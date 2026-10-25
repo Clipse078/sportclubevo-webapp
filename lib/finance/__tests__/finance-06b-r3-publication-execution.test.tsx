@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { FinanceManagementPnlPublicationDialog } from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
+import { FinanceReportingPublicationBar } from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
+import { buildFinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { FINANCE_PUBLICATION_SNAPSHOT_SCHEMA_VERSION } from "@/lib/finance/publishing/finance-publication-reporting-semantic-version";
 import { parseFinancePublicationSnapshotPayloadV1 } from "@/lib/finance/publishing/validate-finance-publication-snapshot-v1";
@@ -128,7 +129,7 @@ vi.mock("@/lib/finance/services/finance-management-reporting-query-service", () 
   loadFinanceManagementReportingDetailReadModel: vi.fn(),
 }));
 
-import { publishFinanceManagementPnlAction } from "@/app/(admin)/dashboard/finance/reports/publication-actions";
+import * as publicationActions from "@/app/(admin)/dashboard/finance/reports/publication-actions";
 
 const financeYearId = "fy-2026";
 
@@ -156,6 +157,79 @@ const labels = {
   close: "Schließen",
 };
 
+const inspectionLabels = {
+  sheetTitle: "Veröffentlichte Erfolgsrechnung",
+  frozenNotice: "Frozen",
+  versionHeading: "Version",
+  versionLabel: "Version {version}",
+  publishedAtLabel: "Veröffentlicht",
+  contentTypeLabel: "Erfolgsrechnung",
+  statusPublished: "Veröffentlicht",
+  statusSuperseded: "Ersetzt",
+  close: "Schließen",
+};
+
+const historyLabels = {
+  historyAction: "Veröffentlichungen",
+  historyTitle: "Veröffentlichungen",
+  openVersion: "Ansehen",
+  versionLabel: "Version {version}",
+  publishedAtLabel: "Veröffentlicht",
+  statusPublished: "Veröffentlicht",
+  statusSuperseded: "Ersetzt",
+};
+
+const pnlLabels = {
+  pageContextYear: "Jahr",
+  interpretationTitle: "Management-Zusammenfassung",
+  budgetedResult: "Budgetiertes Ergebnis",
+  expectedResult: "Erwartetes Ergebnis",
+  forecastVsBudgetVariance: "Prognose vs. Budget",
+  driversTitle: "Treiber",
+  driversSubtitle: null,
+  topFavourable: "Günstig",
+  topUnfavourable: "Ungünstig",
+  incomeSection: "EINNAHMEN",
+  expenseSection: "AUSGABEN",
+  incomeSectionTotal: "Summe Einnahmen",
+  expenseSectionTotal: "Summe Ausgaben",
+  managementResult: "ERGEBNIS",
+  columnBudget: "Budget",
+  columnActual: "Ist",
+  columnActualYtd: "Ist bis",
+  columnForecast: "Prognose",
+  columnVariance: "Abweichung",
+  columnVariancePercent: "Abweichung %",
+  unassignedGroup: "Nicht zugeordnet",
+  archivedAccount: "Archiviert",
+  expandAccounts: "Konten anzeigen",
+  collapseAccounts: "Konten ausblenden",
+  noStructureTitle: "Keine Struktur",
+  noStructureBody: "Body",
+  openStructure: "Struktur",
+  noStructureViewOnly: "View only",
+  favorabilityFavorable: "Günstig",
+  favorabilityUnfavorable: "Ungünstig",
+  favorabilityOnPlan: "Im Plan",
+  partialSourcesHint: "Partial",
+  unassignedHint: "Unassigned",
+  investigateAccount: "Investigate",
+  investigateGroup: "Group",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD",
+  grainExplanationAnnualActualAndPlan: "Annual",
+  attentionResultFavorableTitle: "A",
+  attentionResultFavorableDetail: "B",
+  attentionResultUnfavorableTitle: "C",
+  attentionResultUnfavorableDetail: "D",
+  attentionResultOnPlanTitle: "E",
+  attentionLargestFavorableTitle: "F",
+  attentionLargestUnfavorableTitle: "G",
+  attentionDriverExpenseSuffix: "H",
+  attentionMissingBudget: "I",
+  attentionMissingForecast: "J",
+};
+
 function getStore(): PublicationMockStore {
   const store = globalThis.__fin06bR3Store;
   if (!store) throw new Error("publication mock store missing");
@@ -173,7 +247,9 @@ describe("FIN-06B-R3 publication execution", () => {
   });
 
   it("executes publish action end-to-end with persisted v1 snapshot", async () => {
-    const actionResult = await publishFinanceManagementPnlAction({ financeYearId });
+    const actionResult = await publicationActions.publishFinanceManagementPnlAction({
+      financeYearId,
+    });
     expect(actionResult.ok).toBe(true);
     if (!actionResult.ok) return;
 
@@ -192,12 +268,17 @@ describe("FIN-06B-R3 publication execution", () => {
   it("surfaces success confirmation and version inspection in the dialog", async () => {
     const user = userEvent.setup();
     render(
-      <FinanceManagementPnlPublicationDialog
+      <FinanceReportingPublicationBar
         financeYearId={financeYearId}
         financeYearName="FY 2026"
+        formattingLocale="de-CH"
         canPublish
         reportPublishable
-        labels={labels}
+        publicationSummary={{ availability: "EMPTY", canPublish: true, publications: [] }}
+        publicationLabels={labels}
+        inspectionLabels={inspectionLabels}
+        historyLabels={historyLabels}
+        pnlLabels={pnlLabels}
       />,
     );
 
@@ -212,10 +293,24 @@ describe("FIN-06B-R3 publication execution", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Version 1");
 
+    const store = getStore();
+    const versionRow = store.financePublicationVersion[0]!;
+    const snapshot = parseFinancePublicationSnapshotPayloadV1(versionRow.snapshotPayloadJson);
+    vi.spyOn(publicationActions, "loadFinancePublicationInspectionAction").mockResolvedValueOnce({
+      ok: true,
+      summary: { availability: "AVAILABLE", canPublish: true, publications: [] },
+      presentation: buildFinancePublishedManagementPnlInspectionReadModel({
+        snapshot,
+        lifecycleStatus: "PUBLISHED",
+        contentLabel: "Erfolgsrechnung",
+      }),
+    });
+
     await user.click(screen.getByRole("button", { name: "Veröffentlichung ansehen" }));
     await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: "Veröffentlichte Version" })).toBeTruthy();
+      expect(document.querySelector("[data-finance-publication-inspection-pnl]")).toBeTruthy();
     });
-    expect(screen.getByText(/FY 2026/)).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Veröffentlichte Erfolgsrechnung" })).toBeTruthy();
+    expect(document.querySelector("[data-finance-pnl-statement]")).toBeTruthy();
   });
 });

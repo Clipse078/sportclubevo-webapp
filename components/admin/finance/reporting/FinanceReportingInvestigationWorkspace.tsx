@@ -11,9 +11,12 @@ import {
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
 import type { SerializedFinanceManagementReportingDetailReadModel } from "@/lib/finance/presentation/serialize-management-reporting-detail-read-model";
 import {
-  FinanceManagementPnlPublicationDialog,
-  type FinanceManagementPnlPublicationLabels,
-} from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
+  FinanceReportingPublicationBar,
+  type FinancePublicationHistoryLabels,
+} from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
+import type { FinanceManagementPnlPublicationLabels } from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
+import type { FinancePublicationInspectionLabels } from "@/components/admin/finance/reporting/FinancePublicationInspectionSheet";
+import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
@@ -28,7 +31,10 @@ type Props = {
   initialDetail?: SerializedFinanceManagementReportingDetailReadModel | null;
   initialDetailOpen?: boolean;
   canPublishReport?: boolean;
+  publicationSummary?: SerializedFinancePublicationSummaryReadModel | null;
   publicationLabels?: FinanceManagementPnlPublicationLabels;
+  publicationInspectionLabels?: FinancePublicationInspectionLabels;
+  publicationHistoryLabels?: FinancePublicationHistoryLabels;
 };
 
 export function FinanceReportingInvestigationWorkspace({
@@ -42,7 +48,10 @@ export function FinanceReportingInvestigationWorkspace({
   initialDetail = null,
   initialDetailOpen = false,
   canPublishReport = false,
+  publicationSummary = null,
   publicationLabels,
+  publicationInspectionLabels,
+  publicationHistoryLabels,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -146,13 +155,18 @@ export function FinanceReportingInvestigationWorkspace({
 
   return (
     <>
-      {publicationLabels ? (
-        <FinanceManagementPnlPublicationDialog
+      {publicationLabels && publicationInspectionLabels ? (
+        <FinanceReportingPublicationBar
           financeYearId={model.financeYearId}
           financeYearName={model.financeYearName}
+          formattingLocale={formattingLocale}
           canPublish={canPublishReport}
           reportPublishable={model.availability === "AVAILABLE"}
-          labels={publicationLabels}
+          publicationSummary={publicationSummary}
+          publicationLabels={publicationLabels}
+          inspectionLabels={publicationInspectionLabels}
+          historyLabels={publicationHistoryLabels}
+          pnlLabels={pnlLabels}
         />
       ) : null}
       <FinanceManagementPnlPanel

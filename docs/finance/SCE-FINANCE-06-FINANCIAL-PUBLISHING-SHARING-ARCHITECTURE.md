@@ -196,7 +196,16 @@ Manual browser UAT by engineering agents is **not** part of closure — Product 
 **FIN-06B-R3 (2026-10-25):** Designated STAGE required migration
 `20261025140000_sce_finance_06a_publishing_sharing_foundation` before Preview publication
 persistence. R3 adds bounded German publication action errors, explicit success/inspection UX,
-and automated end-to-end publication execution coverage. Status remains **PO UAT PENDING**.
+and automated end-to-end publication execution coverage.
+
+**FIN-06B-R4 — published report inspection & discoverability:** Persistence and Version 1
+capture remain authoritative. R4 adds a **presentation read model** built exclusively from
+validated `snapshotPayloadJson` (`build-finance-published-management-pnl-read-model.ts`) and a
+large read-only inspection sheet (Management summary + frozen P&L). Historical inspection **must
+not** call `loadFinanceManagementPnlReadModel`. `/dashboard/finance/reports` exposes a compact
+**Veröffentlichungen** affordance when versions exist (newest first; `PUBLISHED` / `SUPERSEDED`
+labels). PO UAT: inspect existing Version 1 on STAGE without re-seeding. Status remains **PO UAT
+PENDING**.
 
 First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
@@ -208,12 +217,15 @@ First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year 
 | Versioning | `FinancePublication` lineage + monotonic `FinancePublicationVersion.versionNumber` per publication; prior `PUBLISHED` → `SUPERSEDED` |
 | Immutability | Published `snapshotPayloadJson` is read-only; corrections require a new version |
 | Read path | `loadFinancePublicationVersionSnapshot` serves **stored JSON only** — no live FIN-05 re-run |
-| Permissions | `finance.reporting.publish` required; VIEW/SHARE do not imply PUBLISH |
+| Presentation | `buildFinancePublishedManagementPnlInspectionReadModel` — snapshot → read-only UI (R4) |
+| Discoverability | **Veröffentlichungen** on reports workspace when history exists (R4) |
+| Permissions | Publish: `finance.reporting.publish`; inspect history: `finance.view` + `finance.publication.view`; VIEW/SHARE ≠ PUBLISH |
 | Tenant isolation | All queries scoped by `tenantId`; foreign IDs → safe not-found |
 | Audit metadata | `publishedByUserId`, `publishedAt`, `versionNumber`, `sourceMetadataJson`, `snapshotSchemaVersion` |
-| UI slice | `/dashboard/finance/reports` — permission-aware **Veröffentlichen** dialog (no sharing/export/approval) |
+| UI slice | `/dashboard/finance/reports` — **Veröffentlichen** + **Veröffentlichungen** + inspection sheet (no sharing/export/approval) |
 
 Automated immutability proof: `lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts`.
+R4 guards: `lib/finance/__tests__/finance-06b-r4-publication-inspection.test.ts`.
 
 ### FIN-06C handoff (not started)
 

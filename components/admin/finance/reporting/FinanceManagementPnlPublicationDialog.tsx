@@ -4,11 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
-import {
-  loadFinancePublicationInspectionAction,
-  publishFinanceManagementPnlAction,
-} from "@/app/(admin)/dashboard/finance/reports/publication-actions";
-import type { SerializedFinancePublicationSnapshotPayload } from "@/lib/finance/presentation/serialize-publication-snapshot";
+import { publishFinanceManagementPnlAction } from "@/app/(admin)/dashboard/finance/reports/publication-actions";
 
 export type FinanceManagementPnlPublicationLabels = {
   publishAction: string;
@@ -40,6 +36,8 @@ type Props = {
   canPublish: boolean;
   reportPublishable: boolean;
   labels: FinanceManagementPnlPublicationLabels;
+  publicationId?: string | null;
+  onInspectPublished?: (input: { publicationId: string; versionNumber: number }) => void;
 };
 
 export function FinanceManagementPnlPublicationDialog({
@@ -48,17 +46,17 @@ export function FinanceManagementPnlPublicationDialog({
   canPublish,
   reportPublishable,
   labels,
+  publicationId: existingPublicationId,
+  onInspectPublished,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publishedVersion, setPublishedVersion] = useState<number | null>(null);
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
-  const [publicationId, setPublicationId] = useState<string | null>(null);
-  const [inspectionOpen, setInspectionOpen] = useState(false);
-  const [inspectionSnapshot, setInspectionSnapshot] =
-    useState<SerializedFinancePublicationSnapshotPayload | null>(null);
-  const [inspectionError, setInspectionError] = useState<string | null>(null);
+  const [publicationId, setPublicationId] = useState<string | null>(
+    existingPublicationId ?? null,
+  );
   const router = useRouter();
 
   const reset = useCallback(() => {
@@ -66,8 +64,10 @@ export function FinanceManagementPnlPublicationDialog({
     setBusy(false);
     setPublishedVersion(null);
     setPublishedAt(null);
-    setPublicationId(null);
-  }, []);
+    if (!existingPublicationId) {
+      setPublicationId(null);
+    }
+  }, [existingPublicationId]);
 
   const closeDialog = useCallback(() => {
     setOpen(false);
@@ -94,23 +94,15 @@ export function FinanceManagementPnlPublicationDialog({
     }
   }, [financeYearId, labels.publishFailed, router]);
 
-  const onInspect = useCallback(async () => {
-    if (!publicationId || publishedVersion == null) return;
+  const onInspect = useCallback(() => {
+    const resolvedPublicationId = publicationId ?? existingPublicationId;
+    if (!resolvedPublicationId || publishedVersion == null || !onInspectPublished) return;
     setOpen(false);
-    setInspectionOpen(true);
-    setInspectionError(null);
-    setInspectionSnapshot(null);
-    const result = await loadFinancePublicationInspectionAction({
-      financeYearId,
-      publicationId,
+    onInspectPublished({
+      publicationId: resolvedPublicationId,
       versionNumber: publishedVersion,
     });
-    if (result.ok && result.latestSnapshot) {
-      setInspectionSnapshot(result.latestSnapshot);
-      return;
-    }
-    setInspectionError(result.ok ? labels.inspectionEmpty : result.error);
-  }, [financeYearId, labels.inspectionEmpty, publicationId, publishedVersion]);
+  }, [existingPublicationId, onInspectPublished, publicationId, publishedVersion]);
 
   if (!canPublish) {
     return null;
@@ -118,19 +110,17 @@ export function FinanceManagementPnlPublicationDialog({
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={!reportPublishable}
-          onClick={() => {
-            reset();
-            setOpen(true);
-          }}
-        >
-          {labels.publishAction}
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={!reportPublishable}
+        onClick={() => {
+          reset();
+          setOpen(true);
+        }}
+      >
+        {labels.publishAction}
+      </Button>
 
       <Dialog
         open={open}
@@ -201,34 +191,6 @@ export function FinanceManagementPnlPublicationDialog({
               ) : null}
             </p>
           </div>
-        )}
-      </Dialog>
-
-      <Dialog
-        open={inspectionOpen}
-        onClose={() => setInspectionOpen(false)}
-        stackLayer="elevated"
-        title={labels.inspectionTitle}
-        footer={
-          <Button type="button" onClick={() => setInspectionOpen(false)}>
-            {labels.close}
-          </Button>
-        }
-      >
-        {inspectionSnapshot ? (
-          <div className="space-y-2 text-sm">
-            <p>{inspectionSnapshot.title}</p>
-            <p className="text-muted-foreground">
-              {labels.versionLabel.replace(
-                "{version}",
-                String(inspectionSnapshot.publicationVersion),
-              )}
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground" role="alert">
-            {inspectionError ?? labels.inspectionEmpty}
-          </p>
         )}
       </Dialog>
     </>

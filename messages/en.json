@@ -679,7 +679,15 @@
         "versionLabel": "Version {version}",
         "publishedAtLabel": "Published",
         "inspectionTitle": "Published version",
+        "inspectionSheetTitle": "Published management income statement",
         "inspectionEmpty": "No publications for this financial year yet.",
+        "frozenNotice": "This version shows the state at the time of publication. Later changes to financial data will not change this version.",
+        "versionHeading": "Version",
+        "statusPublished": "Published",
+        "statusSuperseded": "Superseded",
+        "historyAction": "Publications",
+        "historyTitle": "Publications",
+        "openVersion": "View",
         "close": "Close"
       },
       "investigation": {

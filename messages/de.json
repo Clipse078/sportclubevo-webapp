@@ -1142,7 +1142,15 @@
         "versionLabel": "Version {version}",
         "publishedAtLabel": "Veröffentlicht",
         "inspectionTitle": "Veröffentlichte Version",
+        "inspectionSheetTitle": "Veröffentlichte Erfolgsrechnung",
         "inspectionEmpty": "Für dieses Finanzjahr gibt es noch keine Veröffentlichungen.",
+        "frozenNotice": "Diese Version zeigt den Stand zum Zeitpunkt der Veröffentlichung. Spätere Änderungen an den Finanzdaten verändern diese Version nicht.",
+        "versionHeading": "Version",
+        "statusPublished": "Veröffentlicht",
+        "statusSuperseded": "Ersetzt",
+        "historyAction": "Veröffentlichungen",
+        "historyTitle": "Veröffentlichungen",
+        "openVersion": "Ansehen",
         "close": "Schließen"
       },
       "investigation": {

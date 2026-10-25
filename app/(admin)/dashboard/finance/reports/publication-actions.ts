@@ -2,7 +2,12 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { FinanceDomainError } from "@/lib/finance/errors";
-import { resolveFinancePublicationActionUserMessage } from "@/lib/finance/publishing/finance-publication-action-errors";
+import {
+  resolveFinancePublicationActionUserMessage,
+  FINANCE_PUBLICATION_INSPECTION_FORBIDDEN,
+  FINANCE_PUBLICATION_INSPECTION_NOT_FOUND,
+  FINANCE_PUBLICATION_INSPECTION_READ_FAILED,
+} from "@/lib/finance/publishing/finance-publication-action-errors";
 import { revalidatePath } from "next/cache";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { canPublishFinancialReports } from "@/lib/finance/publishing/finance-publishing-authorization";
@@ -11,7 +16,10 @@ import {
   loadFinancePublicationVersionForTenant,
 } from "@/lib/finance/services/finance-publication-query-service";
 import { publishFinanceManagementPnlSnapshot } from "@/lib/finance/services/finance-publication-service";
-import { serializeFinancePublicationSnapshotPayload } from "@/lib/finance/presentation/serialize-publication-snapshot";
+import { buildFinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
+import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
+import { serializeFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
+import { getTranslations } from "next-intl/server";
 
 export type FinancePublishManagementPnlActionResult =
   | {
@@ -63,8 +71,8 @@ export async function publishFinanceManagementPnlAction(input: {
 export type FinancePublicationInspectionResult =
   | {
       ok: true;
-      summary: Awaited<ReturnType<typeof loadFinancePublicationSummaryForYear>>;
-      latestSnapshot: ReturnType<typeof serializeFinancePublicationSnapshotPayload> | null;
+      summary: ReturnType<typeof serializeFinancePublicationSummaryReadModel>;
+      presentation: FinancePublishedManagementPnlInspectionReadModel | null;
     }
   | { ok: false; error: string };
 
@@ -75,24 +83,43 @@ export async function loadFinancePublicationInspectionAction(input: {
 }): Promise<FinancePublicationInspectionResult> {
   try {
     const workspace = await loadFinanceWorkspaceContext();
-    const summary = await loadFinancePublicationSummaryForYear(
-      prisma,
-      workspace.ctx,
-      input.financeYearId,
+    const t = await getTranslations("Finance.reporting.publication");
+    const summary = serializeFinancePublicationSummaryReadModel(
+      await loadFinancePublicationSummaryForYear(prisma, workspace.ctx, input.financeYearId),
     );
 
-    let latestSnapshot = null;
+    if (summary.availability === "RESTRICTED") {
+      return { ok: false, error: FINANCE_PUBLICATION_INSPECTION_FORBIDDEN };
+    }
+
+    let presentation: FinancePublishedManagementPnlInspectionReadModel | null = null;
     if (input.publicationId && input.versionNumber) {
       const version = await loadFinancePublicationVersionForTenant(prisma, workspace.ctx, {
         publicationId: input.publicationId,
         versionNumber: input.versionNumber,
       });
-      if (version.ok) {
-        latestSnapshot = serializeFinancePublicationSnapshotPayload(version.snapshot);
+      if (!version.ok) {
+        if ("restricted" in version && version.restricted) {
+          return { ok: false, error: FINANCE_PUBLICATION_INSPECTION_FORBIDDEN };
+        }
+        return { ok: false, error: FINANCE_PUBLICATION_INSPECTION_NOT_FOUND };
+      }
+
+      try {
+        presentation = buildFinancePublishedManagementPnlInspectionReadModel({
+          snapshot: version.snapshot,
+          lifecycleStatus: version.lifecycleStatus,
+          contentLabel: t("dialogContentValue"),
+        });
+      } catch (error: unknown) {
+        if (error instanceof FinanceDomainError) {
+          return { ok: false, error: FINANCE_PUBLICATION_INSPECTION_READ_FAILED };
+        }
+        throw error;
       }
     }
 
-    return { ok: true, summary, latestSnapshot };
+    return { ok: true, summary, presentation };
   } catch (error: unknown) {
     return {
       ok: false,

@@ -25,6 +25,15 @@ export const FINANCE_PUBLICATION_ACTION_FALLBACK_ERROR =
 export const FINANCE_PUBLICATION_ACTION_PERSISTENCE_UNAVAILABLE =
   "Die Veröffentlichung ist derzeit nicht verfügbar. Bitte in Kürze erneut versuchen oder den Support informieren.";
 
+export const FINANCE_PUBLICATION_INSPECTION_NOT_FOUND =
+  "Diese Veröffentlichungsversion ist nicht verfügbar.";
+
+export const FINANCE_PUBLICATION_INSPECTION_FORBIDDEN =
+  "Sie dürfen Veröffentlichungen nicht einsehen.";
+
+export const FINANCE_PUBLICATION_INSPECTION_READ_FAILED =
+  "Die gespeicherte Veröffentlichung konnte nicht gelesen werden.";
+
 function isPrismaMissingRelationError(error: unknown): boolean {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
   if (error.code === "P2021") return true;

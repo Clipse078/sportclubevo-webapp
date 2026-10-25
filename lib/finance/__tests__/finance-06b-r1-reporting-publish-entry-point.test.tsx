@@ -144,6 +144,18 @@ const publicationLabels = {
   close: "Close",
 };
 
+const publicationInspectionLabels = {
+  sheetTitle: "Inspection sheet",
+  frozenNotice: "Frozen",
+  versionHeading: "Version",
+  versionLabel: "Version {version}",
+  publishedAtLabel: "Published",
+  contentTypeLabel: "Erfolgsrechnung",
+  statusPublished: "Published",
+  statusSuperseded: "Superseded",
+  close: "Close",
+};
+
 const pnlLabels = {
   pageContextYear: "Year",
   interpretationTitle: "Interpretation",
@@ -201,7 +213,8 @@ describe("FIN-06B-R1 reporting publish entry point", () => {
   });
 
   it("reports route derives publish visibility from finance.reporting.publish on workspace ctx", () => {
-    expect(reportsPage).toContain("canPublishReport={canPublishFinancialReports(workspace.ctx)}");
+    expect(reportsPage).toContain("canPublishReport = canPublishFinancialReports(workspace.ctx)");
+    expect(reportsPage).toContain("canViewFinancePublicationHistory");
     expect(reportsPage).toContain("canPublishFinancialReports");
     expect(reportsPage).not.toMatch(/canPublishReport=\{true\}/);
   });
@@ -231,6 +244,7 @@ describe("FIN-06B-R1 reporting publish entry point", () => {
         canConfigureStructure={false}
         canPublishReport
         publicationLabels={publicationLabels}
+        publicationInspectionLabels={publicationInspectionLabels}
         pnlLabels={pnlLabels}
         detailLabels={{} as never}
       />,
@@ -252,6 +266,7 @@ describe("FIN-06B-R1 reporting publish entry point", () => {
         canConfigureStructure={false}
         canPublishReport={false}
         publicationLabels={publicationLabels}
+        publicationInspectionLabels={publicationInspectionLabels}
         pnlLabels={pnlLabels}
         detailLabels={{} as never}
       />,
