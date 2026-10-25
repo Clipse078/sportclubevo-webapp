@@ -168,6 +168,23 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
             groupAccountsTitle: t("reporting.investigation.groupAccountsTitle"),
             investigateAccount: t("reporting.investigation.investigateAccount"),
             closeDetail: t("reporting.investigation.closeDetail"),
+            semanticIncomeLabel: t("reporting.investigation.semanticIncomeLabel"),
+            semanticExpenseLabel: t("reporting.investigation.semanticExpenseLabel"),
+            targetKindAccountLabel: t("reporting.investigation.targetKindAccountLabel"),
+            targetKindGroupLabel: t("reporting.investigation.targetKindGroupLabel"),
+            varianceVsBudgetLabel: t("reporting.investigation.varianceVsBudgetLabel"),
+            evidenceEntryFallback: t("reporting.investigation.evidenceEntryFallback"),
+            evidenceShowAll: t("reporting.investigation.evidenceShowAll"),
+            evidenceReconciliationSummary: t("reporting.investigation.evidenceReconciliationSummary"),
+            evidenceReconciliationRestricted: t("reporting.investigation.evidenceReconciliationRestricted"),
+            actualContextSeparator: t("reporting.investigation.actualContextSeparator"),
+            interpretationForecastAboveBudget: t(
+              "reporting.investigation.interpretationForecastAboveBudget",
+            ),
+            interpretationForecastBelowBudget: t(
+              "reporting.investigation.interpretationForecastBelowBudget",
+            ),
+            interpretationForecastOnBudget: t("reporting.investigation.interpretationForecastOnBudget"),
           }}
         />
       </SceWorkspaceChrome>

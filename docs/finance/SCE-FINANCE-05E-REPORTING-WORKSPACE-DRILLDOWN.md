@@ -30,7 +30,13 @@ Reporting remains **analyse / explain / present** — not source-of-truth editin
 
 ### R1 — Quiet investigation UX / driver-to-evidence
 
-**Status:** IMPLEMENTED (same package) — PO visual UAT still pending.
+**Status:** IMPLEMENTED — PO visual UAT still pending.
+
+### R2 — Premium financial investigation sheet
+
+**Status:** IMPLEMENTED — PO visual UAT still pending.
+
+Refines the FIN-05E detail Sheet into a financial explanation surface: compact identity in sheet chrome, forecast-vs-budget interpretation, inline actual period context, chronological Ist evidence with opaque technical descriptions filtered at presentation, optional reconciliation summary, progressive disclosure for long lists, restrained source-data links, and bounded desktop panel width (~720–780px).
 
 Canonical grammar:
 

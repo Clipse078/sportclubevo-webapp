@@ -233,6 +233,19 @@ const detailLabels = {
   groupAccountsTitle: "Accounts in this group",
   investigateAccount: "Investigate",
   closeDetail: "Close",
+  varianceVsBudgetLabel: "Variance vs budget",
+  evidenceEntryFallback: "Actual entry",
+  evidenceShowAll: "Show all {count} entries",
+  evidenceReconciliationSummary: "{count} entries · {total}",
+  evidenceReconciliationRestricted: "Restricted",
+  semanticIncomeLabel: "Income",
+  semanticExpenseLabel: "Expense",
+  targetKindAccountLabel: "Account",
+  targetKindGroupLabel: "Reporting group",
+  actualContextSeparator: " · ",
+  interpretationForecastAboveBudget: "Forecast is {variance} above budget.",
+  interpretationForecastBelowBudget: "Forecast is {variance} below budget.",
+  interpretationForecastOnBudget: "Forecast matches budget.",
 };
 
 const accountDetail: SerializedFinanceManagementReportingDetailReadModel = {
@@ -388,7 +401,7 @@ describe("FIN-05E R1 quiet investigation UX", () => {
     expect(onInvestigateDriver).toHaveBeenCalledWith({ kind: "REPORTING_GROUP", id: "g-exp" });
   });
 
-  it("orders sheet content identity → summary → evidence → secondary sources", () => {
+  it("orders sheet content summary → evidence → secondary sources without duplicate identity", () => {
     render(
       <FinanceManagementReportingDetailSheet
         open
@@ -402,8 +415,8 @@ describe("FIN-05E R1 quiet investigation UX", () => {
     );
     const body = document.querySelector("[data-finance-reporting-detail-body]");
     expect(body).toBeTruthy();
+    expect(document.querySelector("[data-finance-reporting-detail-identity]")).toBeNull();
     const sections = [
-      "[data-finance-reporting-detail-identity]",
       "[data-finance-reporting-detail-summary]",
       "[data-finance-reporting-detail-evidence]",
       "[data-finance-reporting-detail-sources]",
@@ -417,6 +430,6 @@ describe("FIN-05E R1 quiet investigation UX", () => {
     const summary = body!.querySelector("[data-finance-reporting-detail-summary]");
     const sources = body!.querySelector("[data-finance-reporting-detail-sources]");
     expect(within(summary as HTMLElement).getByText("Budget")).toBeTruthy();
-    expect(within(sources as HTMLElement).getByText("Open budget")).toBeTruthy();
+    expect(within(sources as HTMLElement).getByRole("link", { name: /Budget/i })).toBeTruthy();
   });
 });
