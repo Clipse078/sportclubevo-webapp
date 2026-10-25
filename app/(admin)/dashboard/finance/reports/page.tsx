@@ -12,6 +12,7 @@ import {
   loadFinanceManagementReportingDetailReadModel,
 } from "@/lib/finance/services/finance-management-reporting-query-service";
 import { prisma } from "@/lib/db/prisma";
+import { canPublishFinancialReports } from "@/lib/finance/publishing/finance-publishing-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,29 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
           model={serialized}
           formattingLocale={workspace.formattingLocale}
           canConfigureStructure={workspace.canStructure}
+          canPublishReport={canPublishFinancialReports(workspace.ctx)}
+          publicationLabels={{
+            publishAction: t("reporting.publication.publishAction"),
+            dialogTitle: t("reporting.publication.dialogTitle"),
+            dialogDescription: t("reporting.publication.dialogDescription"),
+            dialogImmutability: t("reporting.publication.dialogImmutability"),
+            dialogContentLabel: t("reporting.publication.dialogContentLabel"),
+            dialogContentValue: t("reporting.publication.dialogContentValue"),
+            dialogPeriodLabel: t("reporting.publication.dialogPeriodLabel"),
+            confirmPublish: t("reporting.publication.confirmPublish"),
+            cancel: t("reporting.publication.cancel"),
+            publishing: t("reporting.publication.publishing"),
+            successTitle: t("reporting.publication.successTitle"),
+            successBody: t("reporting.publication.successBody"),
+            viewLatest: t("reporting.publication.viewLatest"),
+            notPublishable: t("reporting.publication.notPublishable"),
+            forbidden: t("reporting.publication.forbidden"),
+            versionLabel: t("reporting.publication.versionLabel"),
+            publishedAtLabel: t("reporting.publication.publishedAtLabel"),
+            inspectionTitle: t("reporting.publication.inspectionTitle"),
+            inspectionEmpty: t("reporting.publication.inspectionEmpty"),
+            close: t("reporting.publication.close"),
+          }}
           initialAccountId={initialAccountId && !initialGroupId ? initialAccountId : null}
           initialGroupId={initialGroupId && !initialAccountId ? initialGroupId : null}
           initialDetail={initialDetail}

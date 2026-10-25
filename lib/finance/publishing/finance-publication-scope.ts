@@ -27,6 +27,27 @@ export type FinancePublishingReportingScope = {
   hierarchyDetailLevel: "SUMMARY" | "REPORTING_GROUPS" | "ACCOUNTS";
 };
 
+/** Bounded FIN-06B default scope — Management P&L for one finance year. */
+export function defaultManagementPnlPublicationScope(
+  financeYearId: string,
+): FinancePublishingReportingScope {
+  return {
+    financeYearId,
+    reportType: "MANAGEMENT_PNL",
+    includeActual: true,
+    includeApprovedBudget: true,
+    includeCurrentForecast: true,
+    includeAutomaticForecast: false,
+    includeScenarios: false,
+    hierarchyDetailLevel: "ACCOUNTS",
+    comparisonBasis: "APPROVED_BUDGET",
+  };
+}
+
+export function managementPnlPublicationScopeKey(financeYearId: string): string {
+  return `MANAGEMENT_PNL:${financeYearId}`;
+}
+
 export function assertFinancePublishingReportingScope(
   scope: FinancePublishingReportingScope,
 ): void {

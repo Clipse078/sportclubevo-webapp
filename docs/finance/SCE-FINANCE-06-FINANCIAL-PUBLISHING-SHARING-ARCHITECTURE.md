@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
-| **Package** | **FIN-06A** — Publishing & Sharing Architecture Foundation |
-| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (closure PR **#916** → **STAGE**); **FIN-06 programme IN PROGRESS**; **FIN-06B NEXT / NOT STARTED** |
+| **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
+| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (PR **#916** → **STAGE**); **FIN-06B IMPLEMENTED / PO UAT PENDING**; **FIN-06C NOT STARTED** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -191,28 +191,36 @@ Surfaces reviewed: Finance → Einrichtung; Finance capability configuration; Fi
 
 Manual browser UAT by engineering agents is **not** part of closure — Product Owner owns visual sign-off.
 
-## FIN-06B handoff contract (next package — not implemented in 06A)
+## FIN-06B — publication snapshot & versioning (implemented)
 
-FIN-06B must prove that an actual publication can:
+First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
-1. Capture a canonical semantic financial snapshot (`sce.finance.publication.snapshot.v1`).
-2. Receive an explicit publication version.
-3. Preserve what was published; remain unchanged when live Finance subsequently changes.
-4. Create a **new** version rather than mutate the old publication.
-5. Retain source/reference/audit metadata; remain tenant isolated.
-6. Enforce `finance.reporting.publish` (server-authoritative).
-7. Avoid duplicating FIN-05 calculation authority.
-8. Support efficient repeated reads of published state (**prepare once, serve many**).
+| Concern | Implementation |
+| --- | --- |
+| Snapshot schema | `sce.finance.publication.snapshot.v1` — `build-finance-publication-snapshot-v1.ts` |
+| Source authority | `loadFinanceManagementPnlReadModel` (FIN-05) — **no duplicated P&L engine** |
+| Capture / persist | `publishFinanceManagementPnlSnapshot` — `finance-publication-service.ts` |
+| Versioning | `FinancePublication` lineage + monotonic `FinancePublicationVersion.versionNumber` per publication; prior `PUBLISHED` → `SUPERSEDED` |
+| Immutability | Published `snapshotPayloadJson` is read-only; corrections require a new version |
+| Read path | `loadFinancePublicationVersionSnapshot` serves **stored JSON only** — no live FIN-05 re-run |
+| Permissions | `finance.reporting.publish` required; VIEW/SHARE do not imply PUBLISH |
+| Tenant isolation | All queries scoped by `tenantId`; foreign IDs → safe not-found |
+| Audit metadata | `publishedByUserId`, `publishedAt`, `versionNumber`, `sourceMetadataJson`, `snapshotSchemaVersion` |
+| UI slice | `/dashboard/finance/reports` — permission-aware **Veröffentlichen** dialog (no sharing/export/approval) |
 
-FIN-06A closure does **not** implement this workflow.
+Automated immutability proof: `lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts`.
+
+### FIN-06C handoff (not started)
+
+Controlled live sharing, share links, audience selection, and Teilen product surfaces remain **FIN-06C** — not implemented in 06B.
 
 ## FIN-06 package plan (remainder)
 
 | Package | Focus | Status |
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
-| **06B** | Publication snapshot & versioning | **NEXT / NOT STARTED** |
-| **06C** | Controlled live sharing | NOT STARTED |
+| **06B** | Publication snapshot & versioning | **IMPLEMENTED / PO UAT PENDING** |
+| **06C** | Controlled live sharing | **NEXT / NOT STARTED** |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
@@ -254,5 +262,6 @@ FIN-06A — FINANCIAL PUBLISHING & SHARING ARCHITECTURE FOUNDATION
 COMPLETE · PRODUCT OWNER UAT PASS · MERGED TO STAGE (PR #916)
 
 FIN-06 — IN PROGRESS
-FIN-06B — NEXT / NOT STARTED
+FIN-06B — IMPLEMENTED · PO UAT PENDING
+FIN-06C — NEXT / NOT STARTED
 ```

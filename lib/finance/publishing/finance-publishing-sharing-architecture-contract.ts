@@ -360,5 +360,18 @@ export const FINANCE_06A_IMPLEMENTATION = {
   foundationWorkspaceRoute: "/dashboard/finance/publishing",
   fin06aStatus: "ARCHITECTURE_FOUNDATION_COMPLETE",
   fin06ProgrammeStatus: "IN_PROGRESS",
-  fin06bStatus: "NOT_STARTED",
+  fin06bStatus: "IMPLEMENTED_PO_UAT_PENDING",
+} as const;
+
+export const FINANCE_06B_IMPLEMENTATION = {
+  snapshotBuilder: "lib/finance/publishing/build-finance-publication-snapshot-v1.ts",
+  snapshotValidator: "lib/finance/publishing/validate-finance-publication-snapshot-v1.ts",
+  publicationService: "lib/finance/services/finance-publication-service.ts",
+  publicationQueryService: "lib/finance/services/finance-publication-query-service.ts",
+  publicationTestSuite:
+    "lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts",
+  firstReportScope: "MANAGEMENT_PNL",
+  publishUiRoute: "/dashboard/finance/reports",
+  fin06bStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin06cStatus: "NOT_STARTED",
 } as const;

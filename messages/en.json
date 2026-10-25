@@ -659,6 +659,28 @@
         "attentionMissingBudget": "Approved budget missing — primary comparison unavailable.",
         "attentionMissingForecast": "Current forecast missing — expected outcome unclear."
       },
+      "publication": {
+        "publishAction": "Publish",
+        "dialogTitle": "Publish report",
+        "dialogDescription": "Create a fixed version of this management income statement for {year}.",
+        "dialogImmutability": "This publication captures the current state of the report as a fixed version. Later changes to financial data will not change this version.",
+        "dialogContentLabel": "Content",
+        "dialogContentValue": "Management income statement",
+        "dialogPeriodLabel": "Period",
+        "confirmPublish": "Publish",
+        "cancel": "Cancel",
+        "publishing": "Publishing…",
+        "successTitle": "Publication created",
+        "successBody": "Version {version} is now available as a fixed snapshot.",
+        "viewLatest": "View publication",
+        "notPublishable": "This report is not ready to publish yet.",
+        "forbidden": "You do not have permission to publish financial reports.",
+        "versionLabel": "Version {version}",
+        "publishedAtLabel": "Published",
+        "inspectionTitle": "Published version",
+        "inspectionEmpty": "No publications for this financial year yet.",
+        "close": "Close"
+      },
       "investigation": {
         "pageDescription": "Understand the management result, investigate material variances, and drill into account evidence without leaving the statement.",
         "exceptionsTitle": "Material variances",

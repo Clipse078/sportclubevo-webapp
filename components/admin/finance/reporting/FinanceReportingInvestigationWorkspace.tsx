@@ -10,6 +10,10 @@ import {
 } from "@/components/admin/finance/reporting/FinanceManagementReportingDetailSheet";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
 import type { SerializedFinanceManagementReportingDetailReadModel } from "@/lib/finance/presentation/serialize-management-reporting-detail-read-model";
+import {
+  FinanceManagementPnlPublicationDialog,
+  type FinanceManagementPnlPublicationLabels,
+} from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
@@ -23,6 +27,8 @@ type Props = {
   initialGroupId?: string | null;
   initialDetail?: SerializedFinanceManagementReportingDetailReadModel | null;
   initialDetailOpen?: boolean;
+  canPublishReport?: boolean;
+  publicationLabels?: FinanceManagementPnlPublicationLabels;
 };
 
 export function FinanceReportingInvestigationWorkspace({
@@ -35,6 +41,8 @@ export function FinanceReportingInvestigationWorkspace({
   initialGroupId,
   initialDetail = null,
   initialDetailOpen = false,
+  canPublishReport = false,
+  publicationLabels,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -138,6 +146,15 @@ export function FinanceReportingInvestigationWorkspace({
 
   return (
     <>
+      {publicationLabels ? (
+        <FinanceManagementPnlPublicationDialog
+          financeYearId={model.financeYearId}
+          financeYearName={model.financeYearName}
+          canPublish={canPublishReport}
+          reportPublishable={model.availability === "AVAILABLE"}
+          labels={publicationLabels}
+        />
+      ) : null}
       <FinanceManagementPnlPanel
         model={model}
         formattingLocale={formattingLocale}

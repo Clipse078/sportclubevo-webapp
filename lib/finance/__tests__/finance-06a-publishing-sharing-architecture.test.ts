@@ -77,7 +77,7 @@ describe("FIN-06A publishing & sharing architecture locks", () => {
       SCE_FINANCE_PUBLISHING_ARCHITECTURE_LOCKS.revokedAccessDoesNotRewriteHistoricalPublication,
     ).toBe(true);
     expect(FINANCE_06A_SCOPE.noCompletePublishingWorkspace).toBe(true);
-    expect(FINANCE_06A_IMPLEMENTATION.fin06bStatus).toBe("NOT_STARTED");
+    expect(FINANCE_06A_IMPLEMENTATION.fin06bStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
   });
 
   it("defines source data, live report, share, and publication distinctly", () => {

@@ -1122,6 +1122,28 @@
         "attentionMissingBudget": "Genehmigtes Budget fehlt — Hauptvergleich nicht verfügbar.",
         "attentionMissingForecast": "Aktuelle Prognose fehlt — erwartetes Ergebnis unklar."
       },
+      "publication": {
+        "publishAction": "Veröffentlichen",
+        "dialogTitle": "Bericht veröffentlichen",
+        "dialogDescription": "Eine feste Version dieser Erfolgsrechnung für {year} erstellen.",
+        "dialogImmutability": "Die Veröffentlichung hält den aktuellen Stand dieses Berichts als feste Version fest. Spätere Änderungen an den Finanzdaten verändern diese Version nicht.",
+        "dialogContentLabel": "Inhalt",
+        "dialogContentValue": "Erfolgsrechnung",
+        "dialogPeriodLabel": "Zeitraum",
+        "confirmPublish": "Veröffentlichen",
+        "cancel": "Abbrechen",
+        "publishing": "Veröffentlichen…",
+        "successTitle": "Veröffentlichung erstellt",
+        "successBody": "Version {version} ist als feste Momentaufnahme verfügbar.",
+        "viewLatest": "Veröffentlichung ansehen",
+        "notPublishable": "Dieser Bericht ist noch nicht veröffentlichungsbereit.",
+        "forbidden": "Sie dürfen Finanzberichte nicht veröffentlichen.",
+        "versionLabel": "Version {version}",
+        "publishedAtLabel": "Veröffentlicht",
+        "inspectionTitle": "Veröffentlichte Version",
+        "inspectionEmpty": "Für dieses Finanzjahr gibt es noch keine Veröffentlichungen.",
+        "close": "Schließen"
+      },
       "investigation": {
         "pageDescription": "Management-Ergebnis verstehen, wesentliche Abweichungen untersuchen und Kontobelege einsehen — ohne den Ausweis zu verlassen.",
         "exceptionsTitle": "Wesentliche Abweichungen",
