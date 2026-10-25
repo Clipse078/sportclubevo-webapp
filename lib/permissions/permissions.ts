@@ -209,6 +209,11 @@ export const PERMISSIONS = {
   FINANCE_FORECAST_MANAGE: "finance.forecast.manage",
   FINANCE_STRUCTURE_MANAGE: "finance.structure.manage",
   FINANCE_ADMIN: "finance.admin",
+  /** SCE-FINANCE-06A — publishing & sharing (view ≠ share ≠ publish). */
+  FINANCE_PUBLICATION_VIEW: "finance.publication.view",
+  FINANCE_REPORTING_SHARE: "finance.reporting.share",
+  FINANCE_REPORTING_PUBLISH: "finance.reporting.publish",
+  FINANCE_SHARE_MANAGE: "finance.share.manage",
 
   ORG_VIEW: "org.view",
   ORG_MANAGE: "org.manage",

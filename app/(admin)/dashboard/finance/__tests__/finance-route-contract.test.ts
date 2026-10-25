@@ -28,6 +28,15 @@ describe("FIN-01B finance routes", () => {
     expect(panel).not.toContain('type="checkbox"');
   });
 
+  it("declares FIN-06A publishing foundation route", () => {
+    expect(read("app/(admin)/dashboard/finance/publishing/page.tsx")).toContain(
+      "FinancePublishingFoundationPanel",
+    );
+    expect(read("app/(admin)/dashboard/finance/publishing/page.tsx")).not.toContain(
+      'type="checkbox"',
+    );
+  });
+
   it("declares FIN-01D budget workspace route", () => {
     expect(read("app/(admin)/dashboard/finance/budget/page.tsx")).toContain(
       "FinanceBudgetWorkspacePanel",

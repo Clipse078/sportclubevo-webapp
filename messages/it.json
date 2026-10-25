@@ -402,7 +402,29 @@
     "matchAwaySide": "Ospiti"
   },
   "Finance": {
-    "breadcrumbs": { "dashboard": "Dashboard", "finance": "Finanze", "settings": "Configurazione", "structure": "Struttura finanziaria", "budget": "Budget", "actuals": "Consuntivo", "forecast": "Previsione" },
+    "breadcrumbs": { "dashboard": "Dashboard", "finance": "Finanze", "settings": "Configurazione", "structure": "Struttura finanziaria", "budget": "Budget", "actuals": "Consuntivo", "forecast": "Previsione", "reporting": "Report", "publishing": "Pubblicazioni" },
+    "publishing": {
+      "foundation": {
+        "eyebrow": "Pubblicazione e condivisione",
+        "pageTitle": "Pubblicazioni",
+        "pageDescription": "Pubblicazioni finanziarie formali e condivisione controllata — fondazione architetturale.",
+        "title": "Fondazione pubblicazioni",
+        "description": "I report live restano analitici e mutabili. Le pubblicazioni saranno snapshot versionati e deliberati. La condivisione può riferire viste live se la policy lo consente — distinta dalla pubblicazione formale.",
+        "publicationsLabel": "Pubblicazioni",
+        "activeSharesLabel": "Condivisioni attive",
+        "capabilitiesTitle": "Le tue autorizzazioni",
+        "capViewHistory": "Puoi consultare lo storico delle pubblicazioni.",
+        "capViewHistoryOff": "Storico pubblicazioni non abilitato per il tuo ruolo.",
+        "capShare": "Puoi condividere report finanziari.",
+        "capShareOff": "Condivisione non abilitata per il tuo ruolo.",
+        "capPublish": "Puoi pubblicare report finanziari.",
+        "capPublishOff": "Pubblicazione non abilitata per il tuo ruolo.",
+        "capManageShares": "Puoi gestire e revocare le condivisioni.",
+        "capManageSharesOff": "Gestione condivisioni non abilitata per il tuo ruolo.",
+        "foundationNote": "I workflow completi arrivano nei prossimi pacchetti FIN-06. Nessuna azione è esposta in questa fondazione.",
+        "backToReports": "Torna ai report live"
+      }
+    },
     "capabilityNavAria": "Navigazione funzioni finanze",
     "workspace": { "eyebrow": "Finanze", "title": "Finanze", "description": "Pianificazione e struttura finanziaria della organizzazione." },
     "contextTabsAria": "Sezioni finanze",

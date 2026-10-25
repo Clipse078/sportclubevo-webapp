@@ -86,6 +86,34 @@ export const FINANCE_PERMISSION_DEFS = [
     scope: TENANT_SCOPE,
     grantableByAdmin: true,
   },
+  {
+    key: "finance.publication.view",
+    name: "View financial publication history",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.reporting.share",
+    name: "Share financial reports",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.reporting.publish",
+    name: "Publish financial reports",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.share.manage",
+    name: "Manage and revoke financial shares",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
 ] as const;
 
 export const FINANCE_PERMISSION_KEYS = FINANCE_PERMISSION_DEFS.map((def) => def.key);

@@ -423,7 +423,30 @@
       "budget": "Budget",
       "actuals": "Actuals",
       "forecast": "Forecast",
-      "reporting": "Reporting"
+      "reporting": "Reporting",
+      "publishing": "Publishing"
+    },
+    "publishing": {
+      "foundation": {
+        "eyebrow": "Publishing & sharing",
+        "pageTitle": "Publications",
+        "pageDescription": "Formal financial publications and controlled sharing — architecture foundation.",
+        "title": "Publishing foundation",
+        "description": "Live reports in Berichte remain analytical and mutable. Publications here will be deliberate, versioned snapshots. Sharing may reference live views when policy allows — distinct from formal publication.",
+        "publicationsLabel": "Publications",
+        "activeSharesLabel": "Active shares",
+        "capabilitiesTitle": "Your capabilities",
+        "capViewHistory": "You may view publication history.",
+        "capViewHistoryOff": "Publication history is not enabled for your role.",
+        "capShare": "You may share financial reports.",
+        "capShareOff": "Sharing is not enabled for your role.",
+        "capPublish": "You may publish financial reports.",
+        "capPublishOff": "Publishing is not enabled for your role.",
+        "capManageShares": "You may manage and revoke shares.",
+        "capManageSharesOff": "Share management is not enabled for your role.",
+        "foundationNote": "Full publishing and sharing workflows arrive in later FIN-06 packages. No actions are exposed in this foundation slice.",
+        "backToReports": "Return to live reports"
+      }
     },
     "capabilityNavAria": "Finance capability navigation",
     "workspace": {
