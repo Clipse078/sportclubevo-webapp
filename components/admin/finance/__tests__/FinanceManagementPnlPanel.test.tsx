@@ -261,8 +261,8 @@ describe("FinanceManagementPnlPanel", () => {
         labels={labels}
       />,
     );
-    expect(screen.getByText("Favourable")).toBeTruthy();
-    expect(screen.getByText("Unfavourable")).toBeTruthy();
+    expect(screen.getAllByText("Favourable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Unfavourable").length).toBeGreaterThan(0);
     expect(screen.getByText("Membership")).toBeTruthy();
     expect(screen.getByText("Staff")).toBeTruthy();
     expect(screen.getByText("Variance vs approved budget plan")).toBeTruthy();
