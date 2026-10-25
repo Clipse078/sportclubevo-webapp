@@ -8,7 +8,7 @@ import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permi
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { generateFinancePublicationPdfArtifactForTenant } from "@/lib/finance/services/finance-publication-artifact-service";
 import { financePublicationPdfContentDisposition } from "@/lib/finance/artifacts/finance-publication-pdf/sanitize-finance-publication-pdf-filename";
-import type { FinancePublicationPdfLabels } from "@/lib/finance/artifacts/finance-publication-pdf/finance-publication-pdf-types";
+import { buildFinancePublicationPdfLabels } from "@/lib/finance/presentation/load-finance-publication-pdf-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -20,41 +20,6 @@ function parseVersionNumber(raw: string): number | null {
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed < 1) return null;
   return parsed;
-}
-
-async function loadPdfLabels(): Promise<FinancePublicationPdfLabels> {
-  const overview = await getTranslations("Finance.overview");
-  const pub = await getTranslations("Finance.reporting.publication");
-  const pnl = await getTranslations("Finance.reporting.pnl");
-  const actuals = await getTranslations("Finance.actuals");
-  return {
-    reportTypeLabel: pub("dialogContentValue"),
-    publishedVersionLabel: pub("versionLabel"),
-    financialYearLabel: pnl("contextYear"),
-    executiveSummaryTitle: pnl("interpretationTitle"),
-    expectedResultLabel: pnl("expectedResult"),
-    budgetResultLabel: pnl("budgetedResult"),
-    actualResultLabel: pnl("columnActual"),
-    varianceVsBudgetLabel: pnl("varianceVsBudget"),
-    favorabilityFavorable: actuals("favorabilityFavorable"),
-    favorabilityUnfavorable: actuals("favorabilityUnfavorable"),
-    favorabilityOnPlan: actuals("favorabilityOnPlan"),
-    incomeSection: overview("reportingIncome"),
-    expenseSection: overview("reportingExpense"),
-    incomeSectionTotal: pnl("incomeSectionTotal"),
-    expenseSectionTotal: pnl("expenseSectionTotal"),
-    managementResult: overview("reportingResult"),
-    columnBudget: pnl("columnBudget"),
-    columnActual: pnl("columnActual"),
-    columnForecast: pnl("columnForecast"),
-    columnVariance: pnl("columnVariance"),
-    unassignedGroup: pnl("unassignedGroup"),
-    publishedAtLabel: pub("publishedAtLabel"),
-    pdfGeneratedAtLabel: pub("pdfGeneratedAtLabel"),
-    publicationReferenceLabel: pub("pdfPublicationReferenceLabel"),
-    sportClubEvoDocumentMark: pub("pdfSportClubEvoMark"),
-    pageLabel: pub("pdfPageLabel"),
-  };
 }
 
 export async function GET(_request: NextRequest, context: RouteContext): Promise<NextResponse> {
@@ -87,14 +52,22 @@ export async function GET(_request: NextRequest, context: RouteContext): Promise
     return NextResponse.json({ error: "Publication not found." }, { status: 404 });
   }
 
-  const labels = await loadPdfLabels();
+  const overview = await getTranslations("Finance.overview");
   const pub = await getTranslations("Finance.reporting.publication");
+  const pnl = await getTranslations("Finance.reporting.pnl");
+  const actuals = await getTranslations("Finance.actuals");
+  const labels = buildFinancePublicationPdfLabels({
+    overview: (key) => overview(key),
+    publication: (key, values) => pub(key, values),
+    pnl: (key, values) => pnl(key, values),
+    actuals: (key) => actuals(key),
+  });
 
   const result = await generateFinancePublicationPdfArtifactForTenant(prisma, ctx, {
     publicationId: publicationId.trim(),
     versionNumber,
     labels,
-    reportTypeContentLabel: pub("dialogContentValue"),
+    reportTypeContentLabel: pub("pdfReportTypeSubtitle"),
   });
 
   if (!result.ok) {

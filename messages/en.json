@@ -696,6 +696,17 @@
         "pdfPublicationReferenceLabel": "Publication",
         "pdfSportClubEvoMark": "Financial publication — SportClubEvo",
         "pdfPageLabel": "Page",
+        "pdfFinancialReportHeading": "Financial report {year}",
+        "pdfReportTypeSubtitle": "Management income statement",
+        "pdfOfficialPublicationLine": "Official publication · Version {version}",
+        "pdfPublicationInfoTitle": "Publication information",
+        "pdfManagementAssessmentTitle": "Management assessment",
+        "pdfStatementSectionTitle": "Income statement",
+        "pdfAmountsInCurrency": "Amounts in {currency}",
+        "pdfColumnVarianceVsBudget": "Δ Budget",
+        "pdfForecastSupportingLabel": "Forecast",
+        "pdfCreatedWithSportClubEvo": "Created with SportClubEvo",
+        "pdfPageOf": "Page {page} / {total}",
         "close": "Close"
       },
       "investigation": {

@@ -10,6 +10,8 @@ import type {
   SerializedFinanceManagementPnlReadModel,
   SerializedManagementPnlSection,
 } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+import { derivePublicationVarianceDriversFromSemantic } from "@/lib/finance/presentation/derive-publication-variance-drivers-from-semantic";
+import { buildFinanceComparativeAttentionInsights } from "@/lib/finance/reporting/build-finance-comparative-attention-insights";
 import { buildComparativeComparisonAvailabilityMatrix } from "@/lib/finance/reporting/comparative-comparison-availability";
 import type { FinanceReportingComparisonSlice } from "@/lib/finance/reporting/reporting-comparison-model";
 import type { PnlReconciliationSlice } from "@/lib/finance/reporting/pnl-reporting-completeness";
@@ -89,6 +91,10 @@ function buildPublicationComparativeIntelligence(
   pnl: StoredManagementPnlSemanticPayload,
   actualGrain: "ANNUAL_FULL_YEAR" | "YTD" | null,
   actualCutoffDate: string | null,
+  input: {
+    topFavourableDrivers: SerializedFinanceComparativeIntelligenceReadModel["materialDrivers"]["favourable"];
+    topUnfavourableDrivers: SerializedFinanceComparativeIntelligenceReadModel["materialDrivers"]["unfavourable"];
+  },
 ): SerializedFinanceComparativeIntelligenceReadModel {
   const matrix = buildComparativeComparisonAvailabilityMatrix({
     actualGrain: actualGrain ?? "ANNUAL_FULL_YEAR",
@@ -112,8 +118,23 @@ function buildPublicationComparativeIntelligence(
     },
     actualVsBudgetVarianceRole: actualGrain === "YTD" ? "UNSUPPORTED" : "SUPPORTED",
     comparisonAvailability: matrix,
-    materialDrivers: { favourable: [], unfavourable: [] },
-    attentionInsights: [],
+    materialDrivers: {
+      favourable: input.topFavourableDrivers,
+      unfavourable: input.topUnfavourableDrivers,
+    },
+    attentionInsights: buildFinanceComparativeAttentionInsights({
+      managementResult: pnl.managementResult,
+      topFavourableDrivers: input.topFavourableDrivers,
+      topUnfavourableDrivers: input.topUnfavourableDrivers,
+      approvedBudget: {
+        availability: pnl.sourceVisibility.approvedBudget ? "AVAILABLE" : "NOT_VISIBLE",
+        approvedBudgetVersionId: null,
+      },
+      currentForecast: {
+        availability: pnl.sourceVisibility.currentForecast ? "AVAILABLE" : "NOT_VISIBLE",
+        currentForecastVersionId: null,
+      },
+    }),
     sourceAvailability: {
       approvedBudget: pnl.sourceVisibility.approvedBudget ? "AVAILABLE" : "NOT_VISIBLE",
       actual: pnl.sourceVisibility.actual ? "AVAILABLE" : "NOT_VISIBLE",
@@ -138,6 +159,10 @@ export function buildFinancePublishedManagementPnlInspectionReadModel(input: {
 }): FinancePublishedManagementPnlInspectionReadModel {
   const snapshot = parseFinancePublicationSnapshotPayloadV1(input.snapshot);
   const semantic = parseStoredManagementPnlPayload(snapshot.renderedReportingSemanticPayload);
+  const derivedDrivers = derivePublicationVarianceDriversFromSemantic({
+    incomeNodes: semantic.incomeSection.nodes,
+    expenseNodes: semantic.expenseSection.nodes,
+  });
 
   const financeYearName =
     snapshot.explanatoryMetadata.financeYearName?.trim() || snapshot.title.trim();
@@ -175,14 +200,15 @@ export function buildFinancePublishedManagementPnlInspectionReadModel(input: {
     incomeSection: semantic.incomeSection,
     expenseSection: semantic.expenseSection,
     managementResult: semantic.managementResult,
-    topFavourableDrivers: [],
-    topUnfavourableDrivers: [],
+    topFavourableDrivers: derivedDrivers.topFavourableDrivers,
+    topUnfavourableDrivers: derivedDrivers.topUnfavourableDrivers,
     reconciliation: semantic.reconciliation,
     hasUnassignedFinancialValues: hasUnassigned,
     comparativeIntelligence: buildPublicationComparativeIntelligence(
       semantic,
       actualGrain,
       actualCutoffDate,
+      derivedDrivers,
     ),
   };
 

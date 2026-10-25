@@ -1,17 +1,37 @@
 import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 
 export type FinancePublicationPdfLabels = {
-  reportTypeLabel: string;
-  publishedVersionLabel: string;
-  financialYearLabel: string;
-  executiveSummaryTitle: string;
+  /** Masthead report family, e.g. Finanzbericht {year} */
+  financialReportHeading: string;
+  /** Canonical report type subtitle, e.g. Management-Erfolgsrechnung */
+  reportTypeSubtitle: string;
+  officialPublicationLine: string;
+  publishedAtLabel: string;
+  pdfGeneratedAtLabel: string;
+  publicationInfoTitle: string;
+  versionLabel: string;
+  /** Hero */
   expectedResultLabel: string;
+  varianceVsBudgetLabel: string;
   budgetResultLabel: string;
   actualResultLabel: string;
-  varianceVsBudgetLabel: string;
+  forecastResultLabel: string;
   favorabilityFavorable: string;
   favorabilityUnfavorable: string;
   favorabilityOnPlan: string;
+  /** Management interpretation */
+  managementAssessmentTitle: string;
+  attentionResultFavorableTitle: string;
+  attentionResultUnfavorableTitle: string;
+  attentionResultOnPlanTitle: string;
+  attentionResultFavorableDetail: string;
+  attentionResultUnfavorableDetail: string;
+  attentionLargestFavorableTitle: string;
+  attentionLargestUnfavorableTitle: string;
+  attentionDriverExpenseSuffix: string;
+  /** Statement */
+  statementSectionTitle: string;
+  amountsInCurrencyLabel: string;
   incomeSection: string;
   expenseSection: string;
   incomeSectionTotal: string;
@@ -20,13 +40,11 @@ export type FinancePublicationPdfLabels = {
   columnBudget: string;
   columnActual: string;
   columnForecast: string;
-  columnVariance: string;
+  columnVarianceVsBudget: string;
   unassignedGroup: string;
-  publishedAtLabel: string;
-  pdfGeneratedAtLabel: string;
-  publicationReferenceLabel: string;
-  sportClubEvoDocumentMark: string;
-  pageLabel: string;
+  /** Footer */
+  createdWithSportClubEvo: string;
+  pageOfLabel: string;
 };
 
 export type FinancePublicationPdfDocumentInput = {
@@ -39,6 +57,8 @@ export type FinancePublicationPdfDocumentInput = {
   /** Optional PNG/JPEG bytes for tenant crest — omitted when unavailable. */
   organisationLogoBytes: Uint8Array | null;
   organisationLogoMime: "image/png" | "image/jpeg" | null;
+  /** BCP-47 language tag for PDF document catalog (e.g. de-CH). */
+  documentLanguage: string;
 };
 
 export type FinancePublicationPdfGenerationResult = {

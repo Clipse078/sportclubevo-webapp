@@ -49,7 +49,7 @@ import {
 import { formatFinanceManagementMoneyMinor } from "@/lib/finance/presentation/finance-money-presentation";
 import { buildFinancePublicationPdfFilename } from "@/lib/finance/artifacts/finance-publication-pdf/sanitize-finance-publication-pdf-filename";
 import { financePublicationPdfDownloadPath } from "@/lib/finance/presentation/finance-publication-pdf-download-path";
-import type { FinancePublicationPdfLabels } from "@/lib/finance/artifacts/finance-publication-pdf/finance-publication-pdf-types";
+import { buildFinancePublicationPdfLabels } from "@/lib/finance/presentation/load-finance-publication-pdf-labels";
 
 vi.mock("@/lib/server/request-cache", () => ({
   getCurrentTenantContextByIdCached: vi.fn(async (tenantId: string) => ({
@@ -89,34 +89,57 @@ function ctx(tenantId: string, permissions: string[]): FinanceAuthContext {
   return { tenantId, userId: "user-1", permissionKeys: new Set(permissions) };
 }
 
-const pdfLabels: FinancePublicationPdfLabels = {
-  reportTypeLabel: "Management income statement",
-  publishedVersionLabel: "Version {version}",
-  financialYearLabel: "Financial year",
-  executiveSummaryTitle: "Interpretation",
-  expectedResultLabel: "Expected result",
-  budgetResultLabel: "Budget result",
-  actualResultLabel: "Actual",
-  varianceVsBudgetLabel: "Variance vs budget",
-  favorabilityFavorable: "Favorable",
-  favorabilityUnfavorable: "Unfavorable",
-  favorabilityOnPlan: "On plan",
-  incomeSection: "Income",
-  expenseSection: "Expenses",
-  incomeSectionTotal: "Total income",
-  expenseSectionTotal: "Total expenses",
-  managementResult: "Result",
-  columnBudget: "Budget",
-  columnActual: "Actual",
-  columnForecast: "Forecast",
-  columnVariance: "Variance",
-  unassignedGroup: "Unassigned",
-  publishedAtLabel: "Published",
-  pdfGeneratedAtLabel: "PDF generated",
-  publicationReferenceLabel: "Publication",
-  sportClubEvoDocumentMark: "SportClubEvo",
-  pageLabel: "Page",
-};
+const pdfLabels = buildFinancePublicationPdfLabels({
+  overview: (k) =>
+    ({
+      reportingIncome: "Income",
+      reportingExpense: "Expenses",
+      reportingResult: "Result",
+    })[k as "reportingIncome"] ?? k,
+  publication: (k) =>
+    ({
+      pdfFinancialReportHeading: "Financial report {year}",
+      pdfReportTypeSubtitle: "Management income statement",
+      pdfOfficialPublicationLine: "Official publication · Version {version}",
+      publishedAtLabel: "Published",
+      pdfGeneratedAtLabel: "PDF generated",
+      pdfPublicationInfoTitle: "Publication information",
+      versionLabel: "Version {version}",
+      pdfForecastSupportingLabel: "Forecast",
+      pdfManagementAssessmentTitle: "Management assessment",
+      pdfStatementSectionTitle: "Income statement",
+      pdfAmountsInCurrency: "Amounts in {currency}",
+      pdfColumnVarianceVsBudget: "Variance",
+      pdfCreatedWithSportClubEvo: "SportClubEvo",
+      pdfPageOf: "Page {page} / {total}",
+    })[k as "pdfFinancialReportHeading"] ?? k,
+  pnl: (k) =>
+    ({
+      expectedResult: "Expected result",
+      varianceVsBudget: "vs budget",
+      budgetedResult: "Budget",
+      columnActual: "Actual",
+      columnBudget: "Budget",
+      columnForecast: "Forecast",
+      incomeSectionTotal: "Total income",
+      expenseSectionTotal: "Total expenses",
+      unassignedGroup: "Unassigned",
+      attentionResultFavorableTitle: "Better",
+      attentionResultUnfavorableTitle: "Worse",
+      attentionResultOnPlanTitle: "On plan",
+      attentionResultFavorableDetail: "Above {amount}",
+      attentionResultUnfavorableDetail: "Below {amount}",
+      attentionLargestFavorableTitle: "Top favorable",
+      attentionLargestUnfavorableTitle: "Top unfavorable",
+      attentionDriverExpenseSuffix: "expense",
+    })[k as "expectedResult"] ?? k,
+  actuals: (k) =>
+    ({
+      favorabilityFavorable: "Favorable",
+      favorabilityUnfavorable: "Unfavorable",
+      favorabilityOnPlan: "On plan",
+    })[k as "favorabilityFavorable"] ?? k,
+});
 
 function setupMockDb() {
   const store = createPublicationMockStore();
@@ -149,7 +172,7 @@ async function publishV1AndV2(prisma: ReturnType<typeof makePublicationMockPrism
 
 describe("FIN-06C-R1 publication PDF artifact architecture", () => {
   it("records R1 implementation and artifact pipeline locks", () => {
-    expect(FINANCE_06C_R1_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_06C_R1_IMPLEMENTATION.status).toBe("IMPLEMENTED");
     expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
     expect(FINANCE_PUBLICATION_ARTIFACT_PIPELINE.persistenceRequiredInR1).toBe(false);
     expect(FINANCE_PUBLICATION_ARTIFACT_PIPELINE.onDemandGenerationFromSnapshot).toBe(true);

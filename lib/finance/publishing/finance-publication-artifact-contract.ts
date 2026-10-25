@@ -42,9 +42,22 @@ export const FINANCE_PUBLICATION_PDF_ARTIFACT = {
   downloadRequiresFinanceView: true,
 } as const;
 
+export const FINANCE_06C_R2_IMPLEMENTATION = {
+  packageId: "FIN-06C-R2",
+  status: "IMPLEMENTED_PO_UAT_PENDING",
+  predecessor: "FIN-06C-R1",
+  focus: "publication_pdf_design_accessibility_hardening",
+  pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
+  accessibilityDoc:
+    "docs/finance/SCE-FINANCE-06C-R2-PUBLICATION-PDF-DESIGN-ACCESSIBILITY.md",
+  testSuite: "lib/finance/__tests__/finance-06c-r2-publication-pdf-design.test.ts",
+  fin06cStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "IN_PROGRESS",
+} as const;
+
 export const FINANCE_06C_R1_IMPLEMENTATION = {
   packageId: "FIN-06C-R1",
-  status: "IMPLEMENTED_PO_UAT_PENDING",
+  status: "IMPLEMENTED",
   artifactContract: "lib/finance/publishing/finance-publication-artifact-contract.ts",
   pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
   artifactService: "lib/finance/services/finance-publication-artifact-service.ts",

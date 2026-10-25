@@ -75,6 +75,7 @@ export async function generateFinancePublicationPdfArtifactForTenant(
       organisationName,
       formattingLocale,
       translationLocale: tenant?.locale?.trim() || formattingLocale,
+      documentLanguage: tenant?.locale?.trim() || formattingLocale,
       generatedAt,
       presentation,
       labels: input.labels,

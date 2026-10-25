@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | FIN-06C-R1 — Distribution & Export Foundation + Versioned PDF Artifact |
-| **Status** | **IMPLEMENTED / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED** (superseded for visual design by FIN-06C-R2) |
 | **Branch** | `cursor/sce-finance-06c-distribution-export` |
 | **Predecessor** | FIN-06B COMPLETE / PO APPROVED (PR **#917**) |
 

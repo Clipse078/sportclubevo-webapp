@@ -316,7 +316,7 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
 | **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
-| **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented / PO UAT pending) |
+| **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented; **R2 PDF design/accessibility** implemented / PO UAT pending) |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
