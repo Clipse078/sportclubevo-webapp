@@ -67,4 +67,6 @@ Measure-scoped visibility reuses `finance.view`, `finance.budget.view`, `finance
 
 **FIN-05F** — Comparative intelligence (**COMPLETE / PO APPROVED** — PR **#913** → **STAGE**).
 
-**FIN-05G** — Reporting visual intelligence (**NEXT / NOT STARTED**).
+**FIN-05G** — Reporting visual intelligence (**COMPLETE / PO APPROVED** — PR **#914** → **STAGE**).
+
+**FIN-05H** — Release hardening (**NEXT / NOT STARTED**).
