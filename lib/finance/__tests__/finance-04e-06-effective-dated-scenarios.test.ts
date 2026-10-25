@@ -154,8 +154,6 @@ describe("FIN-04E-06 legacy FIN-04D compatibility", () => {
 
 describe("FIN-04E-06 UX binary control compliance", () => {
   it("uses segmented control for effective-date scope (no new checkboxes)", () => {
-    const { readFileSync } = require("node:fs") as typeof import("node:fs");
-    const { resolve } = require("node:path") as typeof import("node:path");
     const dialog = readFileSync(
       resolve(
         process.cwd(),
