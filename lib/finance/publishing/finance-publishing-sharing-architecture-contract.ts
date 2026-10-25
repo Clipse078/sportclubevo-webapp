@@ -328,12 +328,130 @@ export const FINANCE_PUBLISHING_DESIGN_DIRECTION = {
 export const FINANCE_06_PACKAGE_PLAN = {
   "06A": "Publishing & Sharing Architecture Foundation",
   "06B": "Publication Snapshot & Versioning",
-  "06C": "Controlled Live Sharing",
+  "06C": "Published Artifacts & Distribution",
   "06D": "Publication Governance & History",
-  "06E": "Distribution / Export Surfaces",
+  "06E": "Distribution / Export Surfaces (may fold into 06C slices)",
   "06F": "Privacy, Audience & Policy Hardening",
   "06G": "UX / Responsive / Release Hardening",
   "06H": "Programme Closure",
+} as const;
+
+/** FIN-06C — product model (defined in R6; not implemented in FIN-06B). */
+export const FINANCE_06C_PRODUCT_MODEL = {
+  canonicalProgression: [
+    "LIVE_REPORT",
+    "PUBLISH",
+    "OFFICIAL_IMMUTABLE_VERSION",
+    "DISTRIBUTE",
+  ] as const,
+  publicationWithoutDistributionIsInfrastructureNotCompleteOutcome: true,
+  userFacingOutcome:
+    "I have made this report official and can now send it.",
+  systemOwnsComplexity: [
+    "snapshotting",
+    "immutability",
+    "versionNumbering",
+    "historicalPreservation",
+    "permissions",
+    "artifactGeneration",
+    "distributionIntegrity",
+  ] as const,
+  fin06cStatus: "DEFINED_NOT_STARTED",
+} as const;
+
+/** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */
+export const FINANCE_06C_PDF_ARTIFACT_REQUIREMENT = {
+  firstClassRequirement: true,
+  exampleFilenamePattern:
+    "{organisation} – {reportTitle} {period} – Version {versionNumber}.pdf",
+  readPath: [
+    "FinancePublicationVersion",
+    "snapshotPayloadJson",
+    "publicationPresentationReadModel",
+    "pdfArtifact",
+  ] as const,
+  forbiddenReadPath: [
+    "FinancePublicationVersion",
+    "currentFinanceReadModel",
+    "pdfArtifact",
+  ] as const,
+  semanticInvariance:
+    "PDF(Vn) financial semantics identical regardless of later live source changes",
+  byteIdenticalNotRequiredWhenMetadataDiffers: true,
+} as const;
+
+/** Progressive distribution capabilities — scoped slices, not generic DMS or email marketing. */
+export const FINANCE_06C_DISTRIBUTION_BOUNDARIES = {
+  initialSlices: [
+    "PDF_HERUNTERLADEN",
+    "CONTROLLED_SHARING_OF_SPECIFIC_PUBLICATION_VERSION",
+    "EMAIL_DISTRIBUTION_OF_SPECIFIC_PUBLICATION_VERSION",
+  ] as const,
+  laterCapabilitiesMayInclude: [
+    "expiration",
+    "recipientManagement",
+    "internalOrganisationAudiences",
+    "externalInvitedRecipients",
+    "revocation",
+    "deliveryAudit",
+    "publicAccessWhenTenantPolicyPermits",
+    "otherExportFormats",
+  ] as const,
+  forbiddenInFin06C: [
+    "genericDocumentManagementPlatform",
+    "genericEmailMarketingSystem",
+    "fin08Invoicing",
+    "fin11StatutoryAccountingOutput",
+  ] as const,
+} as const;
+
+/** FIN-06C UX direction (recorded R6 — not FIN-06B implementation). */
+export const FINANCE_06C_UX_DIRECTION = {
+  primaryAction: "Veröffentlichen",
+  quieterHistoryEntry: "Veröffentlichte Berichte (N)",
+  inPublicationActions: ["PDF herunterladen", "Teilen", "Per E-Mail senden"] as const,
+  historyStatusLabels: { current: "Aktuell", superseded: "Ersetzt" } as const,
+  doNotExposeToUsers: [
+    "snapshotPayloadJson",
+    "schemaVersion",
+    "databaseId",
+    "immutableRow",
+  ] as const,
+  userVisibleMetadata: [
+    "version",
+    "publishedDate",
+    "reportingPeriod",
+    "reportType",
+    "status",
+    "distributionActions",
+  ] as const,
+} as const;
+
+/** Distributed artifact presentation — document-like, not Finance UI screenshot. */
+export const FINANCE_06C_ARTIFACT_PRESENTATION = {
+  documentLikeNotInteractiveWorkspace: true,
+  identityHeaderFields: [
+    "organisation",
+    "reportTitle",
+    "financialYearOrReportingPeriod",
+    "publicationVersion",
+    "publicationDate",
+    "currency",
+    "optionalPublishedByWhenPolicyAllows",
+  ] as const,
+  contentHierarchy: [
+    "CONCLUSION",
+    "KEY_FINANCIAL_SUMMARY",
+    "MANAGEMENT_PNL",
+    "relevantExplanationContext",
+  ] as const,
+  excludeFromArtifact: [
+    "investigationControls",
+    "editControls",
+    "appNavigation",
+    "internalIds",
+    "completeInteractiveApplicationDump",
+  ] as const,
 } as const;
 
 export const FINANCE_06A_SCOPE = {
@@ -370,8 +488,14 @@ export const FINANCE_06B_IMPLEMENTATION = {
   publicationQueryService: "lib/finance/services/finance-publication-query-service.ts",
   publicationTestSuite:
     "lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts",
+  r6VersioningContractTest:
+    "lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts",
+  r6PoUatInstructionDoc: "docs/finance/SCE-FINANCE-06B-R6-PO-VERSION-2-UAT.md",
+  r6StagePrepScript: "scripts/sce-finance-06b-r6-stage-version2-uat-prep.ts",
   firstReportScope: "MANAGEMENT_PNL",
   publishUiRoute: "/dashboard/finance/reports",
   fin06bStatus: "IMPLEMENTED_PO_UAT_PENDING",
-  fin06cStatus: "NOT_STARTED",
+  fin06bR5PoImmutabilityCheckpoint: "PASS",
+  fin06bR6Status: "VERSION_2_UAT_PREPARED",
+  fin06cStatus: "DEFINED_NOT_STARTED",
 } as const;
