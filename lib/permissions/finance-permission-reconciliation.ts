@@ -147,6 +147,13 @@ const FINANCE_FORECAST_PERMISSION_KEYS = [
   PERMISSIONS.FINANCE_FORECAST_MANAGE,
 ] as const;
 
+const FINANCE_PUBLICATION_PERMISSION_KEYS = [
+  PERMISSIONS.FINANCE_PUBLICATION_VIEW,
+  PERMISSIONS.FINANCE_REPORTING_SHARE,
+  PERMISSIONS.FINANCE_REPORTING_PUBLISH,
+  PERMISSIONS.FINANCE_SHARE_MANAGE,
+] as const;
+
 /** Idempotent alignment of finance.actual.* on tenant Club Admin roles (FIN-03A catalog gap). */
 export async function reconcileFinanceActualPermissionsForClubAdmin(
   prisma: PrismaClient,
@@ -199,6 +206,35 @@ export async function reconcileFinanceForecastPermissionsForClubAdmin(
   const outcomes: RolePermissionSyncOutcome[] = [];
   for (const roleKey of clubAdminRoleKeys) {
     for (const permissionKey of FINANCE_FORECAST_PERMISSION_KEYS) {
+      outcomes.push(await assignPermissionToRole(prisma, roleKey, permissionKey, dryRun));
+    }
+  }
+  return outcomes;
+}
+
+/** Idempotent alignment of FIN-06 publication/share catalog keys on tenant Club Admin roles. */
+export async function reconcileFinancePublicationPermissionsForClubAdmin(
+  prisma: PrismaClient,
+  dryRun = false,
+): Promise<RolePermissionSyncOutcome[]> {
+  for (const def of FINANCE_PERMISSION_DEFS) {
+    if (!(FINANCE_PUBLICATION_PERMISSION_KEYS as readonly string[]).includes(def.key)) {
+      continue;
+    }
+    const existing = await prisma.permission.findUnique({
+      where: { key: def.key },
+      select: { id: true },
+    });
+    if (!existing && !dryRun) {
+      await prisma.permission.create({ data: def });
+    }
+  }
+
+  const clubAdminRoleKeys = await listTenantClubAdminRoleKeysForReconciliation(prisma);
+
+  const outcomes: RolePermissionSyncOutcome[] = [];
+  for (const roleKey of clubAdminRoleKeys) {
+    for (const permissionKey of FINANCE_PUBLICATION_PERMISSION_KEYS) {
       outcomes.push(await assignPermissionToRole(prisma, roleKey, permissionKey, dryRun));
     }
   }

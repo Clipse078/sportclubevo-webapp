@@ -5,6 +5,7 @@ import {
   FINANCE_PERMISSION_KEYS,
   reconcileFinanceActualPermissionsForClubAdmin,
   reconcileFinancePermissions,
+  reconcileFinancePublicationPermissionsForClubAdmin,
 } from "@/lib/permissions/finance-permission-reconciliation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -53,6 +54,47 @@ describe("reconcileFinanceActualPermissionsForClubAdmin", () => {
     const outcomes = await reconcileFinanceActualPermissionsForClubAdmin(prisma, false);
     expect(outcomes).toHaveLength(2);
     expect(rolePermissionUpsert).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("reconcileFinancePublicationPermissionsForClubAdmin", () => {
+  it("assigns FIN-06 publication keys to discovered Club Admin roles", async () => {
+    listClubAdminRoles.mockResolvedValue(["club_admin__demo"]);
+    const permissionCreate = vi.fn(async () => ({}));
+    const permissionFindUnique = vi.fn(async ({ where }: { where: { key: string } }) => {
+      if (where.key.startsWith("finance.")) {
+        return { id: `p-${where.key}` };
+      }
+      return null;
+    });
+    const roleFindUnique = vi.fn(async ({ where }: { where: { key: string } }) =>
+      where.key === "club_admin__demo" ? { id: "role-ca" } : null,
+    );
+    const rolePermissionFindUnique = vi.fn(async () => null);
+    const rolePermissionUpsert = vi.fn(async () => ({}));
+
+    const prisma = {
+      permission: {
+        findUnique: permissionFindUnique,
+        create: permissionCreate,
+      },
+      role: { findUnique: roleFindUnique },
+      rolePermission: {
+        findUnique: rolePermissionFindUnique,
+        upsert: rolePermissionUpsert,
+      },
+    } as unknown as PrismaClient;
+
+    const outcomes = await reconcileFinancePublicationPermissionsForClubAdmin(prisma, false);
+    expect(outcomes).toHaveLength(4);
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(4);
+    expect(
+      outcomes.some(
+        (row) =>
+          row.permissionKey === PERMISSIONS.FINANCE_REPORTING_PUBLISH &&
+          row.action === "assigned",
+      ),
+    ).toBe(true);
   });
 });
 
