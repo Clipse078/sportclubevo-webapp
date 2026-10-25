@@ -65,4 +65,6 @@ Measure-scoped visibility reuses `finance.view`, `finance.budget.view`, `finance
 
 **FIN-05E** — Reporting workspace drill-down (**COMPLETE / PO APPROVED** — PR **#912**).
 
-**FIN-05F** — Comparative intelligence (**NEXT** — **NOT STARTED**).
+**FIN-05F** — Comparative intelligence (**COMPLETE / PO APPROVED** — PR **#913** → **STAGE**).
+
+**FIN-05G** — Reporting visual intelligence (**NEXT / NOT STARTED**).

@@ -4,8 +4,9 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05F** — comparative intelligence (Budget / Actual / Current Forecast) |
-| **Status** | **IMPLEMENTED — R1 decision-oriented attention — Product Owner visual UAT pending** |
-| **Branch** | `cursor/sce-finance-05f-comparative-intelligence` |
+| **Status** | **COMPLETE — Product Owner visual UAT PASS — R1 COMPLETE — R2 NOT REQUIRED** |
+| **Branch** | `cursor/sce-finance-05f-comparative-intelligence` (PR **#913** → **STAGE**) |
+| **Feature HEAD** | `f65f22ce30c4c48929dd5d7cb63bb741a70659ea` (base `60d8ec5a997be9e93459e754f5833f6a76cb85f4` + R1) |
 | **Route** | `/dashboard/finance/reports` (Berichte) |
 | **Depends on** | FIN-05B variance engine, FIN-05C Management P&L, FIN-05E investigation |
 
@@ -67,12 +68,15 @@ Integer minor units throughout; formatting in presentation only.
 
 ## UX (Berichte)
 
-Progressive disclosure on the existing Management P&L:
+Approved Product Owner reporting flow (progressive disclosure on the existing Management P&L):
 
-1. **Conclusion** — interpretation strip (budget, forecast, variance, actual with authoritative period label)
-2. **Where to look** — decision-oriented attention (max three concrete insights; driver rows open FIN-05E investigation)
-3. **Comparison** — Management P&L statement columns (unchanged hierarchy)
-4. **Explanation / evidence** — FIN-05E investigation sheet
+1. **Comparative summary** — forecast vs budget conclusion with authoritative actual period context
+2. **Worauf achten** — decision-oriented attention (max three concrete insights; driver rows open FIN-05E investigation)
+3. **Management P&L** — statement columns (FIN-05C hierarchy preserved)
+4. **Investigation** — FIN-05E account/group drill-down sheet
+5. **Evidence** — permission-scoped actual evidence where grain permits
+
+Canonical information hierarchy (programme-wide): **Conclusion → important exceptions → statement → investigation → evidence**.
 
 No generic meta signals (“see exceptions below”, “progress evidence”). No duplicate “material variances” driver block in the default Reporting flow when the same drivers appear in attention.
 
@@ -110,3 +114,17 @@ Architecture locks: `lib/finance/__tests__/finance-05f-reporting-architecture.te
 - Actual summary label uses canonical grain (`Ist bis {cutoff}` for YTD; `Ist` for full year).
 - Investigation sheet actual grain presentation verified against authoritative `actualGrain` / cutoff.
 - No fake YTD-vs-annual variance, no `/12` phasing, no new chart.
+- Duplicate default **Wesentliche Abweichungen** driver block removed when the same drivers appear in **Worauf achten**.
+
+## Closure (Product Owner)
+
+| Item | Outcome |
+| --- | --- |
+| Base implementation (`60d8ec5a`) | **ACCEPTED** |
+| R1 (`f65f22ce`) | **ACCEPTED** |
+| R2 | **NOT REQUIRED** |
+| Visual UAT | **PASS** |
+
+**Locked product model:** PLAN = approved budget; REALITY = actual (authoritative period/grain); EXPECTED OUTCOME = current forecast; PRIMARY COMPARISON = current forecast vs approved budget; ATTENTION = overall conclusion + max two material drivers (FIN-05B ranking).
+
+**Next:** FIN-05G — reporting visual intelligence & responsive hardening (**NOT STARTED**). FIN-05H — release hardening (**PLANNED / NOT STARTED**).
