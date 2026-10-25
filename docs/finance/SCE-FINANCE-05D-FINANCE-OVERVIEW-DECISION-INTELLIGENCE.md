@@ -2,11 +2,35 @@
 
 | Field | Value |
 | --- | --- |
-| **Status** | **IMPLEMENTED / AWAITING PO REVIEW** (R2 executive density & timeline polish) |
-| **Branch** | `cursor/sce-finance-05d-overview-decision-intelligence-4dba` |
+| **Status** | **COMPLETE** — Product Owner visual UAT **PASS** (R2 approved; R3 not required) |
+| **Branch** | `cursor/sce-finance-05d-overview-decision-intelligence-4dba` — PR **#911** → **STAGE** |
 | **Depends on** | FIN-05B read models, FIN-05C presentation helpers, FIN-04E timing semantics |
 
-## PO UAT R1 findings (addressed)
+## Product Owner closure
+
+| Gate | Result |
+| --- | --- |
+| Visual UAT | **PASS** |
+| R1 | **SUPERSEDED BY R2** |
+| R2 | **APPROVED** |
+| R3 | **NOT REQUIRED** |
+
+**Approved product outcome:** Finance **Übersicht** is SCE's primary financial **decision surface**. Information hierarchy:
+
+```text
+CONCLUSION → EXCEPTION → EXPLANATION → EVIDENCE
+```
+
+**Workspace responsibilities (locked):**
+
+| Workspace | Role |
+| --- | --- |
+| **Übersicht** | **UNDERSTAND** |
+| **Reporting (Berichte)** | **ANALYSE / EXPLAIN / PRESENT** |
+| **Zeitplanung** | **MANAGE EXPECTED TIMING EVIDENCE** |
+| **Einrichtung** | **CONFIGURE** |
+
+## PO UAT R1 findings (addressed in R2)
 
 - Raw favourability translation key on Übersicht — fixed (`actuals.favorability*`).
 - Oversized FIN-04E movement chart on Übersicht — replaced with compact **expected financial event timeline**.
@@ -48,7 +72,33 @@ Unchanged — FIN-05B / FIN-03 / FIN-04E consumers only; timeline is **presentat
 - **Übersicht** — essential monitoring / decision information only.
 - **Detail** — Berichte, Zeitplanung, and other workspaces for drill-down.
 
-## Event timeline semantics (R1 — preserved in R2)
+## Approved experience (R2 — do not reopen in closure)
+
+### Financial outlook
+
+- Expected result is dominant.
+- Current Forecast vs Approved Budget interpretation; signed variance; semantic favourability.
+- Contextual Actual with localized Actual cutoff — no mental arithmetic.
+
+### Attention
+
+- Concrete timing incompleteness; actual untimed amount; one timing CTA routing to Zeitplanung.
+
+### Key variances
+
+- Restrained favorable/unfavorable driver lists (no driver card soup); route to Berichte for evidence.
+
+### Expected financial movements
+
+- Compact event timeline (~200px canvas); discrete events, not running balance.
+- **EXACT_DATE** — point; **MONTH** / **DATE_RANGE** — bounded intervals (not fake exact days).
+- Direct WHEN / AMOUNT / WHAT labels; precision preserved.
+- Unscheduled events excluded from axis; untimed income/expense reconciliation below.
+- Collision-aware presentation lanes (max two); deterministic layout; dense-event fallback.
+- Quiet fiscal/year boundary; compact month/year axis; chronological accessible DOM order.
+- Mobile chronological-list fallback.
+
+## Event timeline semantics
 
 - **EXACT_DATE** — point marker; business date preserved.
 - **MONTH** — bounded interval for that month (not fake exact day).
@@ -69,7 +119,16 @@ Unchanged — FIN-05B / FIN-03 / FIN-04E consumers only; timeline is **presentat
 - Desktop / tablet: horizontal timeline with direct labels.
 - Mobile: chronological list (no squeezed axis).
 
+## Future polish (FIN-05G — not FIN-05D)
+
+Minor visual refinements identified during FIN-05D UAT belong to **FIN-05G**, not a reopen of FIN-05D:
+
+- Smarter aesthetic timeline-window bounds.
+- Broader Finance visual-language consolidation.
+- Responsive hardening.
+- Cross-workspace visual consistency.
+
 ## Next
 
-- **FIN-05E** — Reporting workspace drill-down (not started)
-- PO visual UAT on Übersicht R2
+- **FIN-05E** — Reporting workspace drill-down (**NEXT** — not started)
+- **FIN-05F–05H** — not started

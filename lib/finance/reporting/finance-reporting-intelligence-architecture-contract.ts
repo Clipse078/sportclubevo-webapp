@@ -653,7 +653,7 @@ export const FINANCE_05D_IMPLEMENTATION = {
   queryLoader: "loadFinanceOverviewDecisionIntelligenceReadModel",
   workspaceRoute: "/dashboard/finance",
   maxDriversPerSide: 3,
-  fin05dStatus: "IMPLEMENTED_AWAITING_PO_REVIEW",
+  fin05dStatus: "COMPLETE_PO_UAT_PASS",
   fin05eStatus: "NOT_STARTED",
 } as const;
 

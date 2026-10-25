@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05C COMPLETE** on **STAGE**; **FIN-05D IMPLEMENTED / AWAITING PO REVIEW**; **FIN-05E NEXT**; **05F–05H** not started |
+| **Status** | **FIN-05A–05D COMPLETE** on **STAGE** (05D PO UAT PASS); **FIN-05E NEXT**; **05F–05H** not started |
 | **Branch** | FIN-05D: `cursor/sce-finance-05d-overview-decision-intelligence-4dba` — see [`SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md`](./SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
@@ -434,4 +434,4 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**Next package: FIN-05D** — Finance Übersicht & Decision Intelligence (FIN-05C complete on branch `cursor/sce-finance-05c-management-pnl`).
+**Next package: FIN-05E** — Reporting Workspace & Drill-down ([`SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md`](./SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md) complete on **STAGE** via PR **#911**).

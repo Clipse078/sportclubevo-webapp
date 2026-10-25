@@ -48,7 +48,7 @@ Measure-scoped visibility reuses `finance.view`, `finance.budget.view`, `finance
 
 | Package | Status |
 | --- | --- |
-| FIN-05D Finance Übersicht | Not implemented |
+| FIN-05D Finance Übersicht | **COMPLETE** (PR **#911** → **STAGE**) |
 | FIN-05E Reporting drill-down workspace | Not implemented |
 | FIN-05F / 05G beyond P&L presentation | Not implemented |
 | FIN-06 Publishing | Not implemented |
@@ -63,4 +63,4 @@ Measure-scoped visibility reuses `finance.view`, `finance.budget.view`, `finance
 
 ## Next
 
-**FIN-05D** — Finance Übersicht & Decision Intelligence (**NEXT** — not started).
+**FIN-05E** — Reporting workspace drill-down (**NEXT** — not started).
