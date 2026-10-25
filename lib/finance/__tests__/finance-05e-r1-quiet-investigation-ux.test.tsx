@@ -330,7 +330,10 @@ describe("FIN-05E R1 quiet investigation UX", () => {
         onInvestigateAccount={onInvestigateAccount}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Investigate: Mitgliedsbeiträge" }));
+    const table = document.querySelector("[data-finance-pnl-table]");
+    await user.click(
+      within(table as HTMLElement).getByRole("button", { name: "Investigate: Mitgliedsbeiträge" }),
+    );
     expect(onInvestigateAccount).toHaveBeenCalledWith("acc-1");
   });
 
@@ -346,7 +349,7 @@ describe("FIN-05E R1 quiet investigation UX", () => {
         onInvestigateGroup={onInvestigateGroup}
       />,
     );
-    const expand = screen.getByRole("button", { name: "Expand accounts" });
+    const expand = screen.getByRole("button", { name: "Collapse accounts" });
     await user.click(expand);
     expect(onInvestigateGroup).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Group detail: Membership group" }));

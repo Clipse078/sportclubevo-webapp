@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
@@ -198,7 +198,12 @@ describe("FIN-05E reporting workspace UX", () => {
         onInvestigateDriver={vi.fn()}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Investigate: Membership" }));
+    const table = document.querySelector("[data-finance-pnl-table]");
+    expect(table).toBeTruthy();
+    const accountButton = within(table as HTMLElement).getByRole("button", {
+      name: "Investigate: Membership",
+    });
+    await user.click(accountButton);
     expect(onInvestigateAccount).toHaveBeenCalledWith("acc-1");
   });
 
