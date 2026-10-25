@@ -636,6 +636,84 @@ export const SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS = {
   noUniversalUntimedPercentMaterialityRule: true,
   /** Running cash balance line/area reserved for FIN-09 liquidity semantics. */
   lineChartReservedForContinuousBalanceFin09: true,
+  /**
+   * Current Übersicht uses a compact event timeline; future packages may choose
+   * period movement profiles when the financial question and timing precision allow.
+   */
+  overviewCurrentImplementationIsCompactEventTimeline: true,
+} as const;
+
+/**
+ * FIN-05H — visualization follows the financial question while preserving data semantics.
+ * Replaces any rigid "discrete events → timeline only" documentation rule.
+ */
+export const FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE = {
+  financialQuestionDrivesVisual: true,
+  discreteExpectedMovements: {
+    allowedForms: [
+      "EVENT_TIMELINE",
+      "CALENDAR",
+      "PERIOD_MOVEMENT_PROFILE",
+      "EVENT_LIST",
+    ] as const,
+    forbiddenImplications: [
+      "FABRICATE_TIMING_PRECISION",
+      "FABRICATE_MONTHLY_PHASING",
+      "IMPLY_RUNNING_BALANCE",
+      "IMPLY_LIQUIDITY",
+      "IMPLY_ACCOUNTING_RECOGNITION",
+    ] as const,
+  },
+  continuousAuthoritativeValueOverTime: {
+    allowedForms: ["LINE", "AREA"] as const,
+    requiresSemanticValidity: true,
+  },
+  categoryMagnitude: { allowedForms: ["BAR"] as const },
+  varianceContribution: {
+    allowedForms: ["RANKED_COMPARISON", "DIVERGING_BAR", "DIRECT_LIST"] as const,
+  },
+  overviewCurrentImplementation: "COMPACT_EVENT_TIMELINE",
+  timelineNotExclusiveFutureEvolution: true,
+  /** Locked question for expected financial movements (FIN-05H closure). */
+  expectedFinancialMovementsQuestion:
+    "What financial movements are expected, and when?",
+  doNotConnectEventsWithLine: true,
+  doNotPresentEventTimelineAsLiquidity: true,
+  fin09LiquidityQuestion: "How much liquidity do we expect to have over time?",
+} as const;
+
+/**
+ * FIN-05H — Product Owner visual benchmark (design direction for FIN-06+, not a FIN-05H redesign).
+ * Reference workspaces: Szenarien + Zeitplanung. Standardise design grammar, not identical layouts.
+ */
+export const FINANCE_VISUAL_BENCHMARK = {
+  referenceWorkspaces: ["SCENARIOS", "ZEITPLANUNG"] as const,
+  designGrammarNotUniversalPageTemplate: true,
+  characteristics: [
+    "SPACIOUS_COMPOSITION",
+    "STRONG_TYPOGRAPHY_WHITESPACE_HIERARCHY",
+    "FEWER_COMPETING_CONTAINERS",
+    "RESTRAINED_BORDERS_AND_CHROME",
+    "DARK_TRANSLUCENT_WORKING_SURFACES",
+    "ONE_DOMINANT_QUESTION_PER_ZONE",
+    "PROGRESSIVE_DISCLOSURE",
+    "CLEAR_NAV_CONTEXT_INTERPRETATION_CONTENT",
+    "LARGE_VALUES_ONLY_WHEN_PRIMARY_ANSWER",
+    "AVOID_GENERIC_DASHBOARD_CARD_GRID",
+    "AVOID_CARD_SOUP_NESTED_PANELS",
+    "CALM_DENSITY_WITH_DEEP_CAPABILITY",
+  ] as const,
+  lockedInterpretation: {
+    zeitplanungMayUseDominantAmount: true,
+    finanzstrukturNoArtificialHeroKpi: true,
+    reportingPreservesAnalyticalDensity: true,
+    actualsMayRequireEvidenceTables: true,
+    budgetRequiresGovernanceVersionContext: true,
+  },
+  sceProductPrinciple:
+    "COMPLEXITY SHOULD EXIST IN THE SYSTEM, NOT IN THE USER'S HEAD.",
+  guidesFin06Onward: true,
+  fin05hRedesignForbidden: true,
 } as const;
 
 /** FIN-09 design note (documentation lock — not implemented in FIN-05D). */
@@ -654,7 +732,7 @@ export const FINANCE_05D_IMPLEMENTATION = {
   workspaceRoute: "/dashboard/finance",
   maxDriversPerSide: 3,
   fin05dStatus: "COMPLETE_PO_UAT_PASS",
-  fin05eStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin05eStatus: "COMPLETE_PO_UAT_PASS",
 } as const;
 
 /** FIN-05E implementation locks — reporting workspace drill-down. */
@@ -696,7 +774,7 @@ export const FINANCE_05E_IMPLEMENTATION = {
   workspaceRoute: "/dashboard/finance/reports",
   detailInteraction: "SCE_SHEET_CONTEXTUAL_DETAIL",
   fin05eStatus: "COMPLETE_PO_UAT_PASS",
-  fin05fStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin05fStatus: "COMPLETE_PO_UAT_PASS",
 } as const;
 
 /** FIN-05F implementation locks — Forecast / Budget / Actual comparative intelligence. */
@@ -732,8 +810,56 @@ export const FINANCE_05F_IMPLEMENTATION = {
   comparativeIntelligenceBuilder: "buildFinanceComparativeIntelligenceReadModel",
   comparisonAvailabilityModule: "lib/finance/reporting/comparative-comparison-availability.ts",
   workspaceRoute: "/dashboard/finance/reports",
-  fin05fStatus: "IMPLEMENTED_PO_UAT_PENDING",
-  fin05gStatus: "NOT_STARTED",
+  fin05fStatus: "COMPLETE_PO_UAT_PASS",
+  fin05gStatus: "COMPLETE_PO_UAT_PASS",
+} as const;
+
+/** FIN-05G implementation locks — visual intelligence & responsive hardening. */
+export const SCE_FINANCE_REPORTING_05G_ARCHITECTURE_LOCKS = {
+  composesFin05fComparativeIntelligence: true,
+  noNewFinancialSemantics: true,
+  expectedEventTimelineIsNotLiquidityGraph: true,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  responsiveProgressiveDisclosureRequired: true,
+  favorabilityNotColorOnly: true,
+} as const;
+
+export const FINANCE_05G_IMPLEMENTATION = {
+  workspaceRoutes: ["/dashboard/finance", "/dashboard/finance/reports"] as const,
+  fin05gStatus: "COMPLETE_PO_UAT_PASS",
+  fin05hStatus: "COMPLETE_PO_UAT_PASS",
+} as const;
+
+/** FIN-05H implementation locks — release hardening & FIN-05 closure gate. */
+export const SCE_FINANCE_REPORTING_05H_ARCHITECTURE_LOCKS = {
+  crossWorkspaceReconciliationRequired: true,
+  overviewAndReportingConsumeSharedMeasureLoader: true,
+  reportingIsNotSourceOfTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  overviewIsNotSourceOfTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  actualGrainConsistencyRequired: true,
+  varianceSemanticsFromFin05bOnly: true,
+  tenantIsolationRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.tenantIsolationRequired,
+  permissionAwareComposition: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.permissionAwareComposition,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  unauthorizedIsNotZero: SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS.unauthorizedIsNotZero,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  expectedMovementVisualizationPrincipleRefined: true,
+  liquidityDeferredToFin09: true,
+  publicationDeferredToFin06: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.publicationDeferredToFin06,
+  balanceSheetDeferredToFin11: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.balanceSheetDeferredToFin11,
+  noGenericBiEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noGenericBiEngine,
+  noNewForecastEngine: true,
+  noNewScenarioEngine: true,
+  fin05ProgrammeReleaseClosed: true,
+  financeVisualBenchmarkDocumented: true,
+} as const;
+
+export const FINANCE_05H_IMPLEMENTATION = {
+  releaseHardeningDoc: "docs/finance/SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md",
+  releaseTestSuite: "lib/finance/__tests__/finance-05h-release-hardening-closure.test.ts",
+  fin05hStatus: "COMPLETE_PO_UAT_PASS",
+  fin05ProgrammeStatus: "COMPLETE_RELEASE_CLOSED",
+  fin06Status: "NOT_STARTED",
 } as const;
 
 export const FINANCE_05C_IMPLEMENTATION = {

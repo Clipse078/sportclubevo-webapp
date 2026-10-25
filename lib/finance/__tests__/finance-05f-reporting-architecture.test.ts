@@ -19,7 +19,7 @@ describe("FIN-05F reporting architecture contract", () => {
 
   it("documents implementation entry points", () => {
     expect(FINANCE_05F_IMPLEMENTATION.workspaceRoute).toBe("/dashboard/finance/reports");
-    expect(FINANCE_05F_IMPLEMENTATION.fin05fStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
-    expect(FINANCE_05F_IMPLEMENTATION.fin05gStatus).toBe("NOT_STARTED");
+    expect(FINANCE_05F_IMPLEMENTATION.fin05fStatus).toBe("COMPLETE_PO_UAT_PASS");
+    expect(FINANCE_05F_IMPLEMENTATION.fin05gStatus).toBe("COMPLETE_PO_UAT_PASS");
   });
 });
