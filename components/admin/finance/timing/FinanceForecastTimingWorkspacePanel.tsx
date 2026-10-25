@@ -34,13 +34,18 @@ import {
 import {
   financeForecastTimingAccountRowDensity,
   financeForecastTimingShowsAllEventsDisclosure,
+  financeForecastTimingShowsCompactUntimedOrientation,
+  financeForecastTimingShowsFullTimingCompletion,
+  financeForecastTimingShowsOpenPlanningSection,
   financeForecastTimingShowsUpcomingMovements,
+  financeForecastTimingShowsZeroTimingInterpretation,
   financeForecastTimingSummaryShowsGlobalCreateCta,
   financeForecastTimingSummaryShowsPartialInterpretation,
+  financeForecastTimingWorkspaceMountsMovementChart,
 } from "@/lib/finance/forecast/finance-forecast-timing-workspace-presentation";
 import type { FinanceForecastTimingOverviewReadModel } from "@/lib/finance/forecast/finance-forecast-timing-read-model";
 import type { FinanceForecastTimingVisualModel } from "@/lib/finance/forecast/finance-forecast-timing-visual-types";
-import { FinanceForecastTimingMovementTimeline } from "@/components/admin/finance/timing/FinanceForecastTimingMovementTimeline";
+import { FinanceForecastTimingWorkspaceOrientation } from "@/components/admin/finance/timing/FinanceForecastTimingWorkspaceOrientation";
 
 type YearOption = { id: string; name: string };
 
@@ -232,9 +237,29 @@ export function FinanceForecastTimingWorkspacePanel({
       interpretationState: interpretationKey,
       presentationState,
     });
+  const showOpenPlanning = financeForecastTimingShowsOpenPlanningSection({
+    presentationState,
+    attentionAccountCount: attentionAccounts.length,
+  });
+  const showZeroInterpretation = financeForecastTimingShowsZeroTimingInterpretation(presentationState);
+  const showUntimedOrientation =
+    !!totals &&
+    financeForecastTimingShowsCompactUntimedOrientation({
+      presentationState,
+      untimedTotalMinor: totals.untimed,
+    });
+  const showFullCompletion = financeForecastTimingShowsFullTimingCompletion(presentationState);
 
   return (
-    <div className={FINANCE_FORECAST_WORKSPACE_STACK_CLASS} data-finance-timing-workspace>
+    <div
+      className={FINANCE_FORECAST_WORKSPACE_STACK_CLASS}
+      data-finance-timing-workspace
+      data-finance-timing-movement-chart-mounted={
+        timingVisual && financeForecastTimingWorkspaceMountsMovementChart(presentationState)
+          ? "true"
+          : "false"
+      }
+    >
       <FinanceForecastSubContextTabs
         labels={{
           current: tForecast("subNav.current"),
@@ -544,81 +569,43 @@ export function FinanceForecastTimingWorkspacePanel({
             ) : null}
           </section>
 
-          {timingVisual ? (
-            <FinanceForecastTimingMovementTimeline
+          {showZeroInterpretation && timingVisual ? (
+            <FinanceForecastTimingWorkspaceOrientation
+              variant="ZERO_TIMING"
               visual={timingVisual}
+              untimedTotalMinor={totals.untimed}
+              untimedIncomeMinor={overview.annual.income.unscheduledRemainderMinor}
+              untimedExpenseMinor={overview.annual.expense.unscheduledRemainderMinor}
               baseCurrency={baseCurrency}
               formattingLocale={formattingLocale}
-              onSelectManualEvent={
-                canMutate
-                  ? (eventId) => {
-                      const event = events.find((row) => row.id === eventId);
-                      if (event) openEdit(event);
-                    }
-                  : undefined
-              }
             />
           ) : null}
 
-          {showUpcoming ? (
-          <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-upcoming>
-            <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">{t("upcomingTitle")}</h2>
-            </header>
-            {overview.upcomingEvents.length === 0 ? (
-              <p className="px-4 py-4 text-sm text-[var(--text-2)] sm:px-5">{t("upcomingEmpty")}</p>
-            ) : (
-              <ul className="divide-y divide-[var(--sce-surface-border-subtle)]/70">
-                {overview.upcomingEvents.map((row) => {
-                  const timingLabel = formatExpectedFinancialEventTimingLabel(row, formattingLocale);
-                  const crossFy =
-                    financeYearEndDateIso &&
-                    isExpectedEventTimingAfterFinanceYearEnd({
-                      financeYearEndDateIso,
-                      timing: row,
-                    });
-                  return (
-                    <li
-                      key={row.eventId}
-                      className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-5"
-                      data-finance-timing-upcoming-row
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-[var(--foreground)]">
-                          {row.accountType === "INCOME" ? t("movementIncoming") : t("movementOutgoing")}{" "}
-                          · {row.accountName}
-                        </p>
-                        {row.description ? (
-                          <p className="truncate text-xs text-[var(--muted)]">{row.description}</p>
-                        ) : null}
-                        {crossFy ? (
-                          <p className="text-xs text-[var(--muted)]">{t("crossFyHint")}</p>
-                        ) : null}
-                      </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-3 tabular-nums">
-                        <span
-                          className={cn(
-                            "font-medium",
-                            movementAmountClassName(row.accountType),
-                          )}
-                        >
-                          {formatMovementAmount(
-                            row.expectedAmountMinor,
-                            row.accountType,
-                            baseCurrency,
-                            formattingLocale,
-                          )}
-                        </span>
-                        <span className="text-[var(--text-2)]">{timingLabel}</span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+          {showUntimedOrientation ? (
+            <FinanceForecastTimingWorkspaceOrientation
+              variant="PARTIAL_UNTIMED"
+              visual={timingVisual}
+              untimedTotalMinor={totals.untimed}
+              untimedIncomeMinor={overview.annual.income.unscheduledRemainderMinor}
+              untimedExpenseMinor={overview.annual.expense.unscheduledRemainderMinor}
+              baseCurrency={baseCurrency}
+              formattingLocale={formattingLocale}
+            />
           ) : null}
 
+          {showFullCompletion ? (
+            <FinanceForecastTimingWorkspaceOrientation
+              variant="FULL_COMPLETION"
+              visual={timingVisual}
+              untimedTotalMinor={0}
+              untimedIncomeMinor={0}
+              untimedExpenseMinor={0}
+              baseCurrency={baseCurrency}
+              formattingLocale={formattingLocale}
+            />
+          ) : null}
+
+          {showOpenPlanning ? (
           <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-attention>
             <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">{t("attentionTitle")}</h2>
@@ -786,6 +773,66 @@ export function FinanceForecastTimingWorkspacePanel({
               </ul>
             )}
           </section>
+          ) : null}
+
+          {showUpcoming ? (
+          <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-upcoming>
+            <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
+              <h2 className="text-sm font-semibold text-[var(--foreground)]">{t("upcomingTitle")}</h2>
+            </header>
+            {overview.upcomingEvents.length === 0 ? (
+              <p className="px-4 py-4 text-sm text-[var(--text-2)] sm:px-5">{t("upcomingEmpty")}</p>
+            ) : (
+              <ul className="divide-y divide-[var(--sce-surface-border-subtle)]/70">
+                {overview.upcomingEvents.map((row) => {
+                  const timingLabel = formatExpectedFinancialEventTimingLabel(row, formattingLocale);
+                  const crossFy =
+                    financeYearEndDateIso &&
+                    isExpectedEventTimingAfterFinanceYearEnd({
+                      financeYearEndDateIso,
+                      timing: row,
+                    });
+                  return (
+                    <li
+                      key={row.eventId}
+                      className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                      data-finance-timing-upcoming-row
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-[var(--foreground)]">
+                          {row.accountType === "INCOME" ? t("movementIncoming") : t("movementOutgoing")}{" "}
+                          · {row.accountName}
+                        </p>
+                        {row.description ? (
+                          <p className="truncate text-xs text-[var(--muted)]">{row.description}</p>
+                        ) : null}
+                        {crossFy ? (
+                          <p className="text-xs text-[var(--muted)]">{t("crossFyHint")}</p>
+                        ) : null}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-3 tabular-nums">
+                        <span
+                          className={cn(
+                            "font-medium",
+                            movementAmountClassName(row.accountType),
+                          )}
+                        >
+                          {formatMovementAmount(
+                            row.expectedAmountMinor,
+                            row.accountType,
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                        <span className="text-[var(--text-2)]">{timingLabel}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+          ) : null}
 
           {balancedAccounts.length > 0 ? (
             <FinanceWorkspaceDisclosure

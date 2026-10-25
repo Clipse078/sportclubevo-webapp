@@ -310,11 +310,12 @@ Future views: inflows/outflows over time, net movement, timed vs unscheduled, ac
 | **04E-04** | Forecast timing read model & intelligence |
 | **04E-05** | Workspace UX |
 | **04E-06** | Effective-dated scenario integration (**COMPLETE** — [`SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md`](./SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md)) |
-| **04E-07** | Visual timing intelligence (**COMPLETE** — [`SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md`](./SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md)) |
-| **04E-07** | Visual timing intelligence |
-| **04E-08** | Hardening & release closure |
+| **04E-07** | Visual timing intelligence — R4 movement chart capability; **07R5** Zeitplanung = manage, Übersicht = intended chart consumer ([`SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md`](./SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md)) |
+| **04E-08** | Hardening & release closure (**not started**) |
 
 **FIN-05** (Financial Reporting & Intelligence) remains **next** after FIN-04E unless Product Owner reprioritizes.
+
+**Finance-wide visual intelligence backlog (post-04E-07R5):** reuse `buildFinanceForecastTimingMovementChartModel` / `FinanceForecastTimingMovementTimeline` on Finance Übersicht; add Budget vs Actual vs Forecast, forecast evolution, income/expense trends, reporting/P&L visuals, and liquidity (FIN-09) as separate primitives — none of these are delivered by 07R5.
 
 ---
 

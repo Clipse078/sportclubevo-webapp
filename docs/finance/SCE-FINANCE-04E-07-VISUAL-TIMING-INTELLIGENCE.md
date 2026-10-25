@@ -4,7 +4,7 @@
 | --- | --- |
 | **Package** | FIN-04E-07 |
 | **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
-| **Status** | **COMPLETE** (automated verification; Product Owner visual UAT pending) |
+| **Status** | **IN PROGRESS** — **07R5** refocuses Zeitplanung composition; Übersicht chart integration **backlog** |
 
 ## Purpose
 
@@ -37,13 +37,24 @@ Plot anchors (`plotAnchorDateIso`) are internal to layout only.
 
 1. `loadFinanceForecastTimingOverview` (FIN-04E-04) — reconciliation & coverage unchanged.
 2. `buildFinanceForecastTimingVisualModel` — presentation-neutral markers + window + untimed totals.
-3. `FinanceForecastTimingMovementTimeline` — Finance surface + SVG lanes; tenant formatting via existing presentation helpers.
+3. `FinanceForecastTimingMovementTimeline` + `buildFinanceForecastTimingMovementChartModel` (07R4) — reusable zero-baseline movement chart; tenant formatting via existing presentation helpers.
 
 No financial reconciliation in React. No `/12` or remaining-month smoothing.
 
-## Primary visual
+## FIN-04E-07R5 — workspace responsibility
 
-**Temporal movement timeline** on `/dashboard/finance/forecast/timing` between summary and “Nächste erwartete Bewegungen”.
+| Workspace | Role |
+| --- | --- |
+| **Finance Übersicht** (`/dashboard/finance`) | **Understand** — intended primary consumer of expected-movement visual intelligence (future FIN-05/09-wide pass) |
+| **Zeitplanung** (`/dashboard/finance/forecast/timing`) | **Manage** timing evidence — summary, open planning, upcoming verification, detail disclosures |
+| **Reporting** | Analyse / explain / publish (later) |
+| **Einrichtung** | Configure |
+
+**07R5 change:** the large analytical movement chart is **not** mounted on Zeitplanung. The R4 chart capability remains in code and tests for reuse. Drill-through from future Overview → Zeitplanung for maintenance is intended but **not implemented** in R5.
+
+Zeitplanung hierarchy (when action is required): **Summary → compact untimed orientation (partial) → Offene Zeitplanung → Nächste erwartete Bewegungen → detail disclosures**.
+
+Locks: `FINANCE_FORECAST_TIMING_WORKSPACE_04E_07R5_ARCHITECTURE_LOCKS`.
 
 ## Scenario integration
 

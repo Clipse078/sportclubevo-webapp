@@ -427,12 +427,13 @@ describe("FIN-04E-07 scenario effective-date visual", () => {
 });
 
 describe("FIN-04E-07 UX guards", () => {
-  it("places timeline between summary and upcoming list", () => {
+  it("places open planning before upcoming; chart is not mounted on Zeitplanung (R5)", () => {
     const summaryIdx = timingPanel.indexOf("data-finance-timing-summary");
-    const visualIdx = timingPanel.indexOf("<FinanceForecastTimingMovementTimeline");
+    const attentionIdx = timingPanel.indexOf("data-finance-timing-attention");
     const upcomingIdx = timingPanel.indexOf("data-finance-timing-upcoming");
-    expect(visualIdx).toBeGreaterThan(summaryIdx);
-    expect(upcomingIdx).toBeGreaterThan(visualIdx);
+    expect(timingPanel).not.toContain("<FinanceForecastTimingMovementTimeline");
+    expect(attentionIdx).toBeGreaterThan(summaryIdx);
+    expect(upcomingIdx).toBeGreaterThan(attentionIdx);
   });
 
   it("does not introduce liquidity curve or monthly phasing", () => {
@@ -444,9 +445,10 @@ describe("FIN-04E-07 UX guards", () => {
     expect(timeline).toContain("data-finance-timing-compact-empty");
   });
 
-  it("gates mutation from timeline via canMutate prop wiring", () => {
-    expect(timingPanel).toContain("onSelectManualEvent");
+  it("gates account create actions via canMutate on workspace panel", () => {
+    expect(timeline).toContain("onSelectManualEvent");
     expect(timingPanel).toContain("canMutate");
+    expect(timingPanel).toContain("addForAccount");
   });
 
   it("binary control compliance — no new checkboxes in timeline", () => {

@@ -1145,6 +1145,8 @@
         "overallocatedSummary": "Es ist {amount} mehr terminiert als in der aktuellen Prognose noch erwartet.",
         "ambiguousSummary": "Bei {count, plural, one {# Eintrag} other {# Einträgen}} überschneidet sich der erwartete Zeitraum mit dem aktuellen Datenstand.",
         "addTimingCta": "Erwarteten Zeitpunkt hinzufügen",
+        "fullCompletionTitle": "Zeitplanung vollständig",
+        "fullCompletionBody": "Alle verbleibenden erwarteten Bewegungen haben einen hinterlegten Zeitpunkt.",
         "emptyProfileBody": "Für die verbleibende Prognose ist noch keine Zeitplanung hinterlegt. Legt erwartete Eingänge und Zahlungen fest, um zu sehen, wann finanzielle Bewegungen voraussichtlich stattfinden.",
         "noRemainingExpectation": "Für diese Prognose ist aktuell kein weiterer Betrag offen.",
         "upcomingTitle": "Nächste erwartete Bewegungen",

@@ -682,6 +682,8 @@
         "overallocatedSummary": "{amount} more is timed than still expected in the current forecast.",
         "ambiguousSummary": "{count, plural, one {# entry} other {# entries}} overlap the current data cutoff.",
         "addTimingCta": "Add expected timing",
+        "fullCompletionTitle": "Timing complete",
+        "fullCompletionBody": "All remaining expected movements have an expected timing.",
         "emptyProfileBody": "No timing has been entered for the remaining forecast yet.",
         "noRemainingExpectation": "No further forecast amount is open for this forecast.",
         "upcomingTitle": "Next expected movements",

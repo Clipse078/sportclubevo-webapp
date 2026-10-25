@@ -159,7 +159,7 @@ describe("FIN-04E-07R2 ZERO_TIMING composition", () => {
         canMutate: true,
         remainingMinor: 80_000_00,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("ZERO_TIMING visual model has no plottable markers", () => {

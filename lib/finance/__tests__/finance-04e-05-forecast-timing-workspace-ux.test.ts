@@ -32,13 +32,13 @@ describe("FIN-04E-05 forecast timing workspace UX", () => {
     expect(de).toContain('"timing": "Zeitplanung"');
   });
 
-  it("B. hierarchy — summary before upcoming and attention", () => {
+  it("B. hierarchy — summary before open planning before upcoming", () => {
     const summaryIdx = timingPanel.indexOf('data-finance-timing-summary');
     const upcomingIdx = timingPanel.indexOf('data-finance-timing-upcoming');
     const attentionIdx = timingPanel.indexOf('data-finance-timing-attention');
     expect(summaryIdx).toBeGreaterThan(-1);
-    expect(upcomingIdx).toBeGreaterThan(summaryIdx);
-    expect(attentionIdx).toBeGreaterThan(upcomingIdx);
+    expect(attentionIdx).toBeGreaterThan(summaryIdx);
+    expect(upcomingIdx).toBeGreaterThan(attentionIdx);
   });
 
   it("C. no liquidity curve, monthly phasing, or scenario controls on timing page", () => {
@@ -46,7 +46,8 @@ describe("FIN-04E-05 forecast timing workspace UX", () => {
     expect(timingPanel).not.toContain("liquidity");
     expect(timingPanel).not.toContain("Ab Datum");
     expect(timingPanel).not.toContain("/ 12");
-    expect(timingPanel).toContain("FinanceForecastTimingMovementTimeline");
+    expect(timingPanel).not.toContain("FinanceForecastTimingMovementTimeline");
+    expect(timingPanel).toContain("FinanceForecastTimingWorkspaceOrientation");
   });
 
   it("D. modal-first create with segmented timing precision (no checkboxes)", () => {

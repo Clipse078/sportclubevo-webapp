@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Reusable Finance expected-movement chart (FIN-04E-07R4).
+ * Intended primary consumer: Finance Übersicht / visual intelligence — not Zeitplanung (FIN-04E-07R5).
+ */
+
 import { useId, useMemo, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";

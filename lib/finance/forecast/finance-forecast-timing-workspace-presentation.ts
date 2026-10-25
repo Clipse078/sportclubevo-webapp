@@ -88,10 +88,48 @@ export function financeForecastTimingSummaryShowsGlobalCreateCta(input: {
   canMutate: boolean;
   remainingMinor: number;
 }): boolean {
-  if (!input.canMutate || input.remainingMinor <= 0) {
+  void input;
+  /** FIN-04E-07R5 — per-account "Zeitpunkt hinzufügen" is the primary workflow; global create adds selection friction. */
+  return false;
+}
+
+/** FIN-04E-07R5 — analytical movement chart is reusable intelligence, not Zeitplanung UI. */
+export function financeForecastTimingWorkspaceMountsMovementChart(
+  _state: FinanceForecastTimingWorkspacePresentationContext,
+): boolean {
+  return false;
+}
+
+export function financeForecastTimingShowsCompactUntimedOrientation(input: {
+  presentationState: FinanceForecastTimingWorkspacePresentationContext;
+  untimedTotalMinor: number;
+}): boolean {
+  return input.presentationState === "PARTIAL_TIMING" && input.untimedTotalMinor > 0;
+}
+
+export function financeForecastTimingShowsZeroTimingInterpretation(
+  state: FinanceForecastTimingWorkspacePresentationContext,
+): boolean {
+  return state === "ZERO_TIMING";
+}
+
+export function financeForecastTimingShowsFullTimingCompletion(
+  state: FinanceForecastTimingWorkspacePresentationContext,
+): boolean {
+  return state === "FULL_TIMING";
+}
+
+export function financeForecastTimingShowsOpenPlanningSection(input: {
+  presentationState: FinanceForecastTimingWorkspacePresentationContext;
+  attentionAccountCount: number;
+}): boolean {
+  if (input.presentationState === "NO_REMAINING") {
     return false;
   }
-  return input.presentationState !== "ZERO_TIMING";
+  if (input.presentationState === "FULL_TIMING" && input.attentionAccountCount === 0) {
+    return false;
+  }
+  return true;
 }
 
 /** FIN-04E-07R2 — zero interpretation is not an action surface; account rows own create CTAs. */
