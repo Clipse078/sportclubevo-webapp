@@ -195,7 +195,7 @@ Within **FIN-04 — Forecast Intelligence**, future timing capability includes:
 - expected inflow/outflow profile;
 - forecast timing confidence.
 
-**Status:** **IN PROGRESS** — **FIN-04E-01–04E-03** complete — [`SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`](./SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md); **04E-04+** read model/UI.
+**Status:** **Principles preserved** — canonical implementation **FIN-04E COMPLETE** (04E-01–04E-08) — [`SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](./SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md), [`SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md`](./SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md).
 
 ## FIN-04D-06 boundary (unchanged)
 
@@ -208,7 +208,7 @@ FIN-04D-06 remains:
 
 Adoption copies calculated **full-year** scenario amounts into a formal Current Forecast revision. Rebase replaces the frozen annual starting point explicitly. Neither requires temporal assumptions.
 
-**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E-03:** **COMPLETE** — expected event services & STAGE persistence apply. **Next:** **FIN-04E-04** read model.
+**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E:** **COMPLETE** — expected events, timing read model, workspace UX, effective-dated scenarios, visual timing (PO UAT PASS), and **04E-08** release closure on PR **#907** → **STAGE** (merge pending PO authorization). **Next:** **FIN-05** (not started).
 
 ## Future scenario UX (progressive disclosure — not implemented)
 

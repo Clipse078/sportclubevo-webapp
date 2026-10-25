@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04E programme — **04E-01** architecture; **04E-02** persistence & reconciliation — see [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md) |
-| **Status** | **IN PROGRESS** — **04E-01–04E-07** on branch `cursor/sce-finance-04e-forecast-timing-f9d6`; **04E-08+** not started |
-| **Branch** | `cursor/sce-finance-04e-forecast-timing` |
+| **Status** | **COMPLETE** — **04E-01–04E-08** on branch `cursor/sce-finance-04e-forecast-timing-f9d6` (PR **#907** → **STAGE**; merge pending explicit Product Owner authorization) |
+| **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
 | **Base** | `STAGE` after FIN-04A–04D **COMPLETE + MERGED + PO UAT PASS** |
 | **Code locks** | `lib/finance/forecast/expected-financial-event-architecture-contract.ts` |
 | **Supersedes placeholder** | FIN-04D direction doc [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) (principles preserved; canonical naming updated) |
@@ -311,11 +311,19 @@ Future views: inflows/outflows over time, net movement, timed vs unscheduled, ac
 | **04E-05** | Workspace UX |
 | **04E-06** | Effective-dated scenario integration (**COMPLETE** — [`SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md`](./SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md)) |
 | **04E-07** | Visual timing intelligence — R4 movement chart capability; **07R5** Zeitplanung = manage, Übersicht = intended chart consumer ([`SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md`](./SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md)) |
-| **04E-08** | Hardening & release closure (**not started**) |
+| **04E-08** | Hardening & release closure (**COMPLETE** — [`SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md`](./SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md)) |
 
-**FIN-05** (Financial Reporting & Intelligence) remains **next** after FIN-04E unless Product Owner reprioritizes.
+**FIN-04E — COMPLETE** after **04E-08** automated closure PASS and Product Owner visual UAT PASS for **04E-07** (including R5 Zeitplanung composition).
 
-**Finance-wide visual intelligence backlog (post-04E-07R5):** reuse `buildFinanceForecastTimingMovementChartModel` / `FinanceForecastTimingMovementTimeline` on Finance Übersicht; add Budget vs Actual vs Forecast, forecast evolution, income/expense trends, reporting/P&L visuals, and liquidity (FIN-09) as separate primitives — none of these are delivered by 07R5.
+**FIN-05** (Financial Reporting & Intelligence) is **next** after FIN-04E unless Product Owner reprioritizes — **not started** in FIN-04E.
+
+**Overview movement visualization is not implemented in FIN-04E.** Finance Übersicht is the intended primary interpretive consumer of expected-movement visualization in a future pass; drill-through Übersicht → Zeitplanung for maintenance remains directional only.
+
+**Finance-wide visual intelligence backlog (post-04E-07R5):** reuse `buildFinanceForecastTimingMovementChartModel` / `FinanceForecastTimingMovementTimeline` on Finance Übersicht; add Budget vs Actual vs Forecast, forecast evolution, income/expense trends, reporting/P&L visuals, and liquidity (FIN-09) as separate primitives — none of these are delivered by FIN-04E.
+
+### Product Owner visual UAT (FIN-04E-07)
+
+Product Owner performed desktop visual UAT (PASS) for ZERO timing, PARTIAL timing, directional movement presentation, expected-event management, and final Zeitplanung hierarchy (Open Planning primary; large analytical chart not on Zeitplanung). Cursor agents did **not** perform manual browser UAT in **04E-08**.
 
 ---
 

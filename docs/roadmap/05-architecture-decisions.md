@@ -876,7 +876,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 
 ## ADR-037 — Forecast Timing & Expected Financial Events (FIN-04E)
 
-**Status:** Accepted — **FIN-04E-01 architecture** + **FIN-04E-02 persistence & reconciliation foundation**
+**Status:** Accepted — **FIN-04E programme COMPLETE** (04E-01–04E-08 on PR **#907** → **STAGE**; merge pending explicit Product Owner authorization)
 
 ### Context
 
@@ -909,8 +909,10 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 
 - FIN-04E-01 adds `finance-04e-expected-financial-event-architecture.test.ts` — guards terminology and boundaries.
 - FIN-04E-02 adds persistence migration, validation, reconciliation engine, and `finance-04e-02-*.test.ts`.
-- **FIN-04E-03 COMPLETE** — manual expected event CRUD + reconciliation application service (`docs/finance/SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`); FIN-04E-04+ read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
-- **FIN-05** remains next programme slice after **FIN-04E** unless Product Owner reprioritizes.
+- **FIN-04E-03 COMPLETE** — manual expected event CRUD + reconciliation application service (`docs/finance/SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`).
+- **FIN-04E-04–04E-07 COMPLETE** — read model, workspace UX, effective-dated scenarios, visual timing intelligence (PO visual UAT PASS for 04E-07 including R5).
+- **FIN-04E-08 COMPLETE** — hardening & release closure (`docs/finance/SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md`); **Overview movement visualization not implemented in FIN-04E**.
+- **FIN-05** is **next** programme slice — **not started** unless Product Owner reprioritizes.
 - [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) remains the FIN-04D-era principle doc; canonical architecture lives under FIN-04E.
 
 ---

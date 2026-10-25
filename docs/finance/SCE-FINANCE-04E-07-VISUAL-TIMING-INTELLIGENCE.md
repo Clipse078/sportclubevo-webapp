@@ -4,7 +4,7 @@
 | --- | --- |
 | **Package** | FIN-04E-07 |
 | **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
-| **Status** | **IN PROGRESS** — **07R5** refocuses Zeitplanung composition; Übersicht chart integration **backlog** |
+| **Status** | **COMPLETE** — **07R5** Zeitplanung composition PO UAT PASS; Übersicht chart integration **not implemented in FIN-04E** (future backlog) |
 
 ## Purpose
 

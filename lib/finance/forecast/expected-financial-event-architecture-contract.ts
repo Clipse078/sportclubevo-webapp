@@ -429,6 +429,30 @@ export const EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN = {
   "04E_08": "Hardening & release closure",
 } as const;
 
+/** FIN-04E-08 hardening & release closure — implementation complete; PO merge authorization pending. */
+export const EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE = {
+  fin04eProgrammeComplete: true,
+  /** Product Owner performed desktop visual UAT for FIN-04E-07 (including R5); not automated agent UAT. */
+  productOwnerVisualUatPassRecorded: true,
+  mergeAuthorizationPending: true,
+  prTargetBranch: "STAGE",
+  prNumber: 907,
+  noOverviewMovementChartInFin04e: true,
+  noLiquidityInFin04e: true,
+  noProfitAndLossInFin04e: true,
+  zeitplanungMovementChartMounted: false,
+  reusableMovementChartCapabilityPreserved: true,
+  stageMigrationVerifyScripts: [
+    "scripts/sce-finance-04e-02-stage-migration-verify.ts",
+    "scripts/sce-finance-04e-06-stage-migration-verify.ts",
+  ] as const,
+  designSystemExplicitRerunRequired: true,
+  permissionsExplicitRerunRequired: true,
+  tenantIsolationExplicitRerunRequired: true,
+  preserveStageUatExpectedEventFixtures: true,
+  nextProgrammeSlice: "FIN-05",
+} as const;
+
 /** Integration map anchors. */
 export const EXPECTED_FINANCIAL_EVENT_INTEGRATION_MAP = {
   currentForecast: "FIN-04A — annual authority",
