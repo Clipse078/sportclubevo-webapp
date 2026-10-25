@@ -174,12 +174,27 @@ async function loadCanonicalMeasures(
         })
       : null;
 
-  const actualGrain = input.actualGrain ?? "ANNUAL_FULL_YEAR";
+  const currentForecastVersion =
+    forecast?.currentVersionId != null
+      ? forecast.versions.find((v) => v.id === forecast.currentVersionId)
+      : null;
+  const forecastActualsThroughDate =
+    currentForecastVersion && "actualsThroughDate" in currentForecastVersion
+      ? (currentForecastVersion.actualsThroughDate as Date | null)
+      : null;
+
+  let actualGrain = input.actualGrain ?? (forecastActualsThroughDate ? "YTD" : "ANNUAL_FULL_YEAR");
+  let actualYtdCutoff = input.actualYtdCutoffDate ?? forecastActualsThroughDate;
+  if (actualGrain === "YTD" && !actualYtdCutoff) {
+    actualGrain = "ANNUAL_FULL_YEAR";
+    actualYtdCutoff = null;
+  }
+
   const actualMeasure = sourceVisibility.actual
     ? resolveActualMeasure({
         entries: actualEntries,
         grain: actualGrain,
-        ytdCutoffDate: input.actualYtdCutoffDate ?? null,
+        ytdCutoffDate: actualYtdCutoff,
       })
     : null;
 

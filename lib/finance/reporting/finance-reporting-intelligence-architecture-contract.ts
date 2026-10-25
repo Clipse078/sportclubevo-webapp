@@ -595,8 +595,66 @@ export const SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS = {
   integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
   noReactFinancialRecalculation: true,
   noNPlusOnePnl: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noNPlusOneReportingReadModel,
-  fin05dFinanceUbersichtNotImplemented: true,
+  fin05dFinanceUbersichtNotImplemented: false,
   fin05eDrilldownNotImplemented: true,
+} as const;
+
+/** FIN-05D implementation locks — Finance Übersicht decision intelligence. */
+export const SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS = {
+  overviewIsInterpretive: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.overviewIsInterpretive,
+  overviewIsNotSourceOfTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  overviewAnswersWhatMattersNow: true,
+  overviewUsesCanonicalManagementReadModels: true,
+  approvedBudgetAuthorityPreserved: true,
+  actualAuthorityPreserved: true,
+  currentForecastAuthorityPreserved: true,
+  automaticForecastIsNotCurrentForecast: true,
+  varianceFavourabilityIsSemantic:
+    SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.varianceFavourabilityIsSemantic,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  unauthorizedIsNotZero: SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS.unauthorizedIsNotZero,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  actualCutoffIsExplicit: true,
+  expectedEventsAreTemporalEvidence: true,
+  expectedMovementIsNotLiquidity: true,
+  timingCoverageIsNotForecastConfidence: true,
+  unscheduledEventsAreNotFakePlotted: true,
+  noGenericBiEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noGenericBiEngine,
+  noChartGallery: true,
+  noLlmNumericalEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noLlmForNumericalExplanation,
+  teamNotRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.teamNotRequired,
+  countryAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.countryAgnostic,
+  sportAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.sportAgnostic,
+  tenantIsolationRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.tenantIsolationRequired,
+  permissionAwareComposition: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.permissionAwareComposition,
+  noNPlusOneOverview: true,
+  integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
+  overviewUsesCompactEventTimeline: true,
+  /** FIN-04E R4 movement chart remains available for Zeitplanung — not Übersicht primary visual. */
+  movementChartReusesFin04eR4InTimingWorkspace: true,
+  /** Presentation-only; not a domain materiality threshold. */
+  noUniversalUntimedPercentMaterialityRule: true,
+  /** Running cash balance line/area reserved for FIN-09 liquidity semantics. */
+  lineChartReservedForContinuousBalanceFin09: true,
+} as const;
+
+/** FIN-09 design note (documentation lock — not implemented in FIN-05D). */
+export const SCE_FINANCE_09_LIQUIDITY_VISUAL_DESIGN_NOTE = {
+  primaryVisual: "RUNNING_CASH_BALANCE_LINE_OR_SUBTLE_AREA",
+  composition: "openingCashBalance + expectedCashInflows - expectedCashOutflows = projectedRunningBalance",
+  timeAxis: "X",
+  balanceAxis: "Y",
+  expectedEventTimelineIsNotLiquidity: true,
+  implementedInFin05d: false,
+} as const;
+
+export const FINANCE_05D_IMPLEMENTATION = {
+  decisionIntelligenceReadModel: "FinanceOverviewDecisionIntelligenceReadModel",
+  queryLoader: "loadFinanceOverviewDecisionIntelligenceReadModel",
+  workspaceRoute: "/dashboard/finance",
+  maxDriversPerSide: 3,
+  fin05dStatus: "COMPLETE_PO_UAT_PASS",
+  fin05eStatus: "NOT_STARTED",
 } as const;
 
 export const FINANCE_05C_IMPLEMENTATION = {
