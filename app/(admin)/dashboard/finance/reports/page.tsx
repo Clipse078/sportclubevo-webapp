@@ -12,6 +12,12 @@ import {
   loadFinanceManagementReportingDetailReadModel,
 } from "@/lib/finance/services/finance-management-reporting-query-service";
 import { prisma } from "@/lib/db/prisma";
+import {
+  canPublishFinancialReports,
+  canViewFinancePublicationHistory,
+} from "@/lib/finance/publishing/finance-publishing-authorization";
+import { loadFinancePublicationSummaryForYear } from "@/lib/finance/services/finance-publication-query-service";
+import { serializeFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +47,18 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
   const hasDeepLinkTarget =
     Boolean(initialAccountId) !== Boolean(initialGroupId) &&
     Boolean(initialAccountId || initialGroupId);
+
+  const canViewPublications = canViewFinancePublicationHistory(workspace.ctx);
+  const canPublishReport = canPublishFinancialReports(workspace.ctx);
+  const publicationSummary = canViewPublications
+    ? serializeFinancePublicationSummaryReadModel(
+        await loadFinancePublicationSummaryForYear(
+          prisma,
+          workspace.ctx,
+          params.yearId ?? model.financeYearId,
+        ),
+      )
+    : null;
 
   const initialDetail = hasDeepLinkTarget
     ? serializeFinanceManagementReportingDetailReadModel(
@@ -92,6 +110,63 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
           model={serialized}
           formattingLocale={workspace.formattingLocale}
           canConfigureStructure={workspace.canStructure}
+          canPublishReport={canPublishReport}
+          publicationSummary={publicationSummary}
+          publicationLabels={
+            canViewPublications || canPublishReport
+              ? {
+            publishAction: t("reporting.publication.publishAction"),
+            dialogTitle: t("reporting.publication.dialogTitle"),
+            dialogDescription: t("reporting.publication.dialogDescription"),
+            dialogImmutability: t("reporting.publication.dialogImmutability"),
+            dialogContentLabel: t("reporting.publication.dialogContentLabel"),
+            dialogContentValue: t("reporting.publication.dialogContentValue"),
+            dialogPeriodLabel: t("reporting.publication.dialogPeriodLabel"),
+            confirmPublish: t("reporting.publication.confirmPublish"),
+            cancel: t("reporting.publication.cancel"),
+            publishing: t("reporting.publication.publishing"),
+            successTitle: t("reporting.publication.successTitle"),
+            successBody: t("reporting.publication.successBody"),
+            viewLatest: t("reporting.publication.viewLatest"),
+            notPublishable: t("reporting.publication.notPublishable"),
+            forbidden: t("reporting.publication.forbidden"),
+            publishFailed: t("reporting.publication.publishFailed"),
+            versionLabel: t("reporting.publication.versionLabel"),
+            publishedAtLabel: t("reporting.publication.publishedAtLabel"),
+            inspectionTitle: t("reporting.publication.inspectionTitle"),
+            inspectionEmpty: t("reporting.publication.inspectionEmpty"),
+            close: t("reporting.publication.close"),
+          }
+              : undefined
+          }
+          publicationInspectionLabels={
+            canViewPublications || canPublishReport
+              ? {
+                  sheetTitle: t("reporting.publication.inspectionSheetTitle"),
+                  frozenNotice: t("reporting.publication.frozenNotice"),
+                  versionHeading: t("reporting.publication.versionHeading"),
+                  versionLabel: t("reporting.publication.versionLabel"),
+                  publishedAtLabel: t("reporting.publication.publishedAtLabel"),
+                  contentTypeLabel: t("reporting.publication.dialogContentValue"),
+                  statusPublished: t("reporting.publication.statusPublished"),
+                  statusSuperseded: t("reporting.publication.statusSuperseded"),
+                  close: t("reporting.publication.close"),
+                }
+              : undefined
+          }
+          publicationHistoryLabels={
+            canViewPublications
+              ? {
+                  historyAction: t("reporting.publication.historyAction"),
+                  historyTitle: t("reporting.publication.historyTitle"),
+                  openVersion: t("reporting.publication.openVersion"),
+                  versionLabel: t("reporting.publication.versionLabel"),
+                  publishedAtLabel: t("reporting.publication.publishedAtLabel"),
+                  statusPublished: t("reporting.publication.statusPublished"),
+                  statusSuperseded: t("reporting.publication.statusSuperseded"),
+                }
+              : undefined
+          }
           initialAccountId={initialAccountId && !initialGroupId ? initialAccountId : null}
           initialGroupId={initialGroupId && !initialAccountId ? initialGroupId : null}
           initialDetail={initialDetail}

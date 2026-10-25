@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
-| **Package** | **FIN-06A** — Publishing & Sharing Architecture Foundation |
-| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (closure PR **#916** → **STAGE**); **FIN-06 programme IN PROGRESS**; **FIN-06B NEXT / NOT STARTED** |
+| **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
+| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R4 PO VISUAL UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PASS**; **FIN-06B-R6 VERSION 2 UAT PASS**; **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C NEXT / DEFINED / NOT STARTED**; **FIN-06 programme IN PROGRESS** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -25,7 +25,15 @@ COMPLEXITY SHOULD EXIST IN THE SYSTEM, NOT IN THE USER'S HEAD.
 SIMPLE UNDERSTANDING. SHALLOW NAVIGATION. DEEP CAPABILITY.
 ```
 
-**LOCK:** Financial data, live reports, shares, and publications are **distinct concepts**. Do not collapse them into one generic “report” entity.
+**LOCK:** Financial **data**, **live reports**, **publications**, **shares**, and **distributed artifacts** are **distinct concepts**. Do not collapse them into one generic “report” entity.
+
+A **publication** is a **versioned, immutable, auditable snapshot** of an approved reporting state.
+
+**Publishing does not mean:** merely opening another copy of the live Erfolgsrechnung; exporting the current report without preserving its state; or rebuilding an old publication from current Finance data.
+
+**Publishing means:** `LIVE REPORT → PUBLISH → IMMUTABLE OFFICIAL VERSION`.
+
+FIN-06B establishes that immutable official-version foundation. The complete user-facing outcome (`LIVE REPORT → PUBLISH → OFFICIAL VERSION → DISTRIBUTE`) is intentionally completed in **FIN-06C** — publication without useful distribution/export remains infrastructure, not the full product value.
 
 ## Conceptual model
 
@@ -122,8 +130,8 @@ Existing Finance terminology already distinguishes:
 | --- | --- | --- |
 | **Berichte** | Financial reporting / analysis | UNDERSTAND / ANALYSE (FIN-05 live workspace) |
 | **Freigaben** | Approvals / financial decision approvals | APPROVE / GOVERN DECISIONS — **not** report sharing |
-| **Teilen** | (future) Controlled distribution / live sharing | FIN-06C+ — **not exposed in FIN-06A** |
-| **Veröffentlichungen** | (future) Formal versioned publication | FIN-06B+ — **not exposed in FIN-06A** |
+| **Teilen** | (future) Distribution / controlled sharing of **published** artifacts | **FIN-06C** — not FIN-06B |
+| **Veröffentlichungen** | Formal versioned publication history | **FIN-06B** (inspection); distribution actions **FIN-06C** |
 
 Do **not** casually reuse **Freigaben** to mean report sharing. This is an information-architecture guard for later FIN-06 packages — FIN-06A did **not** redesign navigation or expose Teilen / Veröffentlichungen product UI.
 
@@ -191,28 +199,120 @@ Surfaces reviewed: Finance → Einrichtung; Finance capability configuration; Fi
 
 Manual browser UAT by engineering agents is **not** part of closure — Product Owner owns visual sign-off.
 
-## FIN-06B handoff contract (next package — not implemented in 06A)
+## FIN-06B — publication snapshot & versioning (implemented)
 
-FIN-06B must prove that an actual publication can:
+**FIN-06B-R3 (2026-10-25):** Designated STAGE required migration
+`20261025140000_sce_finance_06a_publishing_sharing_foundation` before Preview publication
+persistence. R3 adds bounded German publication action errors, explicit success/inspection UX,
+and automated end-to-end publication execution coverage.
 
-1. Capture a canonical semantic financial snapshot (`sce.finance.publication.snapshot.v1`).
-2. Receive an explicit publication version.
-3. Preserve what was published; remain unchanged when live Finance subsequently changes.
-4. Create a **new** version rather than mutate the old publication.
-5. Retain source/reference/audit metadata; remain tenant isolated.
-6. Enforce `finance.reporting.publish` (server-authoritative).
-7. Avoid duplicating FIN-05 calculation authority.
-8. Support efficient repeated reads of published state (**prepare once, serve many**).
+**FIN-06B-R4 — published report inspection & discoverability (PO visual UAT = PASS, 2026-10-25):**
+Product Owner verified on designated STAGE / PR **#917** Preview: **Veröffentlichungen** on Finance
+→ Berichte; Version **1** discoverable and reopenable; inspection shows frozen Management P&L (not
+metadata-only). Version 1 baseline (**FY 2026**, Management P&L / Erfolgsrechnung): Expected /
+Forecast result **161'533 CHF**; Approved Budget **150'000 CHF**; Actual **7'776 CHF**; Forecast vs
+Budget **+11'533 CHF** favorable. Representative stored lines (historical — do not mutate Version
+1): Mitgliedsbeiträge Forecast **212'694**; total income Forecast **262'694**; total expenses
+Forecast **101'161**; Personal / Betrieb / Weitere Einnahmen / Beispiel X as captured at
+publication. R4 engineering: presentation read model from `snapshotPayloadJson` only; no live
+FIN-05 rebuild on historical reads.
 
-FIN-06A closure does **not** implement this workflow.
+**FIN-06B-R5 — immutability checkpoint (PO visual UAT = PASS, 2026-10-25):** After controlled STAGE
+mutation of **Current Forecast** (Mitgliedsbeiträge **212'694 → 213'694 CHF**), Product Owner
+confirmed Version **1** still shows **161'533 / +11'533 / 212'694** while live reporting shows
+**162'533 / +12'533 / 213'694**. Version 1 did **not** follow the live mutation. Guarded operator
+script: `scripts/sce-finance-06b-r5-stage-immutability-uat.ts`. Automated proof:
+`lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
+
+**FIN-06B-R6 — Version 2 UAT (PO visual UAT = PASS, 2026-10-25):** Product Owner created
+**Version 2** through **Finance → Berichte → Veröffentlichen** (UI: *Veröffentlichung erstellt* /
+*Version 2 ist als feste Momentaufnahme verfügbar*). Version 2 captures live state B (**162'533** /
+**+12'533** / **213'694** Mitgliedsbeiträge; total income **263'694**; total expenses **101'161**).
+Version **1** remains state A (**161'533** / **+11'533** / **212'694**). Instructions:
+`docs/finance/SCE-FINANCE-06B-R6-PO-VERSION-2-UAT.md`. Prep script:
+`scripts/sce-finance-06b-r6-stage-version2-uat-prep.ts`. Versioning contract:
+`lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`.
+
+**FIN-06B-R7 — final closure (PO visual UAT = PASS, 2026-10-25):** Product Owner **Michael**
+completed the full A→B→V2 immutability walkthrough. Closure evidence:
+`docs/finance/SCE-FINANCE-06B-R7-FINAL-CLOSURE.md`. STAGE inspect-only verification:
+`scripts/sce-finance-06b-r7-stage-publication-closure-verify.ts`. Contract:
+`FINANCE_06B_R7_RELEASE_CLOSURE` in `finance-publishing-sharing-architecture-contract.ts`.
+
+| FIN-06B final gate | Result |
+| --- | --- |
+| **FIN-06B FINAL PRODUCT OWNER VISUAL UAT** | **PASS** |
+| **FIN-06B PUBLICATION IMMUTABILITY** | **PASS** |
+| **FIN-06B VERSIONING** | **PASS** |
+| **PR #917** | **READY TO MERGE** (when automated release gates green) |
+
+```text
+FIN-06B FINAL PRODUCT OWNER VISUAL UAT = PASS
+FIN-06B PUBLICATION IMMUTABILITY = PASS
+FIN-06B VERSIONING = PASS
+```
+
+First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
+
+| Concern | Implementation |
+| --- | --- |
+| Snapshot schema | `sce.finance.publication.snapshot.v1` — `build-finance-publication-snapshot-v1.ts` |
+| Source authority | `loadFinanceManagementPnlReadModel` (FIN-05) — **no duplicated P&L engine** |
+| Capture / persist | `publishFinanceManagementPnlSnapshot` — `finance-publication-service.ts` |
+| Versioning | `FinancePublication` lineage + monotonic `FinancePublicationVersion.versionNumber` per publication; prior `PUBLISHED` → `SUPERSEDED` |
+| Immutability | Published `snapshotPayloadJson` is read-only; corrections require a new version |
+| Read path | `loadFinancePublicationVersionSnapshot` serves **stored JSON only** — no live FIN-05 re-run |
+| Presentation | `buildFinancePublishedManagementPnlInspectionReadModel` — snapshot → read-only UI (R4) |
+| Discoverability | **Veröffentlichungen** on reports workspace when history exists (R4) |
+| Permissions | Publish: `finance.reporting.publish`; inspect history: `finance.view` + `finance.publication.view`; VIEW/SHARE ≠ PUBLISH |
+| Tenant isolation | All queries scoped by `tenantId`; foreign IDs → safe not-found |
+| Audit metadata | `publishedByUserId`, `publishedAt`, `versionNumber`, `sourceMetadataJson`, `snapshotSchemaVersion` |
+| UI slice | `/dashboard/finance/reports` — **Veröffentlichen** + **Veröffentlichungen** + inspection sheet (no sharing/export/approval) |
+
+Automated immutability proof: `lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts`.
+R4 guards: `lib/finance/__tests__/finance-06b-r4-publication-inspection.test.ts`.
+R5 acceptance flow: `lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
+R6 versioning contract: `lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`.
+
+### FIN-06C — published artifacts & distribution (defined / not started)
+
+**Primary product outcome:** A published financial report becomes an **official immutable artifact that can be distributed**.
+
+```text
+LIVE REPORT → PUBLISH → OFFICIAL VERSION → DISTRIBUTE
+```
+
+Publication without distribution is **infrastructure**, not the complete user outcome. The user should understand: *“I have made this report official and can now send it.”* SCE owns snapshotting, immutability, version numbering, historical preservation, permissions, artifact generation, and distribution integrity (**complexity in the system, not in the user's head**).
+
+| FIN-06C slice | Intent |
+| --- | --- |
+| **PDF herunterladen** | First-class requirement — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
+| **Controlled sharing** | Of a **specific publication version** — not live-report sharing confused with publication |
+| **Email / distribution** | Of a **specific publication version** |
+
+**PDF architecture lock:** `Publication Version → Snapshot → Publication Presentation → PDF`. **Never** `Publication Version → Current FIN-05 Read Model → PDF`. Semantic invariance: `PDF(V1)` today equals `PDF(V1)` after live finance changes (byte identity not required when metadata differs).
+
+**Permission boundaries (unchanged):** `finance.view`, `finance.publication.view`, `finance.reporting.publish`, `finance.reporting.share`, `finance.share.manage` — VIEW ≠ SHARE ≠ PUBLISH; publish does not imply unrestricted external sharing; sharing does not mutate the publication.
+
+**UX direction (FIN-06C, not 06B):** Primary **Veröffentlichen**; quieter **Veröffentlichte Berichte (N)**; in-publication actions **PDF herunterladen**, **Teilen**, **Per E-Mail senden**; history status **Aktuell** / **Ersetzt**. Do not expose `snapshotPayloadJson`, schema version, or database IDs.
+
+**Artifact presentation:** Document-like identity (organisation, title, period, version, date, currency); content hierarchy CONCLUSION → KEY SUMMARY → MANAGEMENT P&L → context; no investigation/edit controls, app navigation, or internal IDs.
+
+**Out of scope for FIN-06C:** generic document management, email marketing, FIN-08 invoicing, FIN-11 statutory output, generic BI.
+
+Contract constants: `FINANCE_06C_*` in `finance-publishing-sharing-architecture-contract.ts`. Tests: `finance-06c-product-handoff-architecture.test.ts`.
+
+### FIN-06B scope lock (R6)
+
+FIN-06B remains: **publication snapshot + versioning + historical inspection + discoverability**. FIN-06B does **not** implement PDF, email, share links, recipient management, public access, download center, or FIN-09/FIN-11 surfaces.
 
 ## FIN-06 package plan (remainder)
 
 | Package | Focus | Status |
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
-| **06B** | Publication snapshot & versioning | **NEXT / NOT STARTED** |
-| **06C** | Controlled live sharing | NOT STARTED |
+| **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
+| **06C** | Published artifacts & distribution | **DEFINED / NOT STARTED** |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
@@ -250,9 +350,12 @@ Run on feature branch:
 ## Result
 
 ```text
-FIN-06A — FINANCIAL PUBLISHING & SHARING ARCHITECTURE FOUNDATION
-COMPLETE · PRODUCT OWNER UAT PASS · MERGED TO STAGE (PR #916)
-
-FIN-06 — IN PROGRESS
-FIN-06B — NEXT / NOT STARTED
+FIN-06A — COMPLETE · PO APPROVED · MERGED TO STAGE (PR #916)
+FIN-06B — COMPLETE · PO APPROVED · PR #917 → STAGE
+FIN-06B-R4 — PO VISUAL UAT PASS
+FIN-06B-R5 — IMMUTABILITY CHECKPOINT PASS
+FIN-06B-R6 — VERSION 2 UAT PASS
+FIN-06B-R7 — FINAL CLOSURE PASS
+FIN-06 — IN PROGRESS (FIN-06C not started)
+FIN-06C — NEXT · DEFINED · NOT STARTED
 ```
