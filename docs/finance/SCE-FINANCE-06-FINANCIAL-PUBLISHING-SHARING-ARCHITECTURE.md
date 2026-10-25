@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (PR **#916** → **STAGE**); **FIN-06B IMPLEMENTED / PO UAT PENDING**; **FIN-06C NOT STARTED** |
+| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (PR **#916** → **STAGE**); **FIN-06B-R4 PO UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PREPARED / PO UAT REQUIRED**; **FIN-06B PO UAT PENDING**; **FIN-06C NOT STARTED** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -198,14 +198,24 @@ Manual browser UAT by engineering agents is **not** part of closure — Product 
 persistence. R3 adds bounded German publication action errors, explicit success/inspection UX,
 and automated end-to-end publication execution coverage.
 
-**FIN-06B-R4 — published report inspection & discoverability:** Persistence and Version 1
-capture remain authoritative. R4 adds a **presentation read model** built exclusively from
-validated `snapshotPayloadJson` (`build-finance-published-management-pnl-read-model.ts`) and a
-large read-only inspection sheet (Management summary + frozen P&L). Historical inspection **must
-not** call `loadFinanceManagementPnlReadModel`. `/dashboard/finance/reports` exposes a compact
-**Veröffentlichungen** affordance when versions exist (newest first; `PUBLISHED` / `SUPERSEDED`
-labels). PO UAT: inspect existing Version 1 on STAGE without re-seeding. Status remains **PO UAT
-PENDING**.
+**FIN-06B-R4 — published report inspection & discoverability (PO visual UAT = PASS, 2026-10-25):**
+Product Owner verified on designated STAGE / PR **#917** Preview: **Veröffentlichungen** on Finance
+→ Berichte; Version **1** discoverable and reopenable; inspection shows frozen Management P&L (not
+metadata-only). Version 1 baseline (**FY 2026**, Management P&L / Erfolgsrechnung): Expected /
+Forecast result **161'533 CHF**; Approved Budget **150'000 CHF**; Actual **7'776 CHF**; Forecast vs
+Budget **+11'533 CHF** favorable. Representative stored lines (historical — do not mutate Version
+1): Mitgliedsbeiträge Forecast **212'694**; total income Forecast **262'694**; total expenses
+Forecast **101'161**; Personal / Betrieb / Weitere Einnahmen / Beispiel X as captured at
+publication. R4 engineering: presentation read model from `snapshotPayloadJson` only; no live
+FIN-05 rebuild on historical reads.
+
+**FIN-06B-R5 — immutability checkpoint (engineering prepared / PO UAT required):** Controlled STAGE
+mutation of **Current Forecast** only (Mitgliedsbeiträge **212'694 → 213'694 CHF** via canonical
+`upsertForecastLine`) so live reporting shows **162'533 / +12'533** while Version **1** remains
+**161'533 / +11'533**. Version **2** must be created by Product Owner through the real publish UI
+after visual confirmation. Guarded operator script:
+`scripts/sce-finance-06b-r5-stage-immutability-uat.ts`. Automated proof:
+`lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
 
 First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
@@ -226,6 +236,7 @@ First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year 
 
 Automated immutability proof: `lib/finance/__tests__/finance-06b-publication-snapshot-versioning.test.ts`.
 R4 guards: `lib/finance/__tests__/finance-06b-r4-publication-inspection.test.ts`.
+R5 acceptance flow: `lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
 
 ### FIN-06C handoff (not started)
 
