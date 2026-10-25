@@ -1151,6 +1151,14 @@
         "historyAction": "Veröffentlichungen",
         "historyTitle": "Veröffentlichungen",
         "openVersion": "Ansehen",
+        "downloadPdf": "PDF herunterladen",
+        "pdfDownloadForbidden": "Sie haben keinen Zugriff auf diese Veröffentlichung.",
+        "pdfDownloadNotFound": "Veröffentlichung nicht gefunden.",
+        "pdfDownloadGenerationFailed": "PDF konnte nicht erstellt werden.",
+        "pdfGeneratedAtLabel": "PDF erstellt",
+        "pdfPublicationReferenceLabel": "Veröffentlichung",
+        "pdfSportClubEvoMark": "Finanzveröffentlichung — SportClubEvo",
+        "pdfPageLabel": "Seite",
         "close": "Schließen"
       },
       "investigation": {

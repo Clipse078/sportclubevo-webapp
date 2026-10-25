@@ -688,6 +688,14 @@
         "historyAction": "Publications",
         "historyTitle": "Publications",
         "openVersion": "View",
+        "downloadPdf": "Download PDF",
+        "pdfDownloadForbidden": "You do not have access to this publication.",
+        "pdfDownloadNotFound": "Publication not found.",
+        "pdfDownloadGenerationFailed": "PDF could not be generated.",
+        "pdfGeneratedAtLabel": "PDF generated",
+        "pdfPublicationReferenceLabel": "Publication",
+        "pdfSportClubEvoMark": "Financial publication — SportClubEvo",
+        "pdfPageLabel": "Page",
         "close": "Close"
       },
       "investigation": {

@@ -3,6 +3,7 @@
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
+import { FinancePublicationPdfDownloadButton } from "@/components/admin/finance/reporting/FinancePublicationPdfDownloadButton";
 import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import type { ComponentProps } from "react";
 
@@ -15,6 +16,7 @@ export type FinancePublicationInspectionLabels = {
   contentTypeLabel: string;
   statusPublished: string;
   statusSuperseded: string;
+  downloadPdf: string;
   close: string;
 };
 
@@ -132,6 +134,13 @@ export function FinancePublicationInspectionSheet({
                 </p>
               ) : null}
               <p className="max-w-prose text-sm text-[var(--muted)]">{labels.frozenNotice}</p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <FinancePublicationPdfDownloadButton
+                  publicationId={identity!.publicationId}
+                  versionNumber={identity!.publicationVersion}
+                  label={labels.downloadPdf}
+                />
+              </div>
             </header>
 
             <div data-finance-publication-inspection-pnl>

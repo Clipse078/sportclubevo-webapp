@@ -356,7 +356,7 @@ export const FINANCE_06C_PRODUCT_MODEL = {
     "artifactGeneration",
     "distributionIntegrity",
   ] as const,
-  fin06cStatus: "DEFINED_NOT_STARTED",
+  fin06cStatus: "IN_PROGRESS",
 } as const;
 
 /** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */
@@ -522,5 +522,6 @@ export const FINANCE_06B_IMPLEMENTATION = {
   fin06bR6Version2PoUat: "PASS",
   fin06bR7FinalClosure: "PASS",
   fin06bR6Status: "VERSION_2_PO_UAT_PASS",
-  fin06cStatus: "DEFINED_NOT_STARTED",
+  fin06cStatus: "IN_PROGRESS",
+  fin06cR1Status: "IMPLEMENTED_PO_UAT_PENDING",
 } as const;

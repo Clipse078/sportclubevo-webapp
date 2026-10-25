@@ -150,6 +150,7 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   contentTypeLabel: t("reporting.publication.dialogContentValue"),
                   statusPublished: t("reporting.publication.statusPublished"),
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
+                  downloadPdf: t("reporting.publication.downloadPdf"),
                   close: t("reporting.publication.close"),
                 }
               : undefined
@@ -164,6 +165,7 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   publishedAtLabel: t("reporting.publication.publishedAtLabel"),
                   statusPublished: t("reporting.publication.statusPublished"),
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
+                  downloadPdf: t("reporting.publication.downloadPdf"),
                 }
               : undefined
           }

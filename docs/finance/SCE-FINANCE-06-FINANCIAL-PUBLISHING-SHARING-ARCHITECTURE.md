@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R4 PO VISUAL UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PASS**; **FIN-06B-R6 VERSION 2 UAT PASS**; **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C NEXT / DEFINED / NOT STARTED**; **FIN-06 programme IN PROGRESS** |
+| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C-R1 IMPLEMENTED / PO UAT PENDING**; **FIN-06C IN PROGRESS**; **FIN-06 programme IN PROGRESS** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -274,7 +274,11 @@ R4 guards: `lib/finance/__tests__/finance-06b-r4-publication-inspection.test.ts`
 R5 acceptance flow: `lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
 R6 versioning contract: `lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`.
 
-### FIN-06C — published artifacts & distribution (defined / not started)
+### FIN-06C — published artifacts & distribution (in progress)
+
+**FIN-06C-R1 (PDF artifact):** **IMPLEMENTED / PO UAT PENDING** — on-demand PDF from immutable snapshot via `finance-publication-artifact-service.ts` and `/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf`. No artifact persistence row in R1; pipeline remains `Publication Version → snapshotPayloadJson → Publication Presentation → PDF`. See [`SCE-FINANCE-06C-R1-PDF-ARTIFACT.md`](SCE-FINANCE-06C-R1-PDF-ARTIFACT.md).
+
+### FIN-06C product direction (remaining slices)
 
 **Primary product outcome:** A published financial report becomes an **official immutable artifact that can be distributed**.
 
@@ -312,7 +316,7 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
 | **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
-| **06C** | Published artifacts & distribution | **DEFINED / NOT STARTED** |
+| **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented / PO UAT pending) |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
@@ -356,6 +360,7 @@ FIN-06B-R4 — PO VISUAL UAT PASS
 FIN-06B-R5 — IMMUTABILITY CHECKPOINT PASS
 FIN-06B-R6 — VERSION 2 UAT PASS
 FIN-06B-R7 — FINAL CLOSURE PASS
-FIN-06 — IN PROGRESS (FIN-06C not started)
-FIN-06C — NEXT · DEFINED · NOT STARTED
+FIN-06 — IN PROGRESS
+FIN-06C-R1 — IMPLEMENTED · PO UAT PENDING (PDF download)
+FIN-06C — IN PROGRESS
 ```

@@ -31,7 +31,7 @@ describe("FIN-06B-R7 release closure contract", () => {
     expect(FINANCE_06A_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bR6Version2PoUat).toBe("PASS");
-    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("DEFINED_NOT_STARTED");
+    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
   });
 
   it("preserves distinct financial data, report, publication, and share concepts", () => {
@@ -54,7 +54,7 @@ describe("FIN-06B-R7 documentation consistency", () => {
     expect(architecture).toContain("FIN-06B FINAL PRODUCT OWNER VISUAL UAT = PASS");
     expect(architecture).toContain("COMPLETE / PO APPROVED");
     expect(architecture).toContain("FIN-06C");
-    expect(architecture).toContain("DEFINED / NOT STARTED");
+    expect(architecture).toMatch(/FIN-06C.*IN PROGRESS/i);
     expect(architecture).not.toContain("FIN-06B PO UAT PENDING");
   });
 
