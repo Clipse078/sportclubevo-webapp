@@ -1,8 +1,17 @@
 /**
- * FIN-05D-R1 — compact executive expected-event timeline (presentation only).
+ * FIN-05D-R2 — compact executive expected-event timeline (presentation only).
  * Discrete expected movements over real time — not liquidity / running cash balance (FIN-09).
  */
 
+import {
+  assignFinanceOverviewEventTimelineLanes,
+  type FinanceOverviewEventTimelineLaneLayout,
+} from "@/lib/finance/presentation/assign-finance-overview-event-timeline-lanes";
+import {
+  buildFinanceOverviewEventTimelineAxis,
+  type FinanceOverviewEventTimelineAxisTick,
+  type FinanceOverviewEventTimelineYearBand,
+} from "@/lib/finance/presentation/finance-overview-event-timeline-axis";
 import {
   timelinePositionFraction,
   timelineSpanFractions,
@@ -21,27 +30,25 @@ export type FinanceOverviewEventTimelineEntry = {
   direction: "INCOME" | "EXPENSE";
   amountMinor: number;
   accountName: string;
+  materialityFraction: number;
   /** Normalized 0–1 within the visual window. */
   xStartFraction: number;
   xEndFraction: number;
   isAfterFinanceYearEnd: boolean;
 };
 
-export type FinanceOverviewEventTimelineAxisTick = {
-  dateIso: string;
-  xFraction: number;
-  /** Short month label for axis (locale applied in UI). */
-  monthIndex: number;
-  year: number;
-};
+export type { FinanceOverviewEventTimelineAxisTick, FinanceOverviewEventTimelineYearBand };
 
 export type FinanceOverviewEventTimelineModel = {
   windowStartDateIso: string;
   windowEndDateIso: string;
+  financeYearStartDateIso: string | null;
   financeYearEndDateIso: string | null;
   financeYearEndFraction: number | null;
   entries: FinanceOverviewEventTimelineEntry[];
   axisTicks: FinanceOverviewEventTimelineAxisTick[];
+  yearBands: FinanceOverviewEventTimelineYearBand[];
+  laneLayout: FinanceOverviewEventTimelineLaneLayout;
 };
 
 function utcDayMs(iso: string): number {
@@ -50,46 +57,6 @@ function utcDayMs(iso: string): number {
 
 function markerSortKey(marker: FinanceTimingVisualEventMarker): string {
   return marker.interval.startDateIso;
-}
-
-function buildAxisTicks(input: {
-  windowStartDateIso: string;
-  windowEndDateIso: string;
-  maxTicks: number;
-}): FinanceOverviewEventTimelineAxisTick[] {
-  const startMs = utcDayMs(input.windowStartDateIso);
-  const endMs = utcDayMs(input.windowEndDateIso);
-  const spanDays = Math.max(1, Math.round((endMs - startMs) / 86_400_000));
-  const target = Math.min(input.maxTicks, Math.max(3, Math.ceil(spanDays / 30)));
-
-  const ticks: FinanceOverviewEventTimelineAxisTick[] = [];
-  const start = new Date(startMs);
-  let cursor = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1);
-  const end = endMs;
-
-  while (cursor <= end && ticks.length < target + 6) {
-    const iso = new Date(cursor).toISOString().slice(0, 10);
-    const fraction = timelinePositionFraction({
-      dateIso: iso,
-      windowStartDateIso: input.windowStartDateIso,
-      windowEndDateIso: input.windowEndDateIso,
-    });
-    const d = new Date(cursor);
-    ticks.push({
-      dateIso: iso,
-      xFraction: fraction,
-      monthIndex: d.getUTCMonth(),
-      year: d.getUTCFullYear(),
-    });
-    cursor = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
-  }
-
-  if (ticks.length <= target) {
-    return ticks;
-  }
-
-  const step = Math.ceil(ticks.length / target);
-  return ticks.filter((_, index) => index % step === 0 || index === ticks.length - 1);
 }
 
 export function buildFinanceOverviewEventTimelineModel(
@@ -121,34 +88,39 @@ export function buildFinanceOverviewEventTimelineModel(
       direction: marker.accountType,
       amountMinor: marker.expectedAmountMinor,
       accountName: marker.accountName,
+      materialityFraction: marker.materialityFraction,
       xStartFraction: span.left,
       xEndFraction: Math.min(1, span.left + span.width),
       isAfterFinanceYearEnd: marker.isAfterFinanceYearEnd,
     };
   });
 
-  const financeYearEndDateIso = window.financeYearEndDateIso;
-  const financeYearEndFraction =
-    financeYearEndDateIso &&
-    financeYearEndDateIso >= windowStartDateIso &&
-    financeYearEndDateIso <= windowEndDateIso
-      ? timelinePositionFraction({
-          dateIso: financeYearEndDateIso,
-          windowStartDateIso,
-          windowEndDateIso,
-        })
-      : null;
+  const axis = buildFinanceOverviewEventTimelineAxis({
+    windowStartDateIso,
+    windowEndDateIso,
+    financeYearStartDateIso: window.financeYearStartDateIso,
+    financeYearEndDateIso: window.financeYearEndDateIso,
+  });
+
+  const materialityByEventId: Record<string, number> = {};
+  for (const marker of visual.markers) {
+    materialityByEventId[marker.eventId] = marker.materialityFraction;
+  }
+
+  const laneLayout = assignFinanceOverviewEventTimelineLanes({
+    entries,
+    materialityByEventId,
+  });
 
   return {
     windowStartDateIso,
     windowEndDateIso,
-    financeYearEndDateIso,
-    financeYearEndFraction,
+    financeYearStartDateIso: window.financeYearStartDateIso,
+    financeYearEndDateIso: window.financeYearEndDateIso,
+    financeYearEndFraction: axis.financeYearEndFraction,
     entries,
-    axisTicks: buildAxisTicks({
-      windowStartDateIso,
-      windowEndDateIso,
-      maxTicks: 6,
-    }),
+    axisTicks: axis.ticks,
+    yearBands: axis.yearBands,
+    laneLayout,
   };
 }

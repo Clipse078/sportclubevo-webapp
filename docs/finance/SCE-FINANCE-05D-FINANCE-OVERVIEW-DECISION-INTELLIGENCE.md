@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Status** | **IMPLEMENTED / AWAITING PO REVIEW** (R1 visual refinement) |
+| **Status** | **IMPLEMENTED / AWAITING PO REVIEW** (R2 executive density & timeline polish) |
 | **Branch** | `cursor/sce-finance-05d-overview-decision-intelligence-4dba` |
 | **Depends on** | FIN-05B read models, FIN-05C presentation helpers, FIN-04E timing semantics |
 
@@ -10,7 +10,7 @@
 
 - Raw favourability translation key on Übersicht — fixed (`actuals.favorability*`).
 - Oversized FIN-04E movement chart on Übersicht — replaced with compact **expected financial event timeline**.
-- Axis label collisions / viewport dominance — timeline height capped (~280px), responsive tick thinning, mobile list fallback.
+- Axis label collisions / viewport dominance — R2: ~200px canvas, edge-aligned month axis, year bands, collision-aware lanes (max 2), mobile list fallback.
 - Duplicate Zeitplanung CTAs — single primary route (attention or untimed footer / zero-timing).
 - Hard-coded **≥30%** untimed “materiality” rule — **removed** (presentation uses deterministic partial-timing state only; not domain truth).
 
@@ -43,13 +43,26 @@ See `SCE_FINANCE_09_LIQUIDITY_VISUAL_DESIGN_NOTE` in `finance-reporting-intellig
 
 Unchanged — FIN-05B / FIN-03 / FIN-04E consumers only; timeline is **presentation**.
 
-## Event timeline semantics (R1)
+## Overview vs detail (design lock)
+
+- **Übersicht** — essential monitoring / decision information only.
+- **Detail** — Berichte, Zeitplanung, and other workspaces for drill-down.
+
+## Event timeline semantics (R1 — preserved in R2)
 
 - **EXACT_DATE** — point marker; business date preserved.
 - **MONTH** — bounded interval for that month (not fake exact day).
 - **DATE_RANGE** — bounded interval for real range.
 - **UNSCHEDULED** — never plotted on axis; shown in footer strip with income/expense breakdown when available.
 - Amount encoding: textual primary; markers use restrained glyphs (not area ∝ amount).
+
+## R2 presentation (timeline)
+
+- Restrained month axis; calendar/fiscal year context only where the year changes (configured finance year boundary when visible).
+- Quiet fiscal-year vertical rule — no competing “Finanzjahresende” label in event lanes.
+- Deterministic collision layout: max **two** event lanes; optional `+N weitere` density affordance.
+- Bounded interval grammar for **MONTH** and **DATE_RANGE** (endpoint bars, not midpoint fake dates).
+- Compact section header; semantic “not balance” via info affordance + SR text; untimed footer shows income/expense breakdown without repeating the attention-strip total.
 
 ## Responsive behaviour
 
@@ -59,4 +72,4 @@ Unchanged — FIN-05B / FIN-03 / FIN-04E consumers only; timeline is **presentat
 ## Next
 
 - **FIN-05E** — Reporting workspace drill-down (not started)
-- PO visual UAT on Übersicht R1
+- PO visual UAT on Übersicht R2

@@ -11,6 +11,7 @@ import {
   financeVarianceComparisonSemanticTextClass,
   financeVarianceFavorabilityLabelKey,
 } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
+import { formatFinanceDirectionalMovementMinor } from "@/lib/finance/presentation/finance-directional-movement-presentation";
 import { formatFinanceManagementMoneyMinor } from "@/lib/finance/presentation/finance-money-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import type { SerializedFinanceOverviewDecisionIntelligenceReadModel } from "@/lib/finance/presentation/serialize-finance-overview-decision-intelligence-read-model";
@@ -85,7 +86,7 @@ type FinanceOverviewPanelLabels = {
   movementSemanticClarification: string;
   timelineMonthPrecision: string;
   timelineRangePrecision: string;
-  timelineFinanceYearEnd: string;
+  timelineMoreEvents: string;
 };
 
 type FinanceOverviewPanelProps = {
@@ -323,7 +324,7 @@ export function FinanceOverviewPanel({
       management.availability === "PARTIAL_SOURCE_AVAILABILITY" ? (
         <>
           <section
-            className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}
+            className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "pb-4 sm:pb-5")}
             data-finance-overview-section="financial-conclusion"
             aria-labelledby="finance-overview-outlook-heading"
           >
@@ -544,23 +545,29 @@ export function FinanceOverviewPanel({
               data-finance-overview-section="expected-movement"
               aria-labelledby="finance-overview-movement-heading"
             >
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between">
+                <div className="flex min-w-0 items-baseline gap-2">
                   <h2 id="finance-overview-movement-heading" className="text-base font-semibold text-[var(--foreground)]">
                     {labels.expectedMovementTitle}
                   </h2>
-                  {formatCoveragePercent(expectedMovement.timingCoverage) ? (
-                    <p className="mt-1 text-xs text-[var(--muted)]" data-finance-timing-coverage>
-                      {labels.timingCoverageShort.replace(
-                        "{percent}",
-                        formatCoveragePercent(expectedMovement.timingCoverage)!,
-                      )}
-                    </p>
-                  ) : null}
+                  <span
+                    className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-[var(--sce-surface-border-subtle)] text-[10px] font-semibold leading-none text-[var(--muted)]"
+                    title={labels.movementSemanticClarification}
+                    aria-label={labels.movementSemanticClarification}
+                    role="img"
+                  >
+                    i
+                  </span>
                 </div>
+                {formatCoveragePercent(expectedMovement.timingCoverage) ? (
+                  <p className="text-xs text-[var(--muted)] sm:shrink-0" data-finance-timing-coverage>
+                    {labels.timingCoverageShort.replace(
+                      "{percent}",
+                      formatCoveragePercent(expectedMovement.timingCoverage)!,
+                    )}
+                  </p>
+                ) : null}
               </div>
-
-              <p className="mt-2 text-xs text-[var(--muted)]">{labels.movementSemanticClarification}</p>
 
               {expectedMovement.availability === "ZERO_TIMING" ? (
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -579,7 +586,7 @@ export function FinanceOverviewPanel({
 
               {expectedMovement.availability === "PARTIAL_OR_FULL_TIMING" &&
               expectedMovement.visualModel ? (
-                <div className="mt-4 min-w-0 overflow-x-hidden" data-finance-overview-event-timeline>
+                <div className="mt-3 min-w-0 overflow-x-hidden" data-finance-overview-event-timeline>
                   <FinanceOverviewExpectedEventTimeline
                     visual={expectedMovement.visualModel}
                     baseCurrency={currency}
@@ -587,7 +594,7 @@ export function FinanceOverviewPanel({
                     labels={{
                       monthPrecisionHint: labels.timelineMonthPrecision,
                       rangePrecisionHint: labels.timelineRangePrecision,
-                      financeYearEndMarker: labels.timelineFinanceYearEnd,
+                      moreEventsAffordance: labels.timelineMoreEvents,
                       semanticClarification: labels.movementSemanticClarification,
                     }}
                   />
@@ -597,31 +604,23 @@ export function FinanceOverviewPanel({
               {expectedMovement.untimedRemainderMinor !== null &&
               expectedMovement.untimedRemainderMinor > 0 ? (
                 <div
-                  className="mt-4 flex flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="mt-3 flex flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between"
                   data-finance-untimed-context
                 >
-                  <div className="min-w-0 text-sm">
-                    <p className="font-medium text-[var(--foreground)]">
-                      {labels.untimedFooterTitle}{" "}
-                      <span className="tabular-nums">
-                        {formatFinanceManagementMoneyMinor(
-                          expectedMovement.untimedRemainderMinor,
-                          currency,
-                          formattingLocale,
-                        )}
-                      </span>
-                    </p>
+                  <div className="min-w-0 text-xs text-[var(--muted)]">
+                    <p className="font-medium text-[var(--foreground)]">{labels.untimedFooterTitle}</p>
                     {expectedMovement.untimedIncomeMinor != null ||
                     expectedMovement.untimedExpenseMinor != null ? (
-                      <p className="mt-1 text-xs text-[var(--muted)]">
+                      <p className="mt-0.5 tabular-nums">
                         {expectedMovement.untimedIncomeMinor != null
                           ? labels.untimedFooterIncome.replace(
                               "{amount}",
-                              formatFinanceManagementMoneyMinor(
-                                expectedMovement.untimedIncomeMinor,
+                              formatFinanceDirectionalMovementMinor({
+                                amountMinor: expectedMovement.untimedIncomeMinor,
+                                direction: "INCOME",
                                 currency,
                                 formattingLocale,
-                              ),
+                              }),
                             )
                           : null}
                         {expectedMovement.untimedIncomeMinor != null &&
@@ -631,11 +630,12 @@ export function FinanceOverviewPanel({
                         {expectedMovement.untimedExpenseMinor != null
                           ? labels.untimedFooterExpense.replace(
                               "{amount}",
-                              formatFinanceManagementMoneyMinor(
-                                expectedMovement.untimedExpenseMinor,
+                              formatFinanceDirectionalMovementMinor({
+                                amountMinor: expectedMovement.untimedExpenseMinor,
+                                direction: "EXPENSE",
                                 currency,
                                 formattingLocale,
-                              ),
+                              }),
                             )
                           : null}
                       </p>

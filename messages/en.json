@@ -583,13 +583,13 @@
         "expectedMovementZeroTiming": "No timed expected movements yet.",
         "expectedMovementZeroTimingAction": "Maintain timing in Zeitplanung.",
         "timingCoverageShort": "Timing coverage {percent}",
-        "untimedFooterTitle": "Not yet timed",
+        "untimedFooterTitle": "Not timed:",
         "untimedFooterIncome": "{amount} income",
         "untimedFooterExpense": "{amount} expense",
         "movementSemanticClarification": "Shows expected financial movements, not cash balance.",
         "timelineMonthPrecision": "Month precision",
         "timelineRangePrecision": "Date range",
-        "timelineFinanceYearEnd": "Financial year end",
+        "timelineMoreEvents": "+{count} more",
         "openTiming": "Open timing",
         "measureUnavailable": "—"
       }

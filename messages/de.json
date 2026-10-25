@@ -1046,13 +1046,13 @@
         "expectedMovementZeroTiming": "Noch keine zeitlich eingeplanten erwarteten Bewegungen.",
         "expectedMovementZeroTimingAction": "Terminierung in der Zeitplanung pflegen.",
         "timingCoverageShort": "Terminierungsgrad {percent}",
-        "untimedFooterTitle": "Noch nicht terminiert",
+        "untimedFooterTitle": "Nicht terminiert:",
         "untimedFooterIncome": "{amount} Einnahmen",
         "untimedFooterExpense": "{amount} Ausgaben",
         "movementSemanticClarification": "Zeigt erwartete Finanzbewegungen, nicht den Kontostand.",
         "timelineMonthPrecision": "Monatsgenau",
         "timelineRangePrecision": "Zeitraum",
-        "timelineFinanceYearEnd": "Finanzjahresende",
+        "timelineMoreEvents": "+{count} weitere",
         "openTiming": "Zeitplanung öffnen",
         "measureUnavailable": "—"
       }

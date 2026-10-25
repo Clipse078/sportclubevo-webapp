@@ -123,7 +123,7 @@ export default async function FinanceOverviewPage() {
             movementSemanticClarification: t("overview.decision.movementSemanticClarification"),
             timelineMonthPrecision: t("overview.decision.timelineMonthPrecision"),
             timelineRangePrecision: t("overview.decision.timelineRangePrecision"),
-            timelineFinanceYearEnd: t("overview.decision.timelineFinanceYearEnd"),
+            timelineMoreEvents: t("overview.decision.timelineMoreEvents"),
             openTiming: t("overview.decision.openTiming"),
             openForecast: t("overview.openForecast"),
             openActuals: t("nav.actuals"),
