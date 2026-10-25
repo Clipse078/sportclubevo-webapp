@@ -6,6 +6,7 @@ import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/
 import { FinanceManagementReportingDetailSheet } from "@/components/admin/finance/reporting/FinanceManagementReportingDetailSheet";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
 import type { SerializedFinanceManagementReportingDetailReadModel } from "@/lib/finance/presentation/serialize-management-reporting-detail-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const emptySlice = {
   availability: "BOTH_MISSING" as const,
@@ -158,6 +159,40 @@ const baseModel: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub({
+    attentionInsights: [
+      {
+        kind: "OVERALL_RESULT",
+        favorability: "FAVORABLE",
+        rawDeltaMinor: 10_00,
+      },
+      {
+        kind: "FAVORABLE_DRIVER",
+        driver: {
+          kind: "ACCOUNT",
+          id: "acc-1",
+          name: "Mitgliedsbeiträge",
+          canonicalSemantic: "INCOME",
+          comparison: measureSlice.forecastVsBudget,
+        },
+      },
+      {
+        kind: "UNFAVORABLE_DRIVER",
+        driver: {
+          kind: "REPORTING_GROUP",
+          id: "g-exp",
+          name: "Personal",
+          canonicalSemantic: "EXPENSE",
+          comparison: {
+            ...emptySlice,
+            availability: "AVAILABLE",
+            rawDeltaMinor: 24_124_00,
+            favorability: "UNFAVORABLE",
+          },
+        },
+      },
+    ],
+  }),
 };
 
 const labels = {
@@ -170,7 +205,6 @@ const labels = {
   driversSubtitle: "Subtitle",
   topFavourable: "Favourable",
   topUnfavourable: "Unfavourable",
-  exceptionsTitle: "Material variances",
   incomeSection: "Income",
   expenseSection: "Expense",
   incomeSectionTotal: "Total income",
@@ -197,6 +231,19 @@ const labels = {
   unassignedHint: "Unassigned",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  attentionResultFavorableTitle: "Ahead",
+  attentionResultFavorableDetail: "Forecast {amount} above budget.",
+  attentionResultUnfavorableTitle: "Below",
+  attentionResultUnfavorableDetail: "Forecast {amount} below budget.",
+  attentionResultOnPlanTitle: "On plan",
+  attentionLargestFavorableTitle: "Largest favourable",
+  attentionLargestUnfavorableTitle: "Largest unfavourable",
+  attentionDriverExpenseSuffix: "expense",
+  attentionMissingBudget: "No budget",
+  attentionMissingForecast: "No forecast",
 };
 
 const detailLabels = {
@@ -246,6 +293,7 @@ const detailLabels = {
   interpretationForecastAboveBudget: "Forecast is {variance} above budget.",
   interpretationForecastBelowBudget: "Forecast is {variance} below budget.",
   interpretationForecastOnBudget: "Forecast matches budget.",
+  grainExplanationYtdVsAnnualPlan: "YTD vs annual plan hint.",
 };
 
 const accountDetail: SerializedFinanceManagementReportingDetailReadModel = {
@@ -273,6 +321,10 @@ const accountDetail: SerializedFinanceManagementReportingDetailReadModel = {
     availability: "AVAILABLE",
     rawDeltaMinor: 37_694_00,
     favorability: "FAVORABLE",
+  },
+  comparativePeriodContext: {
+    actualVsBudgetVarianceRole: "SUPPORTED",
+    grainExplanationKey: null,
   },
   actualEvidence: {
     availability: "AVAILABLE",

@@ -1084,7 +1084,20 @@
         "expandAccounts": "Konten anzeigen",
         "collapseAccounts": "Konten ausblenden",
         "noStructureViewOnly": "Die Finanzstruktur wurde noch nicht konfiguriert.",
-        "partialSourcesHint": "Einige Quellen fehlen — Vergleiche bleiben dort ausgeblendet, wo sie semantisch nicht zulässig sind."
+        "partialSourcesHint": "Einige Quellen fehlen — Vergleiche bleiben dort ausgeblendet, wo sie semantisch nicht zulässig sind.",
+        "attentionSignalsTitle": "Worauf achten",
+        "grainExplanationYtdVsAnnualPlan": "Ist-Werte sind bis zum Stichtag erfasst; Budget und Prognose beziehen sich auf das gesamte Finanzjahr.",
+        "grainExplanationAnnualActualAndPlan": "Ist, Budget und Prognose beziehen sich auf das gesamte Finanzjahr.",
+        "attentionResultFavorableTitle": "Ergebnis besser als geplant",
+        "attentionResultFavorableDetail": "Die aktuelle Prognose liegt {amount} über dem genehmigten Budget.",
+        "attentionResultUnfavorableTitle": "Ergebnis unter Plan",
+        "attentionResultUnfavorableDetail": "Die aktuelle Prognose liegt {amount} unter dem genehmigten Budget.",
+        "attentionResultOnPlanTitle": "Im Plan",
+        "attentionLargestFavorableTitle": "Grösste positive Abweichung",
+        "attentionLargestUnfavorableTitle": "Grösste negative Abweichung",
+        "attentionDriverExpenseSuffix": "Ausgaben",
+        "attentionMissingBudget": "Genehmigtes Budget fehlt — Hauptvergleich nicht verfügbar.",
+        "attentionMissingForecast": "Aktuelle Prognose fehlt — erwartetes Ergebnis unklar."
       },
       "investigation": {
         "pageDescription": "Management-Ergebnis verstehen, wesentliche Abweichungen untersuchen und Kontobelege einsehen — ohne den Ausweis zu verlassen.",

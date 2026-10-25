@@ -4,6 +4,7 @@ import type {
   ManagementPnlGroupRow,
   ManagementPnlUnassignedResidualRow,
 } from "@/lib/finance/reporting/finance-management-pnl-read-model";
+import type { FinanceComparativeIntelligenceReadModel } from "@/lib/finance/reporting/finance-comparative-intelligence-read-model";
 
 export type SerializedManagementPnlAccountRow = Omit<ManagementPnlAccountRow, "archivedAt"> & {
   archivedAt: string | null;
@@ -33,14 +34,24 @@ export type SerializedManagementPnlSection = Omit<
   nodes: SerializedManagementPnlTreeNode[];
 };
 
+export type SerializedFinanceComparativeIntelligenceReadModel = Omit<
+  FinanceComparativeIntelligenceReadModel,
+  "actualContext"
+> & {
+  actualContext: Omit<FinanceComparativeIntelligenceReadModel["actualContext"], "cutoffDate"> & {
+    cutoffDate: string | null;
+  };
+};
+
 /** Client-safe Management P&L payload (dates as ISO strings). */
 export type SerializedFinanceManagementPnlReadModel = Omit<
   FinanceManagementPnlReadModel,
-  "actualCutoffDate" | "incomeSection" | "expenseSection"
+  "actualCutoffDate" | "incomeSection" | "expenseSection" | "comparativeIntelligence"
 > & {
   actualCutoffDate: string | null;
   incomeSection: SerializedManagementPnlSection;
   expenseSection: SerializedManagementPnlSection;
+  comparativeIntelligence: SerializedFinanceComparativeIntelligenceReadModel;
 };
 
 function serializeAccount(account: ManagementPnlAccountRow): SerializedManagementPnlAccountRow {
@@ -76,14 +87,29 @@ function serializeSection(
   };
 }
 
+function serializeComparativeIntelligence(
+  model: FinanceComparativeIntelligenceReadModel,
+): SerializedFinanceComparativeIntelligenceReadModel {
+  const { actualContext, ...rest } = model;
+  return {
+    ...rest,
+    actualContext: {
+      ...actualContext,
+      cutoffDate: actualContext.cutoffDate?.toISOString() ?? null,
+    },
+  };
+}
+
 export function serializeFinanceManagementPnlReadModel(
   model: FinanceManagementPnlReadModel,
 ): SerializedFinanceManagementPnlReadModel {
-  const { actualCutoffDate, incomeSection, expenseSection, ...rest } = model;
+  const { actualCutoffDate, incomeSection, expenseSection, comparativeIntelligence, ...rest } =
+    model;
   return {
     ...rest,
     actualCutoffDate: actualCutoffDate?.toISOString() ?? null,
     incomeSection: serializeSection(incomeSection),
     expenseSection: serializeSection(expenseSection),
+    comparativeIntelligence: serializeComparativeIntelligence(comparativeIntelligence),
   };
 }

@@ -6,6 +6,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const reportsPage = readFileSync(
   join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
@@ -132,6 +133,25 @@ const model: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub({
+    attentionInsights: [
+      {
+        kind: "FAVORABLE_DRIVER",
+        driver: {
+          kind: "ACCOUNT",
+          id: "acc-1",
+          name: "Membership",
+          canonicalSemantic: "INCOME",
+          comparison: {
+            ...emptySlice,
+            availability: "AVAILABLE",
+            rawDeltaMinor: 10_00,
+            favorability: "FAVORABLE",
+          },
+        },
+      },
+    ],
+  }),
 };
 
 const labels = {
@@ -144,7 +164,6 @@ const labels = {
   driversSubtitle: "Subtitle",
   topFavourable: "Favourable",
   topUnfavourable: "Unfavourable",
-  exceptionsTitle: "Material variances",
   incomeSection: "Income",
   expenseSection: "Expense",
   incomeSectionTotal: "Total income",
@@ -171,6 +190,19 @@ const labels = {
   unassignedHint: "Unassigned",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  attentionResultFavorableTitle: "Ahead",
+  attentionResultFavorableDetail: "Forecast {amount} above budget.",
+  attentionResultUnfavorableTitle: "Below",
+  attentionResultUnfavorableDetail: "Forecast {amount} below budget.",
+  attentionResultOnPlanTitle: "On plan",
+  attentionLargestFavorableTitle: "Largest favourable",
+  attentionLargestUnfavorableTitle: "Largest unfavourable",
+  attentionDriverExpenseSuffix: "expense",
+  attentionMissingBudget: "No budget",
+  attentionMissingForecast: "No forecast",
 };
 
 describe("FIN-05E reporting workspace UX", () => {
@@ -207,7 +239,7 @@ describe("FIN-05E reporting workspace UX", () => {
     expect(onInvestigateAccount).toHaveBeenCalledWith("acc-1");
   });
 
-  it("marks exceptions section and driver buttons", () => {
+  it("marks attention driver investigate buttons", () => {
     render(
       <FinanceManagementPnlPanel
         model={model}
@@ -217,7 +249,7 @@ describe("FIN-05E reporting workspace UX", () => {
         onInvestigateDriver={vi.fn()}
       />,
     );
-    expect(document.querySelector("[data-finance-pnl-exceptions]")).toBeTruthy();
+    expect(document.querySelector("[data-finance-comparative-attention-drivers]")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Investigate: Membership" })).toBeTruthy();
   });
 });

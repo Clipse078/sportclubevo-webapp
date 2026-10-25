@@ -32,6 +32,12 @@ import {
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import { FINANCE_SUMMARY_STRIP_SURFACE_CLASS } from "@/lib/finance/finance-workspace-surfaces";
 import type { VarianceFavorability } from "@/lib/finance/actual/variance-semantics";
+import {
+  financeComparativeGrainExplanationLabelKey,
+  presentFinanceComparativeAttentionInsight,
+  type FinanceComparativeAttentionLabelMap,
+} from "@/lib/finance/presentation/finance-comparative-intelligence-presentation";
+import type { FinanceComparativeAttentionInsight } from "@/lib/finance/reporting/finance-comparative-intelligence-read-model";
 
 type FinanceManagementPnlPanelLabels = {
   pageContextYear: string;
@@ -69,8 +75,10 @@ type FinanceManagementPnlPanelLabels = {
   unassignedHint: string;
   investigateAccount: string;
   investigateGroup: string;
-  exceptionsTitle: string;
-};
+  attentionSignalsTitle: string;
+  grainExplanationYtdVsAnnualPlan: string;
+  grainExplanationAnnualActualAndPlan: string;
+} & FinanceComparativeAttentionLabelMap;
 
 type FinanceManagementPnlPanelProps = {
   model: SerializedFinanceManagementPnlReadModel;
@@ -191,6 +199,143 @@ function MeasureCells(props: {
 
 function investigationTargetAriaLabel(actionLabel: string, targetName: string): string {
   return `${actionLabel}: ${targetName}`;
+}
+
+function attentionInsightReactKey(insight: FinanceComparativeAttentionInsight): string {
+  switch (insight.kind) {
+    case "FAVORABLE_DRIVER":
+    case "UNFAVORABLE_DRIVER":
+      return `${insight.kind}-${insight.driver.kind}-${insight.driver.id}`;
+    default:
+      return insight.kind;
+  }
+}
+
+function ComparativeAttentionInsights(props: {
+  insights: FinanceComparativeAttentionInsight[];
+  labels: FinanceManagementPnlPanelLabels;
+  currency: string | null;
+  locale: string;
+  investigateLabel: string;
+  onInvestigateDriver?: (driver: { kind: "ACCOUNT" | "REPORTING_GROUP"; id: string }) => void;
+}) {
+  const overall = props.insights.find((i) => i.kind === "OVERALL_RESULT");
+  const drivers = props.insights.filter(
+    (i) => i.kind === "FAVORABLE_DRIVER" || i.kind === "UNFAVORABLE_DRIVER",
+  );
+  const statusOnly = props.insights.filter(
+    (i) =>
+      i.kind === "MISSING_APPROVED_BUDGET" ||
+      i.kind === "MISSING_CURRENT_FORECAST",
+  );
+
+  return (
+    <div className="space-y-3">
+      {overall ? (
+        <div data-finance-comparative-attention-insight={overall.kind}>
+          {(() => {
+            const copy = presentFinanceComparativeAttentionInsight(
+              overall,
+              props.labels,
+              props.currency,
+              props.locale,
+            );
+            return (
+              <>
+                <p className="text-sm font-semibold text-[var(--foreground)]">{copy.title}</p>
+                {copy.detail ? (
+                  <p className="mt-0.5 text-sm text-[var(--muted)]">{copy.detail}</p>
+                ) : null}
+              </>
+            );
+          })()}
+        </div>
+      ) : null}
+
+      {statusOnly.map((insight) => {
+        const copy = presentFinanceComparativeAttentionInsight(
+          insight,
+          props.labels,
+          props.currency,
+          props.locale,
+        );
+        return (
+          <p
+            key={attentionInsightReactKey(insight)}
+            className="text-sm text-[var(--foreground)]"
+            data-finance-comparative-attention-insight={insight.kind}
+          >
+            {copy.title}
+          </p>
+        );
+      })}
+
+      {drivers.length > 0 ? (
+        <div
+          className="grid gap-3 sm:grid-cols-2"
+          data-finance-comparative-attention-drivers
+        >
+          {drivers.map((insight) => {
+            const copy = presentFinanceComparativeAttentionInsight(
+              insight,
+              props.labels,
+              props.currency,
+              props.locale,
+            );
+            const driver =
+              insight.kind === "FAVORABLE_DRIVER" || insight.kind === "UNFAVORABLE_DRIVER"
+                ? insight.driver
+                : null;
+            const content = (
+              <>
+                <p className="text-xs font-medium text-[var(--muted)]">{copy.title}</p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-sm font-medium tabular-nums text-[var(--foreground)]",
+                    driver
+                      ? financeVarianceComparisonSemanticTextClass({
+                          favorability: driver.comparison.favorability,
+                          hasComparison: driver.comparison.availability === "AVAILABLE",
+                        })
+                      : undefined,
+                  )}
+                >
+                  {copy.detail}
+                </p>
+              </>
+            );
+
+            if (driver && props.onInvestigateDriver) {
+              return (
+                <button
+                  key={attentionInsightReactKey(insight)}
+                  type="button"
+                  data-finance-comparative-attention-insight={insight.kind}
+                  data-finance-pnl-investigate="driver"
+                  className="rounded-md px-1 py-1 text-left hover:bg-[var(--surface-2)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                  aria-label={investigationTargetAriaLabel(props.investigateLabel, driver.name)}
+                  onClick={() =>
+                    props.onInvestigateDriver!({ kind: driver.kind, id: driver.id })
+                  }
+                >
+                  {content}
+                </button>
+              );
+            }
+
+            return (
+              <div
+                key={attentionInsightReactKey(insight)}
+                data-finance-comparative-attention-insight={insight.kind}
+              >
+                {content}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function AccountRow(props: {
@@ -588,9 +733,22 @@ export function FinanceManagementPnlPanel({
 
   const interpretationSlice = model.interpretation.forecastVsBudgetManagementResult;
   const hasInterpretation = interpretationSlice.availability === "AVAILABLE";
+  const comparative = model.comparativeIntelligence;
+  const grainExplanationKey = comparative.actualContext.grainExplanationKey;
+  const grainExplanationText =
+    grainExplanationKey != null
+      ? labels[financeComparativeGrainExplanationLabelKey(grainExplanationKey)]
+      : null;
+  const attentionInsights = comparative.attentionInsights;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4" data-finance-pnl-panel>
+    <div
+      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4"
+      data-finance-pnl-panel
+      data-finance-comparative-intelligence
+      data-finance-comparative-actual-role={comparative.actualContext.presentationRole}
+      data-finance-comparative-actual-vs-budget-role={comparative.actualVsBudgetVarianceRole}
+    >
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[var(--muted)]">
         <span>
           {labels.pageContextYear}:{" "}
@@ -611,7 +769,7 @@ export function FinanceManagementPnlPanel({
         <h2 id="finance-pnl-interpretation" className="text-sm font-semibold text-[var(--foreground)]">
           {labels.interpretationTitle}
         </h2>
-        <dl className="grid gap-3 sm:grid-cols-3 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
+        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
           <div>
             <dt className="text-xs font-medium text-[var(--muted)]">{labels.budgetedResult}</dt>
             <dd className="mt-1 tabular-nums text-sm font-medium">
@@ -644,6 +802,7 @@ export function FinanceManagementPnlPanel({
                   hasComparison: hasInterpretation,
                 }),
               )}
+              data-finance-comparative-primary-variance
             >
               <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 {formatManagementPnlVarianceDelta(
@@ -659,146 +818,52 @@ export function FinanceManagementPnlPanel({
               </span>
             </dd>
           </div>
+          <div data-finance-comparative-actual-evidence>
+            <dt className="text-xs font-medium text-[var(--muted)]">{actualColumnLabel}</dt>
+            <dd className="mt-1 tabular-nums text-sm font-medium">
+              {formatManagementPnlMeasureCell(
+                model.managementResult.actual,
+                model.baseCurrency,
+                formattingLocale,
+              )}
+            </dd>
+          </div>
         </dl>
+        {grainExplanationText ? (
+          <p
+            className="text-xs leading-relaxed text-[var(--muted)]"
+            data-finance-comparative-grain-explanation
+          >
+            {grainExplanationText}
+          </p>
+        ) : null}
         {model.availability === "PARTIAL_SOURCE_AVAILABILITY" ? (
           <p className="text-xs text-[var(--muted)]">{labels.partialSourcesHint}</p>
         ) : null}
       </section>
 
-      {(model.topFavourableDrivers.length > 0 || model.topUnfavourableDrivers.length > 0) && (
+      {attentionInsights.length > 0 ? (
         <section
           className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-3")}
-          data-finance-pnl-drivers
-          data-finance-pnl-exceptions
-          aria-labelledby="finance-pnl-drivers-title"
+          aria-labelledby="finance-comparative-attention"
+          data-finance-comparative-attention
         >
-          <div>
-            <h3 id="finance-pnl-drivers-title" className="text-sm font-semibold text-[var(--foreground)]">
-              {labels.exceptionsTitle}
-            </h3>
-            <p className="sr-only">{labels.driversTitle}</p>
-            {labels.driversSubtitle ? (
-              <p className="mt-0.5 text-xs text-[var(--muted)]">{labels.driversSubtitle}</p>
-            ) : null}
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
-              <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topFavourable}</p>
-              <ul className="mt-1 space-y-0.5 text-sm" data-finance-pnl-driver-list="favourable">
-                {model.topFavourableDrivers.map((driver) => (
-                  <li key={driver.id}>
-                    {onInvestigateDriver ? (
-                      <button
-                        type="button"
-                        data-finance-pnl-investigate="driver"
-                        className="flex w-full items-center justify-between gap-3 rounded-md px-1.5 py-1 text-left tabular-nums hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-                        aria-label={investigationTargetAriaLabel(labels.investigateAccount, driver.name)}
-                        onClick={() =>
-                          onInvestigateDriver({ kind: driver.kind, id: driver.id })
-                        }
-                      >
-                        <span className="truncate font-medium text-[var(--foreground)]">{driver.name}</span>
-                        <span
-                          className={cn(
-                            "inline-flex shrink-0 items-center gap-1 font-medium",
-                            financeVarianceComparisonSemanticTextClass({
-                              favorability: driver.comparison.favorability,
-                              hasComparison: driver.comparison.availability === "AVAILABLE",
-                            }),
-                          )}
-                        >
-                          {formatManagementPnlVarianceDelta(
-                            driver.comparison,
-                            model.baseCurrency,
-                            formattingLocale,
-                          )}
-                          <ChevronRight className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex justify-between gap-3 px-1.5 py-1 tabular-nums">
-                        <span className="truncate text-[var(--foreground)]">{driver.name}</span>
-                        <span
-                          className={cn(
-                            "shrink-0 font-medium",
-                            financeVarianceComparisonSemanticTextClass({
-                              favorability: driver.comparison.favorability,
-                              hasComparison: driver.comparison.availability === "AVAILABLE",
-                            }),
-                          )}
-                        >
-                          {formatManagementPnlVarianceDelta(
-                            driver.comparison,
-                            model.baseCurrency,
-                            formattingLocale,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
-              <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topUnfavourable}</p>
-              <ul className="mt-1 space-y-0.5 text-sm" data-finance-pnl-driver-list="unfavourable">
-                {model.topUnfavourableDrivers.map((driver) => (
-                  <li key={driver.id}>
-                    {onInvestigateDriver ? (
-                      <button
-                        type="button"
-                        data-finance-pnl-investigate="driver"
-                        className="flex w-full items-center justify-between gap-3 rounded-md px-1.5 py-1 text-left tabular-nums hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-                        aria-label={investigationTargetAriaLabel(labels.investigateAccount, driver.name)}
-                        onClick={() =>
-                          onInvestigateDriver({ kind: driver.kind, id: driver.id })
-                        }
-                      >
-                        <span className="truncate font-medium text-[var(--foreground)]">{driver.name}</span>
-                        <span
-                          className={cn(
-                            "inline-flex shrink-0 items-center gap-1 font-medium",
-                            financeVarianceComparisonSemanticTextClass({
-                              favorability: driver.comparison.favorability,
-                              hasComparison: driver.comparison.availability === "AVAILABLE",
-                            }),
-                          )}
-                        >
-                          {formatManagementPnlVarianceDelta(
-                            driver.comparison,
-                            model.baseCurrency,
-                            formattingLocale,
-                          )}
-                          <ChevronRight className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex justify-between gap-3 px-1.5 py-1 tabular-nums">
-                        <span className="truncate text-[var(--foreground)]">{driver.name}</span>
-                        <span
-                          className={cn(
-                            "shrink-0 font-medium",
-                            financeVarianceComparisonSemanticTextClass({
-                              favorability: driver.comparison.favorability,
-                              hasComparison: driver.comparison.availability === "AVAILABLE",
-                            }),
-                          )}
-                        >
-                          {formatManagementPnlVarianceDelta(
-                            driver.comparison,
-                            model.baseCurrency,
-                            formattingLocale,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <h3
+            id="finance-comparative-attention"
+            className="text-sm font-semibold text-[var(--foreground)]"
+          >
+            {labels.attentionSignalsTitle}
+          </h3>
+          <ComparativeAttentionInsights
+            insights={attentionInsights}
+            labels={labels}
+            currency={model.baseCurrency}
+            locale={formattingLocale}
+            investigateLabel={labels.investigateAccount}
+            onInvestigateDriver={onInvestigateDriver}
+          />
         </section>
-      )}
+      ) : null}
 
       <div className="flex flex-col gap-2" data-finance-pnl-statement>
         <SectionTable

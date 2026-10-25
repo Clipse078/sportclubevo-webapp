@@ -621,7 +621,20 @@
         "expandAccounts": "Show accounts",
         "collapseAccounts": "Hide accounts",
         "noStructureViewOnly": "Financial structure has not been configured yet.",
-        "partialSourcesHint": "Some sources are missing — comparisons stay unavailable where required."
+        "partialSourcesHint": "Some sources are missing — comparisons stay unavailable where required.",
+        "attentionSignalsTitle": "Where to look",
+        "grainExplanationYtdVsAnnualPlan": "Actual reflects recorded values through the cutoff date; budget and forecast represent the full financial year.",
+        "grainExplanationAnnualActualAndPlan": "Actual, budget, and forecast all refer to the full financial year.",
+        "attentionResultFavorableTitle": "Result ahead of plan",
+        "attentionResultFavorableDetail": "Current forecast is {amount} above the approved budget.",
+        "attentionResultUnfavorableTitle": "Result below plan",
+        "attentionResultUnfavorableDetail": "Current forecast is {amount} below the approved budget.",
+        "attentionResultOnPlanTitle": "On plan",
+        "attentionLargestFavorableTitle": "Largest favourable variance",
+        "attentionLargestUnfavorableTitle": "Largest unfavourable variance",
+        "attentionDriverExpenseSuffix": "expense",
+        "attentionMissingBudget": "Approved budget missing — primary comparison unavailable.",
+        "attentionMissingForecast": "Current forecast missing — expected outcome unclear."
       },
       "investigation": {
         "pageDescription": "Understand the management result, investigate material variances, and drill into account evidence without leaving the statement.",

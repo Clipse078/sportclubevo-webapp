@@ -3,6 +3,7 @@ import type { FinanceVarianceDriver } from "@/lib/finance/reporting/reporting-co
 import type { FinanceReportingComparisonSlice } from "@/lib/finance/reporting/reporting-comparison-model";
 import type { PnlReconciliationSlice } from "@/lib/finance/reporting/pnl-reporting-completeness";
 import type { FinanceManagementMeasureAvailability } from "@/lib/finance/reporting/finance-management-overview-read-model";
+import type { FinanceComparativeIntelligenceReadModel } from "@/lib/finance/reporting/finance-comparative-intelligence-read-model";
 
 export type ManagementPnlMeasureCell = {
   availability: FinanceManagementMeasureAvailability;
@@ -119,4 +120,5 @@ export type FinanceManagementPnlReadModel = {
     currentForecast: PnlReconciliationSlice;
   };
   hasUnassignedFinancialValues: boolean;
+  comparativeIntelligence: FinanceComparativeIntelligenceReadModel;
 };

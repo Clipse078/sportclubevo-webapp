@@ -106,7 +106,6 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
             driversSubtitle: t("reporting.pnl.driversSubtitle"),
             topFavourable: t("reporting.pnl.topFavourable"),
             topUnfavourable: t("reporting.pnl.topUnfavourable"),
-            exceptionsTitle: t("reporting.investigation.exceptionsTitle"),
             incomeSection: t("overview.reportingIncome"),
             expenseSection: t("overview.reportingExpense"),
             incomeSectionTotal: t("reporting.pnl.incomeSectionTotal"),
@@ -133,6 +132,19 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
             unassignedHint: t("reporting.pnl.unassignedHint"),
             investigateAccount: t("reporting.investigation.investigateAccount"),
             investigateGroup: t("reporting.investigation.investigateGroup"),
+            attentionSignalsTitle: t("reporting.pnl.attentionSignalsTitle"),
+            grainExplanationYtdVsAnnualPlan: t("reporting.pnl.grainExplanationYtdVsAnnualPlan"),
+            grainExplanationAnnualActualAndPlan: t("reporting.pnl.grainExplanationAnnualActualAndPlan"),
+            attentionResultFavorableTitle: t("reporting.pnl.attentionResultFavorableTitle"),
+            attentionResultFavorableDetail: t("reporting.pnl.attentionResultFavorableDetail"),
+            attentionResultUnfavorableTitle: t("reporting.pnl.attentionResultUnfavorableTitle"),
+            attentionResultUnfavorableDetail: t("reporting.pnl.attentionResultUnfavorableDetail"),
+            attentionResultOnPlanTitle: t("reporting.pnl.attentionResultOnPlanTitle"),
+            attentionLargestFavorableTitle: t("reporting.pnl.attentionLargestFavorableTitle"),
+            attentionLargestUnfavorableTitle: t("reporting.pnl.attentionLargestUnfavorableTitle"),
+            attentionDriverExpenseSuffix: t("reporting.pnl.attentionDriverExpenseSuffix"),
+            attentionMissingBudget: t("reporting.pnl.attentionMissingBudget"),
+            attentionMissingForecast: t("reporting.pnl.attentionMissingForecast"),
           }}
           detailLabels={{
             sheetTitleAccount: t("reporting.investigation.sheetTitleAccount"),
@@ -185,6 +197,7 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
               "reporting.investigation.interpretationForecastBelowBudget",
             ),
             interpretationForecastOnBudget: t("reporting.investigation.interpretationForecastOnBudget"),
+            grainExplanationYtdVsAnnualPlan: t("reporting.pnl.grainExplanationYtdVsAnnualPlan"),
           }}
         />
       </SceWorkspaceChrome>

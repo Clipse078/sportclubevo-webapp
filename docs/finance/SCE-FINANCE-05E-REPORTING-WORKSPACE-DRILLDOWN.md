@@ -9,8 +9,8 @@
 | FIN-05C | COMPLETE / PO APPROVED |
 | FIN-05D | COMPLETE / PO APPROVED |
 | **FIN-05E** | **COMPLETE / PRODUCT OWNER VISUAL UAT PASS** (R1 **COMPLETE**, R2 **COMPLETE**, R3 **NOT REQUIRED**) |
-| FIN-05F | NEXT / NOT STARTED |
-| FIN-05G | NOT STARTED |
+| FIN-05F | **COMPLETE / PO APPROVED** (PR **#913** → **STAGE**) |
+| FIN-05G | **NEXT / NOT STARTED** |
 | FIN-05H | NOT STARTED |
 
 | Field | Value |
@@ -150,4 +150,6 @@ Expected-event timelines in FIN-05D/FIN-04E are **timing intelligence**, not aut
 
 ## Next
 
-**FIN-05F** — Forecast / Budget / Actual comparative intelligence (**NEXT** — **NOT STARTED**).
+**FIN-05F** — Forecast / Budget / Actual comparative intelligence (**COMPLETE / PO APPROVED** — PR **#913** → **STAGE**).
+
+**FIN-05G** — Reporting visual intelligence & responsive hardening (**NEXT / NOT STARTED**).

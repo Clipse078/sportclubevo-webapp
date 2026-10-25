@@ -1,10 +1,11 @@
 /** @vitest-environment jsdom */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const reportsPage = readFileSync(
   join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
@@ -118,6 +119,7 @@ const baseModel: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub(),
 };
 
 const labels = {
@@ -156,7 +158,19 @@ const labels = {
   unassignedHint: "Unassigned amounts",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
-  exceptionsTitle: "Material variances",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  attentionResultFavorableTitle: "Result ahead of plan",
+  attentionResultFavorableDetail: "Forecast is {amount} above budget.",
+  attentionResultUnfavorableTitle: "Result below plan",
+  attentionResultUnfavorableDetail: "Forecast is {amount} below budget.",
+  attentionResultOnPlanTitle: "On plan",
+  attentionLargestFavorableTitle: "Largest favourable variance",
+  attentionLargestUnfavorableTitle: "Largest unfavourable variance",
+  attentionDriverExpenseSuffix: "expense",
+  attentionMissingBudget: "Missing budget",
+  attentionMissingForecast: "Missing forecast",
 };
 
 describe("FinanceManagementPnlPanel", () => {
@@ -219,56 +233,66 @@ describe("FinanceManagementPnlPanel", () => {
     expect(sectionTotals[1]?.textContent).toMatch(/\+/);
   });
 
-  it("groups drivers under favourable and unfavourable headings", () => {
+  it("surfaces material drivers in decision-oriented attention", () => {
+    const favourableDriver = {
+      kind: "ACCOUNT" as const,
+      id: "d1",
+      name: "Membership",
+      canonicalSemantic: "INCOME" as const,
+      hierarchySortOrder: 1,
+      rank: 1,
+      relativeContributionBasisPoints: 5000,
+      comparison: {
+        ...emptySlice,
+        availability: "AVAILABLE" as const,
+        rawDeltaMinor: 37_694_00,
+        favorability: "FAVORABLE" as const,
+      },
+    };
+    const unfavourableDriver = {
+      kind: "ACCOUNT" as const,
+      id: "d2",
+      name: "Staff",
+      canonicalSemantic: "EXPENSE" as const,
+      hierarchySortOrder: 2,
+      rank: 1,
+      relativeContributionBasisPoints: 4000,
+      comparison: {
+        ...emptySlice,
+        availability: "AVAILABLE" as const,
+        rawDeltaMinor: 24_124_00,
+        favorability: "UNFAVORABLE" as const,
+      },
+    };
     render(
       <FinanceManagementPnlPanel
         model={{
           ...baseModel,
-          topFavourableDrivers: [
-            {
-              kind: "ACCOUNT",
-              id: "d1",
-              name: "Membership",
-              canonicalSemantic: "INCOME",
-              hierarchySortOrder: 1,
-              rank: 1,
-              relativeContributionBasisPoints: 5000,
-              comparison: {
-                ...emptySlice,
-                availability: "AVAILABLE",
-                rawDeltaMinor: 37_694_00,
+          topFavourableDrivers: [favourableDriver],
+          topUnfavourableDrivers: [unfavourableDriver],
+          comparativeIntelligence: serializedComparativeIntelligenceStub({
+            attentionInsights: [
+              {
+                kind: "OVERALL_RESULT",
                 favorability: "FAVORABLE",
+                rawDeltaMinor: 5_00,
               },
-            },
-          ],
-          topUnfavourableDrivers: [
-            {
-              kind: "ACCOUNT",
-              id: "d2",
-              name: "Staff",
-              canonicalSemantic: "EXPENSE",
-              hierarchySortOrder: 2,
-              rank: 1,
-              relativeContributionBasisPoints: 4000,
-              comparison: {
-                ...emptySlice,
-                availability: "AVAILABLE",
-                rawDeltaMinor: 24_124_00,
-                favorability: "UNFAVORABLE",
-              },
-            },
-          ],
+              { kind: "FAVORABLE_DRIVER", driver: favourableDriver },
+              { kind: "UNFAVORABLE_DRIVER", driver: unfavourableDriver },
+            ],
+          }),
         }}
         formattingLocale="de-CH"
         canConfigureStructure={false}
         labels={labels}
+        onInvestigateDriver={vi.fn()}
       />,
     );
-    expect(screen.getAllByText("Favourable").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Unfavourable").length).toBeGreaterThan(0);
-    expect(screen.getByText("Membership")).toBeTruthy();
-    expect(screen.getByText("Staff")).toBeTruthy();
-    expect(screen.getByText("Variance vs approved budget plan")).toBeTruthy();
+    expect(screen.getByText("Largest favourable variance")).toBeTruthy();
+    expect(screen.getByText("Largest unfavourable variance")).toBeTruthy();
+    expect(screen.getByText(/Membership/)).toBeTruthy();
+    expect(screen.getByText(/Staff/)).toBeTruthy();
+    expect(document.querySelector("[data-finance-pnl-exceptions]")).toBeNull();
   });
 
   it("resolves favorability labels from Finance.actuals translations on the page", () => {
