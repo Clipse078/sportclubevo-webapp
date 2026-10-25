@@ -62,6 +62,10 @@ function emptyDetail(partial: Partial<FinanceManagementReportingDetailReadModel>
       favorability: null,
       absoluteVarianceMagnitudeMinor: null,
     },
+    comparativePeriodContext: {
+      actualVsBudgetVarianceRole: "UNSUPPORTED",
+      grainExplanationKey: null,
+    },
     actualEvidence: { availability: "NOT_VISIBLE", entries: [] },
     sourceActions: {
       budget: { canNavigate: false, href: null },
@@ -295,6 +299,10 @@ export function buildFinanceManagementReportingDetailReadModel(input: {
       actual: resolved.row.actual,
       currentForecast: resolved.row.currentForecast,
       forecastVsBudget: resolved.row.forecastVsBudget,
+      comparativePeriodContext: {
+        actualVsBudgetVarianceRole: pnl.comparativeIntelligence.actualVsBudgetVarianceRole,
+        grainExplanationKey: pnl.comparativeIntelligence.actualContext.grainExplanationKey,
+      },
       actualEvidence: {
         availability: !evidenceVisible
           ? "NOT_VISIBLE"
@@ -339,6 +347,10 @@ export function buildFinanceManagementReportingDetailReadModel(input: {
     actual: resolved.row.actual,
     currentForecast: resolved.row.currentForecast,
     forecastVsBudget: resolved.row.forecastVsBudget,
+    comparativePeriodContext: {
+      actualVsBudgetVarianceRole: pnl.comparativeIntelligence.actualVsBudgetVarianceRole,
+      grainExplanationKey: pnl.comparativeIntelligence.actualContext.grainExplanationKey,
+    },
     actualEvidence: { availability: "NOT_VISIBLE", entries: [] },
     sourceActions,
     childAccountSummaries: childAccounts.map((a) => ({

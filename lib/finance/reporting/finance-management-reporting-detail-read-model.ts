@@ -1,5 +1,9 @@
 import type { FinanceReportingComparisonSlice } from "@/lib/finance/reporting/reporting-comparison-model";
 import type {
+  FinanceComparativeGrainExplanationKey,
+  FinanceComparativePresentationRole,
+} from "@/lib/finance/reporting/comparative-comparison-availability";
+import type {
   ManagementPnlMeasureCell,
   ManagementPnlAccountRow,
 } from "@/lib/finance/reporting/finance-management-pnl-read-model";
@@ -63,6 +67,10 @@ export type FinanceManagementReportingDetailReadModel = {
   actual: ManagementPnlMeasureCell;
   currentForecast: ManagementPnlMeasureCell;
   forecastVsBudget: FinanceReportingComparisonSlice;
+  comparativePeriodContext: {
+    actualVsBudgetVarianceRole: FinanceComparativePresentationRole;
+    grainExplanationKey: FinanceComparativeGrainExplanationKey | null;
+  };
   actualEvidence: FinanceReportingDetailActualEvidence;
   sourceActions: FinanceReportingDetailSourceActions;
   /** Direct child accounts when target is a reporting group. */

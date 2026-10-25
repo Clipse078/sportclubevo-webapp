@@ -111,6 +111,10 @@ export function FinanceReportingInvestigationWorkspace({
             favorability: null,
             absoluteVarianceMagnitudeMinor: null,
           },
+          comparativePeriodContext: {
+            actualVsBudgetVarianceRole: model.comparativeIntelligence.actualVsBudgetVarianceRole,
+            grainExplanationKey: model.comparativeIntelligence.actualContext.grainExplanationKey,
+          },
           actualEvidence: { availability: "NOT_VISIBLE", entries: [] },
           sourceActions: {
             budget: { canNavigate: false, href: null },

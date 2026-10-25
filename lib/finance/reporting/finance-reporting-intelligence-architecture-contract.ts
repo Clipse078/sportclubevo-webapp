@@ -695,8 +695,45 @@ export const FINANCE_05E_IMPLEMENTATION = {
   detailQueryLoader: "loadFinanceManagementReportingDetailReadModel",
   workspaceRoute: "/dashboard/finance/reports",
   detailInteraction: "SCE_SHEET_CONTEXTUAL_DETAIL",
-  fin05eStatus: "IMPLEMENTED_PO_UAT_PENDING",
-  fin05fStatus: "NOT_STARTED",
+  fin05eStatus: "COMPLETE_PO_UAT_PASS",
+  fin05fStatus: "IMPLEMENTED_PO_UAT_PENDING",
+} as const;
+
+/** FIN-05F implementation locks — Forecast / Budget / Actual comparative intelligence. */
+export const SCE_FINANCE_REPORTING_05F_ARCHITECTURE_LOCKS = {
+  comparativeIntelligenceReadModel: "FinanceComparativeIntelligenceReadModel",
+  composesFin05bVarianceEngine: true,
+  reusesFin05bVarianceEngine: true,
+  reusesFin05cManagementPnlHierarchy: true,
+  reusesFin05eInvestigationDrilldown: true,
+  primaryComparisonIsForecastVsApprovedBudget: true,
+  actualIsEvidenceWhenGrainDiffers: true,
+  ytdActualVsAnnualBudgetIsContextNotVariance: true,
+  ytdActualVsAnnualForecastIsContextNotVariance: true,
+  comparisonAvailabilityExplicit: true,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  noSecondVarianceEngineInReact: true,
+  noGenericBiEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noGenericBiEngine,
+  automaticForecastDoesNotReplaceCurrentForecast: true,
+  scenarioDoesNotReplaceCurrentForecast: true,
+  expectedEventsAreNotBudgetPhasing: true,
+  noLiquidityInFin05: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noLiquidityInFin05,
+  publicationDeferredToFin06: true,
+  balanceSheetDeferredToFin11: true,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  tenantScopedReporting: true,
+  permissionAwareComposition: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.permissionAwareComposition,
+  noFabricatedTrendFromSingleSnapshot: true,
+  materialityUsesRelativeRankingNotUniversalThresholds: true,
+} as const;
+
+export const FINANCE_05F_IMPLEMENTATION = {
+  comparativeIntelligenceReadModel: "FinanceComparativeIntelligenceReadModel",
+  comparativeIntelligenceBuilder: "buildFinanceComparativeIntelligenceReadModel",
+  comparisonAvailabilityModule: "lib/finance/reporting/comparative-comparison-availability.ts",
+  workspaceRoute: "/dashboard/finance/reports",
+  fin05fStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin05gStatus: "NOT_STARTED",
 } as const;
 
 export const FINANCE_05C_IMPLEMENTATION = {

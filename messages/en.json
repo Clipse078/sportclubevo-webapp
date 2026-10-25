@@ -621,7 +621,20 @@
         "expandAccounts": "Show accounts",
         "collapseAccounts": "Hide accounts",
         "noStructureViewOnly": "Financial structure has not been configured yet.",
-        "partialSourcesHint": "Some sources are missing — comparisons stay unavailable where required."
+        "partialSourcesHint": "Some sources are missing — comparisons stay unavailable where required.",
+        "actualEvidenceTitle": "Recorded actual (progress)",
+        "attentionSignalsTitle": "Where to look",
+        "grainExplanationYtdVsAnnualPlan": "Actual reflects recorded values through the cutoff date; budget and forecast represent the full financial year.",
+        "grainExplanationAnnualActualAndPlan": "Actual, budget, and forecast all refer to the full financial year.",
+        "signalForecastAboveBudget": "Current forecast expects a better result than the approved budget.",
+        "signalForecastBelowBudget": "Current forecast expects a worse result than the approved budget.",
+        "signalForecastOnBudget": "Current forecast matches the approved budget at management result level.",
+        "signalMaterialFavorableDrivers": "Material favourable forecast vs budget variances — see exceptions below.",
+        "signalMaterialUnfavorableDrivers": "Material unfavourable forecast vs budget variances — see exceptions below.",
+        "signalRecordedActualEvidence": "Recorded actual values provide progress evidence for the year so far.",
+        "signalLimitedActualEvidence": "Forecast differs materially from budget, but little actual is recorded yet for this period.",
+        "signalMissingBudget": "Approved budget missing — primary comparison unavailable.",
+        "signalMissingForecast": "Current forecast missing — expected outcome unclear."
       },
       "investigation": {
         "pageDescription": "Understand the management result, investigate material variances, and drill into account evidence without leaving the statement.",

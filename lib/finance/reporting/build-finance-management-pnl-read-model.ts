@@ -14,6 +14,10 @@ import {
   reconcilePnlSectionTotals,
 } from "@/lib/finance/reporting/pnl-reporting-completeness";
 import { summarizeVarianceTreeResult } from "@/lib/finance/reporting/build-variance-reporting-tree";
+import {
+  buildFinanceComparativeIntelligenceReadModel,
+  type FinanceComparativeIntelligenceSource,
+} from "@/lib/finance/reporting/build-finance-comparative-intelligence-read-model";
 
 function emptyMeasureCell(
   visible: boolean,
@@ -122,11 +126,11 @@ export function buildFinanceManagementPnlReadModel(input: {
     availability = "NO_STRUCTURE";
   }
 
-  return {
+  const readModelBody: FinanceComparativeIntelligenceSource = {
     tenantId: input.tenantId,
     financeYearId: input.financeYearId,
     financeYearName: input.financeYearName,
-    mode: "LIVE",
+    mode: "LIVE" as const,
     baseCurrency: input.baseCurrency,
     availability,
     actualCutoffDate: input.actualCutoffDate,
@@ -170,6 +174,11 @@ export function buildFinanceManagementPnlReadModel(input: {
     },
     hasUnassignedFinancialValues,
   };
+
+  return {
+    ...readModelBody,
+    comparativeIntelligence: buildFinanceComparativeIntelligenceReadModel(readModelBody),
+  };
 }
 
 export function emptyFinanceManagementPnlReadModel(
@@ -197,7 +206,7 @@ export function emptyFinanceManagementPnlReadModel(
     },
     nodes: [],
   };
-  return {
+  const readModelBody: FinanceComparativeIntelligenceSource = {
     tenantId: partial.tenantId,
     financeYearId: partial.financeYearId,
     financeYearName: partial.financeYearName,
@@ -266,5 +275,10 @@ export function emptyFinanceManagementPnlReadModel(
       },
     },
     hasUnassignedFinancialValues: false,
+  };
+
+  return {
+    ...readModelBody,
+    comparativeIntelligence: buildFinanceComparativeIntelligenceReadModel(readModelBody),
   };
 }

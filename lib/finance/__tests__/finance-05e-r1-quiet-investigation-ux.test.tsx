@@ -6,6 +6,7 @@ import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/
 import { FinanceManagementReportingDetailSheet } from "@/components/admin/finance/reporting/FinanceManagementReportingDetailSheet";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
 import type { SerializedFinanceManagementReportingDetailReadModel } from "@/lib/finance/presentation/serialize-management-reporting-detail-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const emptySlice = {
   availability: "BOTH_MISSING" as const,
@@ -158,6 +159,7 @@ const baseModel: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub(),
 };
 
 const labels = {
@@ -197,6 +199,19 @@ const labels = {
   unassignedHint: "Unassigned",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
+  actualEvidenceTitle: "Actual",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  signalForecastAboveBudget: "Above",
+  signalForecastBelowBudget: "Below",
+  signalForecastOnBudget: "On plan",
+  signalMaterialFavorableDrivers: "Fav",
+  signalMaterialUnfavorableDrivers: "Unfav",
+  signalRecordedActualEvidence: "Evidence",
+  signalLimitedActualEvidence: "Limited",
+  signalMissingBudget: "No budget",
+  signalMissingForecast: "No forecast",
 };
 
 const detailLabels = {
@@ -246,6 +261,7 @@ const detailLabels = {
   interpretationForecastAboveBudget: "Forecast is {variance} above budget.",
   interpretationForecastBelowBudget: "Forecast is {variance} below budget.",
   interpretationForecastOnBudget: "Forecast matches budget.",
+  grainExplanationYtdVsAnnualPlan: "YTD vs annual plan hint.",
 };
 
 const accountDetail: SerializedFinanceManagementReportingDetailReadModel = {
@@ -273,6 +289,10 @@ const accountDetail: SerializedFinanceManagementReportingDetailReadModel = {
     availability: "AVAILABLE",
     rawDeltaMinor: 37_694_00,
     favorability: "FAVORABLE",
+  },
+  comparativePeriodContext: {
+    actualVsBudgetVarianceRole: "SUPPORTED",
+    grainExplanationKey: null,
   },
   actualEvidence: {
     availability: "AVAILABLE",

@@ -6,6 +6,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const reportsPage = readFileSync(
   join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
@@ -132,6 +133,7 @@ const model: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub(),
 };
 
 const labels = {
@@ -171,6 +173,19 @@ const labels = {
   unassignedHint: "Unassigned",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
+  actualEvidenceTitle: "Actual",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  signalForecastAboveBudget: "Above",
+  signalForecastBelowBudget: "Below",
+  signalForecastOnBudget: "On plan",
+  signalMaterialFavorableDrivers: "Fav",
+  signalMaterialUnfavorableDrivers: "Unfav",
+  signalRecordedActualEvidence: "Evidence",
+  signalLimitedActualEvidence: "Limited",
+  signalMissingBudget: "No budget",
+  signalMissingForecast: "No forecast",
 };
 
 describe("FIN-05E reporting workspace UX", () => {

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+import { serializedComparativeIntelligenceStub } from "@/lib/finance/__tests__/fixtures/serialized-comparative-intelligence-stub";
 
 const reportsPage = readFileSync(
   join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
@@ -118,6 +119,7 @@ const baseModel: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
+  comparativeIntelligence: serializedComparativeIntelligenceStub(),
 };
 
 const labels = {
@@ -157,6 +159,19 @@ const labels = {
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
   exceptionsTitle: "Material variances",
+  actualEvidenceTitle: "Actual progress",
+  attentionSignalsTitle: "Attention",
+  grainExplanationYtdVsAnnualPlan: "YTD hint",
+  grainExplanationAnnualActualAndPlan: "Annual hint",
+  signalForecastAboveBudget: "Above",
+  signalForecastBelowBudget: "Below",
+  signalForecastOnBudget: "On plan",
+  signalMaterialFavorableDrivers: "Fav drivers",
+  signalMaterialUnfavorableDrivers: "Unfav drivers",
+  signalRecordedActualEvidence: "Actual evidence",
+  signalLimitedActualEvidence: "Limited actual",
+  signalMissingBudget: "Missing budget",
+  signalMissingForecast: "Missing forecast",
 };
 
 describe("FinanceManagementPnlPanel", () => {

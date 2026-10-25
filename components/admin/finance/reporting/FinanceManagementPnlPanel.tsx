@@ -32,6 +32,10 @@ import {
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import { FINANCE_SUMMARY_STRIP_SURFACE_CLASS } from "@/lib/finance/finance-workspace-surfaces";
 import type { VarianceFavorability } from "@/lib/finance/actual/variance-semantics";
+import {
+  financeComparativeAttentionSignalLabelKey,
+  financeComparativeGrainExplanationLabelKey,
+} from "@/lib/finance/presentation/finance-comparative-intelligence-presentation";
 
 type FinanceManagementPnlPanelLabels = {
   pageContextYear: string;
@@ -70,6 +74,19 @@ type FinanceManagementPnlPanelLabels = {
   investigateAccount: string;
   investigateGroup: string;
   exceptionsTitle: string;
+  actualEvidenceTitle: string;
+  attentionSignalsTitle: string;
+  grainExplanationYtdVsAnnualPlan: string;
+  grainExplanationAnnualActualAndPlan: string;
+  signalForecastAboveBudget: string;
+  signalForecastBelowBudget: string;
+  signalForecastOnBudget: string;
+  signalMaterialFavorableDrivers: string;
+  signalMaterialUnfavorableDrivers: string;
+  signalRecordedActualEvidence: string;
+  signalLimitedActualEvidence: string;
+  signalMissingBudget: string;
+  signalMissingForecast: string;
 };
 
 type FinanceManagementPnlPanelProps = {
@@ -588,9 +605,22 @@ export function FinanceManagementPnlPanel({
 
   const interpretationSlice = model.interpretation.forecastVsBudgetManagementResult;
   const hasInterpretation = interpretationSlice.availability === "AVAILABLE";
+  const comparative = model.comparativeIntelligence;
+  const grainExplanationKey = comparative.actualContext.grainExplanationKey;
+  const grainExplanationText =
+    grainExplanationKey != null
+      ? labels[financeComparativeGrainExplanationLabelKey(grainExplanationKey)]
+      : null;
+  const attentionSignals = comparative.attentionSignals.slice(0, 4);
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4" data-finance-pnl-panel>
+    <div
+      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4"
+      data-finance-pnl-panel
+      data-finance-comparative-intelligence
+      data-finance-comparative-actual-role={comparative.actualContext.presentationRole}
+      data-finance-comparative-actual-vs-budget-role={comparative.actualVsBudgetVarianceRole}
+    >
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[var(--muted)]">
         <span>
           {labels.pageContextYear}:{" "}
@@ -611,7 +641,7 @@ export function FinanceManagementPnlPanel({
         <h2 id="finance-pnl-interpretation" className="text-sm font-semibold text-[var(--foreground)]">
           {labels.interpretationTitle}
         </h2>
-        <dl className="grid gap-3 sm:grid-cols-3 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
+        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
           <div>
             <dt className="text-xs font-medium text-[var(--muted)]">{labels.budgetedResult}</dt>
             <dd className="mt-1 tabular-nums text-sm font-medium">
@@ -644,6 +674,7 @@ export function FinanceManagementPnlPanel({
                   hasComparison: hasInterpretation,
                 }),
               )}
+              data-finance-comparative-primary-variance
             >
               <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 {formatManagementPnlVarianceDelta(
@@ -659,11 +690,54 @@ export function FinanceManagementPnlPanel({
               </span>
             </dd>
           </div>
+          <div data-finance-comparative-actual-evidence>
+            <dt className="text-xs font-medium text-[var(--muted)]">{labels.actualEvidenceTitle}</dt>
+            <dd className="mt-1 tabular-nums text-sm font-medium">
+              {formatManagementPnlMeasureCell(
+                model.managementResult.actual,
+                model.baseCurrency,
+                formattingLocale,
+              )}
+            </dd>
+            {actualHeaderMode === "ytd" && actualCutoffLabel ? (
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{actualColumnLabel}</p>
+            ) : null}
+          </div>
         </dl>
+        {grainExplanationText ? (
+          <p
+            className="text-xs leading-relaxed text-[var(--muted)]"
+            data-finance-comparative-grain-explanation
+          >
+            {grainExplanationText}
+          </p>
+        ) : null}
         {model.availability === "PARTIAL_SOURCE_AVAILABILITY" ? (
           <p className="text-xs text-[var(--muted)]">{labels.partialSourcesHint}</p>
         ) : null}
       </section>
+
+      {attentionSignals.length > 0 ? (
+        <section
+          className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-2")}
+          aria-labelledby="finance-comparative-attention"
+          data-finance-comparative-attention
+        >
+          <h3
+            id="finance-comparative-attention"
+            className="text-sm font-semibold text-[var(--foreground)]"
+          >
+            {labels.attentionSignalsTitle}
+          </h3>
+          <ul className="space-y-1 text-sm text-[var(--foreground)]">
+            {attentionSignals.map((signal) => (
+              <li key={signal.kind} data-finance-comparative-attention-signal={signal.kind}>
+                {labels[financeComparativeAttentionSignalLabelKey(signal.kind)]}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {(model.topFavourableDrivers.length > 0 || model.topUnfavourableDrivers.length > 0) && (
         <section

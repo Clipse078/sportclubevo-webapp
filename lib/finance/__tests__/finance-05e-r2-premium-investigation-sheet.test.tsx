@@ -62,6 +62,7 @@ const detailLabels = {
   interpretationForecastAboveBudget: "Forecast is {variance} above budget.",
   interpretationForecastBelowBudget: "Forecast is {variance} below budget.",
   interpretationForecastOnBudget: "Forecast matches budget.",
+  grainExplanationYtdVsAnnualPlan: "YTD vs annual plan hint.",
 };
 
 function accountDetail(
@@ -94,6 +95,10 @@ function accountDetail(
       favorability: "FAVORABLE",
       variancePercent: 21.5,
       absoluteVarianceMagnitudeMinor: 37_694_00,
+    },
+    comparativePeriodContext: {
+      actualVsBudgetVarianceRole: "SUPPORTED",
+      grainExplanationKey: null,
     },
     actualEvidence: {
       availability: "AVAILABLE",

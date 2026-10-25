@@ -75,6 +75,7 @@ export type FinanceManagementReportingDetailLabels = {
   interpretationForecastBelowBudget: string;
   interpretationForecastOnBudget: string;
   actualContextSeparator: string;
+  grainExplanationYtdVsAnnualPlan: string;
 };
 
 type Props = {
@@ -306,11 +307,25 @@ export function FinanceManagementReportingDetailSheet({
                   )}
                 </span>
               </div>
-              <div className="flex items-baseline justify-between gap-4">
+              <div
+                className="flex items-baseline justify-between gap-4"
+                data-finance-reporting-detail-actual-context
+                data-finance-comparative-actual-role={
+                  detail.actualGrain === "YTD" ? "CONTEXT_ONLY" : "SUPPORTED"
+                }
+              >
                 <div className="min-w-0 text-[var(--muted)]">
                   <span>{actualPeriod?.primary}</span>
                   {actualPeriod?.context ? (
                     <span className="mt-0.5 block text-xs text-[var(--muted)]">{actualPeriod.context}</span>
+                  ) : null}
+                  {detail.comparativePeriodContext.grainExplanationKey === "YTD_ACTUAL_VS_ANNUAL_PLAN" ? (
+                    <span
+                      className="mt-1 block text-xs leading-relaxed text-[var(--muted)]"
+                      data-finance-comparative-grain-explanation
+                    >
+                      {labels.grainExplanationYtdVsAnnualPlan}
+                    </span>
                   ) : null}
                 </div>
                 <span className="shrink-0 tabular-nums font-medium text-[var(--foreground)]">

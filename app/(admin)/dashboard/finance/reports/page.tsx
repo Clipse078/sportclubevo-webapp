@@ -133,6 +133,19 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
             unassignedHint: t("reporting.pnl.unassignedHint"),
             investigateAccount: t("reporting.investigation.investigateAccount"),
             investigateGroup: t("reporting.investigation.investigateGroup"),
+            actualEvidenceTitle: t("reporting.pnl.actualEvidenceTitle"),
+            attentionSignalsTitle: t("reporting.pnl.attentionSignalsTitle"),
+            grainExplanationYtdVsAnnualPlan: t("reporting.pnl.grainExplanationYtdVsAnnualPlan"),
+            grainExplanationAnnualActualAndPlan: t("reporting.pnl.grainExplanationAnnualActualAndPlan"),
+            signalForecastAboveBudget: t("reporting.pnl.signalForecastAboveBudget"),
+            signalForecastBelowBudget: t("reporting.pnl.signalForecastBelowBudget"),
+            signalForecastOnBudget: t("reporting.pnl.signalForecastOnBudget"),
+            signalMaterialFavorableDrivers: t("reporting.pnl.signalMaterialFavorableDrivers"),
+            signalMaterialUnfavorableDrivers: t("reporting.pnl.signalMaterialUnfavorableDrivers"),
+            signalRecordedActualEvidence: t("reporting.pnl.signalRecordedActualEvidence"),
+            signalLimitedActualEvidence: t("reporting.pnl.signalLimitedActualEvidence"),
+            signalMissingBudget: t("reporting.pnl.signalMissingBudget"),
+            signalMissingForecast: t("reporting.pnl.signalMissingForecast"),
           }}
           detailLabels={{
             sheetTitleAccount: t("reporting.investigation.sheetTitleAccount"),
@@ -185,6 +198,7 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
               "reporting.investigation.interpretationForecastBelowBudget",
             ),
             interpretationForecastOnBudget: t("reporting.investigation.interpretationForecastOnBudget"),
+            grainExplanationYtdVsAnnualPlan: t("reporting.pnl.grainExplanationYtdVsAnnualPlan"),
           }}
         />
       </SceWorkspaceChrome>
