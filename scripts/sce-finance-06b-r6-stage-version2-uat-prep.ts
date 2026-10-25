@@ -76,6 +76,9 @@ async function main(): Promise<void> {
   }
   const liveMetrics = metricsFromLivePnl(live);
   const currencyCode = live.baseCurrency;
+  if (!currencyCode) {
+    throw new Error("Live Management P&L missing base currency.");
+  }
 
   const liveMatchesCheckpoint = metricsMatchPoWholeChfPresentation(
     liveMetrics,
