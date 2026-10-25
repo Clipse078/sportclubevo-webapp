@@ -172,6 +172,118 @@ describe("FIN-05C Management P&L read model", () => {
     expect(varianceTree[0]?.kind).toBe("reporting_group");
   });
 
+  it("hoists a single presentational section root group", () => {
+    const groups = [baseGroup("g-root", null), baseGroup("g-child", "g-root")];
+    const accounts = [
+      baseAccount("acc-i", "g-child", "INCOME"),
+      baseAccount("acc-e", "g-child", "EXPENSE"),
+    ];
+    const budgetMap = new Map([
+      ["acc-i", 100_00],
+      ["acc-e", 40_00],
+    ]);
+    const { varianceTree } = buildManagementPnlVarianceTree({
+      groups,
+      accounts,
+      budgetMap,
+      forecastMap: budgetMap,
+      budgetVisible: true,
+      forecastVisible: true,
+    });
+    const { incomeSection } = buildManagementPnlSemanticSections({
+      groups,
+      accounts,
+      budgetVisible: true,
+      actualVisible: true,
+      forecastVisible: true,
+      budgetMap,
+      actualMap: budgetMap,
+      forecastMap: budgetMap,
+      varianceTree,
+      unassignedAccounts: [],
+    });
+    expect(incomeSection.nodes).toHaveLength(1);
+    expect(incomeSection.nodes[0]?.kind).toBe("account");
+    expect(incomeSection.nodes[0]?.kind === "account" ? incomeSection.nodes[0].accountId : null).toBe(
+      "acc-i",
+    );
+  });
+
+  it("preserves multiple configured root groups", () => {
+    const groups = [baseGroup("g1", null), baseGroup("g2", null)];
+    const accounts = [baseAccount("acc-i", "g1", "INCOME"), baseAccount("acc-i2", "g2", "INCOME")];
+    const budgetMap = new Map([
+      ["acc-i", 50_00],
+      ["acc-i2", 50_00],
+    ]);
+    const { varianceTree } = buildManagementPnlVarianceTree({
+      groups,
+      accounts,
+      budgetMap,
+      forecastMap: budgetMap,
+      budgetVisible: true,
+      forecastVisible: true,
+    });
+    const { incomeSection } = buildManagementPnlSemanticSections({
+      groups,
+      accounts,
+      budgetVisible: true,
+      actualVisible: true,
+      forecastVisible: true,
+      budgetMap,
+      actualMap: budgetMap,
+      forecastMap: budgetMap,
+      varianceTree,
+      unassignedAccounts: [],
+    });
+    expect(incomeSection.nodes.filter((n) => n.kind === "reporting_group")).toHaveLength(2);
+  });
+
+  it("treats management result variance as favourable when forecast result exceeds budget", () => {
+    const groups = [baseGroup("g1", null)];
+    const accounts = [
+      baseAccount("acc-i", "g1", "INCOME"),
+      baseAccount("acc-e", "g1", "EXPENSE"),
+    ];
+    const budgetMap = new Map([
+      ["acc-i", 300_000_00],
+      ["acc-e", 150_000_00],
+    ]);
+    const forecastMap = new Map([
+      ["acc-i", 310_000_00],
+      ["acc-e", 148_467_00],
+    ]);
+    const model = buildFinanceManagementPnlReadModel({
+      tenantId: tenantA,
+      financeYearId: "year-1",
+      financeYearName: "FY2026",
+      baseCurrency: "CHF",
+      structureAvailability: "AVAILABLE",
+      actualCutoffDate: null,
+      groups,
+      accounts,
+      approvedMeasure: {
+        measure: "APPROVED_BUDGET",
+        budgetVersionId: "bv1",
+        approvedAt: new Date(),
+        baseCurrency: "CHF",
+        valuesByAccountId: budgetMap,
+      },
+      actualMeasure: null,
+      forecastMeasure: {
+        measure: "CURRENT_FORECAST",
+        forecastVersionId: "fv1",
+        forecastId: "f1",
+        valuesByAccountId: forecastMap,
+      },
+      sourceVisibility: { approvedBudget: true, actual: true, currentForecast: true },
+    });
+    expect(model.managementResult.approvedBudget.amountMinor).toBe(150_000_00);
+    expect(model.managementResult.currentForecast.amountMinor).toBe(161_533_00);
+    expect(model.managementResult.forecastVsBudget.rawDeltaMinor).toBe(11_533_00);
+    expect(model.managementResult.forecastVsBudget.favorability).toBe("FAVORABLE");
+  });
+
   it("uses semantic forecast-vs-budget favourability from FIN-05B engine", () => {
     const groups = [baseGroup("g1", null)];
     const accounts = [baseAccount("acc-e", "g1", "EXPENSE")];

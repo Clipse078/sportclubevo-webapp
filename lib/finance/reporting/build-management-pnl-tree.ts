@@ -286,6 +286,27 @@ function buildUnassignedResidual(
   };
 }
 
+/**
+ * When the configured hierarchy has a single semantic root group, the section heading
+ * already establishes that scope — hoisting avoids presentational duplication.
+ */
+export function flattenPresentationalSectionRoots(
+  nodes: ReadonlyArray<ManagementPnlTreeNode>,
+): ManagementPnlTreeNode[] {
+  const unassigned = nodes.filter((node) => node.kind === "unassigned_residual");
+  let structural: ManagementPnlTreeNode[] = nodes.filter(
+    (node) => node.kind !== "unassigned_residual",
+  );
+
+  while (structural.length === 1) {
+    const only = structural[0]!;
+    if (only.kind !== "reporting_group" || only.children.length === 0) break;
+    structural = [...only.children];
+  }
+
+  return [...structural, ...unassigned];
+}
+
 function sumSectionFromNodes(
   nodes: ReadonlyArray<ManagementPnlTreeNode>,
   semantic: "INCOME" | "EXPENSE",
@@ -351,14 +372,16 @@ export function buildManagementPnlSemanticSections(input: {
     );
     if (residual) nodes.push(residual);
 
-    const sectionMeasures = rollGroupMeasures(nodes);
+    const presentationNodes = flattenPresentationalSectionRoots(nodes);
+
+    const sectionMeasures = rollGroupMeasures(presentationNodes);
     return {
       semantic,
       sectionTotal: {
         ...sectionMeasures,
-        forecastVsBudget: sumSectionFromNodes(nodes, semantic),
+        forecastVsBudget: sumSectionFromNodes(presentationNodes, semantic),
       },
-      nodes,
+      nodes: presentationNodes,
     };
   }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Minus } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
 import {
@@ -18,16 +18,20 @@ import type {
   SerializedFinanceManagementPnlReadModel,
   SerializedManagementPnlAccountRow,
   SerializedManagementPnlGroupRow,
-  SerializedManagementPnlTreeNode,
   SerializedManagementPnlUnassignedResidualRow,
 } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
 import {
-  FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS,
-  FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS,
-  FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS,
-  FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+  FinanceVarianceComparisonColGroup,
+  FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS,
+  FINANCE_MANAGEMENT_PNL_HEAD_ACCOUNT_CLASS,
+  FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS,
+  FINANCE_MANAGEMENT_PNL_NUMERIC_CELL_CLASS,
+  FINANCE_MANAGEMENT_PNL_TABLE_HEAD_ROW_CLASS,
+  FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS,
   FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
+import { FINANCE_SUMMARY_STRIP_SURFACE_CLASS } from "@/lib/finance/finance-workspace-surfaces";
+import type { VarianceFavorability } from "@/lib/finance/actual/variance-semantics";
 
 type FinanceManagementPnlPanelLabels = {
   pageContextYear: string;
@@ -40,12 +44,14 @@ type FinanceManagementPnlPanelLabels = {
   topUnfavourable: string;
   incomeSection: string;
   expenseSection: string;
+  incomeSectionTotal: string;
+  expenseSectionTotal: string;
   managementResult: string;
   columnBudget: string;
   columnActual: string;
   columnActualYtd: string;
   columnForecast: string;
-  columnForecastVsBudget: string;
+  columnVariance: string;
   columnVariancePercent: string;
   unassignedGroup: string;
   archivedAccount: string;
@@ -71,11 +77,86 @@ type FinanceManagementPnlPanelProps = {
 
 function favorabilityLabel(
   labels: FinanceManagementPnlPanelLabels,
-  key: ReturnType<typeof financeVarianceFavorabilityLabelKey>,
+  favorability: VarianceFavorability,
 ): string {
+  const key = financeVarianceFavorabilityLabelKey(favorability);
   if (key === "favorabilityFavorable") return labels.favorabilityFavorable;
   if (key === "favorabilityUnfavorable") return labels.favorabilityUnfavorable;
   return labels.favorabilityOnPlan;
+}
+
+function FavorabilityIndicator(props: {
+  favorability: VarianceFavorability;
+  accessibleLabel: string;
+  compact?: boolean;
+}) {
+  const toneClass = financeVarianceComparisonSemanticTextClass({
+    favorability: props.favorability,
+    hasComparison: true,
+  });
+  const iconClass = cn("inline-block h-3.5 w-3.5 shrink-0", toneClass);
+  const Icon =
+    props.favorability === "FAVORABLE"
+      ? ArrowUp
+      : props.favorability === "UNFAVORABLE"
+        ? ArrowDown
+        : Minus;
+  return (
+    <span className={cn("inline-flex items-center gap-1", props.compact ? "text-xs" : "text-xs font-normal")}>
+      <Icon className={iconClass} aria-hidden />
+      <span className="sr-only">{props.accessibleLabel}</span>
+    </span>
+  );
+}
+
+type VariancePresentation = "compact" | "emphasized";
+
+function VarianceCell(props: {
+  slice: SerializedFinanceManagementPnlReadModel["managementResult"]["forecastVsBudget"];
+  currency: string | null;
+  locale: string;
+  labels: FinanceManagementPnlPanelLabels;
+  presentation: VariancePresentation;
+  emphasize?: boolean;
+}) {
+  const slice = props.slice;
+  const hasComparison = slice.availability === "AVAILABLE";
+  const favorability = slice.favorability;
+  const favorabilityText =
+    hasComparison && favorability ? favorabilityLabel(props.labels, favorability) : null;
+
+  return (
+    <td
+      className={cn(
+        FINANCE_MANAGEMENT_PNL_NUMERIC_CELL_CLASS,
+        props.emphasize && "font-semibold",
+        financeVarianceComparisonSemanticTextClass({
+          favorability: slice.favorability,
+          hasComparison,
+        }),
+      )}
+      data-finance-variance-favorability={hasComparison ? slice.favorability : undefined}
+    >
+      <span className="inline-flex flex-col items-end gap-0.5">
+        <span className="inline-flex items-center justify-end gap-1.5 tabular-nums">
+          {formatManagementPnlVarianceDelta(slice, props.currency, props.locale)}
+          {hasComparison && favorability && props.presentation === "compact" ? (
+            <FavorabilityIndicator
+              favorability={favorability}
+              accessibleLabel={favorabilityText ?? ""}
+              compact
+            />
+          ) : null}
+        </span>
+        {hasComparison && favorability && props.presentation === "emphasized" ? (
+          <span className="text-xs font-normal text-[var(--muted)]">{favorabilityText}</span>
+        ) : null}
+        <span className="text-xs font-normal text-[var(--muted)] tabular-nums">
+          {formatManagementPnlVariancePercent(slice, props.locale)}
+        </span>
+      </span>
+    </td>
+  );
 }
 
 function MeasureCells(props: {
@@ -88,14 +169,14 @@ function MeasureCells(props: {
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
   emphasize?: boolean;
+  variancePresentation?: VariancePresentation;
 }) {
-  const { slice } = { slice: props.forecastVsBudget };
-  const hasComparison = slice.availability === "AVAILABLE";
+  const variancePresentation = props.variancePresentation ?? "compact";
   return (
     <>
       <td
         className={cn(
-          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+          FINANCE_MANAGEMENT_PNL_NUMERIC_CELL_CLASS,
           props.emphasize && "font-semibold",
         )}
       >
@@ -103,7 +184,7 @@ function MeasureCells(props: {
       </td>
       <td
         className={cn(
-          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+          FINANCE_MANAGEMENT_PNL_NUMERIC_CELL_CLASS,
           props.emphasize && "font-semibold",
           "hidden md:table-cell",
         )}
@@ -112,41 +193,20 @@ function MeasureCells(props: {
       </td>
       <td
         className={cn(
-          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+          FINANCE_MANAGEMENT_PNL_NUMERIC_CELL_CLASS,
           props.emphasize && "font-semibold",
         )}
       >
         {formatManagementPnlMeasureCell(props.currentForecast, props.currency, props.locale)}
       </td>
-      <td
-        className={cn(
-          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
-          props.emphasize && "font-semibold",
-          financeVarianceComparisonSemanticTextClass({
-            favorability: slice.favorability,
-            hasComparison,
-          }),
-        )}
-        data-finance-variance-favorability={hasComparison ? slice.favorability : undefined}
-      >
-        <span className="block">{formatManagementPnlVarianceDelta(slice, props.currency, props.locale)}</span>
-        {hasComparison && slice.favorability ? (
-          <span className="block text-xs font-normal">
-            {favorabilityLabel(
-              props.labels,
-              financeVarianceFavorabilityLabelKey(slice.favorability),
-            )}
-          </span>
-        ) : null}
-      </td>
-      <td
-        className={cn(
-          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
-          "hidden lg:table-cell text-xs text-[var(--muted)]",
-        )}
-      >
-        {formatManagementPnlVariancePercent(slice)}
-      </td>
+      <VarianceCell
+        slice={props.forecastVsBudget}
+        currency={props.currency}
+        locale={props.locale}
+        labels={props.labels}
+        presentation={variancePresentation}
+        emphasize={props.emphasize}
+      />
     </>
   );
 }
@@ -162,7 +222,7 @@ function AccountRow(props: {
   return (
     <tr className="border-t border-[var(--sce-surface-border-subtle)]/60" data-finance-pnl-row="account">
       <td
-        className={cn(FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS, "pl-8")}
+        className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "pl-8")}
         style={{ paddingLeft: `${16 + props.depth * 12}px` }}
       >
         <span className="font-medium text-[var(--foreground)]">{props.row.name}</span>
@@ -200,7 +260,7 @@ function GroupBlock(props: {
     <>
       <tr className="border-t border-[var(--sce-surface-border-subtle)]" data-finance-pnl-row="group">
         <td
-          className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}
+          className={FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS}
           style={{ paddingLeft: `${16 + props.depth * 12}px` }}
         >
           <div className="flex items-start gap-2">
@@ -302,6 +362,7 @@ function UnassignedBlock(props: {
 
 function SectionTable(props: {
   title: string;
+  sectionTotalLabel: string;
   section: SerializedFinanceManagementPnlReadModel["incomeSection"];
   currency: string | null;
   locale: string;
@@ -310,37 +371,33 @@ function SectionTable(props: {
   actualColumnLabel: string;
 }) {
   return (
-    <section className="min-w-0 space-y-3" data-finance-pnl-section={props.section.semantic}>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+    <section className="min-w-0 space-y-2" data-finance-pnl-section={props.section.semantic}>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
         {props.title}
       </h3>
-      <div className="overflow-x-auto rounded-lg border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)]/40">
+      <div className={FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS}>
         <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS} data-finance-pnl-table>
+          <FinanceVarianceComparisonColGroup mode="MANAGEMENT_PNL" />
           <thead>
-            <tr className="border-b border-[var(--sce-surface-border-subtle)] text-[var(--muted)]">
-              <th scope="col" className={FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS}>
-                {props.title}
+            <tr className={FINANCE_MANAGEMENT_PNL_TABLE_HEAD_ROW_CLASS}>
+              <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_ACCOUNT_CLASS}>
+                <span className="sr-only">{props.title}</span>
               </th>
-              <th scope="col" className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+              <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
                 {props.labels.columnBudget}
               </th>
               <th
                 scope="col"
-                className={cn(FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS, "hidden md:table-cell")}
+                className={cn(FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS, "hidden md:table-cell")}
               >
                 {props.actualColumnLabel}
               </th>
-              <th scope="col" className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+              <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
                 {props.labels.columnForecast}
               </th>
-              <th scope="col" className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
-                {props.labels.columnForecastVsBudget}
-              </th>
-              <th
-                scope="col"
-                className={cn(FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS, "hidden lg:table-cell")}
-              >
-                {props.labels.columnVariancePercent}
+              <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
+                <span>{props.labels.columnVariance}</span>
+                <span className="sr-only"> ({props.labels.columnVariancePercent})</span>
               </th>
             </tr>
           </thead>
@@ -375,11 +432,11 @@ function SectionTable(props: {
               return null;
             })}
             <tr
-              className="border-t border-[var(--sce-color-border-standard)] bg-[var(--surface-2)]/30"
+              className="border-t border-[var(--sce-color-border-standard)] bg-[var(--sce-surface-dense)]"
               data-finance-pnl-row="section-total"
             >
-              <td className={cn(FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS, "font-semibold")}>
-                {props.title}
+              <td className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "font-semibold")}>
+                {props.sectionTotalLabel}
               </td>
               <MeasureCells
                 approvedBudget={props.section.sectionTotal.approvedBudget}
@@ -391,6 +448,7 @@ function SectionTable(props: {
                 labels={props.labels}
                 actualHeaderMode={props.actualHeaderMode}
                 emphasize
+                variancePresentation="emphasized"
               />
             </tr>
           </tbody>
@@ -461,7 +519,7 @@ export function FinanceManagementPnlPanel({
   const hasInterpretation = interpretationSlice.availability === "AVAILABLE";
 
   return (
-    <div className="space-y-8" data-finance-pnl-panel>
+    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-5" data-finance-pnl-panel>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[var(--muted)]">
         <span>
           {labels.pageContextYear}:{" "}
@@ -475,16 +533,16 @@ export function FinanceManagementPnlPanel({
       </div>
 
       <section
-        className="space-y-3 rounded-lg border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)]/30 p-5"
+        className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-2")}
         aria-labelledby="finance-pnl-interpretation"
         data-finance-pnl-interpretation
       >
-        <h2 id="finance-pnl-interpretation" className="text-base font-semibold text-[var(--foreground)]">
+        <h2 id="finance-pnl-interpretation" className="text-sm font-semibold text-[var(--foreground)]">
           {labels.interpretationTitle}
         </h2>
-        <dl className="grid gap-3 sm:grid-cols-3">
+        <dl className="grid gap-3 sm:grid-cols-3 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">{labels.budgetedResult}</dt>
+            <dt className="text-xs font-medium text-[var(--muted)]">{labels.budgetedResult}</dt>
             <dd className="mt-1 tabular-nums text-sm font-medium">
               {formatManagementPnlMeasureCell(
                 model.managementResult.approvedBudget,
@@ -494,7 +552,7 @@ export function FinanceManagementPnlPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">{labels.expectedResult}</dt>
+            <dt className="text-xs font-medium text-[var(--muted)]">{labels.expectedResult}</dt>
             <dd className="mt-1 tabular-nums text-sm font-medium">
               {formatManagementPnlMeasureCell(
                 model.managementResult.currentForecast,
@@ -504,31 +562,30 @@ export function FinanceManagementPnlPanel({
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+            <dt className="text-xs font-medium text-[var(--muted)]">
               {labels.forecastVsBudgetVariance}
             </dt>
             <dd
               className={cn(
-                "mt-1 tabular-nums text-sm font-medium",
+                "mt-1 tabular-nums text-sm font-semibold",
                 financeVarianceComparisonSemanticTextClass({
                   favorability: interpretationSlice.favorability,
                   hasComparison: hasInterpretation,
                 }),
               )}
             >
-              {formatManagementPnlVarianceDelta(
-                interpretationSlice,
-                model.baseCurrency,
-                formattingLocale,
-              )}
-              {hasInterpretation && interpretationSlice.favorability ? (
-                <span className="ml-2 text-xs font-normal">
-                  {favorabilityLabel(
-                    labels,
-                    financeVarianceFavorabilityLabelKey(interpretationSlice.favorability),
-                  )}
-                </span>
-              ) : null}
+              <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                {formatManagementPnlVarianceDelta(
+                  interpretationSlice,
+                  model.baseCurrency,
+                  formattingLocale,
+                )}
+                {hasInterpretation && interpretationSlice.favorability ? (
+                  <span className="text-xs font-normal text-[var(--muted)]">
+                    {favorabilityLabel(labels, interpretationSlice.favorability)}
+                  </span>
+                ) : null}
+              </span>
             </dd>
           </div>
         </dl>
@@ -538,46 +595,72 @@ export function FinanceManagementPnlPanel({
       </section>
 
       {(model.topFavourableDrivers.length > 0 || model.topUnfavourableDrivers.length > 0) && (
-        <section className="grid gap-4 md:grid-cols-2" data-finance-pnl-drivers>
-          <div className="min-w-0 rounded-lg border border-[var(--sce-surface-border-subtle)] p-4">
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">{labels.topFavourable}</h3>
-            <ul className="mt-2 space-y-1 text-sm">
-              {model.topFavourableDrivers.map((driver) => (
-                <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
-                  <span className="truncate text-[var(--foreground)]">{driver.name}</span>
-                  <span className="shrink-0 text-[var(--muted)]">
-                    {formatManagementPnlVarianceDelta(
-                      driver.comparison,
-                      model.baseCurrency,
-                      formattingLocale,
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="min-w-0 rounded-lg border border-[var(--sce-surface-border-subtle)] p-4">
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">{labels.topUnfavourable}</h3>
-            <ul className="mt-2 space-y-1 text-sm">
-              {model.topUnfavourableDrivers.map((driver) => (
-                <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
-                  <span className="truncate text-[var(--foreground)]">{driver.name}</span>
-                  <span className="shrink-0 text-[var(--muted)]">
-                    {formatManagementPnlVarianceDelta(
-                      driver.comparison,
-                      model.baseCurrency,
-                      formattingLocale,
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <section
+          className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-3")}
+          data-finance-pnl-drivers
+          aria-labelledby="finance-pnl-drivers-title"
+        >
+          <h3 id="finance-pnl-drivers-title" className="text-sm font-semibold text-[var(--foreground)]">
+            {labels.driversTitle}
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-[var(--muted)]">{labels.topFavourable}</p>
+              <ul className="mt-1 space-y-1 text-sm">
+                {model.topFavourableDrivers.map((driver) => (
+                  <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
+                    <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    <span
+                      className={cn(
+                        "shrink-0 font-medium",
+                        financeVarianceComparisonSemanticTextClass({
+                          favorability: driver.comparison.favorability,
+                          hasComparison: driver.comparison.availability === "AVAILABLE",
+                        }),
+                      )}
+                    >
+                      {formatManagementPnlVarianceDelta(
+                        driver.comparison,
+                        model.baseCurrency,
+                        formattingLocale,
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-[var(--muted)]">{labels.topUnfavourable}</p>
+              <ul className="mt-1 space-y-1 text-sm">
+                {model.topUnfavourableDrivers.map((driver) => (
+                  <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
+                    <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    <span
+                      className={cn(
+                        "shrink-0 font-medium",
+                        financeVarianceComparisonSemanticTextClass({
+                          favorability: driver.comparison.favorability,
+                          hasComparison: driver.comparison.availability === "AVAILABLE",
+                        }),
+                      )}
+                    >
+                      {formatManagementPnlVarianceDelta(
+                        driver.comparison,
+                        model.baseCurrency,
+                        formattingLocale,
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
       )}
 
       <SectionTable
         title={labels.incomeSection}
+        sectionTotalLabel={labels.incomeSectionTotal}
         section={model.incomeSection}
         currency={model.baseCurrency}
         locale={formattingLocale}
@@ -587,6 +670,7 @@ export function FinanceManagementPnlPanel({
       />
       <SectionTable
         title={labels.expenseSection}
+        sectionTotalLabel={labels.expenseSectionTotal}
         section={model.expenseSection}
         currency={model.baseCurrency}
         locale={formattingLocale}
@@ -595,11 +679,15 @@ export function FinanceManagementPnlPanel({
         actualColumnLabel={actualColumnLabel}
       />
 
-      <div className="overflow-x-auto rounded-lg border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)]/40">
+      <div className={FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS} data-finance-pnl-result>
         <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS} data-finance-pnl-result-table>
+          <FinanceVarianceComparisonColGroup mode="MANAGEMENT_PNL" />
           <tbody>
-            <tr data-finance-pnl-row="management-result">
-              <td className={cn(FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS, "font-semibold")}>
+            <tr
+              className="bg-[var(--sce-surface-dense)]"
+              data-finance-pnl-row="management-result"
+            >
+              <td className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "text-base font-semibold")}>
                 {labels.managementResult}
               </td>
               <MeasureCells
@@ -612,6 +700,7 @@ export function FinanceManagementPnlPanel({
                 labels={labels}
                 actualHeaderMode={actualHeaderMode}
                 emphasize
+                variancePresentation="emphasized"
               />
             </tr>
           </tbody>

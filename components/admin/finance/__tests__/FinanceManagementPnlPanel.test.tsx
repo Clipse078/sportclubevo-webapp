@@ -1,8 +1,15 @@
 /** @vitest-environment jsdom */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import type { SerializedFinanceManagementPnlReadModel } from "@/lib/finance/presentation/serialize-management-pnl-read-model";
+
+const reportsPage = readFileSync(
+  join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
+  "utf8",
+);
 
 const emptySlice = {
   availability: "BOTH_MISSING" as const,
@@ -124,13 +131,15 @@ const labels = {
   topUnfavourable: "Unfavourable",
   incomeSection: "Income",
   expenseSection: "Expense",
+  incomeSectionTotal: "Total income",
+  expenseSectionTotal: "Total expense",
   managementResult: "Result",
   columnBudget: "Budget",
   columnActual: "Actual",
   columnActualYtd: "Actual YTD",
   columnForecast: "Forecast",
-  columnForecastVsBudget: "Forecast vs budget",
-  columnVariancePercent: "Var %",
+  columnVariance: "Variance",
+  columnVariancePercent: "Variance percentage",
   unassignedGroup: "Unassigned",
   archivedAccount: "Archived",
   expandAccounts: "Expand",
@@ -188,5 +197,26 @@ describe("FinanceManagementPnlPanel", () => {
       />,
     );
     expect(screen.getAllByText("Favourable").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Finance\.favorability/i)).toBeNull();
+  });
+
+  it("resolves favorability labels from Finance.actuals translations on the page", () => {
+    expect(reportsPage).toContain('t("actuals.favorabilityFavorable")');
+    expect(reportsPage).toContain('t("actuals.favorabilityUnfavorable")');
+    expect(reportsPage).toContain('t("actuals.favorabilityOnPlan")');
+    expect(reportsPage).not.toContain('t("favorabilityFavorable")');
+  });
+
+  it("labels section totals distinctly from section headings", () => {
+    render(
+      <FinanceManagementPnlPanel
+        model={baseModel}
+        formattingLocale="en-GB"
+        canConfigureStructure={false}
+        labels={labels}
+      />,
+    );
+    expect(screen.getByText("Total income")).toBeTruthy();
+    expect(screen.getByText("Total expense")).toBeTruthy();
   });
 });
