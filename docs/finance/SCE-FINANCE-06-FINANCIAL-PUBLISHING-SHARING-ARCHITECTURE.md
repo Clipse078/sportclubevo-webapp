@@ -193,6 +193,11 @@ Manual browser UAT by engineering agents is **not** part of closure — Product 
 
 ## FIN-06B — publication snapshot & versioning (implemented)
 
+**FIN-06B-R3 (2026-10-25):** Designated STAGE required migration
+`20261025140000_sce_finance_06a_publishing_sharing_foundation` before Preview publication
+persistence. R3 adds bounded German publication action errors, explicit success/inspection UX,
+and automated end-to-end publication execution coverage. Status remains **PO UAT PENDING**.
+
 First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
 | Concern | Implementation |

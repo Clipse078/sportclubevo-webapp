@@ -1,7 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
-import { FinanceDomainError, financeErrorMessage } from "@/lib/finance/errors";
+import { FinanceDomainError } from "@/lib/finance/errors";
+import { resolveFinancePublicationActionUserMessage } from "@/lib/finance/publishing/finance-publication-action-errors";
+import { revalidatePath } from "next/cache";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { canPublishFinancialReports } from "@/lib/finance/publishing/finance-publishing-authorization";
 import {
@@ -26,12 +28,23 @@ export async function publishFinanceManagementPnlAction(input: {
   try {
     const workspace = await loadFinanceWorkspaceContext();
     if (!canPublishFinancialReports(workspace.ctx)) {
-      return { ok: false, error: "Insufficient permission to publish financial reports." };
+      return {
+        ok: false,
+        error: resolveFinancePublicationActionUserMessage(
+          new FinanceDomainError(
+            "FINANCE_FORBIDDEN",
+            "Insufficient permission to publish financial reports.",
+            403,
+          ),
+        ),
+      };
     }
 
     const result = await publishFinanceManagementPnlSnapshot(prisma, workspace.ctx, {
       financeYearId: input.financeYearId,
     });
+
+    revalidatePath("/dashboard/finance/reports");
 
     return {
       ok: true,
@@ -42,7 +55,7 @@ export async function publishFinanceManagementPnlAction(input: {
   } catch (error: unknown) {
     return {
       ok: false,
-      error: error instanceof FinanceDomainError ? error.message : financeErrorMessage(error),
+      error: resolveFinancePublicationActionUserMessage(error),
     };
   }
 }
@@ -83,7 +96,7 @@ export async function loadFinancePublicationInspectionAction(input: {
   } catch (error: unknown) {
     return {
       ok: false,
-      error: error instanceof FinanceDomainError ? error.message : financeErrorMessage(error),
+      error: resolveFinancePublicationActionUserMessage(error),
     };
   }
 }

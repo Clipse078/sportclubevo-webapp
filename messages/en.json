@@ -675,6 +675,7 @@
         "viewLatest": "View publication",
         "notPublishable": "This report is not ready to publish yet.",
         "forbidden": "You do not have permission to publish financial reports.",
+        "publishFailed": "The publication could not be created. Please try again.",
         "versionLabel": "Version {version}",
         "publishedAtLabel": "Published",
         "inspectionTitle": "Published version",

@@ -136,6 +136,7 @@ const publicationLabels = {
   viewLatest: "View",
   notPublishable: "Not publishable",
   forbidden: "Forbidden",
+  publishFailed: "Failed",
   versionLabel: "Version {version}",
   publishedAtLabel: "Published at",
   inspectionTitle: "Inspection",

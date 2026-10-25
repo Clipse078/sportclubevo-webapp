@@ -58,6 +58,21 @@ the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Previ
 
 Closure record: `docs/finance/SCE-FINANCE-02B-IMPLEMENTATION.md` (STAGE migration applied 2026-10-23).
 
+## Finance (FIN-06A) — publication & sharing foundation before Preview UAT
+
+PR Preview code for FIN-06B+ persists `FinancePublication` and
+`FinancePublicationVersion`. If the shared STAGE database has not applied:
+
+- `20261025140000_sce_finance_06a_publishing_sharing_foundation`
+
+…clicking **Veröffentlichen** fails at persistence (Prisma relation missing) while
+the dialog still deploys. Apply step 3 **before** Product Owner FIN-06B publication UAT on Preview.
+
+Operator verify (read-only):
+
+- `scripts/sce-finance-06a-r1-stage-migration-verify.ts`
+- `npm run finance:06a:r1:stage-migration-verify`
+
 ## Finance (FIN-03A) — actuals foundation before Preview UAT
 
 PR Preview code for FIN-03A queries `FinanceActualEntry` and enum `FinanceActualEntrySource`. If the shared STAGE database has not applied:

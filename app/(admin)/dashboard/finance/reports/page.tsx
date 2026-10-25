@@ -110,6 +110,7 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
             viewLatest: t("reporting.publication.viewLatest"),
             notPublishable: t("reporting.publication.notPublishable"),
             forbidden: t("reporting.publication.forbidden"),
+            publishFailed: t("reporting.publication.publishFailed"),
             versionLabel: t("reporting.publication.versionLabel"),
             publishedAtLabel: t("reporting.publication.publishedAtLabel"),
             inspectionTitle: t("reporting.publication.inspectionTitle"),

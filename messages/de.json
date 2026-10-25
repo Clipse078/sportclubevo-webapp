@@ -1138,6 +1138,7 @@
         "viewLatest": "Veröffentlichung ansehen",
         "notPublishable": "Dieser Bericht ist noch nicht veröffentlichungsbereit.",
         "forbidden": "Sie dürfen Finanzberichte nicht veröffentlichen.",
+        "publishFailed": "Die Veröffentlichung konnte nicht erstellt werden. Bitte erneut versuchen.",
         "versionLabel": "Version {version}",
         "publishedAtLabel": "Veröffentlicht",
         "inspectionTitle": "Veröffentlichte Version",
