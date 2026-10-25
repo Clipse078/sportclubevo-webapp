@@ -198,7 +198,7 @@ describe("FIN-05E reporting workspace UX", () => {
         onInvestigateDriver={vi.fn()}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Investigate" }));
+    await user.click(screen.getByRole("button", { name: "Investigate: Membership" }));
     expect(onInvestigateAccount).toHaveBeenCalledWith("acc-1");
   });
 
@@ -213,6 +213,6 @@ describe("FIN-05E reporting workspace UX", () => {
       />,
     );
     expect(document.querySelector("[data-finance-pnl-exceptions]")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Membership" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Investigate: Membership" })).toBeTruthy();
   });
 });

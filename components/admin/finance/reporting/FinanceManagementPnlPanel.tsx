@@ -189,6 +189,10 @@ function MeasureCells(props: {
   );
 }
 
+function investigationTargetAriaLabel(actionLabel: string, targetName: string): string {
+  return `${actionLabel}: ${targetName}`;
+}
+
 function AccountRow(props: {
   row: SerializedManagementPnlAccountRow;
   depth: number;
@@ -208,24 +212,32 @@ function AccountRow(props: {
       )}
       data-finance-pnl-row="account"
       data-finance-pnl-account-id={props.row.accountId}
+      data-finance-pnl-drillable={canInvestigate ? "true" : undefined}
     >
       <td
         className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "pl-8")}
         style={{ paddingLeft: `${16 + props.depth * 12}px` }}
       >
-        <div className="flex items-start gap-2">
-          <span className="font-medium text-[var(--foreground)]">{props.row.name}</span>
-          {props.row.lifecycle === "ARCHIVED" ? (
-            <span className="text-xs text-[var(--muted)]">({props.labels.archivedAccount})</span>
-          ) : null}
+        <div className="flex min-w-0 items-start gap-2">
           {canInvestigate ? (
             <button
               type="button"
-              className="ml-auto shrink-0 rounded-md px-2 py-0.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+              data-finance-pnl-investigate="account"
+              className="group/account inline-flex min-w-0 max-w-full items-center gap-1 rounded-sm text-left font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+              aria-label={investigationTargetAriaLabel(props.labels.investigateAccount, props.row.name)}
               onClick={() => props.onInvestigate?.(props.row.accountId)}
             >
-              {props.labels.investigateAccount}
+              <span className="truncate">{props.row.name}</span>
+              <ChevronRight
+                className="h-3.5 w-3.5 shrink-0 text-[var(--muted)] opacity-70 transition-opacity group-hover/account:opacity-100 group-focus-visible/account:opacity-100"
+                aria-hidden
+              />
             </button>
+          ) : (
+            <span className="font-medium text-[var(--foreground)]">{props.row.name}</span>
+          )}
+          {props.row.lifecycle === "ARCHIVED" ? (
+            <span className="shrink-0 text-xs text-[var(--muted)]">({props.labels.archivedAccount})</span>
           ) : null}
         </div>
       </td>
@@ -268,15 +280,17 @@ function GroupBlock(props: {
         )}
         data-finance-pnl-row="group"
         data-finance-pnl-group-id={props.node.groupId}
+        data-finance-pnl-drillable={props.onInvestigateGroup ? "true" : undefined}
       >
         <td
           className={FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS}
           style={{ paddingLeft: `${16 + props.depth * 12}px` }}
         >
-          <div className="flex items-start gap-2">
+          <div className="flex min-w-0 items-start gap-2">
             {accountChildren.length > 0 ? (
               <button
                 type="button"
+                data-finance-pnl-expand="group"
                 className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
                 aria-expanded={expanded}
                 aria-label={expanded ? props.labels.collapseAccounts : props.labels.expandAccounts}
@@ -290,14 +304,17 @@ function GroupBlock(props: {
             ) : (
               <span className="inline-block w-6 shrink-0" aria-hidden />
             )}
-            <span className="font-semibold text-[var(--foreground)]">{props.node.name}</span>
+            <span className="min-w-0 flex-1 font-semibold text-[var(--foreground)]">{props.node.name}</span>
             {props.onInvestigateGroup ? (
               <button
                 type="button"
-                className="ml-auto shrink-0 rounded-md px-2 py-0.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                data-finance-pnl-investigate="group"
+                className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                aria-label={investigationTargetAriaLabel(props.labels.investigateGroup, props.node.name)}
                 onClick={() => props.onInvestigateGroup?.(props.node.groupId)}
               >
-                {props.labels.investigateGroup}
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                <span className="sr-only">{props.labels.investigateGroup}</span>
               </button>
             ) : null}
           </div>
@@ -573,7 +590,7 @@ export function FinanceManagementPnlPanel({
   const hasInterpretation = interpretationSlice.availability === "AVAILABLE";
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-5" data-finance-pnl-panel>
+    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4" data-finance-pnl-panel>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[var(--muted)]">
         <span>
           {labels.pageContextYear}:{" "}
@@ -667,74 +684,114 @@ export function FinanceManagementPnlPanel({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
               <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topFavourable}</p>
-              <ul className="mt-1 space-y-1 text-sm">
+              <ul className="mt-1 space-y-0.5 text-sm" data-finance-pnl-driver-list="favourable">
                 {model.topFavourableDrivers.map((driver) => (
-                  <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
+                  <li key={driver.id}>
                     {onInvestigateDriver ? (
                       <button
                         type="button"
-                        className="truncate text-left text-[var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        data-finance-pnl-investigate="driver"
+                        className="flex w-full items-center justify-between gap-3 rounded-md px-1.5 py-1 text-left tabular-nums hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        aria-label={investigationTargetAriaLabel(labels.investigateAccount, driver.name)}
                         onClick={() =>
                           onInvestigateDriver({ kind: driver.kind, id: driver.id })
                         }
                       >
-                        {driver.name}
+                        <span className="truncate font-medium text-[var(--foreground)]">{driver.name}</span>
+                        <span
+                          className={cn(
+                            "inline-flex shrink-0 items-center gap-1 font-medium",
+                            financeVarianceComparisonSemanticTextClass({
+                              favorability: driver.comparison.favorability,
+                              hasComparison: driver.comparison.availability === "AVAILABLE",
+                            }),
+                          )}
+                        >
+                          {formatManagementPnlVarianceDelta(
+                            driver.comparison,
+                            model.baseCurrency,
+                            formattingLocale,
+                          )}
+                          <ChevronRight className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
+                        </span>
                       </button>
                     ) : (
-                      <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                      <div className="flex justify-between gap-3 px-1.5 py-1 tabular-nums">
+                        <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                        <span
+                          className={cn(
+                            "shrink-0 font-medium",
+                            financeVarianceComparisonSemanticTextClass({
+                              favorability: driver.comparison.favorability,
+                              hasComparison: driver.comparison.availability === "AVAILABLE",
+                            }),
+                          )}
+                        >
+                          {formatManagementPnlVarianceDelta(
+                            driver.comparison,
+                            model.baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      </div>
                     )}
-                    <span
-                      className={cn(
-                        "shrink-0 font-medium",
-                        financeVarianceComparisonSemanticTextClass({
-                          favorability: driver.comparison.favorability,
-                          hasComparison: driver.comparison.availability === "AVAILABLE",
-                        }),
-                      )}
-                    >
-                      {formatManagementPnlVarianceDelta(
-                        driver.comparison,
-                        model.baseCurrency,
-                        formattingLocale,
-                      )}
-                    </span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
               <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topUnfavourable}</p>
-              <ul className="mt-1 space-y-1 text-sm">
+              <ul className="mt-1 space-y-0.5 text-sm" data-finance-pnl-driver-list="unfavourable">
                 {model.topUnfavourableDrivers.map((driver) => (
-                  <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
+                  <li key={driver.id}>
                     {onInvestigateDriver ? (
                       <button
                         type="button"
-                        className="truncate text-left text-[var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        data-finance-pnl-investigate="driver"
+                        className="flex w-full items-center justify-between gap-3 rounded-md px-1.5 py-1 text-left tabular-nums hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        aria-label={investigationTargetAriaLabel(labels.investigateAccount, driver.name)}
                         onClick={() =>
                           onInvestigateDriver({ kind: driver.kind, id: driver.id })
                         }
                       >
-                        {driver.name}
+                        <span className="truncate font-medium text-[var(--foreground)]">{driver.name}</span>
+                        <span
+                          className={cn(
+                            "inline-flex shrink-0 items-center gap-1 font-medium",
+                            financeVarianceComparisonSemanticTextClass({
+                              favorability: driver.comparison.favorability,
+                              hasComparison: driver.comparison.availability === "AVAILABLE",
+                            }),
+                          )}
+                        >
+                          {formatManagementPnlVarianceDelta(
+                            driver.comparison,
+                            model.baseCurrency,
+                            formattingLocale,
+                          )}
+                          <ChevronRight className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
+                        </span>
                       </button>
                     ) : (
-                      <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                      <div className="flex justify-between gap-3 px-1.5 py-1 tabular-nums">
+                        <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                        <span
+                          className={cn(
+                            "shrink-0 font-medium",
+                            financeVarianceComparisonSemanticTextClass({
+                              favorability: driver.comparison.favorability,
+                              hasComparison: driver.comparison.availability === "AVAILABLE",
+                            }),
+                          )}
+                        >
+                          {formatManagementPnlVarianceDelta(
+                            driver.comparison,
+                            model.baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      </div>
                     )}
-                    <span
-                      className={cn(
-                        "shrink-0 font-medium",
-                        financeVarianceComparisonSemanticTextClass({
-                          favorability: driver.comparison.favorability,
-                          hasComparison: driver.comparison.availability === "AVAILABLE",
-                        }),
-                      )}
-                    >
-                      {formatManagementPnlVarianceDelta(
-                        driver.comparison,
-                        model.baseCurrency,
-                        formattingLocale,
-                      )}
-                    </span>
                   </li>
                 ))}
               </ul>

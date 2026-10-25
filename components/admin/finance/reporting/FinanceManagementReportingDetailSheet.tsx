@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { cn } from "@/lib/cn";
 import {
@@ -97,6 +98,24 @@ function formatMoneyMinor(amountMinor: number, currency: string | null, locale: 
   }
 }
 
+function investigationTargetAriaLabel(actionLabel: string, targetName: string): string {
+  return `${actionLabel}: ${targetName}`;
+}
+
+function actualColumnLabel(
+  detail: SerializedFinanceManagementReportingDetailReadModel,
+  labels: FinanceManagementReportingDetailLabels,
+  formattingLocale: string,
+): string {
+  if (detail.actualGrain === "YTD") {
+    const cutoff = detail.actualCutoffDate
+      ? formatDate(detail.actualCutoffDate, formattingLocale)
+      : null;
+    return cutoff ? `${labels.actualGrainYtd} ${cutoff}` : labels.actualGrainYtd;
+  }
+  return labels.columnActual;
+}
+
 export function FinanceManagementReportingDetailSheet({
   open,
   onClose,
@@ -129,8 +148,9 @@ export function FinanceManagementReportingDetailSheet({
         </div>
       ) : null}
       {!loading && detail?.availability === "AVAILABLE" ? (
-        <div className="space-y-6" data-finance-reporting-detail-body>
-          <div className="space-y-1 text-sm">
+        <div className="space-y-5" data-finance-reporting-detail-body>
+          <header className="space-y-1" data-finance-reporting-detail-identity>
+            <p className="text-base font-semibold text-[var(--foreground)]">{displayName}</p>
             {detail.isUnassignedResidual ? (
               <p className="text-xs text-[var(--muted)]">{labels.unassignedAccount}</p>
             ) : null}
@@ -151,16 +171,19 @@ export function FinanceManagementReportingDetailSheet({
                 </p>
               </div>
             ) : null}
-          </div>
+          </header>
 
-          <section aria-labelledby="finance-reporting-detail-summary">
+          <section
+            aria-labelledby="finance-reporting-detail-summary"
+            data-finance-reporting-detail-summary
+          >
             <h3 id="finance-reporting-detail-summary" className="text-sm font-semibold">
               {labels.summaryTitle}
             </h3>
-            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs text-[var(--muted)]">{labels.columnBudget}</dt>
-                <dd className="tabular-nums text-sm font-medium">
+            <dl className="mt-2 divide-y divide-[var(--sce-surface-border-subtle)]/60 rounded-md border border-[var(--sce-surface-border-subtle)]/80 text-sm">
+              <div className="flex items-baseline justify-between gap-4 px-3 py-2">
+                <dt className="text-[var(--muted)]">{labels.columnBudget}</dt>
+                <dd className="tabular-nums font-medium">
                   {formatManagementPnlMeasureCell(
                     detail.approvedBudget,
                     detail.baseCurrency,
@@ -168,15 +191,17 @@ export function FinanceManagementReportingDetailSheet({
                   )}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted)]">{labels.columnActual}</dt>
-                <dd className="tabular-nums text-sm font-medium">
+              <div className="flex items-baseline justify-between gap-4 px-3 py-2">
+                <dt className="text-[var(--muted)]">
+                  {actualColumnLabel(detail, labels, formattingLocale)}
+                </dt>
+                <dd className="tabular-nums font-medium">
                   {formatManagementPnlMeasureCell(detail.actual, detail.baseCurrency, formattingLocale)}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted)]">{labels.columnForecast}</dt>
-                <dd className="tabular-nums text-sm font-medium">
+              <div className="flex items-baseline justify-between gap-4 px-3 py-2">
+                <dt className="text-[var(--muted)]">{labels.columnForecast}</dt>
+                <dd className="tabular-nums font-medium">
                   {formatManagementPnlMeasureCell(
                     detail.currentForecast,
                     detail.baseCurrency,
@@ -184,75 +209,81 @@ export function FinanceManagementReportingDetailSheet({
                   )}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted)]">{labels.columnVariance}</dt>
+              <div className="flex items-baseline justify-between gap-4 bg-[var(--sce-surface-dense)]/50 px-3 py-2.5">
+                <dt className="font-medium text-[var(--foreground)]">{labels.columnVariance}</dt>
                 <dd
                   className={cn(
-                    "tabular-nums text-sm font-semibold",
+                    "text-right tabular-nums font-semibold",
                     financeVarianceComparisonSemanticTextClass({
                       favorability: detail.forecastVsBudget.favorability,
                       hasComparison: detail.forecastVsBudget.availability === "AVAILABLE",
                     }),
                   )}
                 >
-                  {formatManagementPnlVarianceDelta(
-                    detail.forecastVsBudget,
-                    detail.baseCurrency,
-                    formattingLocale,
-                  )}
+                  <span className="block">
+                    {formatManagementPnlVarianceDelta(
+                      detail.forecastVsBudget,
+                      detail.baseCurrency,
+                      formattingLocale,
+                    )}
+                  </span>
                   {detail.forecastVsBudget.availability === "AVAILABLE" &&
                   detail.forecastVsBudget.favorability ? (
-                    <span className="ml-2 text-xs font-normal text-[var(--muted)]">
+                    <span className="block text-xs font-normal text-[var(--muted)]">
                       {favorabilityLabel(labels, detail.forecastVsBudget.favorability)}
                     </span>
                   ) : null}
-                  <div className="text-xs font-normal text-[var(--muted)]">
+                  <span className="block text-xs font-normal text-[var(--muted)]">
                     {formatManagementPnlVariancePercent(detail.forecastVsBudget, formattingLocale)}
-                  </div>
+                  </span>
                 </dd>
               </div>
             </dl>
           </section>
 
-          {detail.actualGrain ? (
-            <section aria-labelledby="finance-reporting-detail-period">
-              <h3 id="finance-reporting-detail-period" className="text-sm font-semibold">
+          {detail.actualGrain === "ANNUAL_FULL_YEAR" ? (
+            <section
+              aria-labelledby="finance-reporting-detail-period"
+              data-finance-reporting-detail-period
+              className="text-sm"
+            >
+              <h3 id="finance-reporting-detail-period" className="text-xs font-medium text-[var(--muted)]">
                 {labels.periodContextTitle}
               </h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {detail.actualGrain === "YTD"
-                  ? `${labels.actualGrainYtd}${
-                      detail.actualCutoffDate
-                        ? ` ${formatDate(detail.actualCutoffDate, formattingLocale)}`
-                        : ""
-                    }`
-                  : labels.actualGrainAnnual}
-              </p>
+              <p className="mt-0.5 text-[var(--foreground)]">{labels.actualGrainAnnual}</p>
             </section>
           ) : null}
 
           {detail.targetKind === "REPORTING_GROUP" && detail.childAccountSummaries.length > 0 ? (
-            <section aria-labelledby="finance-reporting-detail-group-accounts">
+            <section
+              aria-labelledby="finance-reporting-detail-group-accounts"
+              data-finance-reporting-detail-group-composition
+            >
               <h3 id="finance-reporting-detail-group-accounts" className="text-sm font-semibold">
                 {labels.groupAccountsTitle}
               </h3>
-              <ul className="mt-2 space-y-2">
+              <ul className="mt-2 space-y-1">
                 {detail.childAccountSummaries.map((account) => (
                   <li key={account.accountId}>
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 rounded-md border border-[var(--sce-surface-border-subtle)] px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                      data-finance-reporting-detail-investigate="account"
+                      className="group/child flex w-full items-center justify-between gap-3 rounded-md border border-[var(--sce-surface-border-subtle)]/80 px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                      aria-label={investigationTargetAriaLabel(labels.investigateAccount, account.name)}
                       onClick={() => onInvestigateAccount(account.accountId)}
                     >
-                      <span className="font-medium">{account.name}</span>
-                      <span className="shrink-0 tabular-nums text-[var(--muted)]">
+                      <span className="min-w-0 truncate font-medium">{account.name}</span>
+                      <span className="inline-flex shrink-0 items-center gap-1 tabular-nums text-[var(--muted)]">
                         {formatManagementPnlVarianceDelta(
                           account.forecastVsBudget,
                           detail.baseCurrency,
                           formattingLocale,
                         )}
+                        <ChevronRight
+                          className="h-3.5 w-3.5 opacity-70 group-hover/child:opacity-100 group-focus-visible/child:opacity-100"
+                          aria-hidden
+                        />
                       </span>
-                      <span className="sr-only">{labels.investigateAccount}</span>
                     </button>
                   </li>
                 ))}
@@ -261,11 +292,14 @@ export function FinanceManagementReportingDetailSheet({
           ) : null}
 
           {detail.targetKind === "ACCOUNT" ? (
-            <section aria-labelledby="finance-reporting-detail-evidence">
+            <section
+              aria-labelledby="finance-reporting-detail-evidence"
+              data-finance-reporting-detail-evidence
+            >
               <h3 id="finance-reporting-detail-evidence" className="text-sm font-semibold">
                 {labels.evidenceTitle}
               </h3>
-              <h4 className="mt-2 text-xs font-medium text-[var(--muted)]">
+              <h4 className="mt-1 text-xs font-medium text-[var(--muted)]">
                 {labels.actualEntriesTitle}
               </h4>
               {detail.actualEvidence.availability === "NOT_VISIBLE" ? (
@@ -275,17 +309,17 @@ export function FinanceManagementReportingDetailSheet({
                 <p className="mt-1 text-sm text-[var(--muted)]">{labels.noActualEntries}</p>
               ) : null}
               {detail.actualEvidence.availability === "AVAILABLE" ? (
-                <div className="mt-2 overflow-x-auto">
+                <div className="mt-2 overflow-x-auto rounded-md border border-[var(--sce-surface-border-subtle)]/60">
                   <table className="w-full min-w-[320px] text-sm">
                     <thead>
                       <tr className="border-b border-[var(--sce-surface-border-subtle)] text-left text-xs text-[var(--muted)]">
-                        <th scope="col" className="py-2 pr-3 font-medium">
+                        <th scope="col" className="py-2 pl-3 pr-3 font-medium">
                           {labels.entryDate}
                         </th>
                         <th scope="col" className="py-2 pr-3 font-medium text-right">
                           {labels.entryAmount}
                         </th>
-                        <th scope="col" className="py-2 font-medium">
+                        <th scope="col" className="py-2 pr-3 font-medium">
                           {labels.entryDescription}
                         </th>
                       </tr>
@@ -294,15 +328,15 @@ export function FinanceManagementReportingDetailSheet({
                       {detail.actualEvidence.entries.map((entry) => (
                         <tr
                           key={entry.entryId}
-                          className="border-b border-[var(--sce-surface-border-subtle)]/60"
+                          className="border-b border-[var(--sce-surface-border-subtle)]/60 last:border-0"
                         >
-                          <td className="py-2 pr-3 tabular-nums">
+                          <td className="py-2 pl-3 pr-3 tabular-nums">
                             {formatDate(entry.effectiveDate, formattingLocale)}
                           </td>
                           <td className="py-2 pr-3 text-right tabular-nums">
                             {formatMoneyMinor(entry.amountMinor, entry.currency, formattingLocale)}
                           </td>
-                          <td className="py-2 text-[var(--muted)]">{entry.description ?? "—"}</td>
+                          <td className="py-2 pr-3 text-[var(--muted)]">{entry.description ?? "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -312,8 +346,15 @@ export function FinanceManagementReportingDetailSheet({
             </section>
           ) : null}
 
-          <section aria-labelledby="finance-reporting-detail-sources">
-            <h3 id="finance-reporting-detail-sources" className="text-sm font-semibold">
+          <section
+            aria-labelledby="finance-reporting-detail-sources"
+            data-finance-reporting-detail-sources
+            className="border-t border-[var(--sce-surface-border-subtle)]/60 pt-4"
+          >
+            <h3
+              id="finance-reporting-detail-sources"
+              className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]"
+            >
               {labels.sourceActionsTitle}
             </h3>
             <ul className="mt-2 flex flex-wrap gap-2">
@@ -321,7 +362,7 @@ export function FinanceManagementReportingDetailSheet({
                 <li>
                   <Link
                     href={detail.sourceActions.budget.href}
-                    className="inline-flex h-9 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                    className="inline-flex h-8 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-2.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                   >
                     {labels.openBudget}
                   </Link>
@@ -331,7 +372,7 @@ export function FinanceManagementReportingDetailSheet({
                 <li>
                   <Link
                     href={detail.sourceActions.actual.href}
-                    className="inline-flex h-9 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                    className="inline-flex h-8 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-2.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                   >
                     {labels.openActuals}
                   </Link>
@@ -341,7 +382,7 @@ export function FinanceManagementReportingDetailSheet({
                 <li>
                   <Link
                     href={detail.sourceActions.forecast.href}
-                    className="inline-flex h-9 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                    className="inline-flex h-8 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-2.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                   >
                     {labels.openForecast}
                   </Link>
@@ -351,7 +392,7 @@ export function FinanceManagementReportingDetailSheet({
                 <li>
                   <Link
                     href={detail.sourceActions.timing.href}
-                    className="inline-flex h-9 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                    className="inline-flex h-8 items-center rounded-md border border-[var(--sce-surface-border-subtle)] px-2.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                   >
                     {labels.openTiming}
                   </Link>

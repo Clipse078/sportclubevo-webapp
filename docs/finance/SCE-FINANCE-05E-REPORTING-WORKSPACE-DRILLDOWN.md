@@ -28,10 +28,20 @@ Reporting remains **analyse / explain / present** — not source-of-truth editin
 
 ## Interaction
 
-- Account / group rows expose an **Investigate** affordance.
-- Detail opens in the canonical SCE **Sheet**; the statement remains visible behind the panel.
-- Key variance drivers link to the same detail loader (FIN-05B driver identity).
-- Optional deep links: `?account=` / `?group=` (validated server-side, tenant-scoped).
+### R1 — Quiet investigation UX / driver-to-evidence
+
+**Status:** IMPLEMENTED (same package) — PO visual UAT still pending.
+
+Canonical grammar:
+
+| Surface | Interaction |
+|---------|-------------|
+| **Material variance drivers** (`Wesentliche Abweichungen`) | Primary investigation entry — driver row opens FIN-05E detail for the resolved FIN-05B target. |
+| **Account rows** | Quiet direct investigation — account identity is the control (no repeated textual action column). |
+| **Reporting groups** | Explicit hierarchy expand/collapse **separate** from a quiet group investigation affordance. |
+| **Management statement** | Numbers first — Budget → Ist → Prognose → Abweichung; no permanent action column. |
+
+Detail opens in the canonical SCE **Sheet** (interpretation → explanation → evidence → secondary source routes). Optional deep links: `?account=` / `?group=` (validated server-side, tenant-scoped).
 
 ## Boundaries (locked)
 
