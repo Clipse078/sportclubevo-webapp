@@ -402,7 +402,29 @@
     "matchAwaySide": "Visiteurs"
   },
   "Finance": {
-    "breadcrumbs": { "dashboard": "Tableau de bord", "finance": "Finances", "settings": "Configuration", "structure": "Structure financière", "budget": "Budget", "actuals": "Réel", "forecast": "Prévision" },
+    "breadcrumbs": { "dashboard": "Tableau de bord", "finance": "Finances", "settings": "Configuration", "structure": "Structure financière", "budget": "Budget", "actuals": "Réel", "forecast": "Prévision", "reporting": "Rapports", "publishing": "Publications" },
+    "publishing": {
+      "foundation": {
+        "eyebrow": "Publication & partage",
+        "pageTitle": "Publications",
+        "pageDescription": "Publications financières formelles et partage contrôlé — fondation architecture.",
+        "title": "Fondation publication",
+        "description": "Les rapports live restent analytiques et évolutifs. Les publications seront des instantanés versionnés. Le partage peut référencer des vues live selon la politique — distinct de la publication formelle.",
+        "publicationsLabel": "Publications",
+        "activeSharesLabel": "Partages actifs",
+        "capabilitiesTitle": "Vos droits",
+        "capViewHistory": "Vous pouvez consulter l'historique des publications.",
+        "capViewHistoryOff": "Historique des publications non autorisé pour votre rôle.",
+        "capShare": "Vous pouvez partager des rapports financiers.",
+        "capShareOff": "Partage non autorisé pour votre rôle.",
+        "capPublish": "Vous pouvez publier des rapports financiers.",
+        "capPublishOff": "Publication non autorisée pour votre rôle.",
+        "capManageShares": "Vous pouvez gérer et révoquer les partages.",
+        "capManageSharesOff": "Gestion des partages non autorisée pour votre rôle.",
+        "foundationNote": "Les workflows complets arrivent dans les prochains paquets FIN-06. Aucune action n'est exposée ici.",
+        "backToReports": "Retour aux rapports live"
+      }
+    },
     "capabilityNavAria": "Navigation des fonctions finances",
     "workspace": { "eyebrow": "Finances", "title": "Finances", "description": "Planification et structure financière de votre organisation." },
     "contextTabsAria": "Sections finances",

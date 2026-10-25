@@ -919,7 +919,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 
 ## ADR-038 — Financial Reporting & Intelligence (FIN-05)
 
-**Status:** Accepted — **FIN-05 COMPLETE / RELEASE CLOSED** (FIN-05A–05H merged to **STAGE**; PO UAT PASS; closure PR **#915**; **FIN-06** not started)
+**Status:** Accepted — **FIN-05 COMPLETE / RELEASE CLOSED** (FIN-05A–05H merged to **STAGE**; PO UAT PASS; closure PR **#915**); **FIN-06 IN PROGRESS** (**FIN-06A** merged via PR **#916**)
 
 ### Context
 
@@ -953,6 +953,32 @@ Full contract: [`docs/finance/SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-AR
 - FIN-05D/F integrate overview and reporting workspaces without reopening FIN-04E Zeitplanung composition.
 - FIN-06 must treat FIN-05 live intelligence as input to snapshot publication — not the same artifact.
 - FIN-09 owns liquidity visualization; FIN-11 owns balance sheet / GL — FIN-05 remains management operating intelligence.
+
+---
+
+## ADR-039 — Financial Publishing & Sharing (FIN-06A)
+
+**Status:** Accepted
+
+### Context
+
+FIN-05 delivers live analytical reporting from canonical finance sources. Organisations also need **controlled distribution**: intentional sharing and formal publication with governance, audience boundaries, and immutable published snapshots. FIN-06 must not collapse source data, live reports, shares, and publications into one entity or overload FIN-05 workspaces with document/permission management.
+
+### Decision
+
+1. **Four concepts:** Source financial data (FIN-01…05 authority), live report/view (FIN-05), share (may reference live data; revocable), publication (versioned immutable snapshot).
+2. **Snapshot boundary:** Persist minimum semantic snapshot (`sce.finance.publication.snapshot.v1`) at publication time; serve stored snapshot on read — do not reconstruct historical publication from live domain on every request.
+3. **Permissions:** `finance.view` ≠ `finance.reporting.share` ≠ `finance.reporting.publish`; add `finance.publication.view` and `finance.share.manage`; server-authoritative checks; no metadata leakage on restricted states.
+4. **Audience & policy:** Bounded audience classes; tenant `FinanceDisclosurePolicy` foundation; country-informed via adapters — no Swiss/statutory hardcoding in core.
+5. **FIN-06A scope:** Architecture contract, additive Prisma foundation, permission catalog, lifecycle/scope validation, architecture tests, minimal `/dashboard/finance/publishing` foundation UI — not full publishing/sharing product.
+
+Full contract: [`docs/finance/SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md`](../finance/SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md). Code: `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts`.
+
+### Consequences
+
+- FIN-06B implements snapshot creation/versioning services on top of FIN-06A models.
+- FIN-05 `FINANCE_REPORTING_PUBLICATION_BOUNDARY` remains valid; live reporting stays on `/dashboard/finance/reports`.
+- FIN-09 liquidity and FIN-11 statutory accounting remain separate programmes.
 
 ---
 

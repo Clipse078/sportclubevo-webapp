@@ -886,7 +886,30 @@
       "budget": "Budget",
       "actuals": "Ist",
       "forecast": "Prognose",
-      "reporting": "Berichte"
+      "reporting": "Berichte",
+      "publishing": "Veröffentlichungen"
+    },
+    "publishing": {
+      "foundation": {
+        "eyebrow": "Veröffentlichen & Teilen",
+        "pageTitle": "Veröffentlichungen",
+        "pageDescription": "Formelle Finanzveröffentlichungen und kontrolliertes Teilen — Architekturgrundlage.",
+        "title": "Veröffentlichungs-Grundlage",
+        "description": "Live-Berichte unter Berichte bleiben analytisch und veränderlich. Veröffentlichungen hier sind bewusste, versionierte Momentaufnahmen. Teilen darf Live-Ansichten referenzieren, wenn die Richtlinie es erlaubt — getrennt von formeller Veröffentlichung.",
+        "publicationsLabel": "Veröffentlichungen",
+        "activeSharesLabel": "Aktive Freigaben",
+        "capabilitiesTitle": "Ihre Berechtigungen",
+        "capViewHistory": "Sie dürfen den Veröffentlichungsverlauf einsehen.",
+        "capViewHistoryOff": "Veröffentlichungsverlauf ist für Ihre Rolle nicht freigegeben.",
+        "capShare": "Sie dürfen Finanzberichte teilen.",
+        "capShareOff": "Teilen ist für Ihre Rolle nicht freigegeben.",
+        "capPublish": "Sie dürfen Finanzberichte veröffentlichen.",
+        "capPublishOff": "Veröffentlichen ist für Ihre Rolle nicht freigegeben.",
+        "capManageShares": "Sie dürfen Freigaben verwalten und widerrufen.",
+        "capManageSharesOff": "Freigabeverwaltung ist für Ihre Rolle nicht freigegeben.",
+        "foundationNote": "Vollständige Veröffentlichungs- und Teilen-Workflows folgen in späteren FIN-06-Paketen. In dieser Grundlage sind keine Aktionen verfügbar.",
+        "backToReports": "Zurück zu Live-Berichten"
+      }
     },
     "capabilityNavAria": "Finanz-Funktionsnavigation",
     "workspace": {

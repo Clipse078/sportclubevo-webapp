@@ -1401,6 +1401,10 @@ model Tenant {
   financeScenarioAdoptions        FinanceScenarioAdoption[]
   financeScenarioRebases          FinanceScenarioRebase[]
   financeExpectedFinancialEvents  FinanceExpectedFinancialEvent[]
+  financeDisclosurePolicy         FinanceDisclosurePolicy?
+  financePublications             FinancePublication[]
+  financePublicationVersions      FinancePublicationVersion[]
+  financeFinancialShares          FinanceFinancialShare[]
 
   @@index([status])
   @@index([name])
@@ -1567,6 +1571,11 @@ model User {
   financeScenarioRebasesApplied      FinanceScenarioRebase[]     @relation("FinanceScenarioRebaseAppliedBy")
   financeExpectedFinancialEventsCreated FinanceExpectedFinancialEvent[] @relation("FinanceExpectedFinancialEventCreatedBy")
   financeExpectedFinancialEventsUpdated FinanceExpectedFinancialEvent[] @relation("FinanceExpectedFinancialEventUpdatedBy")
+  financePublicationsCreated            FinancePublication[]            @relation("FinancePublicationCreatedBy")
+  financePublicationsPublished          FinancePublication[]            @relation("FinancePublicationPublishedBy")
+  financePublicationVersionsPublished   FinancePublicationVersion[]     @relation("FinancePublicationVersionPublishedBy")
+  financeFinancialSharesCreated         FinanceFinancialShare[]         @relation("FinanceFinancialShareCreatedBy")
+  financeFinancialSharesRevoked         FinanceFinancialShare[]         @relation("FinanceFinancialShareRevokedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10708,6 +10717,29 @@ enum FinanceCapabilityKey {
   REPORTING
 }
 
+enum FinancePublicationLifecycleStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  SUPERSEDED
+  REVOKED
+}
+
+enum FinancePublishingAudienceClass {
+  INTERNAL_AUTHENTICATED
+  SPECIFIC_USERS
+  SPECIFIC_ROLES
+  ORGANISATION_MEMBERS
+  LINK_RESTRICTED
+  PUBLIC
+}
+
+enum FinanceFinancialShareStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
 /// Tenant-level finance configuration and setup lifecycle (1:1 per tenant).
 model FinanceConfiguration {
   id                   String             @id @default(cuid())
@@ -10753,6 +10785,8 @@ model FinanceYear {
   financeScenarios          FinanceScenario[]
   financeScenarioAdoptions  FinanceScenarioAdoption[]
   expectedFinancialEvents   FinanceExpectedFinancialEvent[]
+  financePublications       FinancePublication[]
+  financeFinancialShares    FinanceFinancialShare[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -11412,4 +11446,97 @@ model FinanceProjectionAdoption {
   @@index([tenantId, appliedAt])
   @@index([projectionVersionId])
   @@index([targetForecastVersionId])
+}
+
+/// Tenant disclosure / publishing policy boundary (FIN-06A foundation — not a full policy engine).
+model FinanceDisclosurePolicy {
+  id                        String   @id @default(cuid())
+  tenantId                  String   @unique
+  externalSharingAllowed    Boolean  @default(false)
+  publicPublishingAllowed   Boolean  @default(false)
+  policyJson                Json?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// Formal publication container — versioned snapshots live on FinancePublicationVersion (FIN-06A).
+model FinancePublication {
+  id               String                           @id @default(cuid())
+  tenantId         String
+  financeYearId    String
+  title            String
+  lifecycleStatus  FinancePublicationLifecycleStatus @default(DRAFT)
+  reportingScopeJson Json
+  currentVersionId String?
+  createdByUserId  String?
+  publishedByUserId String?
+  createdAt        DateTime                         @default(now())
+  updatedAt        DateTime                         @updatedAt
+
+  tenant        Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear   FinanceYear               @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy     User?                     @relation("FinancePublicationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  publishedBy   User?                     @relation("FinancePublicationPublishedBy", fields: [publishedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  versions      FinancePublicationVersion[]
+
+  @@index([tenantId, financeYearId])
+  @@index([tenantId, lifecycleStatus])
+}
+
+/// Immutable published snapshot payload (FIN-06A persistence foundation).
+model FinancePublicationVersion {
+  id                    String                           @id @default(cuid())
+  tenantId              String
+  publicationId         String
+  versionNumber         Int
+  lifecycleStatus       FinancePublicationLifecycleStatus
+  snapshotSchemaVersion String
+  snapshotPayloadJson   Json
+  currencyCode          String
+  audienceClass         FinancePublishingAudienceClass
+  audiencePolicyJson    Json?
+  sourceMetadataJson    Json
+  publishedAt           DateTime?
+  supersededAt          DateTime?
+  revokedAt             DateTime?
+  publishedByUserId     String?
+  createdAt             DateTime                         @default(now())
+  updatedAt             DateTime                         @updatedAt
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  publication FinancePublication @relation(fields: [publicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  publishedBy User?              @relation("FinancePublicationVersionPublishedBy", fields: [publishedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([publicationId, versionNumber])
+  @@index([tenantId, publicationId])
+  @@index([tenantId, lifecycleStatus])
+}
+
+/// Controlled live share — may reference current reporting scope (FIN-06A foundation).
+model FinanceFinancialShare {
+  id                 String                        @id @default(cuid())
+  tenantId           String
+  financeYearId      String
+  status             FinanceFinancialShareStatus   @default(ACTIVE)
+  liveScopeJson      Json
+  audienceClass      FinancePublishingAudienceClass
+  audiencePolicyJson Json?
+  tokenHash          String?
+  expiresAt          DateTime?
+  revokedAt          DateTime?
+  createdByUserId    String?
+  revokedByUserId    String?
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear FinanceYear @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy   User?       @relation("FinanceFinancialShareCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  revokedBy   User?       @relation("FinanceFinancialShareRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, financeYearId])
+  @@index([tenantId, status])
+  @@index([tenantId, tokenHash])
 }
