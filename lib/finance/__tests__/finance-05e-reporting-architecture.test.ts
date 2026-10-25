@@ -24,7 +24,7 @@ describe("FIN-05E reporting architecture contract", () => {
       "loadFinanceManagementReportingDetailReadModel",
     );
     expect(FINANCE_05E_IMPLEMENTATION.workspaceRoute).toBe("/dashboard/finance/reports");
-    expect(FINANCE_05E_IMPLEMENTATION.fin05fStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_05E_IMPLEMENTATION.fin05fStatus).toBe("COMPLETE_PO_UAT_PASS");
   });
 
   it("documents bounded detail query shape", () => {

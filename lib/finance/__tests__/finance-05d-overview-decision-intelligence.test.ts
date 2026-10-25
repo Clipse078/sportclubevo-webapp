@@ -330,7 +330,7 @@ describe("FIN-05D architecture", () => {
     expect(SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS.expectedMovementIsNotLiquidity).toBe(true);
     expect(SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS.noChartGallery).toBe(true);
     expect(SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS.noLlmNumericalEngine).toBe(true);
-    expect(FINANCE_05D_IMPLEMENTATION.fin05eStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_05D_IMPLEMENTATION.fin05eStatus).toBe("COMPLETE_PO_UAT_PASS");
   });
 
   it("documents bounded query composition", () => {
