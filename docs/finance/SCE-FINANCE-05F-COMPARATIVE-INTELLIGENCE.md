@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05F** — comparative intelligence (Budget / Actual / Current Forecast) |
-| **Status** | **IMPLEMENTED — Product Owner visual UAT pending** |
+| **Status** | **IMPLEMENTED — R1 decision-oriented attention — Product Owner visual UAT pending** |
 | **Branch** | `cursor/sce-finance-05f-comparative-intelligence` |
 | **Route** | `/dashboard/finance/reports` (Berichte) |
 | **Depends on** | FIN-05B variance engine, FIN-05C Management P&L, FIN-05E investigation |
@@ -60,8 +60,8 @@ Presentation roles (see `comparative-comparison-availability.ts`):
 - `overallComparison` — forecast vs budget at management result
 - `actualContext` — grain, cutoff, evidence presentation role
 - `comparisonAvailability` — full matrix for tests and future surfaces
-- `materialDrivers` — reuse FIN-05B ranked drivers
-- `attentionSignals` — deterministic prioritisation (relative materiality, no universal CHF/% thresholds)
+- `materialDrivers` — reuse FIN-05B ranked drivers (investigation + ranking authority)
+- `attentionInsights` — bounded decision-oriented insights (max 3): overall forecast-vs-budget conclusion, largest material favourable driver, largest material unfavourable driver
 
 Integer minor units throughout; formatting in presentation only.
 
@@ -69,12 +69,14 @@ Integer minor units throughout; formatting in presentation only.
 
 Progressive disclosure on the existing Management P&L:
 
-1. **Conclusion** — interpretation strip (budget, forecast, variance, actual evidence)
-2. **Comparison** — statement columns (unchanged hierarchy)
-3. **Exception** — material variance drivers (FIN-05B)
+1. **Conclusion** — interpretation strip (budget, forecast, variance, actual with authoritative period label)
+2. **Where to look** — decision-oriented attention (max three concrete insights; driver rows open FIN-05E investigation)
+3. **Comparison** — Management P&L statement columns (unchanged hierarchy)
 4. **Explanation / evidence** — FIN-05E investigation sheet
 
-No new top-level Finance tab. No chart gallery in FIN-05F.
+No generic meta signals (“see exceptions below”, “progress evidence”). No duplicate “material variances” driver block in the default Reporting flow when the same drivers appear in attention.
+
+No new top-level Finance tab. No chart gallery in FIN-05F (FIN-05G).
 
 ## FIN-05E integration
 
@@ -97,4 +99,14 @@ Investigation sheet receives `comparativePeriodContext` from the same comparativ
 ## Validation
 
 Focused tests: `lib/finance/__tests__/finance-05f-comparative-intelligence.test.ts`  
+R1 regression: `lib/finance/__tests__/finance-05f-r1-decision-oriented-attention.test.ts`  
 Architecture locks: `lib/finance/__tests__/finance-05f-reporting-architecture.test.ts`
+
+## R1 (decision-oriented attention)
+
+- Attention copy is financial insight, not a description of Reporting sections.
+- Overall conclusion derives from forecast-vs-budget favourability (FIN-05B semantics).
+- Driver rows reuse FIN-05B material ranking (top favourable / top unfavourable only).
+- Actual summary label uses canonical grain (`Ist bis {cutoff}` for YTD; `Ist` for full year).
+- Investigation sheet actual grain presentation verified against authoritative `actualGrain` / cutoff.
+- No fake YTD-vs-annual variance, no `/12` phasing, no new chart.

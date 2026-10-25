@@ -159,7 +159,40 @@ const baseModel: SerializedFinanceManagementPnlReadModel = {
     },
   },
   hasUnassignedFinancialValues: false,
-  comparativeIntelligence: serializedComparativeIntelligenceStub(),
+  comparativeIntelligence: serializedComparativeIntelligenceStub({
+    attentionInsights: [
+      {
+        kind: "OVERALL_RESULT",
+        favorability: "FAVORABLE",
+        rawDeltaMinor: 10_00,
+      },
+      {
+        kind: "FAVORABLE_DRIVER",
+        driver: {
+          kind: "ACCOUNT",
+          id: "acc-1",
+          name: "Mitgliedsbeiträge",
+          canonicalSemantic: "INCOME",
+          comparison: measureSlice.forecastVsBudget,
+        },
+      },
+      {
+        kind: "UNFAVORABLE_DRIVER",
+        driver: {
+          kind: "REPORTING_GROUP",
+          id: "g-exp",
+          name: "Personal",
+          canonicalSemantic: "EXPENSE",
+          comparison: {
+            ...emptySlice,
+            availability: "AVAILABLE",
+            rawDeltaMinor: 24_124_00,
+            favorability: "UNFAVORABLE",
+          },
+        },
+      },
+    ],
+  }),
 };
 
 const labels = {
@@ -172,7 +205,6 @@ const labels = {
   driversSubtitle: "Subtitle",
   topFavourable: "Favourable",
   topUnfavourable: "Unfavourable",
-  exceptionsTitle: "Material variances",
   incomeSection: "Income",
   expenseSection: "Expense",
   incomeSectionTotal: "Total income",
@@ -199,19 +231,19 @@ const labels = {
   unassignedHint: "Unassigned",
   investigateAccount: "Investigate",
   investigateGroup: "Group detail",
-  actualEvidenceTitle: "Actual",
   attentionSignalsTitle: "Attention",
   grainExplanationYtdVsAnnualPlan: "YTD hint",
   grainExplanationAnnualActualAndPlan: "Annual hint",
-  signalForecastAboveBudget: "Above",
-  signalForecastBelowBudget: "Below",
-  signalForecastOnBudget: "On plan",
-  signalMaterialFavorableDrivers: "Fav",
-  signalMaterialUnfavorableDrivers: "Unfav",
-  signalRecordedActualEvidence: "Evidence",
-  signalLimitedActualEvidence: "Limited",
-  signalMissingBudget: "No budget",
-  signalMissingForecast: "No forecast",
+  attentionResultFavorableTitle: "Ahead",
+  attentionResultFavorableDetail: "Forecast {amount} above budget.",
+  attentionResultUnfavorableTitle: "Below",
+  attentionResultUnfavorableDetail: "Forecast {amount} below budget.",
+  attentionResultOnPlanTitle: "On plan",
+  attentionLargestFavorableTitle: "Largest favourable",
+  attentionLargestUnfavorableTitle: "Largest unfavourable",
+  attentionDriverExpenseSuffix: "expense",
+  attentionMissingBudget: "No budget",
+  attentionMissingForecast: "No forecast",
 };
 
 const detailLabels = {

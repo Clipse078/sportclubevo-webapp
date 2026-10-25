@@ -45,7 +45,13 @@ export function serializedComparativeIntelligenceStub(
     actualVsBudgetVarianceRole: actualGrain === "YTD" ? "UNSUPPORTED" : "SUPPORTED",
     comparisonAvailability: matrix,
     materialDrivers: { favourable: [], unfavourable: [] },
-    attentionSignals: [],
+    attentionInsights: overrides.attentionInsights ?? [
+      {
+        kind: "OVERALL_RESULT",
+        favorability: "FAVORABLE",
+        rawDeltaMinor: 5_00,
+      },
+    ],
     sourceAvailability: {
       approvedBudget: "AVAILABLE",
       actual: "AVAILABLE",

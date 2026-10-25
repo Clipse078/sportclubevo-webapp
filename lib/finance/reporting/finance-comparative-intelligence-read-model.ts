@@ -7,22 +7,29 @@ import type {
 } from "@/lib/finance/reporting/comparative-comparison-availability";
 import type { FinanceManagementMeasureAvailability } from "@/lib/finance/reporting/finance-management-overview-read-model";
 import type { ManagementPnlMeasureCell } from "@/lib/finance/reporting/finance-management-pnl-read-model";
+import type { VarianceFavorability } from "@/lib/finance/actual/variance-semantics";
 
-export type FinanceComparativeAttentionSignalKind =
-  | "FORECAST_EXPECTED_ABOVE_BUDGET"
-  | "FORECAST_EXPECTED_BELOW_BUDGET"
-  | "FORECAST_ON_BUDGET"
-  | "MATERIAL_FAVORABLE_VARIANCE_DRIVERS"
-  | "MATERIAL_UNFAVORABLE_VARIANCE_DRIVERS"
-  | "RECORDED_ACTUAL_EVIDENCE"
-  | "LIMITED_ACTUAL_EVIDENCE"
-  | "MISSING_APPROVED_BUDGET"
-  | "MISSING_CURRENT_FORECAST";
+export type FinanceComparativeAttentionDriverRef = Pick<
+  FinanceVarianceDriver,
+  "kind" | "id" | "name" | "canonicalSemantic" | "comparison"
+>;
 
-export type FinanceComparativeAttentionSignal = {
-  kind: FinanceComparativeAttentionSignalKind;
-  priority: number;
-};
+export type FinanceComparativeAttentionInsight =
+  | {
+      kind: "OVERALL_RESULT";
+      favorability: VarianceFavorability;
+      rawDeltaMinor: number | null;
+    }
+  | {
+      kind: "FAVORABLE_DRIVER";
+      driver: FinanceComparativeAttentionDriverRef;
+    }
+  | {
+      kind: "UNFAVORABLE_DRIVER";
+      driver: FinanceComparativeAttentionDriverRef;
+    }
+  | { kind: "MISSING_APPROVED_BUDGET" }
+  | { kind: "MISSING_CURRENT_FORECAST" };
 
 export type FinanceComparativeActualContext = {
   grain: "ANNUAL_FULL_YEAR" | "YTD" | null;
@@ -50,7 +57,8 @@ export type FinanceComparativeIntelligenceReadModel = {
     favourable: FinanceVarianceDriver[];
     unfavourable: FinanceVarianceDriver[];
   };
-  attentionSignals: FinanceComparativeAttentionSignal[];
+  /** Bounded decision-oriented insights for tenant-facing Reporting (max 3). */
+  attentionInsights: FinanceComparativeAttentionInsight[];
   sourceAvailability: {
     approvedBudget: FinanceManagementMeasureAvailability;
     actual: FinanceManagementMeasureAvailability;

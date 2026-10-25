@@ -312,9 +312,11 @@ describe("FIN-05F comparative intelligence", () => {
       }),
     );
     expect(pnl.comparativeIntelligence.sourceAvailability.approvedBudget).toBe("NO_APPROVED_BUDGET");
-    expect(pnl.comparativeIntelligence.attentionSignals.some((s) => s.kind === "MISSING_APPROVED_BUDGET")).toBe(
-      true,
-    );
+    expect(
+      pnl.comparativeIntelligence.attentionInsights.some(
+        (s) => s.kind === "MISSING_APPROVED_BUDGET",
+      ),
+    ).toBe(true);
   });
 
   it("T/U — no automatic forecast or scenario substitution in reporting query service", () => {
@@ -354,9 +356,9 @@ describe("FIN-05F comparative intelligence", () => {
     const en = readFileSync(join(process.cwd(), "messages/en.json"), "utf8");
     const de = readFileSync(join(process.cwd(), "messages/de.json"), "utf8");
     for (const key of [
-      "actualEvidenceTitle",
+      "attentionResultFavorableTitle",
       "grainExplanationYtdVsAnnualPlan",
-      "signalLimitedActualEvidence",
+      "attentionLargestFavorableTitle",
     ]) {
       expect(en).toContain(`"${key}"`);
       expect(de).toContain(`"${key}"`);
