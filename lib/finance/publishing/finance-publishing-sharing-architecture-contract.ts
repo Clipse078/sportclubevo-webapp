@@ -476,9 +476,29 @@ export const FINANCE_06A_IMPLEMENTATION = {
   architectureTestSuite:
     "lib/finance/__tests__/finance-06a-publishing-sharing-architecture.test.ts",
   foundationWorkspaceRoute: "/dashboard/finance/publishing",
-  fin06aStatus: "ARCHITECTURE_FOUNDATION_COMPLETE",
+  fin06aStatus: "COMPLETE_PO_APPROVED",
   fin06ProgrammeStatus: "IN_PROGRESS",
-  fin06bStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin06bStatus: "COMPLETE_PO_APPROVED",
+} as const;
+
+/** FIN-06B-R7 release closure — Product Owner final visual UAT + merge authorization. */
+export const FINANCE_06B_R7_RELEASE_CLOSURE = {
+  fin06bFinalProductOwnerVisualUat: "PASS",
+  fin06bPublicationImmutability: "PASS",
+  fin06bPublicationVersioning: "PASS",
+  fin06bR4PoVisualUat: "PASS",
+  fin06bR5ImmutabilityCheckpoint: "PASS",
+  fin06bR6Version2PoUat: "PASS",
+  fin06bR7FinalClosure: "PASS",
+  mergeAuthorizationPending: false,
+  mergedToStage: false,
+  prNumber: 917,
+  closureBranch: "cursor/sce-finance-06b-publication-snapshot-versioning",
+  r7ClosureDoc: "docs/finance/SCE-FINANCE-06B-R7-FINAL-CLOSURE.md",
+  r7StageVerifyScript: "scripts/sce-finance-06b-r7-stage-publication-closure-verify.ts",
+  fin06ProgrammeRemainsInProgress: true,
+  fin06cStatus: "DEFINED_NOT_STARTED",
+  productionTouched: false,
 } as const;
 
 export const FINANCE_06B_IMPLEMENTATION = {
@@ -492,10 +512,14 @@ export const FINANCE_06B_IMPLEMENTATION = {
     "lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts",
   r6PoUatInstructionDoc: "docs/finance/SCE-FINANCE-06B-R6-PO-VERSION-2-UAT.md",
   r6StagePrepScript: "scripts/sce-finance-06b-r6-stage-version2-uat-prep.ts",
+  r7ReleaseClosureTest: "lib/finance/__tests__/finance-06b-r7-release-closure.test.ts",
   firstReportScope: "MANAGEMENT_PNL",
   publishUiRoute: "/dashboard/finance/reports",
-  fin06bStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin06bStatus: "COMPLETE_PO_APPROVED",
+  fin06bR4PoVisualUat: "PASS",
   fin06bR5PoImmutabilityCheckpoint: "PASS",
-  fin06bR6Status: "VERSION_2_UAT_PREPARED",
+  fin06bR6Version2PoUat: "PASS",
+  fin06bR7FinalClosure: "PASS",
+  fin06bR6Status: "VERSION_2_PO_UAT_PASS",
   fin06cStatus: "DEFINED_NOT_STARTED",
 } as const;

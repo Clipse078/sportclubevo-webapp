@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (PR **#916** → **STAGE**); **FIN-06B-R4 PO UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PO UAT PASS**; **FIN-06B-R6 VERSION 2 UAT PREPARED**; **FIN-06B PO UAT PENDING** (Version 2 checkpoint); **FIN-06C DEFINED / NOT STARTED** |
+| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R4 PO VISUAL UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PASS**; **FIN-06B-R6 VERSION 2 UAT PASS**; **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C NEXT / DEFINED / NOT STARTED**; **FIN-06 programme IN PROGRESS** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -25,7 +25,15 @@ COMPLEXITY SHOULD EXIST IN THE SYSTEM, NOT IN THE USER'S HEAD.
 SIMPLE UNDERSTANDING. SHALLOW NAVIGATION. DEEP CAPABILITY.
 ```
 
-**LOCK:** Financial data, live reports, shares, and publications are **distinct concepts**. Do not collapse them into one generic “report” entity.
+**LOCK:** Financial **data**, **live reports**, **publications**, **shares**, and **distributed artifacts** are **distinct concepts**. Do not collapse them into one generic “report” entity.
+
+A **publication** is a **versioned, immutable, auditable snapshot** of an approved reporting state.
+
+**Publishing does not mean:** merely opening another copy of the live Erfolgsrechnung; exporting the current report without preserving its state; or rebuilding an old publication from current Finance data.
+
+**Publishing means:** `LIVE REPORT → PUBLISH → IMMUTABLE OFFICIAL VERSION`.
+
+FIN-06B establishes that immutable official-version foundation. The complete user-facing outcome (`LIVE REPORT → PUBLISH → OFFICIAL VERSION → DISTRIBUTE`) is intentionally completed in **FIN-06C** — publication without useful distribution/export remains infrastructure, not the full product value.
 
 ## Conceptual model
 
@@ -216,13 +224,27 @@ confirmed Version **1** still shows **161'533 / +11'533 / 212'694** while live r
 script: `scripts/sce-finance-06b-r5-stage-immutability-uat.ts`. Automated proof:
 `lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
 
-**FIN-06B-R6 — Version 2 UAT prepared (PO action required):** Engineering verifies designated STAGE
-live checkpoint and Version 1 immutability, then Product Owner creates **Version 2** only through
-**Finance → Berichte → Veröffentlichen**. Instructions:
-`docs/finance/SCE-FINANCE-06B-R6-PO-VERSION-2-UAT.md`. Inspect script:
-`scripts/sce-finance-06b-r6-stage-version2-uat-prep.ts`. Versioning contract (A→B→C):
-`lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`. **Do not merge PR #917** until
-Version 2 visual checkpoint passes.
+**FIN-06B-R6 — Version 2 UAT (PO visual UAT = PASS, 2026-10-25):** Product Owner created
+**Version 2** through **Finance → Berichte → Veröffentlichen** (UI: *Veröffentlichung erstellt* /
+*Version 2 ist als feste Momentaufnahme verfügbar*). Version 2 captures live state B (**162'533** /
+**+12'533** / **213'694** Mitgliedsbeiträge; total income **263'694**; total expenses **101'161**).
+Version **1** remains state A (**161'533** / **+11'533** / **212'694**). Instructions:
+`docs/finance/SCE-FINANCE-06B-R6-PO-VERSION-2-UAT.md`. Prep script:
+`scripts/sce-finance-06b-r6-stage-version2-uat-prep.ts`. Versioning contract:
+`lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`.
+
+**FIN-06B-R7 — final closure (PO visual UAT = PASS, 2026-10-25):** Product Owner **Michael**
+completed the full A→B→V2 immutability walkthrough. Closure evidence:
+`docs/finance/SCE-FINANCE-06B-R7-FINAL-CLOSURE.md`. STAGE inspect-only verification:
+`scripts/sce-finance-06b-r7-stage-publication-closure-verify.ts`. Contract:
+`FINANCE_06B_R7_RELEASE_CLOSURE` in `finance-publishing-sharing-architecture-contract.ts`.
+
+| FIN-06B final gate | Result |
+| --- | --- |
+| **FIN-06B FINAL PRODUCT OWNER VISUAL UAT** | **PASS** |
+| **FIN-06B PUBLICATION IMMUTABILITY** | **PASS** |
+| **FIN-06B VERSIONING** | **PASS** |
+| **PR #917** | **READY TO MERGE** (when automated release gates green) |
 
 First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
@@ -283,7 +305,7 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | Package | Focus | Status |
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
-| **06B** | Publication snapshot & versioning | **IMPLEMENTED / PO UAT PENDING** |
+| **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
 | **06C** | Published artifacts & distribution | **DEFINED / NOT STARTED** |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
@@ -322,12 +344,12 @@ Run on feature branch:
 ## Result
 
 ```text
-FIN-06A — FINANCIAL PUBLISHING & SHARING ARCHITECTURE FOUNDATION
-COMPLETE · PRODUCT OWNER UAT PASS · MERGED TO STAGE (PR #916)
-
-FIN-06 — IN PROGRESS
-FIN-06B — IMPLEMENTED · PO UAT PENDING (Version 2 checkpoint)
-FIN-06B-R5 — IMMUTABILITY PO UAT PASS
-FIN-06B-R6 — VERSION 2 UAT PREPARED
-FIN-06C — DEFINED · NOT STARTED
+FIN-06A — COMPLETE · PO APPROVED · MERGED TO STAGE (PR #916)
+FIN-06B — COMPLETE · PO APPROVED · PR #917 → STAGE
+FIN-06B-R4 — PO VISUAL UAT PASS
+FIN-06B-R5 — IMMUTABILITY CHECKPOINT PASS
+FIN-06B-R6 — VERSION 2 UAT PASS
+FIN-06B-R7 — FINAL CLOSURE PASS
+FIN-06 — IN PROGRESS (FIN-06C not started)
+FIN-06C — NEXT · DEFINED · NOT STARTED
 ```
