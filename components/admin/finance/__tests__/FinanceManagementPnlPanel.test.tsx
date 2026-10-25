@@ -174,6 +174,20 @@ const labels = {
 };
 
 describe("FinanceManagementPnlPanel", () => {
+  it("uses decision-first comparative summary with primary variance marker", () => {
+    render(
+      <FinanceManagementPnlPanel
+        model={baseModel}
+        formattingLocale="en-GB"
+        canConfigureStructure={false}
+        labels={labels}
+      />,
+    );
+    expect(document.querySelector("[data-finance-comparative-summary]")).toBeTruthy();
+    expect(document.querySelector("[data-finance-comparative-summary-primary]")).toBeTruthy();
+    expect(document.querySelector("[data-finance-comparative-primary-variance]")).toBeTruthy();
+  });
+
   it("renders interpretation before tabular sections", () => {
     render(
       <FinanceManagementPnlPanel
@@ -369,6 +383,44 @@ describe("FinanceManagementPnlPanel", () => {
     const statement = document.querySelector("[data-finance-pnl-statement]");
     expect(statement?.querySelector('[data-finance-pnl-table]')).toBeTruthy();
     expect(statement?.querySelector('[data-finance-pnl-result-table]')).toBeTruthy();
+  });
+
+  it("exposes mobile progressive disclosure for account variance context", () => {
+    render(
+      <FinanceManagementPnlPanel
+        model={{
+          ...baseModel,
+          incomeSection: {
+            ...baseModel.incomeSection,
+            nodes: [
+              {
+                kind: "account",
+                accountId: "a1",
+                name: "Ticket sales",
+                reportingGroupId: "g1",
+                sortOrder: 0,
+                lifecycle: "ACTIVE",
+                archivedAt: null,
+                canonicalSemantic: "INCOME",
+                approvedBudget: { availability: "AVAILABLE", amountMinor: 10_00 },
+                actual: { availability: "AVAILABLE", amountMinor: 8_00 },
+                currentForecast: { availability: "AVAILABLE", amountMinor: 12_00 },
+                forecastVsBudget: {
+                  ...emptySlice,
+                  availability: "AVAILABLE",
+                  rawDeltaMinor: 2_00,
+                  favorability: "FAVORABLE",
+                },
+              },
+            ],
+          },
+        }}
+        formattingLocale="en-GB"
+        canConfigureStructure={false}
+        labels={labels}
+      />,
+    );
+    expect(document.querySelector("[data-finance-pnl-mobile-measure]")).toBeTruthy();
   });
 
   it("labels section totals distinctly from section headings", () => {
