@@ -4,8 +4,9 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** — Publishing & Sharing Architecture Foundation |
-| **Status** | **FIN-06A IMPLEMENTED** — architecture, permissions, additive persistence, foundation UI, automated gates |
+| **Status** | **FIN-06A COMPLETE / PO UAT PASS** (closure PR **#916** → **STAGE**); **FIN-06 programme IN PROGRESS**; **FIN-06B NEXT / NOT STARTED** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
+| **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
 | **Tests** | `lib/finance/__tests__/finance-06a-publishing-sharing-architecture.test.ts` |
 | **Foundation route** | `/dashboard/finance/publishing` |
@@ -101,6 +102,31 @@ Minimum canonical audience classes (extensible via policy, not FCA-specific):
 
 **Who** may access is separate from **what** financial scope they may access.
 
+### Audience complexity guard (FIN-06A lock)
+
+**DOMAIN DEPTH ≠ USER-FACING COMPLEXITY.**
+
+The canonical audience model may support sophisticated access policy internally. Future UX must **not** require ordinary users to understand low-level permission architecture. Translate policy into a small, understandable decision set appropriate to context (for example *Intern*, *Bestimmte Personen*, *Link teilen*, *Öffentlich* — illustrative only, **not** canonical labels for FIN-06A).
+
+Do **not** expose all audience enum values mechanically in a dropdown simply because the domain supports them.
+
+```text
+COMPLEXITY SHOULD EXIST IN THE SYSTEM, NOT IN THE USER'S HEAD.
+```
+
+## UX terminology guard (FIN-06 onward)
+
+Existing Finance terminology already distinguishes:
+
+| Label | Meaning | FIN-06 role |
+| --- | --- | --- |
+| **Berichte** | Financial reporting / analysis | UNDERSTAND / ANALYSE (FIN-05 live workspace) |
+| **Freigaben** | Approvals / financial decision approvals | APPROVE / GOVERN DECISIONS — **not** report sharing |
+| **Teilen** | (future) Controlled distribution / live sharing | FIN-06C+ — **not exposed in FIN-06A** |
+| **Veröffentlichungen** | (future) Formal versioned publication | FIN-06B+ — **not exposed in FIN-06A** |
+
+Do **not** casually reuse **Freigaben** to mean report sharing. This is an information-architecture guard for later FIN-06 packages — FIN-06A did **not** redesign navigation or expose Teilen / Veröffentlichungen product UI.
+
 ## Disclosure / publishing policy
 
 Tenant-configurable boundary (`FinanceDisclosurePolicy`): permission-aware, audience-aware, scope-aware, privacy-aware, country-informed via **adapters** — **never country-hardcoded** in FIN-06 core.
@@ -148,18 +174,50 @@ Respect **FINANCE_VISUAL_BENCHMARK** (Szenarien + Zeitplanung): design **grammar
 
 Migration: `20261025140000_sce_finance_06a_publishing_sharing_foundation`.
 
+## Product Owner UAT (FIN-06A closure)
+
+| Gate | Result |
+| --- | --- |
+| **FIN_06A_PO_UAT** | **PASS** |
+
+Surfaces reviewed: Finance → Einrichtung; Finance capability configuration; Finance navigation; Finance → Berichte / Erfolgsrechnung; comparative reporting summary; attention/variance presentation; P&L/account presentation.
+
+| Finding | Result |
+| --- | --- |
+| **BLOCKING_VISUAL_DEFECTS** | **NONE** |
+| **FIN_05_VISUAL_REGRESSION** | **NONE OBSERVED** |
+| **PREMATURE_PUBLISHING_UI** | **NONE** — no Teilen, Veröffentlichungen, publication/sharing/audience/public-link management workspace exposed prematurely |
+| **ARCHITECTURE_UI_BOUNDARY** | **PASS** — FIN-06A remained architecture/foundation; Finance navigation coherent |
+
+Manual browser UAT by engineering agents is **not** part of closure — Product Owner owns visual sign-off.
+
+## FIN-06B handoff contract (next package — not implemented in 06A)
+
+FIN-06B must prove that an actual publication can:
+
+1. Capture a canonical semantic financial snapshot (`sce.finance.publication.snapshot.v1`).
+2. Receive an explicit publication version.
+3. Preserve what was published; remain unchanged when live Finance subsequently changes.
+4. Create a **new** version rather than mutate the old publication.
+5. Retain source/reference/audit metadata; remain tenant isolated.
+6. Enforce `finance.reporting.publish` (server-authoritative).
+7. Avoid duplicating FIN-05 calculation authority.
+8. Support efficient repeated reads of published state (**prepare once, serve many**).
+
+FIN-06A closure does **not** implement this workflow.
+
 ## FIN-06 package plan (remainder)
 
-| Package | Focus |
-| --- | --- |
-| **06A** | Architecture foundation (**this package**) |
-| **06B** | Publication snapshot & versioning |
-| **06C** | Controlled live sharing |
-| **06D** | Publication governance & history |
-| **06E** | Distribution / export surfaces |
-| **06F** | Privacy, audience & policy hardening |
-| **06G** | UX / responsive / release hardening |
-| **06H** | Programme closure |
+| Package | Focus | Status |
+| --- | --- | --- |
+| **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
+| **06B** | Publication snapshot & versioning | **NEXT / NOT STARTED** |
+| **06C** | Controlled live sharing | NOT STARTED |
+| **06D** | Publication governance & history | NOT STARTED |
+| **06E** | Distribution / export surfaces | NOT STARTED |
+| **06F** | Privacy, audience & policy hardening | NOT STARTED |
+| **06G** | UX / responsive / release hardening | NOT STARTED |
+| **06H** | Programme closure | NOT STARTED |
 
 ## Boundaries
 
@@ -193,5 +251,8 @@ Run on feature branch:
 
 ```text
 FIN-06A — FINANCIAL PUBLISHING & SHARING ARCHITECTURE FOUNDATION
-IMPLEMENTED · AUTOMATED GATES PASS · PR OPEN · PRODUCT OWNER REVIEW PENDING
+COMPLETE · PRODUCT OWNER UAT PASS · MERGED TO STAGE (PR #916)
+
+FIN-06 — IN PROGRESS
+FIN-06B — NEXT / NOT STARTED
 ```
