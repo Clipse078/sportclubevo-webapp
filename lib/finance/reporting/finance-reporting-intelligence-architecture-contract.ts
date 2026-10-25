@@ -629,7 +629,23 @@ export const SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS = {
   permissionAwareComposition: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.permissionAwareComposition,
   noNPlusOneOverview: true,
   integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
-  movementChartReusesFin04eR4: true,
+  overviewUsesCompactEventTimeline: true,
+  /** FIN-04E R4 movement chart remains available for Zeitplanung — not Übersicht primary visual. */
+  movementChartReusesFin04eR4InTimingWorkspace: true,
+  /** Presentation-only; not a domain materiality threshold. */
+  noUniversalUntimedPercentMaterialityRule: true,
+  /** Running cash balance line/area reserved for FIN-09 liquidity semantics. */
+  lineChartReservedForContinuousBalanceFin09: true,
+} as const;
+
+/** FIN-09 design note (documentation lock — not implemented in FIN-05D). */
+export const SCE_FINANCE_09_LIQUIDITY_VISUAL_DESIGN_NOTE = {
+  primaryVisual: "RUNNING_CASH_BALANCE_LINE_OR_SUBTLE_AREA",
+  composition: "openingCashBalance + expectedCashInflows - expectedCashOutflows = projectedRunningBalance",
+  timeAxis: "X",
+  balanceAxis: "Y",
+  expectedEventTimelineIsNotLiquidity: true,
+  implementedInFin05d: false,
 } as const;
 
 export const FINANCE_05D_IMPLEMENTATION = {

@@ -155,22 +155,28 @@ function buildAttentionItems(input: {
       });
     }
 
-    const untimedIncome = input.timingOverview.annual.income.unscheduledRemainderMinor;
-    const untimedExpense = input.timingOverview.annual.expense.unscheduledRemainderMinor;
-    const untimedTotal = (untimedIncome ?? 0) + (untimedExpense ?? 0);
-    const remaining =
-      input.timingOverview.annual.income.remainingFutureExpectationMinor +
-      input.timingOverview.annual.expense.remainingFutureExpectationMinor;
+    const untimedIncome = input.timingOverview.annual.income.unscheduledRemainderMinor ?? 0;
+    const untimedExpense = input.timingOverview.annual.expense.unscheduledRemainderMinor ?? 0;
+    const untimedTotal = untimedIncome + untimedExpense;
+    const hasTimedEvidence =
+      input.timingOverview.annual.income.timedFutureExpectationMinor +
+        input.timingOverview.annual.expense.timedFutureExpectationMinor >
+        0 ||
+      (input.timingOverview.counts.futureTimedEventCount ?? 0) > 0;
 
-    if (
-      remaining > 0 &&
-      untimedTotal > 0 &&
-      untimedTotal * 10_000 >= remaining * 3_000
-    ) {
+    if (untimedTotal > 0 && hasTimedEvidence) {
       items.push({
-        kind: "SIGNIFICANT_UNTIMED_REMAINDER",
+        kind: "PARTIAL_TIMING_UNTIMED",
         priority: 60,
         routeKey: "timing",
+        untimedTotalMinor: untimedTotal,
+      });
+    } else if (untimedTotal > 0 && input.timingOverview.interpretationState === "PARTIALLY_SCHEDULED") {
+      items.push({
+        kind: "PARTIAL_TIMING_UNTIMED",
+        priority: 60,
+        routeKey: "timing",
+        untimedTotalMinor: untimedTotal,
       });
     }
   }
@@ -183,12 +189,18 @@ function buildExpectedMovementSection(input: {
   timingOverview: FinanceForecastTimingOverviewReadModel | null;
   visualModel: FinanceForecastTimingVisualModel | null;
 }): FinanceOverviewExpectedMovementSection {
+  const emptyUntimed = {
+    untimedRemainderMinor: null as number | null,
+    untimedIncomeMinor: null as number | null,
+    untimedExpenseMinor: null as number | null,
+  };
+
   if (!input.timingVisible) {
     return {
       availability: "NOT_VISIBLE",
       presentationState: null,
       timingCoverage: null,
-      untimedRemainderMinor: null,
+      ...emptyUntimed,
       visualModel: null,
     };
   }
@@ -198,7 +210,7 @@ function buildExpectedMovementSection(input: {
       availability: "NO_CURRENT_FORECAST",
       presentationState: null,
       timingCoverage: null,
-      untimedRemainderMinor: null,
+      ...emptyUntimed,
       visualModel: null,
     };
   }
@@ -208,7 +220,7 @@ function buildExpectedMovementSection(input: {
       availability: "NO_CURRENT_FORECAST",
       presentationState: null,
       timingCoverage: input.timingOverview.timingCoverage,
-      untimedRemainderMinor: null,
+      ...emptyUntimed,
       visualModel: null,
     };
   }
@@ -217,8 +229,14 @@ function buildExpectedMovementSection(input: {
   const expense = input.timingOverview.annual.expense;
   const remainingFuture =
     income.remainingFutureExpectationMinor + expense.remainingFutureExpectationMinor;
-  const untimedTotal =
-    (income.unscheduledRemainderMinor ?? 0) + (expense.unscheduledRemainderMinor ?? 0);
+  const untimedIncome = income.unscheduledRemainderMinor ?? 0;
+  const untimedExpense = expense.unscheduledRemainderMinor ?? 0;
+  const untimedTotal = untimedIncome + untimedExpense;
+  const untimedFields = {
+    untimedRemainderMinor: untimedTotal > 0 ? untimedTotal : null,
+    untimedIncomeMinor: untimedIncome > 0 ? untimedIncome : null,
+    untimedExpenseMinor: untimedExpense > 0 ? untimedExpense : null,
+  };
   const plottableCount = input.visualModel?.markers.length ?? 0;
 
   const presentationState = deriveFinanceForecastTimingWorkspacePresentationState({
@@ -234,7 +252,7 @@ function buildExpectedMovementSection(input: {
       availability: "NO_REMAINING_EXPECTATION",
       presentationState,
       timingCoverage: input.timingOverview.timingCoverage,
-      untimedRemainderMinor: untimedTotal > 0 ? untimedTotal : null,
+      ...untimedFields,
       visualModel: null,
     };
   }
@@ -244,7 +262,7 @@ function buildExpectedMovementSection(input: {
       availability: "ZERO_TIMING",
       presentationState,
       timingCoverage: input.timingOverview.timingCoverage,
-      untimedRemainderMinor: untimedTotal > 0 ? untimedTotal : null,
+      ...untimedFields,
       visualModel: null,
     };
   }
@@ -253,7 +271,7 @@ function buildExpectedMovementSection(input: {
     availability: "PARTIAL_OR_FULL_TIMING",
     presentationState,
     timingCoverage: input.timingOverview.timingCoverage,
-    untimedRemainderMinor: untimedTotal > 0 ? untimedTotal : null,
+    ...untimedFields,
     visualModel: input.visualModel,
   };
 }

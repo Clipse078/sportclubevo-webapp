@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { cn } from "@/lib/cn";
-import { FinanceForecastTimingMovementTimeline } from "@/components/admin/finance/timing/FinanceForecastTimingMovementTimeline";
+import { FinanceOverviewExpectedEventTimeline } from "@/components/admin/finance/overview/FinanceOverviewExpectedEventTimeline";
 import {
   formatManagementPnlVarianceDelta,
 } from "@/lib/finance/presentation/format-management-pnl-measure";
@@ -45,7 +46,7 @@ type FinanceOverviewPanelLabels = {
   openBudget: string;
   outlookTitle: string;
   expectedResult: string;
-  vsApprovedBudget: string;
+  varianceAgainstApprovedBudget: string;
   actualLabel: string;
   actualYtdThrough: string;
   conclusionOnTrack: string;
@@ -60,7 +61,8 @@ type FinanceOverviewPanelLabels = {
   attentionUnfavorableVariance: string;
   attentionTimingOverallocated: string;
   attentionTimingAmbiguous: string;
-  attentionUntimedRemainder: string;
+  attentionPartialTimingTitle: string;
+  attentionPartialTimingBody: string;
   attentionNoStructure: string;
   driversTitle: string;
   driversFavourable: string;
@@ -69,8 +71,7 @@ type FinanceOverviewPanelLabels = {
   expectedMovementTitle: string;
   expectedMovementZeroTiming: string;
   expectedMovementZeroTimingAction: string;
-  expectedMovementUntimedNote: string;
-  timingCoverageLabel: string;
+  timingCoverageShort: string;
   openTiming: string;
   openForecast: string;
   openActuals: string;
@@ -78,6 +79,13 @@ type FinanceOverviewPanelLabels = {
   favorabilityUnfavorable: string;
   favorabilityOnPlan: string;
   measureUnavailable: string;
+  untimedFooterTitle: string;
+  untimedFooterIncome: string;
+  untimedFooterExpense: string;
+  movementSemanticClarification: string;
+  timelineMonthPrecision: string;
+  timelineRangePrecision: string;
+  timelineFinanceYearEnd: string;
 };
 
 type FinanceOverviewPanelProps = {
@@ -112,6 +120,16 @@ function formatResultMinor(
   return formatFinanceManagementMoneyMinor(amountMinor, currency, locale);
 }
 
+function formatLocaleDateFromIso(iso: string, locale: string): string {
+  const [year, month, day] = iso.split("-").map((part) => Number(part));
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 function conclusionHeadline(
   labels: FinanceOverviewPanelLabels,
   kind: SerializedFinanceOverviewDecisionIntelligenceReadModel["conclusion"]["kind"],
@@ -134,9 +152,11 @@ function conclusionHeadline(
 
 function attentionCopy(
   labels: FinanceOverviewPanelLabels,
-  kind: SerializedFinanceOverviewDecisionIntelligenceReadModel["attentionItems"][number]["kind"],
+  item: SerializedFinanceOverviewDecisionIntelligenceReadModel["attentionItems"][number],
+  formattingLocale: string,
+  currency: string | null,
 ): string {
-  switch (kind) {
+  switch (item.kind) {
     case "MISSING_APPROVED_BUDGET":
       return labels.attentionMissingBudget;
     case "MISSING_CURRENT_FORECAST":
@@ -147,8 +167,16 @@ function attentionCopy(
       return labels.attentionTimingOverallocated;
     case "TIMING_AMBIGUOUS_AT_CUTOFF":
       return labels.attentionTimingAmbiguous;
-    case "SIGNIFICANT_UNTIMED_REMAINDER":
-      return labels.attentionUntimedRemainder;
+    case "PARTIAL_TIMING_UNTIMED": {
+      const amount =
+        item.untimedTotalMinor != null && item.untimedTotalMinor > 0
+          ? formatFinanceManagementMoneyMinor(item.untimedTotalMinor, currency, formattingLocale)
+          : null;
+      if (amount) {
+        return labels.attentionPartialTimingBody.replace("{amount}", amount);
+      }
+      return labels.attentionPartialTimingTitle;
+    }
     case "NO_REPORTING_STRUCTURE":
       return labels.attentionNoStructure;
   }
@@ -223,6 +251,26 @@ export function FinanceOverviewPanel({
 
   const actualGrain = management.actual.grain;
   const actualCutoffIso = management.actualCutoffDateIso;
+  const actualCutoffLabel =
+    actualCutoffIso != null
+      ? formatLocaleDateFromIso(actualCutoffIso, formattingLocale)
+      : null;
+
+  const timingAttentionKinds = new Set([
+    "PARTIAL_TIMING_UNTIMED",
+    "TIMING_OVERALLOCATED",
+    "TIMING_AMBIGUOUS_AT_CUTOFF",
+  ]);
+  const hasTimingAttentionWithRoute = attentionItems.some(
+    (item) => item.routeKey === "timing" && timingAttentionKinds.has(item.kind),
+  );
+
+  const driverColumns = useMemo(() => {
+    const fav = drivers.favourable.length > 0;
+    const unfav = drivers.unfavourable.length > 0;
+    if (fav && unfav) return "md:grid-cols-2";
+    return "md:grid-cols-1";
+  }, [drivers.favourable.length, drivers.unfavourable.length]);
 
   return (
     <div className={FINANCE_WORKSPACE_STACK_CLASS} data-finance-overview-panel>
@@ -279,28 +327,23 @@ export function FinanceOverviewPanel({
             data-finance-overview-section="financial-conclusion"
             aria-labelledby="finance-overview-outlook-heading"
           >
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  {labels.outlookTitle}
-                </p>
-                <h2
-                  id="finance-overview-outlook-heading"
-                  className="mt-1 text-lg font-semibold text-[var(--foreground)]"
-                  data-finance-overview-conclusion={conclusion.kind}
-                >
-                  {conclusionHeadline(labels, conclusion.kind)}
-                </h2>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {management.financeYearName}
-                  {currency ? ` · ${currency}` : null}
-                </p>
-              </div>
-              <div className="min-w-0 shrink-0 text-right">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              {labels.outlookTitle}
+            </p>
+            <h2
+              id="finance-overview-outlook-heading"
+              className="mt-1 text-base font-semibold text-[var(--foreground)]"
+              data-finance-overview-conclusion={conclusion.kind}
+            >
+              {conclusionHeadline(labels, conclusion.kind)}
+            </h2>
+
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
                 <p className="text-xs text-[var(--muted)]">{labels.expectedResult}</p>
                 <p
                   className={cn(
-                    "text-2xl font-semibold tabular-nums text-[var(--foreground)]",
+                    "text-3xl font-semibold tabular-nums tracking-tight text-[var(--foreground)]",
                     conclusion.forecastResultMinor !== null
                       ? financeResultSemanticTextClass(conclusion.forecastResultMinor)
                       : null,
@@ -315,44 +358,52 @@ export function FinanceOverviewPanel({
                   )}
                 </p>
                 {hasVariance ? (
-                  <p
-                    className={cn(
-                      "mt-1 text-sm tabular-nums",
-                      financeVarianceComparisonSemanticTextClass({
-                        favorability: varianceSlice.favorability,
-                        hasComparison: true,
-                      }),
-                    )}
-                    data-finance-overview-variance
-                  >
-                    <span className="text-[var(--muted)]">{labels.vsApprovedBudget}: </span>
-                    {formatManagementPnlVarianceDelta(varianceSlice, currency, formattingLocale)}
+                  <div className="mt-2 space-y-0.5" data-finance-overview-variance>
+                    <p
+                      className={cn(
+                        "text-sm font-medium tabular-nums",
+                        financeVarianceComparisonSemanticTextClass({
+                          favorability: varianceSlice.favorability,
+                          hasComparison: true,
+                        }),
+                      )}
+                    >
+                      {formatManagementPnlVarianceDelta(varianceSlice, currency, formattingLocale)}
+                    </p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {labels.varianceAgainstApprovedBudget}
+                    </p>
                     {favorabilityText ? (
-                      <span className="text-[var(--muted)]"> · {favorabilityText}</span>
+                      <p
+                        className="text-sm font-medium text-[var(--foreground)]"
+                        data-finance-overview-favorability
+                      >
+                        {favorabilityText}
+                      </p>
                     ) : null}
-                  </p>
+                  </div>
                 ) : null}
               </div>
-            </div>
 
-            {management.actual.availability !== "NOT_VISIBLE" ? (
-              <div className="mt-4 border-t border-[var(--sce-surface-border-subtle)] pt-3">
-                <p className="text-xs text-[var(--muted)]">
-                  {actualGrain === "YTD" && actualCutoffIso
-                    ? labels.actualYtdThrough.replace("{date}", actualCutoffIso)
-                    : labels.actualLabel}
-                </p>
-                <p className="text-base font-medium tabular-nums text-[var(--foreground)]">
-                  {formatResultMinor(
-                    management.actual.availability,
-                    management.actual.summary?.resultMinor,
-                    currency,
-                    formattingLocale,
-                    labels.measureUnavailable,
-                  )}
-                </p>
-              </div>
-            ) : null}
+              {management.actual.availability !== "NOT_VISIBLE" ? (
+                <div className="min-w-0 shrink-0 sm:text-right">
+                  <p className="text-xs text-[var(--muted)]">
+                    {actualGrain === "YTD" && actualCutoffLabel
+                      ? labels.actualYtdThrough.replace("{date}", actualCutoffLabel)
+                      : labels.actualLabel}
+                  </p>
+                  <p className="text-lg font-medium tabular-nums text-[var(--foreground)]">
+                    {formatResultMinor(
+                      management.actual.availability,
+                      management.actual.summary?.resultMinor,
+                      currency,
+                      formattingLocale,
+                      labels.measureUnavailable,
+                    )}
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </section>
 
           {attentionItems.length > 0 ? (
@@ -363,9 +414,16 @@ export function FinanceOverviewPanel({
               <ul className="flex flex-col gap-2">
                 {attentionItems.slice(0, 3).map((item) => (
                   <li key={item.kind} className={FINANCE_CONTEXT_STRIP_CLASS} data-finance-attention={item.kind}>
-                    <p className="min-w-0 flex-1 text-sm text-[var(--foreground)]">
-                      {attentionCopy(labels, item.kind)}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      {item.kind === "PARTIAL_TIMING_UNTIMED" ? (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]">
+                          {labels.attentionPartialTimingTitle}
+                        </p>
+                      ) : null}
+                      <p className="text-sm text-[var(--foreground)]">
+                        {attentionCopy(labels, item, formattingLocale, currency)}
+                      </p>
+                    </div>
                     {item.routeKey &&
                     ((item.routeKey === "reports" && capabilities.canOpenReports) ||
                       (item.routeKey === "timing" && capabilities.canOpenTiming) ||
@@ -375,6 +433,9 @@ export function FinanceOverviewPanel({
                       <Link
                         href={routeHref(item.routeKey)}
                         className="inline-flex h-8 shrink-0 items-center rounded-md border border-[var(--sce-color-border-standard)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                        {...(item.routeKey === "timing"
+                          ? { "data-finance-overview-timing-cta": "attention" as const }
+                          : {})}
                       >
                         {item.routeKey === "reports"
                           ? labels.openReports
@@ -402,11 +463,9 @@ export function FinanceOverviewPanel({
               aria-labelledby="finance-overview-drivers-heading"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 id="finance-overview-drivers-heading" className="text-base font-semibold text-[var(--foreground)]">
-                    {labels.driversTitle}
-                  </h2>
-                </div>
+                <h2 id="finance-overview-drivers-heading" className="text-base font-semibold text-[var(--foreground)]">
+                  {labels.driversTitle}
+                </h2>
                 {capabilities.canOpenReports ? (
                   <Link
                     href="/dashboard/finance/reports"
@@ -416,13 +475,13 @@ export function FinanceOverviewPanel({
                   </Link>
                 ) : null}
               </div>
-              <div className="mt-4 grid gap-6 md:grid-cols-2">
+              <div className={cn("mt-4 grid gap-6", driverColumns)}>
                 {drivers.favourable.length > 0 ? (
                   <div data-finance-driver-group="favourable">
                     <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                       {labels.driversFavourable}
                     </p>
-                    <ul className="mt-2 space-y-2">
+                    <ul className="mt-2 space-y-1.5">
                       {drivers.favourable.map((driver) => (
                         <li
                           key={driver.id}
@@ -451,7 +510,7 @@ export function FinanceOverviewPanel({
                     <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                       {labels.driversUnfavourable}
                     </p>
-                    <ul className="mt-2 space-y-2">
+                    <ul className="mt-2 space-y-1.5">
                       {drivers.unfavourable.map((driver) => (
                         <li
                           key={driver.id}
@@ -485,56 +544,113 @@ export function FinanceOverviewPanel({
               data-finance-overview-section="expected-movement"
               aria-labelledby="finance-overview-movement-heading"
             >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h2 id="finance-overview-movement-heading" className="text-base font-semibold text-[var(--foreground)]">
-                  {labels.expectedMovementTitle}
-                </h2>
-                {capabilities.canOpenTiming ? (
-                  <Link
-                    href="/dashboard/finance/forecast/timing"
-                    className="inline-flex h-8 items-center rounded-md border border-[var(--sce-color-border-standard)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
-                  >
-                    {labels.openTiming}
-                  </Link>
-                ) : null}
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <div>
+                  <h2 id="finance-overview-movement-heading" className="text-base font-semibold text-[var(--foreground)]">
+                    {labels.expectedMovementTitle}
+                  </h2>
+                  {formatCoveragePercent(expectedMovement.timingCoverage) ? (
+                    <p className="mt-1 text-xs text-[var(--muted)]" data-finance-timing-coverage>
+                      {labels.timingCoverageShort.replace(
+                        "{percent}",
+                        formatCoveragePercent(expectedMovement.timingCoverage)!,
+                      )}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
-              {formatCoveragePercent(expectedMovement.timingCoverage) ? (
-                <p className="mt-2 text-xs text-[var(--muted)]" data-finance-timing-coverage>
-                  {labels.timingCoverageLabel.replace(
-                    "{percent}",
-                    formatCoveragePercent(expectedMovement.timingCoverage)!,
-                  )}
-                </p>
-              ) : null}
+              <p className="mt-2 text-xs text-[var(--muted)]">{labels.movementSemanticClarification}</p>
 
               {expectedMovement.availability === "ZERO_TIMING" ? (
-                <p className="mt-3 text-sm text-[var(--muted)]">{labels.expectedMovementZeroTiming}</p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-[var(--muted)]">{labels.expectedMovementZeroTiming}</p>
+                  {capabilities.canOpenTiming && !hasTimingAttentionWithRoute ? (
+                    <Link
+                      href="/dashboard/finance/forecast/timing"
+                      className="inline-flex h-8 shrink-0 items-center rounded-md border border-[var(--sce-color-border-standard)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                      data-finance-overview-timing-cta="zero-timing"
+                    >
+                      {labels.openTiming}
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
 
               {expectedMovement.availability === "PARTIAL_OR_FULL_TIMING" &&
               expectedMovement.visualModel ? (
-                <div className="mt-4 min-w-0" data-finance-overview-movement-chart>
-                  <FinanceForecastTimingMovementTimeline
+                <div className="mt-4 min-w-0 overflow-x-hidden" data-finance-overview-event-timeline>
+                  <FinanceOverviewExpectedEventTimeline
                     visual={expectedMovement.visualModel}
                     baseCurrency={currency}
                     formattingLocale={formattingLocale}
+                    labels={{
+                      monthPrecisionHint: labels.timelineMonthPrecision,
+                      rangePrecisionHint: labels.timelineRangePrecision,
+                      financeYearEndMarker: labels.timelineFinanceYearEnd,
+                      semanticClarification: labels.movementSemanticClarification,
+                    }}
                   />
                 </div>
               ) : null}
 
               {expectedMovement.untimedRemainderMinor !== null &&
               expectedMovement.untimedRemainderMinor > 0 ? (
-                <p className="mt-3 text-xs text-[var(--muted)]" data-finance-untimed-remainder>
-                  {labels.expectedMovementUntimedNote.replace(
-                    "{amount}",
-                    formatFinanceManagementMoneyMinor(
-                      expectedMovement.untimedRemainderMinor,
-                      currency,
-                      formattingLocale,
-                    ),
-                  )}
-                </p>
+                <div
+                  className="mt-4 flex flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between"
+                  data-finance-untimed-context
+                >
+                  <div className="min-w-0 text-sm">
+                    <p className="font-medium text-[var(--foreground)]">
+                      {labels.untimedFooterTitle}{" "}
+                      <span className="tabular-nums">
+                        {formatFinanceManagementMoneyMinor(
+                          expectedMovement.untimedRemainderMinor,
+                          currency,
+                          formattingLocale,
+                        )}
+                      </span>
+                    </p>
+                    {expectedMovement.untimedIncomeMinor != null ||
+                    expectedMovement.untimedExpenseMinor != null ? (
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {expectedMovement.untimedIncomeMinor != null
+                          ? labels.untimedFooterIncome.replace(
+                              "{amount}",
+                              formatFinanceManagementMoneyMinor(
+                                expectedMovement.untimedIncomeMinor,
+                                currency,
+                                formattingLocale,
+                              ),
+                            )
+                          : null}
+                        {expectedMovement.untimedIncomeMinor != null &&
+                        expectedMovement.untimedExpenseMinor != null
+                          ? " · "
+                          : null}
+                        {expectedMovement.untimedExpenseMinor != null
+                          ? labels.untimedFooterExpense.replace(
+                              "{amount}",
+                              formatFinanceManagementMoneyMinor(
+                                expectedMovement.untimedExpenseMinor,
+                                currency,
+                                formattingLocale,
+                              ),
+                            )
+                          : null}
+                      </p>
+                    ) : null}
+                  </div>
+                  {capabilities.canOpenTiming && !hasTimingAttentionWithRoute ? (
+                    <Link
+                      href="/dashboard/finance/forecast/timing"
+                      className="inline-flex h-8 shrink-0 items-center rounded-md border border-[var(--sce-color-border-standard)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+                      data-finance-overview-timing-cta="untimed-footer"
+                    >
+                      {labels.openTiming}
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
             </section>
           ) : null}

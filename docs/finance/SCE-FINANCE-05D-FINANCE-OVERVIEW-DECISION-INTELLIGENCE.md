@@ -2,61 +2,61 @@
 
 | Field | Value |
 | --- | --- |
-| **Status** | **IMPLEMENTED / AWAITING PO REVIEW** (not merged) |
+| **Status** | **IMPLEMENTED / AWAITING PO REVIEW** (R1 visual refinement) |
 | **Branch** | `cursor/sce-finance-05d-overview-decision-intelligence-4dba` |
-| **Depends on** | FIN-05B read models, FIN-05C presentation helpers, FIN-04E timing & movement visual (R4) |
+| **Depends on** | FIN-05B read models, FIN-05C presentation helpers, FIN-04E timing semantics |
+
+## PO UAT R1 findings (addressed)
+
+- Raw favourability translation key on Übersicht — fixed (`actuals.favorability*`).
+- Oversized FIN-04E movement chart on Übersicht — replaced with compact **expected financial event timeline**.
+- Axis label collisions / viewport dominance — timeline height capped (~280px), responsive tick thinning, mobile list fallback.
+- Duplicate Zeitplanung CTAs — single primary route (attention or untimed footer / zero-timing).
+- Hard-coded **≥30%** untimed “materiality” rule — **removed** (presentation uses deterministic partial-timing state only; not domain truth).
+
+## Canonical SCE visual grammar (FIN-05D lock)
+
+| Question | Visual |
+| --- | --- |
+| Continuous balance / stock over time | **Line / area** (reserved — **FIN-09** liquidity) |
+| Discrete expected movements over time | **Event timeline** (FIN-05D Übersicht) |
+| Category magnitude | Bar |
+| Variance / contribution | Diverging or ranked bars (Berichte) |
+
+**Expected event timing ≠ liquidity.** Do not call the Übersicht timeline Cashflow or Liquidität.
+
+Connecting discrete expected movements with a line would falsely imply a continuous quantity between events.
+
+## FIN-09 future liquidity (design note only — not implemented)
+
+- Opening cash balance + expected cash inflows − expected cash outflows = **projected running cash balance**.
+- Preferred primary visual: **running cash balance line / subtle area** (time on X, balance on Y).
+- Historical vs forecast boundary, optional thresholds — FIN-09 scope.
+
+See `SCE_FINANCE_09_LIQUIDITY_VISUAL_DESIGN_NOTE` in `finance-reporting-intelligence-architecture-contract.ts`.
 
 ## Role
 
-**Übersicht = UNDERSTAND** — interpretive summary and attention routing, not a second P&L, not liquidity, not a chart gallery.
-
-### Ten-second comprehension contract
-
-1. Where are we? (expected management result)
-2. Are we on track? (forecast vs approved budget with semantic favourability)
-3. What drives the difference? (restrained top drivers)
-4. What deserves attention? (prioritized exceptions)
-5. What financial movements are coming? (FIN-04E expected-movement visual when timed evidence exists)
-
-Information hierarchy: **interpretation → exception → explanation → evidence** (conclusion → why → detail).
+**Übersicht = UNDERSTAND** — executive briefing: conclusion → attention → key variances → upcoming expected movements → compact untimed context.
 
 ## Source authority
 
-| Measure | Authority |
-| --- | --- |
-| Approved budget | Governance baseline (`FinanceBudget` approved version) |
-| Actual | FIN-03B postings; YTD only with explicit cutoff (forecast version `actualsThroughDate`) |
-| Current forecast | `FinanceForecast.currentVersionId` — never automatic forecast |
-| Expected events / timing | FIN-04E temporal evidence |
-| Übersicht | Consumer only — no source-of-truth writes |
+Unchanged — FIN-05B / FIN-03 / FIN-04E consumers only; timeline is **presentation**.
 
-## Read model
+## Event timeline semantics (R1)
 
-`FinanceOverviewDecisionIntelligenceReadModel` composes:
+- **EXACT_DATE** — point marker; business date preserved.
+- **MONTH** — bounded interval for that month (not fake exact day).
+- **DATE_RANGE** — bounded interval for real range.
+- **UNSCHEDULED** — never plotted on axis; shown in footer strip with income/expense breakdown when available.
+- Amount encoding: textual primary; markers use restrained glyphs (not area ∝ amount).
 
-- `FinanceManagementOverviewReadModel` (FIN-05B)
-- Deterministic financial conclusion
-- Restrained drivers (max 3 per favourability side)
-- Attention items (timing + variance + missing sources)
-- Expected-movement section (FIN-04E visual reuse)
+## Responsive behaviour
 
-Loader: `loadFinanceOverviewDecisionIntelligenceReadModel`.
-
-## Expected movement ≠ liquidity
-
-Chart semantics: signed expected financial movement over real business time. Not cash balance, runway, or treasury (FIN-09).
-
-Timing coverage is **Terminierungsgrad** only — not forecast confidence.
-
-## Incomplete states
-
-Missing measures render as unavailable (`—`), not zero. Unauthorized measures are `NOT_VISIBLE` without leakage through derived values.
-
-## Permissions
-
-Composition respects budget / actual / forecast view scopes. Timing block requires forecast visibility and forecasting capability.
+- Desktop / tablet: horizontal timeline with direct labels.
+- Mobile: chronological list (no squeezed axis).
 
 ## Next
 
 - **FIN-05E** — Reporting workspace drill-down (not started)
-- PO visual UAT on Übersicht narrative
+- PO visual UAT on Übersicht R1

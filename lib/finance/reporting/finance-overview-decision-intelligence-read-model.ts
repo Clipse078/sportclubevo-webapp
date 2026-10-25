@@ -35,7 +35,7 @@ export const FINANCE_OVERVIEW_ATTENTION_KINDS = [
   "UNFAVORABLE_FORECAST_VS_BUDGET",
   "TIMING_OVERALLOCATED",
   "TIMING_AMBIGUOUS_AT_CUTOFF",
-  "SIGNIFICANT_UNTIMED_REMAINDER",
+  "PARTIAL_TIMING_UNTIMED",
   "NO_REPORTING_STRUCTURE",
 ] as const;
 
@@ -52,6 +52,8 @@ export type FinanceOverviewAttentionItem = {
     | "timing"
     | "structure"
     | null;
+  /** Presentation context — not a new financial authority. */
+  untimedTotalMinor?: number | null;
 };
 
 export type FinanceOverviewExpectedMovementAvailability =
@@ -66,6 +68,8 @@ export type FinanceOverviewExpectedMovementSection = {
   presentationState: FinanceForecastTimingWorkspacePresentationContext | null;
   timingCoverage: FinanceForecastTimingCoverage | null;
   untimedRemainderMinor: number | null;
+  untimedIncomeMinor: number | null;
+  untimedExpenseMinor: number | null;
   visualModel: FinanceForecastTimingVisualModel | null;
 };
 
