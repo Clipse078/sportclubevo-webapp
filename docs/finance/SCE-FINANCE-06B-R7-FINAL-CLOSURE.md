@@ -119,7 +119,7 @@ They **must not** rebuild historical publications from current FIN-05 reporting 
 | **FIN-06B PUBLICATION IMMUTABILITY** | **PASS** |
 | **FIN-06B VERSIONING** | **PASS** |
 | **FIN-06B-R7 FINAL CLOSURE** | **PASS** |
-| **PR #917** | **READY TO MERGE** (when automated gates green) |
+| **PR #917** | **MERGED** → **STAGE** (`2ecc6789`) |
 
 ## Programme status after closure
 
