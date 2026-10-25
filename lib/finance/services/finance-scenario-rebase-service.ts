@@ -23,6 +23,8 @@ type Db = Pick<
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
   | "financeScenarioRebase"
+  | "financeActualEntry"
+  | "financeExpectedFinancialEvent"
   | "financeScenarioAdoption"
   | "financeBudget"
   | "financeBudgetVersion"

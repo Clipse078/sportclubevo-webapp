@@ -161,9 +161,11 @@ export const SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1 = {
   doesNotRetroactivelyChangeActuals: true,
 } as const;
 
-/** Must not appear on FinanceScenarioAssumption in FIN-04D v1 (false precision without temporal engine). */
+/**
+ * Must not appear on FinanceScenarioAssumption (false precision / unsupported semantics).
+ * `effectiveFromDate` (DATE) is allowed from FIN-04E-06 — see effective-dated-scenario-architecture-contract.
+ */
 export const SCENARIO_ASSUMPTION_V1_FORBIDDEN_TEMPORAL_FIELDS = [
-  "effectiveFrom",
   "effectiveTo",
   "startDate",
   "endDate",
@@ -355,7 +357,8 @@ export const SCENARIO_TIMED_CASH_BOUNDARY = {
   futureTimingAssumptionsPossible: true,
   forecastTimingArchitectureDoc:
     "docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md",
-  timingCapabilityImplemented: false,
+  timingCapabilityImplemented: true,
+  effectiveDatedAssumptionsPackage: "FIN-04E-06",
   blocksFin04Fin07Fin08Fin09: false,
   noPseudoMonthlyPhasing: true,
   naiveMonthProrationForbidden: FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN

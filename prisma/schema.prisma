@@ -11122,6 +11122,8 @@ model FinanceScenarioAssumption {
   percentBasisPoints  Int?
   amountMinorDelta    Int?
   absoluteAmountMinor Int?
+  /// Optional business date — null preserves FIN-04D full-year assumption semantics (FIN-04E-06).
+  effectiveFromDate   DateTime?                     @db.Date
   note                String?
   createdAt           DateTime                      @default(now())
   updatedAt           DateTime                      @updatedAt

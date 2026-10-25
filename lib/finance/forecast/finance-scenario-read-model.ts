@@ -1,5 +1,9 @@
 import type { ScenarioAssumptionKindV1 } from "@/lib/finance/forecast/scenario-architecture-contract";
 import type { FinanceScenarioCalculationResult } from "@/lib/finance/forecast/finance-scenario-calculation-types";
+import type {
+  FinanceScenarioAssumptionTemporalReadModel,
+  FinanceScenarioTemporalSummary,
+} from "@/lib/finance/forecast/merge-effective-dated-scenario-calculation";
 import type { ForecastHistoryDisplayMetadata } from "@/lib/finance/forecast/forecast-revision-presentation";
 import type { FinanceForecastAccountComparisonRow } from "@/lib/finance/forecast/forecast-revision-comparison";
 
@@ -127,7 +131,15 @@ export type FinanceScenarioAssumptionReadModel = {
   percentBasisPoints: number | null;
   amountMinorDelta: number | null;
   absoluteAmountMinor: number | null;
+  effectiveFromDateIso: string | null;
   note: string | null;
+};
+
+export type FinanceScenarioTemporalSummaryReadModel = Omit<
+  FinanceScenarioTemporalSummary,
+  "assumptionTemporalByAccountId"
+> & {
+  assumptionTemporal: FinanceScenarioAssumptionTemporalReadModel[];
 };
 
 export type FinanceScenarioAccountPresentation = {
@@ -215,6 +227,7 @@ export type FinanceScenarioGovernanceReadModel = {
   hasAdoptionProvenance: boolean;
   canDelete: boolean;
   canAdoptToCurrentForecast: boolean;
+  adoptBlockedReason: "NONE" | "ARCHIVED" | "NO_CURRENT_FORECAST" | "PARTIAL_TEMPORAL_COVERAGE" | "TEMPORAL_STALE";
   canUpdateSourceForecast: boolean;
   currentForecastVersionIdForActions: string | null;
 };
@@ -234,6 +247,7 @@ export type FinanceScenarioDetailReadModel = {
   assumptions: FinanceScenarioAssumptionReadModel[];
   assumptionCount: number;
   calculation: FinanceScenarioCalculationResult;
+  temporal: FinanceScenarioTemporalSummaryReadModel;
   comparison: FinanceScenarioComparisonReadModel;
   governance: FinanceScenarioGovernanceReadModel;
   topDrivers: FinanceScenarioDriver[];

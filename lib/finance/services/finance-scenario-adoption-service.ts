@@ -26,6 +26,8 @@ type Db = Pick<
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
   | "financeScenarioAdoption"
+  | "financeActualEntry"
+  | "financeExpectedFinancialEvent"
   | "financeBudget"
   | "financeBudgetVersion"
   | "financeBudgetLine"
@@ -42,6 +44,7 @@ export type ScenarioAdoptionPreviewContext = ScenarioAdoptionPreviewResult & {
   expectedCurrentForecastVersionId: string;
   expectedScenarioUpdatedAt: string;
   canAdopt: boolean;
+  temporalAdoptionBlocked: boolean;
 };
 
 async function loadScenarioAdoptionContext(
@@ -186,6 +189,9 @@ export async function previewFinanceScenarioAdoption(
   const baselineOutdated =
     loaded.scenario.sourceForecastVersionId !== loaded.currentVersion.id;
 
+  const temporalAdoptionEligible = loaded.calculation.temporal.adoptionEligible;
+  const temporalStale = loaded.calculation.temporal.temporalStale;
+
   return {
     ...preview,
     scenarioId: loaded.scenario.id,
@@ -193,7 +199,10 @@ export async function previewFinanceScenarioAdoption(
     baselineOutdated,
     expectedCurrentForecastVersionId: loaded.currentVersion.id,
     expectedScenarioUpdatedAt: loaded.scenario.updatedAt.toISOString(),
-    canAdopt: !loaded.scenario.archivedAt,
+    canAdopt:
+      !loaded.scenario.archivedAt && temporalAdoptionEligible && !temporalStale,
+    temporalAdoptionBlocked:
+      !temporalAdoptionEligible || temporalStale,
   };
 }
 
@@ -255,6 +264,21 @@ export async function adoptFinanceScenarioToCurrentForecast(
   const preview = buildPreviewFromContext(loaded);
   for (const line of preview.persistableLines) {
     assertSafeAmountMinor(line.amountMinor);
+  }
+
+  if (!loaded.calculation.temporal.adoptionEligible) {
+    throw new FinanceDomainError(
+      "FINANCE_SCENARIO_ADOPTION_PARTIAL_TEMPORAL_COVERAGE",
+      "Scenario adoption requires complete temporal coverage for effective-dated assumptions.",
+      409,
+    );
+  }
+  if (loaded.calculation.temporal.temporalStale) {
+    throw new FinanceDomainError(
+      "FINANCE_SCENARIO_ADOPTION_TEMPORAL_STALE",
+      "Expected timing evidence changed since this scenario was last saved. Refresh and review before adoption.",
+      409,
+    );
   }
 
   const revisionLabel = `Variante: ${loaded.scenario.name}`.slice(0, 200);

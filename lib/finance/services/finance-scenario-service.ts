@@ -16,6 +16,10 @@ import {
   normalizedScenarioNameKey,
 } from "@/lib/finance/forecast/scenario-metadata-validation";
 import { calculateFinanceScenario } from "@/lib/finance/forecast/calculate-finance-scenario";
+import { formatFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calendar-date";
+import { calculateFinanceScenarioWithTemporalSupport } from "@/lib/finance/forecast/merge-effective-dated-scenario-calculation";
+import type { FinanceScenarioCalculationWithTemporalResult } from "@/lib/finance/forecast/merge-effective-dated-scenario-calculation";
+import { loadScenarioTemporalEvidenceByAccountId } from "@/lib/finance/services/finance-scenario-temporal-evidence-service";
 import {
   FinanceScenarioCalculationError,
   type FinanceScenarioCalculationErrorCode,
@@ -38,6 +42,8 @@ type Db = Pick<
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
   | "financeScenarioAdoption"
+  | "financeActualEntry"
+  | "financeExpectedFinancialEvent"
   | "financialAccount"
   | "$transaction"
 >;
@@ -85,6 +91,16 @@ function mapAssumptionValidationError(error: unknown): never {
     throw new FinanceDomainError(
       "FINANCE_SCENARIO_INVALID_ASSUMPTION",
       "Invalid scenario assumption payload.",
+      400,
+    );
+  }
+  if (
+    error instanceof Error &&
+    error.message === "FINANCE_SCENARIO_EFFECTIVE_DATE_UNSUPPORTED_ASSUMPTION"
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_SCENARIO_EFFECTIVE_DATE_UNSUPPORTED_ASSUMPTION",
+      "Effective-from date is not supported for this assumption kind.",
       400,
     );
   }
@@ -562,6 +578,7 @@ export async function upsertFinanceScenarioAssumption(
         percentBasisPoints: payload.percentBasisPoints,
         amountMinorDelta: payload.amountMinorDelta,
         absoluteAmountMinor: payload.absoluteAmountMinor,
+        effectiveFromDate: payload.effectiveFromDate,
         note: payload.note,
       },
       update: {
@@ -569,6 +586,7 @@ export async function upsertFinanceScenarioAssumption(
         percentBasisPoints: payload.percentBasisPoints,
         amountMinorDelta: payload.amountMinorDelta,
         absoluteAmountMinor: payload.absoluteAmountMinor,
+        effectiveFromDate: payload.effectiveFromDate,
         note: payload.note,
       },
     });
@@ -765,6 +783,7 @@ export async function duplicateFinanceScenario(
           percentBasisPoints: assumption.percentBasisPoints,
           amountMinorDelta: assumption.amountMinorDelta,
           absoluteAmountMinor: assumption.absoluteAmountMinor,
+          effectiveFromDate: assumption.effectiveFromDate,
           note: assumption.note,
         })),
       });
@@ -841,11 +860,107 @@ async function getAccountSemanticsForScenarioCalculation(
  * Loads persisted frozen baseline + assumptions and runs the canonical pure engine.
  * Does not read live Current Forecast, Approved Budget, or Automatic Forecast.
  */
+function resolveScenarioActualsThroughDateIso(scenario: {
+  baselineActualsThroughDate: Date | null;
+}): string | null {
+  if (!scenario.baselineActualsThroughDate) {
+    return null;
+  }
+  return formatFinanceCalendarDateIso(scenario.baselineActualsThroughDate);
+}
+
+export async function runFinanceScenarioCalculationEngine(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input: {
+    scenarioId: string;
+    tenantId: string;
+    financeYearId: string;
+    scenarioUpdatedAt: Date;
+    baselineActualsThroughDate: Date | null;
+    baselineLines: Array<{ financialAccountId: string; amountMinor: number }>;
+    assumptions: Array<{
+      financialAccountId: string;
+      kind: ScenarioAssumptionKindV1;
+      percentBasisPoints: number | null;
+      amountMinorDelta: number | null;
+      absoluteAmountMinor: number | null;
+      effectiveFromDate: Date | null;
+    }>;
+    accountSemantics: Array<{
+      financialAccountId: string;
+      canonicalSemantic: FinanceScenarioPlanningAccountSemantic;
+    }>;
+  },
+): Promise<FinanceScenarioCalculationWithTemporalResult> {
+  const assumptions = input.assumptions.map((assumption) => ({
+    financialAccountId: assumption.financialAccountId,
+    kind: assumption.kind,
+    percentBasisPoints: assumption.percentBasisPoints,
+    amountMinorDelta: assumption.amountMinorDelta,
+    absoluteAmountMinor: assumption.absoluteAmountMinor,
+    effectiveFromDateIso: assumption.effectiveFromDate
+      ? formatFinanceCalendarDateIso(assumption.effectiveFromDate)
+      : null,
+  }));
+
+  const effectiveDatedAccountIds = assumptions
+    .filter((row) => row.effectiveFromDateIso)
+    .map((row) => row.financialAccountId);
+
+  const calculationInput = {
+    scenarioId: input.scenarioId,
+    tenantId: input.tenantId,
+    financeYearId: input.financeYearId,
+    baselineLines: input.baselineLines,
+    assumptions,
+    accountSemantics: input.accountSemantics,
+  };
+
+  if (effectiveDatedAccountIds.length === 0) {
+    const calculation = calculateFinanceScenario(calculationInput);
+    return {
+      ...calculation,
+      temporal: {
+        hasEffectiveDatedAssumptions: false,
+        adoptionEligible: true,
+        temporalStale: false,
+        partialTemporalCoverage: false,
+        assumptionTemporalByAccountId: new Map(),
+      },
+    };
+  }
+
+  const actualsThroughDateIso = resolveScenarioActualsThroughDateIso({
+    baselineActualsThroughDate: input.baselineActualsThroughDate,
+  });
+  if (!actualsThroughDateIso) {
+    throw new FinanceDomainError(
+      "FINANCE_SCENARIO_TEMPORAL_CUTOFF_MISSING",
+      "Scenario baseline is missing actuals-through date required for effective-dated assumptions.",
+      409,
+    );
+  }
+
+  const temporalEvidenceByAccountId = await loadScenarioTemporalEvidenceByAccountId(db, ctx, {
+    scenarioId: input.scenarioId,
+    financeYearId: input.financeYearId,
+    financialAccountIds: effectiveDatedAccountIds,
+    actualsThroughDateIso,
+  });
+
+  return calculateFinanceScenarioWithTemporalSupport({
+    calculationInput,
+    temporalEvidenceByAccountId,
+    scenarioUpdatedAtIso: input.scenarioUpdatedAt.toISOString(),
+  });
+}
+
 export async function calculatePersistedFinanceScenario(
   db: Db,
   ctx: FinanceAuthContext,
   input: { scenarioId: string; financeYearId?: string },
-): Promise<FinanceScenarioCalculationResult> {
+): Promise<FinanceScenarioCalculationWithTemporalResult> {
   requireFinanceForecastView(ctx);
   const scenario = await getScenarioOrThrow(db, ctx, input.scenarioId);
 
@@ -863,10 +978,12 @@ export async function calculatePersistedFinanceScenario(
   );
 
   try {
-    return calculateFinanceScenario({
+    return await runFinanceScenarioCalculationEngine(db, ctx, {
       scenarioId: scenario.id,
       tenantId: scenario.tenantId,
       financeYearId: scenario.financeYearId,
+      scenarioUpdatedAt: scenario.updatedAt,
+      baselineActualsThroughDate: scenario.baselineActualsThroughDate,
       baselineLines: scenario.baselineLines.map((line) => ({
         financialAccountId: line.financialAccountId,
         amountMinor: line.amountMinor,
@@ -877,6 +994,7 @@ export async function calculatePersistedFinanceScenario(
         percentBasisPoints: assumption.percentBasisPoints,
         amountMinorDelta: assumption.amountMinorDelta,
         absoluteAmountMinor: assumption.absoluteAmountMinor,
+        effectiveFromDate: assumption.effectiveFromDate,
       })),
       accountSemantics: accountRows.map((account) => ({
         financialAccountId: account.id,

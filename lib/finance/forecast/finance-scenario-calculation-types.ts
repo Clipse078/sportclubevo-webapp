@@ -21,6 +21,8 @@ export type FinanceScenarioCalculationAssumption = {
   percentBasisPoints?: number | null;
   amountMinorDelta?: number | null;
   absoluteAmountMinor?: number | null;
+  /** Business date (YYYY-MM-DD). Null/omitted preserves FIN-04D full-year semantics. */
+  effectiveFromDateIso?: string | null;
 };
 
 export type FinanceScenarioCalculationInput = {

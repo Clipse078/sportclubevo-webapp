@@ -897,6 +897,14 @@
           "percentHint": "Negative values reduce the amount.",
           "deltaAmountLabel": "Amount more or less",
           "absoluteAmountLabel": "New amount",
+          "validityLabel": "Valid from",
+          "validityFullForecast": "Entire forecast",
+          "validityFromDate": "From date",
+          "effectiveFromLabel": "Start date",
+          "effectiveDateUnsupportedKind": "A start date is not yet available for this assumption type.",
+          "temporalKnownImpact": "Known impact (scheduled)",
+          "temporalPartialCoverage": "Scheduling is incomplete — the full effect cannot be determined yet.",
+          "temporalAmbiguousOverlap": "An expected period overlaps the start of this assumption.",
           "save": "Save",
           "cancel": "Cancel",
           "changeExclude": "excluded",
@@ -904,9 +912,12 @@
           "errors": {
             "invalidInput": "Check account and values.",
             "staleScenario": "This variant changed elsewhere. Refresh and try again.",
-            "accountUnavailable": "This account is not available for new assumptions."
+            "accountUnavailable": "This account is not available for new assumptions.",
+            "effectiveDateUnsupported": "A start date is not yet available for this assumption type."
           }
-        }
+        },
+        "temporalStaleBanner": "Expected dates changed since this variant was last saved. Review the result.",
+        "adoptBlockedPartialTemporal": "Adoption is only available when timing fully determines all effects."
       },
       "yearLabel": "Financial year",
       "currencyLabel": "Currency",

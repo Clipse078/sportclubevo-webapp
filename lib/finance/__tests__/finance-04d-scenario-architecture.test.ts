@@ -203,7 +203,7 @@ describe("FIN-04D v1 annual semantics and temporal boundaries", () => {
     expect(FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN.forbiddenWithoutExplicitEvenDistributionEvidence).toBe(
       true,
     );
-    expect(SCENARIO_TIMED_CASH_BOUNDARY.timingCapabilityImplemented).toBe(false);
+    expect(SCENARIO_TIMED_CASH_BOUNDARY.timingCapabilityImplemented).toBe(true);
     expect(SCENARIO_TIMED_CASH_BOUNDARY.naiveMonthProrationForbidden).toBe(true);
     expect(FINANCE_TEMPORAL_MODEL_FUTURE.implementedInFin04dV1).toBe(false);
     expect(FINANCE_TEMPORAL_MODEL_FUTURE.actualHistoryImmutable).toBe(true);

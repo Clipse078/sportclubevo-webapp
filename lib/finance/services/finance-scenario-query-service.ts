@@ -6,7 +6,9 @@ import {
   requireFinanceForecastView,
   type FinanceAuthContext,
 } from "@/lib/finance/finance-authorization";
-import { calculateFinanceScenario } from "@/lib/finance/forecast/calculate-finance-scenario";
+import { runFinanceScenarioCalculationEngine } from "@/lib/finance/services/finance-scenario-service";
+import type { FinanceScenarioCalculationWithTemporalResult } from "@/lib/finance/forecast/merge-effective-dated-scenario-calculation";
+import type { FinanceScenarioTemporalSummaryReadModel } from "@/lib/finance/forecast/finance-scenario-read-model";
 import {
   buildFinanceScenarioPrimaryComparison,
   computeScenarioVsApprovedBudgetTotals,
@@ -46,6 +48,8 @@ type Db = Pick<
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
   | "financeScenarioAdoption"
+  | "financeActualEntry"
+  | "financeExpectedFinancialEvent"
   | "financialAccount"
   | "financeBudget"
   | "financeBudgetVersion"
@@ -311,37 +315,43 @@ async function loadGovernanceApprovedBudgetBaseline(
   return baseline;
 }
 
-type ScenarioCalcBundle = {
-  calculation: ReturnType<typeof calculateFinanceScenario>;
-  assumptionCount: number;
-};
+function toTemporalReadModel(
+  calculation: FinanceScenarioCalculationWithTemporalResult,
+): FinanceScenarioTemporalSummaryReadModel {
+  return {
+    hasEffectiveDatedAssumptions: calculation.temporal.hasEffectiveDatedAssumptions,
+    adoptionEligible: calculation.temporal.adoptionEligible,
+    temporalStale: calculation.temporal.temporalStale,
+    partialTemporalCoverage: calculation.temporal.partialTemporalCoverage,
+    assumptionTemporal: [...calculation.temporal.assumptionTemporalByAccountId.values()],
+  };
+}
 
-function runScenarioCalculation(input: {
-  scenarioId: string;
-  tenantId: string;
-  financeYearId: string;
-  baselineLines: Array<{ financialAccountId: string; amountMinor: number }>;
-  assumptions: Array<{
-    financialAccountId: string;
-    kind: ScenarioAssumptionKindV1;
-    percentBasisPoints: number | null;
-    amountMinorDelta: number | null;
-    absoluteAmountMinor: number | null;
-  }>;
-  accountSemantics: Array<{
-    financialAccountId: string;
-    canonicalSemantic: FinanceScenarioPlanningAccountSemantic;
-  }>;
-}): ScenarioCalcBundle {
-  const calculation = calculateFinanceScenario({
-    scenarioId: input.scenarioId,
-    tenantId: input.tenantId,
-    financeYearId: input.financeYearId,
-    baselineLines: input.baselineLines,
-    assumptions: input.assumptions,
-    accountSemantics: input.accountSemantics,
-  });
-  return { calculation, assumptionCount: input.assumptions.length };
+async function runScenarioCalculation(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input: {
+    scenarioId: string;
+    tenantId: string;
+    financeYearId: string;
+    scenarioUpdatedAt: Date;
+    baselineActualsThroughDate: Date | null;
+    baselineLines: Array<{ financialAccountId: string; amountMinor: number }>;
+    assumptions: Array<{
+      financialAccountId: string;
+      kind: ScenarioAssumptionKindV1;
+      percentBasisPoints: number | null;
+      amountMinorDelta: number | null;
+      absoluteAmountMinor: number | null;
+      effectiveFromDate: Date | null;
+    }>;
+    accountSemantics: Array<{
+      financialAccountId: string;
+      canonicalSemantic: FinanceScenarioPlanningAccountSemantic;
+    }>;
+  },
+): Promise<FinanceScenarioCalculationWithTemporalResult> {
+  return runFinanceScenarioCalculationEngine(db, ctx, input);
 }
 
 export type LoadFinanceScenarioListOptions = {
@@ -414,13 +424,16 @@ export async function loadFinanceScenarioList(
     canonicalSemantic: account.canonicalSemantic as FinanceScenarioPlanningAccountSemantic,
   }));
 
-  const items: FinanceScenarioListItemReadModel[] = scenarios.map((scenario) => {
+  const items: FinanceScenarioListItemReadModel[] = [];
+  for (const scenario of scenarios) {
     const scenarioBaseline = baselineByScenario.get(scenario.id) ?? [];
     const scenarioAssumptions = assumptionsByScenario.get(scenario.id) ?? [];
-    const { calculation } = runScenarioCalculation({
+    const calculation = await runScenarioCalculation(db, ctx, {
       scenarioId: scenario.id,
       tenantId: scenario.tenantId,
       financeYearId: scenario.financeYearId,
+      scenarioUpdatedAt: scenario.updatedAt,
+      baselineActualsThroughDate: scenario.baselineActualsThroughDate,
       baselineLines: scenarioBaseline.map((line) => ({
         financialAccountId: line.financialAccountId,
         amountMinor: line.amountMinor,
@@ -431,6 +444,7 @@ export async function loadFinanceScenarioList(
         percentBasisPoints: assumption.percentBasisPoints,
         amountMinorDelta: assumption.amountMinorDelta,
         absoluteAmountMinor: assumption.absoluteAmountMinor,
+        effectiveFromDate: assumption.effectiveFromDate,
       })),
       accountSemantics: semantics.filter((row) =>
         scenarioBaseline.some((line) => line.financialAccountId === row.financialAccountId),
@@ -446,7 +460,7 @@ export async function loadFinanceScenarioList(
       accountResults: calculation.accountResults,
     });
 
-    return {
+    items.push({
       scenarioId: scenario.id,
       name: scenario.name,
       description: scenario.description,
@@ -476,8 +490,8 @@ export async function loadFinanceScenarioList(
         assumptionCount: scenarioAssumptions.length,
         changeFlags,
       }),
-    };
-  });
+    });
+  }
 
   return { financeYearId, items };
 }
@@ -540,10 +554,12 @@ export async function loadFinanceScenarioDetail(
     assertSameTenant(account.tenantId, ctx.tenantId, "Financial account");
   }
 
-  const { calculation } = runScenarioCalculation({
+  const calculation = await runScenarioCalculation(db, ctx, {
     scenarioId: scenarioRow.id,
     tenantId: scenarioRow.tenantId,
     financeYearId: scenarioRow.financeYearId,
+    scenarioUpdatedAt: scenarioRow.updatedAt,
+    baselineActualsThroughDate: scenarioRow.baselineActualsThroughDate,
     baselineLines: scenarioRow.baselineLines.map((line) => ({
       financialAccountId: line.financialAccountId,
       amountMinor: line.amountMinor,
@@ -554,12 +570,14 @@ export async function loadFinanceScenarioDetail(
       percentBasisPoints: assumption.percentBasisPoints,
       amountMinorDelta: assumption.amountMinorDelta,
       absoluteAmountMinor: assumption.absoluteAmountMinor,
+      effectiveFromDate: assumption.effectiveFromDate,
     })),
     accountSemantics: accountSemanticsRows.map((account) => ({
       financialAccountId: account.id,
       canonicalSemantic: account.canonicalSemantic as FinanceScenarioPlanningAccountSemantic,
     })),
   });
+  const temporal = toTemporalReadModel(calculation);
 
   const assumptionKindByAccountId = new Map(
     scenarioRow.assumptions.map((assumption) => [
@@ -700,8 +718,18 @@ export async function loadFinanceScenarioDetail(
     baselineFreshness.status === "OUTDATED" &&
     !scenarioRow.archivedAt &&
     currentForecastVersionIdForActions != null;
-  const canAdoptToCurrentForecast =
-    !scenarioRow.archivedAt && currentForecastVersionIdForActions != null;
+  let adoptBlockedReason: FinanceScenarioDetailReadModel["governance"]["adoptBlockedReason"] =
+    "NONE";
+  if (scenarioRow.archivedAt) {
+    adoptBlockedReason = "ARCHIVED";
+  } else if (!currentForecastVersionIdForActions) {
+    adoptBlockedReason = "NO_CURRENT_FORECAST";
+  } else if (temporal.temporalStale) {
+    adoptBlockedReason = "TEMPORAL_STALE";
+  } else if (!temporal.adoptionEligible) {
+    adoptBlockedReason = "PARTIAL_TEMPORAL_COVERAGE";
+  }
+  const canAdoptToCurrentForecast = adoptBlockedReason === "NONE";
 
   return {
     scenarioId: scenarioRow.id,
@@ -726,10 +754,17 @@ export async function loadFinanceScenarioDetail(
       percentBasisPoints: assumption.percentBasisPoints,
       amountMinorDelta: assumption.amountMinorDelta,
       absoluteAmountMinor: assumption.absoluteAmountMinor,
+      effectiveFromDateIso: assumption.effectiveFromDate
+        ? formatFinanceCalendarDateIso(assumption.effectiveFromDate)
+        : null,
       note: assumption.note,
     })),
     assumptionCount: scenarioRow.assumptions.length,
-    calculation,
+    calculation: (() => {
+      const { temporal: _ignoredTemporal, ...baseCalculation } = calculation;
+      return baseCalculation;
+    })(),
+    temporal,
     comparison: {
       primary,
       baselineFreshness,
@@ -744,6 +779,7 @@ export async function loadFinanceScenarioDetail(
       hasAdoptionProvenance,
       canDelete: !hasAdoptionProvenance,
       canAdoptToCurrentForecast,
+      adoptBlockedReason,
       canUpdateSourceForecast,
       currentForecastVersionIdForActions,
     },

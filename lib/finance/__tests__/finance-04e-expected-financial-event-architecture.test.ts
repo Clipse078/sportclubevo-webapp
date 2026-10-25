@@ -141,20 +141,21 @@ describe("FIN-04E reconciliation and forecast relationship", () => {
 });
 
 describe("FIN-04E boundaries — FIN-04D, FIN-09, FIN-11", () => {
-  it("does not change FIN-04D annual scenario semantics", () => {
+  it("preserves FIN-04D annual scenario semantics when effective date is null", () => {
     expect(EXPECTED_FINANCIAL_EVENT_SCENARIO_BOUNDARY.fin04dAnnualSemanticsUnchanged).toBe(true);
-    expect(SCENARIO_TIMED_CASH_BOUNDARY.timingCapabilityImplemented).toBe(false);
-    expect(EXPECTED_FINANCIAL_EVENT_SCENARIO_BOUNDARY.effectiveDateOnFinanceScenarioAssumptionForbiddenUntil04e06).toBe(
+    expect(SCENARIO_TIMED_CASH_BOUNDARY.timingCapabilityImplemented).toBe(true);
+    expect(EXPECTED_FINANCIAL_EVENT_SCENARIO_BOUNDARY.fin04e06PlannedForEffectiveDatedScenarioIntegration).toBe(
       true,
     );
   });
 
-  it("does not add effective-date fields to FinanceScenarioAssumption schema", () => {
+  it("stores optional effectiveFromDate on FinanceScenarioAssumption (FIN-04E-06)", () => {
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
     const assumptionBlock = schema.slice(
       schema.indexOf("model FinanceScenarioAssumption"),
       schema.indexOf("enum FinanceProjectionDataSufficiency"),
     );
+    expect(assumptionBlock).toContain("effectiveFromDate");
     for (const field of SCENARIO_ASSUMPTION_V1_FORBIDDEN_TEMPORAL_FIELDS) {
       expect(assumptionBlock).not.toContain(field);
     }

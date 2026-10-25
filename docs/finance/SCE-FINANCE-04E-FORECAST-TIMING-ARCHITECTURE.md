@@ -309,7 +309,7 @@ Future views: inflows/outflows over time, net movement, timed vs unscheduled, ac
 | **04E-03** | Expected event services & manual management (**COMPLETE** — [`SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`](./SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md)) |
 | **04E-04** | Forecast timing read model & intelligence |
 | **04E-05** | Workspace UX |
-| **04E-06** | Effective-dated scenario integration |
+| **04E-06** | Effective-dated scenario integration (**COMPLETE** — [`SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md`](./SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md)) |
 | **04E-07** | Visual timing intelligence |
 | **04E-08** | Hardening & release closure |
 

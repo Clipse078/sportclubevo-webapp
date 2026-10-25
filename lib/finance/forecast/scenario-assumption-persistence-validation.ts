@@ -1,5 +1,7 @@
 import type { FinanceScenarioAssumptionKind } from "@prisma/client";
+import { parseFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calendar-date";
 import { applyScenarioAssumptionV1 } from "@/lib/finance/forecast/scenario-assumption-calculation";
+import { isEffectiveDatedAssumptionKindSupported } from "@/lib/finance/forecast/effective-dated-scenario-architecture-contract";
 import type { ScenarioAssumptionKindV1 } from "@/lib/finance/forecast/scenario-architecture-contract";
 import { SCENARIO_ASSUMPTION_KINDS_V1 } from "@/lib/finance/forecast/scenario-architecture-contract";
 import { assertSafeAmountMinor } from "@/lib/finance/money-types";
@@ -10,6 +12,8 @@ export type ScenarioAssumptionPayloadInput = {
   amountMinorDelta?: number | null;
   absoluteAmountMinor?: number | null;
   note?: string | null;
+  /** ISO business date (YYYY-MM-DD). Omitted/null = full-year FIN-04D semantics. */
+  effectiveFromDateIso?: string | null;
 };
 
 export type ValidatedScenarioAssumptionPayload = {
@@ -18,6 +22,7 @@ export type ValidatedScenarioAssumptionPayload = {
   amountMinorDelta: number | null;
   absoluteAmountMinor: number | null;
   note: string | null;
+  effectiveFromDate: Date | null;
 };
 
 function isAssumptionKindV1(value: string): value is ScenarioAssumptionKindV1 {
@@ -33,6 +38,14 @@ export function validateScenarioAssumptionPayload(
 
   const note =
     input.note == null || input.note.trim().length === 0 ? null : input.note.trim();
+
+  let effectiveFromDate: Date | null = null;
+  if (input.effectiveFromDateIso != null && input.effectiveFromDateIso.trim().length > 0) {
+    effectiveFromDate = parseFinanceCalendarDateIso(input.effectiveFromDateIso.trim());
+    if (!isEffectiveDatedAssumptionKindSupported(input.kind)) {
+      throw new Error("FINANCE_SCENARIO_EFFECTIVE_DATE_UNSUPPORTED_ASSUMPTION");
+    }
+  }
 
   const percentBasisPoints =
     input.percentBasisPoints === null || input.percentBasisPoints === undefined
@@ -63,6 +76,7 @@ export function validateScenarioAssumptionPayload(
       amountMinorDelta: null,
       absoluteAmountMinor: null,
       note,
+      effectiveFromDate,
     };
   }
 
@@ -79,6 +93,7 @@ export function validateScenarioAssumptionPayload(
       amountMinorDelta: null,
       absoluteAmountMinor: null,
       note,
+      effectiveFromDate,
     };
   }
 
@@ -93,6 +108,7 @@ export function validateScenarioAssumptionPayload(
       amountMinorDelta,
       absoluteAmountMinor: null,
       note,
+      effectiveFromDate,
     };
   }
 
@@ -107,6 +123,7 @@ export function validateScenarioAssumptionPayload(
       amountMinorDelta: null,
       absoluteAmountMinor,
       note,
+      effectiveFromDate,
     };
   }
 
@@ -118,6 +135,12 @@ export function assertScenarioAssumptionAppliesToBaseline(
   baselineAmountMinor: number | null,
   payload: ValidatedScenarioAssumptionPayload,
 ): void {
+  if (payload.effectiveFromDate) {
+    if (baselineAmountMinor === null) {
+      throw new Error("FINANCE_SCENARIO_INVALID_ASSUMPTION");
+    }
+    return;
+  }
   const applyInput = {
     baselineAmountMinor,
     kind: payload.kind as ScenarioAssumptionKindV1,

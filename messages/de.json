@@ -1360,6 +1360,14 @@
           "percentHint": "Negative Werte senken den Betrag.",
           "deltaAmountLabel": "Betrag mehr oder weniger",
           "absoluteAmountLabel": "Neuer Betrag",
+          "validityLabel": "Gültig ab",
+          "validityFullForecast": "Gesamte Prognose",
+          "validityFromDate": "Ab Datum",
+          "effectiveFromLabel": "Startdatum",
+          "effectiveDateUnsupportedKind": "Ein Startdatum ist für diese Art der Annahme noch nicht verfügbar.",
+          "temporalKnownImpact": "Bekannte Auswirkung (terminiert)",
+          "temporalPartialCoverage": "Zeitplanung unvollständig — die vollständige Auswirkung kann noch nicht bestimmt werden.",
+          "temporalAmbiguousOverlap": "Ein erwarteter Zeitraum überschneidet den Start dieser Annahme.",
           "save": "Speichern",
           "cancel": "Abbrechen",
           "changeExclude": "ausgeschlossen",
@@ -1367,9 +1375,12 @@
           "errors": {
             "invalidInput": "Bitte prüfe Konto und Werte.",
             "staleScenario": "Diese Variante wurde inzwischen geändert. Bitte aktualisieren und erneut versuchen.",
-            "accountUnavailable": "Dieses Konto steht für neue Annahmen nicht zur Verfügung."
+            "accountUnavailable": "Dieses Konto steht für neue Annahmen nicht zur Verfügung.",
+            "effectiveDateUnsupported": "Ein Startdatum ist für diese Art der Annahme noch nicht verfügbar."
           }
-        }
+        },
+        "temporalStaleBanner": "Erwartete Termine wurden seit der letzten Bearbeitung dieser Variante geändert. Bitte Ergebnis prüfen.",
+        "adoptBlockedPartialTemporal": "Übernahme ist erst möglich, wenn alle Auswirkungen aus Terminplanung vollständig bestimmbar sind."
       },
       "yearLabel": "Finanzjahr",
       "currencyLabel": "Währung",
