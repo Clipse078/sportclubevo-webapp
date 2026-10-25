@@ -132,5 +132,5 @@ Minor visual refinements identified during FIN-05D UAT belong to **FIN-05G**, no
 
 - **FIN-05E** — Reporting workspace drill-down (**COMPLETE / PO APPROVED** — PR **#912** → **STAGE**)
 - **FIN-05F** — Comparative intelligence (**COMPLETE / PO APPROVED** — PR **#913** → **STAGE**)
-- **FIN-05G** — Reporting visual intelligence (**NEXT / NOT STARTED**)
-- **FIN-05H** — Release hardening (**PLANNED / NOT STARTED**)
+- **FIN-05G** — Reporting visual intelligence (**COMPLETE / PO APPROVED** — PR **#914** → **STAGE**)
+- **FIN-05H** — Release hardening (**NEXT / NOT STARTED**)

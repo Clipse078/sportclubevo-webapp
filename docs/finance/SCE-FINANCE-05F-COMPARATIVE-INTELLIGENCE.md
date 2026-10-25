@@ -127,4 +127,4 @@ Architecture locks: `lib/finance/__tests__/finance-05f-reporting-architecture.te
 
 **Locked product model:** PLAN = approved budget; REALITY = actual (authoritative period/grain); EXPECTED OUTCOME = current forecast; PRIMARY COMPARISON = current forecast vs approved budget; ATTENTION = overall conclusion + max two material drivers (FIN-05B ranking).
 
-**Next:** FIN-05G — reporting visual intelligence & responsive hardening (**NOT STARTED**). FIN-05H — release hardening (**PLANNED / NOT STARTED**).
+**Next:** FIN-05G — reporting visual intelligence & responsive hardening (**COMPLETE / PO APPROVED** — PR **#914** → **STAGE**). FIN-05H — release hardening (**NEXT / NOT STARTED**).

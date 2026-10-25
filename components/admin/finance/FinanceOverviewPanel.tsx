@@ -17,7 +17,6 @@ import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finan
 import type { SerializedFinanceOverviewDecisionIntelligenceReadModel } from "@/lib/finance/presentation/serialize-finance-overview-decision-intelligence-read-model";
 import type { FinanceOverviewState } from "@/lib/finance/setup/finance-setup-state";
 import {
-  FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
@@ -274,7 +273,7 @@ export function FinanceOverviewPanel({
   }, [drivers.favourable.length, drivers.unfavourable.length]);
 
   return (
-    <div className={FINANCE_WORKSPACE_STACK_CLASS} data-finance-overview-panel>
+    <div className={cn(FINANCE_WORKSPACE_STACK_CLASS, "overflow-x-hidden")} data-finance-overview-panel data-finance-responsive-root>
       {management.availability === "NO_BASE_CURRENCY" ? (
         <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-reporting-state="no-base-currency">
           <h2 className="text-base font-semibold text-[var(--foreground)]">{labels.noCurrencyTitle}</h2>
@@ -408,13 +407,24 @@ export function FinanceOverviewPanel({
           </section>
 
           {attentionItems.length > 0 ? (
-            <section data-finance-overview-section="attention" aria-labelledby="finance-overview-attention-heading">
-              <h2 id="finance-overview-attention-heading" className="sr-only">
+            <section
+              className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "divide-y divide-[var(--sce-surface-border-subtle)] p-0")}
+              data-finance-overview-section="attention"
+              aria-labelledby="finance-overview-attention-heading"
+            >
+              <h2
+                id="finance-overview-attention-heading"
+                className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+              >
                 {labels.attentionTitle}
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col">
                 {attentionItems.slice(0, 3).map((item) => (
-                  <li key={item.kind} className={FINANCE_CONTEXT_STRIP_CLASS} data-finance-attention={item.kind}>
+                  <li
+                    key={item.kind}
+                    className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
+                    data-finance-attention={item.kind}
+                  >
                     <div className="min-w-0 flex-1">
                       {item.kind === "PARTIAL_TIMING_UNTIMED" ? (
                         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]">
@@ -459,12 +469,12 @@ export function FinanceOverviewPanel({
           management.currentForecast.availability === "AVAILABLE" &&
           management.approvedBudget.availability === "AVAILABLE" ? (
             <section
-              className={FINANCE_FUNCTIONAL_SURFACE_CLASS}
+              className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}
               data-finance-overview-section="drivers"
               aria-labelledby="finance-overview-drivers-heading"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <h2 id="finance-overview-drivers-heading" className="text-base font-semibold text-[var(--foreground)]">
+                <h2 id="finance-overview-drivers-heading" className="text-sm font-semibold text-[var(--foreground)]">
                   {labels.driversTitle}
                 </h2>
                 {capabilities.canOpenReports ? (
@@ -476,7 +486,7 @@ export function FinanceOverviewPanel({
                   </Link>
                 ) : null}
               </div>
-              <div className={cn("mt-4 grid gap-6", driverColumns)}>
+              <div className={cn("mt-3 grid max-w-2xl gap-4", driverColumns)}>
                 {drivers.favourable.length > 0 ? (
                   <div data-finance-driver-group="favourable">
                     <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -604,7 +614,7 @@ export function FinanceOverviewPanel({
               {expectedMovement.untimedRemainderMinor !== null &&
               expectedMovement.untimedRemainderMinor > 0 ? (
                 <div
-                  className="mt-3 flex flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="mt-3 flex flex-col gap-2 rounded-md bg-[var(--sce-surface-dense)]/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
                   data-finance-untimed-context
                 >
                   <div className="min-w-0 text-xs text-[var(--muted)]">

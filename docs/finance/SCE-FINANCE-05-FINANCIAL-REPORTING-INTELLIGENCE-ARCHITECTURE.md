@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05F COMPLETE** (05F PO UAT PASS — PR **#913** → **STAGE** — [`SCE-FINANCE-05F-COMPARATIVE-INTELLIGENCE.md`](./SCE-FINANCE-05F-COMPARATIVE-INTELLIGENCE.md)); **FIN-05G NEXT / NOT STARTED**; **FIN-05H PLANNED / NOT STARTED** |
+| **Status** | **FIN-05A–05G COMPLETE** (05G PO UAT PASS — PR **#914** → **STAGE** — [`SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md`](./SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md)); **FIN-05H NEXT / NOT STARTED** |
 | **Branch** | FIN-05E: `cursor/sce-finance-05e-reporting-workspace-drilldown-5fa5` — see [`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
@@ -238,12 +238,25 @@ Every visualization must answer a **decision question** — not populate a chart
 | **Budget / Actual / Forecast comparison** | Where are we expected to finish vs approved plan? | Bullet, variance bar, grouped comparison |
 | **Income / Expense composition** | What drives the result? | Ranked bars, hierarchy; avoid default pie/donut proliferation |
 | **Variance contribution** | Which accounts explain the difference? | Diverging bars, waterfall when valid |
-| **Financial movements over time** | When are movements expected? | Reuse FIN-04E R4 model **when meaningful** |
+| **Financial movements over time** | When are movements expected? | **Discrete event timeline** on Übersicht (FIN-05D/05G) — stems/intervals, **not** a connected line graph |
 | **Trend** | How did measures evolve? | Only with real time buckets |
 | **Forecast evolution** | How did expectation change between versions? | FIN-04C history — **FIN-05F** |
 | **Liquidity** | Cash runway / treasury | **FIN-09 — NOT FIN-05** |
 
 **Lock:** `NO_LIQUIDITY_IN_FIN_05`, `DECISION_FIRST`
+
+### Visual form selection (locked)
+
+| Question type | Canonical visual form |
+| --- | --- |
+| Continuous value over time (e.g. projected cash balance) | Line / subtle area — **FIN-09 only** when authoritative liquidity semantics exist |
+| Discrete financial events over time | **Event timeline** (Overview FIN-05G) |
+| Category magnitude | Bar / table hierarchy |
+| Variance drivers | Ranked comparison / direct list (attention drivers) |
+
+**FIN-05G boundary:** Overview **expected financial movements** remain a discrete event timeline. Do **not** connect events with a line to imply running balance or liquidity. Opening cash/bank balance + dated inflows/outflows + `projected cash balance(t)` belong to **FIN-09**, not reporting visual hardening.
+
+Annual budget or current forecast must **not** be ÷12 or otherwise phased to fabricate liquidity. Expected events without cash timing evidence must not be silently treated as precisely timed liquidity. Accounting recognition ≠ cash timing.
 
 ---
 
@@ -434,4 +447,4 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**Next package: FIN-05G** — Reporting Visual Intelligence & Responsive Hardening. FIN-05F comparative intelligence complete via PR **#913** → **STAGE** ([`SCE-FINANCE-05F-COMPARATIVE-INTELLIGENCE.md`](./SCE-FINANCE-05F-COMPARATIVE-INTELLIGENCE.md)).
+**Next package: FIN-05H** — Release Hardening & Closure. FIN-05G visual intelligence complete via PR **#914** → **STAGE** ([`SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md`](./SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md)).

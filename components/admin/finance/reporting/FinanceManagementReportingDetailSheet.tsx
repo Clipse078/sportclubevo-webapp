@@ -285,7 +285,7 @@ export function FinanceManagementReportingDetailSheet({
             </h3>
             {interpretationSentence ? (
               <p
-                className="text-sm leading-relaxed text-[var(--foreground)]"
+                className="text-base font-semibold leading-snug text-[var(--foreground)]"
                 data-finance-reporting-detail-interpretation
               >
                 {interpretationSentence}

@@ -31,6 +31,15 @@ import {
   FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import { FINANCE_SUMMARY_STRIP_SURFACE_CLASS } from "@/lib/finance/finance-workspace-surfaces";
+import { FinanceComparativeSummarySection } from "@/lib/finance/presentation/finance-comparative-summary-section";
+import {
+  FINANCE_COMPARATIVE_ATTENTION_DRIVER_BUTTON_CLASS,
+  FINANCE_COMPARATIVE_ATTENTION_DRIVER_DETAIL_CLASS,
+  FINANCE_COMPARATIVE_ATTENTION_DRIVER_LABEL_CLASS,
+  FINANCE_COMPARATIVE_ATTENTION_DRIVERS_GRID_CLASS,
+  FINANCE_COMPARATIVE_ATTENTION_OVERALL_CLASS,
+} from "@/lib/finance/presentation/finance-comparative-attention-layout";
+import { FINANCE_MONEY_SUPPORTING_NUMERIC_CLASS } from "@/lib/finance/presentation/finance-money-typography";
 import type { VarianceFavorability } from "@/lib/finance/actual/variance-semantics";
 import {
   financeComparativeGrainExplanationLabelKey,
@@ -242,7 +251,7 @@ function ComparativeAttentionInsights(props: {
             );
             return (
               <>
-                <p className="text-sm font-semibold text-[var(--foreground)]">{copy.title}</p>
+                <p className={FINANCE_COMPARATIVE_ATTENTION_OVERALL_CLASS}>{copy.title}</p>
                 {copy.detail ? (
                   <p className="mt-0.5 text-sm text-[var(--muted)]">{copy.detail}</p>
                 ) : null}
@@ -272,7 +281,7 @@ function ComparativeAttentionInsights(props: {
 
       {drivers.length > 0 ? (
         <div
-          className="grid gap-3 sm:grid-cols-2"
+          className={FINANCE_COMPARATIVE_ATTENTION_DRIVERS_GRID_CLASS}
           data-finance-comparative-attention-drivers
         >
           {drivers.map((insight) => {
@@ -288,10 +297,10 @@ function ComparativeAttentionInsights(props: {
                 : null;
             const content = (
               <>
-                <p className="text-xs font-medium text-[var(--muted)]">{copy.title}</p>
+                <p className={FINANCE_COMPARATIVE_ATTENTION_DRIVER_LABEL_CLASS}>{copy.title}</p>
                 <p
                   className={cn(
-                    "mt-0.5 text-sm font-medium tabular-nums text-[var(--foreground)]",
+                    FINANCE_COMPARATIVE_ATTENTION_DRIVER_DETAIL_CLASS,
                     driver
                       ? financeVarianceComparisonSemanticTextClass({
                           favorability: driver.comparison.favorability,
@@ -312,7 +321,7 @@ function ComparativeAttentionInsights(props: {
                   type="button"
                   data-finance-comparative-attention-insight={insight.kind}
                   data-finance-pnl-investigate="driver"
-                  className="rounded-md px-1 py-1 text-left hover:bg-[var(--surface-2)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                  className={FINANCE_COMPARATIVE_ATTENTION_DRIVER_BUTTON_CLASS}
                   aria-label={investigationTargetAriaLabel(props.investigateLabel, driver.name)}
                   onClick={() =>
                     props.onInvestigateDriver!({ kind: driver.kind, id: driver.id })
@@ -345,6 +354,7 @@ function AccountRow(props: {
   locale: string;
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
+  actualColumnLabel: string;
   focused?: boolean;
   onInvestigate?: (accountId: string) => void;
 }) {
@@ -384,6 +394,32 @@ function AccountRow(props: {
           {props.row.lifecycle === "ARCHIVED" ? (
             <span className="shrink-0 text-xs text-[var(--muted)]">({props.labels.archivedAccount})</span>
           ) : null}
+          <p
+            className={cn(
+              "mt-0.5 w-full text-xs text-[var(--muted)] md:hidden",
+              FINANCE_MONEY_SUPPORTING_NUMERIC_CLASS,
+            )}
+            data-finance-pnl-mobile-measure
+          >
+            <span className="font-normal text-[var(--muted)]">{props.actualColumnLabel}: </span>
+            {formatManagementPnlMeasureCell(props.row.actual, props.currency, props.locale)}
+            <span className="mx-1.5 text-[var(--sce-surface-border-subtle)]" aria-hidden>
+              ·
+            </span>
+            {props.labels.columnVariance}:{" "}
+            <span
+              className={financeVarianceComparisonSemanticTextClass({
+                favorability: props.row.forecastVsBudget.favorability,
+                hasComparison: props.row.forecastVsBudget.availability === "AVAILABLE",
+              })}
+            >
+              {formatManagementPnlVarianceDelta(
+                props.row.forecastVsBudget,
+                props.currency,
+                props.locale,
+              )}
+            </span>
+          </p>
         </div>
       </td>
       <MeasureCells
@@ -411,6 +447,7 @@ function GroupBlock(props: {
   focusedGroupId?: string | null;
   onInvestigateAccount?: (accountId: string) => void;
   onInvestigateGroup?: (groupId: string) => void;
+  actualColumnLabel: string;
 }) {
   const accountChildren = props.node.children.filter((c) => c.kind === "account");
   const groupChildren = props.node.children.filter((c) => c.kind === "reporting_group");
@@ -485,6 +522,7 @@ function GroupBlock(props: {
               locale={props.locale}
               labels={props.labels}
               actualHeaderMode={props.actualHeaderMode}
+              actualColumnLabel={props.actualColumnLabel}
               focused={props.focusedAccountId === child.accountId}
               onInvestigate={props.onInvestigateAccount}
             />
@@ -500,6 +538,7 @@ function GroupBlock(props: {
             locale={props.locale}
             labels={props.labels}
             actualHeaderMode={props.actualHeaderMode}
+            actualColumnLabel={props.actualColumnLabel}
             focusedAccountId={props.focusedAccountId}
             focusedGroupId={props.focusedGroupId}
             onInvestigateAccount={props.onInvestigateAccount}
@@ -519,6 +558,7 @@ function UnassignedBlock(props: {
   actualHeaderMode: "annual" | "ytd";
   focusedAccountId?: string | null;
   onInvestigateAccount?: (accountId: string) => void;
+  actualColumnLabel: string;
 }) {
   return (
     <FinanceWorkspaceDisclosure
@@ -541,6 +581,7 @@ function UnassignedBlock(props: {
               locale={props.locale}
               labels={props.labels}
               actualHeaderMode={props.actualHeaderMode}
+              actualColumnLabel={props.actualColumnLabel}
               focused={props.focusedAccountId === account.accountId}
               onInvestigate={props.onInvestigateAccount}
             />
@@ -608,6 +649,7 @@ function SectionTable(props: {
                     locale={props.locale}
                     labels={props.labels}
                     actualHeaderMode={props.actualHeaderMode}
+                    actualColumnLabel={props.actualColumnLabel}
                     focusedAccountId={props.focusedAccountId}
                     focusedGroupId={props.focusedGroupId}
                     onInvestigateAccount={props.onInvestigateAccount}
@@ -625,6 +667,7 @@ function SectionTable(props: {
                     locale={props.locale}
                     labels={props.labels}
                     actualHeaderMode={props.actualHeaderMode}
+                    actualColumnLabel={props.actualColumnLabel}
                     focused={props.focusedAccountId === node.accountId}
                     onInvestigate={props.onInvestigateAccount}
                   />
@@ -665,6 +708,7 @@ function SectionTable(props: {
             locale={props.locale}
             labels={props.labels}
             actualHeaderMode={props.actualHeaderMode}
+            actualColumnLabel={props.actualColumnLabel}
             focusedAccountId={props.focusedAccountId}
             onInvestigateAccount={props.onInvestigateAccount}
           />
@@ -743,8 +787,9 @@ export function FinanceManagementPnlPanel({
 
   return (
     <div
-      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4"
+      className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4 overflow-x-hidden"
       data-finance-pnl-panel
+      data-finance-responsive-root
       data-finance-comparative-intelligence
       data-finance-comparative-actual-role={comparative.actualContext.presentationRole}
       data-finance-comparative-actual-vs-budget-role={comparative.actualVsBudgetVarianceRole}
@@ -761,86 +806,45 @@ export function FinanceManagementPnlPanel({
         ) : null}
       </div>
 
-      <section
-        className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-2")}
-        aria-labelledby="finance-pnl-interpretation"
-        data-finance-pnl-interpretation
-      >
-        <h2 id="finance-pnl-interpretation" className="text-sm font-semibold text-[var(--foreground)]">
-          {labels.interpretationTitle}
-        </h2>
-        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]">
-          <div>
-            <dt className="text-xs font-medium text-[var(--muted)]">{labels.budgetedResult}</dt>
-            <dd className="mt-1 tabular-nums text-sm font-medium">
-              {formatManagementPnlMeasureCell(
-                model.managementResult.approvedBudget,
-                model.baseCurrency,
-                formattingLocale,
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-[var(--muted)]">{labels.expectedResult}</dt>
-            <dd className="mt-1 tabular-nums text-sm font-medium">
-              {formatManagementPnlMeasureCell(
-                model.managementResult.currentForecast,
-                model.baseCurrency,
-                formattingLocale,
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-[var(--muted)]">
-              {labels.forecastVsBudgetVariance}
-            </dt>
-            <dd
-              className={cn(
-                "mt-1 tabular-nums text-sm font-semibold",
-                financeVarianceComparisonSemanticTextClass({
-                  favorability: interpretationSlice.favorability,
-                  hasComparison: hasInterpretation,
-                }),
-              )}
-              data-finance-comparative-primary-variance
-            >
-              <span className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                {formatManagementPnlVarianceDelta(
-                  interpretationSlice,
-                  model.baseCurrency,
-                  formattingLocale,
-                )}
-                {hasInterpretation && interpretationSlice.favorability ? (
-                  <span className="text-xs font-normal text-[var(--muted)]">
-                    {favorabilityLabel(labels, interpretationSlice.favorability)}
-                  </span>
-                ) : null}
-              </span>
-            </dd>
-          </div>
-          <div data-finance-comparative-actual-evidence>
-            <dt className="text-xs font-medium text-[var(--muted)]">{actualColumnLabel}</dt>
-            <dd className="mt-1 tabular-nums text-sm font-medium">
-              {formatManagementPnlMeasureCell(
-                model.managementResult.actual,
-                model.baseCurrency,
-                formattingLocale,
-              )}
-            </dd>
-          </div>
-        </dl>
-        {grainExplanationText ? (
-          <p
-            className="text-xs leading-relaxed text-[var(--muted)]"
-            data-finance-comparative-grain-explanation
-          >
-            {grainExplanationText}
-          </p>
-        ) : null}
-        {model.availability === "PARTIAL_SOURCE_AVAILABILITY" ? (
-          <p className="text-xs text-[var(--muted)]">{labels.partialSourcesHint}</p>
-        ) : null}
-      </section>
+      <FinanceComparativeSummarySection
+        title={labels.interpretationTitle}
+        titleId="finance-pnl-interpretation"
+        budgetedResultLabel={labels.budgetedResult}
+        budgetedResultValue={formatManagementPnlMeasureCell(
+          model.managementResult.approvedBudget,
+          model.baseCurrency,
+          formattingLocale,
+        )}
+        expectedResultLabel={labels.expectedResult}
+        expectedResultValue={formatManagementPnlMeasureCell(
+          model.managementResult.currentForecast,
+          model.baseCurrency,
+          formattingLocale,
+        )}
+        varianceLabel={labels.forecastVsBudgetVariance}
+        varianceValue={formatManagementPnlVarianceDelta(
+          interpretationSlice,
+          model.baseCurrency,
+          formattingLocale,
+        )}
+        varianceFavorability={interpretationSlice.favorability}
+        hasVarianceComparison={hasInterpretation}
+        favorabilityText={
+          hasInterpretation && interpretationSlice.favorability
+            ? favorabilityLabel(labels, interpretationSlice.favorability)
+            : null
+        }
+        actualEvidenceLabel={actualColumnLabel}
+        actualEvidenceValue={formatManagementPnlMeasureCell(
+          model.managementResult.actual,
+          model.baseCurrency,
+          formattingLocale,
+        )}
+        grainExplanationText={grainExplanationText}
+        partialSourcesHint={
+          model.availability === "PARTIAL_SOURCE_AVAILABILITY" ? labels.partialSourcesHint : null
+        }
+      />
 
       {attentionInsights.length > 0 ? (
         <section

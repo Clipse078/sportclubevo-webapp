@@ -199,7 +199,13 @@ export function FinanceOverviewExpectedEventTimeline({
   const moreLabel = labels.moreEventsAffordance.replace("{count}", String(overflowCount));
 
   return (
-    <div className="min-w-0" data-finance-overview-event-timeline>
+    <div
+      className="min-w-0"
+      data-finance-overview-event-timeline
+      data-finance-overview-timeline-trimmed={
+        model.windowStartDateIso !== visual.window.startDateIso ? "true" : undefined
+      }
+    >
       <p className="sr-only">{labels.semanticClarification}</p>
 
       <div className="hidden min-w-0 sm:block" data-finance-overview-event-timeline-desktop>
