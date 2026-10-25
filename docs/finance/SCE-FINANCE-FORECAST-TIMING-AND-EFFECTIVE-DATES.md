@@ -208,7 +208,7 @@ FIN-04D-06 remains:
 
 Adoption copies calculated **full-year** scenario amounts into a formal Current Forecast revision. Rebase replaces the frozen annual starting point explicitly. Neither requires temporal assumptions.
 
-**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E:** **COMPLETE** — expected events, timing read model, workspace UX, effective-dated scenarios, visual timing (PO UAT PASS), and **04E-08** release closure on PR **#907** → **STAGE** (merge pending PO authorization). **Next:** **FIN-05** (not started).
+**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E:** **COMPLETE + MERGED** — expected events, timing read model, workspace UX, effective-dated scenarios, visual timing (PO UAT PASS), and **04E-08** release closure (PR **#907** → **STAGE**, merge commit `c1450ef7`). **Next:** **FIN-05A** architecture — see [`SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md`](./SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md).
 
 ## Future scenario UX (progressive disclosure — not implemented)
 

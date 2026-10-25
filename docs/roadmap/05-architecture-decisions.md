@@ -876,7 +876,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 
 ## ADR-037 — Forecast Timing & Expected Financial Events (FIN-04E)
 
-**Status:** Accepted — **FIN-04E programme COMPLETE** (04E-01–04E-08 on PR **#907** → **STAGE**; merge pending explicit Product Owner authorization)
+**Status:** Accepted — **FIN-04E programme COMPLETE + MERGED** (04E-01–04E-08; PR **#907** → **STAGE**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`)
 
 ### Context
 
@@ -912,8 +912,47 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 - **FIN-04E-03 COMPLETE** — manual expected event CRUD + reconciliation application service (`docs/finance/SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`).
 - **FIN-04E-04–04E-07 COMPLETE** — read model, workspace UX, effective-dated scenarios, visual timing intelligence (PO visual UAT PASS for 04E-07 including R5).
 - **FIN-04E-08 COMPLETE** — hardening & release closure (`docs/finance/SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md`); **Overview movement visualization not implemented in FIN-04E**.
-- **FIN-05** is **next** programme slice — **not started** unless Product Owner reprioritizes.
+- **FIN-05A** defines Financial Reporting & Intelligence architecture — implementation **05B+** not started unless Product Owner reprioritizes.
 - [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) remains the FIN-04D-era principle doc; canonical architecture lives under FIN-04E.
+
+---
+
+## ADR-038 — Financial Reporting & Intelligence (FIN-05)
+
+**Status:** Accepted — **FIN-05A architecture COMPLETE** (reporting intelligence contract + programme doc; implementation packages **05B–05H** not started)
+
+### Context
+
+After FIN-04E, SCE holds strong **annual** budget, actual, current forecast, automatic forecast, scenario, and expected-timing evidence. Product Owner direction requires management reporting that answers *what is happening*, *is it on track*, and *why* — without exposing every chart, ratio, and filter by default. FIN-01E established an approved-budget reporting read model; FIN-05 must extend interpretation and analysis without becoming a source of truth, statutory accounting (FIN-11), liquidity engine (FIN-09), or publication layer (FIN-06).
+
+### Decision
+
+1. **Product principle:** Complexity in the system, not the user's head — `INTERPRETATION → EXCEPTION → EXPLANATION → EVIDENCE`; 10-second comprehension and 30-second investigation targets; no mental arithmetic.
+2. **FIN-05 role:** Consume and interpret canonical measures — **never** silently redefine Approved Budget, Actual, Current Forecast, Automatic Forecast, Expected Financial Events, or Scenarios.
+3. **Workspace model:** Übersicht = **UNDERSTAND**; Budget = **PLAN/GOVERN**; Ist = **RECORD/MEASURE**; Prognose = **EXPECT/REFORECAST**; Zeitplanung = **MANAGE TIMING EVIDENCE** (not primary movement chart surface); Reporting = **ANALYSE/EXPLAIN**; Einrichtung = **CONFIGURE**.
+4. **Übersicht vs Reporting:** Interpretive selective summary vs analytical drill-down — no duplicated full analytical experience; preserve FIN-04E R5 (movement chart not on Zeitplanung; Übersicht intended consumer when decision warrants).
+5. **Management P&L:** Tenant-configurable reporting hierarchy over INCOME/EXPENSE — illustrative category trees forbidden; not FIN-11 statutory statements.
+6. **Variance intelligence:** Semantic favourability centralized (extend FIN-03A `variance-semantics`) — no React sign inversion; percentage variance null on zero/missing baseline.
+7. **Materiality:** Prioritisation contract only in FIN-05A — no universal hardcoded CHF threshold; never hide underlying evidence.
+8. **Period rules:** No fake monthly budget/forecast phasing (`FORECAST_PHASING_SUPPORTED === false`); expected timing ≠ budget phasing ≠ recognition.
+9. **Visual intelligence:** Decision-question-first families; reuse FIN-04E movement model when appropriate; liquidity visuals **FIN-09** only.
+10. **Explainability:** Deterministic numerical explanation chain; optional LLM natural language must not invent calculations.
+11. **Dimensions:** Optional typed dimensions — team not required; no generic BI explorer in FIN-05.
+12. **Publication:** Live `LIVE` reporting views distinct from versioned snapshots — **FIN-06**.
+13. **Permissions:** Reuse `finance.view` + measure-scoped keys; view ≠ share/publish/configure.
+14. **Read models:** Server-side presentation-neutral models; extend FIN-01E `FinancialReportingReadModel`; align with SCE-SCALE-01 — no speculative cache in FIN-05A.
+15. **Currency/locale:** Separate currency identity, formatting locale, translation locale — no hardcoded CHF/de-CH.
+16. **FIN-05A scope:** Architecture doc + `finance-reporting-intelligence-architecture-contract.ts` + tests only.
+
+Full contract: [`docs/finance/SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md`](../finance/SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md). Code locks: `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts`.
+
+### Consequences
+
+- FIN-05A adds `finance-05a-reporting-intelligence-architecture.test.ts` — no reporting UI or new measures in 05A.
+- FIN-05B implements variance engine extensions and comparative read models on top of FIN-03A semantics.
+- FIN-05D/F integrate overview and reporting workspaces without reopening FIN-04E Zeitplanung composition.
+- FIN-06 must treat FIN-05 live intelligence as input to snapshot publication — not the same artifact.
+- FIN-09 owns liquidity visualization; FIN-11 owns balance sheet / GL — FIN-05 remains management operating intelligence.
 
 ---
 
