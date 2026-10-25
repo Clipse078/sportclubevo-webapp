@@ -21,7 +21,6 @@ import {
   canViewFinancePublicationHistory,
   requireFinanceReportingPublish,
 } from "@/lib/finance/publishing/finance-publishing-authorization";
-import { financePublishingRestrictedState } from "@/lib/finance/publishing/finance-publishing-restricted-state";
 import { parseFinancePublicationSnapshotPayloadV1 } from "@/lib/finance/publishing/validate-finance-publication-snapshot-v1";
 import { FINANCE_PUBLICATION_SNAPSHOT_SCHEMA_VERSION } from "@/lib/finance/publishing/finance-publication-reporting-semantic-version";
 import { loadFinanceManagementPnlReadModel } from "@/lib/finance/services/finance-management-reporting-query-service";
@@ -258,7 +257,7 @@ export async function loadFinancePublicationVersionSnapshot(
     return {
       ok: false,
       restricted: true,
-      surface: financePublishingRestrictedState("PUBLICATION").surface,
+      surface: "PUBLICATION" as const,
     };
   }
 
