@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04E programme — **04E-01** architecture; **04E-02** persistence & reconciliation — see [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md) |
-| **Status** | **COMPLETE** — **04E-01–04E-08** on branch `cursor/sce-finance-04e-forecast-timing-f9d6` (PR **#907** → **STAGE**; merge pending explicit Product Owner authorization) |
-| **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
+| **Status** | **COMPLETE + MERGED** — **04E-01–04E-08** (PR **#907** → **STAGE**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
+| **Branch** | merged via PR **#907** |
 | **Base** | `STAGE` after FIN-04A–04D **COMPLETE + MERGED + PO UAT PASS** |
 | **Code locks** | `lib/finance/forecast/expected-financial-event-architecture-contract.ts` |
 | **Supersedes placeholder** | FIN-04D direction doc [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) (principles preserved; canonical naming updated) |

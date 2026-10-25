@@ -3,9 +3,9 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04E-08 (final FIN-04E programme slice) |
-| **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
-| **PR** | **#907** → **STAGE** (open — **DO NOT MERGE** without explicit Product Owner authorization) |
-| **Status** | **COMPLETE** — automated closure PASS; merge pending PO review |
+| **Branch** | merged via PR **#907** |
+| **PR** | **#907** → **STAGE** (**MERGED** — merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
+| **Status** | **COMPLETE + MERGED** — automated closure PASS; PO visual UAT PASS |
 
 ## Objective
 

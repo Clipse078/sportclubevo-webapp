@@ -429,12 +429,14 @@ export const EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN = {
   "04E_08": "Hardening & release closure",
 } as const;
 
-/** FIN-04E-08 hardening & release closure — implementation complete; PO merge authorization pending. */
+/** FIN-04E-08 hardening & release closure — programme merged to STAGE (FIN-05A doc refresh). */
 export const EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE = {
   fin04eProgrammeComplete: true,
   /** Product Owner performed desktop visual UAT for FIN-04E-07 (including R5); not automated agent UAT. */
   productOwnerVisualUatPassRecorded: true,
-  mergeAuthorizationPending: true,
+  mergeAuthorizationPending: false,
+  mergedToStage: true,
+  stageMergeCommitSha: "c1450ef7ce5849705c4f9e4ace248e1996d45a4a",
   prTargetBranch: "STAGE",
   prNumber: 907,
   noOverviewMovementChartInFin04e: true,

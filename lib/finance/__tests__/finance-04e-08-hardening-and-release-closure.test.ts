@@ -27,12 +27,15 @@ const FIN_04E_FINANCIAL_SEMANTICS_SOURCES = [
 ] as const;
 
 describe("FIN-04E-08 release closure contract", () => {
-  it("locks programme completion pending explicit PO merge authorization", () => {
+  it("locks programme completion merged to STAGE", () => {
     expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.fin04eProgrammeComplete).toBe(true);
     expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.productOwnerVisualUatPassRecorded).toBe(
       true,
     );
-    expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.mergeAuthorizationPending).toBe(true);
+    expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.mergeAuthorizationPending).toBe(
+      false,
+    );
+    expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.mergedToStage).toBe(true);
     expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.prNumber).toBe(907);
     expect(EXPECTED_FINANCIAL_EVENT_FIN_04E_08_RELEASE_CLOSURE.noOverviewMovementChartInFin04e).toBe(
       true,
@@ -94,7 +97,7 @@ describe("FIN-04E-08 documentation consistency", () => {
     expect(r8).toContain("FIN-04E-08");
     expect(r8).toContain("Product Owner");
     expect(r8).toContain("#907");
-    expect(r8).toContain("DO NOT MERGE");
+    expect(r8).toMatch(/MERGED|merge commit/i);
   });
 
   it("aligns visual timing doc with R5 hierarchy and overview boundary", () => {
