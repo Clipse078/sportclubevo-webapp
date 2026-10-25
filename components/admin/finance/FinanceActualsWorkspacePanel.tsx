@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
   formatBudgetPlanningMinor,
+  formatFinanceManagementPlanningMinor,
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
 import { formatFinanceYearDateInputValue } from "@/lib/finance/setup/finance-year-date-input";
@@ -132,6 +133,11 @@ export function FinanceActualsWorkspacePanel({
   const formatMoney = (minor: number) =>
     baseCurrency
       ? formatBudgetPlanningMinor(minor, baseCurrency, formattingLocale)
+      : String(minor);
+
+  const formatSummaryMoney = (minor: number) =>
+    baseCurrency
+      ? formatFinanceManagementPlanningMinor(minor, baseCurrency, formattingLocale)
       : String(minor);
 
   function pushContext(next: {
@@ -478,7 +484,7 @@ export function FinanceActualsWorkspacePanel({
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualIncome")}</p>
               <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatMoney(
+                {formatSummaryMoney(
                   periodic?.periodSummary.incomeMinor ??
                     snapshot.variance.actualSummary.incomeMinor,
                 )}
@@ -487,7 +493,7 @@ export function FinanceActualsWorkspacePanel({
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualExpense")}</p>
               <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatMoney(
+                {formatSummaryMoney(
                   periodic?.periodSummary.expenseMinor ??
                     snapshot.variance.actualSummary.expenseMinor,
                 )}
@@ -505,7 +511,7 @@ export function FinanceActualsWorkspacePanel({
                 )}
                 data-finance-actual-result="period"
               >
-                {formatMoney(
+                {formatSummaryMoney(
                   periodic?.periodSummary.resultMinor ??
                     snapshot.variance.actualSummary.resultMinor,
                 )}
@@ -525,13 +531,13 @@ export function FinanceActualsWorkspacePanel({
               <div>
                 <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualIncome")}</p>
                 <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                  {formatMoney(periodic.ytdSummary.incomeMinor)}
+                  {formatSummaryMoney(periodic.ytdSummary.incomeMinor)}
                 </p>
               </div>
               <div>
                 <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualExpense")}</p>
                 <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                  {formatMoney(periodic.ytdSummary.expenseMinor)}
+                  {formatSummaryMoney(periodic.ytdSummary.expenseMinor)}
                 </p>
               </div>
               <div>
@@ -543,7 +549,7 @@ export function FinanceActualsWorkspacePanel({
                   )}
                   data-finance-actual-result="ytd"
                 >
-                  {formatMoney(periodic.ytdSummary.resultMinor)}
+                  {formatSummaryMoney(periodic.ytdSummary.resultMinor)}
                 </p>
               </div>
             </div>
@@ -552,7 +558,7 @@ export function FinanceActualsWorkspacePanel({
         {periodic?.budgetSummary ? (
           <p className="mt-3 text-xs text-muted-foreground">
             {t("annualBudgetReferenceTitle")}:{" "}
-            {formatMoney(periodic.budgetSummary.resultMinor)}{" "}
+            {formatSummaryMoney(periodic.budgetSummary.resultMinor)}{" "}
             {baseCurrency ? `(${baseCurrency})` : null}
           </p>
         ) : null}

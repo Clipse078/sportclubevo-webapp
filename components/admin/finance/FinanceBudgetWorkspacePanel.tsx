@@ -23,6 +23,7 @@ import type { BudgetWorkspaceSnapshot } from "@/lib/finance/budget/budget-presen
 import {
   budgetDraftInputFromMinor,
   formatBudgetPlanningMinor,
+  formatFinanceManagementPlanningMinor,
   formatBudgetPlanningWholeMajorNumber,
   normalizeBudgetAmountInput,
   parseBudgetInputToMinor,
@@ -627,7 +628,7 @@ function BudgetWorkspaceEditor(props: {
             <div>
               <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalIncome")}</dt>
               <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatBudgetPlanningMinor(
+                {formatFinanceManagementPlanningMinor(
                   props.snapshot.approvedBaseline.totals.totalIncomeMinor,
                   props.snapshot.approvedBaseline.currency,
                   props.formattingLocale,
@@ -637,7 +638,7 @@ function BudgetWorkspaceEditor(props: {
             <div>
               <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalExpense")}</dt>
               <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatBudgetPlanningMinor(
+                {formatFinanceManagementPlanningMinor(
                   props.snapshot.approvedBaseline.totals.totalExpenseMinor,
                   props.snapshot.approvedBaseline.currency,
                   props.formattingLocale,
@@ -655,7 +656,7 @@ function BudgetWorkspaceEditor(props: {
                 )}
                 data-finance-result="approved-baseline"
               >
-                {formatBudgetPlanningMinor(
+                {formatFinanceManagementPlanningMinor(
                   props.snapshot.approvedBaseline.totals.resultMinor,
                   props.snapshot.approvedBaseline.currency,
                   props.formattingLocale,
@@ -791,7 +792,7 @@ function BudgetWorkspaceEditor(props: {
           <div>
             <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalIncome")}</dt>
             <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
-              {formatBudgetPlanningMinor(
+              {formatFinanceManagementPlanningMinor(
                 localTotals.totalIncomeMinor,
                 props.workspaceCurrency,
                 props.formattingLocale,
@@ -801,7 +802,7 @@ function BudgetWorkspaceEditor(props: {
           <div>
             <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalExpense")}</dt>
             <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
-              {formatBudgetPlanningMinor(
+              {formatFinanceManagementPlanningMinor(
                 localTotals.totalExpenseMinor,
                 props.workspaceCurrency,
                 props.formattingLocale,
@@ -818,7 +819,7 @@ function BudgetWorkspaceEditor(props: {
               data-budget-summary="result"
               data-finance-result="working-totals"
             >
-              {formatBudgetPlanningMinor(
+              {formatFinanceManagementPlanningMinor(
                 localTotals.resultMinor,
                 props.workspaceCurrency,
                 props.formattingLocale,

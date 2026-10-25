@@ -72,6 +72,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
         contextTabs={
           <FinanceWorkspaceTabs
             showStructure={workspace.canStructure}
+            showReporting={workspace.showReportingNav}
             showBudget={workspace.showBudgetNav}
             showActuals={workspace.showActualsNav}
             showForecast={workspace.showForecastNav}
@@ -79,6 +80,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
             labels={{
               overview: t("nav.overview"),
               structure: t("nav.structure"),
+              reporting: t("nav.reports"),
               budget: t("nav.budget"),
               actuals: t("nav.actuals"),
               forecast: t("nav.forecast"),

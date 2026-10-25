@@ -7,9 +7,9 @@ import {
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { filterFinanceStarterRecommendedCapabilityKeys } from "@/lib/finance/capability-presentation";
 
-/** Capabilities with product surfaces implemented in FIN-01B / FIN-01D. */
+/** Capabilities with product surfaces implemented in FIN-01B / FIN-01D / FIN-05C. */
 export const FINANCE_CAPABILITIES_IMPLEMENTED_01B: ReadonlySet<FinanceCapabilityKey> =
-  new Set(["OVERVIEW", "BUDGETING", "ACTUALS", "FORECASTING"]);
+  new Set(["OVERVIEW", "BUDGETING", "ACTUALS", "FORECASTING", "REPORTING"]);
 
 export const FINANCE_SYSTEM_CAPABILITY_KEYS = FINANCE_CAPABILITY_KEYS;
 

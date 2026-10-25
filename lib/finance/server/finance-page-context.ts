@@ -42,6 +42,7 @@ export async function loadFinanceWorkspaceContext() {
   const showBudgetNav = navigation.some((item) => item.key === "budget");
   const showActualsNav = navigation.some((item) => item.key === "actuals");
   const showForecastNav = navigation.some((item) => item.key === "forecast");
+  const showReportingNav = navigation.some((item) => item.key === "reports");
 
   const reportingReadModel = await loadApprovedBudgetReportingReadModel(prisma, ctx, null);
   const overviewReporting = resolveFinanceOverviewReportingSlice({
@@ -73,6 +74,7 @@ export async function loadFinanceWorkspaceContext() {
     showBudgetNav,
     showActualsNav,
     showForecastNav,
+    showReportingNav,
     canAdmin: permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     canStructure: permissionKeys.has(PERMISSIONS.FINANCE_STRUCTURE_MANAGE),
     canBudgetManage: permissionKeys.has(PERMISSIONS.FINANCE_BUDGET_MANAGE),

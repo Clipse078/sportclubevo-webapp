@@ -109,7 +109,17 @@ export function buildFinanceVarianceAnalysisReadModel(input: {
     periodMismatch,
   });
 
-  const managementResultComparison = summarizeVarianceTreeResult(tree);
+  let managementResultComparison = summarizeVarianceTreeResult(tree);
+  if (periodMismatch && availability === "PERIOD_MISMATCH") {
+    managementResultComparison = {
+      ...managementResultComparison,
+      availability: "PERIOD_MISMATCH",
+      rawDeltaMinor: null,
+      variancePercent: null,
+      favorability: null,
+      absoluteVarianceMagnitudeMinor: null,
+    };
+  }
 
   const accountNodes = collectAccountVarianceNodes(tree);
   const totalAbs = sumAbsoluteVarianceMagnitudes(accountNodes.map((n) => n.comparison));

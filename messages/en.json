@@ -422,7 +422,8 @@
       "structure": "Financial structure",
       "budget": "Budget",
       "actuals": "Actuals",
-      "forecast": "Forecast"
+      "forecast": "Forecast",
+      "reporting": "Reporting"
     },
     "capabilityNavAria": "Finance capability navigation",
     "workspace": {
@@ -553,6 +554,36 @@
       "reportingForecastTitle": "Current forecast",
       "reportingForecastResultDelta": "Forecast result vs approved budget",
       "openForecast": "Open forecast"
+    },
+    "reporting": {
+      "pnl": {
+        "eyebrow": "Reporting",
+        "pageTitle": "Management income statement",
+        "pageDescription": "Compare approved budget, actual, and current forecast across your configured reporting structure.",
+        "contextYear": "Financial year",
+        "interpretationTitle": "Expected result vs budget",
+        "budgetedResult": "Budgeted result",
+        "expectedResult": "Expected result",
+        "varianceVsBudget": "Variance",
+        "driversTitle": "Key variances",
+        "driversSubtitle": "Variance vs approved budget plan (forecast vs budget)",
+        "topFavourable": "Favourable",
+        "topUnfavourable": "Unfavourable",
+        "incomeSectionTotal": "Total income",
+        "expenseSectionTotal": "Total expense",
+        "columnBudget": "Budget",
+        "columnActual": "Actual",
+        "columnActualYtd": "Actual to date",
+        "columnForecast": "Forecast",
+        "columnVariance": "Variance",
+        "columnVariancePercent": "Variance percentage",
+        "unassignedGroup": "Unassigned",
+        "unassignedHint": "Amounts on accounts not represented in the configured hierarchy.",
+        "expandAccounts": "Show accounts",
+        "collapseAccounts": "Hide accounts",
+        "noStructureViewOnly": "Financial structure has not been configured yet.",
+        "partialSourcesHint": "Some sources are missing — comparisons stay unavailable where required."
+      }
     },
     "budget": {
       "pageTitle": "Budget",

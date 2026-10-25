@@ -1,5 +1,8 @@
 import { getTranslations } from "next-intl/server";
-import { formatBudgetPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
+import {
+  formatFinanceManagementPlanningMinor,
+  formatFinanceManagementPlanningSignedMinor,
+} from "@/lib/finance/budget/budget-amount-presentation";
 import { PageShell } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { FinanceOverviewPanel } from "@/components/admin/finance/FinanceOverviewPanel";
@@ -17,17 +20,17 @@ export default async function FinanceOverviewPage() {
   const formattedReporting =
     workspace.overviewReporting.kind === "APPROVED_BASELINE"
       ? {
-          income: formatBudgetPlanningMinor(
+          income: formatFinanceManagementPlanningMinor(
             workspace.overviewReporting.incomeMinor,
             workspace.overviewReporting.currency,
             formattingLocale,
           ),
-          expense: formatBudgetPlanningMinor(
+          expense: formatFinanceManagementPlanningMinor(
             workspace.overviewReporting.expenseMinor,
             workspace.overviewReporting.currency,
             formattingLocale,
           ),
-          result: formatBudgetPlanningMinor(
+          result: formatFinanceManagementPlanningMinor(
             workspace.overviewReporting.resultMinor,
             workspace.overviewReporting.currency,
             formattingLocale,
@@ -42,24 +45,24 @@ export default async function FinanceOverviewPage() {
 
   const formattedForecast = forecastSlice
     ? {
-        income: formatBudgetPlanningMinor(
+        income: formatFinanceManagementPlanningMinor(
           forecastSlice.incomeMinor,
           forecastSlice.currency,
           formattingLocale,
         ),
-        expense: formatBudgetPlanningMinor(
+        expense: formatFinanceManagementPlanningMinor(
           forecastSlice.expenseMinor,
           forecastSlice.currency,
           formattingLocale,
         ),
-        result: formatBudgetPlanningMinor(
+        result: formatFinanceManagementPlanningMinor(
           forecastSlice.resultMinor,
           forecastSlice.currency,
           formattingLocale,
         ),
         resultDeltaVsBudget:
           forecastSlice.resultDeltaVsBudgetMinor !== null
-            ? formatBudgetPlanningMinor(
+            ? formatFinanceManagementPlanningSignedMinor(
                 forecastSlice.resultDeltaVsBudgetMinor,
                 forecastSlice.currency,
                 formattingLocale,
@@ -83,6 +86,7 @@ export default async function FinanceOverviewPage() {
         contextTabs={
           <FinanceWorkspaceTabs
             showStructure={workspace.canStructure}
+            showReporting={workspace.showReportingNav}
             showBudget={workspace.showBudgetNav}
             showActuals={workspace.showActualsNav}
             showForecast={workspace.showForecastNav}
@@ -90,6 +94,7 @@ export default async function FinanceOverviewPage() {
             labels={{
               overview: t("nav.overview"),
               structure: t("nav.structure"),
+              reporting: t("nav.reports"),
               budget: t("nav.budget"),
               actuals: t("nav.actuals"),
               forecast: t("nav.forecast"),

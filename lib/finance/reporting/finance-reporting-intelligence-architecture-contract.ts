@@ -564,4 +564,45 @@ export const FINANCE_05B_IMPLEMENTATION = {
     "ACTUAL_VS_CURRENT_FORECAST",
     "ACTUAL_YTD_VS_ANNUAL_APPROVED_BUDGET",
   ] as const,
+  fin05bMergedOnStageCommit: "1cad40593191ebb88d91e5a41aab82a438130a2d",
+  fin05bStatus: "COMPLETE_ON_STAGE",
+} as const;
+
+/** FIN-05C implementation locks — Management P&L / Erfolgsrechnung. */
+export const SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS = {
+  managementPnlUsesFin05bPrimitives: true,
+  managementPnlIsPresentationNeutralAtReadModelLayer: true,
+  managementPnlDerivesFromConfiguredHierarchy: true,
+  managementPnlReconcilesToCompleteSourceTotals: true,
+  unassignedFinancialValuesMustNotDisappear: true,
+  unassignedResidualDoesNotMutateHierarchy: true,
+  archivedHistoricalValuesRemainReportable: true,
+  approvedBudgetRemainsBaseline: true,
+  currentForecastRemainsOrganisationExpectation: true,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  unauthorizedIsNotZero: true,
+  varianceFavourabilityIsSemantic:
+    SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.varianceFavourabilityIsSemantic,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  managementResultIsIncomeMinusExpense:
+    SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.managementResultIsIncomeMinusExpense,
+  managementPnlIsNotStatutoryAccounting:
+    SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.managementPnlIsNotStatutoryAccounting,
+  noLiquidityInFin05: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noLiquidityInFin05,
+  teamNotRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.teamNotRequired,
+  countryAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.countryAgnostic,
+  sportAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.sportAgnostic,
+  integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
+  noReactFinancialRecalculation: true,
+  noNPlusOnePnl: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noNPlusOneReportingReadModel,
+  fin05dFinanceUbersichtNotImplemented: true,
+  fin05eDrilldownNotImplemented: true,
+} as const;
+
+export const FINANCE_05C_IMPLEMENTATION = {
+  managementPnlReadModel: "FinanceManagementPnlReadModel",
+  queryLoader: "loadFinanceManagementPnlReadModel",
+  workspaceRoute: "/dashboard/finance/reports",
+  completenessModule: "lib/finance/reporting/pnl-reporting-completeness.ts",
+  unassignedResidualGroupId: "__sce_management_pnl_unassigned__",
 } as const;

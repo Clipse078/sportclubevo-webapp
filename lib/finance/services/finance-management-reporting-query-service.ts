@@ -11,7 +11,12 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { resolveActualMeasure } from "@/lib/finance/reporting/actual-measure-provider";
 import { resolveApprovedBudgetMeasure } from "@/lib/finance/reporting/approved-budget-measure-provider";
 import { buildFinanceManagementOverviewReadModel } from "@/lib/finance/reporting/build-finance-management-overview-read-model";
+import {
+  buildFinanceManagementPnlReadModel,
+  emptyFinanceManagementPnlReadModel,
+} from "@/lib/finance/reporting/build-finance-management-pnl-read-model";
 import { buildFinanceVarianceAnalysisReadModel } from "@/lib/finance/reporting/build-finance-variance-analysis-read-model";
+import type { FinanceManagementPnlReadModel } from "@/lib/finance/reporting/finance-management-pnl-read-model";
 import type { FinanceManagementOverviewReadModel } from "@/lib/finance/reporting/finance-management-overview-read-model";
 import type { FinanceVarianceAnalysisReadModel } from "@/lib/finance/reporting/finance-variance-analysis-read-model";
 import { resolveCurrentForecastMeasure } from "@/lib/finance/reporting/current-forecast-measure-provider";
@@ -262,6 +267,56 @@ export async function loadFinanceManagementOverviewReadModel(
   const measures = await loadCanonicalMeasures(db, ctx, context.financeYearId, input);
 
   return buildFinanceManagementOverviewReadModel({
+    tenantId: ctx.tenantId,
+    financeYearId: context.financeYearId,
+    financeYearName: context.financeYearName,
+    baseCurrency: context.baseCurrency,
+    structureAvailability: "AVAILABLE",
+    actualCutoffDate: measures.actualMeasure?.cutoffDate ?? null,
+    groups: context.groups,
+    accounts: context.accounts,
+    approvedMeasure: measures.approvedMeasure,
+    actualMeasure: measures.actualMeasure,
+    forecastMeasure: measures.forecastMeasure,
+    sourceVisibility: measures.sourceVisibility,
+  });
+}
+
+export async function loadFinanceManagementPnlReadModel(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input: LoadFinanceManagementReportingInput,
+): Promise<FinanceManagementPnlReadModel> {
+  requireFinanceReportingAccess(ctx);
+
+  const structure = await loadReportingStructureContext(db, ctx, input.financeYearId);
+  if (!structure.ok) {
+    return emptyFinanceManagementPnlReadModel({
+      tenantId: ctx.tenantId,
+      financeYearId: "",
+      financeYearName: "",
+      baseCurrency: structure.partial.baseCurrency,
+      availability:
+        structure.partial.availability === "NO_BASE_CURRENCY"
+          ? "NO_BASE_CURRENCY"
+          : "NO_FINANCE_YEAR",
+    });
+  }
+
+  const { context } = structure;
+  if (!context.hasStructure) {
+    return emptyFinanceManagementPnlReadModel({
+      tenantId: ctx.tenantId,
+      financeYearId: context.financeYearId,
+      financeYearName: context.financeYearName,
+      baseCurrency: context.baseCurrency,
+      availability: "NO_STRUCTURE",
+    });
+  }
+
+  const measures = await loadCanonicalMeasures(db, ctx, context.financeYearId, input);
+
+  return buildFinanceManagementPnlReadModel({
     tenantId: ctx.tenantId,
     financeYearId: context.financeYearId,
     financeYearName: context.financeYearName,

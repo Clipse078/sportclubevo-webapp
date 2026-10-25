@@ -3,6 +3,7 @@ import type { ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 export type FinanceWorkspaceTabId =
   | "overview"
   | "structure"
+  | "reporting"
   | "budget"
   | "actuals"
   | "forecast"
@@ -10,6 +11,7 @@ export type FinanceWorkspaceTabId =
 
 export function buildFinanceTabNavigationConfig(input: {
   showStructure: boolean;
+  showReporting: boolean;
   showBudget: boolean;
   showActuals: boolean;
   showForecast: boolean;
@@ -17,6 +19,7 @@ export function buildFinanceTabNavigationConfig(input: {
   labels: {
     overview: string;
     structure: string;
+    reporting: string;
     budget: string;
     actuals: string;
     forecast: string;
@@ -26,6 +29,7 @@ export function buildFinanceTabNavigationConfig(input: {
   const tabRoutes: Record<FinanceWorkspaceTabId, string> = {
     overview: "/dashboard/finance",
     structure: "/dashboard/finance/structure",
+    reporting: "/dashboard/finance/reports",
     budget: "/dashboard/finance/budget",
     actuals: "/dashboard/finance/actuals",
     forecast: "/dashboard/finance/forecast",
@@ -37,6 +41,9 @@ export function buildFinanceTabNavigationConfig(input: {
   ];
   if (input.showStructure) {
     tabs.push({ key: "structure", label: input.labels.structure, placement: "primary" });
+  }
+  if (input.showReporting) {
+    tabs.push({ key: "reporting", label: input.labels.reporting, placement: "primary" });
   }
   if (input.showBudget) {
     tabs.push({ key: "budget", label: input.labels.budget, placement: "primary" });
@@ -58,6 +65,9 @@ export function buildFinanceTabNavigationConfig(input: {
     resolveActiveTabFromPathname: (pathname, visibleKeys) => {
       if (pathname.startsWith("/dashboard/finance/structure")) {
         return visibleKeys.includes("structure") ? "structure" : "overview";
+      }
+      if (pathname.startsWith("/dashboard/finance/reports")) {
+        return visibleKeys.includes("reporting") ? "reporting" : "overview";
       }
       if (pathname.startsWith("/dashboard/finance/budget")) {
         return visibleKeys.includes("budget") ? "budget" : "overview";
