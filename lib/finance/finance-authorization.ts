@@ -48,11 +48,29 @@ export function canMutateFinanceStructure(ctx: FinanceAuthContext): boolean {
   return hasFinancePermission(ctx, PERMISSIONS.FINANCE_STRUCTURE_MANAGE);
 }
 
+export function canViewFinanceBudgetMeasures(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_BUDGET_VIEW)
+  );
+}
+
+export function canViewFinanceActualMeasures(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_VIEW)
+  );
+}
+
+export function canViewFinanceForecastMeasures(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_FORECAST_VIEW)
+  );
+}
+
 export function requireFinanceBudgetView(ctx: FinanceAuthContext): void {
-  if (
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_BUDGET_VIEW)
-  ) {
+  if (!canViewFinanceBudgetMeasures(ctx)) {
     throw new FinanceDomainError(
       "FINANCE_FORBIDDEN",
       "Insufficient permission to view budgets.",
@@ -96,10 +114,7 @@ export function canApproveBudget(ctx: FinanceAuthContext): boolean {
 }
 
 export function requireFinanceActualView(ctx: FinanceAuthContext): void {
-  if (
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_VIEW)
-  ) {
+  if (!canViewFinanceActualMeasures(ctx)) {
     throw new FinanceDomainError(
       "FINANCE_FORBIDDEN",
       "Insufficient permission to view actuals.",
@@ -126,10 +141,7 @@ export function canManageActuals(ctx: FinanceAuthContext): boolean {
 }
 
 export function requireFinanceForecastView(ctx: FinanceAuthContext): void {
-  if (
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
-    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_FORECAST_VIEW)
-  ) {
+  if (!canViewFinanceForecastMeasures(ctx)) {
     throw new FinanceDomainError(
       "FINANCE_FORBIDDEN",
       "Insufficient permission to view forecasts.",

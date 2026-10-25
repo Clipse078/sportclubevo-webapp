@@ -519,3 +519,49 @@ export const FINANCE_05A_SCOPE = {
   noFin04eReopen: true,
   binaryControlComplianceExpected: true,
 } as const;
+
+/** FIN-05B implementation locks — management reporting read models & variance engine. */
+export const SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS = {
+  reportingReadModelsArePresentationNeutral: true,
+  readModelsDoNotOwnSourceTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  approvedBudgetAuthorityPreserved: true,
+  currentForecastPointerAuthorityPreserved: true,
+  actualAuthorityPreserved: true,
+  varianceCalculationCentralised: true,
+  varianceCentralImplementationPath: "lib/finance/actual/variance-semantics.ts",
+  varianceFavourabilityIsSemantic: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.varianceDirectionIsSemantic,
+  zeroBaselinePercentageIsUnavailable: true,
+  missingIsNotZero: true,
+  moneyUsesIntegerMinorUnits: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.integerMinorUnits,
+  managementResultIsIncomeMinusExpense: true,
+  managementResultIsNotStatutoryNetIncome: true,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  noExpectedEventDuplicationInFin05B: true,
+  noLiquidityInFin05: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noLiquidityInFin05,
+  noAssetLiabilityEquityInFin05: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noAssetLiabilityEquityInFin05Reporting,
+  teamNotRequired: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.teamNotRequired,
+  countryAgnostic: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.countryAgnostic,
+  sportAgnostic: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.sportAgnostic,
+  tenantIsolationRequired: true,
+  permissionAwareComposition: true,
+  deterministicExplanationDrivers: true,
+  noLlmForNumericalExplanation: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.numericalExplanationDeterministicNotLlm,
+  noGenericBiEngine: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noGenericBiFilterBuilderInFin05,
+  noNPlusOneReportingReadModel: true,
+  financeComparativeMeasuresReadModelConsolidatedIntoVarianceAnalysis: true,
+} as const;
+
+export const FINANCE_05B_IMPLEMENTATION = {
+  varianceEngineModule: "lib/finance/reporting/build-variance-reporting-tree.ts",
+  managementOverviewReadModel: "FinanceManagementOverviewReadModel",
+  varianceAnalysisReadModel: "FinanceVarianceAnalysisReadModel",
+  queryService: "lib/finance/services/finance-management-reporting-query-service.ts",
+  supportedComparisons: [
+    "ACTUAL_VS_APPROVED_BUDGET",
+    "CURRENT_FORECAST_VS_APPROVED_BUDGET",
+  ] as const,
+  unsupportedComparisons: [
+    "ACTUAL_VS_CURRENT_FORECAST",
+    "ACTUAL_YTD_VS_ANNUAL_APPROVED_BUDGET",
+  ] as const,
+} as const;
