@@ -1220,6 +1220,32 @@
             "forbidden": "Keine Berechtigung für diese Aktion."
           }
         },
+        "visual": {
+          "timelineTitle": "Erwartete Bewegungen im Zeitverlauf",
+          "timelineDescription": "Terminierte Eingänge und Zahlungen — ohne Liquiditätsprognose und ohne erfundene Monatsverteilung.",
+          "legendIncome": "Eingang",
+          "legendExpense": "Zahlung",
+          "legendMonthPrecision": "Monatsgenauigkeit",
+          "legendAmbiguous": "Unklar am Datenstand",
+          "emptyTimeline": "Für die verbleibende Prognose ist noch keine terminierte Bewegung sichtbar.",
+          "srSummary": "Terminiert {timed}, noch nicht terminiert {untimed}, {events} sichtbare Bewegungen.",
+          "laneIncome": "Eingänge",
+          "laneExpense": "Zahlungen",
+          "cutoffLabel": "Datenstand",
+          "financeYearEndLabel": "Finanzjahresende",
+          "markerAria": "{account}, {amount}",
+          "movementIncoming": "Eingang",
+          "movementOutgoing": "Zahlung",
+          "monthPrecisionHint": "Monatsgenau",
+          "ambiguousHint": "Zeitpunkt überschneidet den aktuellen Datenstand.",
+          "crossFyHint": "Nach Ende des Finanzjahres",
+          "untimedTitle": "Noch nicht terminiert",
+          "untimedBody": "Diese Beträge bleiben in der aktuellen Prognose, ohne dass SCE bereits einen Zeitpunkt kennt.",
+          "untimedIncome": "Einnahmen",
+          "untimedExpense": "Ausgaben",
+          "untimedTotal": "Summe",
+          "overallocationChartHint": "Es sind mehr Beträge terminiert als aktuell noch erwartet werden — die Darstellung zeigt alle erfassten Termine."
+        },
         "deleteDialog": {
           "title": "Erwarteten Zeitpunkt entfernen?",
           "description": "Der Eintrag wird aus der Zeitplanung entfernt. Die Jahresprognose bleibt unverändert.",
@@ -1380,7 +1406,19 @@
           }
         },
         "temporalStaleBanner": "Erwartete Termine wurden seit der letzten Bearbeitung dieser Variante geändert. Bitte Ergebnis prüfen.",
-        "adoptBlockedPartialTemporal": "Übernahme ist erst möglich, wenn alle Auswirkungen aus Terminplanung vollständig bestimmbar sind."
+        "adoptBlockedPartialTemporal": "Übernahme ist erst möglich, wenn alle Auswirkungen aus Terminplanung vollständig bestimmbar sind.",
+        "temporalVisual": {
+          "effectiveFrom": "Wirksam ab",
+          "effectiveMarker": "Startdatum der Annahme",
+          "knownImpact": "Bekannte Auswirkung",
+          "undetermined": "Noch nicht bestimmbar",
+          "segment": {
+            "BEFORE": "Vor Startdatum (unverändert terminiert)",
+            "AFTER": "Ab Startdatum (wirksam terminiert)",
+            "AMBIGUOUS": "Überschneidung mit Startdatum",
+            "UNSCHEDULED": "Noch nicht terminiert"
+          }
+        }
       },
       "yearLabel": "Finanzjahr",
       "currencyLabel": "Währung",

@@ -41,11 +41,12 @@ describe("FIN-04E-05 forecast timing workspace UX", () => {
     expect(attentionIdx).toBeGreaterThan(upcomingIdx);
   });
 
-  it("C. no chart or liquidity or scenario effective-date controls", () => {
+  it("C. no liquidity curve, monthly phasing, or scenario controls on timing page", () => {
     expect(timingPanel).not.toContain("FinanceForecastEvolutionChart");
     expect(timingPanel).not.toContain("liquidity");
     expect(timingPanel).not.toContain("Ab Datum");
     expect(timingPanel).not.toContain("/ 12");
+    expect(timingPanel).toContain("FinanceForecastTimingMovementTimeline");
   });
 
   it("D. modal-first create with segmented timing precision (no checkboxes)", () => {

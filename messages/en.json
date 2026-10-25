@@ -757,6 +757,32 @@
             "forbidden": "You do not have permission for this action."
           }
         },
+        "visual": {
+          "timelineTitle": "Expected movements over time",
+          "timelineDescription": "Timed receipts and payments — not liquidity and not synthetic monthly phasing.",
+          "legendIncome": "Receipt",
+          "legendExpense": "Payment",
+          "legendMonthPrecision": "Month precision",
+          "legendAmbiguous": "Unclear at cutoff",
+          "emptyTimeline": "No timed movement is visible for the remaining forecast yet.",
+          "srSummary": "Timed {timed}, not yet timed {untimed}, {events} visible movements.",
+          "laneIncome": "Receipts",
+          "laneExpense": "Payments",
+          "cutoffLabel": "Cutoff",
+          "financeYearEndLabel": "Financial year end",
+          "markerAria": "{account}, {amount}",
+          "movementIncoming": "Receipt",
+          "movementOutgoing": "Payment",
+          "monthPrecisionHint": "Month precision",
+          "ambiguousHint": "Timing overlaps the current data cutoff.",
+          "crossFyHint": "After financial year end",
+          "untimedTitle": "Not yet timed",
+          "untimedBody": "These amounts remain in the current forecast without a known timing.",
+          "untimedIncome": "Income",
+          "untimedExpense": "Expense",
+          "untimedTotal": "Total",
+          "overallocationChartHint": "More is timed than still expected — all recorded timings are shown."
+        },
         "deleteDialog": {
           "title": "Remove expected timing?",
           "description": "The entry is removed from timing. The annual forecast stays unchanged.",
@@ -917,7 +943,19 @@
           }
         },
         "temporalStaleBanner": "Expected dates changed since this variant was last saved. Review the result.",
-        "adoptBlockedPartialTemporal": "Adoption is only available when timing fully determines all effects."
+        "adoptBlockedPartialTemporal": "Adoption is only available when timing fully determines all effects.",
+        "temporalVisual": {
+          "effectiveFrom": "Effective from",
+          "effectiveMarker": "Assumption start date",
+          "knownImpact": "Known impact",
+          "undetermined": "Not yet determinable",
+          "segment": {
+            "BEFORE": "Before start (timed, unchanged)",
+            "AFTER": "From start (eligible timed)",
+            "AMBIGUOUS": "Overlaps start date",
+            "UNSCHEDULED": "Not yet timed"
+          }
+        }
       },
       "yearLabel": "Financial year",
       "currencyLabel": "Currency",

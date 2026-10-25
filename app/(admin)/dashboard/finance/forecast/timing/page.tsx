@@ -8,6 +8,8 @@ import { loadForecastWorkspaceSnapshot } from "@/lib/finance/services/finance-fo
 import { loadFinanceForecastTimingOverview } from "@/lib/finance/services/finance-forecast-timing-query-service";
 import { listFinanceExpectedFinancialEvents } from "@/lib/finance/services/finance-expected-financial-event-service";
 import { formatFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calendar-date";
+import { buildFinanceForecastTimingVisualModel } from "@/lib/finance/forecast/build-forecast-timing-visual-model";
+import type { FinanceForecastTimingVisualModel } from "@/lib/finance/forecast/finance-forecast-timing-visual-types";
 import { prisma } from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -39,11 +41,15 @@ export default async function FinanceForecastTimingPage({ searchParams }: PagePr
     await loadForecastWorkspaceSnapshot(prisma, workspace.ctx, params.yearId ?? null);
 
   const selectedYear = years.find((y) => y.id === selectedYearId) ?? null;
+  const financeYearStartDateIso = selectedYear?.startDate
+    ? formatFinanceCalendarDateIso(selectedYear.startDate)
+    : null;
   const financeYearEndDateIso = selectedYear?.endDate
     ? formatFinanceCalendarDateIso(selectedYear.endDate)
     : null;
 
   let overview = null;
+  let timingVisual: FinanceForecastTimingVisualModel | null = null;
   let events: Awaited<ReturnType<typeof listFinanceExpectedFinancialEvents>> = [];
   let loadError: string | null = null;
 
@@ -54,6 +60,16 @@ export default async function FinanceForecastTimingPage({ searchParams }: PagePr
       });
       events = await listFinanceExpectedFinancialEvents(prisma, workspace.ctx, {
         financeYearId: selectedYearId,
+      });
+      const accountNameById = new Map(
+        overview.accounts.map((account) => [account.financialAccountId, account.name]),
+      );
+      timingVisual = buildFinanceForecastTimingVisualModel({
+        overview,
+        events,
+        accountNameById,
+        financeYearStartDateIso,
+        financeYearEndDateIso,
       });
     } catch (error) {
       loadError = error instanceof Error ? error.message : "Unbekannter Fehler";
@@ -108,6 +124,7 @@ export default async function FinanceForecastTimingPage({ searchParams }: PagePr
           hasAccounts={hasAccounts}
           hasCurrentForecast={Boolean(snapshot?.forecastId && snapshot.versionId)}
           overview={overview}
+          timingVisual={timingVisual}
           events={events}
           accountOptions={accountOptions}
           baseCurrency={baseCurrency}

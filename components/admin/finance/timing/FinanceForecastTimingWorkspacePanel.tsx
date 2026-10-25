@@ -26,6 +26,8 @@ import {
   isExpectedEventTimingAfterFinanceYearEnd,
 } from "@/lib/finance/forecast/expected-financial-event-timing-presentation";
 import type { FinanceForecastTimingOverviewReadModel } from "@/lib/finance/forecast/finance-forecast-timing-read-model";
+import type { FinanceForecastTimingVisualModel } from "@/lib/finance/forecast/finance-forecast-timing-visual-types";
+import { FinanceForecastTimingMovementTimeline } from "@/components/admin/finance/timing/FinanceForecastTimingMovementTimeline";
 
 type YearOption = { id: string; name: string };
 
@@ -35,6 +37,7 @@ type FinanceForecastTimingWorkspacePanelProps = {
   hasAccounts: boolean;
   hasCurrentForecast: boolean;
   overview: FinanceForecastTimingOverviewReadModel | null;
+  timingVisual: FinanceForecastTimingVisualModel | null;
   events: ExpectedFinancialEventRecord[];
   accountOptions: Array<{
     financialAccountId: string;
@@ -75,6 +78,7 @@ export function FinanceForecastTimingWorkspacePanel({
   hasAccounts,
   hasCurrentForecast,
   overview,
+  timingVisual,
   events,
   accountOptions,
   baseCurrency,
@@ -361,6 +365,22 @@ export function FinanceForecastTimingWorkspacePanel({
               </p>
             ) : null}
           </section>
+
+          {timingVisual ? (
+            <FinanceForecastTimingMovementTimeline
+              visual={timingVisual}
+              baseCurrency={baseCurrency}
+              formattingLocale={formattingLocale}
+              onSelectManualEvent={
+                canMutate
+                  ? (eventId) => {
+                      const event = events.find((row) => row.id === eventId);
+                      if (event) openEdit(event);
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
 
           <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-upcoming>
             <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">

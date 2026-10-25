@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04E programme — **04E-01** architecture; **04E-02** persistence & reconciliation — see [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md) |
-| **Status** | **IN PROGRESS** — **04E-01–04E-05** on branch `cursor/sce-finance-04e-forecast-timing-f9d6`; **04E-06+** not started |
+| **Status** | **IN PROGRESS** — **04E-01–04E-07** on branch `cursor/sce-finance-04e-forecast-timing-f9d6`; **04E-08+** not started |
 | **Branch** | `cursor/sce-finance-04e-forecast-timing` |
 | **Base** | `STAGE` after FIN-04A–04D **COMPLETE + MERGED + PO UAT PASS** |
 | **Code locks** | `lib/finance/forecast/expected-financial-event-architecture-contract.ts` |
@@ -310,6 +310,7 @@ Future views: inflows/outflows over time, net movement, timed vs unscheduled, ac
 | **04E-04** | Forecast timing read model & intelligence |
 | **04E-05** | Workspace UX |
 | **04E-06** | Effective-dated scenario integration (**COMPLETE** — [`SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md`](./SCE-FINANCE-04E-06-EFFECTIVE-DATED-SCENARIOS.md)) |
+| **04E-07** | Visual timing intelligence (**COMPLETE** — [`SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md`](./SCE-FINANCE-04E-07-VISUAL-TIMING-INTELLIGENCE.md)) |
 | **04E-07** | Visual timing intelligence |
 | **04E-08** | Hardening & release closure |
 

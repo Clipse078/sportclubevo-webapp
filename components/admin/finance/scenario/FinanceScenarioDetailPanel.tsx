@@ -40,6 +40,8 @@ import {
   type ScenarioAssumptionAccountOption,
 } from "@/components/admin/finance/scenario/FinanceScenarioAssumptionDialog";
 import { FinanceScenarioGovernanceDialogs } from "@/components/admin/finance/scenario/FinanceScenarioGovernanceDialogs";
+import { FinanceScenarioAssumptionTemporalVisual } from "@/components/admin/finance/scenario/FinanceScenarioAssumptionTemporalVisual";
+import { buildScenarioAssumptionTemporalVisualModel } from "@/lib/finance/forecast/build-scenario-assumption-temporal-visual-model";
 
 type FinanceScenarioDetailPanelProps = {
   detail: FinanceScenarioDetailReadModel;
@@ -652,6 +654,18 @@ export function FinanceScenarioDetailPanel({
                         <p className="mt-1 text-xs text-[var(--muted)]">
                           {t("assumptions.temporalAmbiguousOverlap")}
                         </p>
+                      ) : null}
+                      {assumption.effectiveFromDateIso && temporalRow ? (
+                        <FinanceScenarioAssumptionTemporalVisual
+                          model={buildScenarioAssumptionTemporalVisualModel({
+                            assumptionId: assumption.assumptionId,
+                            financialAccountId: assumption.financialAccountId,
+                            effectiveFromDateIso: assumption.effectiveFromDateIso,
+                            temporal: temporalRow,
+                          })}
+                          baseCurrency={baseCurrency}
+                          formattingLocale={formattingLocale}
+                        />
                       ) : null}
                     </div>
                     {canMutate && !detail.isArchived ? (
