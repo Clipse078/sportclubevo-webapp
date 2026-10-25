@@ -1,75 +1,33 @@
 import { getTranslations } from "next-intl/server";
-import {
-  formatFinanceManagementPlanningMinor,
-  formatFinanceManagementPlanningSignedMinor,
-} from "@/lib/finance/budget/budget-amount-presentation";
 import { PageShell } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { FinanceOverviewPanel } from "@/components/admin/finance/FinanceOverviewPanel";
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { FINANCE_WORKSPACE_ROUTE_V1 } from "@/lib/finance/finance-architecture";
+import { serializeFinanceOverviewDecisionIntelligenceReadModel } from "@/lib/finance/presentation/serialize-finance-overview-decision-intelligence-read-model";
+import { loadFinanceOverviewDecisionIntelligenceReadModel } from "@/lib/finance/services/finance-overview-decision-intelligence-query-service";
+import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function FinanceOverviewPage() {
   const t = await getTranslations("Finance");
   const workspace = await loadFinanceWorkspaceContext();
-  const formattingLocale = workspace.formattingLocale;
 
-  const formattedReporting =
-    workspace.overviewReporting.kind === "APPROVED_BASELINE"
-      ? {
-          income: formatFinanceManagementPlanningMinor(
-            workspace.overviewReporting.incomeMinor,
-            workspace.overviewReporting.currency,
-            formattingLocale,
-          ),
-          expense: formatFinanceManagementPlanningMinor(
-            workspace.overviewReporting.expenseMinor,
-            workspace.overviewReporting.currency,
-            formattingLocale,
-          ),
-          result: formatFinanceManagementPlanningMinor(
-            workspace.overviewReporting.resultMinor,
-            workspace.overviewReporting.currency,
-            formattingLocale,
-          ),
-        }
-      : undefined;
+  const decisionModel = await loadFinanceOverviewDecisionIntelligenceReadModel(
+    prisma,
+    workspace.ctx,
+    {
+      financeYearId: null,
+      forecastingCapabilityEnabled: workspace.enabledCapabilities.has("FORECASTING"),
+      reportingCapabilityEnabled: workspace.enabledCapabilities.has("REPORTING"),
+      canBudgetManage: workspace.canBudgetManage,
+      canStructure: workspace.canStructure,
+    },
+  );
 
-  const forecastSlice =
-    workspace.overviewReporting.kind === "APPROVED_BASELINE"
-      ? workspace.overviewReporting.forecast
-      : null;
-
-  const formattedForecast = forecastSlice
-    ? {
-        income: formatFinanceManagementPlanningMinor(
-          forecastSlice.incomeMinor,
-          forecastSlice.currency,
-          formattingLocale,
-        ),
-        expense: formatFinanceManagementPlanningMinor(
-          forecastSlice.expenseMinor,
-          forecastSlice.currency,
-          formattingLocale,
-        ),
-        result: formatFinanceManagementPlanningMinor(
-          forecastSlice.resultMinor,
-          forecastSlice.currency,
-          formattingLocale,
-        ),
-        resultDeltaVsBudget:
-          forecastSlice.resultDeltaVsBudgetMinor !== null
-            ? formatFinanceManagementPlanningSignedMinor(
-                forecastSlice.resultDeltaVsBudgetMinor,
-                forecastSlice.currency,
-                formattingLocale,
-              )
-            : null,
-      }
-    : undefined;
+  const serialized = serializeFinanceOverviewDecisionIntelligenceReadModel(decisionModel);
 
   return (
     <PageShell>
@@ -107,10 +65,8 @@ export default async function FinanceOverviewPage() {
         <FinanceOverviewPanel
           state={workspace.overviewState}
           canAdmin={workspace.canAdmin}
-          canBudgetManage={workspace.canBudgetManage}
-          reporting={workspace.overviewReporting}
-          formattedReporting={formattedReporting}
-          formattedForecast={formattedForecast}
+          model={serialized}
+          formattingLocale={workspace.formattingLocale}
           labels={{
             notConfiguredTitle: t("overview.notConfiguredTitle"),
             notConfiguredBody: t("overview.notConfiguredBody"),
@@ -123,24 +79,51 @@ export default async function FinanceOverviewPage() {
             openSetup: t("overview.openSetup"),
             setupWorkflowSubordinateTitle: t("overview.setupWorkflowSubordinateTitle"),
             setupWorkflowSubordinateBody: t("overview.setupWorkflowSubordinateBody"),
-            reportingApprovedTitle: t("overview.reportingApprovedTitle"),
-            reportingYearLabel: t("overview.reportingYearLabel"),
-            reportingIncome: t("overview.reportingIncome"),
-            reportingExpense: t("overview.reportingExpense"),
-            reportingResult: t("overview.reportingResult"),
-            reportingNoCurrencyTitle: t("overview.reportingNoCurrencyTitle"),
-            reportingNoCurrencyBody: t("overview.reportingNoCurrencyBody"),
-            reportingNoFinanceYearTitle: t("overview.reportingNoFinanceYearTitle"),
-            reportingNoFinanceYearBody: t("overview.reportingNoFinanceYearBody"),
-            reportingNoStructureTitle: t("overview.reportingNoStructureTitle"),
-            reportingNoStructureBody: t("overview.reportingNoStructureBody"),
+            noCurrencyTitle: t("overview.reportingNoCurrencyTitle"),
+            noCurrencyBody: t("overview.reportingNoCurrencyBody"),
+            noFinanceYearTitle: t("overview.reportingNoFinanceYearTitle"),
+            noFinanceYearBody: t("overview.reportingNoFinanceYearBody"),
+            noStructureTitle: t("overview.reportingNoStructureTitle"),
+            noStructureBody: t("overview.reportingNoStructureBody"),
             openStructure: t("overview.openStructure"),
-            reportingNoBaselineTitle: t("overview.reportingNoBaselineTitle"),
-            reportingNoBaselineBody: t("overview.reportingNoBaselineBody"),
+            noBaselineTitle: t("overview.reportingNoBaselineTitle"),
+            noBaselineBody: t("overview.reportingNoBaselineBody"),
             openBudget: t("overview.openBudget"),
-            reportingForecastTitle: t("overview.reportingForecastTitle"),
-            reportingForecastResultDelta: t("overview.reportingForecastResultDelta"),
+            outlookTitle: t("overview.decision.outlookTitle"),
+            expectedResult: t("overview.decision.expectedResult"),
+            vsApprovedBudget: t("overview.decision.vsApprovedBudget"),
+            actualLabel: t("overview.decision.actualLabel"),
+            actualYtdThrough: t("overview.decision.actualYtdThrough"),
+            conclusionOnTrack: t("overview.decision.conclusionOnTrack"),
+            conclusionAboveBudget: t("overview.decision.conclusionAboveBudget"),
+            conclusionBelowBudget: t("overview.decision.conclusionBelowBudget"),
+            conclusionForecastUnavailable: t("overview.decision.conclusionForecastUnavailable"),
+            conclusionBudgetUnavailable: t("overview.decision.conclusionBudgetUnavailable"),
+            conclusionNoConclusion: t("overview.decision.conclusionNoConclusion"),
+            attentionTitle: t("overview.decision.attentionTitle"),
+            attentionMissingBudget: t("overview.decision.attentionMissingBudget"),
+            attentionMissingForecast: t("overview.decision.attentionMissingForecast"),
+            attentionUnfavorableVariance: t("overview.decision.attentionUnfavorableVariance"),
+            attentionTimingOverallocated: t("overview.decision.attentionTimingOverallocated"),
+            attentionTimingAmbiguous: t("overview.decision.attentionTimingAmbiguous"),
+            attentionUntimedRemainder: t("overview.decision.attentionUntimedRemainder"),
+            attentionNoStructure: t("overview.decision.attentionNoStructure"),
+            driversTitle: t("overview.decision.driversTitle"),
+            driversFavourable: t("overview.decision.driversFavourable"),
+            driversUnfavourable: t("overview.decision.driversUnfavourable"),
+            openReports: t("overview.decision.openReports"),
+            expectedMovementTitle: t("overview.decision.expectedMovementTitle"),
+            expectedMovementZeroTiming: t("overview.decision.expectedMovementZeroTiming"),
+            expectedMovementZeroTimingAction: t("overview.decision.expectedMovementZeroTimingAction"),
+            expectedMovementUntimedNote: t("overview.decision.expectedMovementUntimedNote"),
+            timingCoverageLabel: t("overview.decision.timingCoverageLabel"),
+            openTiming: t("overview.decision.openTiming"),
             openForecast: t("overview.openForecast"),
+            openActuals: t("nav.actuals"),
+            favorabilityFavorable: t("reporting.pnl.favorabilityFavorable"),
+            favorabilityUnfavorable: t("reporting.pnl.favorabilityUnfavorable"),
+            favorabilityOnPlan: t("reporting.pnl.favorabilityOnPlan"),
+            measureUnavailable: t("overview.decision.measureUnavailable"),
           }}
         />
         <p className="sr-only" data-finance-route={FINANCE_WORKSPACE_ROUTE_V1} />

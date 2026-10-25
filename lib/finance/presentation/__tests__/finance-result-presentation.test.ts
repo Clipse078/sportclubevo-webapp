@@ -48,21 +48,15 @@ describe("FIN-03B-R3 canonical finance result presentation (helper)", () => {
   });
 });
 
-describe("FIN-03B-R3 overview approved budget result", () => {
-  it("4–6 Ergebnis uses canonical helper; income/expense stay neutral", () => {
+describe("FIN-03B-R3 overview expected result (FIN-05D)", () => {
+  it("4–6 expected management result uses canonical helper without income/expense card soup", () => {
     expect(overviewPanel).toContain("finance-result-presentation");
-    expect(overviewPanel).toContain("financeResultSemanticTextClass(reporting.resultMinor)");
-    expect(overviewPanel).toContain('data-finance-result="overview-approved-baseline"');
-    const incomeBlock = overviewPanel.slice(
-      overviewPanel.indexOf("reportingIncome"),
-      overviewPanel.indexOf("reportingExpense"),
+    expect(overviewPanel).toContain(
+      "financeResultSemanticTextClass(conclusion.forecastResultMinor)",
     );
-    expect(incomeBlock).not.toContain("financeResultSemanticTextClass");
-    const expenseBlock = overviewPanel.slice(
-      overviewPanel.indexOf("reportingExpense"),
-      overviewPanel.indexOf("reportingResult"),
-    );
-    expect(expenseBlock).not.toContain("financeResultSemanticTextClass");
+    expect(overviewPanel).toContain('data-finance-overview-section="financial-conclusion"');
+    expect(overviewPanel).not.toContain('data-finance-result="overview-approved-baseline"');
+    expect(overviewPanel).not.toContain("reportingIncome");
   });
 });
 

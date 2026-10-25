@@ -595,8 +595,50 @@ export const SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS = {
   integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
   noReactFinancialRecalculation: true,
   noNPlusOnePnl: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noNPlusOneReportingReadModel,
-  fin05dFinanceUbersichtNotImplemented: true,
+  fin05dFinanceUbersichtNotImplemented: false,
   fin05eDrilldownNotImplemented: true,
+} as const;
+
+/** FIN-05D implementation locks — Finance Übersicht decision intelligence. */
+export const SCE_FINANCE_REPORTING_05D_ARCHITECTURE_LOCKS = {
+  overviewIsInterpretive: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.overviewIsInterpretive,
+  overviewIsNotSourceOfTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  overviewAnswersWhatMattersNow: true,
+  overviewUsesCanonicalManagementReadModels: true,
+  approvedBudgetAuthorityPreserved: true,
+  actualAuthorityPreserved: true,
+  currentForecastAuthorityPreserved: true,
+  automaticForecastIsNotCurrentForecast: true,
+  varianceFavourabilityIsSemantic:
+    SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.varianceFavourabilityIsSemantic,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  unauthorizedIsNotZero: SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS.unauthorizedIsNotZero,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  actualCutoffIsExplicit: true,
+  expectedEventsAreTemporalEvidence: true,
+  expectedMovementIsNotLiquidity: true,
+  timingCoverageIsNotForecastConfidence: true,
+  unscheduledEventsAreNotFakePlotted: true,
+  noGenericBiEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noGenericBiEngine,
+  noChartGallery: true,
+  noLlmNumericalEngine: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noLlmForNumericalExplanation,
+  teamNotRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.teamNotRequired,
+  countryAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.countryAgnostic,
+  sportAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.sportAgnostic,
+  tenantIsolationRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.tenantIsolationRequired,
+  permissionAwareComposition: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.permissionAwareComposition,
+  noNPlusOneOverview: true,
+  integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
+  movementChartReusesFin04eR4: true,
+} as const;
+
+export const FINANCE_05D_IMPLEMENTATION = {
+  decisionIntelligenceReadModel: "FinanceOverviewDecisionIntelligenceReadModel",
+  queryLoader: "loadFinanceOverviewDecisionIntelligenceReadModel",
+  workspaceRoute: "/dashboard/finance",
+  maxDriversPerSide: 3,
+  fin05dStatus: "IMPLEMENTED_AWAITING_PO_REVIEW",
+  fin05eStatus: "NOT_STARTED",
 } as const;
 
 export const FINANCE_05C_IMPLEMENTATION = {

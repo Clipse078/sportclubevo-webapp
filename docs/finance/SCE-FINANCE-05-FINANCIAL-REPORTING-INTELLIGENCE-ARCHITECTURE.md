@@ -4,8 +4,8 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A COMPLETE** (merged on **STAGE**); **FIN-05B COMPLETE** (merge `1cad40593191ebb88d91e5a41aab82a438130a2d`); **FIN-05C COMPLETE** (Management P&L — PO visual UAT **PASS**); **FIN-05D NEXT**; **05E–05H** not started |
-| **Branch** | FIN-05C: `cursor/sce-finance-05c-management-pnl` — see [`SCE-FINANCE-05C-MANAGEMENT-PNL.md`](./SCE-FINANCE-05C-MANAGEMENT-PNL.md) |
+| **Status** | **FIN-05A–05C COMPLETE** on **STAGE**; **FIN-05D IMPLEMENTED / AWAITING PO REVIEW**; **FIN-05E NEXT**; **05F–05H** not started |
+| **Branch** | FIN-05D: `cursor/sce-finance-05d-overview-decision-intelligence-4dba` — see [`SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md`](./SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
 | **ADR** | [ADR-038 — Financial Reporting & Intelligence (FIN-05)](../roadmap/05-architecture-decisions.md#adr-038--financial-reporting--intelligence-fin-05) |
