@@ -246,6 +246,12 @@ completed the full A→B→V2 immutability walkthrough. Closure evidence:
 | **FIN-06B VERSIONING** | **PASS** |
 | **PR #917** | **READY TO MERGE** (when automated release gates green) |
 
+```text
+FIN-06B FINAL PRODUCT OWNER VISUAL UAT = PASS
+FIN-06B PUBLICATION IMMUTABILITY = PASS
+FIN-06B VERSIONING = PASS
+```
+
 First vertical slice: **Management P&L / Erfolgsrechnung** for one finance year (`MANAGEMENT_PNL` scope).
 
 | Concern | Implementation |
