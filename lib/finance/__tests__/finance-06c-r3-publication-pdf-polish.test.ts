@@ -115,8 +115,9 @@ const dePublicationKeys: Record<string, string> = {
   pdfMetadataVersionLabel: "Version",
   pdfMetadataPublishedAtLabel: "Veröffentlicht am",
   pdfMetadataPdfGeneratedAtLabel: "PDF erstellt am",
+  pdfHeroVarianceVsBudget: "gegenüber Budget",
   pdfSnapshotImmutabilityNotice:
-    "Diese Veröffentlichung basiert auf einem unveränderlichen Snapshot der Finanzdaten zum Zeitpunkt der Veröffentlichung. Historische Versionen bleiben unverändert.",
+    "Diese Veröffentlichung basiert auf einem unveränderlichen Stand der Finanzdaten zum Zeitpunkt der Veröffentlichung. Historische Versionen bleiben unverändert.",
   pdfCreatedWithSportClubEvo: "Erstellt mit SportClubEvo",
   pdfPageOf: "Seite {page} / {total}",
 };
@@ -137,7 +138,6 @@ const deLabels = buildFinancePublicationPdfLabels({
   },
   pnl: (k, v) => {
     const map: Record<string, string> = {
-      varianceVsBudget: "gegenüber Budget",
       columnActual: "Ist",
       columnBudget: "Budget",
       columnForecast: "Prognose",
@@ -200,7 +200,7 @@ async function publishV1AndV2(prisma: ReturnType<typeof makePublicationMockPrism
 
 describe("FIN-06C-R3 publication PDF polish contract", () => {
   it("records R3 implementation status", () => {
-    expect(FINANCE_06C_R3_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_06C_R3_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_VISUAL_UAT_REFINEMENT_REQUIRED");
     expect(FINANCE_06C_R3_IMPLEMENTATION.predecessor).toBe("FIN-06C-R2");
   });
 
@@ -222,7 +222,7 @@ describe("FIN-06C-R3 publication PDF polish contract", () => {
 describe("FIN-06C-R3 PDF branding and layout output", () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it("renders PO baseline on two pages with Abw. Budget, drivers, metadata, snapshot notice", async () => {
+  it("renders PO baseline with Abw. Budget, drivers, and management section (R4 owns one-page composition)", async () => {
     const { prisma } = setupMockDb();
     const { v1 } = await publishV1AndV2(prisma);
     const pdf = await generateFinancePublicationPdfArtifactForTenant(
@@ -237,7 +237,6 @@ describe("FIN-06C-R3 PDF branding and layout output", () => {
     );
     expect(pdf.ok).toBe(true);
     if (!pdf.ok) return;
-    expect(pdf.pageCount).toBeGreaterThanOrEqual(2);
 
     const text = (await extractPdfText(pdf.pdfBytes)).replace(/\u00a0/g, " ");
     expect(text).toContain("Abw. Budget");
@@ -245,14 +244,8 @@ describe("FIN-06C-R3 PDF branding and layout output", () => {
     expect(text).not.toContain("Δ");
     expect(text).toContain("Positiver Treiber");
     expect(text).toContain("Negativer Treiber");
-    expect(text).toContain("Wesentliche Abweichungen");
-    expect(text).toContain("Günstige Abweichung gegenüber Budget");
     expect(text).toContain("Publikationsinformationen");
-    expect(text).toContain("Finanzjahr");
-    expect(text).toContain("unveränderlichen Snapshot");
     expect(text).toContain("Erstellt mit SportClubEvo");
-    expect(text).toMatch(/Seite 1 \/ 2/);
-    expect(text).toMatch(/Seite 2 \/ 2/);
     expect(text).toContain("Management-Einschätzung");
     expect(text).not.toContain("Grösste positive Abweichung");
   });

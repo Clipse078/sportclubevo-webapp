@@ -93,6 +93,7 @@ const deLabels = buildFinancePublicationPdfLabels({
       pdfOfficialPublicationLine: "Offizielle Veröffentlichung · Version {version}",
       publishedAtLabel: "Veröffentlicht",
       pdfGeneratedAtLabel: "PDF erzeugt",
+      pdfHeroVarianceVsBudget: "gegenüber Budget",
       pdfPublicationInfoTitle: "Publikationsinformationen",
       versionLabel: "Version {version}",
       pdfForecastSupportingLabel: "Prognose",
@@ -132,7 +133,6 @@ const deLabels = buildFinancePublicationPdfLabels({
   pnl: (k, v) => {
     const map: Record<string, string> = {
       expectedResult: "Erwartetes Jahresergebnis",
-      varianceVsBudget: "gegenüber Budget",
       budgetedResult: "Budget",
       columnActual: "Ist",
       columnBudget: "Budget",
@@ -180,6 +180,7 @@ const enLabels = buildFinancePublicationPdfLabels({
       pdfOfficialPublicationLine: "Official publication · Version {version}",
       publishedAtLabel: "Published",
       pdfGeneratedAtLabel: "PDF generated",
+      pdfHeroVarianceVsBudget: "vs. budget",
       pdfPublicationInfoTitle: "Publication information",
       versionLabel: "Version {version}",
       pdfForecastSupportingLabel: "Forecast",
@@ -302,7 +303,7 @@ describe("FIN-06C-R2 publication PDF design contract", () => {
   it("records R2 implementation status", () => {
     expect(FINANCE_06C_R2_IMPLEMENTATION.status).toBe("IMPLEMENTED");
     expect(FINANCE_06C_R2_IMPLEMENTATION.predecessor).toBe("FIN-06C-R1");
-    expect(FINANCE_06C_R3_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_06C_R3_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_VISUAL_UAT_REFINEMENT_REQUIRED");
   });
 });
 

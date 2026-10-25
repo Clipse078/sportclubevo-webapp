@@ -32,6 +32,15 @@ import {
   loadScePublicationMark,
   type PublicationPdfEmbeddedImage,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-images";
+import {
+  buildCompactPublicationInfoLines,
+  buildPublicationPdfFooterLeftLine,
+  publicationPdfShouldRenderMajorDeviationsDetail,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-composition";
+import {
+  computePublicationPdfFooterZones,
+  truncateTextToMaxWidth,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-footer-layout";
 
 function t(value: string): string {
   return pdfSafeText(value);
@@ -98,8 +107,7 @@ type LayoutContext = {
   y: number;
   pageIndex: number;
   totalPages: number;
-  footerPrimary: string;
-  footerPublishedLine: string;
+  footerLeftLine: string;
   tableHeaderDrawnOnPage: boolean;
   tenantLogo: PublicationPdfEmbeddedImage | null;
   sceMark: PublicationPdfEmbeddedImage | null;
@@ -208,8 +216,7 @@ function ensureSpace(ctx: LayoutContext, neededPt: number): LayoutContext {
 }
 
 function drawFooter(ctx: LayoutContext): void {
-  const { page, fonts, labels, pageIndex, totalPages, footerPrimary, footerPublishedLine, sceMark } =
-    ctx;
+  const { page, fonts, labels, pageIndex, totalPages, footerLeftLine, sceMark } = ctx;
   const footerTop = MARGIN_BOTTOM + FOOTER_BLOCK_HEIGHT;
   page.drawLine({
     start: { x: MARGIN_X, y: footerTop },
@@ -218,18 +225,15 @@ function drawFooter(ctx: LayoutContext): void {
     color: COLORS.line,
   });
 
-  const line1Y = footerTop - mmToPt(3.5);
-  const line2Y = line1Y - mmToPt(3.5);
-  page.drawText(t(footerPrimary), {
-    x: MARGIN_X,
-    y: line1Y,
-    size: TYPE.footer,
-    font: fonts.regular,
-    color: COLORS.muted,
-  });
-  page.drawText(t(footerPublishedLine), {
-    x: MARGIN_X,
-    y: line2Y,
+  const lineY = footerTop - mmToPt(3.5);
+  const zones = computePublicationPdfFooterZones(PAGE_W, MARGIN_X);
+
+  const leftText = t(
+    truncateTextToMaxWidth(footerLeftLine, fonts.regular, TYPE.footer, zones.left.maxWidth),
+  );
+  page.drawText(leftText, {
+    x: zones.left.x,
+    y: lineY,
     size: TYPE.footer,
     font: fonts.regular,
     color: COLORS.muted,
@@ -242,8 +246,8 @@ function drawFooter(ctx: LayoutContext): void {
   );
   const pageTextWidth = fonts.regular.widthOfTextAtSize(pageText, TYPE.footer);
   page.drawText(pageText, {
-    x: (PAGE_W - pageTextWidth) / 2,
-    y: line1Y,
+    x: zones.center.x + (zones.center.maxWidth - pageTextWidth) / 2,
+    y: lineY,
     size: TYPE.footer,
     font: fonts.regular,
     color: COLORS.muted,
@@ -254,16 +258,16 @@ function drawFooter(ctx: LayoutContext): void {
   const markWidth = sceMark?.widthPt ?? 0;
   const attributionWidth = fonts.regular.widthOfTextAtSize(attribution, TYPE.attribution);
   const totalRightWidth = attributionWidth + (markWidth > 0 ? markGap + markWidth : 0);
-  const rightX = PAGE_W - MARGIN_X - totalRightWidth;
+  const rightX = zones.right.x + zones.right.maxWidth - totalRightWidth;
   page.drawText(attribution, {
     x: rightX,
-    y: line2Y,
+    y: lineY,
     size: TYPE.attribution,
     font: fonts.regular,
     color: COLORS.muted,
   });
   if (sceMark) {
-    drawPublicationImage(page, sceMark, rightX + attributionWidth + markGap, line2Y - mmToPt(0.5));
+    drawPublicationImage(page, sceMark, rightX + attributionWidth + markGap, lineY - mmToPt(0.5));
   }
 }
 
@@ -495,7 +499,7 @@ function drawPublicationMasthead(ctx: LayoutContext, input: FinancePublicationPd
     { x: MARGIN_X, y, size: TYPE.mastheadMeta, font: fonts.regular, color: COLORS.muted },
   );
 
-  ctx.y = y - mmToPt(10);
+  ctx.y = y - mmToPt(8);
   return ctx;
 }
 
@@ -596,7 +600,7 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
     });
   }
 
-  ctx.y = heroTop - heroHeight - mmToPt(8);
+  ctx.y = heroTop - heroHeight - mmToPt(6);
   return ctx;
 }
 
@@ -700,7 +704,7 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
   }
 
   const cardWidth = (PAGE_W - MARGIN_X * 2 - mmToPt(4)) / 2;
-  const cardHeight = mmToPt(18);
+  const cardHeight = mmToPt(16);
   const cardTop = ctx.y;
   const cards: Array<{
     x: number;
@@ -769,7 +773,7 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
     });
   }
 
-  ctx.y = cardTop - cardHeight - mmToPt(6);
+  ctx.y = cardTop - cardHeight - mmToPt(5);
   return ctx;
 }
 
@@ -928,35 +932,11 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
   return next;
 }
 
-function drawMetadataRow(
-  page: PDFPage,
-  fonts: Fonts,
-  key: string,
-  value: string,
-  y: number,
-): number {
-  page.drawText(t(key), {
-    x: MARGIN_X,
-    y,
-    size: TYPE.metadataKey,
-    font: fonts.bold,
-    color: COLORS.muted,
-  });
-  page.drawText(t(value), {
-    x: MARGIN_X + mmToPt(42),
-    y,
-    size: TYPE.metadata,
-    font: fonts.regular,
-    color: COLORS.text,
-  });
-  return y - mmToPt(4.5);
-}
-
 function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
   const identity = input.presentation.identity;
-  const next = ensureSpace(ctx, mmToPt(32));
+  const next = ensureSpace(ctx, mmToPt(16));
 
-  next.y -= mmToPt(2);
+  next.y -= mmToPt(1);
   next.page.drawText(t(next.labels.publicationInfoTitle), {
     x: MARGIN_X,
     y: next.y,
@@ -964,53 +944,33 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
     font: next.fonts.bold,
     color: COLORS.accent,
   });
-  next.y -= mmToPt(6);
+  next.y -= mmToPt(5);
 
-  let y = next.y;
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataOrganisationLabel,
-    input.organisationName,
-    y,
-  );
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataFinanceYearLabel,
-    identity.financeYearName,
-    y,
-  );
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataReportTypeLabel,
-    next.labels.reportTypeSubtitle,
-    y,
-  );
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataVersionLabel,
-    String(identity.publicationVersion),
-    y,
-  );
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataPublishedAtLabel,
-    formatDateTime(identity.publishedAt, next.locale),
-    y,
-  );
-  y = drawMetadataRow(
-    next.page,
-    next.fonts,
-    next.labels.metadataPdfGeneratedAtLabel,
-    formatDateTime(input.generatedAt, next.locale),
-    y,
-  );
+  const compact = buildCompactPublicationInfoLines({
+    versionLabel: next.labels.versionLabel,
+    publicationVersion: identity.publicationVersion,
+    publishedAtLabel: next.labels.publishedAtLabel,
+    publishedAtFormatted: formatDateTime(identity.publishedAt, next.locale),
+    pdfGeneratedAtLabel: next.labels.pdfGeneratedAtLabel,
+    pdfGeneratedAtFormatted: formatDateTime(input.generatedAt, next.locale),
+  });
 
-  next.y = y - mmToPt(2);
+  next.page.drawText(t(compact.versionPublishedLine), {
+    x: MARGIN_X,
+    y: next.y,
+    size: TYPE.metadata,
+    font: next.fonts.regular,
+    color: COLORS.text,
+  });
+  next.y -= mmToPt(4);
+  next.page.drawText(t(compact.pdfGeneratedLine), {
+    x: MARGIN_X,
+    y: next.y,
+    size: TYPE.metadata,
+    font: next.fonts.regular,
+    color: COLORS.muted,
+  });
+  next.y -= mmToPt(3);
   return next;
 }
 
@@ -1067,8 +1027,12 @@ export async function generateFinancePublicationPdf(
 
   const sceMark = await loadScePublicationMark(pdfDoc, mmToPt(16), mmToPt(4.5));
 
-  const footerPrimary = `${input.organisationName} · ${input.labels.financialReportHeading.replace("{year}", yearLabel)} · ${input.labels.reportTypeSubtitle} · ${input.labels.versionLabel.replace("{version}", String(identity.publicationVersion))}`;
-  const footerPublishedLine = `${input.labels.publishedAtLabel}: ${formatDateTime(identity.publishedAt, input.formattingLocale)}`;
+  const footerLeftLine = buildPublicationPdfFooterLeftLine({
+    organisationName: input.organisationName,
+    financialReportHeading: input.labels.financialReportHeading,
+    yearLabel,
+    publicationVersion: identity.publicationVersion,
+  });
 
   const firstPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
   let ctx: LayoutContext = {
@@ -1082,25 +1046,28 @@ export async function generateFinancePublicationPdf(
     y: PAGE_H - MARGIN_TOP,
     pageIndex: 1,
     totalPages: 1,
-    footerPrimary,
-    footerPublishedLine,
+    footerLeftLine,
     tableHeaderDrawnOnPage: false,
     tenantLogo,
     sceMark,
     yearLabel,
   };
 
+  const attentionInsights = input.presentation.pnl.comparativeIntelligence.attentionInsights;
+
   ctx = drawPublicationMasthead(ctx, input);
   ctx = drawHeroFinancialConclusion(ctx);
-  ctx = ensureSpace(ctx, mmToPt(36));
-  ctx = drawManagementAssessment(ctx);
-  ctx = ensureSpace(ctx, mmToPt(22));
-  ctx = drawVarianceDrivers(ctx);
   ctx = ensureSpace(ctx, mmToPt(30));
+  ctx = drawManagementAssessment(ctx);
+  ctx = ensureSpace(ctx, mmToPt(20));
+  ctx = drawVarianceDrivers(ctx);
+  ctx = ensureSpace(ctx, mmToPt(26));
   ctx = drawStatementHeading(ctx);
   ctx = drawIncomeSection(ctx);
   ctx = drawExpenseSectionAndResult(ctx);
-  ctx = drawMajorDeviations(ctx);
+  if (publicationPdfShouldRenderMajorDeviationsDetail(attentionInsights)) {
+    ctx = drawMajorDeviations(ctx);
+  }
   ctx = drawPublicationMetadata(ctx, input);
   ctx = drawPublicationSnapshotNotice(ctx);
 

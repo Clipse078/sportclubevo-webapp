@@ -57,12 +57,23 @@ export const FINANCE_06C_R2_IMPLEMENTATION = {
 
 export const FINANCE_06C_R3_IMPLEMENTATION = {
   packageId: "FIN-06C-R3",
-  status: "IMPLEMENTED_PO_UAT_PENDING",
+  status: "IMPLEMENTED_PO_VISUAL_UAT_REFINEMENT_REQUIRED",
   predecessor: "FIN-06C-R2",
   focus: "publication_pdf_po_approved_visual_design",
   pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
   designDoc: "docs/finance/SCE-FINANCE-06C-R3-PUBLICATION-PDF-POLISH.md",
   testSuite: "lib/finance/__tests__/finance-06c-r3-publication-pdf-polish.test.ts",
+  fin06cStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "IN_PROGRESS",
+} as const;
+
+export const FINANCE_06C_R4_IMPLEMENTATION = {
+  packageId: "FIN-06C-R4",
+  status: "IMPLEMENTED_PO_UAT_PENDING",
+  predecessor: "FIN-06C-R3",
+  focus: "publication_pdf_final_composition_polish",
+  pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
+  testSuite: "lib/finance/__tests__/finance-06c-r4-publication-pdf-composition.test.ts",
   fin06cStatus: "IN_PROGRESS",
   fin06ProgrammeStatus: "IN_PROGRESS",
 } as const;

@@ -22,7 +22,7 @@ export function buildFinancePublicationPdfLabels(input: {
     publicationInfoTitle: pub("pdfPublicationInfoTitle"),
     versionLabel: pub("versionLabel"),
     expectedResultLabel: pub("pdfExpectedResultLabel"),
-    varianceVsBudgetLabel: pnl("varianceVsBudget"),
+    varianceVsBudgetLabel: pub("pdfHeroVarianceVsBudget"),
     budgetResultLabel: pub("pdfBudgetResultLabel"),
     actualResultLabel: pub("pdfActualToDateLabel"),
     forecastResultLabel: pub("pdfForecastSupportingLabel"),
