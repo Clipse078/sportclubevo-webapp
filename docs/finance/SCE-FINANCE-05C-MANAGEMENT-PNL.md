@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05C** — Management P&L presentation |
-| **Status** | **IMPLEMENTED** — awaiting Product Owner visual UAT |
+| **Status** | **COMPLETE** — Product Owner visual UAT **PASS** (approved for merge to **STAGE**) |
 | **Architecture base** | FIN-05A + FIN-05B (`1cad40593191ebb88d91e5a41aab82a438130a2d` on **STAGE**) |
 | **Branch** | `cursor/sce-finance-05c-management-pnl` |
 | **Route** | `/dashboard/finance/reports` (Reporting workspace — Erfolgsrechnung) |
@@ -63,4 +63,4 @@ Measure-scoped visibility reuses `finance.view`, `finance.budget.view`, `finance
 
 ## Next
 
-**FIN-05D** — Finance Übersicht & Decision Intelligence (after PO approval of FIN-05C).
+**FIN-05D** — Finance Übersicht & Decision Intelligence (**NEXT** — not started).

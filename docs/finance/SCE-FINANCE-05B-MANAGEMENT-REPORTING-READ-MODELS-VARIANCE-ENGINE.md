@@ -51,4 +51,4 @@ Focused coverage in `lib/finance/__tests__/finance-05b-management-reporting-vari
 
 ## Next
 
-**FIN-05C** — Management P&L / Erfolgsrechnung presentation (consumes FIN-05B primitives).
+**FIN-05C** — Management P&L / Erfolgsrechnung (**COMPLETE** — consumes FIN-05B primitives). **Next: FIN-05D**.

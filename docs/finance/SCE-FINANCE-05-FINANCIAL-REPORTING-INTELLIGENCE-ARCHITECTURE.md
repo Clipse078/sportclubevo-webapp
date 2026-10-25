@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A COMPLETE** (merged on **STAGE**); **FIN-05B COMPLETE** (merge `1cad40593191ebb88d91e5a41aab82a438130a2d`); **FIN-05C IMPLEMENTED** (Management P&L — PO visual UAT pending); **05D–05H** not started |
+| **Status** | **FIN-05A COMPLETE** (merged on **STAGE**); **FIN-05B COMPLETE** (merge `1cad40593191ebb88d91e5a41aab82a438130a2d`); **FIN-05C COMPLETE** (Management P&L — PO visual UAT **PASS**); **FIN-05D NEXT**; **05E–05H** not started |
 | **Branch** | FIN-05C: `cursor/sce-finance-05c-management-pnl` — see [`SCE-FINANCE-05C-MANAGEMENT-PNL.md`](./SCE-FINANCE-05C-MANAGEMENT-PNL.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
@@ -434,4 +434,4 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**Next package: FIN-05C** — Management P&L / Erfolgsrechnung (do not start in FIN-05B).
+**Next package: FIN-05D** — Finance Übersicht & Decision Intelligence (FIN-05C complete on branch `cursor/sce-finance-05c-management-pnl`).
