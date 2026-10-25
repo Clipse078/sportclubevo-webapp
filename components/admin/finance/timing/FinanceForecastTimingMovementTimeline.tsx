@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import {
@@ -9,6 +10,10 @@ import {
   FinanceVisualLegend,
 } from "@/components/admin/finance/visual/FinanceVisualChartSurface";
 import type { FinanceForecastTimingVisualModel } from "@/lib/finance/forecast/finance-forecast-timing-visual-types";
+import {
+  financeForecastTimingShowsUntimedCompanion,
+  financeForecastTimingUsesCompactEmptyTimeline,
+} from "@/lib/finance/forecast/finance-forecast-timing-workspace-presentation";
 import {
   timelineMarkerRadius,
   timelinePositionFraction,
@@ -24,10 +29,13 @@ type FinanceForecastTimingMovementTimelineProps = {
   baseCurrency: string | null;
   formattingLocale: string;
   onSelectManualEvent?: (eventId: string) => void;
+  onAddTiming?: () => void;
+  canMutate?: boolean;
 };
 
 const SVG_WIDTH = 720;
 const SVG_HEIGHT = 200;
+const COMPACT_AXIS_HEIGHT = 56;
 const LANE_MID_INCOME = 52;
 const LANE_MID_EXPENSE = 148;
 const AXIS_Y = 100;
@@ -43,15 +51,89 @@ function markerToTimingInput(marker: FinanceForecastTimingVisualModel["markers"]
   };
 }
 
+function CompactEmptyTimingVisual(props: {
+  visual: FinanceForecastTimingVisualModel;
+  baseCurrency: string | null;
+  formattingLocale: string;
+  canMutate: boolean;
+  onAddTiming?: () => void;
+}) {
+  const t = useTranslations("Finance.forecast.timing.visual");
+  const formattedUntimed = formatFinanceManagementPlanningMinor(
+    props.visual.untimed.totalMinor,
+    props.baseCurrency,
+    props.formattingLocale,
+  );
+  const formattedRemaining = formatFinanceManagementPlanningMinor(
+    props.visual.remainingFutureExpectationMinor,
+    props.baseCurrency,
+    props.formattingLocale,
+  );
+
+  return (
+    <FinanceVisualChartSurface
+      title={t("timelineTitle")}
+      description={t("compactEmptyDescription")}
+      dataFinanceChart="forecast-timing-movement"
+      className="max-h-[240px]"
+    >
+      <div
+        className="relative mt-1 flex min-h-[3.5rem] items-end rounded-md border border-[var(--sce-surface-border-subtle)]/60 bg-[var(--surface-1)]/30 px-3 pb-2"
+        data-finance-timing-compact-empty-cue
+        aria-hidden
+      >
+        <svg
+          viewBox={`0 0 ${SVG_WIDTH} ${COMPACT_AXIS_HEIGHT}`}
+          className="h-14 w-full text-[var(--sce-surface-border-subtle)]"
+          preserveAspectRatio="none"
+        >
+          <line x1={0} y1={COMPACT_AXIS_HEIGHT - 8} x2={SVG_WIDTH} y2={COMPACT_AXIS_HEIGHT - 8} stroke="currentColor" strokeWidth={1} />
+          <text x={4} y={14} className="fill-[var(--muted)] text-[9px]">
+            {t("laneIncome")}
+          </text>
+          <text x={4} y={COMPACT_AXIS_HEIGHT - 14} className="fill-[var(--muted)] text-[9px]">
+            {t("laneExpense")}
+          </text>
+        </svg>
+      </div>
+
+      <div className="mt-4 space-y-2" data-finance-timing-compact-empty>
+        <p className="text-sm font-semibold text-[var(--foreground)]">{t("compactEmptyTitle")}</p>
+        <p className="text-sm text-[var(--text-2)]">
+          {t("compactEmptyAmountLine", { amount: formattedUntimed })}
+        </p>
+        <p className="text-sm text-[var(--text-2)]">
+          {t("compactEmptyBody", {
+            amount: formattedRemaining,
+          })}
+        </p>
+        {props.canMutate && props.onAddTiming ? (
+          <div className="pt-1">
+            <Button type="button" size="sm" onClick={props.onAddTiming}>
+              {t("compactEmptyCta")}
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </FinanceVisualChartSurface>
+  );
+}
+
 export function FinanceForecastTimingMovementTimeline({
   visual,
   baseCurrency,
   formattingLocale,
   onSelectManualEvent,
+  onAddTiming,
+  canMutate = false,
 }: FinanceForecastTimingMovementTimelineProps) {
   const t = useTranslations("Finance.forecast.timing.visual");
   const baseId = useId();
   const [focusedEventId, setFocusedEventId] = useState<string | null>(null);
+
+  const presentationState = visual.workspacePresentationState;
+  const useCompactEmpty = financeForecastTimingUsesCompactEmptyTimeline(presentationState);
+  const showUntimedCompanion = financeForecastTimingShowsUntimedCompanion(presentationState);
 
   const focusedMarker = useMemo(
     () => visual.markers.find((m) => m.eventId === focusedEventId) ?? null,
@@ -72,16 +154,39 @@ export function FinanceForecastTimingMovementTimeline({
       windowEndDateIso: visual.window.endDateIso,
     });
 
-  const showTimeline =
-    visual.hasRemainingExpectation &&
-    (visual.markers.length > 0 || visual.untimed.totalMinor > 0);
+  const showPlottingCanvas =
+    !useCompactEmpty &&
+    (visual.markers.length > 0 || visual.timedFutureExpectationMinor > 0);
 
   if (!visual.hasRemainingExpectation) {
     return null;
   }
 
+  if (useCompactEmpty) {
+    return (
+      <section
+        data-finance-timing-visual-timeline
+        data-finance-timing-presentation-state={presentationState}
+        className="min-w-0"
+      >
+        <CompactEmptyTimingVisual
+          visual={visual}
+          baseCurrency={baseCurrency}
+          formattingLocale={formattingLocale}
+          canMutate={canMutate}
+          onAddTiming={onAddTiming}
+        />
+      </section>
+    );
+  }
+
   return (
-    <section data-finance-timing-visual-timeline className="min-w-0 space-y-3">
+    <section
+      data-finance-timing-visual-timeline
+      data-finance-timing-presentation-state={presentationState}
+      data-finance-timing-full-timeline
+      className="min-w-0 space-y-3"
+    >
       <FinanceVisualChartSurface
         title={t("timelineTitle")}
         description={t("timelineDescription")}
@@ -113,7 +218,7 @@ export function FinanceForecastTimingMovementTimeline({
           ]}
         />
 
-        {!showTimeline ? (
+        {!showPlottingCanvas ? (
           <p className="mt-3 text-sm text-[var(--text-2)]" data-finance-timing-visual-empty>
             {t("emptyTimeline")}
           </p>
@@ -354,47 +459,49 @@ export function FinanceForecastTimingMovementTimeline({
           </>
         )}
 
-        <div
-          className="mt-4 grid gap-2 rounded-md border border-dashed border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)]/40 px-3 py-3 sm:grid-cols-2"
-          data-finance-timing-untimed-companion
-        >
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-              {t("untimedTitle")}
-            </p>
-            <p className="text-sm text-[var(--text-2)]">{t("untimedBody")}</p>
-          </div>
-          <div className="space-y-1 text-sm tabular-nums">
-            <p>
-              {t("untimedIncome")}{" "}
-              <span className="font-medium text-[var(--foreground)]">
+        {showUntimedCompanion ? (
+          <div
+            className="mt-4 grid gap-2 rounded-md border border-dashed border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)]/40 px-3 py-3 sm:grid-cols-2"
+            data-finance-timing-untimed-companion
+          >
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                {t("untimedTitle")}
+              </p>
+              <p className="text-sm text-[var(--text-2)]">{t("untimedBody")}</p>
+            </div>
+            <div className="space-y-1 text-sm tabular-nums">
+              <p>
+                {t("untimedIncome")}{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {formatFinanceManagementPlanningMinor(
+                    visual.untimed.incomeMinor,
+                    baseCurrency,
+                    formattingLocale,
+                  )}
+                </span>
+              </p>
+              <p>
+                {t("untimedExpense")}{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {formatFinanceManagementPlanningMinor(
+                    visual.untimed.expenseMinor,
+                    baseCurrency,
+                    formattingLocale,
+                  )}
+                </span>
+              </p>
+              <p className="font-semibold text-[var(--foreground)]">
+                {t("untimedTotal")}{" "}
                 {formatFinanceManagementPlanningMinor(
-                  visual.untimed.incomeMinor,
+                  visual.untimed.totalMinor,
                   baseCurrency,
                   formattingLocale,
                 )}
-              </span>
-            </p>
-            <p>
-              {t("untimedExpense")}{" "}
-              <span className="font-medium text-[var(--foreground)]">
-                {formatFinanceManagementPlanningMinor(
-                  visual.untimed.expenseMinor,
-                  baseCurrency,
-                  formattingLocale,
-                )}
-              </span>
-            </p>
-            <p className="font-semibold text-[var(--foreground)]">
-              {t("untimedTotal")}{" "}
-              {formatFinanceManagementPlanningMinor(
-                visual.untimed.totalMinor,
-                baseCurrency,
-                formattingLocale,
-              )}
-            </p>
+              </p>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {visual.isOverallocated ? (
           <p className="mt-2 text-sm text-[var(--warning)]" data-finance-timing-visual-overallocation>

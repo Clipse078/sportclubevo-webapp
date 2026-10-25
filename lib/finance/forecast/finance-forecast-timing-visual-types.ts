@@ -9,6 +9,7 @@ import type {
   FinanceForecastTimingInterpretationState,
   FinanceForecastTimingOverviewReadModel,
 } from "@/lib/finance/forecast/finance-forecast-timing-read-model";
+import type { FinanceForecastTimingWorkspacePresentationContext } from "@/lib/finance/forecast/finance-forecast-timing-workspace-presentation";
 
 export type FinanceTimingVisualIntervalKind = "EXACT_DATE" | "MONTH" | "DATE_RANGE";
 
@@ -73,6 +74,7 @@ export type FinanceForecastTimingVisualModel = {
   timedFutureExpectationMinor: number;
   isOverallocated: boolean;
   hasRemainingExpectation: boolean;
+  workspacePresentationState: FinanceForecastTimingWorkspacePresentationContext;
   structuredSummary: FinanceTimingVisualStructuredSummary;
   /** Mirrors overview annual sides for companion copy — no recomputation in UI. */
   overviewAnnual: FinanceForecastTimingOverviewReadModel["annual"];

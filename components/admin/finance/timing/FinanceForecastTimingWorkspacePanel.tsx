@@ -25,6 +25,13 @@ import {
   formatExpectedFinancialEventTimingLabel,
   isExpectedEventTimingAfterFinanceYearEnd,
 } from "@/lib/finance/forecast/expected-financial-event-timing-presentation";
+import {
+  financeForecastTimingAccountRowDensity,
+  financeForecastTimingShowsAllEventsDisclosure,
+  financeForecastTimingShowsUpcomingMovements,
+  financeForecastTimingSummaryShowsGlobalCreateCta,
+  financeForecastTimingSummaryShowsPartialInterpretation,
+} from "@/lib/finance/forecast/finance-forecast-timing-workspace-presentation";
 import type { FinanceForecastTimingOverviewReadModel } from "@/lib/finance/forecast/finance-forecast-timing-read-model";
 import type { FinanceForecastTimingVisualModel } from "@/lib/finance/forecast/finance-forecast-timing-visual-types";
 import { FinanceForecastTimingMovementTimeline } from "@/components/admin/finance/timing/FinanceForecastTimingMovementTimeline";
@@ -168,6 +175,27 @@ export function FinanceForecastTimingWorkspacePanel({
       : null;
 
   const interpretationKey = overview?.interpretationState ?? "NO_REMAINING_EXPECTATION";
+  const presentationState = timingVisual?.workspacePresentationState ?? "NO_REMAINING";
+  const showUpcoming = overview
+    ? financeForecastTimingShowsUpcomingMovements({
+        presentationState,
+        upcomingEventCount: overview.upcomingEvents.length,
+        futureTimedEventCount: overview.counts.futureTimedEventCount,
+      })
+    : false;
+  const showAllEventsDisclosure = financeForecastTimingShowsAllEventsDisclosure(events.length);
+  const showSummaryGlobalCta =
+    totals &&
+    financeForecastTimingSummaryShowsGlobalCreateCta({
+      presentationState,
+      canMutate,
+      remainingMinor: totals.remaining,
+    });
+  const showPartialInterpretation =
+    financeForecastTimingSummaryShowsPartialInterpretation({
+      interpretationState: interpretationKey,
+      presentationState,
+    });
 
   return (
     <div className={FINANCE_FORECAST_WORKSPACE_STACK_CLASS} data-finance-timing-workspace>
@@ -254,9 +282,11 @@ export function FinanceForecastTimingWorkspacePanel({
                     </span>
                   </span>
                 </div>
-                <p className="text-sm text-[var(--text-2)]" data-finance-timing-interpretation>
-                  {t(`interpretation.${interpretationKey}`)}
-                </p>
+                {showPartialInterpretation ? (
+                  <p className="text-sm text-[var(--text-2)]" data-finance-timing-interpretation>
+                    {t(`interpretation.${interpretationKey}`)}
+                  </p>
+                ) : null}
                 {totals.overallocated > 0 ? (
                   <p className="text-sm text-[var(--warning)]" data-finance-timing-overallocated>
                     {t("overallocatedSummary", {
@@ -345,18 +375,12 @@ export function FinanceForecastTimingWorkspacePanel({
               </div>
             </div>
 
-            {canMutate && totals.remaining > 0 ? (
+            {showSummaryGlobalCta ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button type="button" onClick={() => openCreate()}>
                   {t("addTimingCta")}
                 </Button>
               </div>
-            ) : null}
-
-            {overview.counts.totalExpectedEventCount === 0 && totals.remaining > 0 ? (
-              <p className="mt-3 text-sm text-[var(--text-2)]" data-finance-timing-empty-profile>
-                {t("emptyProfileBody")}
-              </p>
             ) : null}
 
             {totals.remaining <= 0 ? (
@@ -371,6 +395,8 @@ export function FinanceForecastTimingWorkspacePanel({
               visual={timingVisual}
               baseCurrency={baseCurrency}
               formattingLocale={formattingLocale}
+              canMutate={canMutate}
+              onAddTiming={canMutate ? () => openCreate() : undefined}
               onSelectManualEvent={
                 canMutate
                   ? (eventId) => {
@@ -382,6 +408,7 @@ export function FinanceForecastTimingWorkspacePanel({
             />
           ) : null}
 
+          {showUpcoming ? (
           <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-upcoming>
             <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">{t("upcomingTitle")}</h2>
@@ -426,6 +453,7 @@ export function FinanceForecastTimingWorkspacePanel({
               </ul>
             )}
           </section>
+          ) : null}
 
           <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-timing-attention>
             <header className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
@@ -437,38 +465,64 @@ export function FinanceForecastTimingWorkspacePanel({
               <ul className="divide-y divide-[var(--sce-surface-border-subtle)]/70">
                 {attentionAccounts.map((account) => {
                   const issue = accountIssueKey(account);
+                  const rowDensity = financeForecastTimingAccountRowDensity({
+                    timedFutureExpectationMinor: account.reconciliation.timedFutureExpectationMinor,
+                    unscheduledRemainderMinor: account.reconciliation.unscheduledRemainderMinor,
+                  });
                   const expanded = expandedAccountId === account.financialAccountId;
                   const accountEvents = events.filter(
                     (e) => e.financialAccountId === account.financialAccountId,
                   );
+                  const remainingMinor = account.reconciliation.remainingFutureExpectationMinor ?? 0;
+                  const timedMinor = account.reconciliation.timedFutureExpectationMinor;
+                  const openMinor = account.reconciliation.unscheduledRemainderMinor ?? 0;
+                  const showIssueLine = issue !== "none" && !(rowDensity === "ZERO_TIMED" && issue === "unscheduled");
                   return (
                     <li key={account.financialAccountId} className="px-4 py-3 sm:px-5">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                           <p className="font-medium text-[var(--foreground)]">{account.name}</p>
-                          <p className="text-xs text-[var(--text-2)]">
-                            {t("accountRemaining")}{" "}
-                            {formatAmount(
-                              account.reconciliation.remainingFutureExpectationMinor ?? 0,
-                              baseCurrency,
-                              formattingLocale,
-                            )}
-                            {" · "}
-                            {t("accountTimed")}{" "}
-                            {formatAmount(
-                              account.reconciliation.timedFutureExpectationMinor,
-                              baseCurrency,
-                              formattingLocale,
-                            )}
-                            {" · "}
-                            {t("accountOpen")}{" "}
-                            {formatAmount(
-                              account.reconciliation.unscheduledRemainderMinor ?? 0,
-                              baseCurrency,
-                              formattingLocale,
-                            )}
-                          </p>
-                          {issue !== "none" ? (
+                          {rowDensity === "ZERO_TIMED" ? (
+                            <p
+                              className="mt-0.5 text-sm font-medium tabular-nums text-[var(--text-2)]"
+                              data-finance-timing-account-row="zero-timed"
+                            >
+                              {t("accountRowZeroTimed", {
+                                amount: formatAmount(openMinor, baseCurrency, formattingLocale),
+                              })}
+                            </p>
+                          ) : rowDensity === "PARTIAL_TIMED" ? (
+                            <div
+                              className="mt-0.5 space-y-0.5 text-sm text-[var(--text-2)]"
+                              data-finance-timing-account-row="partial-timed"
+                            >
+                              <p>
+                                {t("accountRemaining")}{" "}
+                                <span className="font-medium tabular-nums text-[var(--foreground)]">
+                                  {formatAmount(remainingMinor, baseCurrency, formattingLocale)}
+                                </span>
+                              </p>
+                              <p className="tabular-nums">
+                                {t("accountRowPartialBreakdown", {
+                                  timed: formatAmount(timedMinor, baseCurrency, formattingLocale),
+                                  open: formatAmount(openMinor, baseCurrency, formattingLocale),
+                                })}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="mt-0.5 text-xs text-[var(--text-2)]" data-finance-timing-account-row="issue">
+                              {t("accountRemaining")}{" "}
+                              {formatAmount(remainingMinor, baseCurrency, formattingLocale)}
+                              {openMinor > 0 ? (
+                                <>
+                                  {" · "}
+                                  {t("accountOpen")}{" "}
+                                  {formatAmount(openMinor, baseCurrency, formattingLocale)}
+                                </>
+                              ) : null}
+                            </p>
+                          )}
+                          {showIssueLine ? (
                             <p
                               className={cn(
                                 "mt-1 text-xs",
@@ -556,7 +610,7 @@ export function FinanceForecastTimingWorkspacePanel({
 
           {balancedAccounts.length > 0 ? (
             <FinanceWorkspaceDisclosure
-              title={t("allAccountsTitle", { count: balancedAccounts.length })}
+              title={t("balancedAccountsTitle", { count: balancedAccounts.length })}
               expandLabel={t("disclosureShow")}
               collapseLabel={t("disclosureHide")}
               data-finance-disclosure="timing-balanced-accounts"
@@ -574,74 +628,76 @@ export function FinanceForecastTimingWorkspacePanel({
             </FinanceWorkspaceDisclosure>
           ) : null}
 
-          <FinanceWorkspaceDisclosure
-            title={t("allEventsTitle", { count: events.length })}
-            expandLabel={t("disclosureShow")}
-            collapseLabel={t("disclosureHide")}
-            data-finance-disclosure="timing-all-events"
-          >
-            <div className="min-w-0 overflow-x-auto">
-              <table className="w-full min-w-0 text-sm">
-                <thead>
-                  <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
-                    <th className="px-3 py-2">{t("eventsColumnTiming")}</th>
-                    <th className="px-3 py-2">{t("eventsColumnAccount")}</th>
-                    <th className="px-3 py-2">{t("eventsColumnDescription")}</th>
-                    <th className="px-3 py-2 text-right">{t("eventsColumnAmount")}</th>
-                    {canMutate ? <th className="px-3 py-2">{t("eventsColumnActions")}</th> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.map((event) => {
-                    const accountName =
-                      accountOptions.find((a) => a.financialAccountId === event.financialAccountId)
-                        ?.name ?? event.financialAccountId;
-                    const manualEditable = event.sourceKind === "MANUAL";
-                    return (
-                      <tr key={event.id} className={FINANCE_TABLE_ROW_CLASS}>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {formatExpectedFinancialEventTimingLabel(event, formattingLocale)}
-                        </td>
-                        <td className="px-3 py-2">{accountName}</td>
-                        <td className="px-3 py-2 max-w-[12rem] truncate">
-                          {event.description ?? "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">
-                          {formatAmount(event.expectedAmountMinor, baseCurrency, formattingLocale)}
-                        </td>
-                        {canMutate ? (
-                          <td className="px-3 py-2">
-                            {manualEditable ? (
-                              <div className="flex gap-2">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openEdit(event)}
-                                >
-                                  {t("editEvent")}
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openDelete(event)}
-                                >
-                                  {t("deleteEvent")}
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-[var(--muted)]">{t("sourceOwned")}</span>
-                            )}
+          {showAllEventsDisclosure ? (
+            <FinanceWorkspaceDisclosure
+              title={t("allEventsTitle", { count: events.length })}
+              expandLabel={t("disclosureShow")}
+              collapseLabel={t("disclosureHide")}
+              data-finance-disclosure="timing-all-events"
+            >
+              <div className="min-w-0 overflow-x-auto">
+                <table className="w-full min-w-0 text-sm">
+                  <thead>
+                    <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
+                      <th className="px-3 py-2">{t("eventsColumnTiming")}</th>
+                      <th className="px-3 py-2">{t("eventsColumnAccount")}</th>
+                      <th className="px-3 py-2">{t("eventsColumnDescription")}</th>
+                      <th className="px-3 py-2 text-right">{t("eventsColumnAmount")}</th>
+                      {canMutate ? <th className="px-3 py-2">{t("eventsColumnActions")}</th> : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {events.map((event) => {
+                      const accountName =
+                        accountOptions.find((a) => a.financialAccountId === event.financialAccountId)
+                          ?.name ?? event.financialAccountId;
+                      const manualEditable = event.sourceKind === "MANUAL";
+                      return (
+                        <tr key={event.id} className={FINANCE_TABLE_ROW_CLASS}>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {formatExpectedFinancialEventTimingLabel(event, formattingLocale)}
                           </td>
-                        ) : null}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </FinanceWorkspaceDisclosure>
+                          <td className="px-3 py-2">{accountName}</td>
+                          <td className="px-3 py-2 max-w-[12rem] truncate">
+                            {event.description ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {formatAmount(event.expectedAmountMinor, baseCurrency, formattingLocale)}
+                          </td>
+                          {canMutate ? (
+                            <td className="px-3 py-2">
+                              {manualEditable ? (
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEdit(event)}
+                                  >
+                                    {t("editEvent")}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDelete(event)}
+                                  >
+                                    {t("deleteEvent")}
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-[var(--muted)]">{t("sourceOwned")}</span>
+                              )}
+                            </td>
+                          ) : null}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </FinanceWorkspaceDisclosure>
+          ) : null}
         </>
       ) : null}
 

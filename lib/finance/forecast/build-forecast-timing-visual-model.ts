@@ -6,6 +6,7 @@ import { parseFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calenda
 import { classifyExpectedEventTemporalPosition } from "@/lib/finance/forecast/classify-expected-event-temporal-position";
 import type { ExpectedFinancialEventRecord } from "@/lib/finance/forecast/expected-financial-event-row-mapper";
 import type { FinanceForecastTimingOverviewReadModel } from "@/lib/finance/forecast/finance-forecast-timing-read-model";
+import { deriveFinanceForecastTimingWorkspacePresentationState } from "@/lib/finance/forecast/finance-forecast-timing-workspace-presentation";
 import type {
   FinanceForecastTimingVisualModel,
   FinanceTimingVisualEventMarker,
@@ -211,6 +212,13 @@ export function buildFinanceForecastTimingVisualModel(
   const isOverallocated =
     overview.timingCoverage.kind === "RATIO" && overview.timingCoverage.isOverallocated;
 
+  const workspacePresentationState = deriveFinanceForecastTimingWorkspacePresentationState({
+    hasRemainingExpectation: remainingFutureExpectationMinor > 0,
+    timedFutureExpectationMinor,
+    untimedTotalMinor: untimed.totalMinor,
+    plottableMarkerCount: markers.length,
+  });
+
   return {
     window: {
       ...windowRange,
@@ -226,6 +234,7 @@ export function buildFinanceForecastTimingVisualModel(
     timedFutureExpectationMinor,
     isOverallocated,
     hasRemainingExpectation: remainingFutureExpectationMinor > 0,
+    workspacePresentationState,
     structuredSummary: {
       futureTimedEventCount: overview.counts.futureTimedEventCount,
       ambiguousEventCount: overview.counts.ambiguousEventCount,

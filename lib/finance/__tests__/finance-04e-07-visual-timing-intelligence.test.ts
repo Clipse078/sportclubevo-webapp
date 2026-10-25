@@ -141,6 +141,7 @@ describe("FIN-04E-07 empty timing visual model", () => {
     expect(visual.markers).toHaveLength(0);
     expect(visual.untimed.totalMinor).toBe(80_000_00);
     expect(visual.timedFutureExpectationMinor).toBe(0);
+    expect(visual.workspacePresentationState).toBe("ZERO_TIMING");
   });
 });
 
@@ -439,6 +440,8 @@ describe("FIN-04E-07 UX guards", () => {
     expect(timeline).not.toContain("liquidity");
     expect(timeline).not.toContain("runway");
     expect(timeline).toContain("data-finance-timing-untimed-companion");
+    expect(timeline).toContain("financeForecastTimingShowsUntimedCompanion");
+    expect(timeline).toContain("data-finance-timing-compact-empty");
   });
 
   it("gates mutation from timeline via canMutate prop wiring", () => {
