@@ -40,6 +40,8 @@ import {
   type ScenarioAssumptionAccountOption,
 } from "@/components/admin/finance/scenario/FinanceScenarioAssumptionDialog";
 import { FinanceScenarioGovernanceDialogs } from "@/components/admin/finance/scenario/FinanceScenarioGovernanceDialogs";
+import { FinanceScenarioAssumptionTemporalVisual } from "@/components/admin/finance/scenario/FinanceScenarioAssumptionTemporalVisual";
+import { buildScenarioAssumptionTemporalVisualModel } from "@/lib/finance/forecast/build-scenario-assumption-temporal-visual-model";
 
 type FinanceScenarioDetailPanelProps = {
   detail: FinanceScenarioDetailReadModel;
@@ -256,6 +258,7 @@ export function FinanceScenarioDetailPanel({
         labels={{
           current: tForecast("subNav.current"),
           scenarios: tForecast("subNav.scenarios"),
+          timing: tForecast("subNav.timing"),
         }}
         ariaLabel={tForecast("subNav.aria")}
       />
@@ -307,6 +310,16 @@ export function FinanceScenarioDetailPanel({
             ) : null}
             {comparison.baselineFreshness.status === "CURRENT_FORECAST_UNAVAILABLE" ? (
               <p className="text-xs text-[var(--muted)]">{t("currentForecastUnavailable")}</p>
+            ) : null}
+            {detail.temporal.temporalStale ? (
+              <p className="text-xs text-[var(--muted)]" data-finance-scenario-temporal-stale>
+                {t("temporalStaleBanner")}
+              </p>
+            ) : null}
+            {detail.governance.adoptBlockedReason === "PARTIAL_TEMPORAL_COVERAGE" ? (
+              <p className="text-xs text-[var(--muted)]" data-finance-scenario-adopt-blocked-temporal>
+                {t("adoptBlockedPartialTemporal")}
+              </p>
             ) : null}
           </div>
           {canMutate ? (
@@ -581,6 +594,9 @@ export function FinanceScenarioDetailPanel({
                 const effectRow = detail.accountEffects.find(
                   (a) => a.financialAccountId === assumption.financialAccountId,
                 );
+                const temporalRow = detail.temporal.assumptionTemporal.find(
+                  (row) => row.financialAccountId === assumption.financialAccountId,
+                );
                 return (
                   <li
                     key={assumption.assumptionId}
@@ -599,7 +615,21 @@ export function FinanceScenarioDetailPanel({
                           labels: assumptionLabels,
                         })}
                       </span>
-                      {effectRow && effectRow.deltaMinor !== 0 ? (
+                      {assumption.effectiveFromDateIso ? (
+                        <span className="ml-2 text-xs text-[var(--muted)]">
+                          {t("assumptions.validityFromDate")} {assumption.effectiveFromDateIso}
+                        </span>
+                      ) : null}
+                      {temporalRow && temporalRow.knownScenarioImpactMinor !== 0 ? (
+                        <span className="ml-2 text-xs tabular-nums text-[var(--muted)]">
+                          {t("assumptions.temporalKnownImpact")}{" "}
+                          {formatFinanceManagementPlanningSignedMinor(
+                            temporalRow.knownScenarioImpactMinor,
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      ) : effectRow && effectRow.deltaMinor !== 0 ? (
                         <span className="ml-2 text-xs tabular-nums text-[var(--muted)]">
                           {formatFinanceManagementPlanningSignedMinor(
                             effectRow.deltaMinor,
@@ -607,6 +637,35 @@ export function FinanceScenarioDetailPanel({
                             formattingLocale,
                           )}
                         </span>
+                      ) : null}
+                      {temporalRow &&
+                      temporalRow.temporalCoverageState !== "COMPLETE" &&
+                      temporalRow.unscheduledBaseAmountMinor > 0 ? (
+                        <p className="mt-1 text-xs text-[var(--muted)]">
+                          {t("assumptions.temporalPartialCoverage")}{" "}
+                          {formatFinanceManagementPlanningMinor(
+                            temporalRow.unscheduledBaseAmountMinor,
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </p>
+                      ) : null}
+                      {temporalRow && temporalRow.ambiguousBaseAmountMinor > 0 ? (
+                        <p className="mt-1 text-xs text-[var(--muted)]">
+                          {t("assumptions.temporalAmbiguousOverlap")}
+                        </p>
+                      ) : null}
+                      {assumption.effectiveFromDateIso && temporalRow ? (
+                        <FinanceScenarioAssumptionTemporalVisual
+                          model={buildScenarioAssumptionTemporalVisualModel({
+                            assumptionId: assumption.assumptionId,
+                            financialAccountId: assumption.financialAccountId,
+                            effectiveFromDateIso: assumption.effectiveFromDateIso,
+                            temporal: temporalRow,
+                          })}
+                          baseCurrency={baseCurrency}
+                          formattingLocale={formattingLocale}
+                        />
                       ) : null}
                     </div>
                     {canMutate && !detail.isArchived ? (

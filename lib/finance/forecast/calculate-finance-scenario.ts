@@ -171,14 +171,15 @@ export function calculateFinanceScenario(
     const assumption = assumptionByAccount.get(financialAccountId);
 
     let scenarioAmountMinor = baselineAmountMinor;
-    if (assumption) {
+    if (assumption && !assumption.effectiveFromDateIso) {
       scenarioAmountMinor = applyAssumptionToBaseline(baselineAmountMinor, assumption);
     }
 
     const deltaMinor = scenarioAmountMinor - baselineAmountMinor;
     assertSafeScenarioAmount(deltaMinor);
 
-    const resultContributionMinor = assumption
+    const assumptionApplied = Boolean(assumption && !assumption.effectiveFromDateIso);
+    const resultContributionMinor = assumptionApplied
       ? resultContributionMinorForDelta(accountType, deltaMinor)
       : 0;
 
@@ -189,11 +190,11 @@ export function calculateFinanceScenario(
       scenarioAmountMinor,
       deltaMinor,
       assumptionKind: assumption?.kind ?? null,
-      assumptionApplied: Boolean(assumption),
+      assumptionApplied,
       resultContributionMinor,
     });
 
-    if (assumption) {
+    if (assumptionApplied && assumption) {
       assumptionEffects.push({
         financialAccountId,
         kind: assumption.kind,

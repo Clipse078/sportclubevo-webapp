@@ -1,0 +1,21 @@
+/**
+ * FIN-04E-07R3 — directional movement presentation architecture locks.
+ */
+
+export const FINANCE_FORECAST_TIMING_DIRECTION_04E_07R3_ARCHITECTURE_LOCKS = {
+  EXPECTED_EVENT_AMOUNT_STORED_AS_MAGNITUDE: true,
+  DIRECTION_DERIVED_FROM_ACCOUNT_SEMANTIC: true,
+  SIGNED_AMOUNT_IS_PRESENTATION: true,
+  GROSS_TIMING_COVERAGE_IS_NOT_NET_MOVEMENT: true,
+  NET_MOVEMENT_IS_NOT_LIQUIDITY: true,
+  NET_MOVEMENT_IS_NOT_PNL: true,
+  NO_COLOR_ONLY_DIRECTION: true,
+  MONTH_PRECISION_PRESERVED: true,
+  ZERO_STATE_NOT_REGRESSED: true,
+  COUNTRY_AGNOSTIC: true,
+  TENANT_CURRENCY: true,
+  INTEGER_MINOR_UNITS: true,
+} as const;
+
+/** Tenant-facing net label for timing workspace — not liquidity / P&L. */
+export const FINANCE_TIMING_NET_MOVEMENT_PRODUCT_TERM = "Netto-Bewegung" as const;

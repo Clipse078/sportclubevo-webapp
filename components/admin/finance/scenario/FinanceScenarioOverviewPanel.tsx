@@ -123,6 +123,7 @@ export function FinanceScenarioOverviewPanel({
         labels={{
           current: tForecast("subNav.current"),
           scenarios: tForecast("subNav.scenarios"),
+          timing: tForecast("subNav.timing"),
         }}
         ariaLabel={tForecast("subNav.aria")}
       />

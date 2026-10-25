@@ -1400,6 +1400,7 @@ model Tenant {
   financeScenarios                FinanceScenario[]
   financeScenarioAdoptions        FinanceScenarioAdoption[]
   financeScenarioRebases          FinanceScenarioRebase[]
+  financeExpectedFinancialEvents  FinanceExpectedFinancialEvent[]
 
   @@index([status])
   @@index([name])
@@ -1564,6 +1565,8 @@ model User {
   financeProjectionAdoptionsApplied  FinanceProjectionAdoption[] @relation("FinanceProjectionAdoptionAppliedBy")
   financeScenarioAdoptionsApplied    FinanceScenarioAdoption[]   @relation("FinanceScenarioAdoptionAppliedBy")
   financeScenarioRebasesApplied      FinanceScenarioRebase[]     @relation("FinanceScenarioRebaseAppliedBy")
+  financeExpectedFinancialEventsCreated FinanceExpectedFinancialEvent[] @relation("FinanceExpectedFinancialEventCreatedBy")
+  financeExpectedFinancialEventsUpdated FinanceExpectedFinancialEvent[] @relation("FinanceExpectedFinancialEventUpdatedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10749,6 +10752,7 @@ model FinanceYear {
   projectionEvidence        FinanceProjectionEvidence[]
   financeScenarios          FinanceScenario[]
   financeScenarioAdoptions  FinanceScenarioAdoption[]
+  expectedFinancialEvents   FinanceExpectedFinancialEvent[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10815,6 +10819,7 @@ model FinancialAccount {
   projectionEvidence FinanceProjectionEvidence[]
   scenarioBaselineLines FinanceScenarioBaselineLine[]
   scenarioAssumptions   FinanceScenarioAssumption[]
+  expectedFinancialEvents FinanceExpectedFinancialEvent[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
@@ -11117,6 +11122,8 @@ model FinanceScenarioAssumption {
   percentBasisPoints  Int?
   amountMinorDelta    Int?
   absoluteAmountMinor Int?
+  /// Optional business date — null preserves FIN-04D full-year assumption semantics (FIN-04E-06).
+  effectiveFromDate   DateTime?                     @db.Date
   note                String?
   createdAt           DateTime                      @default(now())
   updatedAt           DateTime                      @updatedAt
@@ -11170,6 +11177,53 @@ model FinanceScenarioRebase {
 
   @@index([scenarioId])
   @@index([tenantId])
+}
+
+enum FinanceExpectedFinancialEventTimingPrecision {
+  EXACT_DATE
+  MONTH
+  DATE_RANGE
+}
+
+enum FinanceExpectedFinancialEventSourceKind {
+  MANUAL
+}
+
+/// Temporal expectation evidence — decomposes annual forecast timing (FIN-04E, ADR-037).
+/// Unscheduled remainder is derived at read/reconcile time — not persisted here.
+model FinanceExpectedFinancialEvent {
+  id                 String                                       @id @default(cuid())
+  tenantId           String
+  financeYearId      String
+  financialAccountId String
+  expectedAmountMinor Int
+  timingPrecision    FinanceExpectedFinancialEventTimingPrecision
+  /// Business calendar date when timingPrecision = EXACT_DATE (@db.Date — UTC midnight, no TZ shift).
+  expectedDate       DateTime?                                    @db.Date
+  /// First calendar day of expected month when timingPrecision = MONTH (YYYY-MM-01).
+  expectedMonthStart DateTime?                                    @db.Date
+  rangeStartDate     DateTime?                                    @db.Date
+  rangeEndDate       DateTime?                                    @db.Date
+  sourceKind         FinanceExpectedFinancialEventSourceKind      @default(MANUAL)
+  /// Tenant-scoped opaque reference for future FIN-07/08 integration — no cross-tenant FK.
+  sourceRefType      String?
+  sourceRefId        String?
+  description        String?
+  createdByUserId    String?
+  updatedByUserId    String?
+  createdAt          DateTime                                     @default(now())
+  updatedAt          DateTime                                     @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear      FinanceYear      @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy        User?            @relation("FinanceExpectedFinancialEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updatedBy        User?            @relation("FinanceExpectedFinancialEventUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, financeYearId])
+  @@index([tenantId, financeYearId, financialAccountId])
+  @@index([tenantId, financialAccountId])
+  @@index([financialAccountId])
 }
 
 enum FinanceProjectionDataSufficiency {

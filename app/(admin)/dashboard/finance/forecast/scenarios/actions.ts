@@ -100,6 +100,7 @@ export async function upsertFinanceScenarioAssumptionAction(input: {
     amountMinorDelta?: number | null;
     absoluteAmountMinor?: number | null;
     note?: string | null;
+    effectiveFromDateIso?: string | null;
   };
 }): Promise<FinanceScenarioActionResult> {
   const ctx = await scenarioCtx();

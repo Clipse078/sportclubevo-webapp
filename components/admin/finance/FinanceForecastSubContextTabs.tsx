@@ -11,6 +11,7 @@ type FinanceForecastSubContextTabsProps = {
   labels: {
     current: string;
     scenarios: string;
+    timing: string;
   };
   ariaLabel: string;
 };

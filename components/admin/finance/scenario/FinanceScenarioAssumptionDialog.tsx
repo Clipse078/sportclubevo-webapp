@@ -26,6 +26,7 @@ export type ScenarioAssumptionAccountOption = {
 };
 
 type AssumptionUiKind = ScenarioAssumptionKindV1;
+type AssumptionScopeMode = "FULL_FORECAST" | "FROM_DATE";
 
 type FinanceScenarioAssumptionDialogProps = {
   open: boolean;
@@ -54,7 +55,12 @@ export function FinanceScenarioAssumptionDialog({
   const [kind, setKind] = useState<AssumptionUiKind>("PERCENT_CHANGE");
   const [percentInput, setPercentInput] = useState("");
   const [amountInput, setAmountInput] = useState("");
+  const [scopeMode, setScopeMode] = useState<AssumptionScopeMode>("FULL_FORECAST");
+  const [effectiveFromDateIso, setEffectiveFromDateIso] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const effectiveDateSupported =
+    kind === "PERCENT_CHANGE" || kind === "EXCLUDE_ACCOUNT";
 
   useEffect(() => {
     if (!open) return;
@@ -74,13 +80,29 @@ export function FinanceScenarioAssumptionDialog({
       } else {
         setAmountInput("");
       }
+      if (existing.effectiveFromDateIso) {
+        setScopeMode("FROM_DATE");
+        setEffectiveFromDateIso(existing.effectiveFromDateIso);
+      } else {
+        setScopeMode("FULL_FORECAST");
+        setEffectiveFromDateIso("");
+      }
     } else {
       setAccountId("");
       setKind("PERCENT_CHANGE");
       setPercentInput("");
       setAmountInput("");
+      setScopeMode("FULL_FORECAST");
+      setEffectiveFromDateIso("");
     }
   }, [open, existing]);
+
+  useEffect(() => {
+    if (!effectiveDateSupported && scopeMode === "FROM_DATE") {
+      setScopeMode("FULL_FORECAST");
+      setEffectiveFromDateIso("");
+    }
+  }, [kind, effectiveDateSupported, scopeMode]);
 
   const accountOptions = useMemo(
     () =>
@@ -111,16 +133,21 @@ export function FinanceScenarioAssumptionDialog({
         percentBasisPoints?: number | null;
         amountMinorDelta?: number | null;
         absoluteAmountMinor?: number | null;
+        effectiveFromDateIso?: string | null;
       }
     | null {
     if (!accountId) return null;
+    const effectiveFrom =
+      scopeMode === "FROM_DATE" && effectiveDateSupported && effectiveFromDateIso.trim()
+        ? effectiveFromDateIso.trim()
+        : null;
     if (kind === "EXCLUDE_ACCOUNT") {
-      return { kind };
+      return { kind, effectiveFromDateIso: effectiveFrom };
     }
     if (kind === "PERCENT_CHANGE") {
       const basisPoints = parseScenarioPercentInputToBasisPoints(percentInput);
       if (basisPoints === null) return null;
-      return { kind, percentBasisPoints: basisPoints };
+      return { kind, percentBasisPoints: basisPoints, effectiveFromDateIso: effectiveFrom };
     }
     const amountMinor = parseScenarioAssumptionAmountInputToMinor(amountInput);
     if (amountMinor === null) return null;
@@ -151,7 +178,9 @@ export function FinanceScenarioAssumptionDialog({
             ? t("errors.staleScenario")
             : result.errorCode === "FINANCE_SCENARIO_ACCOUNT_NOT_AVAILABLE"
               ? t("errors.accountUnavailable")
-              : result.error,
+              : result.errorCode === "FINANCE_SCENARIO_EFFECTIVE_DATE_UNSUPPORTED_ASSUMPTION"
+                ? t("errors.effectiveDateUnsupported")
+                : result.error,
         );
         return;
       }
@@ -219,6 +248,33 @@ export function FinanceScenarioAssumptionDialog({
               inputMode="decimal"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
+            />
+          </SceFormField>
+        ) : null}
+        {effectiveDateSupported ? (
+          <SceFormField label={t("validityLabel")}>
+            <SceSegmentedControl
+              aria-label={t("validityLabel")}
+              value={scopeMode}
+              onChange={setScopeMode}
+              options={[
+                { value: "FULL_FORECAST" as const, label: t("validityFullForecast") },
+                { value: "FROM_DATE" as const, label: t("validityFromDate") },
+              ]}
+              disabled={pending}
+            />
+          </SceFormField>
+        ) : (
+          <p className="text-xs text-[var(--muted)]">{t("effectiveDateUnsupportedKind")}</p>
+        )}
+        {effectiveDateSupported && scopeMode === "FROM_DATE" ? (
+          <SceFormField label={t("effectiveFromLabel")} required>
+            <input
+              type="date"
+              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              value={effectiveFromDateIso}
+              onChange={(e) => setEffectiveFromDateIso(e.target.value)}
+              disabled={pending}
             />
           </SceFormField>
         ) : null}
