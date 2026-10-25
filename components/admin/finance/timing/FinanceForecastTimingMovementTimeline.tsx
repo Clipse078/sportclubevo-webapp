@@ -2,7 +2,6 @@
 
 import { useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import {
@@ -29,13 +28,10 @@ type FinanceForecastTimingMovementTimelineProps = {
   baseCurrency: string | null;
   formattingLocale: string;
   onSelectManualEvent?: (eventId: string) => void;
-  onAddTiming?: () => void;
-  canMutate?: boolean;
 };
 
 const SVG_WIDTH = 720;
 const SVG_HEIGHT = 200;
-const COMPACT_AXIS_HEIGHT = 56;
 const LANE_MID_INCOME = 52;
 const LANE_MID_EXPENSE = 148;
 const AXIS_Y = 100;
@@ -55,8 +51,6 @@ function CompactEmptyTimingVisual(props: {
   visual: FinanceForecastTimingVisualModel;
   baseCurrency: string | null;
   formattingLocale: string;
-  canMutate: boolean;
-  onAddTiming?: () => void;
 }) {
   const t = useTranslations("Finance.forecast.timing.visual");
   const formattedUntimed = formatFinanceManagementPlanningMinor(
@@ -64,56 +58,41 @@ function CompactEmptyTimingVisual(props: {
     props.baseCurrency,
     props.formattingLocale,
   );
-  const formattedRemaining = formatFinanceManagementPlanningMinor(
-    props.visual.remainingFutureExpectationMinor,
-    props.baseCurrency,
-    props.formattingLocale,
-  );
 
   return (
     <FinanceVisualChartSurface
       title={t("timelineTitle")}
-      description={t("compactEmptyDescription")}
       dataFinanceChart="forecast-timing-movement"
-      className="max-h-[240px]"
+      className="pb-1"
     >
       <div
-        className="relative mt-1 flex min-h-[3.5rem] items-end rounded-md border border-[var(--sce-surface-border-subtle)]/60 bg-[var(--surface-1)]/30 px-3 pb-2"
+        className="mb-3 flex items-center gap-2 text-[var(--sce-surface-border-subtle)]"
         data-finance-timing-compact-empty-cue
         aria-hidden
       >
-        <svg
-          viewBox={`0 0 ${SVG_WIDTH} ${COMPACT_AXIS_HEIGHT}`}
-          className="h-14 w-full text-[var(--sce-surface-border-subtle)]"
-          preserveAspectRatio="none"
-        >
-          <line x1={0} y1={COMPACT_AXIS_HEIGHT - 8} x2={SVG_WIDTH} y2={COMPACT_AXIS_HEIGHT - 8} stroke="currentColor" strokeWidth={1} />
-          <text x={4} y={14} className="fill-[var(--muted)] text-[9px]">
-            {t("laneIncome")}
-          </text>
-          <text x={4} y={COMPACT_AXIS_HEIGHT - 14} className="fill-[var(--muted)] text-[9px]">
-            {t("laneExpense")}
-          </text>
+        <span className="h-px w-10 rounded-full bg-current opacity-70" />
+        <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 opacity-60" fill="none">
+          <rect
+            x="2"
+            y="3"
+            width="12"
+            height="11"
+            rx="1.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+          />
+          <path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
+        <span className="h-px max-w-[3rem] flex-1 rounded-full bg-current opacity-70" />
       </div>
 
-      <div className="mt-4 space-y-2" data-finance-timing-compact-empty>
+      <div className="space-y-2 pb-1" data-finance-timing-compact-empty>
         <p className="text-sm font-semibold text-[var(--foreground)]">{t("compactEmptyTitle")}</p>
-        <p className="text-sm text-[var(--text-2)]">
-          {t("compactEmptyAmountLine", { amount: formattedUntimed })}
+        <p className="text-sm text-[var(--text-2)]" data-finance-timing-compact-empty-amount>
+          {t("compactEmptyStatement", { amount: formattedUntimed })}
         </p>
-        <p className="text-sm text-[var(--text-2)]">
-          {t("compactEmptyBody", {
-            amount: formattedRemaining,
-          })}
-        </p>
-        {props.canMutate && props.onAddTiming ? (
-          <div className="pt-1">
-            <Button type="button" size="sm" onClick={props.onAddTiming}>
-              {t("compactEmptyCta")}
-            </Button>
-          </div>
-        ) : null}
+        <p className="text-sm text-[var(--muted)]">{t("compactEmptyActionHint")}</p>
       </div>
     </FinanceVisualChartSurface>
   );
@@ -124,8 +103,6 @@ export function FinanceForecastTimingMovementTimeline({
   baseCurrency,
   formattingLocale,
   onSelectManualEvent,
-  onAddTiming,
-  canMutate = false,
 }: FinanceForecastTimingMovementTimelineProps) {
   const t = useTranslations("Finance.forecast.timing.visual");
   const baseId = useId();
@@ -167,14 +144,13 @@ export function FinanceForecastTimingMovementTimeline({
       <section
         data-finance-timing-visual-timeline
         data-finance-timing-presentation-state={presentationState}
+        data-finance-timing-compact-interpretation
         className="min-w-0"
       >
         <CompactEmptyTimingVisual
           visual={visual}
           baseCurrency={baseCurrency}
           formattingLocale={formattingLocale}
-          canMutate={canMutate}
-          onAddTiming={onAddTiming}
         />
       </section>
     );

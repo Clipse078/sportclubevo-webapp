@@ -93,3 +93,19 @@ export function financeForecastTimingSummaryShowsGlobalCreateCta(input: {
   }
   return input.presentationState !== "ZERO_TIMING";
 }
+
+/** FIN-04E-07R2 — zero interpretation is not an action surface; account rows own create CTAs. */
+export function financeForecastTimingCompactEmptyShowsGlobalCreateCta(
+  state: FinanceForecastTimingWorkspacePresentationContext,
+): boolean {
+  if (state === "ZERO_TIMING") {
+    return false;
+  }
+  return false;
+}
+
+export function financeForecastTimingCompactEmptyShowsPlottingSkeleton(
+  state: FinanceForecastTimingWorkspacePresentationContext,
+): boolean {
+  return state !== "ZERO_TIMING";
+}

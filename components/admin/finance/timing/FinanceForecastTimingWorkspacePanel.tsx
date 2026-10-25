@@ -395,8 +395,6 @@ export function FinanceForecastTimingWorkspacePanel({
               visual={timingVisual}
               baseCurrency={baseCurrency}
               formattingLocale={formattingLocale}
-              canMutate={canMutate}
-              onAddTiming={canMutate ? () => openCreate() : undefined}
               onSelectManualEvent={
                 canMutate
                   ? (eventId) => {

@@ -234,8 +234,9 @@ describe("FIN-04E-07R1 ZERO_TIMING UX guards", () => {
     expect(financeForecastTimingShowsAllEventsDisclosure(0)).toBe(false);
   });
 
-  it("uses compact empty timeline markers in UI source", () => {
+  it("uses compact interpretation and full timeline branches in UI source", () => {
     expect(timeline).toContain("data-finance-timing-compact-empty");
+    expect(timeline).toContain("data-finance-timing-compact-interpretation");
     expect(timeline).toContain("data-finance-timing-full-timeline");
     expect(timeline).toContain("financeForecastTimingShowsUntimedCompanion");
     expect(timeline).toContain("CompactEmptyTimingVisual");
