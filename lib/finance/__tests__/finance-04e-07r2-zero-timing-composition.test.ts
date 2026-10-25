@@ -197,9 +197,9 @@ describe("FIN-04E-07R2 ZERO_TIMING composition", () => {
     expect(compact).not.toMatch(/-m[tbrlxy]-/);
   });
 
-  it("full timeline retains lanes and plotting canvas for partial timing", () => {
+  it("full timeline retains zero-baseline chart for partial timing", () => {
     expect(timeline).toContain("data-finance-timing-full-timeline");
-    expect(timeline).toContain("laneIncome");
+    expect(timeline).toContain("data-finance-movement-zero-baseline-chart");
     expect(timeline).toContain("financeForecastTimingShowsUntimedCompanion");
   });
 

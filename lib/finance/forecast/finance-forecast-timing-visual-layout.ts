@@ -41,9 +41,3 @@ export function timelineSpanFractions(input: {
   };
 }
 
-/** Marker radius in SVG user units — bounded by materiality. */
-export function timelineMarkerRadius(materialityFraction: number): number {
-  const minR = 4;
-  const maxR = 11;
-  return minR + materialityFraction * (maxR - minR);
-}

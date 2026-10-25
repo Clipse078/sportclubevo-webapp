@@ -31,4 +31,6 @@ export const FINANCE_FORECAST_TIMING_VISUAL_04E_07_ARCHITECTURE_LOCKS = {
   CHART_NOT_ONLY_INFORMATION_SOURCE: true,
   /** FIN-04E-07R3 — see finance-forecast-timing-direction-07r3-architecture-contract.ts */
   DIRECTIONAL_MOVEMENT_PRESENTATION_IN_07R3: true,
+  /** FIN-04E-07R4 — see finance-forecast-timing-movement-chart-07r4-architecture-contract.ts */
+  ZERO_BASELINE_MOVEMENT_CHART_IN_07R4: true,
 } as const;

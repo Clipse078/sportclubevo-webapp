@@ -12,7 +12,8 @@ import {
   financeMonthPickerIsoFromValue,
   formatFinanceMonthPickerDisplayValue,
 } from "@/lib/finance/forecast/finance-expected-month-picker";
-import { timelineMarkerRadius } from "@/lib/finance/forecast/finance-forecast-timing-visual-layout";
+import { buildFinanceForecastTimingMovementChartModel } from "@/lib/finance/forecast/build-forecast-timing-movement-chart-model";
+import { buildFinanceForecastTimingVisualModel } from "@/lib/finance/forecast/build-forecast-timing-visual-model";
 import {
   financeForecastTimingCompactEmptyShowsGlobalCreateCta,
   financeForecastTimingUsesCompactEmptyTimeline,
@@ -151,8 +152,7 @@ describe("FIN-04E-07R3 workspace wiring", () => {
     expect(timingPanel).toContain("formatFinanceDirectionalMovementMinor");
     expect(timeline).toContain("formatFinanceDirectionalMovementMinor");
     expect(timingPanel).toContain("data-finance-timing-composition-net");
-    expect(timeline).toContain("LANE_MID_INCOME");
-    expect(timeline).toContain("LANE_MID_EXPENSE");
+    expect(timeline).toContain("data-finance-movement-zero-baseline");
   });
 
   it("shows signed amounts in upcoming and events table", () => {
@@ -167,10 +167,120 @@ describe("FIN-04E-07R3 workspace wiring", () => {
 });
 
 describe("FIN-04E-07R3 timeline materiality", () => {
-  it("keeps marker radius bounded for small and large movements", () => {
-    expect(timelineMarkerRadius(1)).toBeLessThanOrEqual(11);
-    expect(timelineMarkerRadius(0)).toBeGreaterThanOrEqual(4);
-    expect(timelineMarkerRadius(0.01)).toBeGreaterThan(timelineMarkerRadius(0));
+  it("encodes materiality via shared signed Y axis rather than bubble radius", () => {
+    expect(timeline).not.toContain("timelineMarkerRadius");
+    const visual = buildFinanceForecastTimingVisualModel({
+      overview: {
+        financeYearId: "fy1",
+        actualsThroughDateIso: "2026-06-30",
+        referenceDateIso: "2026-06-30",
+        currentForecast: {
+          kind: "AVAILABLE",
+          forecastId: "f1",
+          forecastVersionId: "v1",
+          versionNumber: 1,
+          asOfDateIso: "2026-06-30",
+          actualsThroughDateIso: "2026-06-30",
+        },
+        annual: {
+          income: {
+            annualForecastMinor: 100_000_00,
+            actualThroughCutoffMinor: 0,
+            remainingFutureExpectationMinor: 100_000_00,
+            timedFutureExpectationMinor: 90_000_00,
+            ambiguousTimingExpectationMinor: 0,
+            unscheduledRemainderMinor: 10_000_00,
+            overallocatedAmountMinor: 0,
+            actualExceedsAnnualForecastAmountMinor: 0,
+            futureTimedMovementMinor: 90_000_00,
+          },
+          expense: {
+            annualForecastMinor: 0,
+            actualThroughCutoffMinor: 0,
+            remainingFutureExpectationMinor: 0,
+            timedFutureExpectationMinor: 0,
+            ambiguousTimingExpectationMinor: 0,
+            unscheduledRemainderMinor: 0,
+            overallocatedAmountMinor: 0,
+            actualExceedsAnnualForecastAmountMinor: 0,
+            futureTimedMovementMinor: 0,
+          },
+          resultMinor: 100_000_00,
+          futureResultContextMinor: 100_000_00,
+        },
+        timingCoverage: {
+          kind: "RATIO",
+          remainingFutureExpectationMinor: 100_000_00,
+          timedFutureExpectationMinor: 90_000_00,
+          timedCoverageBasisPoints: 9000,
+          rawTimedCoverageBasisPoints: 9000,
+          isOverallocated: false,
+        },
+        interpretationState: "PARTIALLY_SCHEDULED",
+        exceptions: [],
+        counts: {
+          totalExpectedEventCount: 2,
+          futureTimedEventCount: 2,
+          ambiguousEventCount: 0,
+          accountsWithUnscheduledRemainderCount: 1,
+          overallocatedAccountCount: 0,
+          accountCount: 1,
+        },
+        accounts: [],
+        upcomingEvents: [],
+      },
+      events: [
+        {
+          id: "large",
+          tenantId: "t1",
+          financeYearId: "fy1",
+          financialAccountId: "acc-income",
+          expectedAmountMinor: 60_000_00,
+          timingPrecision: "EXACT_DATE",
+          expectedDateIso: "2026-11-15",
+          expectedMonthStartIso: null,
+          rangeStartDateIso: null,
+          rangeEndDateIso: null,
+          sourceKind: "MANUAL",
+          sourceRefType: null,
+          sourceRefId: null,
+          description: null,
+          createdByUserId: null,
+          updatedByUserId: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          id: "small",
+          tenantId: "t1",
+          financeYearId: "fy1",
+          financialAccountId: "acc-income",
+          expectedAmountMinor: 30_000_00,
+          timingPrecision: "EXACT_DATE",
+          expectedDateIso: "2026-12-01",
+          expectedMonthStartIso: null,
+          rangeStartDateIso: null,
+          rangeEndDateIso: null,
+          sourceKind: "MANUAL",
+          sourceRefType: null,
+          sourceRefId: null,
+          description: null,
+          createdByUserId: null,
+          updatedByUserId: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      accountNameById: new Map([["acc-income", "Income"]]),
+      financeYearStartDateIso: "2026-01-01",
+      financeYearEndDateIso: "2026-12-31",
+    });
+    const chart = buildFinanceForecastTimingMovementChartModel(visual);
+    const large = chart.movements.find((m) => m.eventId === "large")!;
+    const small = chart.movements.find((m) => m.eventId === "small")!;
+    expect(Math.abs(large.yValue - chart.domain.zeroY)).toBeGreaterThan(
+      Math.abs(small.yValue - chart.domain.zeroY),
+    );
   });
 });
 
