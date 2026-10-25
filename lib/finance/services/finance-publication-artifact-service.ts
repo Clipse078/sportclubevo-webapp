@@ -12,6 +12,7 @@ import type { FinancePublicationPdfGenerationResult } from "@/lib/finance/artifa
 import { loadFinancePublicationVersionSnapshot } from "@/lib/finance/services/finance-publication-service";
 import { getCurrentTenantContextByIdCached } from "@/lib/server/request-cache";
 import { resolveFinanceFormattingLocale } from "@/lib/finance/presentation/resolve-finance-formatting-locale";
+import { loadTenantPublicationLogo } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-images";
 
 export type GenerateFinancePublicationPdfArtifactInput = {
   publicationId: string;
@@ -69,6 +70,7 @@ export async function generateFinancePublicationPdfArtifactForTenant(
     : "en-GB";
 
   const generatedAt = input.generatedAt ?? new Date();
+  const tenantLogo = await loadTenantPublicationLogo(tenant?.logoUrl ?? null);
 
   try {
     const pdf = await generateFinancePublicationPdf({
@@ -79,8 +81,8 @@ export async function generateFinancePublicationPdfArtifactForTenant(
       generatedAt,
       presentation,
       labels: input.labels,
-      organisationLogoBytes: null,
-      organisationLogoMime: null,
+      organisationLogoBytes: tenantLogo?.bytes ?? null,
+      organisationLogoMime: tenantLogo?.mime ?? null,
     });
 
     return { ok: true, ...pdf };

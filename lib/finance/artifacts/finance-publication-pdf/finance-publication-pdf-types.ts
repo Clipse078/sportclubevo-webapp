@@ -26,9 +26,16 @@ export type FinancePublicationPdfLabels = {
   attentionResultOnPlanTitle: string;
   attentionResultFavorableDetail: string;
   attentionResultUnfavorableDetail: string;
-  attentionLargestFavorableTitle: string;
-  attentionLargestUnfavorableTitle: string;
+  positiveDriverTitle: string;
+  negativeDriverTitle: string;
   attentionDriverExpenseSuffix: string;
+  /** Material deviations */
+  majorDeviationsTitle: string;
+  columnPosition: string;
+  columnDeviation: string;
+  columnComment: string;
+  deviationCommentFavorable: string;
+  deviationCommentUnfavorable: string;
   /** Statement */
   statementSectionTitle: string;
   amountsInCurrencyLabel: string;
@@ -42,6 +49,15 @@ export type FinancePublicationPdfLabels = {
   columnForecast: string;
   columnVarianceVsBudget: string;
   unassignedGroup: string;
+  /** Publication metadata */
+  metadataOrganisationLabel: string;
+  metadataFinanceYearLabel: string;
+  metadataReportTypeLabel: string;
+  metadataVersionLabel: string;
+  metadataPublishedAtLabel: string;
+  metadataPdfGeneratedAtLabel: string;
+  /** Snapshot notice */
+  snapshotImmutabilityNotice: string;
   /** Footer */
   createdWithSportClubEvo: string;
   pageOfLabel: string;

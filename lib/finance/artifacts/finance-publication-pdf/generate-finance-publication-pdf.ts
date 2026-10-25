@@ -21,6 +21,17 @@ import {
   formatPublicationPdfTableMeasureCell,
   formatPublicationPdfTableVarianceDelta,
 } from "@/lib/finance/artifacts/finance-publication-pdf/format-publication-pdf-table-amount";
+import {
+  computePublicationPdfHeroLayoutBands,
+  publicationPdfHeroHeightPt,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-hero-layout";
+import {
+  drawPublicationImage,
+  embedPublicationPdfImage,
+  fitImageWithinBounds,
+  loadScePublicationMark,
+  type PublicationPdfEmbeddedImage,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-images";
 
 function t(value: string): string {
   return pdfSafeText(value);
@@ -31,26 +42,30 @@ const PAGE_H = mmToPt(A4_HEIGHT_MM);
 const MARGIN_X = mmToPt(18);
 const MARGIN_TOP = mmToPt(20);
 const MARGIN_BOTTOM = mmToPt(18);
-const CONTENT_BOTTOM = MARGIN_BOTTOM + mmToPt(14);
+const CONTENT_BOTTOM = MARGIN_BOTTOM + mmToPt(16);
+const FOOTER_BLOCK_HEIGHT = mmToPt(11);
 
-/** Typography scale (pt) — Helvetica / Helvetica-Bold only (pdf-lib standard fonts, WinAnsi). */
 const TYPE = {
   mastheadClub: 15,
   mastheadReport: 11,
   mastheadSubtitle: 10,
   mastheadMeta: 8.5,
+  continuationClub: 10,
+  continuationMeta: 8,
   sectionHeading: 10,
   heroValue: 22,
   heroLabel: 8,
-  heroVariance: 10,
+  heroVariance: 9.5,
   heroSupporting: 8.5,
   body: 9,
   tableHeader: 7.5,
   tableRow: 8.5,
   tableRowBold: 9,
   metadata: 8,
+  metadataKey: 8,
   footer: 7,
   attribution: 6.5,
+  driverTitle: 7.5,
 } as const;
 
 const COLORS = {
@@ -58,9 +73,16 @@ const COLORS = {
   muted: rgb(0.42, 0.45, 0.5),
   line: rgb(0.82, 0.84, 0.87),
   accent: rgb(0.07, 0.17, 0.29),
-  heroBg: rgb(0.97, 0.98, 0.99),
+  heroBg: rgb(0.96, 0.97, 0.99),
+  tableHeaderBg: rgb(0.96, 0.97, 0.99),
+  resultBandBg: rgb(0.93, 0.96, 0.99),
+  panelBg: rgb(0.98, 0.98, 0.99),
   favorable: rgb(0.12, 0.42, 0.28),
   unfavorable: rgb(0.55, 0.18, 0.16),
+  favorableBg: rgb(0.94, 0.98, 0.95),
+  unfavorableBg: rgb(0.99, 0.95, 0.94),
+  favorableBand: rgb(0.9, 0.96, 0.92),
+  unfavorableBand: rgb(0.98, 0.93, 0.92),
 } as const;
 
 type Fonts = { regular: PDFFont; bold: PDFFont };
@@ -72,11 +94,16 @@ type LayoutContext = {
   locale: string;
   labels: FinancePublicationPdfLabels;
   presentation: FinancePublicationPdfDocumentInput["presentation"];
+  organisationName: string;
   y: number;
   pageIndex: number;
   totalPages: number;
-  footerLeft: string;
+  footerPrimary: string;
+  footerPublishedLine: string;
   tableHeaderDrawnOnPage: boolean;
+  tenantLogo: PublicationPdfEmbeddedImage | null;
+  sceMark: PublicationPdfEmbeddedImage | null;
+  yearLabel: string;
 };
 
 function formatDateTime(isoOrDate: string | Date, locale: string): string {
@@ -116,15 +143,63 @@ function columnRights(): { budget: number; actual: number; forecast: number; var
   };
 }
 
+function drawContinuationHeader(ctx: LayoutContext): void {
+  const { page, fonts, labels, presentation, locale, yearLabel } = ctx;
+  const identity = presentation.identity;
+  let y = PAGE_H - MARGIN_TOP;
+
+  page.drawText(t(ctx.organisationName.toUpperCase()), {
+    x: MARGIN_X,
+    y,
+    size: TYPE.continuationClub,
+    font: fonts.bold,
+    color: COLORS.text,
+  });
+
+  const reportLine = `${labels.financialReportHeading.replace("{year}", yearLabel)} · ${labels.reportTypeSubtitle}`;
+  y -= mmToPt(5);
+  page.drawText(t(reportLine), {
+    x: MARGIN_X,
+    y,
+    size: TYPE.continuationMeta + 0.5,
+    font: fonts.regular,
+    color: COLORS.text,
+  });
+
+  const officialLine = labels.officialPublicationLine.replace(
+    "{version}",
+    String(identity.publicationVersion),
+  );
+  const publishedLine = `${labels.publishedAtLabel}: ${formatDateTime(identity.publishedAt, locale)}`;
+  const rightBlock = `${officialLine}\n${publishedLine}`.split("\n");
+  let rightY = PAGE_H - MARGIN_TOP;
+  for (const line of rightBlock) {
+    drawRightAlignedText(page, t(line), PAGE_W - MARGIN_X, rightY, fonts.regular, TYPE.continuationMeta, COLORS.muted);
+    rightY -= mmToPt(4);
+  }
+
+  const ruleY = PAGE_H - MARGIN_TOP - mmToPt(11);
+  page.drawLine({
+    start: { x: MARGIN_X, y: ruleY },
+    end: { x: PAGE_W - MARGIN_X, y: ruleY },
+    thickness: 0.4,
+    color: COLORS.line,
+  });
+
+  ctx.y = ruleY - mmToPt(6);
+}
+
 function newPage(ctx: LayoutContext): LayoutContext {
   const page = ctx.pdfDoc.addPage([PAGE_W, PAGE_H]);
-  return {
+  const next: LayoutContext = {
     ...ctx,
     page,
     y: PAGE_H - MARGIN_TOP,
     pageIndex: ctx.pageIndex + 1,
     tableHeaderDrawnOnPage: false,
   };
+  drawContinuationHeader(next);
+  return next;
 }
 
 function ensureSpace(ctx: LayoutContext, neededPt: number): LayoutContext {
@@ -133,42 +208,63 @@ function ensureSpace(ctx: LayoutContext, neededPt: number): LayoutContext {
 }
 
 function drawFooter(ctx: LayoutContext): void {
-  const { page, fonts, labels, pageIndex, totalPages, footerLeft } = ctx;
-  const footerY = MARGIN_BOTTOM - mmToPt(1);
+  const { page, fonts, labels, pageIndex, totalPages, footerPrimary, footerPublishedLine, sceMark } =
+    ctx;
+  const footerTop = MARGIN_BOTTOM + FOOTER_BLOCK_HEIGHT;
   page.drawLine({
-    start: { x: MARGIN_X, y: footerY + mmToPt(4) },
-    end: { x: PAGE_W - MARGIN_X, y: footerY + mmToPt(4) },
+    start: { x: MARGIN_X, y: footerTop },
+    end: { x: PAGE_W - MARGIN_X, y: footerTop },
     thickness: 0.4,
     color: COLORS.line,
   });
-  page.drawText(t(footerLeft), {
+
+  const line1Y = footerTop - mmToPt(3.5);
+  const line2Y = line1Y - mmToPt(3.5);
+  page.drawText(t(footerPrimary), {
     x: MARGIN_X,
-    y: footerY,
+    y: line1Y,
     size: TYPE.footer,
     font: fonts.regular,
     color: COLORS.muted,
   });
+  page.drawText(t(footerPublishedLine), {
+    x: MARGIN_X,
+    y: line2Y,
+    size: TYPE.footer,
+    font: fonts.regular,
+    color: COLORS.muted,
+  });
+
   const pageText = t(
     labels.pageOfLabel
       .replace("{page}", String(pageIndex))
       .replace("{total}", String(totalPages)),
   );
-  drawRightAlignedText(
-    page,
-    pageText,
-    PAGE_W - MARGIN_X,
-    footerY,
-    fonts.regular,
-    TYPE.footer,
-    COLORS.muted,
-  );
-  page.drawText(t(labels.createdWithSportClubEvo), {
-    x: MARGIN_X,
-    y: footerY - mmToPt(3.5),
+  const pageTextWidth = fonts.regular.widthOfTextAtSize(pageText, TYPE.footer);
+  page.drawText(pageText, {
+    x: (PAGE_W - pageTextWidth) / 2,
+    y: line1Y,
+    size: TYPE.footer,
+    font: fonts.regular,
+    color: COLORS.muted,
+  });
+
+  const attribution = t(labels.createdWithSportClubEvo);
+  const markGap = mmToPt(1.5);
+  const markWidth = sceMark?.widthPt ?? 0;
+  const attributionWidth = fonts.regular.widthOfTextAtSize(attribution, TYPE.attribution);
+  const totalRightWidth = attributionWidth + (markWidth > 0 ? markGap + markWidth : 0);
+  const rightX = PAGE_W - MARGIN_X - totalRightWidth;
+  page.drawText(attribution, {
+    x: rightX,
+    y: line2Y,
     size: TYPE.attribution,
     font: fonts.regular,
     color: COLORS.muted,
   });
+  if (sceMark) {
+    drawPublicationImage(page, sceMark, rightX + attributionWidth + markGap, line2Y - mmToPt(0.5));
+  }
 }
 
 function drawWrappedTextBlock(
@@ -205,15 +301,23 @@ function drawWrappedTextBlock(
 function drawTableHeader(ctx: LayoutContext): LayoutContext {
   const cols = columnRights();
   const headerY = ctx.y;
-  ctx.page.drawLine({
-    start: { x: MARGIN_X, y: headerY + mmToPt(1) },
-    end: { x: PAGE_W - MARGIN_X, y: headerY + mmToPt(1) },
-    thickness: 0.5,
-    color: COLORS.line,
+  ctx.page.drawRectangle({
+    x: MARGIN_X,
+    y: headerY - mmToPt(5.5),
+    width: PAGE_W - MARGIN_X * 2,
+    height: mmToPt(6),
+    color: COLORS.tableHeaderBg,
   });
   const size = TYPE.tableHeader;
   const font = ctx.fonts.bold;
   const headerTextY = headerY - mmToPt(3.5);
+  ctx.page.drawText(t(ctx.labels.columnPosition), {
+    x: MARGIN_X + mmToPt(1),
+    y: headerTextY,
+    size,
+    font,
+    color: COLORS.muted,
+  });
   drawRightAlignedText(ctx.page, t(ctx.labels.columnBudget), cols.budget, headerTextY, font, size, COLORS.muted);
   drawRightAlignedText(ctx.page, t(ctx.labels.columnActual), cols.actual, headerTextY, font, size, COLORS.muted);
   drawRightAlignedText(ctx.page, t(ctx.labels.columnForecast), cols.forecast, headerTextY, font, size, COLORS.muted);
@@ -226,7 +330,7 @@ function drawTableHeader(ctx: LayoutContext): LayoutContext {
     size,
     COLORS.muted,
   );
-  ctx.y = headerY - mmToPt(6);
+  ctx.y = headerY - mmToPt(7);
   ctx.tableHeaderDrawnOnPage = true;
   return ctx;
 }
@@ -255,6 +359,16 @@ function drawAmountRow(
   const maxLabelWidth = cols.budget - labelX - mmToPt(5);
 
   const labelY = next.y;
+  if (options.emphasis) {
+    next.page.drawRectangle({
+      x: MARGIN_X,
+      y: labelY - mmToPt(6),
+      width: PAGE_W - MARGIN_X * 2,
+      height: mmToPt(7),
+      color: COLORS.resultBandBg,
+    });
+  }
+
   const labelEndY = drawWrappedTextBlock(
     next.page,
     label,
@@ -310,7 +424,7 @@ function walkTree(ctx: LayoutContext, nodes: readonly SerializedManagementPnlTre
     } else if (node.kind === "account") {
       next = drawAmountRow(next, node.name, node, { indent: (depth + 1) * mmToPt(3) });
     } else if (node.kind === "unassigned_residual") {
-      next = drawAmountRow(next, ctx.labels.unassignedGroup, node, {
+      next = drawAmountRow(next, next.labels.unassignedGroup, node, {
         bold: true,
         indent: depth * mmToPt(3),
       });
@@ -324,14 +438,15 @@ function walkTree(ctx: LayoutContext, nodes: readonly SerializedManagementPnlTre
   return next;
 }
 
-function drawMasthead(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
-  const { presentation, fonts, labels } = ctx;
+function drawPublicationMasthead(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
+  const { presentation, fonts, labels, locale, tenantLogo } = ctx;
   const identity = presentation.identity;
-  const yearLabel = extractPublicationYearLabel(identity.financeYearName);
   let y = ctx.y;
 
-  if (input.organisationLogoBytes && input.organisationLogoMime === "image/png") {
-    void input.organisationLogoBytes;
+  if (tenantLogo) {
+    const logoX = PAGE_W - MARGIN_X - tenantLogo.widthPt;
+    const logoY = y - tenantLogo.heightPt + mmToPt(2);
+    drawPublicationImage(ctx.page, tenantLogo, logoX, logoY);
   }
 
   ctx.page.drawText(t(input.organisationName.toUpperCase()), {
@@ -343,7 +458,7 @@ function drawMasthead(ctx: LayoutContext, input: FinancePublicationPdfDocumentIn
   });
   y -= mmToPt(8);
 
-  const reportHeading = labels.financialReportHeading.replace("{year}", yearLabel);
+  const reportHeading = labels.financialReportHeading.replace("{year}", ctx.yearLabel);
   ctx.page.drawText(t(reportHeading), {
     x: MARGIN_X,
     y,
@@ -376,7 +491,7 @@ function drawMasthead(ctx: LayoutContext, input: FinancePublicationPdfDocumentIn
   y -= mmToPt(4);
 
   ctx.page.drawText(
-    t(`${labels.publishedAtLabel} ${formatDateTime(identity.publishedAt, ctx.locale)}`),
+    t(`${labels.publishedAtLabel}: ${formatDateTime(identity.publishedAt, locale)}`),
     { x: MARGIN_X, y, size: TYPE.mastheadMeta, font: fonts.regular, color: COLORS.muted },
   );
 
@@ -384,7 +499,7 @@ function drawMasthead(ctx: LayoutContext, input: FinancePublicationPdfDocumentIn
   return ctx;
 }
 
-function drawHeroConclusion(ctx: LayoutContext): LayoutContext {
+function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
   const { presentation, labels, fonts, locale } = ctx;
   const pnl = presentation.pnl;
   const currency = pnl.baseCurrency;
@@ -394,7 +509,9 @@ function drawHeroConclusion(ctx: LayoutContext): LayoutContext {
   const variance = pnl.interpretation.forecastVsBudgetManagementResult;
 
   const heroTop = ctx.y;
-  const heroHeight = mmToPt(32);
+  const heroHeight = publicationPdfHeroHeightPt();
+  const bands = computePublicationPdfHeroLayoutBands(heroTop);
+
   ctx.page.drawRectangle({
     x: MARGIN_X,
     y: heroTop - heroHeight,
@@ -404,21 +521,20 @@ function drawHeroConclusion(ctx: LayoutContext): LayoutContext {
   });
 
   const innerX = MARGIN_X + mmToPt(5);
-  let y = heroTop - mmToPt(7);
+  const innerWidth = PAGE_W - MARGIN_X * 2 - mmToPt(10);
 
   ctx.page.drawText(t(labels.expectedResultLabel.toUpperCase()), {
     x: innerX,
-    y,
+    y: bands.label.yBottom + mmToPt(1.5),
     size: TYPE.heroLabel,
     font: fonts.bold,
     color: COLORS.muted,
   });
-  y -= mmToPt(8);
 
   const forecastValue = formatManagementPnlMeasureCell(forecast, currency, locale);
   ctx.page.drawText(t(forecastValue), {
     x: innerX,
-    y,
+    y: bands.value.yBottom + mmToPt(2),
     size: TYPE.heroValue,
     font: fonts.bold,
     color: COLORS.text,
@@ -426,35 +542,58 @@ function drawHeroConclusion(ctx: LayoutContext): LayoutContext {
 
   const varianceValue = formatManagementPnlVarianceDelta(variance, currency, locale);
   const favText = favorabilityText(variance, labels);
-  y -= mmToPt(9);
+  const varianceLine = favText
+    ? `${varianceValue} ${labels.varianceVsBudgetLabel} · ${favText}`
+    : `${varianceValue} ${labels.varianceVsBudgetLabel}`;
   const varianceColor =
     variance.favorability === "FAVORABLE"
       ? COLORS.favorable
       : variance.favorability === "UNFAVORABLE"
         ? COLORS.unfavorable
         : COLORS.text;
-  const varianceLine = favText
-    ? `${varianceValue} ${labels.varianceVsBudgetLabel} · ${favText}`
-    : `${varianceValue} ${labels.varianceVsBudgetLabel}`;
-  ctx.page.drawText(t(varianceLine), {
+  const bandColor =
+    variance.favorability === "FAVORABLE"
+      ? COLORS.favorableBand
+      : variance.favorability === "UNFAVORABLE"
+        ? COLORS.unfavorableBand
+        : COLORS.panelBg;
+  ctx.page.drawRectangle({
     x: innerX,
-    y,
+    y: bands.variance.yBottom + mmToPt(0.5),
+    width: innerWidth,
+    height: bands.variance.yTop - bands.variance.yBottom - mmToPt(0.5),
+    color: bandColor,
+  });
+  ctx.page.drawText(t(varianceLine), {
+    x: innerX + mmToPt(2),
+    y: bands.variance.yBottom + mmToPt(2),
     size: TYPE.heroVariance,
-    font: fonts.regular,
+    font: fonts.bold,
     color: varianceColor,
   });
 
-  const supportY = heroTop - heroHeight + mmToPt(5);
   const supportCols = [
     { label: labels.budgetResultLabel, value: formatManagementPnlMeasureCell(budget, currency, locale) },
     { label: labels.actualResultLabel, value: formatManagementPnlMeasureCell(actual, currency, locale) },
   ];
-  const colWidth = (PAGE_W - MARGIN_X * 2 - mmToPt(10)) / 2;
+  const colWidth = innerWidth / 2;
   for (let i = 0; i < supportCols.length; i += 1) {
     const col = supportCols[i]!;
     const x = innerX + i * colWidth;
-    ctx.page.drawText(t(col.label), { x, y: supportY + mmToPt(4), size: TYPE.heroSupporting, font: fonts.regular, color: COLORS.muted });
-    ctx.page.drawText(t(col.value), { x, y: supportY, size: TYPE.heroSupporting + 1, font: fonts.bold, color: COLORS.text });
+    ctx.page.drawText(t(col.label), {
+      x,
+      y: bands.supporting.yTop - mmToPt(3),
+      size: TYPE.heroSupporting,
+      font: fonts.regular,
+      color: COLORS.muted,
+    });
+    ctx.page.drawText(t(col.value), {
+      x,
+      y: bands.supporting.yBottom + mmToPt(1),
+      size: TYPE.heroSupporting + 1,
+      font: fonts.bold,
+      color: COLORS.text,
+    });
   }
 
   ctx.y = heroTop - heroHeight - mmToPt(8);
@@ -495,12 +634,12 @@ function formatAttentionDetail(
   return { title: labels.attentionResultOnPlanTitle, detail: null };
 }
 
-function drawManagementInterpretation(ctx: LayoutContext): LayoutContext {
+function drawManagementAssessment(ctx: LayoutContext): LayoutContext {
   const { presentation, labels, fonts, locale } = ctx;
   const insights = presentation.pnl.comparativeIntelligence.attentionInsights;
   const currency = presentation.pnl.baseCurrency;
 
-  ctx.page.drawText(t(labels.managementAssessmentTitle.toUpperCase()), {
+  ctx.page.drawText(t(labels.managementAssessmentTitle), {
     x: MARGIN_X,
     y: ctx.y,
     size: TYPE.sectionHeading,
@@ -512,85 +651,133 @@ function drawManagementInterpretation(ctx: LayoutContext): LayoutContext {
   const overall = insights.find((i) => i.kind === "OVERALL_RESULT");
   if (overall && overall.kind === "OVERALL_RESULT") {
     const { title, detail } = formatAttentionDetail(overall, labels, currency, locale);
-    ctx.page.drawText(t(title), {
+    const panelTop = ctx.y;
+    const panelHeight = mmToPt(detail ? 16 : 10);
+    ctx.page.drawRectangle({
       x: MARGIN_X,
-      y: ctx.y,
+      y: panelTop - panelHeight,
+      width: PAGE_W - MARGIN_X * 2,
+      height: panelHeight,
+      color: COLORS.panelBg,
+      borderColor: COLORS.line,
+      borderWidth: 0.4,
+    });
+    ctx.page.drawText(t(title), {
+      x: MARGIN_X + mmToPt(3),
+      y: panelTop - mmToPt(5),
       size: TYPE.body + 1,
       font: fonts.bold,
       color: COLORS.text,
     });
-    ctx.y -= mmToPt(5);
     if (detail) {
-      ctx.y = drawWrappedTextBlock(
+      drawWrappedTextBlock(
         ctx.page,
         detail,
-        MARGIN_X,
-        ctx.y,
-        PAGE_W - MARGIN_X * 2,
+        MARGIN_X + mmToPt(3),
+        panelTop - mmToPt(9),
+        PAGE_W - MARGIN_X * 2 - mmToPt(6),
         TYPE.body,
         fonts.regular,
         COLORS.text,
         mmToPt(4.5),
       );
-      ctx.y -= mmToPt(2);
     }
+    ctx.y = panelTop - panelHeight - mmToPt(4);
   }
+
+  return ctx;
+}
+
+function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
+  const { presentation, labels, fonts, locale } = ctx;
+  const insights = presentation.pnl.comparativeIntelligence.attentionInsights;
+  const currency = presentation.pnl.baseCurrency;
 
   const fav = insights.find((i) => i.kind === "FAVORABLE_DRIVER");
-  if (fav && fav.kind === "FAVORABLE_DRIVER") {
-    const delta = formatManagementPnlVarianceDelta(fav.driver.comparison, currency, locale);
-    const line = `${fav.driver.name} ${delta}`;
-    ctx.page.drawText(t(labels.attentionLargestFavorableTitle), {
-      x: MARGIN_X,
-      y: ctx.y,
-      size: TYPE.body,
-      font: fonts.bold,
-      color: COLORS.text,
-    });
-    ctx.y -= mmToPt(4.5);
-    ctx.page.drawText(t(line), {
-      x: MARGIN_X + mmToPt(2),
-      y: ctx.y,
-      size: TYPE.body,
-      font: fonts.regular,
-      color: COLORS.favorable,
-    });
-    ctx.y -= mmToPt(6);
+  const unfav = insights.find((i) => i.kind === "UNFAVORABLE_DRIVER");
+  if (!fav && !unfav) {
+    return ctx;
   }
 
-  const unfav = insights.find((i) => i.kind === "UNFAVORABLE_DRIVER");
+  const cardWidth = (PAGE_W - MARGIN_X * 2 - mmToPt(4)) / 2;
+  const cardHeight = mmToPt(18);
+  const cardTop = ctx.y;
+  const cards: Array<{
+    x: number;
+    bg: RGB;
+    title: string;
+    name: string;
+    amountLine: string;
+    amountColor: RGB;
+  }> = [];
+
+  if (fav && fav.kind === "FAVORABLE_DRIVER") {
+    const delta = formatManagementPnlVarianceDelta(fav.driver.comparison, currency, locale);
+    cards.push({
+      x: MARGIN_X,
+      bg: COLORS.favorableBg,
+      title: labels.positiveDriverTitle,
+      name: fav.driver.name,
+      amountLine: delta,
+      amountColor: COLORS.favorable,
+    });
+  }
   if (unfav && unfav.kind === "UNFAVORABLE_DRIVER") {
     const delta = formatManagementPnlVarianceDelta(unfav.driver.comparison, currency, locale);
     const suffix =
       unfav.driver.canonicalSemantic === "EXPENSE" ? ` ${labels.attentionDriverExpenseSuffix}` : "";
-    const line = `${unfav.driver.name} ${delta}${suffix}`;
-    ctx.page.drawText(t(labels.attentionLargestUnfavorableTitle), {
-      x: MARGIN_X,
-      y: ctx.y,
+    cards.push({
+      x: MARGIN_X + (fav ? cardWidth + mmToPt(4) : 0),
+      bg: COLORS.unfavorableBg,
+      title: labels.negativeDriverTitle,
+      name: unfav.driver.name,
+      amountLine: `${delta}${suffix}`,
+      amountColor: COLORS.unfavorable,
+    });
+  }
+
+  for (const card of cards) {
+    ctx.page.drawRectangle({
+      x: card.x,
+      y: cardTop - cardHeight,
+      width: cardWidth,
+      height: cardHeight,
+      color: card.bg,
+      borderColor: COLORS.line,
+      borderWidth: 0.35,
+    });
+    ctx.page.drawText(t(card.title), {
+      x: card.x + mmToPt(3),
+      y: cardTop - mmToPt(5),
+      size: TYPE.driverTitle,
+      font: fonts.bold,
+      color: COLORS.muted,
+    });
+    ctx.page.drawText(t(card.name), {
+      x: card.x + mmToPt(3),
+      y: cardTop - mmToPt(9),
       size: TYPE.body,
       font: fonts.bold,
       color: COLORS.text,
     });
-    ctx.y -= mmToPt(4.5);
-    ctx.page.drawText(t(line), {
-      x: MARGIN_X + mmToPt(2),
-      y: ctx.y,
+    ctx.page.drawText(t(card.amountLine), {
+      x: card.x + mmToPt(3),
+      y: cardTop - mmToPt(13),
       size: TYPE.body,
       font: fonts.regular,
-      color: COLORS.unfavorable,
+      color: card.amountColor,
     });
-    ctx.y -= mmToPt(6);
   }
 
-  ctx.y -= mmToPt(2);
+  ctx.y = cardTop - cardHeight - mmToPt(6);
   return ctx;
 }
 
-function drawStatementSection(ctx: LayoutContext): LayoutContext {
+function drawStatementHeading(ctx: LayoutContext): LayoutContext {
   const { labels, fonts, presentation } = ctx;
   const currency = presentation.pnl.baseCurrency;
 
-  ctx.page.drawText(t(labels.statementSectionTitle.toUpperCase()), {
+  ctx.page.drawText(t(labels.statementSectionTitle), {
     x: MARGIN_X,
     y: ctx.y,
     size: TYPE.sectionHeading,
@@ -603,52 +790,174 @@ function drawStatementSection(ctx: LayoutContext): LayoutContext {
     { x: MARGIN_X, y: ctx.y, size: TYPE.heroSupporting, font: fonts.regular, color: COLORS.muted },
   );
   ctx.y -= mmToPt(7);
+  return ctx;
+}
 
-  ctx.page.drawText(t(labels.incomeSection.toUpperCase()), {
-    x: MARGIN_X,
-    y: ctx.y,
-    size: TYPE.body,
-    font: fonts.bold,
-    color: COLORS.text,
-  });
-  ctx.y -= mmToPt(5);
-  let next = drawTableHeader({ ...ctx, tableHeaderDrawnOnPage: false });
-  next = walkTree(next, presentation.pnl.incomeSection.nodes, 0);
-  next = drawAmountRow(next, labels.incomeSectionTotal, presentation.pnl.incomeSection.sectionTotal, {
-    bold: true,
-  });
-
-  next.y -= mmToPt(5);
-  next = ensureSpace(next, mmToPt(24));
-  next.page.drawText(t(labels.expenseSection.toUpperCase()), {
+function drawIncomeSection(ctx: LayoutContext): LayoutContext {
+  let next = ctx;
+  next.page.drawText(t(next.labels.incomeSection.toUpperCase()), {
     x: MARGIN_X,
     y: next.y,
     size: TYPE.body,
-    font: fonts.bold,
+    font: next.fonts.bold,
     color: COLORS.text,
   });
   next.y -= mmToPt(5);
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
-  next = walkTree(next, presentation.pnl.expenseSection.nodes, 0);
-  next = drawAmountRow(next, labels.expenseSectionTotal, presentation.pnl.expenseSection.sectionTotal, {
+  next = walkTree(next, next.presentation.pnl.incomeSection.nodes, 0);
+  next = drawAmountRow(next, next.labels.incomeSectionTotal, next.presentation.pnl.incomeSection.sectionTotal, {
     bold: true,
   });
+  next.y -= mmToPt(4);
+  return next;
+}
 
+function drawExpenseSectionAndResult(ctx: LayoutContext): LayoutContext {
+  let next = ensureSpace(ctx, mmToPt(24));
+  next.page.drawText(t(next.labels.expenseSection.toUpperCase()), {
+    x: MARGIN_X,
+    y: next.y,
+    size: TYPE.body,
+    font: next.fonts.bold,
+    color: COLORS.text,
+  });
+  next.y -= mmToPt(5);
+  next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
+  next = walkTree(next, next.presentation.pnl.expenseSection.nodes, 0);
+  next = drawAmountRow(next, next.labels.expenseSectionTotal, next.presentation.pnl.expenseSection.sectionTotal, {
+    bold: true,
+  });
   next.y -= mmToPt(4);
   next = ensureSpace(next, mmToPt(10));
-  next = drawAmountRow(next, labels.managementResult, presentation.pnl.managementResult, {
+  next = drawAmountRow(next, next.labels.managementResult, next.presentation.pnl.managementResult, {
     emphasis: true,
   });
-
   return next;
+}
+
+function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
+  const { presentation, labels, fonts, locale } = ctx;
+  const insights = presentation.pnl.comparativeIntelligence.attentionInsights;
+  const currency = presentation.pnl.baseCurrency;
+  const fav = insights.find((i) => i.kind === "FAVORABLE_DRIVER");
+  const unfav = insights.find((i) => i.kind === "UNFAVORABLE_DRIVER");
+  if (!fav && !unfav) return ctx;
+
+  let next = ensureSpace(ctx, mmToPt(22));
+  next.page.drawText(t(labels.majorDeviationsTitle), {
+    x: MARGIN_X,
+    y: next.y,
+    size: TYPE.sectionHeading,
+    font: fonts.bold,
+    color: COLORS.accent,
+  });
+  next.y -= mmToPt(6);
+
+  const rows: Array<{ name: string; delta: string; comment: string }> = [];
+  if (fav && fav.kind === "FAVORABLE_DRIVER") {
+    rows.push({
+      name: fav.driver.name,
+      delta: formatManagementPnlVarianceDelta(fav.driver.comparison, currency, locale),
+      comment: labels.deviationCommentFavorable,
+    });
+  }
+  if (unfav && unfav.kind === "UNFAVORABLE_DRIVER") {
+    rows.push({
+      name: unfav.driver.name,
+      delta: formatManagementPnlVarianceDelta(unfav.driver.comparison, currency, locale),
+      comment: labels.deviationCommentUnfavorable,
+    });
+  }
+
+  const colDeviation = MARGIN_X + mmToPt(52);
+  const colComment = MARGIN_X + mmToPt(82);
+  next.page.drawText(t(labels.columnPosition), {
+    x: MARGIN_X,
+    y: next.y,
+    size: TYPE.tableHeader,
+    font: fonts.bold,
+    color: COLORS.muted,
+  });
+  next.page.drawText(t(labels.columnDeviation), {
+    x: colDeviation,
+    y: next.y,
+    size: TYPE.tableHeader,
+    font: fonts.bold,
+    color: COLORS.muted,
+  });
+  next.page.drawText(t(labels.columnComment), {
+    x: colComment,
+    y: next.y,
+    size: TYPE.tableHeader,
+    font: fonts.bold,
+    color: COLORS.muted,
+  });
+  next.y -= mmToPt(5);
+
+  for (const row of rows) {
+    next = ensureSpace(next, mmToPt(6));
+    next.page.drawText(t(row.name), {
+      x: MARGIN_X,
+      y: next.y,
+      size: TYPE.body,
+      font: fonts.regular,
+      color: COLORS.text,
+    });
+    next.page.drawText(t(row.delta), {
+      x: colDeviation,
+      y: next.y,
+      size: TYPE.body,
+      font: fonts.regular,
+      color: COLORS.text,
+    });
+    next.y = drawWrappedTextBlock(
+      next.page,
+      row.comment,
+      colComment,
+      next.y,
+      PAGE_W - colComment - MARGIN_X,
+      TYPE.body,
+      fonts.regular,
+      COLORS.muted,
+      mmToPt(4),
+    );
+    next.y -= mmToPt(1);
+  }
+
+  next.y -= mmToPt(3);
+  return next;
+}
+
+function drawMetadataRow(
+  page: PDFPage,
+  fonts: Fonts,
+  key: string,
+  value: string,
+  y: number,
+): number {
+  page.drawText(t(key), {
+    x: MARGIN_X,
+    y,
+    size: TYPE.metadataKey,
+    font: fonts.bold,
+    color: COLORS.muted,
+  });
+  page.drawText(t(value), {
+    x: MARGIN_X + mmToPt(42),
+    y,
+    size: TYPE.metadata,
+    font: fonts.regular,
+    color: COLORS.text,
+  });
+  return y - mmToPt(4.5);
 }
 
 function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
   const identity = input.presentation.identity;
-  const next = ensureSpace(ctx, mmToPt(28));
+  const next = ensureSpace(ctx, mmToPt(32));
 
-  next.y -= mmToPt(4);
-  next.page.drawText(t(next.labels.publicationInfoTitle.toUpperCase()), {
+  next.y -= mmToPt(2);
+  next.page.drawText(t(next.labels.publicationInfoTitle), {
     x: MARGIN_X,
     y: next.y,
     size: TYPE.sectionHeading,
@@ -657,22 +966,68 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
   });
   next.y -= mmToPt(6);
 
-  const lines = [
-    next.labels.versionLabel.replace("{version}", String(identity.publicationVersion)),
-    `${next.labels.publishedAtLabel} ${formatDateTime(identity.publishedAt, next.locale)}`,
-    `${next.labels.pdfGeneratedAtLabel} ${formatDateTime(input.generatedAt, next.locale)}`,
-  ];
+  let y = next.y;
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataOrganisationLabel,
+    input.organisationName,
+    y,
+  );
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataFinanceYearLabel,
+    identity.financeYearName,
+    y,
+  );
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataReportTypeLabel,
+    next.labels.reportTypeSubtitle,
+    y,
+  );
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataVersionLabel,
+    String(identity.publicationVersion),
+    y,
+  );
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataPublishedAtLabel,
+    formatDateTime(identity.publishedAt, next.locale),
+    y,
+  );
+  y = drawMetadataRow(
+    next.page,
+    next.fonts,
+    next.labels.metadataPdfGeneratedAtLabel,
+    formatDateTime(input.generatedAt, next.locale),
+    y,
+  );
 
-  for (const line of lines) {
-    next.page.drawText(t(line), {
-      x: MARGIN_X,
-      y: next.y,
-      size: TYPE.metadata,
-      font: next.fonts.regular,
-      color: COLORS.muted,
-    });
-    next.y -= mmToPt(4.5);
-  }
+  next.y = y - mmToPt(2);
+  return next;
+}
+
+function drawPublicationSnapshotNotice(ctx: LayoutContext): LayoutContext {
+  const next = ensureSpace(ctx, mmToPt(14));
+  next.y = drawWrappedTextBlock(
+    next.page,
+    next.labels.snapshotImmutabilityNotice,
+    MARGIN_X,
+    next.y,
+    PAGE_W - MARGIN_X * 2,
+    TYPE.metadata,
+    next.fonts.regular,
+    COLORS.muted,
+    mmToPt(4),
+  );
+  next.y -= mmToPt(2);
   return next;
 }
 
@@ -697,7 +1052,23 @@ export async function generateFinancePublicationPdf(
   pdfDoc.setCreationDate(input.generatedAt);
   pdfDoc.setModificationDate(input.generatedAt);
 
-  const footerLeft = `${input.organisationName} · ${input.labels.financialReportHeading.replace("{year}", yearLabel)} · ${input.labels.versionLabel.replace("{version}", String(identity.publicationVersion))}`;
+  let tenantLogo: PublicationPdfEmbeddedImage | null = null;
+  if (input.organisationLogoBytes && input.organisationLogoMime) {
+    const embedded = await embedPublicationPdfImage(
+      pdfDoc,
+      input.organisationLogoBytes,
+      input.organisationLogoMime,
+    );
+    if (embedded) {
+      const fitted = fitImageWithinBounds(embedded.width, embedded.height, mmToPt(22), mmToPt(18));
+      tenantLogo = { image: embedded, widthPt: fitted.widthPt, heightPt: fitted.heightPt };
+    }
+  }
+
+  const sceMark = await loadScePublicationMark(pdfDoc, mmToPt(16), mmToPt(4.5));
+
+  const footerPrimary = `${input.organisationName} · ${input.labels.financialReportHeading.replace("{year}", yearLabel)} · ${input.labels.reportTypeSubtitle} · ${input.labels.versionLabel.replace("{version}", String(identity.publicationVersion))}`;
+  const footerPublishedLine = `${input.labels.publishedAtLabel}: ${formatDateTime(identity.publishedAt, input.formattingLocale)}`;
 
   const firstPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
   let ctx: LayoutContext = {
@@ -707,20 +1078,31 @@ export async function generateFinancePublicationPdf(
     locale: input.formattingLocale,
     labels: input.labels,
     presentation: input.presentation,
+    organisationName: input.organisationName,
     y: PAGE_H - MARGIN_TOP,
     pageIndex: 1,
     totalPages: 1,
-    footerLeft,
+    footerPrimary,
+    footerPublishedLine,
     tableHeaderDrawnOnPage: false,
+    tenantLogo,
+    sceMark,
+    yearLabel,
   };
 
-  ctx = drawMasthead(ctx, input);
-  ctx = drawHeroConclusion(ctx);
-  ctx = ensureSpace(ctx, mmToPt(40));
-  ctx = drawManagementInterpretation(ctx);
-  ctx = ensureSpace(ctx, mmToPt(50));
-  ctx = drawStatementSection(ctx);
+  ctx = drawPublicationMasthead(ctx, input);
+  ctx = drawHeroFinancialConclusion(ctx);
+  ctx = ensureSpace(ctx, mmToPt(36));
+  ctx = drawManagementAssessment(ctx);
+  ctx = ensureSpace(ctx, mmToPt(22));
+  ctx = drawVarianceDrivers(ctx);
+  ctx = ensureSpace(ctx, mmToPt(30));
+  ctx = drawStatementHeading(ctx);
+  ctx = drawIncomeSection(ctx);
+  ctx = drawExpenseSectionAndResult(ctx);
+  ctx = drawMajorDeviations(ctx);
   ctx = drawPublicationMetadata(ctx, input);
+  ctx = drawPublicationSnapshotNotice(ctx);
 
   const totalPages = pdfDoc.getPageCount();
   for (let i = 0; i < totalPages; i += 1) {

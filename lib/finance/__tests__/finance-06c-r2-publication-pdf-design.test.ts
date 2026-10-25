@@ -6,7 +6,10 @@ import { derivePublicationVarianceDriversFromSemantic } from "@/lib/finance/pres
 import { generateFinancePublicationPdf } from "@/lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf";
 import { buildFinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import { buildFinancePublicationSnapshotV1 } from "@/lib/finance/publishing/build-finance-publication-snapshot-v1";
-import { FINANCE_06C_R2_IMPLEMENTATION } from "@/lib/finance/publishing/finance-publication-artifact-contract";
+import {
+  FINANCE_06C_R2_IMPLEMENTATION,
+  FINANCE_06C_R3_IMPLEMENTATION,
+} from "@/lib/finance/publishing/finance-publication-artifact-contract";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import {
   createPublicationMockStore,
@@ -96,7 +99,25 @@ const deLabels = buildFinancePublicationPdfLabels({
       pdfManagementAssessmentTitle: "Management-Einschätzung",
       pdfStatementSectionTitle: "Erfolgsrechnung",
       pdfAmountsInCurrency: "Beträge in {currency}",
-      pdfColumnVarianceVsBudget: "Δ Budget",
+      pdfColumnVarianceVsBudget: "Abw. Budget",
+      pdfExpectedResultLabel: "Erwartetes Ergebnis (Prognose)",
+      pdfBudgetResultLabel: "Budgetiertes Ergebnis",
+      pdfActualToDateLabel: "Ist (bisher)",
+      pdfPositiveDriverLabel: "Positiver Treiber",
+      pdfNegativeDriverLabel: "Negativer Treiber",
+      pdfMajorDeviationsTitle: "Wesentliche Abweichungen",
+      pdfDeviationCommentFavorable: "Günstige Abweichung gegenüber Budget",
+      pdfDeviationCommentUnfavorable: "Ungünstige Abweichung gegenüber Budget",
+      pdfMetadataOrganisationLabel: "Organisation",
+      pdfMetadataFinanceYearLabel: "Finanzjahr",
+      pdfMetadataReportTypeLabel: "Berichtstyp",
+      pdfMetadataVersionLabel: "Version",
+      pdfMetadataPublishedAtLabel: "Veröffentlicht am",
+      pdfMetadataPdfGeneratedAtLabel: "PDF erstellt am",
+      pdfSnapshotImmutabilityNotice: "Snapshot-Hinweis",
+      pdfColumnPosition: "Position",
+      pdfColumnDeviation: "Abweichung",
+      pdfColumnComment: "Kommentar",
       pdfCreatedWithSportClubEvo: "Erstellt mit SportClubEvo",
       pdfPageOf: "Seite {page} / {total}",
     };
@@ -127,8 +148,6 @@ const deLabels = buildFinancePublicationPdfLabels({
       attentionResultOnPlanTitle: "Im Plan",
       attentionResultFavorableDetail: "Die aktuelle Prognose liegt {amount} über dem genehmigten Budget.",
       attentionResultUnfavorableDetail: "Die aktuelle Prognose liegt {amount} unter dem genehmigten Budget.",
-      attentionLargestFavorableTitle: "Grösste positive Abweichung",
-      attentionLargestUnfavorableTitle: "Grösste negative Abweichung",
       attentionDriverExpenseSuffix: "Ausgaben",
     };
     let out = map[k] ?? k;
@@ -167,7 +186,25 @@ const enLabels = buildFinancePublicationPdfLabels({
       pdfManagementAssessmentTitle: "Management assessment",
       pdfStatementSectionTitle: "Income statement",
       pdfAmountsInCurrency: "Amounts in {currency}",
-      pdfColumnVarianceVsBudget: "Δ Budget",
+      pdfColumnVarianceVsBudget: "Var. Budget",
+      pdfExpectedResultLabel: "Expected result (forecast)",
+      pdfBudgetResultLabel: "Budgeted result",
+      pdfActualToDateLabel: "Actual (YTD)",
+      pdfPositiveDriverLabel: "Positive driver",
+      pdfNegativeDriverLabel: "Negative driver",
+      pdfMajorDeviationsTitle: "Material variances",
+      pdfDeviationCommentFavorable: "Favorable variance vs budget",
+      pdfDeviationCommentUnfavorable: "Unfavorable variance vs budget",
+      pdfMetadataOrganisationLabel: "Organisation",
+      pdfMetadataFinanceYearLabel: "Financial year",
+      pdfMetadataReportTypeLabel: "Report type",
+      pdfMetadataVersionLabel: "Version",
+      pdfMetadataPublishedAtLabel: "Published on",
+      pdfMetadataPdfGeneratedAtLabel: "PDF generated on",
+      pdfSnapshotImmutabilityNotice: "Snapshot notice",
+      pdfColumnPosition: "Position",
+      pdfColumnDeviation: "Variance",
+      pdfColumnComment: "Comment",
       pdfCreatedWithSportClubEvo: "Created with SportClubEvo",
       pdfPageOf: "Page {page} / {total}",
     })[k as "pdfFinancialReportHeading"] ?? k,
@@ -187,8 +224,6 @@ const enLabels = buildFinancePublicationPdfLabels({
       attentionResultOnPlanTitle: "On plan",
       attentionResultFavorableDetail: "Forecast is {amount} above budget.",
       attentionResultUnfavorableDetail: "Forecast is {amount} below budget.",
-      attentionLargestFavorableTitle: "Largest favorable variance",
-      attentionLargestUnfavorableTitle: "Largest unfavorable variance",
       attentionDriverExpenseSuffix: "expense",
     })[k as "expectedResult"] ?? k,
   actuals: (k) =>
@@ -265,8 +300,9 @@ function buildLargeSyntheticPnl(): FinanceManagementPnlReadModel {
 
 describe("FIN-06C-R2 publication PDF design contract", () => {
   it("records R2 implementation status", () => {
-    expect(FINANCE_06C_R2_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_06C_R2_IMPLEMENTATION.status).toBe("IMPLEMENTED");
     expect(FINANCE_06C_R2_IMPLEMENTATION.predecessor).toBe("FIN-06C-R1");
+    expect(FINANCE_06C_R3_IMPLEMENTATION.status).toBe("IMPLEMENTED_PO_UAT_PENDING");
   });
 });
 
@@ -297,12 +333,13 @@ describe("FIN-06C-R2 PDF semantic output", () => {
     expect(text1).toContain("FC ALLSCHWIL");
     expect(text1).toContain("Finanzbericht 2026");
     expect(text1).toContain("Management-Erfolgsrechnung");
-    expect(text1.toUpperCase()).toContain("MANAGEMENT-EINSCH");
+    expect(text1).toContain("Management-Einschätzung");
     expect(text1).toContain("Mitgliedsbeitr");
-    expect(text1).toContain("Grösste positive Abweichung");
-    expect(text1).toContain("Grösste negative Abweichung");
+    expect(text1).toContain("Positiver Treiber");
+    expect(text1).toContain("Negativer Treiber");
     expect(text1).toContain("Beträge in CHF");
-    expect(text1.toUpperCase()).toContain("PUBLIKATIONSINFORMATIONEN");
+    expect(text1).toContain("Abw. Budget");
+    expect(text1).toContain("Publikationsinformationen");
     expect(text1).toContain("Erstellt mit SportClubEvo");
 
     const v1Amount = formatFinanceManagementMoneyMinor(
@@ -369,7 +406,7 @@ describe("FIN-06C-R2 PDF semantic output", () => {
     const text = await extractPdfText(pdf.pdfBytes);
     expect(text).toContain("Management income statement");
     expect(text).toContain("Amounts in EUR");
-    expect(text.toUpperCase()).toContain("MANAGEMENT ASSESSMENT");
+    expect(text).toContain("Management assessment");
   });
 
   it("multi-page synthetic hierarchy paginates with page x / y", async () => {
