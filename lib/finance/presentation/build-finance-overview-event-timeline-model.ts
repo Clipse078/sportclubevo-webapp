@@ -12,10 +12,7 @@ import {
   type FinanceOverviewEventTimelineAxisTick,
   type FinanceOverviewEventTimelineYearBand,
 } from "@/lib/finance/presentation/finance-overview-event-timeline-axis";
-import {
-  timelinePositionFraction,
-  timelineSpanFractions,
-} from "@/lib/finance/forecast/finance-forecast-timing-visual-layout";
+import { timelineSpanFractions } from "@/lib/finance/forecast/finance-forecast-timing-visual-layout";
 import type {
   FinanceForecastTimingVisualModel,
   FinanceTimingVisualEventMarker,

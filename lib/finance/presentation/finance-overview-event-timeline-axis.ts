@@ -59,6 +59,7 @@ export function buildFinanceOverviewEventTimelineAxis(input: {
       xFraction: fraction,
       monthIndex: d.getUTCMonth(),
       year: d.getUTCFullYear(),
+      alignment: "center",
     });
     cursor = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
   }
