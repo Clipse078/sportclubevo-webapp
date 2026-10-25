@@ -13,6 +13,7 @@ import { buildFinanceManagementOverviewReadModel } from "@/lib/finance/reporting
 import { buildFinanceManagementPnlReadModel } from "@/lib/finance/reporting/build-finance-management-pnl-read-model";
 import {
   FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE,
+  FINANCE_VISUAL_BENCHMARK,
   FINANCE_05H_IMPLEMENTATION,
   SCE_FINANCE_09_LIQUIDITY_VISUAL_DESIGN_NOTE,
   SCE_FINANCE_REPORTING_05H_ARCHITECTURE_LOCKS,
@@ -452,6 +453,20 @@ describe("FIN-05H release hardening & FIN-05 closure", () => {
     expect(
       FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE.discreteExpectedMovements.forbiddenImplications,
     ).toContain("IMPLY_RUNNING_BALANCE");
+    expect(FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE.expectedFinancialMovementsQuestion).toBe(
+      "What financial movements are expected, and when?",
+    );
+    expect(FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE.doNotConnectEventsWithLine).toBe(true);
+    expect(
+      FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE.doNotPresentEventTimelineAsLiquidity,
+    ).toBe(true);
+  });
+
+  it("Y2 — FINANCE_VISUAL_BENCHMARK documents Szenarien/Zeitplanung design grammar for FIN-06+", () => {
+    expect(FINANCE_VISUAL_BENCHMARK.referenceWorkspaces).toEqual(["SCENARIOS", "ZEITPLANUNG"]);
+    expect(FINANCE_VISUAL_BENCHMARK.designGrammarNotUniversalPageTemplate).toBe(true);
+    expect(FINANCE_VISUAL_BENCHMARK.fin05hRedesignForbidden).toBe(true);
+    expect(SCE_FINANCE_REPORTING_05H_ARCHITECTURE_LOCKS.financeVisualBenchmarkDocumented).toBe(true);
   });
 
   it("Z — management P&L is not statutory accounting; reporting is not source of truth", () => {
@@ -481,8 +496,8 @@ describe("FIN-05H release hardening & FIN-05 closure", () => {
   });
 
   it("AC — FIN-05H implementation locks and documentation paths are registered", () => {
-    expect(FINANCE_05H_IMPLEMENTATION.fin05hStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
-    expect(FINANCE_05H_IMPLEMENTATION.fin05ProgrammeStatus).toBe("IMPLEMENTED_PO_UAT_PENDING");
+    expect(FINANCE_05H_IMPLEMENTATION.fin05hStatus).toBe("COMPLETE_PO_UAT_PASS");
+    expect(FINANCE_05H_IMPLEMENTATION.fin05ProgrammeStatus).toBe("COMPLETE_RELEASE_CLOSED");
     expect(FINANCE_05H_IMPLEMENTATION.fin06Status).toBe("NOT_STARTED");
     const doc = readFileSync(
       join(process.cwd(), FINANCE_05H_IMPLEMENTATION.releaseHardeningDoc),

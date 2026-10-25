@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05G COMPLETE** (05G PO UAT PASS — PR **#914** → **STAGE**); **FIN-05H IMPLEMENTED / PO UAT PENDING** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md); **FIN-05 programme overall: IMPLEMENTED / PO UAT PENDING** (do not mark COMPLETE before PO sign-off); **FIN-06 NOT STARTED** |
+| **Status** | **FIN-05A–05H COMPLETE / PO UAT PASS** (05H closure PR **#915** → **STAGE** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md)); **FIN-05 programme: COMPLETE / RELEASE CLOSED**; **FIN-06 NOT STARTED** |
 | **Branch** | FIN-05E: `cursor/sce-finance-05e-reporting-workspace-drilldown-5fa5` — see [`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
@@ -272,6 +272,14 @@ Restrained **decision-oriented narrative** for Finance Übersicht (implementatio
 
 Evaluate existing Übersicht before locking layout. Prefer **one coherent narrative** over card soup.
 
+### FINANCE_VISUAL_BENCHMARK (FIN-05H — design direction for FIN-06+)
+
+Product Owner identified **Szenarien** and **Zeitplanung** as the preferred visual direction for future Finance evolution. Code lock: `FINANCE_VISUAL_BENCHMARK` in `finance-reporting-intelligence-architecture-contract.ts`.
+
+Standardise **design grammar** (spacious composition, typography-led hierarchy, restrained chrome, dark translucent working surfaces, progressive disclosure, calm density) — **not** a universal page template. Different workspaces have different jobs (e.g. Zeitplanung may foreground remaining expected movement; Finanzstruktur must not receive an artificial hero KPI; Reporting keeps analytical density; Budget keeps governance context).
+
+Tied to: *COMPLEXITY SHOULD EXIST IN THE SYSTEM, NOT IN THE USER'S HEAD.* FIN-05H does **not** perform Finance-wide visual refinement.
+
 ---
 
 ## 13. Explainability
@@ -447,8 +455,8 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**FIN-05H** release hardening implemented — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md). Programme awaits **Product Owner final FIN-05 UAT**. **FIN-06** not started.
+**FIN-05H** release hardening **COMPLETE / PO UAT PASS** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md). **FIN-05 programme COMPLETE / RELEASE CLOSED.** **FIN-06** not started.
 
 ### Expected movement visualization (FIN-05H refinement)
 
-Visualization follows the **financial question**, not a fixed widget type. Discrete expected movements may use timeline, calendar, period movement profile, or event list — provided semantics stay honest (no fake phasing, liquidity line, or recognition inference). Code lock: `FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE` in `finance-reporting-intelligence-architecture-contract.ts`.
+**Question:** *What financial movements are expected, and when?* **Current visual:** discrete expected-event timeline. Do not connect events with a line, imply liquidity, or fake monthly phasing. Visualization follows the **financial question**, not a fixed widget type. Code lock: `FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE`. Liquidity over time remains **FIN-09**.

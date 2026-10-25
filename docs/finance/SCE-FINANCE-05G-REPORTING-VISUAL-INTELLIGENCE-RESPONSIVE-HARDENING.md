@@ -198,4 +198,4 @@ Component coverage: `FinanceManagementPnlPanel.test.tsx` (comparative summary + 
 
 ## Next
 
-**FIN-05H** — Release hardening & closure (**NEXT / NOT STARTED**). Do not conflate FIN-05H scope with FIN-05G visual work.
+**FIN-05H** — Release hardening & closure (**COMPLETE / PO UAT PASS** — PR **#915** → **STAGE**). **FIN-05 programme COMPLETE / RELEASE CLOSED.** **FIN-06** not started.

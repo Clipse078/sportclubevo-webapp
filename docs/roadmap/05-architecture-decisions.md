@@ -919,7 +919,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 
 ## ADR-038 — Financial Reporting & Intelligence (FIN-05)
 
-**Status:** Accepted — **FIN-05A architecture COMPLETE** (reporting intelligence contract + programme doc; implementation packages **05B–05H** not started)
+**Status:** Accepted — **FIN-05 COMPLETE / RELEASE CLOSED** (FIN-05A–05H merged to **STAGE**; PO UAT PASS; closure PR **#915**; **FIN-06** not started)
 
 ### Context
 
