@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05G COMPLETE** (05G PO UAT PASS — PR **#914** → **STAGE** — [`SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md`](./SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md)); **FIN-05H NEXT / NOT STARTED** |
+| **Status** | **FIN-05A–05G COMPLETE** (05G PO UAT PASS — PR **#914** → **STAGE**); **FIN-05H IMPLEMENTED / PO UAT PENDING** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md); **FIN-05 programme overall: IMPLEMENTED / PO UAT PENDING** (do not mark COMPLETE before PO sign-off); **FIN-06 NOT STARTED** |
 | **Branch** | FIN-05E: `cursor/sce-finance-05e-reporting-workspace-drilldown-5fa5` — see [`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
@@ -447,4 +447,8 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**Next package: FIN-05H** — Release Hardening & Closure. FIN-05G visual intelligence complete via PR **#914** → **STAGE** ([`SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md`](./SCE-FINANCE-05G-REPORTING-VISUAL-INTELLIGENCE-RESPONSIVE-HARDENING.md)).
+**FIN-05H** release hardening implemented — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md). Programme awaits **Product Owner final FIN-05 UAT**. **FIN-06** not started.
+
+### Expected movement visualization (FIN-05H refinement)
+
+Visualization follows the **financial question**, not a fixed widget type. Discrete expected movements may use timeline, calendar, period movement profile, or event list — provided semantics stay honest (no fake phasing, liquidity line, or recognition inference). Code lock: `FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE` in `finance-reporting-intelligence-architecture-contract.ts`.

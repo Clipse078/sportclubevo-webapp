@@ -58,13 +58,13 @@ FIN-05G improves how existing Finance intelligence is perceived, prioritised, co
 | **Reporting comparative summary** | Expected result and forecast-vs-budget variance primary; approved budget and actual supporting context |
 | **Management P&L** | Canonical FIN-05C/F semantics — columns **Budget · Actual · Current Forecast · Variance**; financial meaning unchanged |
 | **Investigation** | FIN-05E account/group investigation remains the single drill-down mechanism |
-| **Expected financial movements** | **Discrete event timeline** — not a liquidity graph (see boundary below) |
+| **Expected financial movements** | **Compact discrete event timeline** (current implementation) — not a liquidity graph; future period movement profiles allowed when semantically honest (FIN-05H principle) |
 
 ## Expected financial movements vs liquidity (architectural boundary)
 
-**EXPECTED FINANCIAL EVENT TIMELINE ≠ LIQUIDITY GRAPH.**
+**EXPECTED FINANCIAL MOVEMENTS ≠ LIQUIDITY GRAPH.**
 
-The Finance Overview timeline answers: *What financial movements are expected, and when?*
+The Finance Overview timeline answers: *What financial movements are expected, and when?* FIN-05H clarifies that this timeline is the **current** honest presentation — not the only permitted future form for discrete expected movements (see `FINANCE_EXPECTED_MOVEMENT_VISUALIZATION_PRINCIPLE`).
 
 | Allowed | Forbidden in FIN-05G / Overview |
 | --- | --- |
