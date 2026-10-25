@@ -67,6 +67,9 @@ type FinanceManagementPnlPanelLabels = {
   favorabilityOnPlan: string;
   partialSourcesHint: string;
   unassignedHint: string;
+  investigateAccount: string;
+  investigateGroup: string;
+  exceptionsTitle: string;
 };
 
 type FinanceManagementPnlPanelProps = {
@@ -74,6 +77,11 @@ type FinanceManagementPnlPanelProps = {
   formattingLocale: string;
   canConfigureStructure: boolean;
   labels: FinanceManagementPnlPanelLabels;
+  focusedAccountId?: string | null;
+  focusedGroupId?: string | null;
+  onInvestigateAccount?: (accountId: string) => void;
+  onInvestigateGroup?: (groupId: string) => void;
+  onInvestigateDriver?: (driver: { kind: "ACCOUNT" | "REPORTING_GROUP"; id: string }) => void;
 };
 
 function favorabilityLabel(
@@ -188,17 +196,38 @@ function AccountRow(props: {
   locale: string;
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
+  focused?: boolean;
+  onInvestigate?: (accountId: string) => void;
 }) {
+  const canInvestigate = Boolean(props.onInvestigate);
   return (
-    <tr className="border-t border-[var(--sce-surface-border-subtle)]/60" data-finance-pnl-row="account">
+    <tr
+      className={cn(
+        "border-t border-[var(--sce-surface-border-subtle)]/60",
+        props.focused && "bg-[var(--sce-surface-dense)]/80",
+      )}
+      data-finance-pnl-row="account"
+      data-finance-pnl-account-id={props.row.accountId}
+    >
       <td
         className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "pl-8")}
         style={{ paddingLeft: `${16 + props.depth * 12}px` }}
       >
-        <span className="font-medium text-[var(--foreground)]">{props.row.name}</span>
-        {props.row.lifecycle === "ARCHIVED" ? (
-          <span className="ml-2 text-xs text-[var(--muted)]">({props.labels.archivedAccount})</span>
-        ) : null}
+        <div className="flex items-start gap-2">
+          <span className="font-medium text-[var(--foreground)]">{props.row.name}</span>
+          {props.row.lifecycle === "ARCHIVED" ? (
+            <span className="text-xs text-[var(--muted)]">({props.labels.archivedAccount})</span>
+          ) : null}
+          {canInvestigate ? (
+            <button
+              type="button"
+              className="ml-auto shrink-0 rounded-md px-2 py-0.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+              onClick={() => props.onInvestigate?.(props.row.accountId)}
+            >
+              {props.labels.investigateAccount}
+            </button>
+          ) : null}
+        </div>
       </td>
       <MeasureCells
         approvedBudget={props.row.approvedBudget}
@@ -221,6 +250,10 @@ function GroupBlock(props: {
   locale: string;
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
+  focusedAccountId?: string | null;
+  focusedGroupId?: string | null;
+  onInvestigateAccount?: (accountId: string) => void;
+  onInvestigateGroup?: (groupId: string) => void;
 }) {
   const accountChildren = props.node.children.filter((c) => c.kind === "account");
   const groupChildren = props.node.children.filter((c) => c.kind === "reporting_group");
@@ -228,7 +261,14 @@ function GroupBlock(props: {
 
   return (
     <>
-      <tr className="border-t border-[var(--sce-surface-border-subtle)]" data-finance-pnl-row="group">
+      <tr
+        className={cn(
+          "border-t border-[var(--sce-surface-border-subtle)]",
+          props.focusedGroupId === props.node.groupId && "bg-[var(--sce-surface-dense)]/80",
+        )}
+        data-finance-pnl-row="group"
+        data-finance-pnl-group-id={props.node.groupId}
+      >
         <td
           className={FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS}
           style={{ paddingLeft: `${16 + props.depth * 12}px` }}
@@ -251,6 +291,15 @@ function GroupBlock(props: {
               <span className="inline-block w-6 shrink-0" aria-hidden />
             )}
             <span className="font-semibold text-[var(--foreground)]">{props.node.name}</span>
+            {props.onInvestigateGroup ? (
+              <button
+                type="button"
+                className="ml-auto shrink-0 rounded-md px-2 py-0.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                onClick={() => props.onInvestigateGroup?.(props.node.groupId)}
+              >
+                {props.labels.investigateGroup}
+              </button>
+            ) : null}
           </div>
         </td>
         <MeasureCells
@@ -274,6 +323,8 @@ function GroupBlock(props: {
               locale={props.locale}
               labels={props.labels}
               actualHeaderMode={props.actualHeaderMode}
+              focused={props.focusedAccountId === child.accountId}
+              onInvestigate={props.onInvestigateAccount}
             />
           ))
         : null}
@@ -287,6 +338,10 @@ function GroupBlock(props: {
             locale={props.locale}
             labels={props.labels}
             actualHeaderMode={props.actualHeaderMode}
+            focusedAccountId={props.focusedAccountId}
+            focusedGroupId={props.focusedGroupId}
+            onInvestigateAccount={props.onInvestigateAccount}
+            onInvestigateGroup={props.onInvestigateGroup}
           />
         ) : null,
       )}
@@ -300,6 +355,8 @@ function UnassignedBlock(props: {
   locale: string;
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
+  focusedAccountId?: string | null;
+  onInvestigateAccount?: (accountId: string) => void;
 }) {
   return (
     <FinanceWorkspaceDisclosure
@@ -322,6 +379,8 @@ function UnassignedBlock(props: {
               locale={props.locale}
               labels={props.labels}
               actualHeaderMode={props.actualHeaderMode}
+              focused={props.focusedAccountId === account.accountId}
+              onInvestigate={props.onInvestigateAccount}
             />
           ))}
         </tbody>
@@ -339,6 +398,10 @@ function SectionTable(props: {
   labels: FinanceManagementPnlPanelLabels;
   actualHeaderMode: "annual" | "ytd";
   actualColumnLabel: string;
+  focusedAccountId?: string | null;
+  focusedGroupId?: string | null;
+  onInvestigateAccount?: (accountId: string) => void;
+  onInvestigateGroup?: (groupId: string) => void;
 }) {
   return (
     <section className="min-w-0 space-y-2" data-finance-pnl-section={props.section.semantic}>
@@ -383,6 +446,10 @@ function SectionTable(props: {
                     locale={props.locale}
                     labels={props.labels}
                     actualHeaderMode={props.actualHeaderMode}
+                    focusedAccountId={props.focusedAccountId}
+                    focusedGroupId={props.focusedGroupId}
+                    onInvestigateAccount={props.onInvestigateAccount}
+                    onInvestigateGroup={props.onInvestigateGroup}
                   />
                 );
               }
@@ -396,6 +463,8 @@ function SectionTable(props: {
                     locale={props.locale}
                     labels={props.labels}
                     actualHeaderMode={props.actualHeaderMode}
+                    focused={props.focusedAccountId === node.accountId}
+                    onInvestigate={props.onInvestigateAccount}
                   />
                 );
               }
@@ -434,6 +503,8 @@ function SectionTable(props: {
             locale={props.locale}
             labels={props.labels}
             actualHeaderMode={props.actualHeaderMode}
+            focusedAccountId={props.focusedAccountId}
+            onInvestigateAccount={props.onInvestigateAccount}
           />
         ))}
     </section>
@@ -445,6 +516,11 @@ export function FinanceManagementPnlPanel({
   formattingLocale,
   canConfigureStructure,
   labels,
+  focusedAccountId = null,
+  focusedGroupId = null,
+  onInvestigateAccount,
+  onInvestigateGroup,
+  onInvestigateDriver,
 }: FinanceManagementPnlPanelProps) {
   const actualHeaderMode = model.actualGrain === "YTD" ? "ytd" : "annual";
 
@@ -576,12 +652,14 @@ export function FinanceManagementPnlPanel({
         <section
           className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "space-y-3")}
           data-finance-pnl-drivers
+          data-finance-pnl-exceptions
           aria-labelledby="finance-pnl-drivers-title"
         >
           <div>
             <h3 id="finance-pnl-drivers-title" className="text-sm font-semibold text-[var(--foreground)]">
-              {labels.driversTitle}
+              {labels.exceptionsTitle}
             </h3>
+            <p className="sr-only">{labels.driversTitle}</p>
             {labels.driversSubtitle ? (
               <p className="mt-0.5 text-xs text-[var(--muted)]">{labels.driversSubtitle}</p>
             ) : null}
@@ -592,7 +670,19 @@ export function FinanceManagementPnlPanel({
               <ul className="mt-1 space-y-1 text-sm">
                 {model.topFavourableDrivers.map((driver) => (
                   <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
-                    <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    {onInvestigateDriver ? (
+                      <button
+                        type="button"
+                        className="truncate text-left text-[var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        onClick={() =>
+                          onInvestigateDriver({ kind: driver.kind, id: driver.id })
+                        }
+                      >
+                        {driver.name}
+                      </button>
+                    ) : (
+                      <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    )}
                     <span
                       className={cn(
                         "shrink-0 font-medium",
@@ -617,7 +707,19 @@ export function FinanceManagementPnlPanel({
               <ul className="mt-1 space-y-1 text-sm">
                 {model.topUnfavourableDrivers.map((driver) => (
                   <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
-                    <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    {onInvestigateDriver ? (
+                      <button
+                        type="button"
+                        className="truncate text-left text-[var(--foreground)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                        onClick={() =>
+                          onInvestigateDriver({ kind: driver.kind, id: driver.id })
+                        }
+                      >
+                        {driver.name}
+                      </button>
+                    ) : (
+                      <span className="truncate text-[var(--foreground)]">{driver.name}</span>
+                    )}
                     <span
                       className={cn(
                         "shrink-0 font-medium",
@@ -651,6 +753,10 @@ export function FinanceManagementPnlPanel({
           labels={labels}
           actualHeaderMode={actualHeaderMode}
           actualColumnLabel={actualColumnLabel}
+          focusedAccountId={focusedAccountId}
+          focusedGroupId={focusedGroupId}
+          onInvestigateAccount={onInvestigateAccount}
+          onInvestigateGroup={onInvestigateGroup}
         />
         <SectionTable
           title={labels.expenseSection}
@@ -661,6 +767,10 @@ export function FinanceManagementPnlPanel({
           labels={labels}
           actualHeaderMode={actualHeaderMode}
           actualColumnLabel={actualColumnLabel}
+          focusedAccountId={focusedAccountId}
+          focusedGroupId={focusedGroupId}
+          onInvestigateAccount={onInvestigateAccount}
+          onInvestigateGroup={onInvestigateGroup}
         />
 
         <div className={FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS} data-finance-pnl-result>

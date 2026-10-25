@@ -130,5 +130,6 @@ Minor visual refinements identified during FIN-05D UAT belong to **FIN-05G**, no
 
 ## Next
 
-- **FIN-05E** — Reporting workspace drill-down (**NEXT** — not started)
+- **FIN-05E** — Reporting workspace drill-down (**IMPLEMENTED** — PO UAT pending)
+- **FIN-05F** — Comparative intelligence (**NEXT** — not started)
 - **FIN-05F–05H** — not started
