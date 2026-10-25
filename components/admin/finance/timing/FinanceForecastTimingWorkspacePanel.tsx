@@ -12,6 +12,12 @@ import { FinanceExpectedFinancialEventDeleteDialog } from "@/components/admin/fi
 import { cn } from "@/lib/cn";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import {
+  deriveFinanceTimingMovementComposition,
+  formatFinanceDirectionalMovementMinor,
+  formatFinanceNetMovementMinor,
+  financeMovementDirectionFromAccountType,
+} from "@/lib/finance/presentation/finance-directional-movement-presentation";
+import {
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_FORECAST_WORKSPACE_STACK_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
@@ -67,6 +73,26 @@ function formatAmount(
   return formatFinanceManagementPlanningMinor(amountMinor, currency, locale);
 }
 
+function formatMovementAmount(
+  amountMinor: number,
+  accountType: "INCOME" | "EXPENSE",
+  currency: string | null,
+  locale: string,
+): string {
+  return formatFinanceDirectionalMovementMinor({
+    amountMinor,
+    direction: financeMovementDirectionFromAccountType(accountType),
+    currency,
+    formattingLocale: locale,
+  });
+}
+
+function movementAmountClassName(accountType: "INCOME" | "EXPENSE"): string {
+  return accountType === "INCOME"
+    ? "text-[var(--sce-success)]"
+    : "text-[var(--sce-danger)]";
+}
+
 function accountIssueKey(account: FinanceForecastTimingOverviewReadModel["accounts"][number]): string {
   const r = account.reconciliation;
   if (r.state === "OVERALLOCATED") return "overallocated";
@@ -115,11 +141,21 @@ export function FinanceForecastTimingWorkspacePanel({
     if (!overview) return null;
     const income = overview.annual.income;
     const expense = overview.annual.expense;
+    const timedComposition = deriveFinanceTimingMovementComposition({
+      incomeMagnitudeMinor: income.timedFutureExpectationMinor,
+      expenseMagnitudeMinor: expense.timedFutureExpectationMinor,
+    });
+    const untimedComposition = deriveFinanceTimingMovementComposition({
+      incomeMagnitudeMinor: income.unscheduledRemainderMinor,
+      expenseMagnitudeMinor: expense.unscheduledRemainderMinor,
+    });
     return {
       remaining:
         income.remainingFutureExpectationMinor + expense.remainingFutureExpectationMinor,
-      timed: income.timedFutureExpectationMinor + expense.timedFutureExpectationMinor,
-      untimed: income.unscheduledRemainderMinor + expense.unscheduledRemainderMinor,
+      timed: timedComposition.grossMinor,
+      untimed: untimedComposition.grossMinor,
+      timedComposition,
+      untimedComposition,
       overallocated: income.overallocatedAmountMinor + expense.overallocatedAmountMinor,
       ambiguous: income.ambiguousTimingExpectationMinor + expense.ambiguousTimingExpectationMinor,
     };
@@ -268,19 +304,131 @@ export function FinanceForecastTimingWorkspacePanel({
                 >
                   {formatAmount(totals.remaining, baseCurrency, formattingLocale)}
                 </p>
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--text-2)]">
-                  <span data-finance-timing-timed>
-                    {t("timedLabel")}{" "}
-                    <span className="font-medium text-[var(--foreground)]">
-                      {formatAmount(totals.timed, baseCurrency, formattingLocale)}
-                    </span>
-                  </span>
-                  <span data-finance-timing-untimed>
-                    {t("untimedLabel")}{" "}
-                    <span className="font-medium text-[var(--foreground)]">
-                      {formatAmount(totals.untimed, baseCurrency, formattingLocale)}
-                    </span>
-                  </span>
+                <div className="flex flex-col gap-3 text-sm text-[var(--text-2)]">
+                  <div data-finance-timing-timed>
+                    <p>
+                      {t("timedLabel")}{" "}
+                      <span
+                        className="font-medium text-[var(--foreground)]"
+                        data-finance-timing-composition-gross="timed"
+                      >
+                        {formatAmount(totals.timed, baseCurrency, formattingLocale)}
+                      </span>
+                    </p>
+                    <ul
+                      className="mt-1 space-y-0.5 text-xs sm:text-sm"
+                      data-finance-timing-composition="timed"
+                    >
+                      <li data-finance-timing-composition-income>
+                        {t("compositionIncome")}{" "}
+                        <span
+                          className={cn(
+                            "font-medium tabular-nums",
+                            movementAmountClassName("INCOME"),
+                          )}
+                        >
+                          {formatMovementAmount(
+                            totals.timedComposition.incomeMinor,
+                            "INCOME",
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      </li>
+                      <li data-finance-timing-composition-expense>
+                        {t("compositionExpense")}{" "}
+                        <span
+                          className={cn(
+                            "font-medium tabular-nums",
+                            movementAmountClassName("EXPENSE"),
+                          )}
+                        >
+                          {formatMovementAmount(
+                            totals.timedComposition.expenseMinor,
+                            "EXPENSE",
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      </li>
+                      <li
+                        className="font-medium text-[var(--foreground)]"
+                        data-finance-timing-composition-net
+                      >
+                        {t("compositionNet")}{" "}
+                        <span className="tabular-nums">
+                          {formatFinanceNetMovementMinor({
+                            netMovementMinor: totals.timedComposition.netMovementMinor,
+                            currency: baseCurrency,
+                            formattingLocale,
+                          })}
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div data-finance-timing-untimed>
+                    <p>
+                      {t("untimedLabel")}{" "}
+                      <span
+                        className="font-medium text-[var(--foreground)]"
+                        data-finance-timing-composition-gross="untimed"
+                      >
+                        {formatAmount(totals.untimed, baseCurrency, formattingLocale)}
+                      </span>
+                    </p>
+                    {totals.untimed > 0 ? (
+                      <ul
+                        className="mt-1 space-y-0.5 text-xs sm:text-sm"
+                        data-finance-timing-composition="untimed"
+                      >
+                        <li data-finance-timing-composition-income>
+                          {t("compositionIncome")}{" "}
+                          <span
+                            className={cn(
+                              "font-medium tabular-nums",
+                              movementAmountClassName("INCOME"),
+                            )}
+                          >
+                            {formatMovementAmount(
+                              totals.untimedComposition.incomeMinor,
+                              "INCOME",
+                              baseCurrency,
+                              formattingLocale,
+                            )}
+                          </span>
+                        </li>
+                        <li data-finance-timing-composition-expense>
+                          {t("compositionExpense")}{" "}
+                          <span
+                            className={cn(
+                              "font-medium tabular-nums",
+                              movementAmountClassName("EXPENSE"),
+                            )}
+                          >
+                            {formatMovementAmount(
+                              totals.untimedComposition.expenseMinor,
+                              "EXPENSE",
+                              baseCurrency,
+                              formattingLocale,
+                            )}
+                          </span>
+                        </li>
+                        <li
+                          className="font-medium text-[var(--foreground)]"
+                          data-finance-timing-composition-net
+                        >
+                          {t("compositionNet")}{" "}
+                          <span className="tabular-nums">
+                            {formatFinanceNetMovementMinor({
+                              netMovementMinor: totals.untimedComposition.netMovementMinor,
+                              currency: baseCurrency,
+                              formattingLocale,
+                            })}
+                          </span>
+                        </li>
+                      </ul>
+                    ) : null}
+                  </div>
                 </div>
                 {showPartialInterpretation ? (
                   <p className="text-sm text-[var(--text-2)]" data-finance-timing-interpretation>
@@ -305,7 +453,7 @@ export function FinanceForecastTimingWorkspacePanel({
                 {coveragePercent !== null && overview.timingCoverage.kind === "RATIO" ? (
                   <div data-finance-timing-coverage>
                     <div className="mb-1 flex justify-between text-xs text-[var(--muted)]">
-                      <span>{t("coverageLabel")}</span>
+                      <span title={t("coverageTooltip")}>{t("coverageLabel")}</span>
                       <span>
                         {overview.timingCoverage.isOverallocated
                           ? t("coverageOverallocated")
@@ -345,11 +493,14 @@ export function FinanceForecastTimingWorkspacePanel({
                     </p>
                     <p>
                       {t("sideTimed")}{" "}
-                      {formatAmount(
-                        overview.annual.income.timedFutureExpectationMinor,
-                        baseCurrency,
-                        formattingLocale,
-                      )}
+                      <span className={movementAmountClassName("INCOME")}>
+                        {formatMovementAmount(
+                          overview.annual.income.timedFutureExpectationMinor,
+                          "INCOME",
+                          baseCurrency,
+                          formattingLocale,
+                        )}
+                      </span>
                     </p>
                   </div>
                   <div>
@@ -364,11 +515,14 @@ export function FinanceForecastTimingWorkspacePanel({
                     </p>
                     <p>
                       {t("sideTimed")}{" "}
-                      {formatAmount(
-                        overview.annual.expense.timedFutureExpectationMinor,
-                        baseCurrency,
-                        formattingLocale,
-                      )}
+                      <span className={movementAmountClassName("EXPENSE")}>
+                        {formatMovementAmount(
+                          overview.annual.expense.timedFutureExpectationMinor,
+                          "EXPENSE",
+                          baseCurrency,
+                          formattingLocale,
+                        )}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -442,7 +596,19 @@ export function FinanceForecastTimingWorkspacePanel({
                         ) : null}
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-3 tabular-nums">
-                        <span>{formatAmount(row.expectedAmountMinor, baseCurrency, formattingLocale)}</span>
+                        <span
+                          className={cn(
+                            "font-medium",
+                            movementAmountClassName(row.accountType),
+                          )}
+                        >
+                          {formatMovementAmount(
+                            row.expectedAmountMinor,
+                            row.accountType,
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
                         <span className="text-[var(--text-2)]">{timingLabel}</span>
                       </div>
                     </li>
@@ -474,7 +640,12 @@ export function FinanceForecastTimingWorkspacePanel({
                   const remainingMinor = account.reconciliation.remainingFutureExpectationMinor ?? 0;
                   const timedMinor = account.reconciliation.timedFutureExpectationMinor;
                   const openMinor = account.reconciliation.unscheduledRemainderMinor ?? 0;
-                  const showIssueLine = issue !== "none" && !(rowDensity === "ZERO_TIMED" && issue === "unscheduled");
+                  const showIssueLine =
+                    issue !== "none" &&
+                    !(
+                      (rowDensity === "ZERO_TIMED" || rowDensity === "PARTIAL_TIMED") &&
+                      issue === "unscheduled"
+                    );
                   return (
                     <li key={account.financialAccountId} className="px-4 py-3 sm:px-5">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -502,7 +673,12 @@ export function FinanceForecastTimingWorkspacePanel({
                               </p>
                               <p className="tabular-nums">
                                 {t("accountRowPartialBreakdown", {
-                                  timed: formatAmount(timedMinor, baseCurrency, formattingLocale),
+                                  timed: formatMovementAmount(
+                                    timedMinor,
+                                    account.accountType,
+                                    baseCurrency,
+                                    formattingLocale,
+                                  ),
                                   open: formatAmount(openMinor, baseCurrency, formattingLocale),
                                 })}
                               </p>
@@ -587,7 +763,12 @@ export function FinanceForecastTimingWorkspacePanel({
                             <ul className="mt-2 space-y-1">
                               {accountEvents.map((ev) => (
                                 <li key={ev.id}>
-                                  {formatAmount(ev.expectedAmountMinor, baseCurrency, formattingLocale)}{" "}
+                                  {formatMovementAmount(
+                                    ev.expectedAmountMinor,
+                                    account.accountType,
+                                    baseCurrency,
+                                    formattingLocale,
+                                  )}{" "}
                                   ·{" "}
                                   {formatExpectedFinancialEventTimingLabel(ev, formattingLocale)}
                                   {ev.description ? ` · ${ev.description}` : ""}
@@ -650,6 +831,9 @@ export function FinanceForecastTimingWorkspacePanel({
                         accountOptions.find((a) => a.financialAccountId === event.financialAccountId)
                           ?.name ?? event.financialAccountId;
                       const manualEditable = event.sourceKind === "MANUAL";
+                      const accountType =
+                        accountOptions.find((a) => a.financialAccountId === event.financialAccountId)
+                          ?.accountType ?? "EXPENSE";
                       return (
                         <tr key={event.id} className={FINANCE_TABLE_ROW_CLASS}>
                           <td className="px-3 py-2 whitespace-nowrap">
@@ -659,8 +843,18 @@ export function FinanceForecastTimingWorkspacePanel({
                           <td className="px-3 py-2 max-w-[12rem] truncate">
                             {event.description ?? "—"}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums">
-                            {formatAmount(event.expectedAmountMinor, baseCurrency, formattingLocale)}
+                          <td
+                            className={cn(
+                              "px-3 py-2 text-right tabular-nums font-medium",
+                              movementAmountClassName(accountType),
+                            )}
+                          >
+                            {formatMovementAmount(
+                              event.expectedAmountMinor,
+                              accountType,
+                              baseCurrency,
+                              formattingLocale,
+                            )}
                           </td>
                           {canMutate ? (
                             <td className="px-3 py-2">
@@ -710,6 +904,7 @@ export function FinanceForecastTimingWorkspacePanel({
             accounts={accountOptions}
             existing={editingEvent}
             presetAccountId={presetAccountId}
+            formattingLocale={formattingLocale}
           />
           <FinanceExpectedFinancialEventDeleteDialog
             open={deleteDialogOpen}

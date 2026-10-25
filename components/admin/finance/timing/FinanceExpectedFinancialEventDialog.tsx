@@ -18,6 +18,7 @@ import {
   monthInputValueFromIso,
   type ExpectedEventTimingUiKind,
 } from "@/lib/finance/forecast/expected-financial-event-timing-presentation";
+import { FinanceExpectedMonthPicker } from "@/components/admin/finance/timing/FinanceExpectedMonthPicker";
 import {
   createFinanceExpectedEventAction,
   loadAccountTimingContextAction,
@@ -40,6 +41,7 @@ type FinanceExpectedFinancialEventDialogProps = {
   accounts: ExpectedEventAccountOption[];
   existing?: ExpectedFinancialEventRecord | null;
   presetAccountId?: string | null;
+  formattingLocale: string;
 };
 
 function mapErrorCodeToMessage(
@@ -78,6 +80,7 @@ function FinanceExpectedFinancialEventDialogForm({
   accounts,
   existing,
   presetAccountId,
+  formattingLocale,
 }: FormProps) {
   const t = useTranslations("Finance.forecast.timing.eventDialog");
   const [pending, startTransition] = useTransition();
@@ -295,12 +298,15 @@ function FinanceExpectedFinancialEventDialogForm({
         ) : null}
         {timingKind === "MONTH" ? (
           <SceFormField label={t("monthLabel")} htmlFor="expected-event-month">
-            <input
+            <FinanceExpectedMonthPicker
               id="expected-event-month"
-              type="month"
-              className="fca-input w-full"
               value={monthValue}
-              onChange={(e) => setMonthValue(e.target.value)}
+              onChange={setMonthValue}
+              formattingLocale={formattingLocale}
+              placeholder={t("monthPlaceholder")}
+              ariaLabel={t("monthLabel")}
+              yearDecreaseLabel={t("monthYearDecrease")}
+              yearIncreaseLabel={t("monthYearIncrease")}
             />
           </SceFormField>
         ) : null}
@@ -368,6 +374,7 @@ export function FinanceExpectedFinancialEventDialog({
   accounts,
   existing,
   presetAccountId,
+  formattingLocale,
 }: FinanceExpectedFinancialEventDialogProps) {
   const t = useTranslations("Finance.forecast.timing.eventDialog");
   const isEdit = Boolean(existing);
@@ -385,6 +392,7 @@ export function FinanceExpectedFinancialEventDialog({
           accounts={accounts}
           existing={existing}
           presetAccountId={presetAccountId}
+          formattingLocale={formattingLocale}
         />
       ) : null}
     </Dialog>

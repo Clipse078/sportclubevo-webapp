@@ -1133,6 +1133,10 @@
         "timedLabel": "Zeitlich eingeplant",
         "untimedLabel": "Noch nicht terminiert",
         "coverageLabel": "Terminierungsgrad",
+        "coverageTooltip": "Anteil der verbleibenden Prognose mit hinterlegtem Zeitpunkt (Bruttoumfang, nicht Netto-Bewegung).",
+        "compositionIncome": "Eingänge",
+        "compositionExpense": "Zahlungen",
+        "compositionNet": "Netto-Bewegung",
         "coverageOverallocated": "Mehr terminiert als erwartet",
         "incomeSection": "Einnahmen",
         "expenseSection": "Ausgaben",
@@ -1204,6 +1208,9 @@
           "timingRange": "Zeitraum",
           "exactDateLabel": "Datum",
           "monthLabel": "Monat",
+          "monthPlaceholder": "Monat wählen …",
+          "monthYearDecrease": "Vorheriges Jahr",
+          "monthYearIncrease": "Nächstes Jahr",
           "rangeStartLabel": "Von",
           "rangeEndLabel": "Bis",
           "descriptionLabel": "Beschreibung (optional)",
@@ -1250,6 +1257,7 @@
           "untimedIncome": "Einnahmen",
           "untimedExpense": "Ausgaben",
           "untimedTotal": "Summe",
+          "untimedNet": "Netto-Bewegung",
           "overallocationChartHint": "Es sind mehr Beträge terminiert als aktuell noch erwartet werden — die Darstellung zeigt alle erfassten Termine."
         },
         "deleteDialog": {

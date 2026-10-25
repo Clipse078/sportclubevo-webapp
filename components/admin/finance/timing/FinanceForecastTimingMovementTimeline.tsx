@@ -5,6 +5,13 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import {
+  deriveFinanceTimingMovementComposition,
+  formatFinanceDirectionalMovementDetailLine,
+  formatFinanceDirectionalMovementMinor,
+  formatFinanceNetMovementMinor,
+  financeMovementDirectionFromAccountType,
+} from "@/lib/finance/presentation/finance-directional-movement-presentation";
+import {
   FinanceVisualChartSurface,
   FinanceVisualLegend,
 } from "@/components/admin/finance/visual/FinanceVisualChartSurface";
@@ -116,6 +123,39 @@ export function FinanceForecastTimingMovementTimeline({
     () => visual.markers.find((m) => m.eventId === focusedEventId) ?? null,
     [focusedEventId, visual.markers],
   );
+
+  const untimedComposition = useMemo(
+    () =>
+      deriveFinanceTimingMovementComposition({
+        incomeMagnitudeMinor: visual.untimed.incomeMinor,
+        expenseMagnitudeMinor: visual.untimed.expenseMinor,
+      }),
+    [visual.untimed.expenseMinor, visual.untimed.incomeMinor],
+  );
+
+  function formatMovementAmount(
+    amountMinor: number,
+    accountType: "INCOME" | "EXPENSE",
+  ): string {
+    return formatFinanceDirectionalMovementMinor({
+      amountMinor,
+      direction: financeMovementDirectionFromAccountType(accountType),
+      currency: baseCurrency,
+      formattingLocale,
+    });
+  }
+
+  function markerAccessibleLabel(marker: FinanceForecastTimingVisualModel["markers"][number]): string {
+    const directionLabel =
+      marker.accountType === "INCOME" ? t("movementIncoming") : t("movementOutgoing");
+    return `${marker.accountName}, ${formatFinanceDirectionalMovementDetailLine({
+      directionLabel,
+      amountMinor: marker.expectedAmountMinor,
+      direction: financeMovementDirectionFromAccountType(marker.accountType),
+      currency: baseCurrency,
+      formattingLocale,
+    })}`;
+  }
 
   const cutoffX = timelinePositionFraction({
     dateIso: visual.window.actualsThroughDateIso,
@@ -315,14 +355,7 @@ export function FinanceForecastTimingMovementTimeline({
                           className="fill-transparent stroke-transparent"
                           tabIndex={0}
                           role="button"
-                          aria-label={t("markerAria", {
-                            account: marker.accountName,
-                            amount: formatFinanceManagementPlanningMinor(
-                              marker.expectedAmountMinor,
-                              baseCurrency,
-                              formattingLocale,
-                            ),
-                          })}
+                          aria-label={markerAccessibleLabel(marker)}
                           onFocus={() => setFocusedEventId(marker.eventId)}
                           onBlur={() => setFocusedEventId(null)}
                           onClick={() => {
@@ -372,14 +405,7 @@ export function FinanceForecastTimingMovementTimeline({
                         strokeWidth={isAmbiguous ? 2 : 1}
                         tabIndex={0}
                         role="button"
-                        aria-label={t("markerAria", {
-                          account: marker.accountName,
-                          amount: formatFinanceManagementPlanningMinor(
-                            marker.expectedAmountMinor,
-                            baseCurrency,
-                            formattingLocale,
-                          ),
-                        })}
+                        aria-label={markerAccessibleLabel(marker)}
                         onFocus={() => setFocusedEventId(marker.eventId)}
                         onBlur={() => setFocusedEventId(null)}
                         onClick={() => {
@@ -401,19 +427,28 @@ export function FinanceForecastTimingMovementTimeline({
                 data-finance-timing-visual-tooltip
                 role="status"
               >
-                <p className="font-medium text-[var(--foreground)]">
-                  {focusedMarker.accountType === "INCOME" ? t("movementIncoming") : t("movementOutgoing")}{" "}
-                  · {focusedMarker.accountName}
-                </p>
+                <p className="font-medium text-[var(--foreground)]">{focusedMarker.accountName}</p>
                 {focusedMarker.description ? (
                   <p className="text-xs text-[var(--muted)]">{focusedMarker.description}</p>
                 ) : null}
-                <p className="tabular-nums text-[var(--foreground)]">
-                  {formatFinanceManagementPlanningMinor(
-                    focusedMarker.expectedAmountMinor,
-                    baseCurrency,
-                    formattingLocale,
+                <p
+                  className={cn(
+                    "tabular-nums font-medium",
+                    focusedMarker.accountType === "INCOME"
+                      ? "text-[var(--sce-success)]"
+                      : "text-[var(--sce-danger)]",
                   )}
+                >
+                  {formatFinanceDirectionalMovementDetailLine({
+                    directionLabel:
+                      focusedMarker.accountType === "INCOME"
+                        ? t("movementIncoming")
+                        : t("movementOutgoing"),
+                    amountMinor: focusedMarker.expectedAmountMinor,
+                    direction: financeMovementDirectionFromAccountType(focusedMarker.accountType),
+                    currency: baseCurrency,
+                    formattingLocale,
+                  })}
                 </p>
                 <p className="text-xs text-[var(--text-2)]">
                   {formatExpectedFinancialEventTimingLabel(
@@ -447,33 +482,36 @@ export function FinanceForecastTimingMovementTimeline({
               <p className="text-sm text-[var(--text-2)]">{t("untimedBody")}</p>
             </div>
             <div className="space-y-1 text-sm tabular-nums">
-              <p>
-                {t("untimedIncome")}{" "}
-                <span className="font-medium text-[var(--foreground)]">
-                  {formatFinanceManagementPlanningMinor(
-                    visual.untimed.incomeMinor,
-                    baseCurrency,
-                    formattingLocale,
-                  )}
-                </span>
-              </p>
-              <p>
-                {t("untimedExpense")}{" "}
-                <span className="font-medium text-[var(--foreground)]">
-                  {formatFinanceManagementPlanningMinor(
-                    visual.untimed.expenseMinor,
-                    baseCurrency,
-                    formattingLocale,
-                  )}
-                </span>
-              </p>
-              <p className="font-semibold text-[var(--foreground)]">
+              <p className="font-medium text-[var(--foreground)]" data-finance-timing-untimed-gross>
                 {t("untimedTotal")}{" "}
                 {formatFinanceManagementPlanningMinor(
                   visual.untimed.totalMinor,
                   baseCurrency,
                   formattingLocale,
                 )}
+              </p>
+              <p data-finance-timing-untimed-income>
+                {t("untimedIncome")}{" "}
+                <span className="font-medium text-[var(--sce-success)]">
+                  {formatMovementAmount(visual.untimed.incomeMinor, "INCOME")}
+                </span>
+              </p>
+              <p data-finance-timing-untimed-expense>
+                {t("untimedExpense")}{" "}
+                <span className="font-medium text-[var(--sce-danger)]">
+                  {formatMovementAmount(visual.untimed.expenseMinor, "EXPENSE")}
+                </span>
+              </p>
+              <p
+                className="font-semibold text-[var(--foreground)]"
+                data-finance-timing-untimed-net
+              >
+                {t("untimedNet")}{" "}
+                {formatFinanceNetMovementMinor({
+                  netMovementMinor: untimedComposition.netMovementMinor,
+                  currency: baseCurrency,
+                  formattingLocale,
+                })}
               </p>
             </div>
           </div>

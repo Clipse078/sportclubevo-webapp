@@ -670,6 +670,10 @@
         "timedLabel": "Timed",
         "untimedLabel": "Not yet timed",
         "coverageLabel": "Timing coverage",
+        "coverageTooltip": "Share of remaining forecast with an expected timing (gross magnitude, not net movement).",
+        "compositionIncome": "Receipts",
+        "compositionExpense": "Payments",
+        "compositionNet": "Net movement",
         "coverageOverallocated": "More timed than expected",
         "incomeSection": "Income",
         "expenseSection": "Expense",
@@ -741,6 +745,9 @@
           "timingRange": "Date range",
           "exactDateLabel": "Date",
           "monthLabel": "Month",
+          "monthPlaceholder": "Select month…",
+          "monthYearDecrease": "Previous year",
+          "monthYearIncrease": "Next year",
           "rangeStartLabel": "From",
           "rangeEndLabel": "To",
           "descriptionLabel": "Description (optional)",
@@ -787,6 +794,7 @@
           "untimedIncome": "Income",
           "untimedExpense": "Expense",
           "untimedTotal": "Total",
+          "untimedNet": "Net movement",
           "overallocationChartHint": "More is timed than still expected — all recorded timings are shown."
         },
         "deleteDialog": {
