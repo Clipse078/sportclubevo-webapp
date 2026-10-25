@@ -73,10 +73,11 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
           labels={{
             pageContextYear: t("reporting.pnl.contextYear"),
             interpretationTitle: t("reporting.pnl.interpretationTitle"),
-            budgetedResult: t("overview.reportingResult"),
+            budgetedResult: t("reporting.pnl.budgetedResult"),
             expectedResult: t("reporting.pnl.expectedResult"),
-            forecastVsBudgetVariance: t("overview.reportingForecastResultDelta"),
+            forecastVsBudgetVariance: t("reporting.pnl.varianceVsBudget"),
             driversTitle: t("reporting.pnl.driversTitle"),
+            driversSubtitle: t("reporting.pnl.driversSubtitle"),
             topFavourable: t("reporting.pnl.topFavourable"),
             topUnfavourable: t("reporting.pnl.topUnfavourable"),
             incomeSection: t("overview.reportingIncome"),

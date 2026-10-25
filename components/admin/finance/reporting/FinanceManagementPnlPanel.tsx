@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronRight, Minus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
 import {
@@ -40,6 +40,7 @@ type FinanceManagementPnlPanelLabels = {
   expectedResult: string;
   forecastVsBudgetVariance: string;
   driversTitle: string;
+  driversSubtitle: string | null;
   topFavourable: string;
   topUnfavourable: string;
   incomeSection: string;
@@ -85,30 +86,6 @@ function favorabilityLabel(
   return labels.favorabilityOnPlan;
 }
 
-function FavorabilityIndicator(props: {
-  favorability: VarianceFavorability;
-  accessibleLabel: string;
-  compact?: boolean;
-}) {
-  const toneClass = financeVarianceComparisonSemanticTextClass({
-    favorability: props.favorability,
-    hasComparison: true,
-  });
-  const iconClass = cn("inline-block h-3.5 w-3.5 shrink-0", toneClass);
-  const Icon =
-    props.favorability === "FAVORABLE"
-      ? ArrowUp
-      : props.favorability === "UNFAVORABLE"
-        ? ArrowDown
-        : Minus;
-  return (
-    <span className={cn("inline-flex items-center gap-1", props.compact ? "text-xs" : "text-xs font-normal")}>
-      <Icon className={iconClass} aria-hidden />
-      <span className="sr-only">{props.accessibleLabel}</span>
-    </span>
-  );
-}
-
 type VariancePresentation = "compact" | "emphasized";
 
 function VarianceCell(props: {
@@ -138,17 +115,10 @@ function VarianceCell(props: {
       data-finance-variance-favorability={hasComparison ? slice.favorability : undefined}
     >
       <span className="inline-flex flex-col items-end gap-0.5">
-        <span className="inline-flex items-center justify-end gap-1.5 tabular-nums">
+        <span className="tabular-nums">
           {formatManagementPnlVarianceDelta(slice, props.currency, props.locale)}
-          {hasComparison && favorability && props.presentation === "compact" ? (
-            <FavorabilityIndicator
-              favorability={favorability}
-              accessibleLabel={favorabilityText ?? ""}
-              compact
-            />
-          ) : null}
         </span>
-        {hasComparison && favorability && props.presentation === "emphasized" ? (
+        {hasComparison && favorability && favorabilityText ? (
           <span className="text-xs font-normal text-[var(--muted)]">{favorabilityText}</span>
         ) : null}
         <span className="text-xs font-normal text-[var(--muted)] tabular-nums">
@@ -477,8 +447,6 @@ export function FinanceManagementPnlPanel({
   labels,
 }: FinanceManagementPnlPanelProps) {
   const actualHeaderMode = model.actualGrain === "YTD" ? "ytd" : "annual";
-  const actualColumnLabel =
-    actualHeaderMode === "ytd" ? labels.columnActualYtd : labels.columnActual;
 
   const actualCutoffLabel = useMemo(() => {
     if (!model.actualCutoffDate) return null;
@@ -492,6 +460,16 @@ export function FinanceManagementPnlPanel({
       return model.actualCutoffDate.slice(0, 10);
     }
   }, [model.actualCutoffDate, formattingLocale]);
+
+  const actualColumnLabel = useMemo(() => {
+    if (actualHeaderMode === "annual") {
+      return labels.columnActual;
+    }
+    if (actualCutoffLabel) {
+      return `${labels.columnActualYtd} ${actualCutoffLabel}`;
+    }
+    return labels.columnActualYtd;
+  }, [actualHeaderMode, actualCutoffLabel, labels.columnActual, labels.columnActualYtd]);
 
   if (model.availability === "NO_STRUCTURE") {
     return (
@@ -600,12 +578,17 @@ export function FinanceManagementPnlPanel({
           data-finance-pnl-drivers
           aria-labelledby="finance-pnl-drivers-title"
         >
-          <h3 id="finance-pnl-drivers-title" className="text-sm font-semibold text-[var(--foreground)]">
-            {labels.driversTitle}
-          </h3>
+          <div>
+            <h3 id="finance-pnl-drivers-title" className="text-sm font-semibold text-[var(--foreground)]">
+              {labels.driversTitle}
+            </h3>
+            {labels.driversSubtitle ? (
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{labels.driversSubtitle}</p>
+            ) : null}
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-[var(--muted)]">{labels.topFavourable}</p>
+            <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
+              <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topFavourable}</p>
               <ul className="mt-1 space-y-1 text-sm">
                 {model.topFavourableDrivers.map((driver) => (
                   <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
@@ -629,8 +612,8 @@ export function FinanceManagementPnlPanel({
                 ))}
               </ul>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-[var(--muted)]">{labels.topUnfavourable}</p>
+            <div className="min-w-0 rounded-md border border-[var(--sce-surface-border-subtle)]/80 p-3">
+              <p className="text-xs font-semibold text-[var(--foreground)]">{labels.topUnfavourable}</p>
               <ul className="mt-1 space-y-1 text-sm">
                 {model.topUnfavourableDrivers.map((driver) => (
                   <li key={driver.id} className="flex justify-between gap-3 tabular-nums">
@@ -658,53 +641,78 @@ export function FinanceManagementPnlPanel({
         </section>
       )}
 
-      <SectionTable
-        title={labels.incomeSection}
-        sectionTotalLabel={labels.incomeSectionTotal}
-        section={model.incomeSection}
-        currency={model.baseCurrency}
-        locale={formattingLocale}
-        labels={labels}
-        actualHeaderMode={actualHeaderMode}
-        actualColumnLabel={actualColumnLabel}
-      />
-      <SectionTable
-        title={labels.expenseSection}
-        sectionTotalLabel={labels.expenseSectionTotal}
-        section={model.expenseSection}
-        currency={model.baseCurrency}
-        locale={formattingLocale}
-        labels={labels}
-        actualHeaderMode={actualHeaderMode}
-        actualColumnLabel={actualColumnLabel}
-      />
+      <div className="flex flex-col gap-2" data-finance-pnl-statement>
+        <SectionTable
+          title={labels.incomeSection}
+          sectionTotalLabel={labels.incomeSectionTotal}
+          section={model.incomeSection}
+          currency={model.baseCurrency}
+          locale={formattingLocale}
+          labels={labels}
+          actualHeaderMode={actualHeaderMode}
+          actualColumnLabel={actualColumnLabel}
+        />
+        <SectionTable
+          title={labels.expenseSection}
+          sectionTotalLabel={labels.expenseSectionTotal}
+          section={model.expenseSection}
+          currency={model.baseCurrency}
+          locale={formattingLocale}
+          labels={labels}
+          actualHeaderMode={actualHeaderMode}
+          actualColumnLabel={actualColumnLabel}
+        />
 
-      <div className={FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS} data-finance-pnl-result>
-        <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS} data-finance-pnl-result-table>
-          <FinanceVarianceComparisonColGroup mode="MANAGEMENT_PNL" />
-          <tbody>
-            <tr
-              className="bg-[var(--sce-surface-dense)]"
-              data-finance-pnl-row="management-result"
-            >
-              <td className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "text-base font-semibold")}>
-                {labels.managementResult}
-              </td>
-              <MeasureCells
-                approvedBudget={model.managementResult.approvedBudget}
-                actual={model.managementResult.actual}
-                currentForecast={model.managementResult.currentForecast}
-                forecastVsBudget={model.managementResult.forecastVsBudget}
-                currency={model.baseCurrency}
-                locale={formattingLocale}
-                labels={labels}
-                actualHeaderMode={actualHeaderMode}
-                emphasize
-                variancePresentation="emphasized"
-              />
-            </tr>
-          </tbody>
-        </table>
+        <div className={FINANCE_MANAGEMENT_PNL_TABLE_SURFACE_CLASS} data-finance-pnl-result>
+          <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS} data-finance-pnl-result-table>
+            <FinanceVarianceComparisonColGroup mode="MANAGEMENT_PNL" />
+            <thead>
+              <tr className={FINANCE_MANAGEMENT_PNL_TABLE_HEAD_ROW_CLASS}>
+                <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_ACCOUNT_CLASS}>
+                  <span className="sr-only">{labels.managementResult}</span>
+                </th>
+                <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
+                  {labels.columnBudget}
+                </th>
+                <th
+                  scope="col"
+                  className={cn(FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS, "hidden md:table-cell")}
+                >
+                  {actualColumnLabel}
+                </th>
+                <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
+                  {labels.columnForecast}
+                </th>
+                <th scope="col" className={FINANCE_MANAGEMENT_PNL_HEAD_NUMERIC_CLASS}>
+                  <span>{labels.columnVariance}</span>
+                  <span className="sr-only"> ({labels.columnVariancePercent})</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                className="bg-[var(--sce-surface-dense)]"
+                data-finance-pnl-row="management-result"
+              >
+                <td className={cn(FINANCE_MANAGEMENT_PNL_ACCOUNT_CELL_CLASS, "text-base font-semibold")}>
+                  {labels.managementResult}
+                </td>
+                <MeasureCells
+                  approvedBudget={model.managementResult.approvedBudget}
+                  actual={model.managementResult.actual}
+                  currentForecast={model.managementResult.currentForecast}
+                  forecastVsBudget={model.managementResult.forecastVsBudget}
+                  currency={model.baseCurrency}
+                  locale={formattingLocale}
+                  labels={labels}
+                  actualHeaderMode={actualHeaderMode}
+                  emphasize
+                  variancePresentation="emphasized"
+                />
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
