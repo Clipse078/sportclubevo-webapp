@@ -4,9 +4,9 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05B** — read models + deterministic variance engine |
-| **Status** | **IMPLEMENTED** — awaiting Product Owner review |
+| **Status** | **COMPLETE** — merged on **STAGE** (merge commit `1cad40593191ebb88d91e5a41aab82a438130a2d`) |
 | **Architecture base** | FIN-05A (`finance-reporting-intelligence-architecture-contract.ts`) |
-| **Branch** | `cursor/sce-finance-05b-reporting-read-models-variance-engine-f86e` |
+| **Branch** | `cursor/sce-finance-05b-reporting-read-models-variance-engine-f86e` (merged) |
 
 ## Scope
 

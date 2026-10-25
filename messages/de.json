@@ -885,7 +885,8 @@
       "structure": "Finanzstruktur",
       "budget": "Budget",
       "actuals": "Ist",
-      "forecast": "Prognose"
+      "forecast": "Prognose",
+      "reporting": "Berichte"
     },
     "capabilityNavAria": "Finanz-Funktionsnavigation",
     "workspace": {
@@ -1016,6 +1017,31 @@
       "reportingForecastTitle": "Aktuelle Prognose",
       "reportingForecastResultDelta": "Prognose-Ergebnis vs. genehmigtes Budget",
       "openForecast": "Prognose öffnen"
+    },
+    "reporting": {
+      "pnl": {
+        "eyebrow": "Berichte",
+        "pageTitle": "Erfolgsrechnung",
+        "pageDescription": "Genehmigtes Budget, Ist und aktuelle Prognose entlang Ihrer konfigurierten Berichtsstruktur vergleichen.",
+        "contextYear": "Finanzjahr",
+        "interpretationTitle": "Erwartetes Ergebnis vs. Budget",
+        "expectedResult": "Erwartetes Ergebnis (Prognose)",
+        "driversTitle": "Wesentliche Prognose-vs.-Budget-Abweichungen",
+        "topFavourable": "Grösste günstige Abweichungen",
+        "topUnfavourable": "Grösste ungünstige Abweichungen",
+        "columnBudget": "Budget",
+        "columnActual": "Ist",
+        "columnActualYtd": "Ist bis",
+        "columnForecast": "Aktuelle Prognose",
+        "columnForecastVsBudget": "Prognose vs. Budget",
+        "columnVariancePercent": "Abweichung %",
+        "unassignedGroup": "Nicht zugeordnet",
+        "unassignedHint": "Beträge auf Konten, die in der konfigurierten Hierarchie nicht abgebildet sind.",
+        "expandAccounts": "Konten anzeigen",
+        "collapseAccounts": "Konten ausblenden",
+        "noStructureViewOnly": "Die Finanzstruktur wurde noch nicht konfiguriert.",
+        "partialSourcesHint": "Einige Quellen fehlen — Vergleiche bleiben dort ausgeblendet, wo sie semantisch nicht zulässig sind."
+      }
     },
     "budget": {
       "pageTitle": "Budget",

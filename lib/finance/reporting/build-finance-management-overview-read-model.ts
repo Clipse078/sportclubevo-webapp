@@ -87,13 +87,18 @@ export function buildFinanceManagementOverviewReadModel(input: {
     sourceVisibility: input.sourceVisibility,
   });
 
+  const actualComparisonGrain =
+    input.actualMeasure?.grain === "YTD"
+      ? ("ACTUAL_YTD_WITH_EXPLICIT_CUTOFF" as const)
+      : ("ANNUAL_FULL_YEAR" as const);
+
   const actualVariance = buildFinanceVarianceAnalysisReadModel({
     tenantId: input.tenantId,
     financeYearId: input.financeYearId,
     financeYearName: input.financeYearName,
     baseCurrency: input.baseCurrency,
     comparison: "ACTUAL_VS_APPROVED_BUDGET",
-    grain: "ANNUAL_FULL_YEAR",
+    grain: actualComparisonGrain,
     actualCutoffDate: input.actualCutoffDate,
     groups: input.groups,
     accounts: input.accounts,
