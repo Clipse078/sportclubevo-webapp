@@ -1,4 +1,4 @@
-import { PDFDocument, type PDFPage, rgb, type PDFFont, type RGB } from "pdf-lib";
+import { PDFDocument, type PDFPage, type PDFFont, type RGB } from "pdf-lib";
 import { A4_HEIGHT_MM, A4_WIDTH_MM } from "@/lib/billing/invoice-pdf/constants";
 import { mmToPt } from "@/lib/billing/invoice-pdf/mm";
 import { drawRightAlignedText } from "@/lib/billing/invoice-pdf/pdf-text-layout";
@@ -41,6 +41,9 @@ import {
   computePublicationPdfFooterZones,
   truncateTextToMaxWidth,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-footer-layout";
+import { publicationPdfColors } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-colors";
+import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";
+import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
 
 function t(value: string): string {
   return pdfSafeText(value);
@@ -54,45 +57,7 @@ const MARGIN_BOTTOM = mmToPt(18);
 const CONTENT_BOTTOM = MARGIN_BOTTOM + mmToPt(16);
 const FOOTER_BLOCK_HEIGHT = mmToPt(11);
 
-const TYPE = {
-  mastheadClub: 15,
-  mastheadReport: 11,
-  mastheadSubtitle: 10,
-  mastheadMeta: 8.5,
-  continuationClub: 10,
-  continuationMeta: 8,
-  sectionHeading: 10,
-  heroValue: 22,
-  heroLabel: 8,
-  heroVariance: 9.5,
-  heroSupporting: 8.5,
-  body: 9,
-  tableHeader: 7.5,
-  tableRow: 8.5,
-  tableRowBold: 9,
-  metadata: 8,
-  metadataKey: 8,
-  footer: 7,
-  attribution: 6.5,
-  driverTitle: 7.5,
-} as const;
-
-const COLORS = {
-  text: rgb(0.09, 0.11, 0.15),
-  muted: rgb(0.42, 0.45, 0.5),
-  line: rgb(0.82, 0.84, 0.87),
-  accent: rgb(0.07, 0.17, 0.29),
-  heroBg: rgb(0.96, 0.97, 0.99),
-  tableHeaderBg: rgb(0.96, 0.97, 0.99),
-  resultBandBg: rgb(0.93, 0.96, 0.99),
-  panelBg: rgb(0.98, 0.98, 0.99),
-  favorable: rgb(0.12, 0.42, 0.28),
-  unfavorable: rgb(0.55, 0.18, 0.16),
-  favorableBg: rgb(0.94, 0.98, 0.95),
-  unfavorableBg: rgb(0.99, 0.95, 0.94),
-  favorableBand: rgb(0.9, 0.96, 0.92),
-  unfavorableBand: rgb(0.98, 0.93, 0.92),
-} as const;
+const COLORS = publicationPdfColors;
 
 type Fonts = { regular: PDFFont; bold: PDFFont };
 
@@ -141,14 +106,8 @@ function favorabilityText(
   return labels.favorabilityOnPlan;
 }
 
-function columnRights(): { budget: number; actual: number; forecast: number; variance: number } {
-  const right = PAGE_W - MARGIN_X;
-  return {
-    budget: right - mmToPt(84),
-    actual: right - mmToPt(60),
-    forecast: right - mmToPt(36),
-    variance: right,
-  };
+function columnRights() {
+  return computePublicationPdfAmountColumnRights({ pageWidthPt: PAGE_W, marginXPt: MARGIN_X });
 }
 
 function drawContinuationHeader(ctx: LayoutContext): void {
@@ -159,9 +118,9 @@ function drawContinuationHeader(ctx: LayoutContext): void {
   page.drawText(t(ctx.organisationName.toUpperCase()), {
     x: MARGIN_X,
     y,
-    size: TYPE.continuationClub,
+    size: TYPE.continuationTenant,
     font: fonts.bold,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
 
   const reportLine = `${labels.financialReportHeading.replace("{year}", yearLabel)} · ${labels.reportTypeSubtitle}`;
@@ -171,7 +130,7 @@ function drawContinuationHeader(ctx: LayoutContext): void {
     y,
     size: TYPE.continuationMeta + 0.5,
     font: fonts.regular,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
 
   const officialLine = labels.officialPublicationLine.replace(
@@ -182,7 +141,7 @@ function drawContinuationHeader(ctx: LayoutContext): void {
   const rightBlock = `${officialLine}\n${publishedLine}`.split("\n");
   let rightY = PAGE_H - MARGIN_TOP;
   for (const line of rightBlock) {
-    drawRightAlignedText(page, t(line), PAGE_W - MARGIN_X, rightY, fonts.regular, TYPE.continuationMeta, COLORS.muted);
+    drawRightAlignedText(page, t(line), PAGE_W - MARGIN_X, rightY, fonts.regular, TYPE.continuationMeta, COLORS.textSecondary);
     rightY -= mmToPt(4);
   }
 
@@ -191,7 +150,7 @@ function drawContinuationHeader(ctx: LayoutContext): void {
     start: { x: MARGIN_X, y: ruleY },
     end: { x: PAGE_W - MARGIN_X, y: ruleY },
     thickness: 0.4,
-    color: COLORS.line,
+    color: COLORS.rule,
   });
 
   ctx.y = ruleY - mmToPt(6);
@@ -222,7 +181,7 @@ function drawFooter(ctx: LayoutContext): void {
     start: { x: MARGIN_X, y: footerTop },
     end: { x: PAGE_W - MARGIN_X, y: footerTop },
     thickness: 0.4,
-    color: COLORS.line,
+    color: COLORS.rule,
   });
 
   const lineY = footerTop - mmToPt(3.5);
@@ -236,7 +195,7 @@ function drawFooter(ctx: LayoutContext): void {
     y: lineY,
     size: TYPE.footer,
     font: fonts.regular,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
 
   const pageText = t(
@@ -250,21 +209,21 @@ function drawFooter(ctx: LayoutContext): void {
     y: lineY,
     size: TYPE.footer,
     font: fonts.regular,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
 
   const attribution = t(labels.createdWithSportClubEvo);
   const markGap = mmToPt(1.5);
   const markWidth = sceMark?.widthPt ?? 0;
-  const attributionWidth = fonts.regular.widthOfTextAtSize(attribution, TYPE.attribution);
+  const attributionWidth = fonts.regular.widthOfTextAtSize(attribution, TYPE.footerAttribution);
   const totalRightWidth = attributionWidth + (markWidth > 0 ? markGap + markWidth : 0);
   const rightX = zones.right.x + zones.right.maxWidth - totalRightWidth;
   page.drawText(attribution, {
     x: rightX,
     y: lineY,
-    size: TYPE.attribution,
+    size: TYPE.footerAttribution,
     font: fonts.regular,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   if (sceMark) {
     drawPublicationImage(page, sceMark, rightX + attributionWidth + markGap, lineY - mmToPt(0.5));
@@ -310,7 +269,7 @@ function drawTableHeader(ctx: LayoutContext): LayoutContext {
     y: headerY - mmToPt(5.5),
     width: PAGE_W - MARGIN_X * 2,
     height: mmToPt(6),
-    color: COLORS.tableHeaderBg,
+    color: COLORS.tableHeaderSurface,
   });
   const size = TYPE.tableHeader;
   const font = ctx.fonts.bold;
@@ -320,11 +279,11 @@ function drawTableHeader(ctx: LayoutContext): LayoutContext {
     y: headerTextY,
     size,
     font,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnBudget), cols.budget, headerTextY, font, size, COLORS.muted);
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnActual), cols.actual, headerTextY, font, size, COLORS.muted);
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnForecast), cols.forecast, headerTextY, font, size, COLORS.muted);
+  drawRightAlignedText(ctx.page, t(ctx.labels.columnBudget), cols.budget, headerTextY, font, size, COLORS.textSecondary);
+  drawRightAlignedText(ctx.page, t(ctx.labels.columnActual), cols.actual, headerTextY, font, size, COLORS.textSecondary);
+  drawRightAlignedText(ctx.page, t(ctx.labels.columnForecast), cols.forecast, headerTextY, font, size, COLORS.textSecondary);
   drawRightAlignedText(
     ctx.page,
     t(ctx.labels.columnVarianceVsBudget),
@@ -332,9 +291,9 @@ function drawTableHeader(ctx: LayoutContext): LayoutContext {
     headerTextY,
     font,
     size,
-    COLORS.muted,
+    COLORS.textSecondary,
   );
-  ctx.y = headerY - mmToPt(7);
+  ctx.y = headerY - mmToPt(7.5);
   ctx.tableHeaderDrawnOnPage = true;
   return ctx;
 }
@@ -357,19 +316,25 @@ function drawAmountRow(
   const cols = columnRights();
   const currency = next.presentation.pnl.baseCurrency;
   const font = options.bold || options.emphasis ? next.fonts.bold : next.fonts.regular;
-  const size = options.emphasis ? TYPE.tableRowBold : options.bold ? TYPE.tableRowBold : TYPE.tableRow;
+  const size = options.emphasis ? TYPE.tableResult : options.bold ? TYPE.tableSubtotal : TYPE.tableRow;
   const indent = options.indent ?? 0;
   const labelX = MARGIN_X + indent;
   const maxLabelWidth = cols.budget - labelX - mmToPt(5);
 
   const labelY = next.y;
   if (options.emphasis) {
+    next.page.drawLine({
+      start: { x: MARGIN_X, y: labelY + mmToPt(1.5) },
+      end: { x: PAGE_W - MARGIN_X, y: labelY + mmToPt(1.5) },
+      thickness: 0.45,
+      color: COLORS.ruleStrong,
+    });
     next.page.drawRectangle({
       x: MARGIN_X,
       y: labelY - mmToPt(6),
       width: PAGE_W - MARGIN_X * 2,
       height: mmToPt(7),
-      color: COLORS.resultBandBg,
+      color: COLORS.resultSurface,
     });
   }
 
@@ -381,7 +346,7 @@ function drawAmountRow(
     maxLabelWidth,
     size,
     font,
-    COLORS.text,
+    COLORS.textPrimary,
     mmToPt(4),
   );
   const rowY = labelY;
@@ -394,24 +359,16 @@ function drawAmountRow(
   ];
   const xs = [cols.budget, cols.actual, cols.forecast, cols.variance];
   for (let i = 0; i < values.length; i += 1) {
-    drawRightAlignedText(next.page, t(values[i]!), xs[i]!, rowY, font, size, COLORS.text);
+    drawRightAlignedText(next.page, t(values[i]!), xs[i]!, rowY, font, size, COLORS.textPrimary);
   }
 
   next.y = Math.min(next.y - mmToPt(5.5), labelEndY - mmToPt(1));
-  if (options.emphasis) {
-    next.page.drawLine({
-      start: { x: MARGIN_X, y: next.y + mmToPt(2) },
-      end: { x: PAGE_W - MARGIN_X, y: next.y + mmToPt(2) },
-      thickness: 0.75,
-      color: COLORS.text,
-    });
-    next.y -= mmToPt(2);
-  } else if (options.bold) {
+  if (options.bold && !options.emphasis) {
     next.page.drawLine({
       start: { x: MARGIN_X, y: next.y + mmToPt(1.5) },
       end: { x: PAGE_W - MARGIN_X, y: next.y + mmToPt(1.5) },
       thickness: 0.35,
-      color: COLORS.line,
+      color: COLORS.rule,
     });
   }
   return next;
@@ -456,9 +413,9 @@ function drawPublicationMasthead(ctx: LayoutContext, input: FinancePublicationPd
   ctx.page.drawText(t(input.organisationName.toUpperCase()), {
     x: MARGIN_X,
     y,
-    size: TYPE.mastheadClub,
+    size: TYPE.mastheadTenant,
     font: fonts.bold,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
   y -= mmToPt(8);
 
@@ -466,18 +423,18 @@ function drawPublicationMasthead(ctx: LayoutContext, input: FinancePublicationPd
   ctx.page.drawText(t(reportHeading), {
     x: MARGIN_X,
     y,
-    size: TYPE.mastheadReport,
+    size: TYPE.reportTitle,
     font: fonts.bold,
-    color: COLORS.accent,
+    color: COLORS.sectionAccent,
   });
   y -= mmToPt(5);
 
   ctx.page.drawText(t(labels.reportTypeSubtitle), {
     x: MARGIN_X,
     y,
-    size: TYPE.mastheadSubtitle,
+    size: TYPE.reportSubtitle,
     font: fonts.regular,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
   y -= mmToPt(6);
 
@@ -488,15 +445,15 @@ function drawPublicationMasthead(ctx: LayoutContext, input: FinancePublicationPd
   ctx.page.drawText(t(officialLine), {
     x: MARGIN_X,
     y,
-    size: TYPE.mastheadMeta,
+    size: TYPE.publicationMetadata,
     font: fonts.bold,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   y -= mmToPt(4);
 
   ctx.page.drawText(
     t(`${labels.publishedAtLabel}: ${formatDateTime(identity.publishedAt, locale)}`),
-    { x: MARGIN_X, y, size: TYPE.mastheadMeta, font: fonts.regular, color: COLORS.muted },
+    { x: MARGIN_X, y, size: TYPE.publicationMetadata, font: fonts.regular, color: COLORS.textSecondary },
   );
 
   ctx.y = y - mmToPt(8);
@@ -521,7 +478,7 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
     y: heroTop - heroHeight,
     width: PAGE_W - MARGIN_X * 2,
     height: heroHeight,
-    color: COLORS.heroBg,
+    color: COLORS.heroSurface,
   });
 
   const innerX = MARGIN_X + mmToPt(5);
@@ -530,18 +487,18 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
   ctx.page.drawText(t(labels.expectedResultLabel.toUpperCase()), {
     x: innerX,
     y: bands.label.yBottom + mmToPt(1.5),
-    size: TYPE.heroLabel,
+    size: TYPE.heroEyebrow,
     font: fonts.bold,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
 
   const forecastValue = formatManagementPnlMeasureCell(forecast, currency, locale);
   ctx.page.drawText(t(forecastValue), {
     x: innerX,
     y: bands.value.yBottom + mmToPt(2),
-    size: TYPE.heroValue,
+    size: TYPE.heroNumber,
     font: fonts.bold,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
 
   const varianceValue = formatManagementPnlVarianceDelta(variance, currency, locale);
@@ -551,16 +508,16 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
     : `${varianceValue} ${labels.varianceVsBudgetLabel}`;
   const varianceColor =
     variance.favorability === "FAVORABLE"
-      ? COLORS.favorable
+      ? COLORS.favorableText
       : variance.favorability === "UNFAVORABLE"
-        ? COLORS.unfavorable
-        : COLORS.text;
+        ? COLORS.unfavorableText
+        : COLORS.textPrimary;
   const bandColor =
     variance.favorability === "FAVORABLE"
-      ? COLORS.favorableBand
+      ? COLORS.favorableHeroBand
       : variance.favorability === "UNFAVORABLE"
-        ? COLORS.unfavorableBand
-        : COLORS.panelBg;
+        ? COLORS.unfavorableHeroBand
+        : COLORS.page;
   ctx.page.drawRectangle({
     x: innerX,
     y: bands.variance.yBottom + mmToPt(0.5),
@@ -572,7 +529,7 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
     x: innerX + mmToPt(2),
     y: bands.variance.yBottom + mmToPt(2),
     size: TYPE.heroVariance,
-    font: fonts.bold,
+    font: fonts.regular,
     color: varianceColor,
   });
 
@@ -587,20 +544,20 @@ function drawHeroFinancialConclusion(ctx: LayoutContext): LayoutContext {
     ctx.page.drawText(t(col.label), {
       x,
       y: bands.supporting.yTop - mmToPt(3),
-      size: TYPE.heroSupporting,
+      size: TYPE.supportingMetricLabel,
       font: fonts.regular,
-      color: COLORS.muted,
+      color: COLORS.textSecondary,
     });
     ctx.page.drawText(t(col.value), {
       x,
       y: bands.supporting.yBottom + mmToPt(1),
-      size: TYPE.heroSupporting + 1,
-      font: fonts.bold,
-      color: COLORS.text,
+      size: TYPE.supportingMetricValue,
+      font: fonts.regular,
+      color: COLORS.textSecondary,
     });
   }
 
-  ctx.y = heroTop - heroHeight - mmToPt(6);
+  ctx.y = heroTop - heroHeight - mmToPt(5);
   return ctx;
 }
 
@@ -648,45 +605,52 @@ function drawManagementAssessment(ctx: LayoutContext): LayoutContext {
     y: ctx.y,
     size: TYPE.sectionHeading,
     font: fonts.bold,
-    color: COLORS.accent,
+    color: COLORS.sectionAccent,
   });
-  ctx.y -= mmToPt(6);
+  ctx.y -= mmToPt(5);
 
   const overall = insights.find((i) => i.kind === "OVERALL_RESULT");
   if (overall && overall.kind === "OVERALL_RESULT") {
     const { title, detail } = formatAttentionDetail(overall, labels, currency, locale);
-    const panelTop = ctx.y;
-    const panelHeight = mmToPt(detail ? 16 : 10);
-    ctx.page.drawRectangle({
-      x: MARGIN_X,
-      y: panelTop - panelHeight,
-      width: PAGE_W - MARGIN_X * 2,
-      height: panelHeight,
-      color: COLORS.panelBg,
-      borderColor: COLORS.line,
-      borderWidth: 0.4,
+    const blockTop = ctx.y;
+    const accentX = MARGIN_X;
+    const textX = MARGIN_X + mmToPt(3.5);
+    const accentColor =
+      overall.favorability === "FAVORABLE"
+        ? COLORS.managementAccent
+        : overall.favorability === "UNFAVORABLE"
+          ? COLORS.unfavorableText
+          : COLORS.sectionAccent;
+    const accentHeight = mmToPt(detail ? 12 : 7);
+    ctx.page.drawLine({
+      start: { x: accentX, y: blockTop },
+      end: { x: accentX, y: blockTop - accentHeight },
+      thickness: 1.2,
+      color: accentColor,
     });
     ctx.page.drawText(t(title), {
-      x: MARGIN_X + mmToPt(3),
-      y: panelTop - mmToPt(5),
-      size: TYPE.body + 1,
+      x: textX,
+      y: blockTop - mmToPt(4),
+      size: TYPE.body,
       font: fonts.bold,
-      color: COLORS.text,
+      color: COLORS.textPrimary,
     });
     if (detail) {
-      drawWrappedTextBlock(
+      ctx.y = drawWrappedTextBlock(
         ctx.page,
         detail,
-        MARGIN_X + mmToPt(3),
-        panelTop - mmToPt(9),
-        PAGE_W - MARGIN_X * 2 - mmToPt(6),
+        textX,
+        blockTop - mmToPt(8),
+        PAGE_W - textX - MARGIN_X,
         TYPE.body,
         fonts.regular,
-        COLORS.text,
-        mmToPt(4.5),
+        COLORS.textPrimary,
+        mmToPt(4.2),
       );
+    } else {
+      ctx.y = blockTop - accentHeight;
     }
-    ctx.y = panelTop - panelHeight - mmToPt(4);
+    ctx.y -= mmToPt(3);
   }
 
   return ctx;
@@ -719,11 +683,11 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
     const delta = formatManagementPnlVarianceDelta(fav.driver.comparison, currency, locale);
     cards.push({
       x: MARGIN_X,
-      bg: COLORS.favorableBg,
+      bg: COLORS.favorableSurface,
       title: labels.positiveDriverTitle,
       name: fav.driver.name,
       amountLine: delta,
-      amountColor: COLORS.favorable,
+      amountColor: COLORS.favorableText,
     });
   }
   if (unfav && unfav.kind === "UNFAVORABLE_DRIVER") {
@@ -732,11 +696,11 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
       unfav.driver.canonicalSemantic === "EXPENSE" ? ` ${labels.attentionDriverExpenseSuffix}` : "";
     cards.push({
       x: MARGIN_X + (fav ? cardWidth + mmToPt(4) : 0),
-      bg: COLORS.unfavorableBg,
+      bg: COLORS.unfavorableSurface,
       title: labels.negativeDriverTitle,
       name: unfav.driver.name,
       amountLine: `${delta}${suffix}`,
-      amountColor: COLORS.unfavorable,
+      amountColor: COLORS.unfavorableText,
     });
   }
 
@@ -747,28 +711,26 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
       width: cardWidth,
       height: cardHeight,
       color: card.bg,
-      borderColor: COLORS.line,
-      borderWidth: 0.35,
     });
     ctx.page.drawText(t(card.title), {
       x: card.x + mmToPt(3),
       y: cardTop - mmToPt(5),
-      size: TYPE.driverTitle,
-      font: fonts.bold,
-      color: COLORS.muted,
+      size: TYPE.driverLabel,
+      font: fonts.regular,
+      color: COLORS.textSecondary,
     });
     ctx.page.drawText(t(card.name), {
       x: card.x + mmToPt(3),
       y: cardTop - mmToPt(9),
-      size: TYPE.body,
+      size: TYPE.driverName,
       font: fonts.bold,
-      color: COLORS.text,
+      color: COLORS.textPrimary,
     });
     ctx.page.drawText(t(card.amountLine), {
       x: card.x + mmToPt(3),
       y: cardTop - mmToPt(13),
-      size: TYPE.body,
-      font: fonts.regular,
+      size: TYPE.driverAmount,
+      font: fonts.bold,
       color: card.amountColor,
     });
   }
@@ -786,12 +748,12 @@ function drawStatementHeading(ctx: LayoutContext): LayoutContext {
     y: ctx.y,
     size: TYPE.sectionHeading,
     font: fonts.bold,
-    color: COLORS.accent,
+    color: COLORS.sectionAccent,
   });
   ctx.y -= mmToPt(4);
   ctx.page.drawText(
     t(labels.amountsInCurrencyLabel.replace("{currency}", currency ?? "")),
-    { x: MARGIN_X, y: ctx.y, size: TYPE.heroSupporting, font: fonts.regular, color: COLORS.muted },
+    { x: MARGIN_X, y: ctx.y, size: TYPE.supportingMetricLabel, font: fonts.regular, color: COLORS.textSecondary },
   );
   ctx.y -= mmToPt(7);
   return ctx;
@@ -804,7 +766,7 @@ function drawIncomeSection(ctx: LayoutContext): LayoutContext {
     y: next.y,
     size: TYPE.body,
     font: next.fonts.bold,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
   next.y -= mmToPt(5);
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
@@ -823,7 +785,7 @@ function drawExpenseSectionAndResult(ctx: LayoutContext): LayoutContext {
     y: next.y,
     size: TYPE.body,
     font: next.fonts.bold,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
   next.y -= mmToPt(5);
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
@@ -853,7 +815,7 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
     y: next.y,
     size: TYPE.sectionHeading,
     font: fonts.bold,
-    color: COLORS.accent,
+    color: COLORS.sectionAccent,
   });
   next.y -= mmToPt(6);
 
@@ -880,21 +842,21 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
     y: next.y,
     size: TYPE.tableHeader,
     font: fonts.bold,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   next.page.drawText(t(labels.columnDeviation), {
     x: colDeviation,
     y: next.y,
     size: TYPE.tableHeader,
     font: fonts.bold,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   next.page.drawText(t(labels.columnComment), {
     x: colComment,
     y: next.y,
     size: TYPE.tableHeader,
     font: fonts.bold,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   next.y -= mmToPt(5);
 
@@ -905,14 +867,14 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
       y: next.y,
       size: TYPE.body,
       font: fonts.regular,
-      color: COLORS.text,
+      color: COLORS.textPrimary,
     });
     next.page.drawText(t(row.delta), {
       x: colDeviation,
       y: next.y,
       size: TYPE.body,
       font: fonts.regular,
-      color: COLORS.text,
+      color: COLORS.textPrimary,
     });
     next.y = drawWrappedTextBlock(
       next.page,
@@ -922,7 +884,7 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
       PAGE_W - colComment - MARGIN_X,
       TYPE.body,
       fonts.regular,
-      COLORS.muted,
+      COLORS.textSecondary,
       mmToPt(4),
     );
     next.y -= mmToPt(1);
@@ -942,7 +904,7 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
     y: next.y,
     size: TYPE.sectionHeading,
     font: next.fonts.bold,
-    color: COLORS.accent,
+    color: COLORS.sectionAccent,
   });
   next.y -= mmToPt(5);
 
@@ -958,17 +920,17 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
   next.page.drawText(t(compact.versionPublishedLine), {
     x: MARGIN_X,
     y: next.y,
-    size: TYPE.metadata,
+    size: TYPE.publicationNote,
     font: next.fonts.regular,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   });
   next.y -= mmToPt(4);
   next.page.drawText(t(compact.pdfGeneratedLine), {
     x: MARGIN_X,
     y: next.y,
-    size: TYPE.metadata,
+    size: TYPE.publicationNote,
     font: next.fonts.regular,
-    color: COLORS.muted,
+    color: COLORS.textSecondary,
   });
   next.y -= mmToPt(3);
   return next;
@@ -982,9 +944,9 @@ function drawPublicationSnapshotNotice(ctx: LayoutContext): LayoutContext {
     MARGIN_X,
     next.y,
     PAGE_W - MARGIN_X * 2,
-    TYPE.metadata,
+    TYPE.publicationNote,
     next.fonts.regular,
-    COLORS.muted,
+    COLORS.textSecondary,
     mmToPt(4),
   );
   next.y -= mmToPt(2);

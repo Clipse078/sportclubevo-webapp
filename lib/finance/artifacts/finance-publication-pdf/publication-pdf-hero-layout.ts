@@ -17,7 +17,7 @@ const HERO_HEIGHT_MM = 42;
 const PADDING_TOP_MM = 6;
 const LABEL_BAND_MM = 5;
 const VALUE_BAND_MM = 11;
-const VARIANCE_BAND_MM = 7;
+const VARIANCE_BAND_MM = 5.5;
 const SUPPORTING_BAND_MM = 10;
 const PADDING_BOTTOM_MM = 3;
 
