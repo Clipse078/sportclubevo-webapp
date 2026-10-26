@@ -103,6 +103,8 @@ describe("FIN-06D controlled publication sharing", () => {
     expect(stored.publicToken).toBe(created.publicToken);
     expect(stored.tokenHash).toBeNull();
     expect(store.auditLog.some((e) => e.action === "SHARE_CREATED")).toBe(true);
+    const auditPayload = JSON.stringify(store.auditLog);
+    expect(auditPayload).not.toContain(created.publicToken);
   });
 
   it("reuses active default share on repeated ensure (no duplicate DEFAULT)", async () => {

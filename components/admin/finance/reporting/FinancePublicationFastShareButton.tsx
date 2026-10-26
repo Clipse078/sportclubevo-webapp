@@ -4,12 +4,18 @@ import { useCallback, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { ensureDefaultFinancePublicationShareAction } from "@/app/(admin)/dashboard/finance/reports/publication-share-actions";
 import { useToast } from "@/hooks/use-toast";
+import { copyFinancePublicationShareAbsoluteUrl } from "@/lib/finance/presentation/copy-finance-publication-share-url";
+import { buildFinancePublicationShareAbsoluteUrlFromPath } from "@/lib/finance/presentation/format-finance-publication-share-url-display";
+import { FinancePublicationFastShareConfirmation } from "@/components/admin/finance/reporting/FinancePublicationFastShareConfirmation";
 
 export type FinancePublicationFastShareLabels = {
   shareAction: string;
   copyLink: string;
+  openLink: string;
   linkCopiedTitle: string;
+  linkCreatedTitle: string;
   linkCopiedBody: string;
+  linkCopySuccess: string;
   createFailed: string;
   manageAction: string;
 };
@@ -26,21 +32,19 @@ type Props = {
   reloadKey?: number;
 };
 
-async function copyShareUrl(relativePath: string): Promise<boolean> {
+const SHARE_CONFIRMATION_TOAST_DURATION_MS = 12_000;
+
+function absoluteUrlFromRelativePath(relativePath: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const url = `${origin}${relativePath}`;
-  try {
-    await navigator.clipboard.writeText(url);
-    return true;
-  } catch {
-    return false;
-  }
+  return buildFinancePublicationShareAbsoluteUrlFromPath({
+    origin,
+    relativeSharePath: relativePath,
+  });
 }
 
 export function FinancePublicationFastShareButton({
   publicationId,
   versionNumber,
-  financeYearName,
   labels,
   disabled,
   onShareChanged,
@@ -49,13 +53,40 @@ export function FinancePublicationFastShareButton({
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
 
-  const showSuccessToast = useCallback(() => {
-    toast.success(
-      `${labels.linkCopiedTitle} — ${labels.linkCopiedBody
-        .replace("{year}", financeYearName)
-        .replace("{version}", String(versionNumber))}`,
-    );
-  }, [financeYearName, labels.linkCopiedBody, labels.linkCopiedTitle, toast, versionNumber]);
+  const showShareConfirmation = useCallback(
+    (relativeSharePath: string, clipboardSucceeded: boolean) => {
+      const title = clipboardSucceeded ? labels.linkCopiedTitle : labels.linkCreatedTitle;
+      const absoluteUrl = absoluteUrlFromRelativePath(relativeSharePath);
+
+      toast.success(
+        <FinancePublicationFastShareConfirmation
+          title={title}
+          relativeSharePath={relativeSharePath}
+          labels={{ openLink: labels.openLink, copyLink: labels.copyLink }}
+          onOpenLink={() => {
+            window.open(absoluteUrl, "_blank", "noopener,noreferrer");
+          }}
+          onCopyLink={() => {
+            void (async () => {
+              const copied = await copyFinancePublicationShareAbsoluteUrl(absoluteUrl);
+              if (copied) {
+                toast.success(labels.linkCopySuccess, { duration: 2500 });
+              }
+            })();
+          }}
+        />,
+        { duration: SHARE_CONFIRMATION_TOAST_DURATION_MS },
+      );
+    },
+    [
+      labels.copyLink,
+      labels.linkCopySuccess,
+      labels.linkCopiedTitle,
+      labels.linkCreatedTitle,
+      labels.openLink,
+      toast,
+    ],
+  );
 
   const onPrimaryShare = useCallback(() => {
     startTransition(() => {
@@ -69,17 +100,16 @@ export function FinancePublicationFastShareButton({
           return;
         }
         onShareChanged?.();
-        const copied = await copyShareUrl(result.shareUrlPath);
-        if (copied) {
-          showSuccessToast();
-        }
+        const absoluteUrl = absoluteUrlFromRelativePath(result.shareUrlPath);
+        const copied = await copyFinancePublicationShareAbsoluteUrl(absoluteUrl);
+        showShareConfirmation(result.shareUrlPath, copied);
       })();
     });
   }, [
     labels.createFailed,
     onShareChanged,
     publicationId,
-    showSuccessToast,
+    showShareConfirmation,
     toast,
     versionNumber,
   ]);

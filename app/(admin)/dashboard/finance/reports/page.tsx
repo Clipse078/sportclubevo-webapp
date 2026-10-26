@@ -169,8 +169,11 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
               ? {
                   shareAction: t("reporting.publicationShare.shareAction"),
                   copyLink: t("reporting.publicationShare.copyLink"),
+                  openLink: t("reporting.publicationShare.openLink"),
                   linkCopiedTitle: t("reporting.publicationShare.linkCopiedTitle"),
+                  linkCreatedTitle: t("reporting.publicationShare.linkCreatedTitle"),
                   linkCopiedBody: t("reporting.publicationShare.linkCopiedBody"),
+                  linkCopySuccess: t("reporting.publicationShare.linkCopySuccess"),
                   createFailed: t("reporting.publicationShare.createFailed"),
                   manageAction: t("reporting.publicationShare.manageAction"),
                 }

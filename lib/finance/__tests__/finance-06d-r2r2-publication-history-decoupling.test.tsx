@@ -96,8 +96,11 @@ const historyLabels = {
 const fastShareLabels = {
   shareAction: "Teilen",
   copyLink: "Link kopieren",
+  openLink: "Link öffnen",
   linkCopiedTitle: "Copied",
+  linkCreatedTitle: "Created",
   linkCopiedBody: "Year {year} v{version}",
+  linkCopySuccess: "Copied link",
   createFailed: "Failed",
   manageAction: "Freigabe verwalten",
 };
