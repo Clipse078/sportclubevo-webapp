@@ -44,6 +44,10 @@ import {
 import { publicationPdfColors } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-colors";
 import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";
 import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
+import {
+  publicationPdfAdvanceYAfterResultBand,
+  publicationPdfResultBandLayout,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
 
 function t(value: string): string {
   return pdfSafeText(value);
@@ -323,17 +327,18 @@ function drawAmountRow(
 
   const labelY = next.y;
   if (options.emphasis) {
+    const resultLayout = publicationPdfResultBandLayout();
     next.page.drawLine({
-      start: { x: MARGIN_X, y: labelY + mmToPt(1.5) },
-      end: { x: PAGE_W - MARGIN_X, y: labelY + mmToPt(1.5) },
+      start: { x: MARGIN_X, y: labelY + resultLayout.separatorAboveBaselinePt },
+      end: { x: PAGE_W - MARGIN_X, y: labelY + resultLayout.separatorAboveBaselinePt },
       thickness: 0.45,
       color: COLORS.ruleStrong,
     });
     next.page.drawRectangle({
       x: MARGIN_X,
-      y: labelY - mmToPt(6),
+      y: labelY - resultLayout.surfaceBottomBelowBaselinePt,
       width: PAGE_W - MARGIN_X * 2,
-      height: mmToPt(7),
+      height: resultLayout.surfaceHeightPt,
       color: COLORS.resultSurface,
     });
   }
@@ -362,7 +367,11 @@ function drawAmountRow(
     drawRightAlignedText(next.page, t(values[i]!), xs[i]!, rowY, font, size, COLORS.textPrimary);
   }
 
-  next.y = Math.min(next.y - mmToPt(5.5), labelEndY - mmToPt(1));
+  if (options.emphasis) {
+    next.y = publicationPdfAdvanceYAfterResultBand(labelY, labelEndY);
+  } else {
+    next.y = Math.min(next.y - mmToPt(5.5), labelEndY - mmToPt(1));
+  }
   if (options.bold && !options.emphasis) {
     next.page.drawLine({
       start: { x: MARGIN_X, y: next.y + mmToPt(1.5) },
@@ -896,9 +905,13 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
 
 function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
   const identity = input.presentation.identity;
-  const next = ensureSpace(ctx, mmToPt(16));
+  const resultLayout = publicationPdfResultBandLayout();
+  const next = ensureSpace(
+    ctx,
+    resultLayout.publicationSectionGapPt + mmToPt(14),
+  );
 
-  next.y -= mmToPt(1);
+  next.y -= resultLayout.publicationSectionGapPt;
   next.page.drawText(t(next.labels.publicationInfoTitle), {
     x: MARGIN_X,
     y: next.y,
