@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C-R1 IMPLEMENTED / PO UAT PENDING**; **FIN-06C IN PROGRESS**; **FIN-06 programme IN PROGRESS** |
+| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C PDF / EXPORT COMPLETE / PO APPROVED** (PR **#918** → **STAGE**); **FIN-06C controlled sharing & email distribution NOT STARTED**; **FIN-06 programme IN PROGRESS** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -276,7 +276,15 @@ R6 versioning contract: `lib/finance/__tests__/finance-06b-r6-versioning-contrac
 
 ### FIN-06C — published artifacts & distribution (in progress)
 
-**FIN-06C-R1 (PDF artifact):** **IMPLEMENTED / PO UAT PENDING** — on-demand PDF from immutable snapshot via `finance-publication-artifact-service.ts` and `/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf`. No artifact persistence row in R1; pipeline remains `Publication Version → snapshotPayloadJson → Publication Presentation → PDF`. See [`SCE-FINANCE-06C-R1-PDF-ARTIFACT.md`](SCE-FINANCE-06C-R1-PDF-ARTIFACT.md).
+**FIN-06C PDF / export slice — final closure (PO visual UAT = PASS, 2026-10-26):** Product Owner **Michael** approved the locked publication PDF design through **R5R3R1** (baseline commit **`3c6f169f`**). On-demand PDF from immutable snapshot only; tenant-primary branding; actual-draw geometry/collision guards; V1/V2 immutability preserved. Closure evidence: [`SCE-FINANCE-06C-PDF-EXPORT-FINAL-CLOSURE.md`](SCE-FINANCE-06C-PDF-EXPORT-FINAL-CLOSURE.md). Contract: `FINANCE_06C_PDF_EXPORT_RELEASE_CLOSURE`.
+
+| FIN-06C PDF / export gate | Result |
+| --- | --- |
+| **FIN-06C PDF / EXPORT PO VISUAL UAT** | **PASS** |
+| **IMMUTABILITY / snapshot-only PDF path** | **PASS** |
+| **PR #918** | **MERGE AUTHORIZED** when automated closure gates green |
+
+**FIN-06C-R1 (PDF artifact):** **COMPLETE / PO APPROVED** — on-demand PDF from immutable snapshot via `finance-publication-artifact-service.ts` and `/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf`. No artifact persistence row; pipeline remains `Publication Version → snapshotPayloadJson → Publication Presentation → PDF`. See [`SCE-FINANCE-06C-R1-PDF-ARTIFACT.md`](SCE-FINANCE-06C-R1-PDF-ARTIFACT.md).
 
 ### FIN-06C product direction (remaining slices)
 
@@ -290,9 +298,9 @@ Publication without distribution is **infrastructure**, not the complete user ou
 
 | FIN-06C slice | Intent |
 | --- | --- |
-| **PDF herunterladen** | First-class requirement — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
-| **Controlled sharing** | Of a **specific publication version** — not live-report sharing confused with publication |
-| **Email / distribution** | Of a **specific publication version** |
+| **PDF herunterladen** | **COMPLETE / PO APPROVED** — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
+| **Controlled sharing** | **NOT STARTED** — of a **specific publication version** (not live-report sharing confused with publication) |
+| **Email / distribution** | **NOT STARTED** — of a **specific publication version** |
 
 **PDF architecture lock:** `Publication Version → Snapshot → Publication Presentation → PDF`. **Never** `Publication Version → Current FIN-05 Read Model → PDF`. Semantic invariance: `PDF(V1)` today equals `PDF(V1)` after live finance changes (byte identity not required when metadata differs).
 
