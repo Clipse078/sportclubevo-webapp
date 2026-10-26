@@ -14,6 +14,7 @@ import { canPublishFinancialReports } from "@/lib/finance/publishing/finance-pub
 import {
   loadFinancePublicationSummaryForYear,
   loadFinancePublicationVersionForTenant,
+  loadFinancePublicationVersionHistoryPage,
 } from "@/lib/finance/services/finance-publication-query-service";
 import { publishFinanceManagementPnlSnapshot } from "@/lib/finance/services/finance-publication-service";
 import { buildFinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
@@ -75,6 +76,41 @@ export type FinancePublicationInspectionResult =
       presentation: FinancePublishedManagementPnlInspectionReadModel | null;
     }
   | { ok: false; error: string };
+
+export type FinancePublicationVersionHistoryActionResult =
+  | {
+      ok: true;
+      versions: Awaited<
+        ReturnType<typeof loadFinancePublicationVersionHistoryPage>
+      >["versions"];
+      hasOlder: boolean;
+      nextCursorVersionNumber: number | null;
+    }
+  | { ok: false; error: string };
+
+export async function loadFinancePublicationVersionHistoryAction(input: {
+  publicationId: string;
+  cursorVersionNumber?: number | null;
+}): Promise<FinancePublicationVersionHistoryActionResult> {
+  try {
+    const workspace = await loadFinanceWorkspaceContext();
+    const page = await loadFinancePublicationVersionHistoryPage(prisma, workspace.ctx, {
+      publicationId: input.publicationId,
+      cursorVersionNumber: input.cursorVersionNumber ?? null,
+    });
+    return {
+      ok: true,
+      versions: page.versions,
+      hasOlder: page.hasOlder,
+      nextCursorVersionNumber: page.nextCursorVersionNumber,
+    };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      error: resolveFinancePublicationActionUserMessage(error),
+    };
+  }
+}
 
 export async function loadFinancePublicationInspectionAction(input: {
   financeYearId: string;

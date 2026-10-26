@@ -180,10 +180,13 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
               : undefined
           }
           publicationShareManagementLabels={
-            canSharePublication
+            canSharePublication || canRevokePublicationShares
               ? {
                   sectionTitle: t("reporting.publicationShare.managementTitle"),
+                  dialogTitle: t("reporting.publicationShare.managementDialogTitle"),
                   empty: t("reporting.publicationShare.managementEmpty"),
+                  noActiveShare: t("reporting.publicationShare.noActiveShare"),
+                  createDefaultLink: t("reporting.publicationShare.createDefaultLink"),
                   statusActive: t("reporting.publicationShare.statusActive"),
                   statusExpired: t("reporting.publicationShare.statusExpired"),
                   statusRevoked: t("reporting.publicationShare.statusRevoked"),
@@ -194,7 +197,11 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   revoke: t("reporting.publicationShare.revoke"),
                   revoking: t("reporting.publicationShare.revoking"),
                   revokeFailed: t("reporting.publicationShare.revokeFailed"),
+                  revokeConfirmTitle: t("reporting.publicationShare.revokeConfirmTitle"),
+                  revokeConfirmDescription: t("reporting.publicationShare.revokeConfirmDescription"),
+                  revokeSuccess: t("reporting.publicationShare.revokeSuccess"),
                   copyLink: t("reporting.publicationShare.copyLink"),
+                  openLink: t("reporting.publicationShare.openLink"),
                   linkCopied: t("reporting.publicationShare.copied"),
                   loadFailed: t("reporting.publicationShare.loadFailed"),
                   advancedTitle: t("reporting.publicationShare.advancedTitle"),
@@ -205,6 +212,8 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   createAdvancedShare: t("reporting.publicationShare.createAdvancedShare"),
                   creating: t("reporting.publicationShare.creating"),
                   createFailed: t("reporting.publicationShare.createFailed"),
+                  manageAction: t("reporting.publicationShare.manageAction"),
+                  cancel: t("reporting.publication.cancel"),
                 }
               : undefined
           }
@@ -219,6 +228,11 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   statusPublished: t("reporting.publication.statusPublished"),
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
                   downloadPdf: t("reporting.publication.downloadPdf"),
+                  close: t("reporting.publication.close"),
+                  loading: t("reporting.publication.historyLoading"),
+                  loadingMore: t("reporting.publication.historyLoadingMore"),
+                  loadOlder: t("reporting.publication.historyLoadOlder"),
+                  empty: t("reporting.publication.historyEmpty"),
                 }
               : undefined
           }

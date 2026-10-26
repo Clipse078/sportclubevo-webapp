@@ -210,7 +210,14 @@ export function FinancePublicationInspectionSheet({
         <Dialog
           open={manageOpen}
           onClose={() => setManageOpen(false)}
-          title={shareManagementLabels.sectionTitle}
+          title={
+            identity
+              ? shareManagementLabels.dialogTitle.replace(
+                  "{version}",
+                  String(identity.publicationVersion),
+                )
+              : shareManagementLabels.sectionTitle
+          }
           footer={
             <Button type="button" variant="secondary" onClick={() => setManageOpen(false)}>
               {labels.close}
@@ -223,8 +230,10 @@ export function FinancePublicationInspectionSheet({
             formattingLocale={formattingLocale}
             labels={shareManagementLabels}
             canRevoke={canRevokeShares}
+            canCreateShare={canShare}
             reloadKey={shareReloadKey}
             active={manageOpen && Boolean(identity)}
+            onShareChanged={onShareCreated}
           />
         </Dialog>
       ) : null}

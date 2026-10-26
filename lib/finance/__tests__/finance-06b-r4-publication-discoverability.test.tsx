@@ -9,9 +9,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
 }));
 
+const loadHistory = vi.fn();
+
 vi.mock("@/app/(admin)/dashboard/finance/reports/publication-actions", () => ({
   publishFinanceManagementPnlAction: vi.fn(),
   loadFinancePublicationInspectionAction: vi.fn(),
+  loadFinancePublicationVersionHistoryAction: (...args: unknown[]) => loadHistory(...args),
 }));
 
 const publicationLabels = {
@@ -60,6 +63,11 @@ const historyLabels = {
   statusPublished: "Veröffentlicht",
   statusSuperseded: "Ersetzt",
   downloadPdf: "PDF herunterladen",
+  close: "Close",
+  loading: "Loading",
+  loadingMore: "Loading more",
+  loadOlder: "Load older",
+  empty: "Empty",
 };
 
 const pnlLabels = {
@@ -128,23 +136,36 @@ const withVersions: SerializedFinancePublicationSummaryReadModel = {
       financeYearId: "fy-2026",
       title: "FY 2026",
       currentVersionNumber: 2,
-      versions: [
-        {
-          versionNumber: 2,
-          lifecycleStatus: "PUBLISHED",
-          publishedAt: "2026-10-26T10:00:00.000Z",
-        },
-        {
-          versionNumber: 1,
-          lifecycleStatus: "SUPERSEDED",
-          publishedAt: "2026-10-25T12:00:00.000Z",
-        },
-      ],
+      versionCount: 2,
+      versions: [],
     },
   ],
 };
 
+const historyVersions = [
+  {
+    versionNumber: 2,
+    lifecycleStatus: "PUBLISHED",
+    publishedAt: "2026-10-26T10:00:00.000Z",
+  },
+  {
+    versionNumber: 1,
+    lifecycleStatus: "SUPERSEDED",
+    publishedAt: "2026-10-25T12:00:00.000Z",
+  },
+];
+
 describe("FIN-06B-R4 publication discoverability", () => {
+  beforeEach(() => {
+    loadHistory.mockReset();
+    loadHistory.mockResolvedValue({
+      ok: true,
+      versions: historyVersions,
+      hasOlder: false,
+      nextCursorVersionNumber: null,
+    });
+  });
+
   it("does not show history affordance when no publications exist", () => {
     render(
       <FinanceReportingPublicationBar

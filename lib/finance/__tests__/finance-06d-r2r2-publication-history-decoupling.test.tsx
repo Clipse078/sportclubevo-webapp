@@ -15,9 +15,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
 }));
 
+const loadHistory = vi.fn();
+
 vi.mock("@/app/(admin)/dashboard/finance/reports/publication-actions", () => ({
   publishFinanceManagementPnlAction: vi.fn(),
   loadFinancePublicationInspectionAction: vi.fn(),
+  loadFinancePublicationVersionHistoryAction: (...args: unknown[]) => loadHistory(...args),
 }));
 
 vi.mock("@/app/(admin)/dashboard/finance/reports/publication-share-actions", () => ({
@@ -34,11 +37,8 @@ const publicationSummary: SerializedFinancePublicationSummaryReadModel = {
       financeYearId: "fy-2026",
       title: "Erfolgsrechnung",
       currentVersionNumber: 3,
-      versions: [
-        { versionNumber: 3, lifecycleStatus: "PUBLISHED", publishedAt: "2026-10-26T10:00:00.000Z" },
-        { versionNumber: 2, lifecycleStatus: "SUPERSEDED", publishedAt: "2026-10-25T10:00:00.000Z" },
-        { versionNumber: 1, lifecycleStatus: "SUPERSEDED", publishedAt: "2026-10-24T10:00:00.000Z" },
-      ],
+      versionCount: 3,
+      versions: [],
     },
   ],
 };
@@ -91,6 +91,11 @@ const historyLabels = {
   statusPublished: "Veröffentlicht",
   statusSuperseded: "Ersetzt",
   downloadPdf: "PDF herunterladen",
+  close: "Close",
+  loading: "Loading",
+  loadingMore: "Loading more",
+  loadOlder: "Load older",
+  empty: "Empty",
 };
 
 const fastShareLabels = {
@@ -181,6 +186,17 @@ describe("FIN-06D-R2R2 publication history decoupling", () => {
   beforeEach(() => {
     getDefaultStatus.mockReset();
     ensureDefault.mockReset();
+    loadHistory.mockReset();
+    loadHistory.mockResolvedValue({
+      ok: true,
+      versions: [
+        { versionNumber: 3, lifecycleStatus: "PUBLISHED", publishedAt: "2026-10-26T10:00:00.000Z" },
+        { versionNumber: 2, lifecycleStatus: "SUPERSEDED", publishedAt: "2026-10-25T10:00:00.000Z" },
+        { versionNumber: 1, lifecycleStatus: "SUPERSEDED", publishedAt: "2026-10-24T10:00:00.000Z" },
+      ],
+      hasOlder: false,
+      nextCursorVersionNumber: null,
+    });
     vi.stubGlobal("navigator", {
       clipboard: { writeText: vi.fn(async () => undefined) },
     });
