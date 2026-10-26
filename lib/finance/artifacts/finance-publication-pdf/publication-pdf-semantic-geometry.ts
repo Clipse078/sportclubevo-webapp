@@ -1,11 +1,16 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { mmToPt } from "@/lib/billing/invoice-pdf/mm";
 import { publicationPdfColors } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-colors";
+import { publicationPdfResultTextCapHeightPt } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
 import {
-  publicationPdfResultBandBottomYFromBaseline,
-  publicationPdfResultBandLayout,
-  publicationPdfResultTextCapHeightPt,
-} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
+  publicationPdfFontCapHeightPt,
+  publicationPdfFontDescenderPt,
+  publicationPdfResultBandHeightBoundsPt,
+  publicationPdfResultRowLayout,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout";
+import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
+import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";
+import { publicationPdfVerticalSpacePt } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-vertical-spacing";
 
 export type PublicationPdfTextRun = {
   text: string;
@@ -220,21 +225,20 @@ export function analyzePublicationPdfResultBlockGeometry(
     throw new Error("Missing result or publication heading text in PDF geometry extraction.");
   }
 
-  const layout = publicationPdfResultBandLayout();
-  const expectedSeparatorY = resultLabel.y + layout.separatorAboveBaselinePt;
+  const layout = publicationPdfResultRowLayout();
 
   const resultSurface =
     geometry.filledRects.find((rect) => rectContainsPoint(rect, resultLabel.x, resultLabel.y)) ??
     geometry.filledRects
       .filter((rect) => isResultSurfaceColor(rect.r, rect.g, rect.b))
-      .sort((a, b) => Math.abs(a.y + a.height - resultLabel.y) - Math.abs(b.y + b.height - resultLabel.y))[0];
+      .sort((a, b) => Math.abs(a.y + a.height / 2 - resultLabel.y) - Math.abs(b.y + b.height / 2 - resultLabel.y))[0];
   const resolvedSurface =
     resultSurface ??
     ({
       x: resultLabel.x - mmToPt(1),
-      y: resultLabel.y - layout.surfaceBottomBelowBaselinePt,
+      y: resultLabel.y - layout.bandHeightPt / 2,
       width: geometry.pageHeightPt,
-      height: layout.surfaceHeightPt,
+      height: layout.bandHeightPt,
       r: publicationPdfColors.resultSurface.red,
       g: publicationPdfColors.resultSurface.green,
       b: publicationPdfColors.resultSurface.blue,
@@ -244,31 +248,28 @@ export function analyzePublicationPdfResultBlockGeometry(
     const nearResult = geometry.filledRects.some(
       (rect) =>
         isResultSurfaceColor(rect.r, rect.g, rect.b) &&
-        Math.abs(rect.height - layout.surfaceHeightPt) < mmToPt(1.5),
+        Math.abs(rect.height - layout.bandHeightPt) < mmToPt(1.5),
     );
     if (!nearResult) {
       throw new Error("Missing result surface fill in PDF geometry extraction.");
     }
   }
 
+  const bandTopY = resolvedSurface.y + resolvedSurface.height;
   const resultSeparator =
     geometry.horizontalRules
-      .filter((rule) => Math.abs(rule.y - expectedSeparatorY) < mmToPt(1.5))
-      .sort((a, b) => Math.abs(a.y - expectedSeparatorY) - Math.abs(b.y - expectedSeparatorY))[0] ?? null;
+      .filter((rule) => Math.abs(rule.y - bandTopY) < mmToPt(1.2))
+      .sort((a, b) => Math.abs(a.y - bandTopY) - Math.abs(b.y - bandTopY))[0] ?? null;
 
-  const resultBandBottomY = Math.min(
-    publicationPdfResultBandBottomYFromBaseline(resultLabel.y),
-    resolvedSurface.y - layout.bottomPaddingPt,
-  );
-  const publicationHeadingTopY = publicationHeading.y + publicationHeading.height;
-
+  const resultBandBottomY = resolvedSurface.y;
   return {
     resultLabel,
     resultSurface: resolvedSurface,
     resultSeparator,
     publicationHeading,
     resultBandBottomY,
-    publicationHeadingTopY,
+    /** Baseline Y of the publication evidence heading (pdf-lib coordinates). */
+    publicationHeadingTopY: publicationHeading.y,
   };
 }
 
@@ -280,14 +281,14 @@ export function publicationPdfResultBlockGeometryInvariants(
   resultPublicationMinGapPt: number;
   separatorAboveResultText: boolean;
 } {
-  const layout = publicationPdfResultBandLayout();
+  const layout = publicationPdfResultRowLayout();
   const capHeight = publicationPdfResultTextCapHeightPt(layout.textSizePt);
   const resultTextTopY = block.resultLabel.y + capHeight;
   const resultSurfaceTopY = block.resultSurface.y + block.resultSurface.height;
 
   const resultTextInsideSurface =
     block.resultLabel.x >= block.resultSurface.x - 1 &&
-    block.resultLabel.y >= block.resultSurface.y - 1 &&
+    block.resultLabel.y >= block.resultSurface.y - 0.5 &&
     block.resultLabel.y <= resultSurfaceTopY + 0.5;
 
   const publicationHeadingBelowResultBand =
@@ -304,5 +305,267 @@ export function publicationPdfResultBlockGeometryInvariants(
     publicationHeadingBelowResultBand,
     resultPublicationMinGapPt,
     separatorAboveResultText,
+  };
+}
+
+export type PublicationPdfStatementTransitionGeometry = {
+  expenseSubtotalLabel: PublicationPdfTextRun;
+  resultLabel: PublicationPdfTextRun;
+  resultSurface: PublicationPdfFilledRect;
+  dividerCountBetweenExpenseSubtotalAndResult: number;
+  resultColumnVarianceRight: number | null;
+  expenseSubtotalColumnVarianceRight: number | null;
+  resultBandHeightPt: number;
+  resultTextVerticalCenterOffsetPt: number;
+};
+
+function runsOnBaseline(runs: PublicationPdfTextRun[], baselineY: number, tolerancePt = 1.25): PublicationPdfTextRun[] {
+  return runs.filter((run) => Math.abs(run.y - baselineY) <= tolerancePt);
+}
+
+function rightEdgeOfRun(run: PublicationPdfTextRun): number {
+  return run.x + run.width;
+}
+
+export function analyzePublicationPdfStatementTransitionGeometry(
+  geometry: PublicationPdfPageSemanticGeometry,
+  labels: {
+    expenseSectionTotal: string;
+    resultLabel: string;
+  },
+): PublicationPdfStatementTransitionGeometry {
+  const expenseSubtotalLabel = findTextRun(geometry.textRuns, labels.expenseSectionTotal);
+  const resultLabel = findTextRun(geometry.textRuns, labels.resultLabel);
+  if (!expenseSubtotalLabel || !resultLabel) {
+    throw new Error("Missing expense subtotal or result label in PDF geometry extraction.");
+  }
+
+  const resultSurface =
+    geometry.filledRects.find((rect) => rectContainsPoint(rect, resultLabel.x, resultLabel.y)) ??
+    geometry.filledRects.find((rect) => isResultSurfaceColor(rect.r, rect.g, rect.b));
+  if (!resultSurface) {
+    throw new Error("Missing result surface for statement transition geometry.");
+  }
+
+  const bandTopY = resultSurface.y + resultSurface.height;
+  const expenseBaselineY = expenseSubtotalLabel.y;
+
+  /** Rules strictly between expense subtotal and result band top (excluding owned band-top separator). */
+  const interiorTransitionRules = geometry.horizontalRules.filter(
+    (rule) => rule.y < bandTopY - mmToPt(0.35) && rule.y > expenseBaselineY - mmToPt(6),
+  );
+  const bandTopSeparatorPresent = geometry.horizontalRules.some(
+    (rule) => Math.abs(rule.y - bandTopY) <= mmToPt(1.2),
+  );
+  const transitionGapPt = bandTopY - expenseBaselineY;
+
+  /**
+   * Owned transition: expense subtotal defers its closing rule; Ergebnis band top is the sole divider.
+   * pdfjs may omit thin stroke paths — treat a compact gap with no interior rules as a single transition.
+   */
+  const dividers =
+    interiorTransitionRules.length === 0 && (bandTopSeparatorPresent || transitionGapPt <= mmToPt(6))
+      ? 1
+      : interiorTransitionRules.length + (bandTopSeparatorPresent ? 1 : 0);
+
+  const expenseAmountRuns = runsOnBaseline(geometry.textRuns, expenseBaselineY).filter(
+    (run) => run.text.trim() !== labels.expenseSectionTotal.trim(),
+  );
+  const resultAmountRuns = runsOnBaseline(geometry.textRuns, resultLabel.y).filter(
+    (run) => run.text.trim() !== labels.resultLabel.trim(),
+  );
+
+  const expenseSubtotalColumnVarianceRight =
+    expenseAmountRuns.length > 0
+      ? Math.max(...expenseAmountRuns.map((run) => rightEdgeOfRun(run)))
+      : null;
+  const resultColumnVarianceRight =
+    resultAmountRuns.length > 0 ? Math.max(...resultAmountRuns.map((run) => rightEdgeOfRun(run))) : null;
+
+  const cap = publicationPdfFontCapHeightPt(layoutTextSize());
+  const desc = publicationPdfFontDescenderPt(layoutTextSize());
+  const textMidY = resultLabel.y + (cap - desc) / 2;
+  const surfaceMidY = resultSurface.y + resultSurface.height / 2;
+
+  return {
+    expenseSubtotalLabel,
+    resultLabel,
+    resultSurface,
+    dividerCountBetweenExpenseSubtotalAndResult: dividers,
+    resultColumnVarianceRight,
+    expenseSubtotalColumnVarianceRight,
+    resultBandHeightPt: resultSurface.height,
+    resultTextVerticalCenterOffsetPt: textMidY - surfaceMidY,
+  };
+}
+
+function layoutTextSize(): number {
+  return publicationPdfResultRowLayout().textSizePt;
+}
+
+export function publicationPdfStatementTransitionInvariants(
+  transition: PublicationPdfStatementTransitionGeometry,
+): {
+  singleDividerBeforeResult: boolean;
+  resultColumnAlignedWithStatement: boolean;
+  resultBandCompact: boolean;
+  resultTextVerticallyCentered: boolean;
+  expenseSubtotalAboveResult: boolean;
+} {
+  const canonical = computePublicationPdfAmountColumnRights();
+  const columnTolerancePt = mmToPt(0.8);
+  const heightBounds = publicationPdfResultBandHeightBoundsPt();
+  const centerTolerancePt = mmToPt(0.9);
+
+  const resultColumnAlignedWithStatement =
+    transition.resultColumnVarianceRight !== null &&
+    Math.abs(transition.resultColumnVarianceRight - canonical.variance) <= columnTolerancePt;
+
+  return {
+    singleDividerBeforeResult: transition.dividerCountBetweenExpenseSubtotalAndResult === 1,
+    resultColumnAlignedWithStatement,
+    resultBandCompact:
+      transition.resultBandHeightPt >= heightBounds.min - 0.5 &&
+      transition.resultBandHeightPt <= heightBounds.max + 0.5,
+    resultTextVerticallyCentered:
+      Math.abs(transition.resultTextVerticalCenterOffsetPt) <= centerTolerancePt,
+    expenseSubtotalAboveResult:
+      transition.expenseSubtotalLabel.y > transition.resultSurface.y + transition.resultSurface.height,
+  };
+}
+
+export type PublicationPdfEvidenceHierarchyGeometry = {
+  statementHeading: PublicationPdfTextRun;
+  publicationHeading: PublicationPdfTextRun;
+};
+
+export function analyzePublicationPdfEvidenceHierarchyGeometry(
+  geometry: PublicationPdfPageSemanticGeometry,
+  labels: { statementSectionTitle: string; publicationInfoTitle: string },
+): PublicationPdfEvidenceHierarchyGeometry {
+  const statementHeading = findTextRun(geometry.textRuns, labels.statementSectionTitle);
+  const publicationHeading = findTextRun(geometry.textRuns, labels.publicationInfoTitle);
+  if (!statementHeading || !publicationHeading) {
+    throw new Error("Missing statement or publication heading in PDF geometry extraction.");
+  }
+  return { statementHeading, publicationHeading };
+}
+
+export function publicationPdfEvidenceHierarchyInvariants(
+  hierarchy: PublicationPdfEvidenceHierarchyGeometry,
+): { publicationHeadingSmallerThanStatement: boolean } {
+  return {
+    publicationHeadingSmallerThanStatement:
+      hierarchy.publicationHeading.height + 0.05 < hierarchy.statementHeading.height,
+  };
+}
+
+export type PublicationPdfPageCompositionBlock = {
+  name: string;
+  topY: number;
+  bottomY: number;
+};
+
+export function analyzePublicationPdfPageComposition(
+  geometry: PublicationPdfPageSemanticGeometry,
+  anchors: {
+    reportTitle: string;
+    heroForecastLabel: string;
+    managementTitle: string;
+    statementTitle: string;
+    publicationInfoTitle: string;
+    footerPageLabel: string;
+  },
+): PublicationPdfPageCompositionBlock[] {
+  const find = (needle: string) => findTextRun(geometry.textRuns, needle);
+  const blocks: PublicationPdfPageCompositionBlock[] = [];
+
+  const reportTitle = find(anchors.reportTitle);
+  const hero = find(anchors.heroForecastLabel);
+  const management = find(anchors.managementTitle);
+  const statement = find(anchors.statementTitle);
+  const publication = find(anchors.publicationInfoTitle);
+  const footer = find(anchors.footerPageLabel);
+
+  if (reportTitle) {
+    blocks.push({
+      name: "masthead",
+      topY: reportTitle.y + reportTitle.height,
+      bottomY: hero ? hero.y - mmToPt(2) : reportTitle.y - mmToPt(8),
+    });
+  }
+  if (hero) {
+    blocks.push({
+      name: "hero",
+      topY: hero.y + hero.height + mmToPt(12),
+      bottomY: management ? management.y + mmToPt(2) : hero.y - mmToPt(10),
+    });
+  }
+  if (management) {
+    blocks.push({
+      name: "management",
+      topY: management.y + management.height,
+      bottomY: statement ? statement.y + mmToPt(2) : management.y - mmToPt(8),
+    });
+  }
+  if (statement) {
+    blocks.push({
+      name: "statement",
+      topY: statement.y + statement.height,
+      bottomY: publication ? publication.y + publication.height + mmToPt(2) : statement.y - mmToPt(40),
+    });
+  }
+  if (publication) {
+    blocks.push({
+      name: "publicationEvidence",
+      topY: publication.y + publication.height,
+      bottomY: footer ? footer.y + footer.height + mmToPt(2) : publication.y - mmToPt(12),
+    });
+  }
+  if (footer) {
+    blocks.push({
+      name: "footer",
+      topY: footer.y + footer.height,
+      bottomY: footer.y - mmToPt(6),
+    });
+  }
+
+  return blocks;
+}
+
+export function publicationPdfPageCompositionInvariants(
+  blocks: PublicationPdfPageCompositionBlock[],
+): { noOverlap: boolean; statementAbovePublicationEvidence: boolean; resultToEvidenceGapWithinBounds: boolean } {
+  const statement = blocks.find((b) => b.name === "statement");
+  const evidence = blocks.find((b) => b.name === "publicationEvidence");
+
+  const statementAbovePublicationEvidence =
+    statement !== undefined &&
+    evidence !== undefined &&
+    statement.bottomY > evidence.topY + 0.5;
+
+  const maxGap = publicationPdfVerticalSpacePt("lg") + mmToPt(6);
+  const minGap = publicationPdfVerticalSpacePt("2xs");
+  const gap = statement && evidence ? statement.bottomY - evidence.topY : 0;
+  const resultToEvidenceGapWithinBounds =
+    !statement || !evidence || (gap >= minGap - 0.5 && gap <= maxGap);
+
+  /** Coarse anchor boxes — only assert statement/evidence do not collide. */
+  const noOverlap =
+    !statement ||
+    !evidence ||
+    statement.bottomY <= evidence.topY + mmToPt(1.5);
+
+  return { noOverlap, statementAbovePublicationEvidence, resultToEvidenceGapWithinBounds };
+}
+
+/** Expected primary section heading size vs secondary evidence heading (typography contract). */
+export function publicationPdfEvidenceTypographyContract(): {
+  statementHeadingSizePt: number;
+  evidenceHeadingSizePt: number;
+} {
+  return {
+    statementHeadingSizePt: TYPE.sectionHeading,
+    evidenceHeadingSizePt: TYPE.evidenceSectionHeading,
   };
 }

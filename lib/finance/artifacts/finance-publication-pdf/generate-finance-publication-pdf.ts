@@ -46,8 +46,14 @@ import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/financ
 import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
 import {
   publicationPdfAdvanceYAfterResultBand,
-  publicationPdfResultBandLayout,
+  publicationPdfResultRowGeometryFromBandTop,
+  publicationPdfResultRowLayout,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
+import {
+  publicationPdfImmutabilityNoticeMaxWidthPt,
+  publicationPdfStatementRowAdvancePt,
+  publicationPdfVerticalSpacePt,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-vertical-spacing";
 
 function t(value: string): string {
   return pdfSafeText(value);
@@ -311,9 +317,16 @@ function drawAmountRow(
     currentForecast: Parameters<typeof formatPublicationPdfTableMeasureCell>[0];
     forecastVsBudget: FinanceReportingComparisonSlice;
   },
-  options: { bold?: boolean; indent?: number; emphasis?: boolean } = {},
+  options: {
+    bold?: boolean;
+    indent?: number;
+    emphasis?: boolean;
+    /** Omit post-subtotal rule when the terminal Ergebnis row owns the transition. */
+    deferClosingRule?: boolean;
+  } = {},
 ): LayoutContext {
-  let next = ensureSpace(ctx, mmToPt(7));
+  const rowAdvance = publicationPdfStatementRowAdvancePt();
+  let next = ensureSpace(ctx, options.emphasis ? publicationPdfResultRowLayout().bandHeightPt + mmToPt(2) : rowAdvance + mmToPt(1.5));
   if (!next.tableHeaderDrawnOnPage) {
     next = drawTableHeader(next);
   }
@@ -325,22 +338,26 @@ function drawAmountRow(
   const labelX = MARGIN_X + indent;
   const maxLabelWidth = cols.budget - labelX - mmToPt(5);
 
-  const labelY = next.y;
+  let labelY = next.y;
+  let resultBandTopY: number | null = null;
   if (options.emphasis) {
-    const resultLayout = publicationPdfResultBandLayout();
+    const resultLayout = publicationPdfResultRowLayout();
+    resultBandTopY = next.y;
+    const geom = publicationPdfResultRowGeometryFromBandTop(resultBandTopY);
     next.page.drawLine({
-      start: { x: MARGIN_X, y: labelY + resultLayout.separatorAboveBaselinePt },
-      end: { x: PAGE_W - MARGIN_X, y: labelY + resultLayout.separatorAboveBaselinePt },
-      thickness: 0.45,
+      start: { x: MARGIN_X, y: geom.separatorY },
+      end: { x: PAGE_W - MARGIN_X, y: geom.separatorY },
+      thickness: resultLayout.separatorStrokePt,
       color: COLORS.ruleStrong,
     });
     next.page.drawRectangle({
       x: MARGIN_X,
-      y: labelY - resultLayout.surfaceBottomBelowBaselinePt,
+      y: geom.bandBottomY,
       width: PAGE_W - MARGIN_X * 2,
-      height: resultLayout.surfaceHeightPt,
+      height: geom.surfaceHeightPt,
       color: COLORS.resultSurface,
     });
+    labelY = geom.baselineY;
   }
 
   const labelEndY = drawWrappedTextBlock(
@@ -367,12 +384,12 @@ function drawAmountRow(
     drawRightAlignedText(next.page, t(values[i]!), xs[i]!, rowY, font, size, COLORS.textPrimary);
   }
 
-  if (options.emphasis) {
-    next.y = publicationPdfAdvanceYAfterResultBand(labelY, labelEndY);
+  if (options.emphasis && resultBandTopY !== null) {
+    next.y = publicationPdfAdvanceYAfterResultBand(resultBandTopY);
   } else {
-    next.y = Math.min(next.y - mmToPt(5.5), labelEndY - mmToPt(1));
+    next.y = Math.min(next.y - rowAdvance, labelEndY - mmToPt(1));
   }
-  if (options.bold && !options.emphasis) {
+  if (options.bold && !options.emphasis && !options.deferClosingRule) {
     next.page.drawLine({
       start: { x: MARGIN_X, y: next.y + mmToPt(1.5) },
       end: { x: PAGE_W - MARGIN_X, y: next.y + mmToPt(1.5) },
@@ -759,12 +776,12 @@ function drawStatementHeading(ctx: LayoutContext): LayoutContext {
     font: fonts.bold,
     color: COLORS.sectionAccent,
   });
-  ctx.y -= mmToPt(4);
+  ctx.y -= publicationPdfVerticalSpacePt("xs");
   ctx.page.drawText(
     t(labels.amountsInCurrencyLabel.replace("{currency}", currency ?? "")),
     { x: MARGIN_X, y: ctx.y, size: TYPE.supportingMetricLabel, font: fonts.regular, color: COLORS.textSecondary },
   );
-  ctx.y -= mmToPt(7);
+  ctx.y -= publicationPdfVerticalSpacePt("md");
   return ctx;
 }
 
@@ -777,13 +794,13 @@ function drawIncomeSection(ctx: LayoutContext): LayoutContext {
     font: next.fonts.bold,
     color: COLORS.textPrimary,
   });
-  next.y -= mmToPt(5);
+  next.y -= publicationPdfVerticalSpacePt("sm");
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
   next = walkTree(next, next.presentation.pnl.incomeSection.nodes, 0);
   next = drawAmountRow(next, next.labels.incomeSectionTotal, next.presentation.pnl.incomeSection.sectionTotal, {
     bold: true,
   });
-  next.y -= mmToPt(4);
+  next.y -= publicationPdfVerticalSpacePt("sm");
   return next;
 }
 
@@ -796,14 +813,14 @@ function drawExpenseSectionAndResult(ctx: LayoutContext): LayoutContext {
     font: next.fonts.bold,
     color: COLORS.textPrimary,
   });
-  next.y -= mmToPt(5);
+  next.y -= publicationPdfVerticalSpacePt("sm");
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
   next = walkTree(next, next.presentation.pnl.expenseSection.nodes, 0);
   next = drawAmountRow(next, next.labels.expenseSectionTotal, next.presentation.pnl.expenseSection.sectionTotal, {
     bold: true,
+    deferClosingRule: true,
   });
-  next.y -= mmToPt(4);
-  next = ensureSpace(next, mmToPt(10));
+  next = ensureSpace(next, publicationPdfResultRowLayout().bandHeightPt);
   next = drawAmountRow(next, next.labels.managementResult, next.presentation.pnl.managementResult, {
     emphasis: true,
   });
@@ -905,21 +922,16 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
 
 function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
   const identity = input.presentation.identity;
-  const resultLayout = publicationPdfResultBandLayout();
-  const next = ensureSpace(
-    ctx,
-    resultLayout.publicationSectionGapPt + mmToPt(14),
-  );
+  const next = ensureSpace(ctx, publicationPdfVerticalSpacePt("xl") + mmToPt(6));
 
-  next.y -= resultLayout.publicationSectionGapPt;
   next.page.drawText(t(next.labels.publicationInfoTitle), {
     x: MARGIN_X,
     y: next.y,
-    size: TYPE.sectionHeading,
+    size: TYPE.evidenceSectionHeading,
     font: next.fonts.bold,
-    color: COLORS.sectionAccent,
+    color: COLORS.textSecondary,
   });
-  next.y -= mmToPt(5);
+  next.y -= publicationPdfVerticalSpacePt("sm");
 
   const compact = buildCompactPublicationInfoLines({
     versionLabel: next.labels.versionLabel,
@@ -937,7 +949,7 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
     font: next.fonts.regular,
     color: COLORS.textPrimary,
   });
-  next.y -= mmToPt(4);
+  next.y -= publicationPdfVerticalSpacePt("xs");
   next.page.drawText(t(compact.pdfGeneratedLine), {
     x: MARGIN_X,
     y: next.y,
@@ -945,7 +957,7 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
     font: next.fonts.regular,
     color: COLORS.textSecondary,
   });
-  next.y -= mmToPt(3);
+  next.y -= publicationPdfVerticalSpacePt("2xs");
   return next;
 }
 
@@ -956,7 +968,7 @@ function drawPublicationSnapshotNotice(ctx: LayoutContext): LayoutContext {
     next.labels.snapshotImmutabilityNotice,
     MARGIN_X,
     next.y,
-    PAGE_W - MARGIN_X * 2,
+    publicationPdfImmutabilityNoticeMaxWidthPt(),
     TYPE.publicationNote,
     next.fonts.regular,
     COLORS.textSecondary,

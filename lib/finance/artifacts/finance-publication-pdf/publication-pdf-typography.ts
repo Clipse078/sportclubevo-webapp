@@ -20,6 +20,8 @@ export const publicationPdfTypography = {
   tableRow: 8.5,
   tableSubtotal: 9,
   tableResult: 9,
+  /** Secondary evidence block — subordinate to primary section headings. */
+  evidenceSectionHeading: 8.5,
   publicationNote: 8,
   footer: 7,
   footerAttribution: 6.5,

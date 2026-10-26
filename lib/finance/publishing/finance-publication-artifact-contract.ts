@@ -90,6 +90,32 @@ export const FINANCE_06C_R5_IMPLEMENTATION = {
   fin06ProgrammeStatus: "IN_PROGRESS",
 } as const;
 
+export const FINANCE_06C_R5R1_IMPLEMENTATION = {
+  packageId: "FIN-06C-R5R1",
+  status: "IMPLEMENTED_PO_UAT_PENDING",
+  predecessor: "FIN-06C-R5",
+  focus: "publication_pdf_result_row_vertical_collision_fix",
+  pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
+  testSuite: "lib/finance/__tests__/finance-06c-r5r1-result-row-vertical-layout.test.ts",
+  fin06cStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "IN_PROGRESS",
+} as const;
+
+export const FINANCE_06C_R5R2_IMPLEMENTATION = {
+  packageId: "FIN-06C-R5R2",
+  status: "IMPLEMENTED_PO_UAT_PENDING",
+  predecessor: "FIN-06C-R5R1",
+  focus: "publication_pdf_statement_document_grid_vertical_rhythm",
+  pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
+  spacingTokens: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-vertical-spacing.ts",
+  statementLayout: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout.ts",
+  semanticGeometry: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-semantic-geometry.ts",
+  designNotes: "docs/finance/SCE-FINANCE-06C-R5R2-STATEMENT-DOCUMENT-GRID.md",
+  testSuite: "lib/finance/__tests__/finance-06c-r5r2-statement-document-grid.test.ts",
+  fin06cStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "IN_PROGRESS",
+} as const;
+
 export const FINANCE_06C_R1_IMPLEMENTATION = {
   packageId: "FIN-06C-R1",
   status: "IMPLEMENTED",

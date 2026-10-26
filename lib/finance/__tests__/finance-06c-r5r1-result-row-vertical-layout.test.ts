@@ -1,10 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildFinancePublicationPdfLabels } from "@/lib/finance/presentation/load-finance-publication-pdf-labels";
-import {
-  publicationPdfResultBandLayout,
-  publicationPdfResultBandBottomYFromBaseline,
-} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
+import { publicationPdfResultRowLayout } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
 import {
   analyzePublicationPdfResultBlockGeometry,
   extractPublicationPdfSemanticGeometry,
@@ -180,19 +177,16 @@ describe("FIN-06C-R5R1 result row vertical layout", () => {
       publicationInfoTitle: deLabels.publicationInfoTitle,
     });
     const inv = publicationPdfResultBlockGeometryInvariants(block);
-    const layout = publicationPdfResultBandLayout();
+    const layout = publicationPdfResultRowLayout();
 
     expect(inv.resultTextInsideSurface).toBe(true);
     expect(inv.publicationHeadingBelowResultBand).toBe(true);
-    expect(inv.resultPublicationMinGapPt).toBeGreaterThanOrEqual(layout.minPublicationClearancePt);
+    expect(inv.resultPublicationMinGapPt).toBeGreaterThanOrEqual(layout.minResultEvidenceClearancePt);
     expect(inv.separatorAboveResultText).toBe(true);
 
     expect(block.publicationHeadingTopY).toBeLessThan(block.resultBandBottomY);
     expect(block.resultBandBottomY - block.publicationHeadingTopY).toBeGreaterThanOrEqual(
-      layout.minPublicationClearancePt,
-    );
-    expect(block.publicationHeadingTopY).toBeLessThanOrEqual(
-      publicationPdfResultBandBottomYFromBaseline(block.resultLabel.y) - layout.minPublicationClearancePt,
+      layout.minResultEvidenceClearancePt,
     );
   });
 
