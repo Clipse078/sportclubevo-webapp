@@ -1,0 +1,28 @@
+/** Publication PDF typography scale — single coherent document hierarchy. */
+export const publicationPdfTypography = {
+  mastheadTenant: 15,
+  reportTitle: 11,
+  reportSubtitle: 10,
+  publicationMetadata: 8.5,
+  continuationTenant: 10,
+  continuationMeta: 8,
+  sectionHeading: 10,
+  heroEyebrow: 8,
+  heroNumber: 22,
+  heroVariance: 9,
+  supportingMetricLabel: 8,
+  supportingMetricValue: 8.5,
+  body: 9,
+  driverLabel: 7.5,
+  driverName: 9,
+  driverAmount: 9,
+  tableHeader: 7.5,
+  tableRow: 8.5,
+  tableSubtotal: 9,
+  tableResult: 9,
+  /** Secondary evidence block — subordinate to primary section headings. */
+  evidenceSectionHeading: 8.5,
+  publicationNote: 8,
+  footer: 7,
+  footerAttribution: 6.5,
+} as const;

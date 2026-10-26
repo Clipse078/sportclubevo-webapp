@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R4 PO VISUAL UAT PASS**; **FIN-06B-R5 IMMUTABILITY CHECKPOINT PASS**; **FIN-06B-R6 VERSION 2 UAT PASS**; **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C NEXT / DEFINED / NOT STARTED**; **FIN-06 programme IN PROGRESS** |
+| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C PDF / EXPORT COMPLETE / PO APPROVED** (PR **#918** → **STAGE**); **FIN-06C controlled sharing & email distribution NOT STARTED**; **FIN-06 programme IN PROGRESS** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -274,7 +274,19 @@ R4 guards: `lib/finance/__tests__/finance-06b-r4-publication-inspection.test.ts`
 R5 acceptance flow: `lib/finance/__tests__/finance-06b-r5-immutability.test.ts`.
 R6 versioning contract: `lib/finance/__tests__/finance-06b-r6-versioning-contract.test.ts`.
 
-### FIN-06C — published artifacts & distribution (defined / not started)
+### FIN-06C — published artifacts & distribution (in progress)
+
+**FIN-06C PDF / export slice — final closure (PO visual UAT = PASS, 2026-10-26):** Product Owner **Michael** approved the locked publication PDF design through **R5R3R1** (baseline commit **`3c6f169f`**). On-demand PDF from immutable snapshot only; tenant-primary branding; actual-draw geometry/collision guards; V1/V2 immutability preserved. Closure evidence: [`SCE-FINANCE-06C-PDF-EXPORT-FINAL-CLOSURE.md`](SCE-FINANCE-06C-PDF-EXPORT-FINAL-CLOSURE.md). Contract: `FINANCE_06C_PDF_EXPORT_RELEASE_CLOSURE`.
+
+| FIN-06C PDF / export gate | Result |
+| --- | --- |
+| **FIN-06C PDF / EXPORT PO VISUAL UAT** | **PASS** |
+| **IMMUTABILITY / snapshot-only PDF path** | **PASS** |
+| **PR #918** | **MERGE AUTHORIZED** when automated closure gates green |
+
+**FIN-06C-R1 (PDF artifact):** **COMPLETE / PO APPROVED** — on-demand PDF from immutable snapshot via `finance-publication-artifact-service.ts` and `/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf`. No artifact persistence row; pipeline remains `Publication Version → snapshotPayloadJson → Publication Presentation → PDF`. See [`SCE-FINANCE-06C-R1-PDF-ARTIFACT.md`](SCE-FINANCE-06C-R1-PDF-ARTIFACT.md).
+
+### FIN-06C product direction (remaining slices)
 
 **Primary product outcome:** A published financial report becomes an **official immutable artifact that can be distributed**.
 
@@ -286,9 +298,9 @@ Publication without distribution is **infrastructure**, not the complete user ou
 
 | FIN-06C slice | Intent |
 | --- | --- |
-| **PDF herunterladen** | First-class requirement — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
-| **Controlled sharing** | Of a **specific publication version** — not live-report sharing confused with publication |
-| **Email / distribution** | Of a **specific publication version** |
+| **PDF herunterladen** | **COMPLETE / PO APPROVED** — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
+| **Controlled sharing** | **NOT STARTED** — of a **specific publication version** (not live-report sharing confused with publication) |
+| **Email / distribution** | **NOT STARTED** — of a **specific publication version** |
 
 **PDF architecture lock:** `Publication Version → Snapshot → Publication Presentation → PDF`. **Never** `Publication Version → Current FIN-05 Read Model → PDF`. Semantic invariance: `PDF(V1)` today equals `PDF(V1)` after live finance changes (byte identity not required when metadata differs).
 
@@ -312,7 +324,7 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
 | **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
-| **06C** | Published artifacts & distribution | **DEFINED / NOT STARTED** |
+| **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented; **R2 PDF design/accessibility** implemented / PO UAT pending) |
 | **06D** | Publication governance & history | NOT STARTED |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
@@ -356,6 +368,7 @@ FIN-06B-R4 — PO VISUAL UAT PASS
 FIN-06B-R5 — IMMUTABILITY CHECKPOINT PASS
 FIN-06B-R6 — VERSION 2 UAT PASS
 FIN-06B-R7 — FINAL CLOSURE PASS
-FIN-06 — IN PROGRESS (FIN-06C not started)
-FIN-06C — NEXT · DEFINED · NOT STARTED
+FIN-06 — IN PROGRESS
+FIN-06C-R1 — IMPLEMENTED · PO UAT PENDING (PDF download)
+FIN-06C — IN PROGRESS
 ```

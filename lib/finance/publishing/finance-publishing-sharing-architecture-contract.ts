@@ -356,7 +356,10 @@ export const FINANCE_06C_PRODUCT_MODEL = {
     "artifactGeneration",
     "distributionIntegrity",
   ] as const,
-  fin06cStatus: "DEFINED_NOT_STARTED",
+  fin06cStatus: "IN_PROGRESS",
+  fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
+  fin06cControlledSharingSliceStatus: "NOT_STARTED",
+  fin06cEmailDistributionSliceStatus: "NOT_STARTED",
 } as const;
 
 /** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */
@@ -502,6 +505,28 @@ export const FINANCE_06B_R7_RELEASE_CLOSURE = {
   productionTouched: false,
 } as const;
 
+/** FIN-06C PDF / export slice — Product Owner visual UAT + merge closure (PR #918). */
+export const FINANCE_06C_PDF_EXPORT_RELEASE_CLOSURE = {
+  fin06cPdfExportPoVisualUat: "PASS",
+  fin06cPdfExportImmutability: "PASS",
+  fin06cPdfExportLayoutContract: "PASS",
+  fin06cPdfExportBrandingContract: "PASS",
+  fin06cPdfExportFinalClosure: "PASS",
+  approvedVisualBaselineCommit: "3c6f169f68d36eaf50d18748370467189259f768",
+  mergeAuthorizationPending: false,
+  mergedToStage: false,
+  prNumber: 918,
+  closureBranch: "cursor/sce-finance-06c-distribution-export",
+  closureDoc: "docs/finance/SCE-FINANCE-06C-PDF-EXPORT-FINAL-CLOSURE.md",
+  fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
+  fin06cControlledSharingSliceStatus: "NOT_STARTED",
+  fin06cEmailDistributionSliceStatus: "NOT_STARTED",
+  fin06cPackageRemainsInProgress: true,
+  fin06ProgrammeRemainsInProgress: true,
+  fullTaggedPdfRequiresFuturePdfEngineDecision: true,
+  productionTouched: false,
+} as const;
+
 export const FINANCE_06B_IMPLEMENTATION = {
   snapshotBuilder: "lib/finance/publishing/build-finance-publication-snapshot-v1.ts",
   snapshotValidator: "lib/finance/publishing/validate-finance-publication-snapshot-v1.ts",
@@ -522,5 +547,7 @@ export const FINANCE_06B_IMPLEMENTATION = {
   fin06bR6Version2PoUat: "PASS",
   fin06bR7FinalClosure: "PASS",
   fin06bR6Status: "VERSION_2_PO_UAT_PASS",
-  fin06cStatus: "DEFINED_NOT_STARTED",
+  fin06cStatus: "IN_PROGRESS",
+  fin06cR1Status: "COMPLETE_PO_APPROVED",
+  fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
 } as const;

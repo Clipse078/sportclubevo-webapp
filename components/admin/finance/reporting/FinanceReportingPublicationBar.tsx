@@ -20,6 +20,7 @@ import type { ComponentProps } from "react";
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
+import { FinancePublicationPdfDownloadButton } from "@/components/admin/finance/reporting/FinancePublicationPdfDownloadButton";
 
 export type FinancePublicationHistoryLabels = {
   historyAction: string;
@@ -29,6 +30,7 @@ export type FinancePublicationHistoryLabels = {
   publishedAtLabel: string;
   statusPublished: string;
   statusSuperseded: string;
+  downloadPdf: string;
 };
 
 type Props = {
@@ -168,19 +170,13 @@ export function FinanceReportingPublicationBar({
                 {versionEntries.map((version) => {
                   const status = statusLabel(version.lifecycleStatus, resolvedHistoryLabels);
                   return (
-                    <li key={version.versionNumber}>
-                      <button
-                        type="button"
-                        className="flex w-full flex-col gap-0.5 px-4 py-3 text-left text-sm hover:bg-[var(--surface-1)]"
-                        data-finance-publication-history-version={version.versionNumber}
-                        data-finance-publication-lifecycle={version.lifecycleStatus}
-                        onClick={() =>
-                          void openInspection({
-                            publicationId,
-                            versionNumber: version.versionNumber,
-                          })
-                        }
-                      >
+                    <li
+                      key={version.versionNumber}
+                      className="px-4 py-3 text-sm hover:bg-[var(--surface-1)]"
+                      data-finance-publication-history-version={version.versionNumber}
+                      data-finance-publication-lifecycle={version.lifecycleStatus}
+                    >
+                      <div className="flex flex-col gap-0.5">
                         <span className="font-medium text-[var(--foreground)]">
                           {resolvedHistoryLabels.versionLabel.replace(
                             "{version}",
@@ -192,10 +188,27 @@ export function FinanceReportingPublicationBar({
                           {formatPublishedAt(version.publishedAt, formattingLocale)}
                           {status ? ` · ${status}` : null}
                         </span>
-                        <span className="text-xs font-medium text-[var(--sce-primary)]">
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() =>
+                            void openInspection({
+                              publicationId,
+                              versionNumber: version.versionNumber,
+                            })
+                          }
+                        >
                           {resolvedHistoryLabels.openVersion}
-                        </span>
-                      </button>
+                        </Button>
+                        <FinancePublicationPdfDownloadButton
+                          publicationId={publicationId}
+                          versionNumber={version.versionNumber}
+                          label={resolvedHistoryLabels.downloadPdf}
+                        />
+                      </div>
                     </li>
                   );
                 })}

@@ -166,6 +166,7 @@ const inspectionLabels = {
   contentTypeLabel: "Erfolgsrechnung",
   statusPublished: "Veröffentlicht",
   statusSuperseded: "Ersetzt",
+  downloadPdf: "PDF herunterladen",
   close: "Schließen",
 };
 
@@ -177,6 +178,7 @@ const historyLabels = {
   publishedAtLabel: "Veröffentlicht",
   statusPublished: "Veröffentlicht",
   statusSuperseded: "Ersetzt",
+  downloadPdf: "PDF herunterladen",
 };
 
 const pnlLabels = {
