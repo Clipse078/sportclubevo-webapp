@@ -42,4 +42,13 @@ describe("FIN-06E-R4 migration deployment guard", () => {
     );
     expect(sql).toContain(`ADD VALUE 'DISTRIBUTION'`);
   });
+
+  it("documents PostgreSQL enum guard SQL for deployed DISTRIBUTION shares", () => {
+    const contract = readFileSync(
+      resolve(process.cwd(), "lib/server/finance-publication-share-database-contract.ts"),
+      "utf8",
+    );
+    expect(contract).toContain("FinancePublicationShareKind");
+    expect(contract).toContain("DISTRIBUTION");
+  });
 });

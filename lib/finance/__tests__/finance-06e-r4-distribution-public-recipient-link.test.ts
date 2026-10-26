@@ -5,6 +5,14 @@
 process.env.APP_BASE_URL = "https://fcallschwil.sportclubevo.com";
 
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/finance/email/load-finance-publication-distribution-email-branding", () => ({
+  loadFinancePublicationDistributionEmailBranding: vi.fn(async () => ({
+    tenantName: "FC Allschwil",
+    tenantLogoAbsoluteUrl: "https://fcallschwil.sportclubevo.com/images/tenants/fca-crest.png",
+    sceLogoAbsoluteUrl: "https://fcallschwil.sportclubevo.com/images/branding/sportclubevo_logo.png",
+  })),
+}));
 import { FinancePublicationShareKind } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
@@ -331,6 +339,8 @@ describe("FIN-06E-R4 distribution email public URLs", () => {
     const rendered = buildFinancePublicationDistributionEmail({
       labels: emailLabels,
       tenantName: "FC Allschwil",
+      tenantLogoAbsoluteUrl: "https://fcallschwil.sportclubevo.com/images/tenants/fca-crest.png",
+      sceLogoAbsoluteUrl: "https://fcallschwil.sportclubevo.com/images/branding/sportclubevo_logo.png",
       reportTitle: "Finanzbericht",
       financeYearLabel: "FY 2026",
       versionNumber: 4,

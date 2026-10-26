@@ -17,6 +17,7 @@ import {
   buildFinancePublicationDistributionEmail,
   type FinancePublicationDistributionEmailLabels,
 } from "@/lib/finance/email/build-finance-publication-distribution-email";
+import { loadFinancePublicationDistributionEmailBranding } from "@/lib/finance/email/load-finance-publication-distribution-email-branding";
 import { FinanceDomainError } from "@/lib/finance/errors";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { auditFinancePublicationShareCreated } from "@/lib/finance/audit/finance-publication-share-audit";
@@ -329,6 +330,8 @@ async function runRecipientDeliveries(input: {
   }>;
   emailLabels: FinancePublicationDistributionEmailLabels;
   tenantName: string;
+  tenantLogoAbsoluteUrl: string | null;
+  sceLogoAbsoluteUrl: string;
   reportTitle: string;
   financeYearLabel: string;
   versionNumber: number;
@@ -345,6 +348,8 @@ async function runRecipientDeliveries(input: {
     const rendered = buildFinancePublicationDistributionEmail({
       labels: input.emailLabels,
       tenantName: input.tenantName,
+      tenantLogoAbsoluteUrl: input.tenantLogoAbsoluteUrl,
+      sceLogoAbsoluteUrl: input.sceLogoAbsoluteUrl,
       reportTitle: input.reportTitle,
       financeYearLabel: input.financeYearLabel,
       versionNumber: input.versionNumber,
@@ -560,6 +565,7 @@ export async function createFinancePublicationDistribution(
     : "—";
 
   const emailPort = deps.emailPort ?? financePublicationDistributionEmailPort;
+  const emailBranding = await loadFinancePublicationDistributionEmailBranding(ctx.tenantId);
 
   if (existing?.status === "PROCESSING") {
     const pendingRecipients = existing.recipients.filter((r) => r.status === "PENDING");
@@ -604,7 +610,9 @@ export async function createFinancePublicationDistribution(
             distributionId: existing.id,
             deliveries: pendingDeliveries,
             emailLabels: input.emailLabels,
-            tenantName: tenant.name,
+            tenantName: emailBranding.tenantName || tenant.name,
+            tenantLogoAbsoluteUrl: emailBranding.tenantLogoAbsoluteUrl,
+            sceLogoAbsoluteUrl: emailBranding.sceLogoAbsoluteUrl,
             reportTitle: versionRow.publication.title,
             financeYearLabel: versionRow.publication.financeYear.name,
             versionNumber: versionRow.versionNumber,
@@ -715,7 +723,9 @@ export async function createFinancePublicationDistribution(
     distributionId,
     deliveries: recipientDeliveries,
     emailLabels: input.emailLabels,
-    tenantName: tenant.name,
+    tenantName: emailBranding.tenantName || tenant.name,
+    tenantLogoAbsoluteUrl: emailBranding.tenantLogoAbsoluteUrl,
+    sceLogoAbsoluteUrl: emailBranding.sceLogoAbsoluteUrl,
     reportTitle: versionRow.publication.title,
     financeYearLabel: versionRow.publication.financeYear.name,
     versionNumber: versionRow.versionNumber,

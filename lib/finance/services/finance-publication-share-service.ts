@@ -31,6 +31,7 @@ import {
 } from "@/lib/finance/publishing/finance-publishing-authorization";
 import { parseFinancePublicationSnapshotPayloadV1 } from "@/lib/finance/publishing/validate-finance-publication-snapshot-v1";
 import { loadFinancePublicationVersionSnapshot } from "@/lib/finance/services/finance-publication-service";
+import { logFinancePublicationSharePublicFailure } from "@/lib/finance/server/finance-publication-share-public-diagnostics";
 
 type Db = Pick<
   PrismaClient,
@@ -517,43 +518,48 @@ export async function revokeFinancePublicationShare(
 }
 
 async function loadShareByCapabilityToken(db: Db, capabilityToken: string) {
-  const byPublic = await db.financePublicationShare.findUnique({
-    where: { publicToken: capabilityToken },
-    include: {
-      publicationVersion: {
-        select: {
-          id: true,
-          tenantId: true,
-          publicationId: true,
-          versionNumber: true,
-          lifecycleStatus: true,
-          publishedAt: true,
-          snapshotPayloadJson: true,
+  try {
+    const byPublic = await db.financePublicationShare.findUnique({
+      where: { publicToken: capabilityToken },
+      include: {
+        publicationVersion: {
+          select: {
+            id: true,
+            tenantId: true,
+            publicationId: true,
+            versionNumber: true,
+            lifecycleStatus: true,
+            publishedAt: true,
+            snapshotPayloadJson: true,
+          },
         },
       },
-    },
-  });
-  if (byPublic) {
-    return byPublic;
-  }
+    });
+    if (byPublic) {
+      return byPublic;
+    }
 
-  const tokenHash = hashFinanceShareLinkToken(capabilityToken);
-  return db.financePublicationShare.findUnique({
-    where: { tokenHash },
-    include: {
-      publicationVersion: {
-        select: {
-          id: true,
-          tenantId: true,
-          publicationId: true,
-          versionNumber: true,
-          lifecycleStatus: true,
-          publishedAt: true,
-          snapshotPayloadJson: true,
+    const tokenHash = hashFinanceShareLinkToken(capabilityToken);
+    return await db.financePublicationShare.findUnique({
+      where: { tokenHash },
+      include: {
+        publicationVersion: {
+          select: {
+            id: true,
+            tenantId: true,
+            publicationId: true,
+            versionNumber: true,
+            lifecycleStatus: true,
+            publishedAt: true,
+            snapshotPayloadJson: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error: unknown) {
+    logFinancePublicationSharePublicFailure("share-lookup", error);
+    return null;
+  }
 }
 
 export async function resolveFinancePublicationShareByRawToken(
@@ -600,23 +606,27 @@ export async function resolveFinancePublicationShareByRawToken(
 
   if (options?.recordAccess) {
     const accessCount = share.accessCount + 1;
-    await db.$transaction(async (tx) => {
-      await tx.financePublicationShare.update({
-        where: { id: share.id },
-        data: {
+    try {
+      await db.$transaction(async (tx) => {
+        await tx.financePublicationShare.update({
+          where: { id: share.id },
+          data: {
+            accessCount,
+            lastAccessedAt: now,
+          },
+        });
+        await auditFinancePublicationShareAccessed(tx, {
+          tenantId: share.tenantId,
+          shareId: share.id,
+          publicationId: share.publicationId,
+          publicationVersionId: share.publicationVersion.id,
+          versionNumber: share.publicationVersion.versionNumber,
           accessCount,
-          lastAccessedAt: now,
-        },
+        });
       });
-      await auditFinancePublicationShareAccessed(tx, {
-        tenantId: share.tenantId,
-        shareId: share.id,
-        publicationId: share.publicationId,
-        publicationVersionId: share.publicationVersion.id,
-        versionNumber: share.publicationVersion.versionNumber,
-        accessCount,
-      });
-    });
+    } catch (error: unknown) {
+      logFinancePublicationSharePublicFailure("share-access-audit", error);
+    }
   }
 
   return {
