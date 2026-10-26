@@ -77,6 +77,41 @@ Operator verify (read-only):
 - `scripts/sce-finance-06e-r2-stage-migration-verify.ts`
 - `npm run finance:06e:r2:stage-migration-verify`
 
+### Finance (FIN-06E-R7) — external recipient access on Preview (Deployment Protection)
+
+PR Preview deployments for `sportclubevo-webapp-stage` typically enable **Vercel Authentication**
+(Deployment Protection). Unauthenticated recipients must not hit a Vercel login wall when opening
+distribution capability URLs (`/share/finance/publication/{token}`).
+
+Application code routes Preview distribution view/PDF links to the **executing deployment origin**
+(`VERCEL_URL` or `PUBLIC_ACTION_BASE_URL`) so DISTRIBUTION rows resolve on FIN-06E runtime.
+That routing is necessary but **not sufficient**: the origin must also be **externally reachable**
+without deployment-provider authentication.
+
+**Post-merge / normal operation:** STAGE production on `https://fcallschwil.sportclubevo.com`
+remains the canonical recipient host (no `*.vercel.app` in emails).
+
+**Pre-merge Preview UAT (choose one minimal path):**
+
+1. **Preferred after merge readiness:** merge FIN-06E to `STAGE`, deploy production, run external
+   recipient UAT on the canonical tenant domain (no Preview-only configuration).
+
+2. **Preview-only external UAT (before merge):** in the Vercel project **Deployment Protection**
+   settings, either:
+   - disable Vercel Authentication for **Preview** deployments only (accept broader Preview exposure), **or**
+   - attach an **unprotected custom HTTPS domain** to Preview for this branch and set Preview env:
+     - `PUBLIC_ACTION_BASE_URL=https://<unprotected-preview-host>` (origin only, no path/query)
+     - `PUBLIC_ACTION_EXTERNALLY_REACHABLE=confirmed` (operator attestation that anonymous access works)
+
+   Do **not** embed `VERCEL_AUTOMATION_BYPASS_SECRET` or `x-vercel-protection-bypass` in distribution
+   emails. Shareable-link query parameters are for manual sharing, not transactional recipient mail.
+
+3. **Fail closed:** if neither path is configured, distribution send is blocked in Preview with a
+   localized operator message (prevents silently emailing protected `*.vercel.app` links).
+
+Repository guard: deployment preflight emits `PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE` when
+Preview would still require Vercel Deployment Protection for finance distribution links.
+
 ## Finance (FIN-06D) — controlled publication version sharing before Preview UAT
 
 PR Preview code for FIN-06D-R2 queries `FinancePublicationShare` including `publicToken`

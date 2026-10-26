@@ -36,6 +36,7 @@ import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import { loadFinancePublicationVersionSnapshot } from "@/lib/finance/services/finance-publication-service";
 import { searchDiscoverableTenantPersons } from "@/lib/people/tenant-person-discovery";
 import { isExternalSideEffectConfigured } from "@/lib/server/external-side-effect-policy";
+import { requirePublicActionTargetForFinanceDistribution } from "@/lib/server/public-action-target";
 
 type Db = Pick<
   PrismaClient,
@@ -536,6 +537,7 @@ export async function createFinancePublicationDistribution(
   if (!deps.emailPort) {
     requireFinancePublicationDistributionTransport();
   }
+  requirePublicActionTargetForFinanceDistribution();
 
   const versionRow = await loadPublishedVersionRow(db, ctx, {
     publicationId: input.publicationId,

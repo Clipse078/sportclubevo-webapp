@@ -36,3 +36,11 @@ export const FINANCE_06E_PUBLIC_SHARE_REQUIRED_COLUMNS = [
  */
 export const FINANCE_06E_CROSS_DEPLOYMENT_PUBLIC_LINK_INVARIANT =
   "SEND_RUNTIME_COMPATIBLE_WITH_CLICK_RUNTIME" as const;
+
+/**
+ * FIN-06E-R7 — recipient URL must satisfy runtime parity AND anonymous reachability.
+ * A compatible Preview `*.vercel.app` origin alone is insufficient when Vercel
+ * Deployment Protection blocks unauthenticated recipients.
+ */
+export const FINANCE_06E_PUBLIC_ACTION_TARGET_INVARIANT =
+  "RUNTIME_COMPATIBLE_AND_EXTERNALLY_REACHABLE_AND_CAPABILITY_SECURED" as const;

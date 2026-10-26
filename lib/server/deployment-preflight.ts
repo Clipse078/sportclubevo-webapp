@@ -18,6 +18,7 @@ import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity"
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 import { collectPrismaGeneratedEnumParityViolations } from "@/lib/server/prisma-generated-enum-parity";
 import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url-policy";
+import { evaluatePublicActionTarget } from "@/lib/server/public-action-target";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -315,6 +316,32 @@ export function runDeploymentPreflight(
                 "Public distribution links would target a STAGE runtime that may not match Preview schema/code.",
             ),
           );
+        }
+      }
+
+      if (publicActionBaseWouldCrossIncompatibleDeployment(processEnv)) {
+        const publicActionTarget = evaluatePublicActionTarget(processEnv);
+        if (!publicActionTarget.valid) {
+          if (publicActionTarget.failureCode === "DEPLOYMENT_PROTECTION") {
+            addViolation(
+              error(
+                "PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE",
+                "Preview/Acceptance would emit finance distribution recipient links that require Vercel Deployment Protection login. " +
+                  "Configure PUBLIC_ACTION_BASE_URL to an unprotected HTTPS origin on this deployment, or set PUBLIC_ACTION_EXTERNALLY_REACHABLE after disabling Preview protection, " +
+                  "or complete FIN-06E on STAGE production before external recipient UAT. See docs/deployment/stage-preview-migration-runbook.md (FIN-06E Preview recipient access).",
+              ),
+            );
+          } else if (
+            publicActionTarget.failureCode === "MISCONFIGURED_PUBLIC_ACTION_BASE_URL"
+          ) {
+            addViolation(
+              error(
+                "PREVIEW_PUBLIC_ACTION_BASE_URL_MISCONFIGURED",
+                "PUBLIC_ACTION_BASE_URL must not target the canonical tenant host while Preview code diverges from STAGE production, " +
+                  "and must alias the executing Preview deployment when used for external recipient links.",
+              ),
+            );
+          }
         }
       }
     } catch {
