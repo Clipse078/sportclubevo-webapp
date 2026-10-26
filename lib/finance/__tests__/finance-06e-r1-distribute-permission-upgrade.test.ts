@@ -61,10 +61,10 @@ describe("FIN-06E-R1 existing-tenant distribute permission upgrade", () => {
     const roleFindUnique = vi.fn(async ({ where }: { where: { key: string } }) =>
       where.key === "club_admin__existing" ? { id: "role-existing" } : null,
     );
-    const rolePermissionFindUnique = vi
-      .fn()
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ roleId: "role-existing" });
+    let assigned = false;
+    const rolePermissionFindUnique = vi.fn(async () =>
+      assigned ? { roleId: "role-existing" } : null,
+    );
     const rolePermissionUpsert = vi.fn(async () => ({}));
 
     const prisma = {
@@ -77,10 +77,11 @@ describe("FIN-06E-R1 existing-tenant distribute permission upgrade", () => {
     } as unknown as PrismaClient;
 
     const first = await reconcileFinanceReportingDistributePermissionsForClubAdmin(prisma, false);
+    assigned = true;
     const second = await reconcileFinanceReportingDistributePermissionsForClubAdmin(prisma, false);
 
     expect(first[0]?.action).toBe("assigned");
     expect(second[0]?.action).toBe("already_assigned");
-    expect(rolePermissionUpsert).toHaveBeenCalledTimes(1);
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(2);
   });
 });

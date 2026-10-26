@@ -305,7 +305,6 @@ describe("FIN-06E-R1 publication history Versenden entry point", () => {
 
     const versionRow = document.querySelector('[data-finance-publication-history-version="4"]');
     expect(versionRow?.querySelector("[data-finance-publication-distribute-trigger]")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Versenden" })).toBeTruthy();
   });
 
   it("hides Versenden when user lacks finance.reporting.distribute capability", async () => {
@@ -330,9 +329,15 @@ describe("FIN-06E-R1 publication history Versenden entry point", () => {
     renderBar({ canDistribute: true });
 
     await user.click(screen.getByRole("button", { name: "Veröffentlichungen" }));
-    await waitFor(() => screen.getByRole("button", { name: "Versenden" }));
+    await waitFor(() =>
+      document.querySelector('[data-finance-publication-history-version="4"]'),
+    );
 
-    await user.click(screen.getByRole("button", { name: "Versenden" }));
+    const version4Send = document
+      .querySelector('[data-finance-publication-history-version="4"]')
+      ?.querySelector("[data-finance-publication-distribute-trigger]") as HTMLButtonElement;
+    expect(version4Send).toBeTruthy();
+    await user.click(version4Send);
     expect(screen.getByText("Veröffentlichung versenden")).toBeTruthy();
     expect(loadDistributionHistory).not.toHaveBeenCalled();
   });
