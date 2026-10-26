@@ -150,6 +150,92 @@ describe("FIN-06E distribution service", () => {
     expect(share?.publicationVersionId).toBe(distribution?.publicationVersionId);
   });
 
+  it("resumes PROCESSING distributions without duplicate shares or emails", async () => {
+    const { prisma, store } = setupDistribution();
+    const send = vi.fn().mockResolvedValue({
+      provider: "mock",
+      providerMessageId: "msg-resume",
+      from: "noreply@test",
+    });
+    const emailPort = mockEmailPort(send);
+    vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel").mockResolvedValue(
+      buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
+    );
+    const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
+      financeYearId: yearId,
+    });
+    const versionRow = store.financePublicationVersion.find((v) => v.versionNumber === 1);
+    const shareId = "share-resume-1";
+    const publicToken = "tok-resume-public";
+    store.financePublicationShare.push({
+      id: shareId,
+      tenantId: tenantA,
+      publicationId: published.publicationId,
+      publicationVersionId: versionRow!.id,
+      publicToken,
+      tokenHash: null,
+      shareKind: "DISTRIBUTION",
+      expiresAt: null,
+      createdByUserId: "user-1",
+      revokedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    store.financePublicationDistribution.push({
+      id: "dist-processing",
+      tenantId: tenantA,
+      publicationId: published.publicationId,
+      publicationVersionId: versionRow!.id,
+      createdByUserId: "user-1",
+      optionalMessage: null,
+      status: "PROCESSING",
+      idempotencyKey: "idem-processing",
+      localeCode: "en",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      completedAt: null,
+    });
+    store.financePublicationDistributionRecipient.push({
+      id: "rec-pending",
+      tenantId: tenantA,
+      distributionId: "dist-processing",
+      personId: "person-1",
+      recipientEmail: "berta@example.com",
+      recipientDisplayName: "Berta Board",
+      isExternalRecipient: false,
+      publicationShareId: shareId,
+      status: "PENDING",
+      sentAt: null,
+      failedAt: null,
+      failureCode: null,
+      deliveryMetadataJson: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const shareCountBefore = store.financePublicationShare.length;
+    const result = await createFinancePublicationDistribution(
+      prisma,
+      ctx(tenantA, distributePerms),
+      {
+        publicationId: published.publicationId,
+        versionNumber: 1,
+        idempotencyKey: "idem-processing",
+        localeCode: "en",
+        recipients: [{ kind: "PERSON", personId: "person-1" }],
+        emailLabels,
+      },
+      { emailPort },
+    );
+
+    expect(result.reused).toBe(true);
+    expect(result.status).toBe("COMPLETED");
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(store.financePublicationShare).toHaveLength(shareCountBefore);
+    expect(store.financePublicationDistributionRecipient[0]?.status).toBe("SENT");
+    expect(store.financePublicationDistribution[0]?.status).toBe("COMPLETED");
+  });
+
   it("is idempotent for duplicate idempotency keys", async () => {
     const { prisma } = setupDistribution();
     const send = vi.fn();

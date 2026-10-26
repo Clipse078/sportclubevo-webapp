@@ -1,4 +1,6 @@
 /** @vitest-environment jsdom */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -105,6 +107,17 @@ const emailLabels = {
 };
 
 describe("FIN-06E-R3 send execution", () => {
+  it("does not block the server action on finance reports revalidation", () => {
+    const source = readFileSync(
+      join(
+        process.cwd(),
+        "app/(admin)/dashboard/finance/reports/publication-distribution-actions.ts",
+      ),
+      "utf8",
+    );
+    expect(source).not.toContain("revalidatePath");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.RESEND_API_KEY;
