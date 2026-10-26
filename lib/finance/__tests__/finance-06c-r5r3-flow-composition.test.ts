@@ -21,6 +21,7 @@ import {
   assertPublicationPdfNoSequentialBlockTextCollisions,
   assertPublicationPdfWrappedLinesDoNotOverlap,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-text-collision";
+import { buildPublicationPdfR5R2DefectiveEvidenceDraws } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-r5r2-overlap-fixture";
 import { generateFinancePublicationPdfArtifactForTenant } from "@/lib/finance/services/finance-publication-artifact-service";
 import * as managementReporting from "@/lib/finance/services/finance-management-reporting-query-service";
 import {
@@ -208,6 +209,22 @@ describe("FIN-06C-R5R3 publication PDF flow composition reset", () => {
   it("records R5R3 implementation lineage", () => {
     expect(FINANCE_06C_R5R3_IMPLEMENTATION.predecessor).toBe("FIN-06C-R5R2");
     expect(FINANCE_06C_R5R3_IMPLEMENTATION.focus).toContain("flow_cursor");
+  });
+
+  it("OLD_R5R2 overlap fixture fails collision guard; current FCA V2 layout passes", async () => {
+    const defective = buildPublicationPdfR5R2DefectiveEvidenceDraws();
+    const defectiveCollision = assertPublicationPdfNoSequentialBlockTextCollisions(defective);
+    expect(defectiveCollision.ok).toBe(false);
+
+    const pdf = await generateFcaV2PdfWithDrawLog();
+    const textDraws = publicationPdfRecordedTextDraws({
+      pageIndex: 0,
+      operations: pdf.drawOperations!,
+    });
+    const currentCollision = assertPublicationPdfNoSequentialBlockTextCollisions(textDraws, {
+      horizontalTableBlockIds: ["statement.row", "statement.result"],
+    });
+    expect(currentCollision.ok).toBe(true);
   });
 
   it("FCA V2 visual contract via actual draw geometry and collision guards", async () => {
