@@ -16,7 +16,7 @@ import {
 } from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
 import type { FinanceManagementPnlPublicationLabels } from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
 import type { FinancePublicationInspectionLabels } from "@/components/admin/finance/reporting/FinancePublicationInspectionSheet";
-import type { FinancePublicationShareDialogLabels } from "@/components/admin/finance/reporting/FinancePublicationShareDialog";
+import type { FinancePublicationFastShareLabels } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
 import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
@@ -39,7 +39,7 @@ type Props = {
   publicationLabels?: FinanceManagementPnlPublicationLabels;
   publicationInspectionLabels?: FinancePublicationInspectionLabels;
   publicationHistoryLabels?: FinancePublicationHistoryLabels;
-  publicationShareDialogLabels?: FinancePublicationShareDialogLabels;
+  publicationFastShareLabels?: FinancePublicationFastShareLabels;
   publicationShareManagementLabels?: FinancePublicationShareManagementLabels;
 };
 
@@ -60,7 +60,7 @@ export function FinanceReportingInvestigationWorkspace({
   publicationLabels,
   publicationInspectionLabels,
   publicationHistoryLabels,
-  publicationShareDialogLabels,
+  publicationFastShareLabels,
   publicationShareManagementLabels,
 }: Props) {
   const router = useRouter();
@@ -179,7 +179,7 @@ export function FinanceReportingInvestigationWorkspace({
           inspectionLabels={publicationInspectionLabels}
           historyLabels={publicationHistoryLabels}
           pnlLabels={pnlLabels}
-          shareDialogLabels={publicationShareDialogLabels}
+          fastShareLabels={publicationFastShareLabels}
           shareManagementLabels={publicationShareManagementLabels}
         />
       ) : null}

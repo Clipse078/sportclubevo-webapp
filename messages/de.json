@@ -1220,7 +1220,13 @@
         "revokeFailed": "Die Freigabe konnte nicht widerrufen werden.",
         "copyUnavailable": "Freigabelinks werden nur einmal bei der Erstellung angezeigt und können später nicht erneut abgerufen werden.",
         "loadFailed": "Freigaben konnten nicht geladen werden.",
-        "externalUnavailable": "Diese Freigabe ist nicht mehr verfügbar."
+        "externalUnavailable": "Diese Freigabe ist nicht mehr verfügbar.",
+        "linkCopiedTitle": "Freigabelink kopiert",
+        "linkCopiedBody": "{year} · Version {version} ist über diesen Link einsehbar.",
+        "manageAction": "Freigabe verwalten",
+        "inspectionLoading": "Veröffentlichung wird geladen…",
+        "advancedTitle": "Freigabe mit Ablaufdatum",
+        "createAdvancedShare": "Freigabe mit Ablauf erstellen"
       },
       "investigation": {
         "pageDescription": "Management-Ergebnis verstehen, wesentliche Abweichungen untersuchen und Kontobelege einsehen — ohne den Ausweis zu verlassen.",

@@ -757,7 +757,13 @@
         "revokeFailed": "The share could not be revoked.",
         "copyUnavailable": "Share links are shown once when created and cannot be retrieved later.",
         "loadFailed": "Shares could not be loaded.",
-        "externalUnavailable": "This share is no longer available."
+        "externalUnavailable": "This share is no longer available.",
+        "linkCopiedTitle": "Share link copied",
+        "linkCopiedBody": "{year} · Version {version} can be viewed via this link.",
+        "manageAction": "Manage share",
+        "inspectionLoading": "Loading publication…",
+        "advancedTitle": "Share with expiry",
+        "createAdvancedShare": "Create expiring share"
       },
       "investigation": {
         "pageDescription": "Understand the management result, investigate material variances, and drill into account evidence without leaving the statement.",

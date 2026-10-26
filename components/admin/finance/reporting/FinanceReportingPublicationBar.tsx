@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { PopoverContent } from "@/components/ui/Popover";
@@ -16,8 +16,9 @@ import {
 import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 import type { ComponentProps } from "react";
-import type { FinancePublicationShareDialogLabels } from "@/components/admin/finance/reporting/FinancePublicationShareDialog";
+import type { FinancePublicationFastShareLabels } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
 import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
+import { FinancePublicationFastShareButton } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
@@ -48,7 +49,7 @@ type Props = {
   inspectionLabels: FinancePublicationInspectionLabels;
   historyLabels?: FinancePublicationHistoryLabels;
   pnlLabels: PnlLabels;
-  shareDialogLabels?: FinancePublicationShareDialogLabels;
+  fastShareLabels?: FinancePublicationFastShareLabels;
   shareManagementLabels?: FinancePublicationShareManagementLabels;
 };
 
@@ -83,10 +84,11 @@ export function FinanceReportingPublicationBar({
   inspectionLabels,
   historyLabels,
   pnlLabels,
-  shareDialogLabels,
+  fastShareLabels,
   shareManagementLabels,
 }: Props) {
   const router = useRouter();
+  const [, startInspectionTransition] = useTransition();
   const [shareReloadKey, setShareReloadKey] = useState(0);
   const historyAnchorRef = useRef<HTMLButtonElement>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -122,19 +124,21 @@ export function FinanceReportingPublicationBar({
         versionNumber: input.versionNumber,
       });
 
-      setInspectionLoading(false);
-      if (!result.ok) {
-        setInspectionError(result.error);
-        return;
-      }
-      if (!result.presentation) {
-        setInspectionError(publicationLabels.inspectionEmpty);
-        return;
-      }
-      setInspectionPresentation(result.presentation);
-      router.refresh();
+      startInspectionTransition(() => {
+        setInspectionLoading(false);
+        if (!result.ok) {
+          setInspectionError(result.error);
+          return;
+        }
+        if (!result.presentation) {
+          setInspectionError(publicationLabels.inspectionEmpty);
+          return;
+        }
+        setInspectionPresentation(result.presentation);
+        router.refresh();
+      });
     },
-    [financeYearId, publicationLabels.inspectionEmpty, router],
+    [financeYearId, publicationLabels.inspectionEmpty, router, startInspectionTransition],
   );
 
   const publicationId = publicationSummary?.publications[0]?.publicationId ?? null;
@@ -219,6 +223,16 @@ export function FinanceReportingPublicationBar({
                           versionNumber={version.versionNumber}
                           label={resolvedHistoryLabels.downloadPdf}
                         />
+                        {canShare && fastShareLabels ? (
+                          <FinancePublicationFastShareButton
+                            publicationId={publicationId}
+                            versionNumber={version.versionNumber}
+                            financeYearName={financeYearName}
+                            labels={fastShareLabels}
+                            reloadKey={shareReloadKey}
+                            onShareChanged={() => setShareReloadKey((k) => k + 1)}
+                          />
+                        ) : null}
                       </div>
                     </li>
                   );
@@ -252,7 +266,7 @@ export function FinanceReportingPublicationBar({
         pnlLabels={pnlLabels}
         canShare={canShare}
         canRevokeShares={canRevokeShares}
-        shareDialogLabels={shareDialogLabels}
+        fastShareLabels={fastShareLabels}
         shareManagementLabels={shareManagementLabels}
         shareReloadKey={shareReloadKey}
         onShareCreated={() => setShareReloadKey((k) => k + 1)}
