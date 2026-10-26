@@ -213,21 +213,6 @@ export function FinancePublicationHistorySheet({
                     >
                       {historyLabels.openVersion}
                     </Button>
-                    <FinancePublicationPdfDownloadButton
-                      publicationId={publicationId}
-                      versionNumber={version.versionNumber}
-                      label={historyLabels.downloadPdf}
-                    />
-                    {canShare && fastShareLabels ? (
-                      <FinancePublicationFastShareButton
-                        publicationId={publicationId}
-                        versionNumber={version.versionNumber}
-                        financeYearName={financeYearName}
-                        labels={fastShareLabels}
-                        reloadKey={shareReloadKey}
-                        onShareChanged={onShareChanged}
-                      />
-                    ) : null}
                     {canDistribute && distributionLabels ? (
                       <Button
                         type="button"
@@ -243,6 +228,21 @@ export function FinancePublicationHistorySheet({
                       >
                         {distributionLabels.sendAction}
                       </Button>
+                    ) : null}
+                    <FinancePublicationPdfDownloadButton
+                      publicationId={publicationId}
+                      versionNumber={version.versionNumber}
+                      label={historyLabels.downloadPdf}
+                    />
+                    {canShare && fastShareLabels ? (
+                      <FinancePublicationFastShareButton
+                        publicationId={publicationId}
+                        versionNumber={version.versionNumber}
+                        financeYearName={financeYearName}
+                        labels={fastShareLabels}
+                        reloadKey={shareReloadKey}
+                        onShareChanged={onShareChanged}
+                      />
                     ) : null}
                     {canManageShares && shareManagementLabels ? (
                       <Button
