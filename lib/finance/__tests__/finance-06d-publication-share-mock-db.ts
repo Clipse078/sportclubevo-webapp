@@ -10,7 +10,9 @@ type ShareRow = {
   tenantId: string;
   publicationId: string;
   publicationVersionId: string;
-  tokenHash: string;
+  publicToken: string | null;
+  tokenHash: string | null;
+  shareKind: "DEFAULT" | "ADVANCED";
   expiresAt: Date | null;
   revokedAt: Date | null;
   revokedByUserId: string | null;
@@ -34,6 +36,18 @@ export function createPublicationShareMockStore(): PublicationShareMockStore {
   };
 }
 
+function rowMatchesWhere(row: ShareRow, where: Record<string, unknown>): boolean {
+  if (where.id && row.id !== where.id) return false;
+  if (where.tenantId && row.tenantId !== where.tenantId) return false;
+  if (where.publicationVersionId && row.publicationVersionId !== where.publicationVersionId) {
+    return false;
+  }
+  if (where.shareKind && row.shareKind !== where.shareKind) return false;
+  if (where.revokedAt === null && row.revokedAt !== null) return false;
+  if (where.expiresAt === null && row.expiresAt !== null) return false;
+  return true;
+}
+
 export function makePublicationShareMockPrisma(store: PublicationShareMockStore) {
   const base = makePublicationMockPrisma(store) as Record<string, unknown>;
   const db = {
@@ -43,17 +57,34 @@ export function makePublicationShareMockPrisma(store: PublicationShareMockStore)
         data,
         select,
       }: {
-        data: Partial<ShareRow> & {
-          publicationVersion?: { select: { versionNumber: true } };
-        };
+        data: Partial<ShareRow>;
         select?: unknown;
       }) => {
+        if (
+          data.shareKind === "DEFAULT" &&
+          !data.expiresAt &&
+          store.financePublicationShare.some((row) =>
+            rowMatchesWhere(row, {
+              tenantId: data.tenantId,
+              publicationVersionId: data.publicationVersionId,
+              shareKind: "DEFAULT",
+              revokedAt: null,
+              expiresAt: null,
+            }),
+          )
+        ) {
+          const err = new Error("Unique constraint") as Error & { code: string };
+          err.code = "P2002";
+          throw err;
+        }
         const row: ShareRow = {
           id: randomUUID(),
           tenantId: data.tenantId!,
           publicationId: data.publicationId!,
           publicationVersionId: data.publicationVersionId!,
-          tokenHash: data.tokenHash!,
+          publicToken: data.publicToken ?? null,
+          tokenHash: data.tokenHash ?? null,
+          shareKind: data.shareKind ?? "DEFAULT",
           expiresAt: data.expiresAt ?? null,
           revokedAt: null,
           revokedByUserId: null,
@@ -70,6 +101,44 @@ export function makePublicationShareMockPrisma(store: PublicationShareMockStore)
         if (select && typeof select === "object") {
           return {
             id: row.id,
+            expiresAt: row.expiresAt,
+            publicationVersion: { versionNumber: version?.versionNumber ?? 1 },
+          };
+        }
+        return row;
+      },
+      findFirst: async ({
+        where,
+        select,
+        include,
+      }: {
+        where: Record<string, unknown>;
+        select?: unknown;
+        include?: { publicationVersion?: { select: Record<string, boolean> } };
+      }) => {
+        const row = store.financePublicationShare.find((s) => rowMatchesWhere(s, where)) ?? null;
+        if (!row) return null;
+        const version = store.financePublicationVersion.find(
+          (v) => v.id === row.publicationVersionId,
+        );
+        if (include?.publicationVersion && version) {
+          return {
+            ...row,
+            publicationVersion: {
+              id: version.id,
+              tenantId: version.tenantId,
+              publicationId: version.publicationId,
+              versionNumber: version.versionNumber,
+              lifecycleStatus: version.lifecycleStatus,
+              publishedAt: version.publishedAt,
+              snapshotPayloadJson: version.snapshotPayloadJson,
+            },
+          };
+        }
+        if (select) {
+          return {
+            id: row.id,
+            publicToken: row.publicToken,
             expiresAt: row.expiresAt,
             publicationVersion: { versionNumber: version?.versionNumber ?? 1 },
           };
@@ -107,6 +176,8 @@ export function makePublicationShareMockPrisma(store: PublicationShareMockStore)
               createdAt: row.createdAt,
               expiresAt: row.expiresAt,
               revokedAt: row.revokedAt,
+              shareKind: row.shareKind,
+              publicToken: row.publicToken,
               createdBy: null,
               publicationVersion: { versionNumber: version?.versionNumber ?? 1 },
             };
@@ -114,48 +185,19 @@ export function makePublicationShareMockPrisma(store: PublicationShareMockStore)
           return row;
         });
       },
-      findFirst: async ({
+      findUnique: async ({
         where,
         include,
       }: {
-        where: { id?: string; tenantId?: string };
+        where: { tokenHash?: string; publicToken?: string };
         include?: { publicationVersion?: { select: Record<string, boolean> } };
       }) => {
         const row =
           store.financePublicationShare.find(
             (s) =>
-              (!where.id || s.id === where.id) &&
-              (!where.tenantId || s.tenantId === where.tenantId),
+              (where.tokenHash !== undefined && s.tokenHash === where.tokenHash) ||
+              (where.publicToken !== undefined && s.publicToken === where.publicToken),
           ) ?? null;
-        if (!row) return null;
-        const version = store.financePublicationVersion.find(
-          (v) => v.id === row.publicationVersionId,
-        );
-        if (include?.publicationVersion && version) {
-          return {
-            ...row,
-            publicationVersion: {
-              id: version.id,
-              tenantId: version.tenantId,
-              publicationId: version.publicationId,
-              versionNumber: version.versionNumber,
-              lifecycleStatus: version.lifecycleStatus,
-              publishedAt: version.publishedAt,
-              snapshotPayloadJson: version.snapshotPayloadJson,
-            },
-          };
-        }
-        return row;
-      },
-      findUnique: async ({
-        where,
-        include,
-      }: {
-        where: { tokenHash: string };
-        include?: { publicationVersion?: { select: Record<string, boolean> } };
-      }) => {
-        const row =
-          store.financePublicationShare.find((s) => s.tokenHash === where.tokenHash) ?? null;
         if (!row) return null;
         const version = store.financePublicationVersion.find(
           (v) => v.id === row.publicationVersionId,
@@ -197,9 +239,7 @@ export function makePublicationShareMockPrisma(store: PublicationShareMockStore)
       }) => {
         let count = 0;
         for (const row of store.financePublicationShare) {
-          if (where.id && row.id !== where.id) continue;
-          if (where.tenantId && row.tenantId !== where.tenantId) continue;
-          if (where.revokedAt === null && row.revokedAt !== null) continue;
+          if (!rowMatchesWhere(row, where as Record<string, unknown>)) continue;
           Object.assign(row, data, { updatedAt: new Date() });
           count += 1;
         }

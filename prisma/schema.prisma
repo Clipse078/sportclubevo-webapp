@@ -11519,14 +11519,22 @@ model FinancePublicationVersion {
   @@index([tenantId, lifecycleStatus])
 }
 
+enum FinancePublicationShareKind {
+  DEFAULT
+  ADVANCED
+}
+
 /// Controlled external access to a specific immutable publication version (FIN-06D).
 model FinancePublicationShare {
-  id                    String    @id @default(cuid())
+  id                    String                        @id @default(cuid())
   tenantId              String
   publicationId         String
   publicationVersionId  String
-  /// SHA-256 hex digest of the opaque share token — raw token never stored.
-  tokenHash             String    @unique
+  /// Opaque high-entropy URL capability (R2+). Persisted for authorized link copy; not a hidden password.
+  publicToken           String?                       @unique
+  /// Legacy R1 lookup: SHA-256 hex of URL segment when publicToken was not persisted.
+  tokenHash             String?                       @unique
+  shareKind             FinancePublicationShareKind   @default(DEFAULT)
   expiresAt             DateTime?
   revokedAt             DateTime?
   revokedByUserId       String?

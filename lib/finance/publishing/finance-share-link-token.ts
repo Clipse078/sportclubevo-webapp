@@ -1,13 +1,21 @@
 /**
- * FIN-06A — share link token hashing (no plaintext persistence).
+ * FIN-06D — publication share capability identifiers.
+ *
+ * R2: publicToken is a high-entropy opaque capability URL segment (persisted for reuse).
+ * R1 legacy: only SHA-256 digest stored; external links still resolve via hash lookup.
  */
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 const SHARE_TOKEN_BYTES = 32;
 
+export function generateFinancePublicationSharePublicToken(): string {
+  return randomBytes(SHARE_TOKEN_BYTES).toString("base64url");
+}
+
+/** @deprecated R1 creation path — prefer generateFinancePublicationSharePublicToken */
 export function generateFinanceShareLinkToken(): { rawToken: string; tokenHash: string } {
-  const rawToken = randomBytes(SHARE_TOKEN_BYTES).toString("base64url");
+  const rawToken = generateFinancePublicationSharePublicToken();
   return { rawToken, tokenHash: hashFinanceShareLinkToken(rawToken) };
 }
 

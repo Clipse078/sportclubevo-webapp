@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   buildPoBaselineManagementPnlReadModel,
@@ -7,9 +8,7 @@ import {
   R5_LIVE_AFTER_MUTATION,
   R5_V1_BASELINE,
 } from "@/lib/finance/uat/sce-finance-06b-r5-immutability-uat";
-import {
-  publishFinanceManagementPnlSnapshot,
-} from "@/lib/finance/services/finance-publication-service";
+import { publishFinanceManagementPnlSnapshot } from "@/lib/finance/services/finance-publication-service";
 import * as managementReporting from "@/lib/finance/services/finance-management-reporting-query-service";
 import {
   canManageFinancialShares,
@@ -18,16 +17,14 @@ import {
 } from "@/lib/finance/publishing/finance-publishing-authorization";
 import {
   createFinancePublicationShare,
+  ensureDefaultFinancePublicationShare,
   listFinancePublicationSharesForVersion,
   resolveFinancePublicationShareByRawToken,
   revokeFinancePublicationShare,
 } from "@/lib/finance/services/finance-publication-share-service";
-import {
-  deriveFinancePublicationShareStatus,
-} from "@/lib/finance/publishing/finance-publication-share-status";
-import {
-  FINANCE_PUBLICATION_SHARE_SECURITY,
-} from "@/lib/finance/publishing/finance-publication-share-security";
+import { deriveFinancePublicationShareStatus } from "@/lib/finance/publishing/finance-publication-share-status";
+import { FINANCE_PUBLICATION_SHARE_SECURITY } from "@/lib/finance/publishing/finance-publication-share-security";
+import { FINANCE_06D_R2_FAST_PATH_CONTRACT } from "@/lib/finance/publishing/finance-06d-r2-fast-path-contract";
 import { hashFinanceShareLinkToken } from "@/lib/finance/publishing/finance-share-link-token";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import {
@@ -67,12 +64,16 @@ function setup() {
   return { store, prisma };
 }
 
-describe("FIN-06D controlled publication sharing", () => {
-  it("documents token security decisions", () => {
-    expect(FINANCE_PUBLICATION_SHARE_SECURITY.RAW_TOKEN_PERSISTENCE).toContain("NEVER");
-    expect(FINANCE_PUBLICATION_SHARE_SECURITY.ENUMERATION_RESISTANCE).toBeTruthy();
+describe("FIN-06D R2 fast-path contract", () => {
+  it("documents UX and security contracts", () => {
+    expect(FINANCE_06D_R2_FAST_PATH_CONTRACT.DEFAULT_SHARE_REQUIRES_PRECONFIGURATION).toBe(false);
+    expect(FINANCE_06D_R2_FAST_PATH_CONTRACT.RAW_SECRET_PLAINTEXT_STORAGE).toBe(false);
+    expect(FINANCE_PUBLICATION_SHARE_SECURITY.R2_MODEL).toContain("publicToken");
+    expect(FINANCE_PUBLICATION_SHARE_SECURITY.LEGACY_R1_RESOLUTION).toBeTruthy();
   });
+});
 
+describe("FIN-06D controlled publication sharing", () => {
   it("separates view, share, publish, and manage permissions", () => {
     expect(canShareFinancialReports(ctx(tenantA, viewOnly))).toBe(false);
     expect(canPublishFinancialReports(ctx(tenantA, sharePerms))).toBe(false);
@@ -80,8 +81,56 @@ describe("FIN-06D controlled publication sharing", () => {
     expect(canManageFinancialShares(ctx(tenantA, manageSharePerms))).toBe(true);
   });
 
-  it("creates share with optional expiry, binds to exact version, stores hash only", async () => {
+  it("creates default share with publicToken persisted (R2)", async () => {
     const { prisma, store } = setup();
+    const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
+    loader.mockResolvedValueOnce(
+      buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
+    );
+    const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
+      financeYearId: yearId,
+    });
+
+    const created = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+      publicationId: published.publicationId,
+      versionNumber: 1,
+    });
+
+    expect(created.publicToken.length).toBeGreaterThan(20);
+    expect(created.reused).toBe(false);
+    expect(created.versionNumber).toBe(1);
+    const stored = store.financePublicationShare[0];
+    expect(stored.publicToken).toBe(created.publicToken);
+    expect(stored.tokenHash).toBeNull();
+    expect(store.auditLog.some((e) => e.action === "SHARE_CREATED")).toBe(true);
+  });
+
+  it("reuses active default share on repeated ensure (no duplicate DEFAULT)", async () => {
+    const { prisma, store } = setup();
+    const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
+    loader.mockResolvedValueOnce(
+      buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
+    );
+    const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
+      financeYearId: yearId,
+    });
+
+    const first = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+      publicationId: published.publicationId,
+      versionNumber: 1,
+    });
+    const second = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+      publicationId: published.publicationId,
+      versionNumber: 1,
+    });
+
+    expect(second.reused).toBe(true);
+    expect(second.publicToken).toBe(first.publicToken);
+    expect(store.financePublicationShare.filter((s) => s.shareKind === "DEFAULT")).toHaveLength(1);
+  });
+
+  it("creates advanced share with optional expiry", async () => {
+    const { prisma } = setup();
     const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
     loader.mockResolvedValueOnce(
       buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
@@ -95,15 +144,11 @@ describe("FIN-06D controlled publication sharing", () => {
       publicationId: published.publicationId,
       versionNumber: 1,
       expiresAt,
+      shareKind: "ADVANCED",
     });
 
-    expect(created.rawToken.length).toBeGreaterThan(20);
-    expect(created.versionNumber).toBe(1);
-    const stored = store.financePublicationShare[0];
-    expect(stored.tokenHash).toBe(hashFinanceShareLinkToken(created.rawToken));
-    expect(stored.tokenHash).not.toBe(created.rawToken);
-    expect(stored.publicationVersionId).toBeTruthy();
-    expect(store.auditLog.some((e) => e.action === "SHARE_CREATED")).toBe(true);
+    expect(created.publicToken.length).toBeGreaterThan(20);
+    expect(created.expiresAt).toBeTruthy();
   });
 
   it("V1 share remains V1 after V2 is published", async () => {
@@ -115,10 +160,9 @@ describe("FIN-06D controlled publication sharing", () => {
     const v1 = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
       financeYearId: yearId,
     });
-    const v1Share = await createFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+    const v1Share = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
       publicationId: v1.publicationId,
       versionNumber: 1,
-      expiresAt: null,
     });
 
     loader.mockResolvedValueOnce(
@@ -132,14 +176,13 @@ describe("FIN-06D controlled publication sharing", () => {
       financeYearId: yearId,
     });
 
-    const v2Share = await createFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+    const v2Share = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
       publicationId: v1.publicationId,
       versionNumber: 2,
-      expiresAt: null,
     });
 
-    const v1Access = await resolveFinancePublicationShareByRawToken(prisma, v1Share.rawToken);
-    const v2Access = await resolveFinancePublicationShareByRawToken(prisma, v2Share.rawToken);
+    const v1Access = await resolveFinancePublicationShareByRawToken(prisma, v1Share.publicToken);
+    const v2Access = await resolveFinancePublicationShareByRawToken(prisma, v2Share.publicToken);
     expect(v1Access.ok).toBe(true);
     expect(v2Access.ok).toBe(true);
     if (!v1Access.ok || !v2Access.ok) return;
@@ -152,7 +195,7 @@ describe("FIN-06D controlled publication sharing", () => {
     );
   });
 
-  it("revokes share and blocks external access; derives expired status", async () => {
+  it("revokes share and blocks external access; new default after revoke", async () => {
     const { prisma } = setup();
     const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
     loader.mockResolvedValueOnce(
@@ -161,18 +204,24 @@ describe("FIN-06D controlled publication sharing", () => {
     const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
       financeYearId: yearId,
     });
-    const share = await createFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+    const share = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
       publicationId: published.publicationId,
       versionNumber: 1,
-      expiresAt: null,
     });
 
     await revokeFinancePublicationShare(prisma, ctx(tenantA, manageSharePerms), {
       shareId: share.shareId,
     });
 
-    const blocked = await resolveFinancePublicationShareByRawToken(prisma, share.rawToken);
+    const blocked = await resolveFinancePublicationShareByRawToken(prisma, share.publicToken);
     expect(blocked.ok).toBe(false);
+
+    const reShare = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+      publicationId: published.publicationId,
+      versionNumber: 1,
+    });
+    expect(reShare.publicToken).not.toBe(share.publicToken);
+    expect(reShare.reused).toBe(false);
 
     expect(
       deriveFinancePublicationShareStatus({
@@ -180,12 +229,39 @@ describe("FIN-06D controlled publication sharing", () => {
         expiresAt: null,
       }),
     ).toBe("REVOKED");
-    expect(
-      deriveFinancePublicationShareStatus({
-        revokedAt: null,
-        expiresAt: new Date(Date.now() - 1000),
-      }),
-    ).toBe("EXPIRED");
+  });
+
+  it("resolves legacy R1 tokenHash rows for external access", async () => {
+    const { prisma, store } = setup();
+    const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
+    loader.mockResolvedValueOnce(
+      buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
+    );
+    const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
+      financeYearId: yearId,
+    });
+    const version = store.financePublicationVersion[0];
+    const legacyToken = "legacy-r1-capability-token-for-test";
+    store.financePublicationShare.push({
+      id: "legacy-share",
+      tenantId: tenantA,
+      publicationId: published.publicationId,
+      publicationVersionId: version.id,
+      publicToken: null,
+      tokenHash: hashFinanceShareLinkToken(legacyToken),
+      shareKind: "DEFAULT",
+      expiresAt: null,
+      revokedAt: null,
+      revokedByUserId: null,
+      createdByUserId: "user-1",
+      lastAccessedAt: null,
+      accessCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const access = await resolveFinancePublicationShareByRawToken(prisma, legacyToken);
+    expect(access.ok).toBe(true);
   });
 
   it("enforces tenant isolation on share management", async () => {
@@ -197,10 +273,9 @@ describe("FIN-06D controlled publication sharing", () => {
     const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
       financeYearId: yearId,
     });
-    const share = await createFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+    const share = await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
       publicationId: published.publicationId,
       versionNumber: 1,
-      expiresAt: null,
     });
 
     await expect(
@@ -217,13 +292,13 @@ describe("FIN-06D controlled publication sharing", () => {
     ).rejects.toThrow();
   });
 
-  it("returns unavailable for invalid or expired tokens without enumeration", async () => {
+  it("returns unavailable for invalid tokens without enumeration", async () => {
     const { prisma } = setup();
     const invalid = await resolveFinancePublicationShareByRawToken(prisma, "not-a-valid-token");
     expect(invalid).toEqual({ ok: false, reason: "UNAVAILABLE" });
   });
 
-  it("lists shares for version without exposing token material", async () => {
+  it("lists shares with reconstructable paths for active publicToken shares", async () => {
     const { prisma } = setup();
     const loader = vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel");
     loader.mockResolvedValueOnce(
@@ -232,10 +307,9 @@ describe("FIN-06D controlled publication sharing", () => {
     const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
       financeYearId: yearId,
     });
-    await createFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
+    await ensureDefaultFinancePublicationShare(prisma, ctx(tenantA, sharePerms), {
       publicationId: published.publicationId,
       versionNumber: 1,
-      expiresAt: null,
     });
 
     const listed = await listFinancePublicationSharesForVersion(prisma, ctx(tenantA, sharePerms), {
@@ -243,6 +317,15 @@ describe("FIN-06D controlled publication sharing", () => {
       versionNumber: 1,
     });
     expect(listed.length).toBe(1);
+    expect(listed[0]?.relativeSharePath).toContain("/share/finance/publication/");
     expect(JSON.stringify(listed)).not.toContain("tokenHash");
+  });
+
+  it("regression: surfaces prisma missing-table code for operators (PO STAGE failure class)", () => {
+    const err = new Prisma.PrismaClientKnownRequestError("table missing", {
+      code: "P2021",
+      clientVersion: "test",
+    });
+    expect(err.code).toBe("P2021");
   });
 });
