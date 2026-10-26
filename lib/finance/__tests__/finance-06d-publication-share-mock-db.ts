@@ -12,7 +12,7 @@ type ShareRow = {
   publicationVersionId: string;
   publicToken: string | null;
   tokenHash: string | null;
-  shareKind: "DEFAULT" | "ADVANCED";
+  shareKind: "DEFAULT" | "ADVANCED" | "DISTRIBUTION";
   expiresAt: Date | null;
   revokedAt: Date | null;
   revokedByUserId: string | null;

@@ -51,7 +51,7 @@ export type FinancePublicationShareListItem = {
   revokedAt: string | null;
   createdByDisplayName: string | null;
   versionNumber: number;
-  shareKind: "DEFAULT" | "ADVANCED";
+  shareKind: "DEFAULT" | "ADVANCED" | "DISTRIBUTION";
   relativeSharePath: string | null;
 };
 
@@ -417,6 +417,7 @@ export async function listFinancePublicationSharesForVersion(
     where: {
       tenantId: ctx.tenantId,
       publicationVersionId: version.id,
+      shareKind: { not: "DISTRIBUTION" },
     },
     orderBy: { createdAt: "desc" },
     select: {

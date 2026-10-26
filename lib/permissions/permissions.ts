@@ -213,6 +213,7 @@ export const PERMISSIONS = {
   FINANCE_PUBLICATION_VIEW: "finance.publication.view",
   FINANCE_REPORTING_SHARE: "finance.reporting.share",
   FINANCE_REPORTING_PUBLISH: "finance.reporting.publish",
+  FINANCE_REPORTING_DISTRIBUTE: "finance.reporting.distribute",
   FINANCE_SHARE_MANAGE: "finance.share.manage",
 
   ORG_VIEW: "org.view",

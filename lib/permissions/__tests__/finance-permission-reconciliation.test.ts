@@ -86,8 +86,8 @@ describe("reconcileFinancePublicationPermissionsForClubAdmin", () => {
     } as unknown as PrismaClient;
 
     const outcomes = await reconcileFinancePublicationPermissionsForClubAdmin(prisma, false);
-    expect(outcomes).toHaveLength(4);
-    expect(rolePermissionUpsert).toHaveBeenCalledTimes(4);
+    expect(outcomes).toHaveLength(5);
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(5);
     expect(
       outcomes.some(
         (row) =>

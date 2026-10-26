@@ -17,6 +17,7 @@ const _permissionKeyAlignment: Record<
   viewPublicationHistory: PERMISSIONS.FINANCE_PUBLICATION_VIEW,
   shareFinancialReports: PERMISSIONS.FINANCE_REPORTING_SHARE,
   publishFinancialReports: PERMISSIONS.FINANCE_REPORTING_PUBLISH,
+  distributeFinancialReports: PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE,
   manageFinancialShares: PERMISSIONS.FINANCE_SHARE_MANAGE,
 };
 void _permissionKeyAlignment;
@@ -38,6 +39,10 @@ export function canPublishFinancialReports(ctx: FinanceAuthContext): boolean {
 
 export function canManageFinancialShares(ctx: FinanceAuthContext): boolean {
   return hasFinancePermission(ctx, PERMISSIONS.FINANCE_SHARE_MANAGE);
+}
+
+export function canDistributeFinancialReports(ctx: FinanceAuthContext): boolean {
+  return hasFinancePermission(ctx, PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE);
 }
 
 export function requireFinancePublicationFoundationView(ctx: FinanceAuthContext): void {
@@ -87,6 +92,27 @@ export function canManagePublicationShares(ctx: FinanceAuthContext): boolean {
 
 export function requireFinancePublicationShareCreate(ctx: FinanceAuthContext): void {
   requireFinanceReportingShare(ctx);
+}
+
+export function requireFinanceReportingDistribute(ctx: FinanceAuthContext): void {
+  if (!canDistributeFinancialReports(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to distribute financial publications.",
+      403,
+    );
+  }
+}
+
+export function requireFinancePublicationDistributionView(ctx: FinanceAuthContext): void {
+  requireFinancePublicationFoundationView(ctx);
+  if (!canDistributeFinancialReports(ctx) && !canPublishFinancialReports(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to view publication distribution history.",
+      403,
+    );
+  }
 }
 
 export function requireFinancePublicationShareManagement(ctx: FinanceAuthContext): void {

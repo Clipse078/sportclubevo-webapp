@@ -19,6 +19,7 @@ import type { FinanceManagementPnlPublicationLabels } from "@/components/admin/f
 import type { FinancePublicationInspectionLabels } from "@/components/admin/finance/reporting/FinancePublicationInspectionSheet";
 import type { FinancePublicationFastShareLabels } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
 import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
+import type { FinancePublicationDistributionLabels } from "@/components/admin/finance/reporting/FinancePublicationDistributionDialog";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
@@ -42,6 +43,8 @@ type Props = {
   publicationHistoryLabels?: FinancePublicationHistoryLabels;
   publicationFastShareLabels?: FinancePublicationFastShareLabels;
   publicationShareManagementLabels?: FinancePublicationShareManagementLabels;
+  canDistributePublication?: boolean;
+  publicationDistributionLabels?: FinancePublicationDistributionLabels;
 };
 
 export function FinanceReportingInvestigationWorkspace({
@@ -63,6 +66,8 @@ export function FinanceReportingInvestigationWorkspace({
   publicationHistoryLabels,
   publicationFastShareLabels,
   publicationShareManagementLabels,
+  canDistributePublication = false,
+  publicationDistributionLabels,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -182,6 +187,8 @@ export function FinanceReportingInvestigationWorkspace({
           pnlLabels={pnlLabels}
           fastShareLabels={publicationFastShareLabels}
           shareManagementLabels={publicationShareManagementLabels}
+          canDistribute={canDistributePublication}
+          distributionLabels={publicationDistributionLabels}
         />
       ) : null}
       <FinanceManagementPnlPanel

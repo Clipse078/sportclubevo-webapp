@@ -108,6 +108,13 @@ export const FINANCE_PERMISSION_DEFS = [
     grantableByAdmin: true,
   },
   {
+    key: "finance.reporting.distribute",
+    name: "Distribute published financial reports",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
     key: "finance.share.manage",
     name: "Manage and revoke financial shares",
     module: FINANCE_MODULE,
@@ -151,6 +158,7 @@ const FINANCE_PUBLICATION_PERMISSION_KEYS = [
   PERMISSIONS.FINANCE_PUBLICATION_VIEW,
   PERMISSIONS.FINANCE_REPORTING_SHARE,
   PERMISSIONS.FINANCE_REPORTING_PUBLISH,
+  PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE,
   PERMISSIONS.FINANCE_SHARE_MANAGE,
 ] as const;
 
