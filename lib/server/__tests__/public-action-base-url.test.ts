@@ -82,4 +82,12 @@ describe("publicActionBaseWouldCrossIncompatibleDeployment", () => {
       false,
     );
   });
+
+  it("is true for Preview with tenant canonical APP_BASE_URL but no VERCEL_URL", () => {
+    expect(
+      publicActionBaseWouldCrossIncompatibleDeployment(
+        previewEnv({ VERCEL_URL: undefined }),
+      ),
+    ).toBe(true);
+  });
 });

@@ -6,6 +6,9 @@ import {
   SecurityLinkConfigurationError,
 } from "@/lib/server/security-link-url";
 import { assertSafeInternalNotificationHref } from "@/lib/notifications/internal-href";
+import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url-policy";
+
+export { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url-policy";
 
 function normalizeDeploymentHost(rawHost: string): string {
   return rawHost.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
@@ -98,18 +101,3 @@ export function buildPublicActionAbsoluteHref(
   return new URL(href, resolvePublicActionBaseUrl(processEnv)).toString();
 }
 
-export function publicActionBaseWouldCrossIncompatibleDeployment(
-  processEnv: NodeJS.ProcessEnv = process.env,
-): boolean {
-  const runtime = getRuntimeEnvironment({
-    ...processEnv,
-    NODE_ENV: processEnv.NODE_ENV ?? "development",
-  });
-  if (!runtime.isPreview && !runtime.isAcceptance) {
-    return false;
-  }
-
-  const canonical = resolveSecurityLinkBaseUrl(processEnv);
-  const deploymentOrigin = resolveVercelDeploymentOrigin(processEnv);
-  return Boolean(deploymentOrigin && deploymentOrigin.origin !== canonical.origin);
-}

@@ -17,7 +17,7 @@ import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard"
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 import { collectPrismaGeneratedEnumParityViolations } from "@/lib/server/prisma-generated-enum-parity";
-import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url";
+import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url-policy";
 
 export type PreflightSeverity = "error" | "warning";
 
