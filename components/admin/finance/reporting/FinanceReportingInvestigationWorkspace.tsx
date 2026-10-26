@@ -16,6 +16,8 @@ import {
 } from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
 import type { FinanceManagementPnlPublicationLabels } from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
 import type { FinancePublicationInspectionLabels } from "@/components/admin/finance/reporting/FinancePublicationInspectionSheet";
+import type { FinancePublicationShareDialogLabels } from "@/components/admin/finance/reporting/FinancePublicationShareDialog";
+import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
@@ -31,10 +33,14 @@ type Props = {
   initialDetail?: SerializedFinanceManagementReportingDetailReadModel | null;
   initialDetailOpen?: boolean;
   canPublishReport?: boolean;
+  canSharePublication?: boolean;
+  canRevokePublicationShares?: boolean;
   publicationSummary?: SerializedFinancePublicationSummaryReadModel | null;
   publicationLabels?: FinanceManagementPnlPublicationLabels;
   publicationInspectionLabels?: FinancePublicationInspectionLabels;
   publicationHistoryLabels?: FinancePublicationHistoryLabels;
+  publicationShareDialogLabels?: FinancePublicationShareDialogLabels;
+  publicationShareManagementLabels?: FinancePublicationShareManagementLabels;
 };
 
 export function FinanceReportingInvestigationWorkspace({
@@ -48,10 +54,14 @@ export function FinanceReportingInvestigationWorkspace({
   initialDetail = null,
   initialDetailOpen = false,
   canPublishReport = false,
+  canSharePublication = false,
+  canRevokePublicationShares = false,
   publicationSummary = null,
   publicationLabels,
   publicationInspectionLabels,
   publicationHistoryLabels,
+  publicationShareDialogLabels,
+  publicationShareManagementLabels,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -161,12 +171,16 @@ export function FinanceReportingInvestigationWorkspace({
           financeYearName={model.financeYearName}
           formattingLocale={formattingLocale}
           canPublish={canPublishReport}
+          canShare={canSharePublication}
+          canRevokeShares={canRevokePublicationShares}
           reportPublishable={model.availability === "AVAILABLE"}
           publicationSummary={publicationSummary}
           publicationLabels={publicationLabels}
           inspectionLabels={publicationInspectionLabels}
           historyLabels={publicationHistoryLabels}
           pnlLabels={pnlLabels}
+          shareDialogLabels={publicationShareDialogLabels}
+          shareManagementLabels={publicationShareManagementLabels}
         />
       ) : null}
       <FinanceManagementPnlPanel

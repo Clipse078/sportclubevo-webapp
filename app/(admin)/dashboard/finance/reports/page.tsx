@@ -13,7 +13,9 @@ import {
 } from "@/lib/finance/services/finance-management-reporting-query-service";
 import { prisma } from "@/lib/db/prisma";
 import {
+  canManageFinancialShares,
   canPublishFinancialReports,
+  canShareFinancialReports,
   canViewFinancePublicationHistory,
 } from "@/lib/finance/publishing/finance-publishing-authorization";
 import { loadFinancePublicationSummaryForYear } from "@/lib/finance/services/finance-publication-query-service";
@@ -50,6 +52,9 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
 
   const canViewPublications = canViewFinancePublicationHistory(workspace.ctx);
   const canPublishReport = canPublishFinancialReports(workspace.ctx);
+  const canSharePublication =
+    canShareFinancialReports(workspace.ctx) && canViewFinancePublicationHistory(workspace.ctx);
+  const canRevokePublicationShares = canManageFinancialShares(workspace.ctx);
   const publicationSummary = canViewPublications
     ? serializeFinancePublicationSummaryReadModel(
         await loadFinancePublicationSummaryForYear(
@@ -111,6 +116,8 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
           formattingLocale={workspace.formattingLocale}
           canConfigureStructure={workspace.canStructure}
           canPublishReport={canPublishReport}
+          canSharePublication={canSharePublication}
+          canRevokePublicationShares={canRevokePublicationShares}
           publicationSummary={publicationSummary}
           publicationLabels={
             canViewPublications || canPublishReport
@@ -152,6 +159,48 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
                   downloadPdf: t("reporting.publication.downloadPdf"),
                   close: t("reporting.publication.close"),
+                  shareableHint: t("reporting.publicationShare.shareableHint"),
+                }
+              : undefined
+          }
+          publicationShareDialogLabels={
+            canSharePublication
+              ? {
+                  shareAction: t("reporting.publicationShare.shareAction"),
+                  dialogTitle: t("reporting.publicationShare.dialogTitle"),
+                  contextLine: t("reporting.publicationShare.contextLine"),
+                  expirySection: t("reporting.publicationShare.expirySection"),
+                  expiryNone: t("reporting.publicationShare.expiryNone"),
+                  expiryDate: t("reporting.publicationShare.expiryDate"),
+                  expiryDateLabel: t("reporting.publicationShare.expiryDateLabel"),
+                  createShare: t("reporting.publicationShare.createShare"),
+                  cancel: t("reporting.publication.cancel"),
+                  creating: t("reporting.publicationShare.creating"),
+                  linkTitle: t("reporting.publicationShare.linkTitle"),
+                  linkExplanation: t("reporting.publicationShare.linkExplanation"),
+                  copyLink: t("reporting.publicationShare.copyLink"),
+                  copied: t("reporting.publicationShare.copied"),
+                  createFailed: t("reporting.publicationShare.createFailed"),
+                  shareableHint: t("reporting.publicationShare.shareableHint"),
+                }
+              : undefined
+          }
+          publicationShareManagementLabels={
+            canSharePublication
+              ? {
+                  sectionTitle: t("reporting.publicationShare.managementTitle"),
+                  empty: t("reporting.publicationShare.managementEmpty"),
+                  statusActive: t("reporting.publicationShare.statusActive"),
+                  statusExpired: t("reporting.publicationShare.statusExpired"),
+                  statusRevoked: t("reporting.publicationShare.statusRevoked"),
+                  createdLabel: t("reporting.publicationShare.createdLabel"),
+                  expiresLabel: t("reporting.publicationShare.expiresLabel"),
+                  creatorLabel: t("reporting.publicationShare.creatorLabel"),
+                  revoke: t("reporting.publicationShare.revoke"),
+                  revoking: t("reporting.publicationShare.revoking"),
+                  revokeFailed: t("reporting.publicationShare.revokeFailed"),
+                  copyUnavailable: t("reporting.publicationShare.copyUnavailable"),
+                  loadFailed: t("reporting.publicationShare.loadFailed"),
                 }
               : undefined
           }

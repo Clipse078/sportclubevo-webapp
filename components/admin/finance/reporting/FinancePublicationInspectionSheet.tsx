@@ -4,6 +4,14 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import { FinancePublicationPdfDownloadButton } from "@/components/admin/finance/reporting/FinancePublicationPdfDownloadButton";
+import {
+  FinancePublicationShareDialog,
+  type FinancePublicationShareDialogLabels,
+} from "@/components/admin/finance/reporting/FinancePublicationShareDialog";
+import {
+  FinancePublicationShareManagement,
+  type FinancePublicationShareManagementLabels,
+} from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import type { ComponentProps } from "react";
 
@@ -18,6 +26,7 @@ export type FinancePublicationInspectionLabels = {
   statusSuperseded: string;
   downloadPdf: string;
   close: string;
+  shareableHint: string;
 };
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
@@ -31,6 +40,12 @@ type Props = {
   formattingLocale: string;
   labels: FinancePublicationInspectionLabels;
   pnlLabels: PnlLabels;
+  canShare?: boolean;
+  canRevokeShares?: boolean;
+  shareDialogLabels?: FinancePublicationShareDialogLabels;
+  shareManagementLabels?: FinancePublicationShareManagementLabels;
+  shareReloadKey?: number;
+  onShareCreated?: () => void;
 };
 
 function formatPublishedAt(iso: string, locale: string): string {
@@ -62,6 +77,12 @@ export function FinancePublicationInspectionSheet({
   formattingLocale,
   labels,
   pnlLabels,
+  canShare = false,
+  canRevokeShares = false,
+  shareDialogLabels,
+  shareManagementLabels,
+  shareReloadKey = 0,
+  onShareCreated,
 }: Props) {
   const identity = presentation?.identity;
 
@@ -134,14 +155,42 @@ export function FinancePublicationInspectionSheet({
                 </p>
               ) : null}
               <p className="max-w-prose text-sm text-[var(--muted)]">{labels.frozenNotice}</p>
+              {labels.shareableHint ? (
+                <p className="text-sm text-[var(--muted)]">{labels.shareableHint}</p>
+              ) : null}
               <div className="flex flex-wrap gap-2 pt-1">
                 <FinancePublicationPdfDownloadButton
                   publicationId={identity!.publicationId}
                   versionNumber={identity!.publicationVersion}
                   label={labels.downloadPdf}
                 />
+                {canShare && shareDialogLabels ? (
+                  <FinancePublicationShareDialog
+                    publicationId={identity!.publicationId}
+                    versionNumber={identity!.publicationVersion}
+                    financeYearName={identity!.financeYearName}
+                    publishedAtLabel={labels.publishedAtLabel}
+                    publishedAtFormatted={formatPublishedAt(
+                      identity!.publishedAt,
+                      formattingLocale,
+                    )}
+                    labels={shareDialogLabels}
+                    onShareCreated={onShareCreated}
+                  />
+                ) : null}
               </div>
             </header>
+
+            {shareManagementLabels ? (
+              <FinancePublicationShareManagement
+                publicationId={identity!.publicationId}
+                versionNumber={identity!.publicationVersion}
+                formattingLocale={formattingLocale}
+                labels={shareManagementLabels}
+                canRevoke={canRevokeShares}
+                reloadKey={shareReloadKey}
+              />
+            ) : null}
 
             <div data-finance-publication-inspection-pnl>
               <FinanceManagementPnlPanel

@@ -358,8 +358,22 @@ export const FINANCE_06C_PRODUCT_MODEL = {
   ] as const,
   fin06cStatus: "IN_PROGRESS",
   fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
-  fin06cControlledSharingSliceStatus: "NOT_STARTED",
+  fin06cControlledSharingSliceStatus: "IN_PROGRESS_R1_IMPLEMENTED",
   fin06cEmailDistributionSliceStatus: "NOT_STARTED",
+} as const;
+
+/** FIN-06D — controlled publication version sharing (R1). */
+export const FINANCE_06D_PUBLICATION_SHARE_MODEL = {
+  shareTarget: "FinancePublicationVersion",
+  neverShareLiveFin05Report: true,
+  neverSilentlyFollowLatestVersion: true,
+  persistenceModel: "FinancePublicationShare",
+  lifecycleDerived: ["ACTIVE", "REVOKED", "EXPIRED"] as const,
+  tokenStorage: "SHA-256 digest only; raw token shown once at creation",
+  externalRoutePrefix: "/share/finance/publication",
+  pdfThroughShareAuthorizedPath: "/api/share/finance/publication/{token}/pdf",
+  emailDistribution: "FIN-06E — NOT STARTED",
+  fin06dR1Status: "IMPLEMENTED_PO_UAT_PENDING",
 } as const;
 
 /** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */

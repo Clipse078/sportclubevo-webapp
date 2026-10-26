@@ -70,3 +70,31 @@ export function requireFinanceReportingPublish(ctx: FinanceAuthContext): void {
     );
   }
 }
+
+export function requireFinanceShareManage(ctx: FinanceAuthContext): void {
+  if (!canManageFinancialShares(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to manage financial shares.",
+      403,
+    );
+  }
+}
+
+export function canManagePublicationShares(ctx: FinanceAuthContext): boolean {
+  return canShareFinancialReports(ctx) || canManageFinancialShares(ctx);
+}
+
+export function requireFinancePublicationShareCreate(ctx: FinanceAuthContext): void {
+  requireFinanceReportingShare(ctx);
+}
+
+export function requireFinancePublicationShareManagement(ctx: FinanceAuthContext): void {
+  if (!canManagePublicationShares(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to manage publication shares.",
+      403,
+    );
+  }
+}

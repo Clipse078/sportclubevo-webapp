@@ -16,6 +16,8 @@ import {
 import type { FinancePublishedManagementPnlInspectionReadModel } from "@/lib/finance/presentation/build-finance-published-management-pnl-read-model";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 import type { ComponentProps } from "react";
+import type { FinancePublicationShareDialogLabels } from "@/components/admin/finance/reporting/FinancePublicationShareDialog";
+import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
@@ -38,12 +40,16 @@ type Props = {
   financeYearName: string;
   formattingLocale: string;
   canPublish: boolean;
+  canShare?: boolean;
+  canRevokeShares?: boolean;
   reportPublishable: boolean;
   publicationSummary: SerializedFinancePublicationSummaryReadModel | null;
   publicationLabels: FinanceManagementPnlPublicationLabels;
   inspectionLabels: FinancePublicationInspectionLabels;
   historyLabels?: FinancePublicationHistoryLabels;
   pnlLabels: PnlLabels;
+  shareDialogLabels?: FinancePublicationShareDialogLabels;
+  shareManagementLabels?: FinancePublicationShareManagementLabels;
 };
 
 function formatPublishedAt(iso: string | null, locale: string): string {
@@ -69,14 +75,19 @@ export function FinanceReportingPublicationBar({
   financeYearName,
   formattingLocale,
   canPublish,
+  canShare = false,
+  canRevokeShares = false,
   reportPublishable,
   publicationSummary,
   publicationLabels,
   inspectionLabels,
   historyLabels,
   pnlLabels,
+  shareDialogLabels,
+  shareManagementLabels,
 }: Props) {
   const router = useRouter();
+  const [shareReloadKey, setShareReloadKey] = useState(0);
   const historyAnchorRef = useRef<HTMLButtonElement>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -239,6 +250,12 @@ export function FinanceReportingPublicationBar({
         formattingLocale={formattingLocale}
         labels={inspectionLabels}
         pnlLabels={pnlLabels}
+        canShare={canShare}
+        canRevokeShares={canRevokeShares}
+        shareDialogLabels={shareDialogLabels}
+        shareManagementLabels={shareManagementLabels}
+        shareReloadKey={shareReloadKey}
+        onShareCreated={() => setShareReloadKey((k) => k + 1)}
       />
     </>
   );
