@@ -14,9 +14,9 @@ import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
   budgetDraftInputFromMinor,
+  formatFinanceManagementPlanningMinor,
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
-import { formatFinanceManagementPlanningMinor } from "@/lib/finance/presentation/finance-money-presentation";
 import {
   financeCommitmentApprovalLabelKey,
   financeCommitmentLifecycleLabelKey,
@@ -307,9 +307,10 @@ export function FinanceCommitmentWorkspacePanel({
         <SceFormField label={t("fieldCurrency")} required>
           <FinanceBaseCurrencySelector
             value={currency}
-            onValueChange={setCurrency}
-            locale={formattingLocale}
+            onChange={setCurrency}
             disabled={pending}
+            ariaLabel={t("fieldCurrency")}
+            placeholder={t("fieldCurrency")}
           />
         </SceFormField>
       </div>
@@ -400,34 +401,56 @@ export function FinanceCommitmentWorkspacePanel({
 
       <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "flex flex-col gap-3 p-4")}>
         <div className="flex flex-wrap gap-3">
-          <SceToolbarSelect
-            label={t("filterYear")}
-            value={selectedYearId}
-            onValueChange={(v) => pushFilters({ yearId: v })}
-            options={snapshot.years.map((y) => ({ value: y.id, label: y.name }))}
-          />
-          <SceToolbarSelect
-            label={t("filterLifecycle")}
-            value={snapshot.filters.lifecycleStatus ?? ""}
-            onValueChange={(v) => pushFilters({ lifecycle: v || undefined, page: "1" })}
-            options={LIFECYCLE_FILTERS.map((value) => ({
-              value,
-              label: value
-                ? t(financeCommitmentLifecycleLabelKey(value))
-                : t("filterAll"),
-            }))}
-          />
-          <SceToolbarSelect
-            label={t("filterApproval")}
-            value={snapshot.filters.approvalStatus ?? ""}
-            onValueChange={(v) => pushFilters({ approval: v || undefined, page: "1" })}
-            options={APPROVAL_FILTERS.map((value) => ({
-              value,
-              label: value
-                ? t(financeCommitmentApprovalLabelKey(value))
-                : t("filterAll"),
-            }))}
-          />
+          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
+            {t("filterYear")}
+            <SceToolbarSelect
+              value={selectedYearId}
+              onChange={(e) => pushFilters({ yearId: e.target.value })}
+              aria-label={t("filterYear")}
+            >
+              {snapshot.years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                </option>
+              ))}
+            </SceToolbarSelect>
+          </label>
+          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
+            {t("filterLifecycle")}
+            <SceToolbarSelect
+              value={snapshot.filters.lifecycleStatus ?? ""}
+              onChange={(e) =>
+                pushFilters({ lifecycle: e.target.value || undefined, page: "1" })
+              }
+              aria-label={t("filterLifecycle")}
+            >
+              {LIFECYCLE_FILTERS.map((value) => (
+                <option key={value || "all"} value={value}>
+                  {value
+                    ? t(financeCommitmentLifecycleLabelKey(value))
+                    : t("filterAll")}
+                </option>
+              ))}
+            </SceToolbarSelect>
+          </label>
+          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
+            {t("filterApproval")}
+            <SceToolbarSelect
+              value={snapshot.filters.approvalStatus ?? ""}
+              onChange={(e) =>
+                pushFilters({ approval: e.target.value || undefined, page: "1" })
+              }
+              aria-label={t("filterApproval")}
+            >
+              {APPROVAL_FILTERS.map((value) => (
+                <option key={value || "all"} value={value}>
+                  {value
+                    ? t(financeCommitmentApprovalLabelKey(value))
+                    : t("filterAll")}
+                </option>
+              ))}
+            </SceToolbarSelect>
+          </label>
           <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-[var(--muted)]">
             {t("filterSearch")}
             <input
@@ -657,7 +680,7 @@ export function FinanceCommitmentWorkspacePanel({
           </Button>
           <Button
             type="button"
-            variant="destructive"
+            variant="danger"
             disabled={cancelPhraseInput.trim() !== cancelPhrase || pending}
             onClick={handleCancel}
           >
