@@ -16,6 +16,7 @@ import { getRuntimeEnvironment } from "@/lib/env";
 import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard";
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
+import { collectPrismaGeneratedEnumParityViolations } from "@/lib/server/prisma-generated-enum-parity";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -300,7 +301,12 @@ export function runDeploymentPreflight(
     );
   }
 
-  // ── (8) Unsupported runtime classification ───────────────────────────────
+  // ── (8) Prisma schema ↔ generated client enum parity ─────────────────────
+  for (const violation of collectPrismaGeneratedEnumParityViolations()) {
+    addViolation(violation);
+  }
+
+  // ── (9) Unsupported runtime classification ───────────────────────────────
   if (runtime.isUnknown && !isDeployedContext) {
     violations.push(
       warning(
