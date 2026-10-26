@@ -246,4 +246,11 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
     expect(panel).not.toContain('type="checkbox"');
   });
+
+  it("formats commitment amounts via budget planning presentation module", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("formatFinanceManagementPlanningMinor");
+    expect(panel).toContain("@/lib/finance/budget/budget-amount-presentation");
+    expect(panel).not.toContain("finance-money-presentation");
+  });
 });
