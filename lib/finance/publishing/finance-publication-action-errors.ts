@@ -36,9 +36,13 @@ export const FINANCE_PUBLICATION_INSPECTION_READ_FAILED =
 
 function isPrismaMissingRelationError(error: unknown): boolean {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
-  if (error.code === "P2021") return true;
+  if (error.code === "P2021" || error.code === "P2022") return true;
   const message = error.message.toLowerCase();
-  return message.includes("financepublication") || message.includes("does not exist");
+  return (
+    message.includes("financepublicationshare") ||
+    message.includes("financepublication") ||
+    message.includes("does not exist")
+  );
 }
 
 export function resolveFinancePublicationActionUserMessage(error: unknown): string {

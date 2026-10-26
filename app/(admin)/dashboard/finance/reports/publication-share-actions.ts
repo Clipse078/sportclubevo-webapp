@@ -70,17 +70,10 @@ export async function ensureDefaultFinancePublicationShareAction(input: {
     };
   } catch (error: unknown) {
     logShareActionFailure("ensure-default", error);
-    if (error instanceof FinanceDomainError) {
-      return {
-        ok: false,
-        errorCode: "CREATE_FAILED",
-        error: resolveFinancePublicationActionUserMessage(error),
-      };
-    }
     return {
       ok: false,
       errorCode: "CREATE_FAILED",
-      error: "CREATE_FAILED",
+      error: resolveFinancePublicationActionUserMessage(error),
     };
   }
 }
@@ -103,14 +96,11 @@ export async function getDefaultFinancePublicationShareStatusAction(input: {
     };
   } catch (error: unknown) {
     logShareActionFailure("default-status", error);
-    if (error instanceof FinanceDomainError) {
-      return {
-        ok: false,
-        errorCode: "LOAD_FAILED",
-        error: resolveFinancePublicationActionUserMessage(error),
-      };
-    }
-    return { ok: false, errorCode: "LOAD_FAILED", error: "LOAD_FAILED" };
+    return {
+      ok: false,
+      errorCode: "LOAD_FAILED",
+      error: resolveFinancePublicationActionUserMessage(error),
+    };
   }
 }
 
@@ -160,17 +150,10 @@ export async function createFinancePublicationShareAction(input: {
     };
   } catch (error: unknown) {
     logShareActionFailure("create", error);
-    if (error instanceof FinanceDomainError) {
-      return {
-        ok: false,
-        errorCode: "CREATE_FAILED",
-        error: resolveFinancePublicationActionUserMessage(error),
-      };
-    }
     return {
       ok: false,
       errorCode: "CREATE_FAILED",
-      error: "CREATE_FAILED",
+      error: resolveFinancePublicationActionUserMessage(error),
     };
   }
 }
@@ -189,14 +172,11 @@ export async function listFinancePublicationSharesAction(input: {
     return { ok: true, shares };
   } catch (error: unknown) {
     logShareActionFailure("list", error);
-    if (error instanceof FinanceDomainError) {
-      return {
-        ok: false,
-        errorCode: "LOAD_FAILED",
-        error: resolveFinancePublicationActionUserMessage(error),
-      };
-    }
-    return { ok: false, errorCode: "LOAD_FAILED", error: "LOAD_FAILED" };
+    return {
+      ok: false,
+      errorCode: "LOAD_FAILED",
+      error: resolveFinancePublicationActionUserMessage(error),
+    };
   }
 }
 
@@ -214,13 +194,10 @@ export async function revokeFinancePublicationShareAction(input: {
     return { ok: true };
   } catch (error: unknown) {
     logShareActionFailure("revoke", error);
-    if (error instanceof FinanceDomainError) {
-      return {
-        ok: false,
-        errorCode: "REVOKE_FAILED",
-        error: resolveFinancePublicationActionUserMessage(error),
-      };
-    }
-    return { ok: false, errorCode: "REVOKE_FAILED", error: "REVOKE_FAILED" };
+    return {
+      ok: false,
+      errorCode: "REVOKE_FAILED",
+      error: resolveFinancePublicationActionUserMessage(error),
+    };
   }
 }

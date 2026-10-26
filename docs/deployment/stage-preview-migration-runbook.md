@@ -58,6 +58,23 @@ the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Previ
 
 Closure record: `docs/finance/SCE-FINANCE-02B-IMPLEMENTATION.md` (STAGE migration applied 2026-10-23).
 
+## Finance (FIN-06D) — controlled publication version sharing before Preview UAT
+
+PR Preview code for FIN-06D-R2 queries `FinancePublicationShare` including `publicToken`
+and `shareKind`. If the shared STAGE database has not applied **both**:
+
+- `20261026120000_sce_finance_06d_publication_sharing`
+- `20261026143000_sce_finance_06d_r2_share_public_token`
+
+…share actions log Prisma **P2021** / **P2022** errors while Finance Reports SSR may still
+render; Product Owner share UAT (**Teilen**, link copy, revoke) fails until migrations are
+applied on STAGE. Apply step 3 **before** FIN-06D-R2 Preview UAT.
+
+Operator verify (read-only):
+
+- `scripts/sce-finance-06d-r2-stage-migration-verify.ts`
+- `npm run finance:06d:r2:stage-migration-verify`
+
 ## Finance (FIN-06A) — publication & sharing foundation before Preview UAT
 
 PR Preview code for FIN-06B+ persists `FinancePublication` and

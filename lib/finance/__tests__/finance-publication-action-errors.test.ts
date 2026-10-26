@@ -25,6 +25,19 @@ describe("finance publication action errors", () => {
     );
   });
 
+  it("maps missing column prisma errors (R2 publicToken) to persistence unavailable copy", () => {
+    const prismaError = new Prisma.PrismaClientKnownRequestError(
+      "column publicToken does not exist",
+      {
+        code: "P2022",
+        clientVersion: "test",
+      },
+    );
+    expect(resolveFinancePublicationActionUserMessage(prismaError)).toBe(
+      FINANCE_PUBLICATION_ACTION_PERSISTENCE_UNAVAILABLE,
+    );
+  });
+
   it("falls back for unknown errors", () => {
     expect(resolveFinancePublicationActionUserMessage(new Error("boom"))).toBe(
       FINANCE_PUBLICATION_ACTION_FALLBACK_ERROR,
