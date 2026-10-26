@@ -13,7 +13,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
-import { reconcileFinancePublicationPermissionsForClubAdmin } from "@/lib/permissions/finance-permission-reconciliation";
+import {
+  reconcileFinancePublicationPermissionsForClubAdmin,
+  reconcileFinanceReportingDistributePermissionsForClubAdmin,
+} from "@/lib/permissions/finance-permission-reconciliation";
 import { reconcileTenantClubAdminPermissions } from "@/lib/permissions/tenant-club-admin-permission-reconciliation";
 
 const connectionString =
@@ -38,6 +41,15 @@ async function main() {
   const publicationAssigned = publicationOutcomes.filter((row) => row.action === "assigned");
   console.log(
     `[post-deploy-club-admin-reconcile] FIN-06 publication keys — ${publicationAssigned.length} new Club Admin assignment(s).`,
+  );
+
+  const distributeOutcomes = await reconcileFinanceReportingDistributePermissionsForClubAdmin(
+    prisma,
+    false,
+  );
+  const distributeAssigned = distributeOutcomes.filter((row) => row.action === "assigned");
+  console.log(
+    `[post-deploy-club-admin-reconcile] FIN-06E distribute key — ${distributeAssigned.length} new Club Admin assignment(s).`,
   );
 
   console.log("[post-deploy-club-admin-reconcile] Applying tenant Club Admin catalog reconciliation…");

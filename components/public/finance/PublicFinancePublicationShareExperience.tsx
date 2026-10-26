@@ -62,8 +62,8 @@ export function PublicFinancePublicationShareExperience({ model, labels, pnlLabe
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={model.tenantLogoUrl}
-              alt=""
-              className="h-10 w-10 rounded-md object-contain"
+              alt={model.tenantName}
+              className="h-10 w-10 max-h-10 max-w-[72px] rounded-md object-contain"
             />
           ) : null}
           <div>

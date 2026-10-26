@@ -6,6 +6,7 @@ import {
   reconcileFinanceActualPermissionsForClubAdmin,
   reconcileFinancePermissions,
   reconcileFinancePublicationPermissionsForClubAdmin,
+  reconcileFinanceReportingDistributePermissionsForClubAdmin,
 } from "@/lib/permissions/finance-permission-reconciliation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -86,8 +87,8 @@ describe("reconcileFinancePublicationPermissionsForClubAdmin", () => {
     } as unknown as PrismaClient;
 
     const outcomes = await reconcileFinancePublicationPermissionsForClubAdmin(prisma, false);
-    expect(outcomes).toHaveLength(4);
-    expect(rolePermissionUpsert).toHaveBeenCalledTimes(4);
+    expect(outcomes).toHaveLength(5);
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(5);
     expect(
       outcomes.some(
         (row) =>
@@ -95,6 +96,52 @@ describe("reconcileFinancePublicationPermissionsForClubAdmin", () => {
           row.action === "assigned",
       ),
     ).toBe(true);
+    expect(
+      outcomes.some(
+        (row) =>
+          row.permissionKey === PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE &&
+          row.action === "assigned",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("reconcileFinanceReportingDistributePermissionsForClubAdmin", () => {
+  it("assigns finance.reporting.distribute to discovered Club Admin roles (FIN-06E-R1 gap)", async () => {
+    listClubAdminRoles.mockResolvedValue(["club_admin__legacy-tenant"]);
+    const permissionCreate = vi.fn(async () => ({}));
+    const permissionFindUnique = vi.fn(async ({ where }: { where: { key: string } }) => {
+      if (where.key === PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE) {
+        return { id: "p-distribute" };
+      }
+      return null;
+    });
+    const roleFindUnique = vi.fn(async ({ where }: { where: { key: string } }) =>
+      where.key === "club_admin__legacy-tenant" ? { id: "role-ca" } : null,
+    );
+    const rolePermissionFindUnique = vi.fn(async () => null);
+    const rolePermissionUpsert = vi.fn(async () => ({}));
+
+    const prisma = {
+      permission: {
+        findUnique: permissionFindUnique,
+        create: permissionCreate,
+      },
+      role: { findUnique: roleFindUnique },
+      rolePermission: {
+        findUnique: rolePermissionFindUnique,
+        upsert: rolePermissionUpsert,
+      },
+    } as unknown as PrismaClient;
+
+    const outcomes = await reconcileFinanceReportingDistributePermissionsForClubAdmin(
+      prisma,
+      false,
+    );
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]?.permissionKey).toBe(PERMISSIONS.FINANCE_REPORTING_DISTRIBUTE);
+    expect(outcomes[0]?.action).toBe("assigned");
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(1);
   });
 });
 

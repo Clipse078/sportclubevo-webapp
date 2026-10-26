@@ -13,6 +13,7 @@ import {
 } from "@/lib/finance/services/finance-management-reporting-query-service";
 import { prisma } from "@/lib/db/prisma";
 import {
+  canDistributeFinancialReports,
   canManageFinancialShares,
   canPublishFinancialReports,
   canShareFinancialReports,
@@ -55,6 +56,8 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
   const canSharePublication =
     canShareFinancialReports(workspace.ctx) && canViewFinancePublicationHistory(workspace.ctx);
   const canRevokePublicationShares = canManageFinancialShares(workspace.ctx);
+  const canDistributePublication =
+    canDistributeFinancialReports(workspace.ctx) && canViewPublications;
   const publicationSummary = canViewPublications
     ? serializeFinancePublicationSummaryReadModel(
         await loadFinancePublicationSummaryForYear(
@@ -214,6 +217,74 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   createFailed: t("reporting.publicationShare.createFailed"),
                   manageAction: t("reporting.publicationShare.manageAction"),
                   cancel: t("reporting.publication.cancel"),
+                }
+              : undefined
+          }
+          canDistributePublication={canDistributePublication}
+          publicationDistributionLabels={
+            canDistributePublication
+              ? {
+                  sendAction: t("reporting.publicationDistribution.sendAction"),
+                  dialogTitle: t("reporting.publicationDistribution.dialogTitle"),
+                  historyAction: t("reporting.publicationDistribution.historyAction"),
+                  historyTitle: t("reporting.publicationDistribution.historyTitle"),
+                  historyEmpty: t("reporting.publicationDistribution.historyEmpty"),
+                  optionalMessageLabel: t("reporting.publicationDistribution.optionalMessageLabel"),
+                  optionalMessagePlaceholder: t(
+                    "reporting.publicationDistribution.optionalMessagePlaceholder",
+                  ),
+                  reviewHeading: t("reporting.publicationDistribution.reviewHeading"),
+                  reviewVersion: t("reporting.publicationDistribution.reviewVersion"),
+                  reviewRecipients: t("reporting.publicationDistribution.reviewRecipients"),
+                  reviewMessage: t("reporting.publicationDistribution.reviewMessage"),
+                  reviewMessageEmpty: t("reporting.publicationDistribution.reviewMessageEmpty"),
+                  sendConfirm: t("reporting.publicationDistribution.sendConfirm"),
+                  sending: t("reporting.publicationDistribution.sending"),
+                  sendSuccess: t("reporting.publicationDistribution.sendSuccess"),
+                  sendPartial: t("reporting.publicationDistribution.sendPartial"),
+                  sendFailed: t("reporting.publicationDistribution.sendFailed"),
+                  loadingHistory: t("reporting.publicationDistribution.loadingHistory"),
+                  distributionSummary: t("reporting.publicationDistribution.distributionSummary"),
+                  viewRecipients: t("reporting.publicationDistribution.viewRecipients"),
+                  recipientSent: t("reporting.publicationDistribution.recipientSent"),
+                  recipientFailed: t("reporting.publicationDistribution.recipientFailed"),
+                  externalRecipient: t("reporting.publicationDistribution.externalRecipient"),
+                  statusCompleted: "COMPLETED",
+                  statusPartial: "PARTIAL",
+                  statusFailed: "FAILED",
+                  recipientPicker: {
+                    recipientsLabel: t(
+                      "reporting.publicationDistribution.recipientPicker.recipientsLabel",
+                    ),
+                    addPerson: t("reporting.publicationDistribution.recipientPicker.addPerson"),
+                    personDialogTitle: t(
+                      "reporting.publicationDistribution.recipientPicker.personDialogTitle",
+                    ),
+                    searchPlaceholder: t(
+                      "reporting.publicationDistribution.recipientPicker.searchPlaceholder",
+                    ),
+                    searchLoading: t(
+                      "reporting.publicationDistribution.recipientPicker.searchLoading",
+                    ),
+                    searchEmpty: t(
+                      "reporting.publicationDistribution.recipientPicker.searchEmpty",
+                    ),
+                    externalEmailLabel: t(
+                      "reporting.publicationDistribution.recipientPicker.externalEmailLabel",
+                    ),
+                    externalEmailPlaceholder: t(
+                      "reporting.publicationDistribution.recipientPicker.externalEmailPlaceholder",
+                    ),
+                    addExternal: t(
+                      "reporting.publicationDistribution.recipientPicker.addExternal",
+                    ),
+                    externalBadge: t(
+                      "reporting.publicationDistribution.recipientPicker.externalBadge",
+                    ),
+                    invalidEmail: t(
+                      "reporting.publicationDistribution.recipientPicker.invalidEmail",
+                    ),
+                  },
                 }
               : undefined
           }

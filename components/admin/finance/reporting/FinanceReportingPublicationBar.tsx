@@ -18,6 +18,7 @@ import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance
 import type { ComponentProps } from "react";
 import type { FinancePublicationFastShareLabels } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
 import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
+import type { FinancePublicationDistributionLabels } from "@/components/admin/finance/reporting/FinancePublicationDistributionDialog";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
 
@@ -54,6 +55,8 @@ type Props = {
   pnlLabels: PnlLabels;
   fastShareLabels?: FinancePublicationFastShareLabels;
   shareManagementLabels?: FinancePublicationShareManagementLabels;
+  canDistribute?: boolean;
+  distributionLabels?: FinancePublicationDistributionLabels;
 };
 
 export function FinanceReportingPublicationBar({
@@ -71,6 +74,8 @@ export function FinanceReportingPublicationBar({
   pnlLabels,
   fastShareLabels,
   shareManagementLabels,
+  canDistribute = false,
+  distributionLabels,
 }: Props) {
   const router = useRouter();
   const [, startInspectionTransition] = useTransition();
@@ -163,6 +168,8 @@ export function FinanceReportingPublicationBar({
           historyLabels={resolvedHistoryLabels}
           canShare={canShare}
           canManageShares={canRevokeShares}
+          canDistribute={canDistribute}
+          distributionLabels={distributionLabels}
           fastShareLabels={fastShareLabels}
           shareManagementLabels={shareManagementLabels}
           shareReloadKey={shareReloadKey}

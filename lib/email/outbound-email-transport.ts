@@ -10,6 +10,10 @@ import {
   type MailAttachment,
   type MailDeliveryResult,
 } from "@/lib/email/mailer";
+import {
+  OutboundEmailOperationTimeoutError,
+  withOutboundEmailOperationTimeout,
+} from "@/lib/email/outbound-email-operation-timeout";
 
 export type OutboundEmailPayload = {
   from?: string;
@@ -54,6 +58,13 @@ function classifyTransportFailure(error: unknown): OutboundEmailTransportError {
       true,
     );
   }
+  if (error instanceof OutboundEmailOperationTimeoutError) {
+    return new OutboundEmailTransportError(
+      "TRANSPORT_TIMEOUT",
+      error.message,
+      false,
+    );
+  }
   const message = error instanceof Error ? error.message : "Unknown transport failure";
   const lower = message.toLowerCase();
   const permanent =
@@ -72,16 +83,19 @@ export async function sendOutboundEmail(
   payload: OutboundEmailPayload,
 ): Promise<OutboundEmailTransportResult> {
   try {
-    const result: MailDeliveryResult = await sendMail({
-      from: payload.from,
-      to: payload.to,
-      replyTo: payload.replyTo,
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text,
-      attachments: payload.attachments,
-      idempotencyKey: payload.idempotencyKey,
-    });
+    const result: MailDeliveryResult = await withOutboundEmailOperationTimeout(
+      "sendOutboundEmail",
+      sendMail({
+        from: payload.from,
+        to: payload.to,
+        replyTo: payload.replyTo,
+        subject: payload.subject,
+        html: payload.html,
+        text: payload.text,
+        attachments: payload.attachments,
+        idempotencyKey: payload.idempotencyKey,
+      }),
+    );
     return {
       provider: "resend",
       messageId: result.providerMessageId,

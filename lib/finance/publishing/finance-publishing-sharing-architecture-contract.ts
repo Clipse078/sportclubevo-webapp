@@ -143,14 +143,19 @@ export const FINANCE_PUBLISHING_PERMISSION_KEYS = {
   viewPublicationHistory: "finance.publication.view",
   shareFinancialReports: "finance.reporting.share",
   publishFinancialReports: "finance.reporting.publish",
+  distributeFinancialReports: "finance.reporting.distribute",
   manageFinancialShares: "finance.share.manage",
 } as const;
 
 export const FINANCE_PUBLISHING_PERMISSION_MODEL = {
   viewDoesNotImplyShare: true,
   viewDoesNotImplyPublish: true,
+  viewDoesNotImplyDistribute: true,
   shareDoesNotImplyPublish: true,
+  shareDoesNotImplyDistribute: true,
   publishDoesNotImplyShare: true,
+  publishDoesNotImplyDistribute: true,
+  distributeDoesNotImplyShare: true,
   manageSharesSeparateFromShare: true,
   serverAuthoritativeChecksRequired: true,
   noHardcodedRoleNames: true,
@@ -359,7 +364,7 @@ export const FINANCE_06C_PRODUCT_MODEL = {
   fin06cStatus: "IN_PROGRESS",
   fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
   fin06cControlledSharingSliceStatus: "IN_PROGRESS_R1_IMPLEMENTED",
-  fin06cEmailDistributionSliceStatus: "NOT_STARTED",
+  fin06cEmailDistributionSliceStatus: "IMPLEMENTED_FIN_06E",
 } as const;
 
 /** FIN-06D — controlled publication version sharing (R2 fast path). */
@@ -374,8 +379,21 @@ export const FINANCE_06D_PUBLICATION_SHARE_MODEL = {
   defaultShareReuse: "One active DEFAULT share per publication version (no expiry)",
   externalRoutePrefix: "/share/finance/publication",
   pdfThroughShareAuthorizedPath: "/api/share/finance/publication/{token}/pdf",
-  emailDistribution: "FIN-06E — NOT STARTED",
+  emailDistribution: "FIN-06E — IMPLEMENTED_PO_UAT_PENDING",
   fin06dR2Status: "IMPLEMENTED_PO_UAT_PENDING",
+} as const;
+
+/** FIN-06E — publication version email distribution (distinct from SHARE). */
+export const FINANCE_06E_PUBLICATION_DISTRIBUTION_MODEL = {
+  distributionTarget: "FinancePublicationVersion",
+  persistenceModel: "FinancePublicationDistribution",
+  recipientModel: "FinancePublicationDistributionRecipient",
+  neverEmailLiveFin05Report: true,
+  publicationHistoryDependsOnDistribution: false,
+  recipientSpecificShareKind: "DISTRIBUTION",
+  separateTransactionalEmailPerRecipient: true,
+  providerNeutralDeliveryBoundary: "lib/finance/delivery/finance-publication-distribution-email-port.ts",
+  fin06eStatus: "IMPLEMENTED_PO_UAT_PENDING",
 } as const;
 
 /** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */

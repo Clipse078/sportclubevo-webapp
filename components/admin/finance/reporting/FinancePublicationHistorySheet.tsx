@@ -16,6 +16,10 @@ import {
 } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 import type { FinancePublicationHistoryLabels } from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
 import type { FinancePublicationVersionHistoryEntry } from "@/lib/finance/services/finance-publication-query-service";
+import {
+  FinancePublicationDistributionDialog,
+  type FinancePublicationDistributionLabels,
+} from "@/components/admin/finance/reporting/FinancePublicationDistributionDialog";
 
 type Props = {
   open: boolean;
@@ -26,6 +30,8 @@ type Props = {
   historyLabels: FinancePublicationHistoryLabels;
   canShare: boolean;
   canManageShares: boolean;
+  canDistribute?: boolean;
+  distributionLabels?: FinancePublicationDistributionLabels;
   fastShareLabels?: FinancePublicationFastShareLabels;
   shareManagementLabels?: FinancePublicationShareManagementLabels;
   shareReloadKey: number;
@@ -60,6 +66,8 @@ export function FinancePublicationHistorySheet({
   historyLabels,
   canShare,
   canManageShares,
+  canDistribute = false,
+  distributionLabels,
   fastShareLabels,
   shareManagementLabels,
   shareReloadKey,
@@ -73,6 +81,10 @@ export function FinancePublicationHistorySheet({
   const [hasOlder, setHasOlder] = useState(false);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [manageVersion, setManageVersion] = useState<number | null>(null);
+  const [distributeVersion, setDistributeVersion] = useState<{
+    versionNumber: number;
+    publishedAt: string | null;
+  } | null>(null);
 
   const loadInitial = useCallback(async () => {
     setLoading(true);
@@ -201,6 +213,22 @@ export function FinancePublicationHistorySheet({
                     >
                       {historyLabels.openVersion}
                     </Button>
+                    {canDistribute && distributionLabels ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        data-finance-publication-distribute-trigger
+                        onClick={() =>
+                          setDistributeVersion({
+                            versionNumber: version.versionNumber,
+                            publishedAt: version.publishedAt,
+                          })
+                        }
+                      >
+                        {distributionLabels.sendAction}
+                      </Button>
+                    ) : null}
                     <FinancePublicationPdfDownloadButton
                       publicationId={publicationId}
                       versionNumber={version.versionNumber}
@@ -249,6 +277,23 @@ export function FinancePublicationHistorySheet({
           ) : null}
         </div>
       </Sheet>
+
+      {distributionLabels && distributeVersion != null ? (
+        <FinancePublicationDistributionDialog
+          open
+          onClose={() => setDistributeVersion(null)}
+          publicationId={publicationId}
+          versionNumber={distributeVersion.versionNumber}
+          financeYearName={financeYearName}
+          publishedAtLabel={formatPublishedAt(distributeVersion.publishedAt, formattingLocale)}
+          formattingLocale={formattingLocale}
+          labels={{
+            ...distributionLabels,
+            cancel: historyLabels.close,
+            close: historyLabels.close,
+          }}
+        />
+      ) : null}
 
       {shareManagementLabels && manageVersion != null ? (
         <Dialog
