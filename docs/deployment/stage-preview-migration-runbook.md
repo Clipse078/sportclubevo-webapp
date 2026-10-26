@@ -58,6 +58,25 @@ the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Previ
 
 Closure record: `docs/finance/SCE-FINANCE-02B-IMPLEMENTATION.md` (STAGE migration applied 2026-10-23).
 
+## Finance (FIN-06E) — distribution schema + distribute permission before Preview UAT
+
+PR Preview code for FIN-06E persists `FinancePublicationDistribution` and gates **Versenden**
+on `finance.reporting.distribute`. If the shared STAGE database has not applied **both**:
+
+- `20261026160000_sce_finance_06e_publication_distribution`
+- `20261026173000_sce_finance_06e_r1_distribute_permission_backfill`
+
+…Club Admin users who already had FIN-06D publication keys still lack
+`finance.reporting.distribute` in the permission catalog and on materialized
+`club_admin__*` roles; **Versenden** stays hidden in Veröffentlichungen while
+**Teilen** / **Freigabe verwalten** remain visible. Apply step 3 **before**
+FIN-06E Product Owner UAT on Preview.
+
+Operator verify (read-only):
+
+- `scripts/sce-finance-06e-r2-stage-migration-verify.ts`
+- `npm run finance:06e:r2:stage-migration-verify`
+
 ## Finance (FIN-06D) — controlled publication version sharing before Preview UAT
 
 PR Preview code for FIN-06D-R2 queries `FinancePublicationShare` including `publicToken`
