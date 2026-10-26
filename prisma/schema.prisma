@@ -1405,6 +1405,7 @@ model Tenant {
   financePublications             FinancePublication[]
   financePublicationVersions      FinancePublicationVersion[]
   financeFinancialShares          FinanceFinancialShare[]
+  financePublicationShares        FinancePublicationShare[]
 
   @@index([status])
   @@index([name])
@@ -1576,6 +1577,8 @@ model User {
   financePublicationVersionsPublished   FinancePublicationVersion[]     @relation("FinancePublicationVersionPublishedBy")
   financeFinancialSharesCreated         FinanceFinancialShare[]         @relation("FinanceFinancialShareCreatedBy")
   financeFinancialSharesRevoked         FinanceFinancialShare[]         @relation("FinanceFinancialShareRevokedBy")
+  financePublicationSharesCreated       FinancePublicationShare[]       @relation("FinancePublicationShareCreatedBy")
+  financePublicationSharesRevoked       FinancePublicationShare[]       @relation("FinancePublicationShareRevokedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -11480,6 +11483,7 @@ model FinancePublication {
   createdBy     User?                     @relation("FinancePublicationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   publishedBy   User?                     @relation("FinancePublicationPublishedBy", fields: [publishedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   versions      FinancePublicationVersion[]
+  publicationShares FinancePublicationShare[]
 
   @@index([tenantId, financeYearId])
   @@index([tenantId, lifecycleStatus])
@@ -11508,10 +11512,48 @@ model FinancePublicationVersion {
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   publication FinancePublication @relation(fields: [publicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   publishedBy User?              @relation("FinancePublicationVersionPublishedBy", fields: [publishedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  publicationShares FinancePublicationShare[]
 
   @@unique([publicationId, versionNumber])
   @@index([tenantId, publicationId])
   @@index([tenantId, lifecycleStatus])
+}
+
+enum FinancePublicationShareKind {
+  DEFAULT
+  ADVANCED
+}
+
+/// Controlled external access to a specific immutable publication version (FIN-06D).
+model FinancePublicationShare {
+  id                    String                        @id @default(cuid())
+  tenantId              String
+  publicationId         String
+  publicationVersionId  String
+  /// Opaque high-entropy URL capability (R2+). Persisted for authorized link copy; not a hidden password.
+  publicToken           String?                       @unique
+  /// Legacy R1 lookup: SHA-256 hex of URL segment when publicToken was not persisted.
+  tokenHash             String?                       @unique
+  shareKind             FinancePublicationShareKind   @default(DEFAULT)
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  revokedByUserId       String?
+  createdByUserId       String?
+  lastAccessedAt        DateTime?
+  accessCount           Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  tenant             Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  publication        FinancePublication        @relation(fields: [publicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  publicationVersion FinancePublicationVersion @relation(fields: [publicationVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy          User?                     @relation("FinancePublicationShareCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  revokedBy          User?                     @relation("FinancePublicationShareRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, publicationId])
+  @@index([tenantId, publicationVersionId])
+  @@index([tenantId, revokedAt])
+  @@index([tenantId, expiresAt])
 }
 
 /// Controlled live share — may reference current reporting scope (FIN-06A foundation).

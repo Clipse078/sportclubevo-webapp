@@ -299,7 +299,7 @@ Publication without distribution is **infrastructure**, not the complete user ou
 | FIN-06C slice | Intent |
 | --- | --- |
 | **PDF herunterladen** | **COMPLETE / PO APPROVED** — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
-| **Controlled sharing** | **NOT STARTED** — of a **specific publication version** (not live-report sharing confused with publication) |
+| **Controlled sharing (FIN-06D R1)** | **IMPLEMENTED / PO UAT PENDING** — `FinancePublicationShare` binds to **FinancePublicationVersion**; external route `/share/finance/publication/{token}`; PDF via `/api/share/finance/publication/{token}/pdf`; raw token shown once; SHA-256 digest stored |
 | **Email / distribution** | **NOT STARTED** — of a **specific publication version** |
 
 **PDF architecture lock:** `Publication Version → Snapshot → Publication Presentation → PDF`. **Never** `Publication Version → Current FIN-05 Read Model → PDF`. Semantic invariance: `PDF(V1)` today equals `PDF(V1)` after live finance changes (byte identity not required when metadata differs).
@@ -325,7 +325,7 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
 | **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
 | **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented; **R2 PDF design/accessibility** implemented / PO UAT pending) |
-| **06D** | Publication governance & history | NOT STARTED |
+| **06D** | Controlled publication sharing | **R1 IMPLEMENTED / PO UAT PENDING** |
 | **06E** | Distribution / export surfaces | NOT STARTED |
 | **06F** | Privacy, audience & policy hardening | NOT STARTED |
 | **06G** | UX / responsive / release hardening | NOT STARTED |

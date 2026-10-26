@@ -96,3 +96,65 @@ export async function generateFinancePublicationPdfArtifactForTenant(
     return { ok: false, generationFailed: true, message };
   }
 }
+
+export type GenerateFinancePublicationPdfForShareInput = {
+  snapshot: Parameters<
+    typeof buildFinancePublishedManagementPnlInspectionReadModel
+  >[0]["snapshot"];
+  lifecycleStatus: string;
+  reportTypeContentLabel: string;
+  labels: FinancePublicationPdfLabels;
+  tenantId: string;
+  generatedAt?: Date;
+};
+
+export async function generateFinancePublicationPdfArtifactForShare(
+  input: GenerateFinancePublicationPdfForShareInput,
+): Promise<GenerateFinancePublicationPdfArtifactResult> {
+  let presentation;
+  try {
+    presentation = buildFinancePublishedManagementPnlInspectionReadModel({
+      snapshot: input.snapshot,
+      lifecycleStatus: input.lifecycleStatus,
+      contentLabel: input.reportTypeContentLabel,
+    });
+  } catch (error: unknown) {
+    if (error instanceof FinanceDomainError) {
+      return {
+        ok: false,
+        generationFailed: true,
+        message: error.message,
+      };
+    }
+    throw error;
+  }
+
+  const tenant = await getCurrentTenantContextByIdCached(input.tenantId);
+  const organisationName = tenant?.name?.trim() || presentation.identity.title;
+  const formattingLocale = tenant
+    ? resolveFinanceFormattingLocale(tenant)
+    : "en-GB";
+  const generatedAt = input.generatedAt ?? new Date();
+  const tenantLogo = await loadTenantPublicationLogo(tenant?.logoUrl ?? null);
+
+  try {
+    const pdf = await generateFinancePublicationPdf({
+      organisationName,
+      formattingLocale,
+      translationLocale: tenant?.locale?.trim() || formattingLocale,
+      documentLanguage: tenant?.locale?.trim() || formattingLocale,
+      generatedAt,
+      presentation,
+      labels: input.labels,
+      organisationLogoBytes: tenantLogo?.bytes ?? null,
+      organisationLogoMime: tenantLogo?.mime ?? null,
+    });
+    return { ok: true, ...pdf };
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error && error.message.trim()
+        ? error.message
+        : "PDF could not be generated.";
+    return { ok: false, generationFailed: true, message };
+  }
+}

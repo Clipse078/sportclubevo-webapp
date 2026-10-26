@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type ComponentProps } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import { loadFinanceReportingDetailAction } from "@/app/(admin)/dashboard/finance/reports/actions";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import {
@@ -16,6 +17,8 @@ import {
 } from "@/components/admin/finance/reporting/FinanceReportingPublicationBar";
 import type { FinanceManagementPnlPublicationLabels } from "@/components/admin/finance/reporting/FinanceManagementPnlPublicationDialog";
 import type { FinancePublicationInspectionLabels } from "@/components/admin/finance/reporting/FinancePublicationInspectionSheet";
+import type { FinancePublicationFastShareLabels } from "@/components/admin/finance/reporting/FinancePublicationFastShareButton";
+import type { FinancePublicationShareManagementLabels } from "@/components/admin/finance/reporting/FinancePublicationShareManagement";
 import type { SerializedFinancePublicationSummaryReadModel } from "@/lib/finance/presentation/serialize-finance-publication-summary";
 
 type PnlLabels = ComponentProps<typeof FinanceManagementPnlPanel>["labels"];
@@ -31,10 +34,14 @@ type Props = {
   initialDetail?: SerializedFinanceManagementReportingDetailReadModel | null;
   initialDetailOpen?: boolean;
   canPublishReport?: boolean;
+  canSharePublication?: boolean;
+  canRevokePublicationShares?: boolean;
   publicationSummary?: SerializedFinancePublicationSummaryReadModel | null;
   publicationLabels?: FinanceManagementPnlPublicationLabels;
   publicationInspectionLabels?: FinancePublicationInspectionLabels;
   publicationHistoryLabels?: FinancePublicationHistoryLabels;
+  publicationFastShareLabels?: FinancePublicationFastShareLabels;
+  publicationShareManagementLabels?: FinancePublicationShareManagementLabels;
 };
 
 export function FinanceReportingInvestigationWorkspace({
@@ -48,10 +55,14 @@ export function FinanceReportingInvestigationWorkspace({
   initialDetail = null,
   initialDetailOpen = false,
   canPublishReport = false,
+  canSharePublication = false,
+  canRevokePublicationShares = false,
   publicationSummary = null,
   publicationLabels,
   publicationInspectionLabels,
   publicationHistoryLabels,
+  publicationFastShareLabels,
+  publicationShareManagementLabels,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -154,19 +165,23 @@ export function FinanceReportingInvestigationWorkspace({
   }, [syncUrl]);
 
   return (
-    <>
+    <ToastProvider>
       {publicationLabels && publicationInspectionLabels ? (
         <FinanceReportingPublicationBar
           financeYearId={model.financeYearId}
           financeYearName={model.financeYearName}
           formattingLocale={formattingLocale}
           canPublish={canPublishReport}
+          canShare={canSharePublication}
+          canRevokeShares={canRevokePublicationShares}
           reportPublishable={model.availability === "AVAILABLE"}
           publicationSummary={publicationSummary}
           publicationLabels={publicationLabels}
           inspectionLabels={publicationInspectionLabels}
           historyLabels={publicationHistoryLabels}
           pnlLabels={pnlLabels}
+          fastShareLabels={publicationFastShareLabels}
+          shareManagementLabels={publicationShareManagementLabels}
         />
       ) : null}
       <FinanceManagementPnlPanel
@@ -194,6 +209,6 @@ export function FinanceReportingInvestigationWorkspace({
         labels={detailLabels}
         onInvestigateAccount={(accountId) => void openInvestigation({ accountId, groupId: null })}
       />
-    </>
+    </ToastProvider>
   );
 }

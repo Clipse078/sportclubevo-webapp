@@ -97,7 +97,7 @@ export function Toast({ id, variant, message, duration = 4000, onDismiss }: Toas
     >
       <span className="mt-0.5">{icon}</span>
 
-      <p className="flex-1 text-sm font-medium leading-snug">{message}</p>
+      <div className="flex-1 min-w-0 text-sm font-medium leading-snug">{message}</div>
 
       <button
         type="button"

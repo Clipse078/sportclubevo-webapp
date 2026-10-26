@@ -13,7 +13,9 @@ import {
 } from "@/lib/finance/services/finance-management-reporting-query-service";
 import { prisma } from "@/lib/db/prisma";
 import {
+  canManageFinancialShares,
   canPublishFinancialReports,
+  canShareFinancialReports,
   canViewFinancePublicationHistory,
 } from "@/lib/finance/publishing/finance-publishing-authorization";
 import { loadFinancePublicationSummaryForYear } from "@/lib/finance/services/finance-publication-query-service";
@@ -50,6 +52,9 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
 
   const canViewPublications = canViewFinancePublicationHistory(workspace.ctx);
   const canPublishReport = canPublishFinancialReports(workspace.ctx);
+  const canSharePublication =
+    canShareFinancialReports(workspace.ctx) && canViewFinancePublicationHistory(workspace.ctx);
+  const canRevokePublicationShares = canManageFinancialShares(workspace.ctx);
   const publicationSummary = canViewPublications
     ? serializeFinancePublicationSummaryReadModel(
         await loadFinancePublicationSummaryForYear(
@@ -111,6 +116,8 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
           formattingLocale={workspace.formattingLocale}
           canConfigureStructure={workspace.canStructure}
           canPublishReport={canPublishReport}
+          canSharePublication={canSharePublication}
+          canRevokePublicationShares={canRevokePublicationShares}
           publicationSummary={publicationSummary}
           publicationLabels={
             canViewPublications || canPublishReport
@@ -152,6 +159,61 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
                   downloadPdf: t("reporting.publication.downloadPdf"),
                   close: t("reporting.publication.close"),
+                  shareableHint: t("reporting.publicationShare.shareableHint"),
+                  loading: t("reporting.publicationShare.inspectionLoading"),
+                }
+              : undefined
+          }
+          publicationFastShareLabels={
+            canSharePublication
+              ? {
+                  shareAction: t("reporting.publicationShare.shareAction"),
+                  copyLink: t("reporting.publicationShare.copyLink"),
+                  openLink: t("reporting.publicationShare.openLink"),
+                  linkCopiedTitle: t("reporting.publicationShare.linkCopiedTitle"),
+                  linkCreatedTitle: t("reporting.publicationShare.linkCreatedTitle"),
+                  linkCopiedBody: t("reporting.publicationShare.linkCopiedBody"),
+                  linkCopySuccess: t("reporting.publicationShare.linkCopySuccess"),
+                  createFailed: t("reporting.publicationShare.createFailed"),
+                  manageAction: t("reporting.publicationShare.manageAction"),
+                }
+              : undefined
+          }
+          publicationShareManagementLabels={
+            canSharePublication || canRevokePublicationShares
+              ? {
+                  sectionTitle: t("reporting.publicationShare.managementTitle"),
+                  dialogTitle: t("reporting.publicationShare.managementDialogTitle"),
+                  empty: t("reporting.publicationShare.managementEmpty"),
+                  noActiveShare: t("reporting.publicationShare.noActiveShare"),
+                  createDefaultLink: t("reporting.publicationShare.createDefaultLink"),
+                  statusActive: t("reporting.publicationShare.statusActive"),
+                  statusExpired: t("reporting.publicationShare.statusExpired"),
+                  statusRevoked: t("reporting.publicationShare.statusRevoked"),
+                  createdLabel: t("reporting.publicationShare.createdLabel"),
+                  expiresLabel: t("reporting.publicationShare.expiresLabel"),
+                  expiresNone: t("reporting.publicationShare.expiryNone"),
+                  creatorLabel: t("reporting.publicationShare.creatorLabel"),
+                  revoke: t("reporting.publicationShare.revoke"),
+                  revoking: t("reporting.publicationShare.revoking"),
+                  revokeFailed: t("reporting.publicationShare.revokeFailed"),
+                  revokeConfirmTitle: t("reporting.publicationShare.revokeConfirmTitle"),
+                  revokeConfirmDescription: t("reporting.publicationShare.revokeConfirmDescription"),
+                  revokeSuccess: t("reporting.publicationShare.revokeSuccess"),
+                  copyLink: t("reporting.publicationShare.copyLink"),
+                  openLink: t("reporting.publicationShare.openLink"),
+                  linkCopied: t("reporting.publicationShare.copied"),
+                  loadFailed: t("reporting.publicationShare.loadFailed"),
+                  advancedTitle: t("reporting.publicationShare.advancedTitle"),
+                  expirySection: t("reporting.publicationShare.expirySection"),
+                  expiryNone: t("reporting.publicationShare.expiryNone"),
+                  expiryDate: t("reporting.publicationShare.expiryDate"),
+                  expiryDateLabel: t("reporting.publicationShare.expiryDateLabel"),
+                  createAdvancedShare: t("reporting.publicationShare.createAdvancedShare"),
+                  creating: t("reporting.publicationShare.creating"),
+                  createFailed: t("reporting.publicationShare.createFailed"),
+                  manageAction: t("reporting.publicationShare.manageAction"),
+                  cancel: t("reporting.publication.cancel"),
                 }
               : undefined
           }
@@ -166,6 +228,11 @@ export default async function FinanceReportingPnlPage({ searchParams }: PageProp
                   statusPublished: t("reporting.publication.statusPublished"),
                   statusSuperseded: t("reporting.publication.statusSuperseded"),
                   downloadPdf: t("reporting.publication.downloadPdf"),
+                  close: t("reporting.publication.close"),
+                  loading: t("reporting.publication.historyLoading"),
+                  loadingMore: t("reporting.publication.historyLoadingMore"),
+                  loadOlder: t("reporting.publication.historyLoadOlder"),
+                  empty: t("reporting.publication.historyEmpty"),
                 }
               : undefined
           }
