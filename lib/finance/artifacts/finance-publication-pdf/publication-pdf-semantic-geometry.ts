@@ -1,12 +1,12 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { mmToPt } from "@/lib/billing/invoice-pdf/mm";
 import { publicationPdfColors } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-colors";
-import { publicationPdfResultTextCapHeightPt } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
 import {
   publicationPdfFontCapHeightPt,
   publicationPdfFontDescenderPt,
   publicationPdfResultBandHeightBoundsPt,
   publicationPdfResultRowLayout,
+  publicationPdfResultTextCapHeightPt,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout";
 import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
 import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";

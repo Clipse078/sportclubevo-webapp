@@ -1,6 +1,10 @@
 import { PDFDocument, type PDFPage, type PDFFont, type RGB } from "pdf-lib";
 import { A4_HEIGHT_MM, A4_WIDTH_MM } from "@/lib/billing/invoice-pdf/constants";
 import { mmToPt } from "@/lib/billing/invoice-pdf/mm";
+import {
+  PUBLICATION_PDF_FOOTER_BLOCK_HEIGHT_PT,
+  publicationPdfContentBottomYPt,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-page-layout";
 import { drawRightAlignedText } from "@/lib/billing/invoice-pdf/pdf-text-layout";
 import {
   formatManagementPnlMeasureCell,
@@ -45,10 +49,22 @@ import { publicationPdfColors } from "@/lib/finance/artifacts/finance-publicatio
 import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";
 import { computePublicationPdfAmountColumnRights } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-layout";
 import {
+  createPublicationPdfDrawRecorder,
+  recordPublicationPdfLineDraw,
+  recordPublicationPdfRectDraw,
+  recordPublicationPdfTextDraw,
+  type PublicationPdfDrawRecorder,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-draw-recorder";
+import {
+  drawPublicationSingleLine,
+  drawPublicationTextBlock,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-flow-layout";
+import { publicationPdfLineHeightPt } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-font-metrics";
+import {
   publicationPdfAdvanceYAfterResultBand,
   publicationPdfResultRowGeometryFromBandTop,
   publicationPdfResultRowLayout,
-} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout";
 import {
   publicationPdfImmutabilityNoticeMaxWidthPt,
   publicationPdfStatementRowAdvancePt,
@@ -64,8 +80,8 @@ const PAGE_H = mmToPt(A4_HEIGHT_MM);
 const MARGIN_X = mmToPt(18);
 const MARGIN_TOP = mmToPt(20);
 const MARGIN_BOTTOM = mmToPt(18);
-const CONTENT_BOTTOM = MARGIN_BOTTOM + mmToPt(16);
-const FOOTER_BLOCK_HEIGHT = mmToPt(11);
+const FOOTER_BLOCK_HEIGHT = PUBLICATION_PDF_FOOTER_BLOCK_HEIGHT_PT;
+const CONTENT_BOTTOM = publicationPdfContentBottomYPt();
 
 const COLORS = publicationPdfColors;
 
@@ -87,6 +103,7 @@ type LayoutContext = {
   tenantLogo: PublicationPdfEmbeddedImage | null;
   sceMark: PublicationPdfEmbeddedImage | null;
   yearLabel: string;
+  drawRecorder: PublicationPdfDrawRecorder | null;
 };
 
 function formatDateTime(isoOrDate: string | Date, locale: string): string {
@@ -175,6 +192,9 @@ function newPage(ctx: LayoutContext): LayoutContext {
     pageIndex: ctx.pageIndex + 1,
     tableHeaderDrawnOnPage: false,
   };
+  if (next.drawRecorder) {
+    next.drawRecorder.pageIndex = next.pageIndex - 1;
+  }
   drawContinuationHeader(next);
   return next;
 }
@@ -238,37 +258,6 @@ function drawFooter(ctx: LayoutContext): void {
   if (sceMark) {
     drawPublicationImage(page, sceMark, rightX + attributionWidth + markGap, lineY - mmToPt(0.5));
   }
-}
-
-function drawWrappedTextBlock(
-  page: PDFPage,
-  text: string,
-  x: number,
-  startY: number,
-  maxWidth: number,
-  size: number,
-  font: PDFFont,
-  color: RGB,
-  lineHeight: number,
-): number {
-  const words = t(text).split(/\s+/).filter(Boolean);
-  let line = "";
-  let y = startY;
-  for (const word of words) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (font.widthOfTextAtSize(candidate, size) > maxWidth && line) {
-      page.drawText(t(line), { x, y, size, font, color });
-      y -= lineHeight;
-      line = word;
-    } else {
-      line = candidate;
-    }
-  }
-  if (line) {
-    page.drawText(t(line), { x, y, size, font, color });
-    y -= lineHeight;
-  }
-  return y;
 }
 
 function drawTableHeader(ctx: LayoutContext): LayoutContext {
@@ -350,6 +339,13 @@ function drawAmountRow(
       thickness: resultLayout.separatorStrokePt,
       color: COLORS.ruleStrong,
     });
+    recordPublicationPdfLineDraw(next.drawRecorder, {
+      blockId: "statement.result",
+      x1: MARGIN_X,
+      y1: geom.separatorY,
+      x2: PAGE_W - MARGIN_X,
+      y2: geom.separatorY,
+    });
     next.page.drawRectangle({
       x: MARGIN_X,
       y: geom.bandBottomY,
@@ -357,20 +353,29 @@ function drawAmountRow(
       height: geom.surfaceHeightPt,
       color: COLORS.resultSurface,
     });
+    recordPublicationPdfRectDraw(next.drawRecorder, {
+      blockId: "statement.result",
+      x: MARGIN_X,
+      y: geom.bandBottomY,
+      width: PAGE_W - MARGIN_X * 2,
+      height: geom.surfaceHeightPt,
+    });
     labelY = geom.baselineY;
   }
 
-  const labelEndY = drawWrappedTextBlock(
-    next.page,
-    label,
-    labelX,
-    labelY,
-    maxLabelWidth,
-    size,
+  const rowBlockId = options.emphasis ? "statement.result" : "statement.row";
+  const labelBlock = drawPublicationTextBlock(next.page, {
+    text: label,
+    x: labelX,
+    startBaselineY: labelY,
+    maxWidth: maxLabelWidth,
+    fontSize: size,
     font,
-    COLORS.textPrimary,
-    mmToPt(4),
-  );
+    color: COLORS.textPrimary,
+    lineHeight: publicationPdfLineHeightPt(size),
+    blockId: rowBlockId,
+    recorder: next.drawRecorder,
+  });
   const rowY = labelY;
 
   const values = [
@@ -381,13 +386,25 @@ function drawAmountRow(
   ];
   const xs = [cols.budget, cols.actual, cols.forecast, cols.variance];
   for (let i = 0; i < values.length; i += 1) {
-    drawRightAlignedText(next.page, t(values[i]!), xs[i]!, rowY, font, size, COLORS.textPrimary);
+    const valueText = t(values[i]!);
+    drawRightAlignedText(next.page, valueText, xs[i]!, rowY, font, size, COLORS.textPrimary);
+    const valueWidth = font.widthOfTextAtSize(valueText, size);
+    recordPublicationPdfTextDraw(next.drawRecorder, {
+      blockId: rowBlockId,
+      x: xs[i]! - valueWidth,
+      baselineY: rowY,
+      text: valueText,
+      font,
+      fontSize: size,
+      lineHeight: publicationPdfLineHeightPt(size),
+      color: COLORS.textPrimary,
+    });
   }
 
   if (options.emphasis && resultBandTopY !== null) {
     next.y = publicationPdfAdvanceYAfterResultBand(resultBandTopY);
   } else {
-    next.y = Math.min(next.y - rowAdvance, labelEndY - mmToPt(1));
+    next.y = Math.min(next.y - rowAdvance, labelBlock.nextY);
   }
   if (options.bold && !options.emphasis && !options.deferClosingRule) {
     next.page.drawLine({
@@ -662,17 +679,18 @@ function drawManagementAssessment(ctx: LayoutContext): LayoutContext {
       color: COLORS.textPrimary,
     });
     if (detail) {
-      ctx.y = drawWrappedTextBlock(
-        ctx.page,
-        detail,
-        textX,
-        blockTop - mmToPt(8),
-        PAGE_W - textX - MARGIN_X,
-        TYPE.body,
-        fonts.regular,
-        COLORS.textPrimary,
-        mmToPt(4.2),
-      );
+      const detailBlock = drawPublicationTextBlock(ctx.page, {
+        text: detail,
+        x: textX,
+        startBaselineY: blockTop - mmToPt(8),
+        maxWidth: PAGE_W - textX - MARGIN_X,
+        fontSize: TYPE.body,
+        font: fonts.regular,
+        color: COLORS.textPrimary,
+        blockId: "management.detail",
+        recorder: ctx.drawRecorder,
+      });
+      ctx.y = detailBlock.nextY;
     } else {
       ctx.y = blockTop - accentHeight;
     }
@@ -765,55 +783,69 @@ function drawVarianceDrivers(ctx: LayoutContext): LayoutContext {
   return ctx;
 }
 
-function drawStatementHeading(ctx: LayoutContext): LayoutContext {
+function drawStatement(ctx: LayoutContext): LayoutContext {
   const { labels, fonts, presentation } = ctx;
   const currency = presentation.pnl.baseCurrency;
+  let next = ctx;
 
-  ctx.page.drawText(t(labels.statementSectionTitle), {
+  const heading = drawPublicationSingleLine(next.page, {
+    text: labels.statementSectionTitle,
     x: MARGIN_X,
-    y: ctx.y,
-    size: TYPE.sectionHeading,
+    baselineY: next.y,
+    fontSize: TYPE.sectionHeading,
     font: fonts.bold,
     color: COLORS.sectionAccent,
+    blockId: "statement.heading",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("xs"),
   });
-  ctx.y -= publicationPdfVerticalSpacePt("xs");
-  ctx.page.drawText(
-    t(labels.amountsInCurrencyLabel.replace("{currency}", currency ?? "")),
-    { x: MARGIN_X, y: ctx.y, size: TYPE.supportingMetricLabel, font: fonts.regular, color: COLORS.textSecondary },
-  );
-  ctx.y -= publicationPdfVerticalSpacePt("md");
-  return ctx;
-}
+  next = { ...next, y: heading.nextY };
 
-function drawIncomeSection(ctx: LayoutContext): LayoutContext {
-  let next = ctx;
-  next.page.drawText(t(next.labels.incomeSection.toUpperCase()), {
+  const currencyLine = drawPublicationSingleLine(next.page, {
+    text: labels.amountsInCurrencyLabel.replace("{currency}", currency ?? ""),
     x: MARGIN_X,
-    y: next.y,
-    size: TYPE.body,
+    baselineY: next.y,
+    fontSize: TYPE.supportingMetricLabel,
+    font: fonts.regular,
+    color: COLORS.textSecondary,
+    blockId: "statement.heading",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("md"),
+  });
+  next = { ...next, y: currencyLine.nextY };
+
+  const incomeTitle = drawPublicationSingleLine(next.page, {
+    text: labels.incomeSection.toUpperCase(),
+    x: MARGIN_X,
+    baselineY: next.y,
+    fontSize: TYPE.body,
     font: next.fonts.bold,
     color: COLORS.textPrimary,
+    blockId: "statement.income",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("sm"),
   });
-  next.y -= publicationPdfVerticalSpacePt("sm");
+  next = { ...next, y: incomeTitle.nextY };
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
   next = walkTree(next, next.presentation.pnl.incomeSection.nodes, 0);
   next = drawAmountRow(next, next.labels.incomeSectionTotal, next.presentation.pnl.incomeSection.sectionTotal, {
     bold: true,
   });
   next.y -= publicationPdfVerticalSpacePt("sm");
-  return next;
-}
 
-function drawExpenseSectionAndResult(ctx: LayoutContext): LayoutContext {
-  let next = ensureSpace(ctx, mmToPt(24));
-  next.page.drawText(t(next.labels.expenseSection.toUpperCase()), {
+  next = ensureSpace(next, mmToPt(24));
+  const expenseTitle = drawPublicationSingleLine(next.page, {
+    text: labels.expenseSection.toUpperCase(),
     x: MARGIN_X,
-    y: next.y,
-    size: TYPE.body,
+    baselineY: next.y,
+    fontSize: TYPE.body,
     font: next.fonts.bold,
     color: COLORS.textPrimary,
+    blockId: "statement.expense",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("sm"),
   });
-  next.y -= publicationPdfVerticalSpacePt("sm");
+  next = { ...next, y: expenseTitle.nextY };
   next = drawTableHeader({ ...next, tableHeaderDrawnOnPage: false });
   next = walkTree(next, next.presentation.pnl.expenseSection.nodes, 0);
   next = drawAmountRow(next, next.labels.expenseSectionTotal, next.presentation.pnl.expenseSection.sectionTotal, {
@@ -902,36 +934,46 @@ function drawMajorDeviations(ctx: LayoutContext): LayoutContext {
       font: fonts.regular,
       color: COLORS.textPrimary,
     });
-    next.y = drawWrappedTextBlock(
-      next.page,
-      row.comment,
-      colComment,
-      next.y,
-      PAGE_W - colComment - MARGIN_X,
-      TYPE.body,
-      fonts.regular,
-      COLORS.textSecondary,
-      mmToPt(4),
-    );
-    next.y -= mmToPt(1);
+    const commentBlock = drawPublicationTextBlock(next.page, {
+      text: row.comment,
+      x: colComment,
+      startBaselineY: next.y,
+      maxWidth: PAGE_W - colComment - MARGIN_X,
+      fontSize: TYPE.body,
+      font: fonts.regular,
+      color: COLORS.textSecondary,
+      blockId: "majorDeviations.comment",
+      recorder: next.drawRecorder,
+      trailingGapPt: mmToPt(1),
+    });
+    next.y = commentBlock.nextY;
   }
 
   next.y -= mmToPt(3);
   return next;
 }
 
-function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPdfDocumentInput): LayoutContext {
+function drawPublicationEvidence(
+  ctx: LayoutContext,
+  input: FinancePublicationPdfDocumentInput,
+): LayoutContext {
   const identity = input.presentation.identity;
-  const next = ensureSpace(ctx, publicationPdfVerticalSpacePt("xl") + mmToPt(6));
+  let next = ensureSpace(ctx, publicationPdfVerticalSpacePt("xl") + mmToPt(6));
+  const noteSize = TYPE.publicationNote;
+  const noteLineHeight = publicationPdfLineHeightPt(noteSize);
 
-  next.page.drawText(t(next.labels.publicationInfoTitle), {
+  const heading = drawPublicationSingleLine(next.page, {
+    text: next.labels.publicationInfoTitle,
     x: MARGIN_X,
-    y: next.y,
-    size: TYPE.evidenceSectionHeading,
+    baselineY: next.y,
+    fontSize: TYPE.evidenceSectionHeading,
     font: next.fonts.bold,
     color: COLORS.textSecondary,
+    blockId: "publicationEvidence.heading",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("sm"),
   });
-  next.y -= publicationPdfVerticalSpacePt("sm");
+  next = { ...next, y: heading.nextY };
 
   const compact = buildCompactPublicationInfoLines({
     versionLabel: next.labels.versionLabel,
@@ -942,39 +984,49 @@ function drawPublicationMetadata(ctx: LayoutContext, input: FinancePublicationPd
     pdfGeneratedAtFormatted: formatDateTime(input.generatedAt, next.locale),
   });
 
-  next.page.drawText(t(compact.versionPublishedLine), {
+  const versionLine = drawPublicationSingleLine(next.page, {
+    text: compact.versionPublishedLine,
     x: MARGIN_X,
-    y: next.y,
-    size: TYPE.publicationNote,
+    baselineY: next.y,
+    fontSize: noteSize,
     font: next.fonts.regular,
     color: COLORS.textPrimary,
+    lineHeight: noteLineHeight,
+    blockId: "publicationEvidence.versionLine",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("xs"),
   });
-  next.y -= publicationPdfVerticalSpacePt("xs");
-  next.page.drawText(t(compact.pdfGeneratedLine), {
+  next = { ...next, y: versionLine.nextY };
+
+  const pdfCreatedLine = drawPublicationSingleLine(next.page, {
+    text: compact.pdfGeneratedLine,
     x: MARGIN_X,
-    y: next.y,
-    size: TYPE.publicationNote,
+    baselineY: next.y,
+    fontSize: noteSize,
     font: next.fonts.regular,
     color: COLORS.textSecondary,
+    lineHeight: noteLineHeight,
+    blockId: "publicationEvidence.pdfCreatedLine",
+    recorder: next.drawRecorder,
+    trailingGapPt: publicationPdfVerticalSpacePt("sm"),
   });
-  next.y -= publicationPdfVerticalSpacePt("2xs");
-  return next;
-}
+  next = { ...next, y: pdfCreatedLine.nextY };
 
-function drawPublicationSnapshotNotice(ctx: LayoutContext): LayoutContext {
-  const next = ensureSpace(ctx, mmToPt(14));
-  next.y = drawWrappedTextBlock(
-    next.page,
-    next.labels.snapshotImmutabilityNotice,
-    MARGIN_X,
-    next.y,
-    publicationPdfImmutabilityNoticeMaxWidthPt(),
-    TYPE.publicationNote,
-    next.fonts.regular,
-    COLORS.textSecondary,
-    mmToPt(4),
-  );
-  next.y -= mmToPt(2);
+  next = ensureSpace(next, mmToPt(14));
+  const notice = drawPublicationTextBlock(next.page, {
+    text: next.labels.snapshotImmutabilityNotice,
+    x: MARGIN_X,
+    startBaselineY: next.y,
+    maxWidth: publicationPdfImmutabilityNoticeMaxWidthPt(),
+    fontSize: noteSize,
+    font: next.fonts.regular,
+    color: COLORS.textSecondary,
+    lineHeight: noteLineHeight,
+    blockId: "publicationEvidence.immutabilityNotice",
+    recorder: next.drawRecorder,
+    trailingGapPt: mmToPt(2),
+  });
+  next = { ...next, y: notice.nextY };
   return next;
 }
 
@@ -1021,6 +1073,8 @@ export async function generateFinancePublicationPdf(
     publicationVersion: identity.publicationVersion,
   });
 
+  const drawRecorder = input.recordDrawOperations ? createPublicationPdfDrawRecorder(0) : null;
+
   const firstPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
   let ctx: LayoutContext = {
     pdfDoc,
@@ -1038,6 +1092,7 @@ export async function generateFinancePublicationPdf(
     tenantLogo,
     sceMark,
     yearLabel,
+    drawRecorder,
   };
 
   const attentionInsights = input.presentation.pnl.comparativeIntelligence.attentionInsights;
@@ -1049,14 +1104,11 @@ export async function generateFinancePublicationPdf(
   ctx = ensureSpace(ctx, mmToPt(20));
   ctx = drawVarianceDrivers(ctx);
   ctx = ensureSpace(ctx, mmToPt(26));
-  ctx = drawStatementHeading(ctx);
-  ctx = drawIncomeSection(ctx);
-  ctx = drawExpenseSectionAndResult(ctx);
+  ctx = drawStatement(ctx);
   if (publicationPdfShouldRenderMajorDeviationsDetail(attentionInsights)) {
     ctx = drawMajorDeviations(ctx);
   }
-  ctx = drawPublicationMetadata(ctx, input);
-  ctx = drawPublicationSnapshotNotice(ctx);
+  ctx = drawPublicationEvidence(ctx, input);
 
   const totalPages = pdfDoc.getPageCount();
   for (let i = 0; i < totalPages; i += 1) {
@@ -1080,5 +1132,6 @@ export async function generateFinancePublicationPdf(
     pdfBytes,
     pageCount: totalPages,
     filename,
+    ...(drawRecorder ? { drawOperations: drawRecorder.operations } : {}),
   };
 }

@@ -1,9 +1,15 @@
 import { mmToPt } from "@/lib/billing/invoice-pdf/mm";
+import {
+  publicationPdfFontCapHeightPt,
+  publicationPdfFontDescenderPt,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-font-metrics";
 import { publicationPdfTypography as TYPE } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-typography";
 import {
   publicationPdfStatementRowAdvancePt,
   publicationPdfVerticalSpacePt,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-vertical-spacing";
+
+export { publicationPdfFontCapHeightPt, publicationPdfFontDescenderPt };
 
 /** Symmetric padding inside the result band (above/below text cap box). */
 export const PUBLICATION_PDF_RESULT_BAND_PADDING_MM = 1.35;
@@ -35,16 +41,6 @@ export function publicationPdfResultRowLayout(): PublicationPdfResultRowLayout {
   };
 }
 
-/** Cap height above baseline (Helvetica-like). */
-export function publicationPdfFontCapHeightPt(fontSizePt: number): number {
-  return fontSizePt * 0.72;
-}
-
-/** Approximate descender depth below baseline. */
-export function publicationPdfFontDescenderPt(fontSizePt: number): number {
-  return fontSizePt * 0.22;
-}
-
 /**
  * Given the top edge of the result band (separator line Y), compute fill bounds and
  * optically centred text baseline.
@@ -63,8 +59,7 @@ export function publicationPdfResultRowGeometryFromBandTop(bandTopY: number): {
   const textBoxHeight = cap + desc;
   const innerHeight = layout.bandHeightPt - layout.paddingPt * 2;
   const slack = Math.max(0, innerHeight - textBoxHeight);
-  const baselineY =
-    bandBottomY + layout.paddingPt + desc + slack / 2;
+  const baselineY = bandBottomY + layout.paddingPt + desc + slack / 2;
   return {
     bandTopY,
     bandBottomY,
@@ -78,6 +73,23 @@ export function publicationPdfResultRowGeometryFromBandTop(bandTopY: number): {
 export function publicationPdfCursorYAfterResultRow(bandBottomY: number): number {
   const layout = publicationPdfResultRowLayout();
   return bandBottomY - layout.resultToEvidenceGapPt;
+}
+
+/** Band bottom from explicit band-top separator Y. */
+export function publicationPdfResultBandBottomYFromBandTop(bandTopY: number): number {
+  return publicationPdfResultRowGeometryFromBandTop(bandTopY).bandBottomY;
+}
+
+/** Cursor Y after drawing the full result band block. */
+export function publicationPdfAdvanceYAfterResultBand(bandTopY: number): number {
+  const bandBottomY = publicationPdfResultBandBottomYFromBandTop(bandTopY);
+  return publicationPdfCursorYAfterResultRow(bandBottomY);
+}
+
+export function publicationPdfResultTextCapHeightPt(
+  fontSizePt: number = publicationPdfResultRowLayout().textSizePt,
+): number {
+  return publicationPdfFontCapHeightPt(fontSizePt);
 }
 
 /** Approved compact height range (~1.4–1.6 ordinary rows). */

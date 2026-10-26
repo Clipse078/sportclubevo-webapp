@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildFinancePublicationPdfLabels } from "@/lib/finance/presentation/load-finance-publication-pdf-labels";
-import { publicationPdfResultRowLayout } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-result-band-layout";
+import { publicationPdfResultRowLayout } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout";
 import {
   analyzePublicationPdfResultBlockGeometry,
   extractPublicationPdfSemanticGeometry,

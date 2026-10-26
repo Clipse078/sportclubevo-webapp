@@ -20,6 +20,7 @@ export type GenerateFinancePublicationPdfArtifactInput = {
   labels: FinancePublicationPdfLabels;
   reportTypeContentLabel: string;
   generatedAt?: Date;
+  recordDrawOperations?: boolean;
 };
 
 export type GenerateFinancePublicationPdfArtifactResult =
@@ -83,6 +84,7 @@ export async function generateFinancePublicationPdfArtifactForTenant(
       labels: input.labels,
       organisationLogoBytes: tenantLogo?.bytes ?? null,
       organisationLogoMime: tenantLogo?.mime ?? null,
+      recordDrawOperations: input.recordDrawOperations,
     });
 
     return { ok: true, ...pdf };

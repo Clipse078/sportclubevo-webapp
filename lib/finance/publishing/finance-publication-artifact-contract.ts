@@ -116,6 +116,20 @@ export const FINANCE_06C_R5R2_IMPLEMENTATION = {
   fin06ProgrammeStatus: "IN_PROGRESS",
 } as const;
 
+export const FINANCE_06C_R5R3_IMPLEMENTATION = {
+  packageId: "FIN-06C-R5R3",
+  status: "IMPLEMENTED_PO_UAT_PENDING",
+  predecessor: "FIN-06C-R5R2",
+  focus: "publication_pdf_flow_cursor_actual_draw_geometry",
+  pdfGenerator: "lib/finance/artifacts/finance-publication-pdf/generate-finance-publication-pdf.ts",
+  flowLayout: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-flow-layout.ts",
+  drawRecorder: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-draw-recorder.ts",
+  collisionHelper: "lib/finance/artifacts/finance-publication-pdf/publication-pdf-text-collision.ts",
+  testSuite: "lib/finance/__tests__/finance-06c-r5r3-flow-composition.test.ts",
+  fin06cStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "IN_PROGRESS",
+} as const;
+
 export const FINANCE_06C_R1_IMPLEMENTATION = {
   packageId: "FIN-06C-R1",
   status: "IMPLEMENTED",

@@ -75,10 +75,14 @@ export type FinancePublicationPdfDocumentInput = {
   organisationLogoMime: "image/png" | "image/jpeg" | null;
   /** BCP-47 language tag for PDF document catalog (e.g. de-CH). */
   documentLanguage: string;
+  /** Test-only: capture primitives actually sent to pdf-lib. */
+  recordDrawOperations?: boolean;
 };
 
 export type FinancePublicationPdfGenerationResult = {
   pdfBytes: Uint8Array;
   pageCount: number;
   filename: string;
+  /** Present when `recordDrawOperations` was enabled on the document input. */
+  drawOperations?: import("@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-draw-recorder").PublicationPdfRecordedDraw[];
 };
