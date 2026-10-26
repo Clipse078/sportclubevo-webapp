@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type ComponentProps } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import { loadFinanceReportingDetailAction } from "@/app/(admin)/dashboard/finance/reports/actions";
 import { FinanceManagementPnlPanel } from "@/components/admin/finance/reporting/FinanceManagementPnlPanel";
 import {
@@ -164,7 +165,7 @@ export function FinanceReportingInvestigationWorkspace({
   }, [syncUrl]);
 
   return (
-    <>
+    <ToastProvider>
       {publicationLabels && publicationInspectionLabels ? (
         <FinanceReportingPublicationBar
           financeYearId={model.financeYearId}
@@ -208,6 +209,6 @@ export function FinanceReportingInvestigationWorkspace({
         labels={detailLabels}
         onInvestigateAccount={(accountId) => void openInvestigation({ accountId, groupId: null })}
       />
-    </>
+    </ToastProvider>
   );
 }

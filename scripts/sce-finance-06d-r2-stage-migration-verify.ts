@@ -191,9 +191,11 @@ async function main(): Promise<void> {
   }
 
   if (schemaReady) {
-    await prisma.financePublicationShare.findFirst({
-      select: { id: true, publicToken: true, shareKind: true },
-    });
+    await prisma.$queryRaw`
+      SELECT id, "publicToken", "shareKind"
+      FROM "FinancePublicationShare"
+      LIMIT 1
+    `;
   }
 
   const status = migrateStatusOutput();

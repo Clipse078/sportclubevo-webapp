@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
-import {
-  ensureDefaultFinancePublicationShareAction,
-  getDefaultFinancePublicationShareStatusAction,
-} from "@/app/(admin)/dashboard/finance/reports/publication-share-actions";
+import { ensureDefaultFinancePublicationShareAction } from "@/app/(admin)/dashboard/finance/reports/publication-share-actions";
 import { useToast } from "@/hooks/use-toast";
 
 export type FinancePublicationFastShareLabels = {
@@ -25,6 +22,7 @@ type Props = {
   disabled?: boolean;
   onShareChanged?: () => void;
   onOpenManage?: () => void;
+  /** Reserved for share-management refresh; fast path does not preload share status. */
   reloadKey?: number;
 };
 
@@ -47,34 +45,9 @@ export function FinancePublicationFastShareButton({
   disabled,
   onShareChanged,
   onOpenManage,
-  reloadKey = 0,
 }: Props) {
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
-  const [hasActiveDefault, setHasActiveDefault] = useState(false);
-  const [cachedSharePath, setCachedSharePath] = useState<string | null>(null);
-  const [statusLoaded, setStatusLoaded] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    startTransition(() => {
-      void (async () => {
-        const result = await getDefaultFinancePublicationShareStatusAction({
-          publicationId,
-          versionNumber,
-        });
-        if (cancelled) return;
-        setStatusLoaded(true);
-        if (result.ok) {
-          setHasActiveDefault(result.hasActiveDefault);
-          setCachedSharePath(result.shareUrlPath);
-        }
-      })();
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [publicationId, versionNumber, reloadKey]);
 
   const showSuccessToast = useCallback(() => {
     toast.success(
@@ -87,14 +60,6 @@ export function FinancePublicationFastShareButton({
   const onPrimaryShare = useCallback(() => {
     startTransition(() => {
       void (async () => {
-        if (hasActiveDefault && cachedSharePath) {
-          const copied = await copyShareUrl(cachedSharePath);
-          if (copied) {
-            showSuccessToast();
-          }
-          return;
-        }
-
         const result = await ensureDefaultFinancePublicationShareAction({
           publicationId,
           versionNumber,
@@ -103,8 +68,6 @@ export function FinancePublicationFastShareButton({
           toast.danger(labels.createFailed);
           return;
         }
-        setHasActiveDefault(true);
-        setCachedSharePath(result.shareUrlPath);
         onShareChanged?.();
         const copied = await copyShareUrl(result.shareUrlPath);
         if (copied) {
@@ -113,9 +76,6 @@ export function FinancePublicationFastShareButton({
       })();
     });
   }, [
-    cachedSharePath,
-    financeYearName,
-    hasActiveDefault,
     labels.createFailed,
     onShareChanged,
     publicationId,
@@ -123,9 +83,6 @@ export function FinancePublicationFastShareButton({
     toast,
     versionNumber,
   ]);
-
-  const primaryLabel =
-    hasActiveDefault && statusLoaded ? labels.copyLink : labels.shareAction;
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-finance-publication-fast-share>
@@ -136,9 +93,9 @@ export function FinancePublicationFastShareButton({
         disabled={disabled || pending}
         onClick={onPrimaryShare}
         data-finance-publication-share-trigger
-        data-finance-publication-share-mode={hasActiveDefault ? "copy" : "share"}
+        data-finance-publication-share-mode="share"
       >
-        {primaryLabel}
+        {labels.shareAction}
       </Button>
       {onOpenManage ? (
         <Button

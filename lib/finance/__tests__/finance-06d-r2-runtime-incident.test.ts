@@ -21,6 +21,17 @@ vi.mock("@/lib/finance/services/finance-publication-share-service", () => ({
 }));
 
 describe("FIN-06D-R2 runtime incident containment", () => {
+  it("architecture guard: publication workspace wraps ToastProvider for share actions", () => {
+    const workspace = readFileSync(
+      join(
+        process.cwd(),
+        "components/admin/finance/reporting/FinanceReportingInvestigationWorkspace.tsx",
+      ),
+      "utf8",
+    );
+    expect(workspace).toContain("ToastProvider");
+  });
+
   it("architecture guard: finance reports SSR page does not import share persistence", () => {
     const reportsPage = readFileSync(
       join(process.cwd(), "app/(admin)/dashboard/finance/reports/page.tsx"),
