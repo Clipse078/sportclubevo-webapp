@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-06 — Financial Publishing & Sharing |
 | **Package** | **FIN-06A** complete; **FIN-06B** — Publication Snapshot & Versioning |
-| **Status** | **FIN-06A COMPLETE / PO APPROVED** (PR **#916** → **STAGE**); **FIN-06B COMPLETE / PO APPROVED** (PR **#917** → **STAGE**); **FIN-06B-R7 FINAL CLOSURE PASS**; **FIN-06C PDF / EXPORT COMPLETE / PO APPROVED** (PR **#918** → **STAGE**); **FIN-06C controlled sharing & email distribution NOT STARTED**; **FIN-06 programme IN PROGRESS** |
+| **Status** | **FIN-06 — COMPLETE / PO APPROVED** (FIN-06H programme closure — [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](./SCE-FINANCE-06H-PROGRAMME-CLOSURE.md)); **FIN-06A–06E COMPLETE / PO APPROVED** (PRs **#916**–**#920** → **STAGE**); **FIN-06F FUTURE BACKLOG / OPTIONAL** |
 | **Predecessor** | **FIN-05 COMPLETE / RELEASE CLOSED** (PR **#915** → **STAGE**) |
 | **Closure branch** | `cursor/sce-finance-06a-publishing-sharing-architecture-48cd` |
 | **Architecture contract** | `lib/finance/publishing/finance-publishing-sharing-architecture-contract.ts` |
@@ -299,8 +299,8 @@ Publication without distribution is **infrastructure**, not the complete user ou
 | FIN-06C slice | Intent |
 | --- | --- |
 | **PDF herunterladen** | **COMPLETE / PO APPROVED** — professional downloadable document (e.g. `FC Allschwil – Erfolgsrechnung FY 2026 – Version 2.pdf`) |
-| **Controlled sharing (FIN-06D R1)** | **IMPLEMENTED / PO UAT PENDING** — `FinancePublicationShare` binds to **FinancePublicationVersion**; external route `/share/finance/publication/{token}`; PDF via `/api/share/finance/publication/{token}/pdf`; raw token shown once; SHA-256 digest stored |
-| **Email / distribution** | **NOT STARTED** — of a **specific publication version** |
+| **Controlled sharing (FIN-06D)** | **COMPLETE / PO APPROVED** (PR **#919**) — `FinancePublicationShare` binds to **FinancePublicationVersion**; external route `/share/finance/publication/{token}`; PDF via `/api/share/finance/publication/{token}/pdf`; revocation lifecycle |
+| **Email / distribution (FIN-06E)** | **COMPLETE / PO APPROVED** (PR **#920**) — `FinancePublicationDistribution`; tenant-branded transactional email; **Versenden** / **Versandverlauf** |
 
 **PDF architecture lock:** `Publication Version → Snapshot → Publication Presentation → PDF`. **Never** `Publication Version → Current FIN-05 Read Model → PDF`. Semantic invariance: `PDF(V1)` today equals `PDF(V1)` after live finance changes (byte identity not required when metadata differs).
 
@@ -324,12 +324,12 @@ FIN-06B remains: **publication snapshot + versioning + historical inspection + d
 | --- | --- | --- |
 | **06A** | Architecture foundation | **COMPLETE / PO UAT PASS** |
 | **06B** | Publication snapshot & versioning | **COMPLETE / PO APPROVED** (PR **#917**) |
-| **06C** | Published artifacts & distribution | **IN PROGRESS** (**R1 PDF** implemented; **R2 PDF design/accessibility** implemented / PO UAT pending) |
-| **06D** | Controlled publication sharing | **R1 IMPLEMENTED / PO UAT PENDING** |
-| **06E** | Distribution / export surfaces | NOT STARTED |
-| **06F** | Privacy, audience & policy hardening | NOT STARTED |
-| **06G** | UX / responsive / release hardening | NOT STARTED |
-| **06H** | Programme closure | NOT STARTED |
+| **06C** | Published artifacts & distribution | **COMPLETE / PO APPROVED** (PR **#918**) |
+| **06D** | Controlled publication sharing | **COMPLETE / PO APPROVED** (PR **#919**) |
+| **06E** | Distribution / email delivery | **COMPLETE / PO APPROVED** (PR **#920**; external-recipient PO UAT PASS) |
+| **06F** | Privacy, audience & policy hardening | **FUTURE BACKLOG / OPTIONAL** |
+| **06G** | UX / responsive / release hardening | **FUTURE BACKLOG / OPTIONAL** |
+| **06H** | Programme closure | **COMPLETE** — [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](./SCE-FINANCE-06H-PROGRAMME-CLOSURE.md) |
 
 ## Boundaries
 
@@ -362,13 +362,12 @@ Run on feature branch:
 ## Result
 
 ```text
-FIN-06A — COMPLETE · PO APPROVED · MERGED TO STAGE (PR #916)
+FIN-06A — COMPLETE · PO APPROVED · PR #916 → STAGE
 FIN-06B — COMPLETE · PO APPROVED · PR #917 → STAGE
-FIN-06B-R4 — PO VISUAL UAT PASS
-FIN-06B-R5 — IMMUTABILITY CHECKPOINT PASS
-FIN-06B-R6 — VERSION 2 UAT PASS
-FIN-06B-R7 — FINAL CLOSURE PASS
-FIN-06 — IN PROGRESS
-FIN-06C-R1 — IMPLEMENTED · PO UAT PENDING (PDF download)
-FIN-06C — IN PROGRESS
+FIN-06C — COMPLETE · PO APPROVED · PR #918 → STAGE
+FIN-06D — COMPLETE · PO APPROVED · PR #919 → STAGE
+FIN-06E — COMPLETE · PO APPROVED · PR #920 → STAGE
+FIN-06F — FUTURE BACKLOG / OPTIONAL
+FIN-06 — COMPLETE / PO APPROVED (FIN-06H programme closure)
+NEXT — FIN-07 COMMITMENTS & APPROVALS
 ```

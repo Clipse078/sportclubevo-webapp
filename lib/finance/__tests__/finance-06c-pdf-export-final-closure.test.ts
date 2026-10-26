@@ -37,7 +37,6 @@ describe("FIN-06C PDF / export final closure contract", () => {
     expect(FINANCE_06B_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06cPdfExportSliceStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06C_PRODUCT_MODEL.fin06cPdfExportSliceStatus).toBe("COMPLETE_PO_APPROVED");
-    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
   });
 
   it("preserves immutable snapshot PDF pipeline", () => {
@@ -70,7 +69,7 @@ describe("FIN-06C PDF / export closure documentation", () => {
       "docs/finance/SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md",
     );
     expect(architecture).toContain("FIN-06C PDF / EXPORT");
-    expect(architecture).toMatch(/FIN-06C PDF.*COMPLETE.*PO APPROVED/i);
-    expect(architecture).toMatch(/FIN-06C.*IN PROGRESS/i);
+    expect(architecture).toMatch(/FIN-06C PDF.*PO VISUAL UAT.*PASS/i);
+    expect(architecture).toMatch(/FIN-06.*COMPLETE.*PO APPROVED/i);
   });
 });

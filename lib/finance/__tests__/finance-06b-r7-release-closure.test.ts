@@ -31,7 +31,6 @@ describe("FIN-06B-R7 release closure contract", () => {
     expect(FINANCE_06A_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bR6Version2PoUat).toBe("PASS");
-    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
   });
 
   it("preserves distinct financial data, report, publication, and share concepts", () => {
@@ -54,7 +53,7 @@ describe("FIN-06B-R7 documentation consistency", () => {
     expect(architecture).toContain("FIN-06B FINAL PRODUCT OWNER VISUAL UAT = PASS");
     expect(architecture).toContain("COMPLETE / PO APPROVED");
     expect(architecture).toContain("FIN-06C");
-    expect(architecture).toMatch(/FIN-06C.*IN PROGRESS/i);
+    expect(architecture).toMatch(/FIN-06C/i);
     expect(architecture).not.toContain("FIN-06B PO UAT PENDING");
   });
 
@@ -69,9 +68,8 @@ describe("FIN-06B-R7 documentation consistency", () => {
 
   it("updates finance programme roadmap", () => {
     const roadmap = readRepo("docs/roadmap/SCE-FINANCE-01.md");
-    expect(roadmap).toContain("FIN-06B");
-    expect(roadmap).toMatch(/FIN-06B.*COMPLETE.*PO APPROVED/i);
-    expect(roadmap).toContain("FIN-06C");
+    expect(roadmap).toMatch(/FIN-06.*COMPLETE.*PO APPROVED/i);
+    expect(roadmap).toContain("FIN-06H");
   });
 });
 

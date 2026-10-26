@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05H COMPLETE / PO UAT PASS** (05H closure PR **#915** → **STAGE** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md)); **FIN-05 programme: COMPLETE / RELEASE CLOSED**; **FIN-06 IN PROGRESS** (**FIN-06A** complete — [`SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md`](./SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md)) |
+| **Status** | **FIN-05A–05H COMPLETE / PO UAT PASS** (05H closure PR **#915** → **STAGE** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](./SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md)); **FIN-05 programme: COMPLETE / RELEASE CLOSED**; **FIN-06 COMPLETE / PO APPROVED** — [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](./SCE-FINANCE-06H-PROGRAMME-CLOSURE.md) |
 | **Branch** | FIN-05E: `cursor/sce-finance-05e-reporting-workspace-drilldown-5fa5` — see [`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |

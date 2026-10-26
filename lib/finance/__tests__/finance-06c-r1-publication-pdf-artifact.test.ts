@@ -173,7 +173,9 @@ async function publishV1AndV2(prisma: ReturnType<typeof makePublicationMockPrism
 describe("FIN-06C-R1 publication PDF artifact architecture", () => {
   it("records R1 implementation and artifact pipeline locks", () => {
     expect(FINANCE_06C_R1_IMPLEMENTATION.status).toBe("IMPLEMENTED");
-    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
+    expect(FINANCE_06C_PRODUCT_MODEL.fin06cPdfExportSliceStatus).toBe(
+      "COMPLETE_PO_APPROVED",
+    );
     expect(FINANCE_PUBLICATION_ARTIFACT_PIPELINE.persistenceRequiredInR1).toBe(false);
     expect(FINANCE_PUBLICATION_ARTIFACT_PIPELINE.onDemandGenerationFromSnapshot).toBe(true);
     expect(FINANCE_PUBLICATION_PDF_ARTIFACT.technology).toBe("pdf-lib");
