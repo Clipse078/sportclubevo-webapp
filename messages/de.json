@@ -887,7 +887,29 @@
       "actuals": "Ist",
       "forecast": "Prognose",
       "reporting": "Berichte",
-      "publishing": "Veröffentlichungen"
+      "publishing": "Veröffentlichungen",
+      "commitments": "Verpflichtungen"
+    },
+    "commitments": {
+      "foundation": {
+        "eyebrow": "Verpflichtungen",
+        "pageTitle": "Verpflichtungen",
+        "pageDescription": "Organisatorische Finanzverpflichtungen und Freigaben — Architekturgrundlage.",
+        "title": "Verpflichtungs-Grundlage",
+        "description": "Eine Verpflichtung hält fest, wofür die Organisation sich entschieden hat, bevor Geld fliesst. Freigaben bleiben getrennt von Budget, Ist und Prognose.",
+        "commitmentsLabel": "Verpflichtungen",
+        "pendingApprovalLabel": "Ausstehende Freigabe",
+        "capabilitiesTitle": "Ihre Berechtigungen",
+        "capManage": "Sie dürfen Verpflichtungen erfassen und bearbeiten.",
+        "capManageOff": "Erfassen oder Bearbeiten ist für Ihre Rolle nicht freigegeben.",
+        "capSubmit": "Sie dürfen Verpflichtungen zur Freigabe einreichen.",
+        "capSubmitOff": "Einreichen ist für Ihre Rolle nicht freigegeben.",
+        "capApprove": "Sie dürfen Verpflichtungen freigeben oder ablehnen.",
+        "capApproveOff": "Freigabe von Verpflichtungen ist für Ihre Rolle nicht freigegeben.",
+        "capPolicy": "Sie dürfen Freigaberichtlinien für Verpflichtungen verwalten.",
+        "capPolicyOff": "Richtlinienverwaltung ist für Ihre Rolle nicht freigegeben.",
+        "foundationNote": "Vollständige Verpflichtungs-Workflows folgen in späteren FIN-07-Paketen. In dieser Grundlage sind keine Erfassungs- oder Freigabeaktionen verfügbar."
+      }
     },
     "publishing": {
       "foundation": {

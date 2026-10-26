@@ -104,7 +104,7 @@ describe("FIN-06A publishing & sharing architecture locks", () => {
     expect(FINANCE_PUBLISHING_PERMISSION_MODEL.viewDoesNotImplyPublish).toBe(true);
     expect(FINANCE_PUBLISHING_AUDIENCE_MODEL.whoMayAccessSeparateFromFinancialScope).toBe(true);
     expect(FINANCE_DISCLOSURE_POLICY_BOUNDARY.hugePolicyEngineDeferred).toBe(true);
-    expect(FINANCE_PUBLISHING_PROGRAMME_BOUNDARIES.fin07).toContain("NOT STARTED");
+    expect(FINANCE_PUBLISHING_PROGRAMME_BOUNDARIES.fin07).toContain("FIN-07");
   });
 });
 

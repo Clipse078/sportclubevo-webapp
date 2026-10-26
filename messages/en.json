@@ -424,7 +424,29 @@
       "actuals": "Actuals",
       "forecast": "Forecast",
       "reporting": "Reporting",
-      "publishing": "Publishing"
+      "publishing": "Publishing",
+      "commitments": "Commitments"
+    },
+    "commitments": {
+      "foundation": {
+        "eyebrow": "Commitments",
+        "pageTitle": "Commitments",
+        "pageDescription": "Organisational financial obligations and approvals — architecture foundation.",
+        "title": "Commitment foundation",
+        "description": "A commitment records what the organisation has decided to spend or pay before cash moves. Approvals stay separate from budgets, actuals, and forecasts.",
+        "commitmentsLabel": "Commitments",
+        "pendingApprovalLabel": "Awaiting approval",
+        "capabilitiesTitle": "Your capabilities",
+        "capManage": "You may create and edit commitments.",
+        "capManageOff": "Creating or editing commitments is not enabled for your role.",
+        "capSubmit": "You may submit commitments for approval.",
+        "capSubmitOff": "Submitting commitments is not enabled for your role.",
+        "capApprove": "You may approve or reject commitments.",
+        "capApproveOff": "Commitment approval is not enabled for your role.",
+        "capPolicy": "You may manage commitment approval policy.",
+        "capPolicyOff": "Commitment policy management is not enabled for your role.",
+        "foundationNote": "Full commitment workflows arrive in later FIN-07 packages. No create or approval actions are exposed in this foundation slice."
+      }
     },
     "publishing": {
       "foundation": {
