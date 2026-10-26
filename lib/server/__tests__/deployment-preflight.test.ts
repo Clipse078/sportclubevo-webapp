@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { runDeploymentPreflight } from "../deployment-preflight";
 import { getDatabaseFingerprintFromEffectivePrismaSource } from "../runtime-identity";
 
@@ -199,6 +201,20 @@ describe("runDeploymentPreflight", () => {
       expect(
         result.violations.some((v) => v.code === "PREVIEW_NOT_TARGETING_STAGE_DB"),
       ).toBe(false);
+    });
+
+    it("fails Preview when canonical tenant APP_BASE_URL differs from deployment host but VERCEL_URL is missing", () => {
+      const result = runDeploymentPreflight({
+        ...VALID_PREVIEW_ENV,
+        APP_BASE_URL: "https://fcallschwil.sportclubevo.com",
+        NEXTAUTH_URL: "https://fcallschwil.sportclubevo.com",
+        VERCEL_URL: undefined,
+      });
+
+      expect(result.pass).toBe(false);
+      expect(
+        result.violations.some((v) => v.code === "PREVIEW_PUBLIC_ACTION_HOST_MISSING"),
+      ).toBe(true);
     });
 
     it("fails Preview when only the database host matches STAGE_DB_URL but the database name differs", () => {
