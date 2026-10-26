@@ -43,6 +43,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
       showBudget: false,
       showActuals: false,
       showForecast: false,
+      showCommitments: false,
       showSettings: true,
       labels: {
         overview: "O",
@@ -50,6 +51,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
         budget: "B",
         actuals: "A",
         forecast: "F",
+        commitments: "C",
         settings: "E",
       },
     });
@@ -68,6 +70,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
       showBudget: true,
       showActuals: false,
       showForecast: false,
+      showCommitments: false,
       showSettings: true,
       labels: {
         overview: "O",
@@ -75,6 +78,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
         budget: "B",
         actuals: "A",
         forecast: "F",
+        commitments: "C",
         settings: "E",
       },
     });
@@ -111,6 +115,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
       showBudget: true,
       showActuals: false,
       showForecast: false,
+      showCommitments: false,
       showSettings: true,
       labels: {
         overview: "O",
@@ -118,6 +123,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
         budget: "B",
         actuals: "A",
         forecast: "F",
+        commitments: "C",
         settings: "E",
       },
     });
@@ -168,6 +174,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
       showBudget: false,
       showActuals: false,
       showForecast: false,
+      showCommitments: false,
       showSettings: false,
       labels: {
         overview: "O",
@@ -175,6 +182,7 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
         budget: "B",
         actuals: "A",
         forecast: "F",
+        commitments: "C",
         settings: "E",
       },
     });

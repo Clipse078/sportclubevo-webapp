@@ -76,6 +76,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
             showBudget={workspace.showBudgetNav}
             showActuals={workspace.showActualsNav}
             showForecast={workspace.showForecastNav}
+            showCommitments={workspace.showCommitmentsNav}
             showSettings={workspace.canAdmin || workspace.canStructure}
             labels={{
               overview: t("nav.overview"),
@@ -84,6 +85,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
               budget: t("nav.budget"),
               actuals: t("nav.actuals"),
               forecast: t("nav.forecast"),
+              commitments: t("nav.commitments"),
               settings: t("nav.structure_settings"),
             }}
             ariaLabel={t("contextTabsAria")}

@@ -7,6 +7,7 @@ export type FinanceWorkspaceTabId =
   | "budget"
   | "actuals"
   | "forecast"
+  | "commitments"
   | "settings";
 
 export function buildFinanceTabNavigationConfig(input: {
@@ -15,6 +16,7 @@ export function buildFinanceTabNavigationConfig(input: {
   showBudget: boolean;
   showActuals: boolean;
   showForecast: boolean;
+  showCommitments: boolean;
   showSettings: boolean;
   labels: {
     overview: string;
@@ -23,6 +25,7 @@ export function buildFinanceTabNavigationConfig(input: {
     budget: string;
     actuals: string;
     forecast: string;
+    commitments: string;
     settings: string;
   };
 }): ContextTabNavigationConfig<FinanceWorkspaceTabId> {
@@ -33,6 +36,7 @@ export function buildFinanceTabNavigationConfig(input: {
     budget: "/dashboard/finance/budget",
     actuals: "/dashboard/finance/actuals",
     forecast: "/dashboard/finance/forecast",
+    commitments: "/dashboard/finance/commitments",
     settings: "/dashboard/finance/settings",
   };
 
@@ -53,6 +57,9 @@ export function buildFinanceTabNavigationConfig(input: {
   }
   if (input.showForecast) {
     tabs.push({ key: "forecast", label: input.labels.forecast, placement: "primary" });
+  }
+  if (input.showCommitments) {
+    tabs.push({ key: "commitments", label: input.labels.commitments, placement: "primary" });
   }
   if (input.showSettings) {
     tabs.push({ key: "settings", label: input.labels.settings, placement: "primary" });
@@ -77,6 +84,9 @@ export function buildFinanceTabNavigationConfig(input: {
       }
       if (pathname.startsWith("/dashboard/finance/forecast")) {
         return visibleKeys.includes("forecast") ? "forecast" : "overview";
+      }
+      if (pathname.startsWith("/dashboard/finance/commitments")) {
+        return visibleKeys.includes("commitments") ? "commitments" : "overview";
       }
       if (pathname.startsWith("/dashboard/finance/settings")) {
         return visibleKeys.includes("settings") ? "settings" : "overview";

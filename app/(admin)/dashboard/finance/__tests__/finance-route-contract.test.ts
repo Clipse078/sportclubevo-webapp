@@ -19,6 +19,15 @@ describe("FIN-01B finance routes", () => {
     expect(read("lib/nav/nav-config.ts")).toContain("PERMISSIONS.FINANCE_VIEW");
   });
 
+  it("declares FIN-07B commitments workspace route", () => {
+    expect(read("app/(admin)/dashboard/finance/commitments/page.tsx")).toContain(
+      "FinanceCommitmentWorkspacePanel",
+    );
+    const panel = read("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).not.toContain('type="checkbox"');
+    expect(read("lib/finance/capability-registry.ts")).toContain("COMMITMENTS");
+  });
+
   it("declares FIN-03A actuals workspace route", () => {
     expect(read("app/(admin)/dashboard/finance/actuals/page.tsx")).toContain(
       "FinanceActualsWorkspacePanel",
