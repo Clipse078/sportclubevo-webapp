@@ -12,10 +12,16 @@ import { buildFinancePublicationDistributionEmail } from "@/lib/finance/email/bu
 import { evaluatePublicActionTarget } from "@/lib/server/public-action-target";
 import { FINANCE_06E_PUBLIC_ACTION_TARGET_INVARIANT } from "@/lib/server/finance-publication-share-database-contract";
 import { runDeploymentPreflight } from "@/lib/server/deployment-preflight";
-import { getDatabaseFingerprintFromEffectivePrismaSource } from "@/lib/server/deployment-identity";
+import { getDatabaseFingerprintFromEffectivePrismaSource } from "@/lib/server/runtime-identity";
 
 const PREVIEW_HOST = "sportclubevo-webapp-stage-git-curs-46608a.vercel.app";
 const CANONICAL = "https://fcallschwil.sportclubevo.com";
+
+const stageUrl = "postgresql://u:p@stage-db.neon.tech:5432/sce_stage";
+const stageFingerprint = getDatabaseFingerprintFromEffectivePrismaSource({
+  NODE_ENV: "production",
+  DATABASE_URL: stageUrl,
+})!;
 
 const previewEnv: NodeJS.ProcessEnv = {
   NODE_ENV: "production",
@@ -24,9 +30,12 @@ const previewEnv: NodeJS.ProcessEnv = {
   VERCEL_ENV: "preview",
   APP_BASE_URL: CANONICAL,
   NEXTAUTH_URL: CANONICAL,
+  NEXTAUTH_SECRET: "preview-secret",
   VERCEL_URL: PREVIEW_HOST,
-  DATABASE_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
-  STAGE_DB_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
+  DATABASE_URL: stageUrl,
+  STAGE_DB_URL: stageUrl,
+  SCE_DATA_ENVIRONMENT: "STAGE",
+  SCE_DATA_DATABASE_FINGERPRINT: stageFingerprint,
 };
 
 const emailLabels = {
@@ -47,16 +56,7 @@ describe("FIN-06E-R7 external recipient access", () => {
   });
 
   it("preflight fails Preview when distribution links require Vercel login", () => {
-    const stageUrl = previewEnv.DATABASE_URL!;
-    const fingerprint = getDatabaseFingerprintFromEffectivePrismaSource({
-      NODE_ENV: "production",
-      DATABASE_URL: stageUrl,
-    })!;
-
-    const result = runDeploymentPreflight({
-      ...previewEnv,
-      SCE_DATA_DATABASE_FINGERPRINT: fingerprint,
-    });
+    const result = runDeploymentPreflight({ ...previewEnv });
 
     expect(result.pass).toBe(false);
     expect(
@@ -65,16 +65,9 @@ describe("FIN-06E-R7 external recipient access", () => {
   });
 
   it("preflight passes Preview when operator attests external reachability", () => {
-    const stageUrl = previewEnv.DATABASE_URL!;
-    const fingerprint = getDatabaseFingerprintFromEffectivePrismaSource({
-      NODE_ENV: "production",
-      DATABASE_URL: stageUrl,
-    })!;
-
     const result = runDeploymentPreflight({
       ...previewEnv,
       PUBLIC_ACTION_EXTERNALLY_REACHABLE: "confirmed",
-      SCE_DATA_DATABASE_FINGERPRINT: fingerprint,
     });
 
     expect(

@@ -101,15 +101,14 @@ function evaluateRuntimeCompatible(
       return false;
     }
     if (explicitPublicActionOrigin) {
+      if (canonicalOrigin && explicitPublicActionOrigin === canonicalOrigin) {
+        return false;
+      }
       if (deploymentOrigin && explicitPublicActionOrigin === deploymentOrigin) {
         return true;
       }
-      if (
-        deploymentOrigin &&
-        explicitPublicActionOrigin !== deploymentOrigin &&
-        explicitPublicActionOrigin !== canonicalOrigin
-      ) {
-        return readPublicActionExternallyReachableAttestation(processEnv);
+      if (readPublicActionExternallyReachableAttestation(processEnv)) {
+        return true;
       }
       return explicitPublicActionOrigin !== canonicalOrigin;
     }
@@ -156,11 +155,7 @@ function evaluateExternallyReachable(
   }
 
   if (runtime.isPreview || runtime.isAcceptance) {
-    if (isVercelAppHostname(hostname)) {
-      return false;
-    }
-    const explicit = processEnv.PUBLIC_ACTION_BASE_URL?.trim();
-    return Boolean(explicit);
+    return readPublicActionExternallyReachableAttestation(processEnv);
   }
 
   return !isVercelAppHostname(hostname);
