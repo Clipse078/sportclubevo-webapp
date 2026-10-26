@@ -3,7 +3,7 @@
  */
 
 import { plainTextToSafeHtml } from "@/lib/communication/outbound-email-service";
-import { buildNotificationAbsoluteHref } from "@/lib/notifications/internal-href";
+import { buildPublicActionAbsoluteHref } from "@/lib/server/public-action-base-url";
 import {
   financePublicationSharePath,
   financePublicationSharePdfApiPath,
@@ -90,8 +90,8 @@ export function buildFinancePublicationDistributionEmail(
   input: BuildFinancePublicationDistributionEmailInput,
 ): { subject: string; html: string; text: string } {
   const sharePath = financePublicationSharePath(input.sharePublicToken);
-  const viewUrl = buildNotificationAbsoluteHref(sharePath);
-  const pdfUrl = buildNotificationAbsoluteHref(
+  const viewUrl = buildPublicActionAbsoluteHref(sharePath);
+  const pdfUrl = buildPublicActionAbsoluteHref(
     financePublicationSharePdfApiPath(input.sharePublicToken),
   );
 

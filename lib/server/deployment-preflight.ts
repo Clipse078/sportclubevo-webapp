@@ -17,6 +17,7 @@ import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard"
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 import { collectPrismaGeneratedEnumParityViolations } from "@/lib/server/prisma-generated-enum-parity";
+import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -301,12 +302,32 @@ export function runDeploymentPreflight(
     );
   }
 
-  // ── (8) Prisma schema ↔ generated client enum parity ─────────────────────
+  // ── (8) Preview public capability link host (FIN-06E cross-deployment) ───
+  if (runtime.isPreview || runtime.isAcceptance) {
+    try {
+      if (publicActionBaseWouldCrossIncompatibleDeployment(processEnv)) {
+        const vercelUrl = safeReadOptional(processEnv.VERCEL_URL);
+        if (!vercelUrl) {
+          addViolation(
+            error(
+              "PREVIEW_PUBLIC_ACTION_HOST_MISSING",
+              "Preview/Acceptance APP_BASE_URL targets the canonical tenant host but VERCEL_URL is missing. " +
+                "Public distribution links would target a STAGE runtime that may not match Preview schema/code.",
+            ),
+          );
+        }
+      }
+    } catch {
+      // APP_BASE_URL validation is covered elsewhere.
+    }
+  }
+
+  // ── (9) Prisma schema ↔ generated client enum parity ─────────────────────
   for (const violation of collectPrismaGeneratedEnumParityViolations()) {
     addViolation(violation);
   }
 
-  // ── (9) Unsupported runtime classification ───────────────────────────────
+  // ── (10) Unsupported runtime classification ──────────────────────────────
   if (runtime.isUnknown && !isDeployedContext) {
     violations.push(
       warning(

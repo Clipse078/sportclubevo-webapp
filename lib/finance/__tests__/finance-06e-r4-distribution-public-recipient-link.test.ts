@@ -6,6 +6,8 @@ process.env.APP_BASE_URL = "https://fcallschwil.sportclubevo.com";
 
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/finance/email/load-finance-publication-distribution-email-branding", () => ({
   loadFinancePublicationDistributionEmailBranding: vi.fn(async () => ({
     tenantName: "FC Allschwil",
@@ -29,7 +31,7 @@ import { createFinancePublicationDistribution } from "@/lib/finance/services/fin
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import type { FinancePublicationDistributionEmailPort } from "@/lib/finance/delivery/finance-publication-distribution-email-port";
 import { buildFinancePublicationDistributionEmail } from "@/lib/finance/email/build-finance-publication-distribution-email";
-import { buildNotificationAbsoluteHref } from "@/lib/notifications/internal-href";
+import { buildPublicActionAbsoluteHref } from "@/lib/server/public-action-base-url";
 import {
   financePublicationSharePath,
   financePublicationSharePdfApiPath,
@@ -351,8 +353,8 @@ describe("FIN-06E-R4 distribution email public URLs", () => {
       locale: "de",
     });
 
-    const expectedView = buildNotificationAbsoluteHref(financePublicationSharePath(token));
-    const expectedPdf = buildNotificationAbsoluteHref(financePublicationSharePdfApiPath(token));
+    const expectedView = buildPublicActionAbsoluteHref(financePublicationSharePath(token));
+    const expectedPdf = buildPublicActionAbsoluteHref(financePublicationSharePdfApiPath(token));
 
     expect(expectedView).toBe("https://fcallschwil.sportclubevo.com/share/finance/publication/distribution-capability-token");
     expect(expectedPdf).toBe(

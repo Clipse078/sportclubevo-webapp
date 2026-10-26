@@ -7,6 +7,8 @@ process.env.APP_BASE_URL = "https://fcallschwil.sportclubevo.com";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { Prisma } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
@@ -21,7 +23,7 @@ import { createFinancePublicationDistribution } from "@/lib/finance/services/fin
 import type { FinancePublicationDistributionEmailPort } from "@/lib/finance/delivery/finance-publication-distribution-email-port";
 import { buildFinancePublicationDistributionEmail } from "@/lib/finance/email/build-finance-publication-distribution-email";
 import { resolveFinancePublicationDistributionSceEmailLogoUrl } from "@/lib/finance/email/resolve-finance-transactional-email-asset-url";
-import { buildNotificationAbsoluteHref } from "@/lib/notifications/internal-href";
+import { buildPublicActionAbsoluteHref } from "@/lib/server/public-action-base-url";
 import {
   financePublicationSharePath,
   financePublicationSharePdfApiPath,
@@ -294,10 +296,10 @@ describe("FIN-06E-R5 distribution email branding + links", () => {
 
   it("uses tenant-primary hierarchy, SCE footer, canonical host links, and no vercel.app", () => {
     const rendered = buildFinancePublicationDistributionEmail(baseEmailInput);
-    const expectedView = buildNotificationAbsoluteHref(
+    const expectedView = buildPublicActionAbsoluteHref(
       financePublicationSharePath(baseEmailInput.sharePublicToken),
     );
-    const expectedPdf = buildNotificationAbsoluteHref(
+    const expectedPdf = buildPublicActionAbsoluteHref(
       financePublicationSharePdfApiPath(baseEmailInput.sharePublicToken),
     );
 
