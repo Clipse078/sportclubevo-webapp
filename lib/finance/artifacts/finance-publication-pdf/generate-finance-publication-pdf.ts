@@ -66,6 +66,9 @@ import {
   publicationPdfResultRowLayout,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-statement-layout";
 import {
+  publicationPdfTableHeaderGeometryFromAnchor,
+} from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-header-layout";
+import {
   publicationPdfImmutabilityNoticeMaxWidthPt,
   publicationPdfStatementRowAdvancePt,
   publicationPdfVerticalSpacePt,
@@ -262,37 +265,57 @@ function drawFooter(ctx: LayoutContext): void {
 
 function drawTableHeader(ctx: LayoutContext): LayoutContext {
   const cols = columnRights();
-  const headerY = ctx.y;
+  const geom = publicationPdfTableHeaderGeometryFromAnchor(ctx.y);
   ctx.page.drawRectangle({
     x: MARGIN_X,
-    y: headerY - mmToPt(5.5),
+    y: geom.bandBottomY,
     width: PAGE_W - MARGIN_X * 2,
-    height: mmToPt(6),
+    height: geom.bandHeightPt,
     color: COLORS.tableHeaderSurface,
+  });
+  recordPublicationPdfRectDraw(ctx.drawRecorder, {
+    blockId: "statement.tableHeader",
+    x: MARGIN_X,
+    y: geom.bandBottomY,
+    width: PAGE_W - MARGIN_X * 2,
+    height: geom.bandHeightPt,
   });
   const size = TYPE.tableHeader;
   const font = ctx.fonts.bold;
-  const headerTextY = headerY - mmToPt(3.5);
-  ctx.page.drawText(t(ctx.labels.columnPosition), {
-    x: MARGIN_X + mmToPt(1),
-    y: headerTextY,
-    size,
-    font,
-    color: COLORS.textSecondary,
-  });
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnBudget), cols.budget, headerTextY, font, size, COLORS.textSecondary);
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnActual), cols.actual, headerTextY, font, size, COLORS.textSecondary);
-  drawRightAlignedText(ctx.page, t(ctx.labels.columnForecast), cols.forecast, headerTextY, font, size, COLORS.textSecondary);
-  drawRightAlignedText(
-    ctx.page,
-    t(ctx.labels.columnVarianceVsBudget),
-    cols.variance,
-    headerTextY,
-    font,
-    size,
-    COLORS.textSecondary,
-  );
-  ctx.y = headerY - mmToPt(7.5);
+  const headerTextY = geom.headerTextBaselineY;
+  const headerLabels: Array<{ text: string; x: number }> = [
+    { text: t(ctx.labels.columnPosition), x: MARGIN_X + mmToPt(1) },
+    { text: t(ctx.labels.columnBudget), x: cols.budget },
+    { text: t(ctx.labels.columnActual), x: cols.actual },
+    { text: t(ctx.labels.columnForecast), x: cols.forecast },
+    { text: t(ctx.labels.columnVarianceVsBudget), x: cols.variance },
+  ];
+  for (const label of headerLabels) {
+    const isRight = label.x !== MARGIN_X + mmToPt(1);
+    if (isRight) {
+      drawRightAlignedText(ctx.page, label.text, label.x, headerTextY, font, size, COLORS.textSecondary);
+    } else {
+      ctx.page.drawText(label.text, {
+        x: label.x,
+        y: headerTextY,
+        size,
+        font,
+        color: COLORS.textSecondary,
+      });
+    }
+    const width = font.widthOfTextAtSize(label.text, size);
+    recordPublicationPdfTextDraw(ctx.drawRecorder, {
+      blockId: "statement.tableHeader",
+      x: isRight ? label.x - width : label.x,
+      baselineY: headerTextY,
+      text: label.text,
+      font,
+      fontSize: size,
+      lineHeight: publicationPdfLineHeightPt(size),
+      color: COLORS.textSecondary,
+    });
+  }
+  ctx.y = geom.firstRowBaselineY;
   ctx.tableHeaderDrawnOnPage = true;
   return ctx;
 }

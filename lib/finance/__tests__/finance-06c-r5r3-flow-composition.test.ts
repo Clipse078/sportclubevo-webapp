@@ -22,6 +22,7 @@ import {
   assertPublicationPdfWrappedLinesDoNotOverlap,
 } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-text-collision";
 import { buildPublicationPdfR5R2DefectiveEvidenceDraws } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-r5r2-overlap-fixture";
+import { assertPublicationPdfAllTableHeaderSectionsClearFirstRow } from "@/lib/finance/artifacts/finance-publication-pdf/publication-pdf-table-header-geometry";
 import { generateFinancePublicationPdfArtifactForTenant } from "@/lib/finance/services/finance-publication-artifact-service";
 import * as managementReporting from "@/lib/finance/services/finance-management-reporting-query-service";
 import {
@@ -238,9 +239,12 @@ describe("FIN-06C-R5R3 publication PDF flow composition reset", () => {
     });
 
     const collision = assertPublicationPdfNoSequentialBlockTextCollisions(textDraws, {
-      horizontalTableBlockIds: ["statement.row", "statement.result"],
+      horizontalTableBlockIds: ["statement.row", "statement.result", "statement.tableHeader"],
     });
     expect(collision.ok, collision.ok ? "" : JSON.stringify(collision)).toBe(true);
+
+    const tableHeaderGap = assertPublicationPdfAllTableHeaderSectionsClearFirstRow(pdf.drawOperations!);
+    expect(tableHeaderGap.ok, tableHeaderGap.ok ? "" : JSON.stringify(tableHeaderGap)).toBe(true);
 
     const evidenceOrder = assertPublicationPdfEvidenceMetadataOrdering(textDraws);
     expect(evidenceOrder.ok).toBe(true);
