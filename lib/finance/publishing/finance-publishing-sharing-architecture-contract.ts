@@ -361,10 +361,10 @@ export const FINANCE_06C_PRODUCT_MODEL = {
     "artifactGeneration",
     "distributionIntegrity",
   ] as const,
-  fin06cStatus: "IN_PROGRESS",
+  fin06cStatus: "COMPLETE_PO_APPROVED",
   fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
-  fin06cControlledSharingSliceStatus: "IN_PROGRESS_R1_IMPLEMENTED",
-  fin06cEmailDistributionSliceStatus: "IMPLEMENTED_FIN_06E",
+  fin06cControlledSharingSliceStatus: "COMPLETE_PO_APPROVED",
+  fin06cEmailDistributionSliceStatus: "COMPLETE_PO_APPROVED",
 } as const;
 
 /** FIN-06D — controlled publication version sharing (R2 fast path). */
@@ -379,8 +379,8 @@ export const FINANCE_06D_PUBLICATION_SHARE_MODEL = {
   defaultShareReuse: "One active DEFAULT share per publication version (no expiry)",
   externalRoutePrefix: "/share/finance/publication",
   pdfThroughShareAuthorizedPath: "/api/share/finance/publication/{token}/pdf",
-  emailDistribution: "FIN-06E — IMPLEMENTED_PO_UAT_PENDING",
-  fin06dR2Status: "IMPLEMENTED_PO_UAT_PENDING",
+  emailDistribution: "FIN-06E — COMPLETE / PO APPROVED",
+  fin06dR2Status: "COMPLETE_PO_APPROVED",
 } as const;
 
 /** FIN-06E — publication version email distribution (distinct from SHARE). */
@@ -393,7 +393,35 @@ export const FINANCE_06E_PUBLICATION_DISTRIBUTION_MODEL = {
   recipientSpecificShareKind: "DISTRIBUTION",
   separateTransactionalEmailPerRecipient: true,
   providerNeutralDeliveryBoundary: "lib/finance/delivery/finance-publication-distribution-email-port.ts",
-  fin06eStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin06eStatus: "COMPLETE_PO_APPROVED",
+  fin06ePoUat: "PASS",
+  fin06ePoApproved: true,
+} as const;
+
+/** FIN-06F — deferred privacy / audience / policy hardening (not v1-blocking). */
+export const FINANCE_06F_BACKLOG_CLASSIFICATION = {
+  packageId: "FIN-06F",
+  title: "Privacy, Audience & Policy Hardening",
+  classification: "OPTIONAL_FUTURE_ENHANCEMENT",
+  blocksFin06V1Closure: false,
+  documentedScope:
+    "Full FinanceDisclosurePolicy engine, advanced audience UX, sensitive-dimension exclusions, and publication-approval gates beyond FIN-06A foundation",
+  status: "FUTURE_BACKLOG_OPTIONAL",
+} as const;
+
+/** FIN-06H — programme release closure (Publishing & Sharing v1). */
+export const FINANCE_06_PROGRAMME_RELEASE_CLOSURE = {
+  fin06ProgrammeStatus: "COMPLETE_PO_APPROVED",
+  fin06aThroughE: "COMPLETE_PO_APPROVED",
+  fin06fStatus: "FUTURE_BACKLOG_OPTIONAL",
+  fin06eFinalPoUat: "PASS",
+  fin06ePoApproved: true,
+  stageMergeCommitFin06e: "20bd444c04f3234e7c0d6f806f370b4aaac77900",
+  stageMergePrFin06e: 920,
+  closureDoc: "docs/finance/SCE-FINANCE-06H-PROGRAMME-CLOSURE.md",
+  closureTestSuite: "lib/finance/__tests__/finance-06h-programme-closure.test.ts",
+  nextFinanceProgramme: "FIN-07_COMMITMENTS_AND_APPROVALS",
+  productionTouched: false,
 } as const;
 
 /** PDF must consume immutable publication snapshot — never live FIN-05 for historical versions. */
@@ -514,7 +542,7 @@ export const FINANCE_06A_IMPLEMENTATION = {
     "lib/finance/__tests__/finance-06a-publishing-sharing-architecture.test.ts",
   foundationWorkspaceRoute: "/dashboard/finance/publishing",
   fin06aStatus: "COMPLETE_PO_APPROVED",
-  fin06ProgrammeStatus: "IN_PROGRESS",
+  fin06ProgrammeStatus: "COMPLETE_PO_APPROVED",
   fin06bStatus: "COMPLETE_PO_APPROVED",
 } as const;
 
@@ -581,7 +609,7 @@ export const FINANCE_06B_IMPLEMENTATION = {
   fin06bR6Version2PoUat: "PASS",
   fin06bR7FinalClosure: "PASS",
   fin06bR6Status: "VERSION_2_PO_UAT_PASS",
-  fin06cStatus: "IN_PROGRESS",
+  fin06cStatus: "COMPLETE_PO_APPROVED",
   fin06cR1Status: "COMPLETE_PO_APPROVED",
   fin06cPdfExportSliceStatus: "COMPLETE_PO_APPROVED",
 } as const;

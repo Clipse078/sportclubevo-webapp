@@ -18,9 +18,9 @@ describe("FIN-06C product handoff architecture (R6)", () => {
       "OFFICIAL_IMMUTABLE_VERSION",
       "DISTRIBUTE",
     ]);
-    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("IN_PROGRESS");
+    expect(FINANCE_06C_PRODUCT_MODEL.fin06cStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06C_PRODUCT_MODEL.fin06cPdfExportSliceStatus).toBe("COMPLETE_PO_APPROVED");
-    expect(FINANCE_06B_IMPLEMENTATION.fin06cStatus).toBe("IN_PROGRESS");
+    expect(FINANCE_06B_IMPLEMENTATION.fin06cStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06cPdfExportSliceStatus).toBe("COMPLETE_PO_APPROVED");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bR6Status).toBe("VERSION_2_PO_UAT_PASS");
     expect(FINANCE_06B_IMPLEMENTATION.fin06bStatus).toBe("COMPLETE_PO_APPROVED");

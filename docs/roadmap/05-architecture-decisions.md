@@ -919,7 +919,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 
 ## ADR-038 — Financial Reporting & Intelligence (FIN-05)
 
-**Status:** Accepted — **FIN-05 COMPLETE / RELEASE CLOSED** (FIN-05A–05H merged to **STAGE**; PO UAT PASS; closure PR **#915**); **FIN-06 IN PROGRESS** (**FIN-06A** merged via PR **#916**)
+**Status:** Accepted — **FIN-05 COMPLETE / RELEASE CLOSED** (FIN-05A–05H merged to **STAGE**; PO UAT PASS; closure PR **#915**); **FIN-06 COMPLETE / PO APPROVED** (FIN-06A–06E merged to **STAGE**; programme closure [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](../finance/SCE-FINANCE-06H-PROGRAMME-CLOSURE.md))
 
 ### Context
 
@@ -976,7 +976,7 @@ Full contract: [`docs/finance/SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHIT
 
 ### Consequences
 
-- FIN-06B implements snapshot creation/versioning services on top of FIN-06A models.
+- FIN-06B–06E implement snapshot versioning, PDF artifacts, controlled sharing, and email distribution on top of FIN-06A models; FIN-06F remains optional policy hardening backlog.
 - FIN-05 `FINANCE_REPORTING_PUBLICATION_BOUNDARY` remains valid; live reporting stays on `/dashboard/finance/reports`.
 - FIN-09 liquidity and FIN-11 statutory accounting remain separate programmes.
 

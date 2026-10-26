@@ -221,7 +221,7 @@ describe("FIN-06A documentation and roadmap", () => {
   it("updates finance programme roadmap for FIN-06A", () => {
     const roadmap = readRepo("docs/roadmap/SCE-FINANCE-01.md");
     expect(roadmap).toContain("FIN-06A");
-    expect(roadmap).toContain("FIN-06B");
+    expect(roadmap).toMatch(/FIN-06.*COMPLETE.*PO APPROVED/i);
     expect(roadmap).toMatch(/FIN-07.*NOT STARTED/i);
   });
 
