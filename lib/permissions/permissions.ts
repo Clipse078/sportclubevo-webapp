@@ -215,6 +215,11 @@ export const PERMISSIONS = {
   FINANCE_REPORTING_PUBLISH: "finance.reporting.publish",
   FINANCE_REPORTING_DISTRIBUTE: "finance.reporting.distribute",
   FINANCE_SHARE_MANAGE: "finance.share.manage",
+  FINANCE_COMMITMENT_VIEW: "finance.commitment.view",
+  FINANCE_COMMITMENT_MANAGE: "finance.commitment.manage",
+  FINANCE_COMMITMENT_SUBMIT: "finance.commitment.submit",
+  FINANCE_COMMITMENT_APPROVE: "finance.commitment.approve",
+  FINANCE_COMMITMENT_POLICY_MANAGE: "finance.commitment.policy.manage",
 
   ORG_VIEW: "org.view",
   ORG_MANAGE: "org.manage",

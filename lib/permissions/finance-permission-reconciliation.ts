@@ -121,6 +121,41 @@ export const FINANCE_PERMISSION_DEFS = [
     scope: TENANT_SCOPE,
     grantableByAdmin: true,
   },
+  {
+    key: "finance.commitment.view",
+    name: "View financial commitments",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.commitment.manage",
+    name: "Create and edit financial commitments",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.commitment.submit",
+    name: "Submit financial commitments for approval",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.commitment.approve",
+    name: "Approve or reject financial commitments",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.commitment.policy.manage",
+    name: "Manage commitment approval policy",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
 ] as const;
 
 export const FINANCE_PERMISSION_KEYS = FINANCE_PERMISSION_DEFS.map((def) => def.key);

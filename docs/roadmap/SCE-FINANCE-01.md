@@ -28,7 +28,7 @@ SCE must **reduce management complexity rather than expose it**. Complex domain 
 | **FIN-04E** | Forecast Timing & Expected Financial Events — **COMPLETE + MERGED** (04E-01–04E-08; PR **#907** → **STAGE**; PO visual UAT PASS; **04E-08** closure PASS) — [`SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04E-08-HARDENING-AND-RELEASE-CLOSURE.md) |
 | **FIN-05** | Financial reporting & intelligence — **FIN-05A–05H COMPLETE / PO UAT PASS** on **STAGE** (05H PR **#915**); **programme COMPLETE / RELEASE CLOSED** — [`SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md`](../finance/SCE-FINANCE-05H-RELEASE-HARDENING-CLOSURE.md); architecture [`SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md`](../finance/SCE-FINANCE-05-FINANCIAL-REPORTING-INTELLIGENCE-ARCHITECTURE.md) |
 | **FIN-06** | Financial publishing & sharing — **COMPLETE / PO APPROVED** (**FIN-06A–06E** PRs **#916**–**#920** → **STAGE**); **FIN-06F FUTURE BACKLOG / OPTIONAL** — [`SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md`](../finance/SCE-FINANCE-06-FINANCIAL-PUBLISHING-SHARING-ARCHITECTURE.md), [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](../finance/SCE-FINANCE-06H-PROGRAMME-CLOSURE.md) |
-| **FIN-07** | Commitments & approvals (**NOT STARTED**) |
+| **FIN-07** | Commitments & approvals (**IN PROGRESS** — **07A** foundation — [`SCE-FINANCE-07-COMMITMENTS-APPROVALS-ARCHITECTURE.md`](../finance/SCE-FINANCE-07-COMMITMENTS-APPROVALS-ARCHITECTURE.md); **07B–07G NOT STARTED**) |
 | **FIN-08** | Revenue / receivables / collections |
 | **FIN-09** | Liquidity & treasury |
 | **FIN-10** | Funds / grants / advanced governance |
