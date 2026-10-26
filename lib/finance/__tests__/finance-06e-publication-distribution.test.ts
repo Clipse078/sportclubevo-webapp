@@ -20,7 +20,10 @@ import {
   listFinancePublicationDistributionSummariesForVersion,
 } from "@/lib/finance/services/finance-publication-distribution-service";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
-import type { FinancePublicationDistributionEmailPort } from "@/lib/finance/delivery/finance-publication-distribution-email-port";
+import {
+  FinancePublicationDistributionEmailDeliveryError,
+  type FinancePublicationDistributionEmailPort,
+} from "@/lib/finance/delivery/finance-publication-distribution-email-port";
 import { FINANCE_PUBLICATION_DISTRIBUTION_AUDIT } from "@/lib/finance/audit/finance-publication-distribution-audit";
 import {
   createPublicationDistributionMockStore,
@@ -176,6 +179,40 @@ describe("FIN-06E distribution service", () => {
     );
     expect(second.reused).toBe(true);
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks recipient and distribution failed when provider rejects", async () => {
+    const { prisma, store } = setupDistribution();
+    const send = vi.fn().mockRejectedValue(
+      new FinancePublicationDistributionEmailDeliveryError(
+        "PERMANENT_PROVIDER_FAILURE",
+        "provider rejected",
+        true,
+      ),
+    );
+    const emailPort: FinancePublicationDistributionEmailPort = { send };
+    vi.spyOn(managementReporting, "loadFinanceManagementPnlReadModel").mockResolvedValue(
+      buildPoBaselineManagementPnlReadModel({ tenantId: tenantA, financeYearId: yearId }),
+    );
+    const published = await publishFinanceManagementPnlSnapshot(prisma, ctx(tenantA, publishPerms), {
+      financeYearId: yearId,
+    });
+    const result = await createFinancePublicationDistribution(
+      prisma,
+      ctx(tenantA, distributePerms),
+      {
+        publicationId: published.publicationId,
+        versionNumber: 1,
+        idempotencyKey: "idem-reject",
+        localeCode: "en",
+        recipients: [{ kind: "EXTERNAL", email: "ext@example.com" }],
+        emailLabels,
+      },
+      { emailPort },
+    );
+    expect(result.status).toBe("FAILED");
+    expect(result.primaryFailureCode).toBe("PERMANENT_PROVIDER_FAILURE");
+    expect(store.financePublicationDistributionRecipient[0]?.status).toBe("FAILED");
   });
 
   it("preserves partial failure per recipient", async () => {

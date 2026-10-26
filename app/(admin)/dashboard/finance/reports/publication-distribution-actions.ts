@@ -5,6 +5,10 @@ import { getLocale } from "next-intl/server";
 import { prisma } from "@/lib/db/prisma";
 import { FinanceDomainError } from "@/lib/finance/errors";
 import { resolveFinancePublicationActionUserMessage } from "@/lib/finance/publishing/finance-publication-action-errors";
+import {
+  resolveFinancePublicationDistributionDeliveryFailureMessage,
+  resolveFinancePublicationDistributionSendUserMessage,
+} from "@/lib/finance/publishing/finance-publication-distribution-action-errors";
 import type { FinancePublicationDistributionRecipientInput } from "@/lib/finance/publishing/finance-publication-distribution-contract";
 import {
   createFinancePublicationDistribution,
@@ -17,7 +21,6 @@ import {
 } from "@/lib/finance/services/finance-publication-distribution-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { getTranslations } from "next-intl/server";
-import { revalidatePath } from "next/cache";
 
 export type FinancePublicationDistributionActionErrorCode =
   | "SEND_FAILED"
@@ -95,6 +98,7 @@ export async function sendFinancePublicationDistributionAction(input: {
       sentCount: number;
       failedCount: number;
       reused: boolean;
+      userMessage?: string;
     }
   | { ok: false; errorCode: FinancePublicationDistributionActionErrorCode; error: string }
 > {
@@ -110,14 +114,19 @@ export async function sendFinancePublicationDistributionAction(input: {
       recipients: input.recipients,
       emailLabels: await loadDistributionEmailLabels(),
     });
-    revalidatePath("/dashboard/finance/reports");
-    return { ok: true, ...result };
+    const userMessage =
+      result.failedCount > 0 && result.sentCount === 0
+        ? resolveFinancePublicationDistributionDeliveryFailureMessage(
+            result.primaryFailureCode,
+          )
+        : undefined;
+    return { ok: true, ...result, userMessage };
   } catch (error: unknown) {
     logDistributionActionFailure("send", error);
     return {
       ok: false,
       errorCode: "SEND_FAILED",
-      error: resolveFinancePublicationActionUserMessage(error),
+      error: resolveFinancePublicationDistributionSendUserMessage(error),
     };
   }
 }

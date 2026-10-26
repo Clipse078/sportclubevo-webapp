@@ -146,24 +146,29 @@ export function FinancePublicationDistributionDialog({
     setSending(true);
     setError(null);
     setSuccess(null);
-    const result = await sendFinancePublicationDistributionAction({
-      publicationId,
-      versionNumber,
-      idempotencyKey,
-      optionalMessage,
-      recipients,
-    });
-    setSending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    if (result.failedCount > 0 && result.sentCount > 0) {
-      setSuccess(labels.sendPartial);
-    } else if (result.failedCount > 0) {
+    try {
+      const result = await sendFinancePublicationDistributionAction({
+        publicationId,
+        versionNumber,
+        idempotencyKey,
+        optionalMessage,
+        recipients,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      if (result.failedCount > 0 && result.sentCount > 0) {
+        setSuccess(labels.sendPartial);
+      } else if (result.failedCount > 0) {
+        setError(result.userMessage ?? labels.sendFailed);
+      } else {
+        setSuccess(labels.sendSuccess);
+      }
+    } catch {
       setError(labels.sendFailed);
-    } else {
-      setSuccess(labels.sendSuccess);
+    } finally {
+      setSending(false);
     }
   }, [
     idempotencyKey,

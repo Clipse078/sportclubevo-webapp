@@ -34,6 +34,7 @@ import { generateFinancePublicationSharePublicToken } from "@/lib/finance/publis
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import { loadFinancePublicationVersionSnapshot } from "@/lib/finance/services/finance-publication-service";
 import { searchDiscoverableTenantPersons } from "@/lib/people/tenant-person-discovery";
+import { isExternalSideEffectConfigured } from "@/lib/server/external-side-effect-policy";
 
 type Db = Pick<
   PrismaClient,
@@ -93,7 +94,29 @@ export type CreateFinancePublicationDistributionResult = {
   sentCount: number;
   failedCount: number;
   reused: boolean;
+  primaryFailureCode: string | null;
 };
+
+function requireFinancePublicationDistributionTransport(): void {
+  if (
+    !isExternalSideEffectConfigured("resend", ["RESEND_API_KEY", "EMAIL_FROM"])
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_PUBLICATION_DISTRIBUTION_UNAVAILABLE",
+      "Outbound email transport is not configured for this environment.",
+      503,
+    );
+  }
+}
+
+function pickPrimaryFailureCode(failureCodes: string[]): string | null {
+  if (failureCodes.length === 0) return null;
+  const priority = ["NOT_CONFIGURED", "TRANSPORT_TIMEOUT", "PERMANENT_PROVIDER_FAILURE"];
+  for (const code of priority) {
+    if (failureCodes.includes(code)) return code;
+  }
+  return failureCodes[0] ?? null;
+}
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
@@ -288,6 +311,141 @@ async function deliverRecipientEmail(input: {
   });
 }
 
+type RecipientDeliveryRun = {
+  sentCount: number;
+  failedCount: number;
+  failureCodes: string[];
+};
+
+async function runRecipientDeliveries(input: {
+  db: Db;
+  emailPort: FinancePublicationDistributionEmailPort;
+  tenantId: string;
+  distributionId: string;
+  deliveries: Array<{
+    recipientId: string;
+    email: string;
+    sharePublicToken: string;
+  }>;
+  emailLabels: FinancePublicationDistributionEmailLabels;
+  tenantName: string;
+  reportTitle: string;
+  financeYearLabel: string;
+  versionNumber: number;
+  publishedAtLabel: string;
+  senderDisplayName: string | null;
+  optionalMessage: string | null;
+  localeCode: string;
+}): Promise<RecipientDeliveryRun> {
+  let sentCount = 0;
+  let failedCount = 0;
+  const failureCodes: string[] = [];
+
+  for (const delivery of input.deliveries) {
+    const rendered = buildFinancePublicationDistributionEmail({
+      labels: input.emailLabels,
+      tenantName: input.tenantName,
+      reportTitle: input.reportTitle,
+      financeYearLabel: input.financeYearLabel,
+      versionNumber: input.versionNumber,
+      publishedAtLabel: input.publishedAtLabel,
+      senderDisplayName: input.senderDisplayName,
+      optionalMessage: input.optionalMessage,
+      sharePublicToken: delivery.sharePublicToken,
+      locale: input.localeCode,
+    });
+
+    try {
+      const result = await deliverRecipientEmail({
+        emailPort: input.emailPort,
+        tenantId: input.tenantId,
+        distributionId: input.distributionId,
+        recipientId: delivery.recipientId,
+        to: delivery.email,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
+      });
+
+      await input.db.financePublicationDistributionRecipient.update({
+        where: { id: delivery.recipientId },
+        data: {
+          status: "SENT",
+          sentAt: new Date(),
+          deliveryMetadataJson: {
+            provider: result.provider,
+            providerMessageId: result.providerMessageId,
+          },
+        },
+      });
+      sentCount += 1;
+    } catch (error) {
+      const code =
+        error instanceof FinancePublicationDistributionEmailDeliveryError
+          ? error.code
+          : "DELIVERY_FAILED";
+      failureCodes.push(code);
+      await input.db.financePublicationDistributionRecipient.update({
+        where: { id: delivery.recipientId },
+        data: {
+          status: "FAILED",
+          failedAt: new Date(),
+          failureCode: code,
+        },
+      });
+      failedCount += 1;
+    }
+  }
+
+  return { sentCount, failedCount, failureCodes };
+}
+
+async function finalizeDistributionRun(input: {
+  db: Db;
+  ctx: FinanceAuthContext;
+  distributionId: string;
+  publicationId: string;
+  publicationVersionId: string;
+  versionNumber: number;
+  sentCount: number;
+  failedCount: number;
+  failureCodes: string[];
+  recipientCount: number;
+  reused: boolean;
+}): Promise<CreateFinancePublicationDistributionResult> {
+  const finalStatus = deriveDistributionStatus(input.sentCount, input.failedCount);
+
+  await input.db.financePublicationDistribution.update({
+    where: { id: input.distributionId },
+    data: {
+      status: finalStatus as "COMPLETED" | "PARTIAL" | "FAILED",
+      completedAt: new Date(),
+    },
+  });
+
+  await auditFinancePublicationDistributionCompleted(input.db, {
+    tenantId: input.ctx.tenantId,
+    actorUserId: input.ctx.userId,
+    distributionId: input.distributionId,
+    publicationId: input.publicationId,
+    publicationVersionId: input.publicationVersionId,
+    versionNumber: input.versionNumber,
+    sentCount: input.sentCount,
+    failedCount: input.failedCount,
+    status: finalStatus,
+  });
+
+  return {
+    distributionId: input.distributionId,
+    status: finalStatus,
+    recipientCount: input.recipientCount,
+    sentCount: input.sentCount,
+    failedCount: input.failedCount,
+    reused: input.reused,
+    primaryFailureCode: pickPrimaryFailureCode(input.failureCodes),
+  };
+}
+
 export type FinancePublicationDistributionPersonCandidate = {
   personId: string;
   displayName: string;
@@ -334,12 +492,31 @@ export async function createFinancePublicationDistribution(
   const existing = await db.financePublicationDistribution.findFirst({
     where: { tenantId: ctx.tenantId, idempotencyKey },
     include: {
-      recipients: { select: { status: true } },
+      recipients: {
+        select: {
+          id: true,
+          status: true,
+          failureCode: true,
+          recipientEmail: true,
+          publicationShareId: true,
+        },
+      },
+      publicationVersion: {
+        select: {
+          id: true,
+          versionNumber: true,
+          publishedAt: true,
+          publicationId: true,
+        },
+      },
     },
   });
-  if (existing) {
+  if (existing && existing.status !== "PROCESSING") {
     const sentCount = existing.recipients.filter((r) => r.status === "SENT").length;
     const failedCount = existing.recipients.filter((r) => r.status === "FAILED").length;
+    const failureCodes = existing.recipients
+      .map((r) => r.failureCode)
+      .filter((code): code is string => Boolean(code));
     return {
       distributionId: existing.id,
       status: existing.status,
@@ -347,7 +524,12 @@ export async function createFinancePublicationDistribution(
       sentCount,
       failedCount,
       reused: true,
+      primaryFailureCode: pickPrimaryFailureCode(failureCodes),
     };
+  }
+
+  if (!deps.emailPort) {
+    requireFinancePublicationDistributionTransport();
   }
 
   const versionRow = await loadPublishedVersionRow(db, ctx, {
@@ -378,6 +560,75 @@ export async function createFinancePublicationDistribution(
     : "—";
 
   const emailPort = deps.emailPort ?? financePublicationDistributionEmailPort;
+
+  if (existing?.status === "PROCESSING") {
+    const pendingRecipients = existing.recipients.filter((r) => r.status === "PENDING");
+    const shareIds = pendingRecipients
+      .map((r) => r.publicationShareId)
+      .filter((id): id is string => Boolean(id));
+    const shares =
+      shareIds.length > 0
+        ? await db.financePublicationShare.findMany({
+            where: { id: { in: shareIds }, tenantId: ctx.tenantId },
+            select: { id: true, publicToken: true },
+          })
+        : [];
+    const tokenByShareId = new Map(shares.map((s) => [s.id, s.publicToken]));
+
+    const pendingDeliveries = pendingRecipients
+      .map((recipient) => {
+        const token = recipient.publicationShareId
+          ? tokenByShareId.get(recipient.publicationShareId)
+          : null;
+        if (!token) return null;
+        return {
+          recipientId: recipient.id,
+          email: recipient.recipientEmail,
+          sharePublicToken: token,
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row != null);
+
+    const priorSent = existing.recipients.filter((r) => r.status === "SENT").length;
+    const priorFailed = existing.recipients.filter((r) => r.status === "FAILED").length;
+    const priorFailureCodes = existing.recipients
+      .map((r) => r.failureCode)
+      .filter((code): code is string => Boolean(code));
+
+    const resumed =
+      pendingDeliveries.length > 0
+        ? await runRecipientDeliveries({
+            db,
+            emailPort,
+            tenantId: ctx.tenantId,
+            distributionId: existing.id,
+            deliveries: pendingDeliveries,
+            emailLabels: input.emailLabels,
+            tenantName: tenant.name,
+            reportTitle: versionRow.publication.title,
+            financeYearLabel: versionRow.publication.financeYear.name,
+            versionNumber: versionRow.versionNumber,
+            publishedAtLabel,
+            senderDisplayName,
+            optionalMessage,
+            localeCode: input.localeCode,
+          })
+        : { sentCount: 0, failedCount: 0, failureCodes: [] as string[] };
+
+    return finalizeDistributionRun({
+      db,
+      ctx,
+      distributionId: existing.id,
+      publicationId: versionRow.publicationId,
+      publicationVersionId: versionRow.id,
+      versionNumber: versionRow.versionNumber,
+      sentCount: priorSent + resumed.sentCount,
+      failedCount: priorFailed + resumed.failedCount,
+      failureCodes: [...priorFailureCodes, ...resumed.failureCodes],
+      recipientCount: existing.recipients.length,
+      reused: true,
+    });
+  }
 
   const { distributionId, recipientDeliveries } = await db.$transaction(async (tx) => {
     const distribution = await tx.financePublicationDistribution.create({
@@ -457,92 +708,36 @@ export async function createFinancePublicationDistribution(
     return { distributionId: distribution.id, recipientDeliveries: deliveries };
   });
 
-  let sentCount = 0;
-  let failedCount = 0;
-
-  for (const delivery of recipientDeliveries) {
-    const rendered = buildFinancePublicationDistributionEmail({
-      labels: input.emailLabels,
-      tenantName: tenant.name,
-      reportTitle: versionRow.publication.title,
-      financeYearLabel: versionRow.publication.financeYear.name,
-      versionNumber: versionRow.versionNumber,
-      publishedAtLabel,
-      senderDisplayName,
-      optionalMessage,
-      sharePublicToken: delivery.sharePublicToken,
-      locale: input.localeCode,
-    });
-
-    try {
-      const result = await deliverRecipientEmail({
-        emailPort,
-        tenantId: ctx.tenantId,
-        distributionId,
-        recipientId: delivery.recipientId,
-        to: delivery.email,
-        subject: rendered.subject,
-        html: rendered.html,
-        text: rendered.text,
-      });
-
-      await db.financePublicationDistributionRecipient.update({
-        where: { id: delivery.recipientId },
-        data: {
-          status: "SENT",
-          sentAt: new Date(),
-          deliveryMetadataJson: {
-            provider: result.provider,
-            providerMessageId: result.providerMessageId,
-          },
-        },
-      });
-      sentCount += 1;
-    } catch (error) {
-      const code =
-        error instanceof FinancePublicationDistributionEmailDeliveryError ? error.code : "DELIVERY_FAILED";
-      await db.financePublicationDistributionRecipient.update({
-        where: { id: delivery.recipientId },
-        data: {
-          status: "FAILED",
-          failedAt: new Date(),
-          failureCode: code,
-        },
-      });
-      failedCount += 1;
-    }
-  }
-
-  const finalStatus = deriveDistributionStatus(sentCount, failedCount);
-
-  await db.financePublicationDistribution.update({
-    where: { id: distributionId },
-    data: {
-      status: finalStatus as "COMPLETED" | "PARTIAL" | "FAILED",
-      completedAt: new Date(),
-    },
+  const deliveryRun = await runRecipientDeliveries({
+    db,
+    emailPort,
+    tenantId: ctx.tenantId,
+    distributionId,
+    deliveries: recipientDeliveries,
+    emailLabels: input.emailLabels,
+    tenantName: tenant.name,
+    reportTitle: versionRow.publication.title,
+    financeYearLabel: versionRow.publication.financeYear.name,
+    versionNumber: versionRow.versionNumber,
+    publishedAtLabel,
+    senderDisplayName,
+    optionalMessage,
+    localeCode: input.localeCode,
   });
 
-  await auditFinancePublicationDistributionCompleted(db, {
-    tenantId: ctx.tenantId,
-    actorUserId: ctx.userId,
+  return finalizeDistributionRun({
+    db,
+    ctx,
     distributionId,
     publicationId: versionRow.publicationId,
     publicationVersionId: versionRow.id,
     versionNumber: versionRow.versionNumber,
-    sentCount,
-    failedCount,
-    status: finalStatus,
-  });
-
-  return {
-    distributionId,
-    status: finalStatus,
+    sentCount: deliveryRun.sentCount,
+    failedCount: deliveryRun.failedCount,
+    failureCodes: deliveryRun.failureCodes,
     recipientCount: recipientDeliveries.length,
-    sentCount,
-    failedCount,
     reused: false,
-  };
+  });
 }
 
 export async function listFinancePublicationDistributionSummariesForVersion(
