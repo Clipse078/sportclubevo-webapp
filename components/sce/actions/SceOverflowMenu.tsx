@@ -10,6 +10,7 @@ import {
 } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import { PopoverContent } from "@/components/ui/Popover";
 import { SceIconButton } from "@/components/sce/actions/SceIconButton";
+import type { SceFloatingLayer } from "@/lib/ui/sce-overlay-layering";
 
 export type SceOverflowMenuProps = {
   open: boolean;
@@ -20,6 +21,8 @@ export type SceOverflowMenuProps = {
   triggerIcon: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Use `composer` when the menu opens inside a modal sheet/dialog (above overlay z-index). */
+  floatingLayer?: SceFloatingLayer;
 };
 
 export function SceOverflowMenu({
@@ -31,6 +34,7 @@ export function SceOverflowMenu({
   triggerIcon,
   children,
   className,
+  floatingLayer = "app",
 }: SceOverflowMenuProps) {
   return (
     <>
@@ -57,6 +61,7 @@ export function SceOverflowMenu({
         constrainHeight={false}
         clipOverflow={false}
         role="dialog"
+        floatingLayer={floatingLayer}
         className={cn(SCE_OVERFLOW_MENU_SURFACE_CLASS, className)}
         data-sce-overflow-menu-surface
       >

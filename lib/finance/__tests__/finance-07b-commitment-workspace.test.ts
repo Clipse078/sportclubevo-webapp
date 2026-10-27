@@ -276,7 +276,9 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(panel).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
     expect(panel).toContain("data-finance-commitment-delete-dialog");
     expect(panel).toContain("data-finance-commitment-lifecycle-menu");
+    expect(panel).toContain('floatingLayer="composer"');
     expect(panel).toContain("snapshot.baseCurrency");
+    expect(panel).toContain("editSaveConfirm");
   });
 
   it("FIN-07B R5 — presents calendar dates via canonical Finance locale formatter", () => {

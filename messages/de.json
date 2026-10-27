@@ -949,6 +949,7 @@
         "fieldDescription": "Beschreibung",
         "submitAction": "Zur Prüfung einreichen",
         "editAction": "Bearbeiten",
+        "editSaveConfirm": "Änderungen speichern",
         "cancelAction": "Verpflichtung stornieren",
         "cancelTitle": "Verpflichtung stornieren",
         "cancelBody": "Die Verpflichtung wird für die Planung zurückgezogen. Der Verlauf bleibt erhalten.",

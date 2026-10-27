@@ -486,6 +486,7 @@
         "fieldDescription": "Description",
         "submitAction": "Submit for review",
         "editAction": "Edit",
+        "editSaveConfirm": "Save changes",
         "cancelAction": "Cancel commitment",
         "cancelTitle": "Cancel commitment",
         "cancelBody": "This withdraws the commitment for planning purposes. Historical records are preserved.",

@@ -260,6 +260,91 @@ describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {
     ).toBeTruthy();
   });
 
+  it("opens overflow menu above sheet layer and exposes cancel for submitted commitments", async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue({
+      ...uatDetail,
+      lifecycleStatus: "SUBMITTED",
+      approvalStatus: "PENDING",
+      canEdit: false,
+      canSubmit: false,
+      canCancel: true,
+      submittedAtIso: "2026-10-27T12:00:00.000Z",
+    });
+
+    renderPanel({
+      ...baseSnapshot,
+      items: [
+        {
+          id: uatDetail.id,
+          title: uatDetail.title,
+          amountMinor: uatDetail.amountMinor,
+          currency: uatDetail.currency,
+          partyName: uatDetail.partyName,
+          lifecycleStatus: "SUBMITTED",
+          approvalStatus: "PENDING",
+          responsibleUserId: null,
+          responsibleDisplayName: null,
+          expectedPaymentDateIso: uatDetail.expectedPaymentDateIso,
+          commitmentDateIso: uatDetail.commitmentDateIso,
+          financialAccountName: uatDetail.financialAccountName,
+          financeYearId: uatDetail.financeYearId,
+          financeYearName: uatDetail.financeYearName,
+          updatedAtIso: uatDetail.updatedAtIso,
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole("button", { name: /UAT — Hallenturniere Winter/ }));
+    await waitFor(() => {
+      expect(document.querySelector("[data-finance-commitment-lifecycle-menu]")).toBeTruthy();
+    });
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await waitFor(() => {
+      expect(document.querySelector('[data-floating-layer="composer"]')).toBeTruthy();
+    });
+    expect(screen.getByRole("menuitem", { name: "Cancel commitment" })).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: "Delete draft" })).toBeNull();
+  });
+
+  it("keeps edit as a primary action for drafts and opens delete from overflow", async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue(uatDetail);
+
+    renderPanel({
+      ...baseSnapshot,
+      items: [
+        {
+          id: uatDetail.id,
+          title: uatDetail.title,
+          amountMinor: uatDetail.amountMinor,
+          currency: uatDetail.currency,
+          partyName: uatDetail.partyName,
+          lifecycleStatus: uatDetail.lifecycleStatus,
+          approvalStatus: uatDetail.approvalStatus,
+          responsibleUserId: null,
+          responsibleDisplayName: null,
+          expectedPaymentDateIso: uatDetail.expectedPaymentDateIso,
+          commitmentDateIso: uatDetail.commitmentDateIso,
+          financialAccountName: uatDetail.financialAccountName,
+          financeYearId: uatDetail.financeYearId,
+          financeYearName: uatDetail.financeYearName,
+          updatedAtIso: uatDetail.updatedAtIso,
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole("button", { name: /UAT — Hallenturniere Winter/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Edit" })).toBeTruthy();
+    });
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.getByRole("menuitem", { name: "Delete draft" })).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: "Cancel commitment" })).toBeNull();
+  });
+
   it("explains when edit is blocked for submitted commitments", async () => {
     const user = userEvent.setup();
     vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue({

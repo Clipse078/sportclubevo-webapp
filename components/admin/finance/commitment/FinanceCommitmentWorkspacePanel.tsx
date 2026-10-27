@@ -355,9 +355,12 @@ export function FinanceCommitmentWorkspacePanel({
     detail?.lifecycleStatus === "DRAFT" &&
     !detail.submittedAtIso &&
     detail.canEdit;
-  const showLifecycleOverflow =
-    detail &&
-    ((detail.canCancel && detail.lifecycleStatus !== "CANCELLED") || canDeleteDraft);
+  const showCancelInOverflowMenu =
+    Boolean(detail) &&
+    detail.canCancel &&
+    (detail.lifecycleStatus === "SUBMITTED" || detail.lifecycleStatus === "ACTIVE");
+  const showDeleteInOverflowMenu = Boolean(canDeleteDraft);
+  const showLifecycleOverflow = showCancelInOverflowMenu || showDeleteInOverflowMenu;
 
   const createDialogFooter = (
     <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
@@ -376,7 +379,7 @@ export function FinanceCommitmentWorkspacePanel({
         {t("dismiss")}
       </Button>
       <Button type="button" onClick={handleUpdate} disabled={pending}>
-        {t("createConfirm")}
+        {t("editSaveConfirm")}
       </Button>
     </div>
   );
@@ -846,8 +849,9 @@ export function FinanceCommitmentWorkspacePanel({
                       triggerLabel={t("detailMenuTrigger")}
                       menuLabel={t("detailMenuLabel")}
                       triggerIcon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
+                      floatingLayer="composer"
                     >
-                      {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
+                      {showCancelInOverflowMenu ? (
                         <SceOverflowMenuItem
                           icon={<Ban className="h-4 w-4" />}
                           label={t("cancelAction")}
@@ -857,11 +861,9 @@ export function FinanceCommitmentWorkspacePanel({
                           }}
                         />
                       ) : null}
-                      {canDeleteDraft ? (
+                      {showDeleteInOverflowMenu ? (
                         <>
-                          {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
-                            <SceOverflowMenuDivider />
-                          ) : null}
+                          {showCancelInOverflowMenu ? <SceOverflowMenuDivider /> : null}
                           <SceOverflowMenuItem
                             icon={<Trash2 className="h-4 w-4" />}
                             label={t("deleteDraftAction")}
