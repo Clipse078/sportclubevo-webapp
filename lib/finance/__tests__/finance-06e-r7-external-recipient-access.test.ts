@@ -55,13 +55,16 @@ describe("FIN-06E-R7 external recipient access", () => {
     );
   });
 
-  it("preflight fails Preview when distribution links require Vercel login", () => {
+  it("preflight passes ordinary protected Preview with finance distribution readiness warning", () => {
     const result = runDeploymentPreflight({ ...previewEnv });
 
-    expect(result.pass).toBe(false);
+    expect(result.pass).toBe(true);
+    expect(
+      result.violations.some((v) => v.code === "FINANCE_EXTERNAL_DISTRIBUTION_NOT_READY"),
+    ).toBe(true);
     expect(
       result.violations.some((v) => v.code === "PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE"),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("preflight passes Preview when operator attests external reachability", () => {
@@ -70,6 +73,10 @@ describe("FIN-06E-R7 external recipient access", () => {
       PUBLIC_ACTION_EXTERNALLY_REACHABLE: "confirmed",
     });
 
+    expect(result.pass).toBe(true);
+    expect(
+      result.violations.some((v) => v.code === "FINANCE_EXTERNAL_DISTRIBUTION_NOT_READY"),
+    ).toBe(false);
     expect(
       result.violations.some((v) => v.code === "PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE"),
     ).toBe(false);
