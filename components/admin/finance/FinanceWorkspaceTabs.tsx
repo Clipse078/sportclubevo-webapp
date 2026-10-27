@@ -13,6 +13,7 @@ type FinanceWorkspaceTabsProps = {
   showBudget: boolean;
   showActuals: boolean;
   showForecast: boolean;
+  showCommitments: boolean;
   showSettings: boolean;
   labels: {
     overview: string;
@@ -21,6 +22,7 @@ type FinanceWorkspaceTabsProps = {
     budget: string;
     actuals: string;
     forecast: string;
+    commitments: string;
     settings: string;
   };
   ariaLabel: string;
@@ -32,6 +34,7 @@ export function FinanceWorkspaceTabs({
   showBudget,
   showActuals,
   showForecast,
+  showCommitments,
   showSettings,
   labels,
   ariaLabel,
@@ -42,6 +45,7 @@ export function FinanceWorkspaceTabs({
     showBudget,
     showActuals,
     showForecast,
+    showCommitments,
     showSettings,
     labels,
   });

@@ -262,7 +262,7 @@ export const FINANCE_COMMITMENT_UX_IA = {
   capabilityKey: "COMMITMENTS" as const,
   foundationRoute: "/dashboard/finance/commitments",
   futureWorkspaceRoute: "/dashboard/finance/commitments",
-  mainNavDeferredUntil: "FIN-07B",
+  mainNavDeferredUntil: null,
   interpretationExceptionExplanationEvidence: true,
   futureEmptyStateExplainsCommitment: true,
   noAccountingWorkflowLanguageForClubUsers: true,
@@ -303,11 +303,21 @@ export const FINANCE_07A_SCOPE = {
   packageRoadmap: true,
   architectureGuardTests: true,
   minimalFoundationUi: true,
-  noFullCommitmentWorkspace: true,
+  noFullCommitmentWorkspace: false,
   noApprovalInbox: true,
   noPolicyEngine: true,
   noSupplierBillIngestion: true,
   noBudgetAvailableArithmetic: true,
+} as const;
+
+export const FINANCE_07B_IMPLEMENTATION = {
+  workspaceRoute: FINANCE_COMMITMENT_UX_IA.foundationRoute,
+  workspacePanel: "components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx",
+  commitmentService: "lib/finance/services/finance-commitment-service.ts",
+  commitmentQueryService: "lib/finance/services/finance-commitment-query-service.ts",
+  architectureTestSuite: "lib/finance/__tests__/finance-07b-commitment-workspace.test.ts",
+  fin07bStatus: "IMPLEMENTED_PR_OPEN_PO_UAT_REQUIRED",
+  expectedEventSyncDeferred: "FIN-07F",
 } as const;
 
 export const FINANCE_07A_IMPLEMENTATION = {
@@ -318,7 +328,7 @@ export const FINANCE_07A_IMPLEMENTATION = {
   architectureTestSuite:
     "lib/finance/__tests__/finance-07a-commitment-architecture.test.ts",
   foundationWorkspaceRoute: FINANCE_COMMITMENT_UX_IA.foundationRoute,
-  fin07aStatus: "IMPLEMENTED_FOUNDATION_REVIEW",
+  fin07aStatus: "COMPLETE_FOUNDATION_APPROVED",
   fin07ProgrammeStatus: "IN_PROGRESS",
   fin06ProgrammeStatus: "COMPLETE_PO_APPROVED",
 } as const;

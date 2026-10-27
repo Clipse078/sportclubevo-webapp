@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { formatFinanceYearPeriodLabel } from "@/lib/finance/setup/finance-year-period-display";
+import {
+  formatFinanceCalendarDateLabel,
+  formatFinanceYearPeriodLabel,
+} from "@/lib/finance/setup/finance-year-period-display";
+
+describe("formatFinanceCalendarDateLabel", () => {
+  it("formats UTC calendar days for de-CH", () => {
+    expect(formatFinanceCalendarDateLabel("2026-12-31", "de-CH")).toBe("31.12.2026");
+    expect(formatFinanceCalendarDateLabel("2027-01-14", "de-CH")).toBe("14.01.2027");
+  });
+});
 
 describe("formatFinanceYearPeriodLabel", () => {
   it("formats UTC calendar boundaries for de-CH", () => {

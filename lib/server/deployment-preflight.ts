@@ -17,8 +17,7 @@ import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard"
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 import { collectPrismaGeneratedEnumParityViolations } from "@/lib/server/prisma-generated-enum-parity";
-import { publicActionBaseWouldCrossIncompatibleDeployment } from "@/lib/server/public-action-base-url-policy";
-import { evaluatePublicActionTarget } from "@/lib/server/public-action-target-policy";
+import { collectPreviewPublicActionPreflightViolations } from "@/lib/server/deployment-public-action-preflight";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -306,43 +305,8 @@ export function runDeploymentPreflight(
   // ── (8) Preview public capability link host (FIN-06E cross-deployment) ───
   if (runtime.isPreview || runtime.isAcceptance) {
     try {
-      if (publicActionBaseWouldCrossIncompatibleDeployment(processEnv)) {
-        const vercelUrl = safeReadOptional(processEnv.VERCEL_URL);
-        if (!vercelUrl) {
-          addViolation(
-            error(
-              "PREVIEW_PUBLIC_ACTION_HOST_MISSING",
-              "Preview/Acceptance APP_BASE_URL targets the canonical tenant host but VERCEL_URL is missing. " +
-                "Public distribution links would target a STAGE runtime that may not match Preview schema/code.",
-            ),
-          );
-        }
-      }
-
-      if (publicActionBaseWouldCrossIncompatibleDeployment(processEnv)) {
-        const publicActionTarget = evaluatePublicActionTarget(processEnv);
-        if (!publicActionTarget.valid) {
-          if (publicActionTarget.failureCode === "DEPLOYMENT_PROTECTION") {
-            addViolation(
-              error(
-                "PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE",
-                "Preview/Acceptance would emit finance distribution recipient links that require Vercel Deployment Protection login. " +
-                  "Configure PUBLIC_ACTION_BASE_URL to an unprotected HTTPS origin on this deployment, or set PUBLIC_ACTION_EXTERNALLY_REACHABLE after disabling Preview protection, " +
-                  "or complete FIN-06E on STAGE production before external recipient UAT. See docs/deployment/stage-preview-migration-runbook.md (FIN-06E Preview recipient access).",
-              ),
-            );
-          } else if (
-            publicActionTarget.failureCode === "MISCONFIGURED_PUBLIC_ACTION_BASE_URL"
-          ) {
-            addViolation(
-              error(
-                "PREVIEW_PUBLIC_ACTION_BASE_URL_MISCONFIGURED",
-                "PUBLIC_ACTION_BASE_URL must not target the canonical tenant host while Preview code diverges from STAGE production, " +
-                  "and must alias the executing Preview deployment when used for external recipient links.",
-              ),
-            );
-          }
-        }
+      for (const violation of collectPreviewPublicActionPreflightViolations(processEnv)) {
+        addViolation(violation);
       }
     } catch {
       // APP_BASE_URL validation is covered elsewhere.

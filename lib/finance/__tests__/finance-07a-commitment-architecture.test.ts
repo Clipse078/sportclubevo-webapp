@@ -55,7 +55,7 @@ describe("FIN-07A commitment architecture locks", () => {
     );
     expect(SCE_FINANCE_COMMITMENT_ARCHITECTURE_LOCKS.countryAgnosticCore).toBe(true);
     expect(SCE_FINANCE_COMMITMENT_ARCHITECTURE_LOCKS.noFcaSpecificSemantics).toBe(true);
-    expect(FINANCE_07A_SCOPE.noFullCommitmentWorkspace).toBe(true);
+    expect(FINANCE_07A_SCOPE.noFullCommitmentWorkspace).toBe(false);
     expect(FINANCE_07A_SCOPE.noBudgetAvailableArithmetic).toBe(true);
     expect(FINANCE_07A_IMPLEMENTATION.fin07ProgrammeStatus).toBe("IN_PROGRESS");
   });

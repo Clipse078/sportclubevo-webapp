@@ -458,6 +458,12 @@ export const FINANCE_NAVIGATION_ENTRIES = [
     permissionKeys: [PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_VIEW],
     labelKey: "finance.nav.reports",
   },
+  {
+    key: "commitments",
+    requiredCapabilities: ["COMMITMENTS"] as const,
+    permissionKeys: [PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_COMMITMENT_VIEW],
+    labelKey: "finance.nav.commitments",
+  },
 ] as const;
 
 /** Contextual analysis surfaces (team/org/event/personnel) — not global mandatory nav sections. */

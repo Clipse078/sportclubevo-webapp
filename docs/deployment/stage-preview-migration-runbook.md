@@ -109,8 +109,11 @@ remains the canonical recipient host (no `*.vercel.app` in emails).
 3. **Fail closed:** if neither path is configured, distribution send is blocked in Preview with a
    localized operator message (prevents silently emailing protected `*.vercel.app` links).
 
-Repository guard: deployment preflight emits `PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE` when
-Preview would still require Vercel Deployment Protection for finance distribution links.
+Repository guard: deployment preflight emits `FINANCE_EXTERNAL_DISTRIBUTION_NOT_READY` (warning,
+does not block build) when a protected Preview would require Vercel Deployment Protection for
+finance distribution links. Distribution send remains fail-closed at runtime. Preflight emits
+`PREVIEW_PUBLIC_ACTION_NOT_EXTERNALLY_REACHABLE` (error) only when `PUBLIC_ACTION_BASE_URL` is
+explicitly configured for FIN-06E Preview UAT but external reachability is not attested.
 
 ## Finance (FIN-06D) — controlled publication version sharing before Preview UAT
 
