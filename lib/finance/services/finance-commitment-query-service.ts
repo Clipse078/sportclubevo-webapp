@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import {
+  canApproveFinanceCommitments,
   canManageFinanceCommitments,
   canSubmitFinanceCommitments,
   canViewFinanceCommitments,
@@ -12,6 +13,7 @@ import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configu
 type Db = Pick<
   PrismaClient,
   | "financeCommitment"
+  | "financeCommitmentApprovalDecision"
   | "financeYear"
   | "financialAccount"
   | "financeCostCenter"
@@ -41,6 +43,7 @@ export type FinanceCommitmentWorkspaceSnapshot = {
     canView: boolean;
     canManage: boolean;
     canSubmit: boolean;
+    canApprove: boolean;
   };
   summary: {
     draftCount: number;
@@ -67,6 +70,13 @@ export type FinanceCommitmentWorkspaceSnapshot = {
   };
 };
 
+export type FinanceCommitmentApprovalDecisionRecord = {
+  decision: string;
+  comment: string | null;
+  decidedAtIso: string;
+  decidedByDisplayName: string | null;
+};
+
 export type FinanceCommitmentDetailRecord = FinanceCommitmentListItem & {
   financialAccountId: string | null;
   description: string | null;
@@ -75,11 +85,36 @@ export type FinanceCommitmentDetailRecord = FinanceCommitmentListItem & {
   expectedEvidenceDateIso: string | null;
   submittedAtIso: string | null;
   cancelledAtIso: string | null;
+  approvalDecidedAtIso: string | null;
+  approvalDecidedByDisplayName: string | null;
   lifecycleStatus: string;
   approvalStatus: string;
   canEdit: boolean;
   canSubmit: boolean;
   canCancel: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+  approvalDecisionHistory: FinanceCommitmentApprovalDecisionRecord[];
+};
+
+export type FinanceCommitmentApprovalInboxSnapshot = {
+  capabilities: {
+    canView: boolean;
+    canApprove: boolean;
+  };
+  pendingItems: FinanceCommitmentListItem[];
+  pendingCount: number;
+  selectedYearId: string | null;
+  years: { id: string; name: string; startDateIso: string; endDateIso: string }[];
+  baseCurrency: string | null;
+  recentDecisions: Array<
+    FinanceCommitmentListItem & {
+      decision: string;
+      decisionComment: string | null;
+      decidedAtIso: string;
+      decidedByDisplayName: string | null;
+    }
+  >;
 };
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -287,6 +322,7 @@ export async function loadFinanceCommitmentWorkspaceSnapshot(
       canView: canViewFinanceCommitments(ctx),
       canManage: canManageFinanceCommitments(ctx),
       canSubmit: canSubmitFinanceCommitments(ctx),
+      canApprove: canApproveFinanceCommitments(ctx),
     },
     summary: {
       draftCount,
@@ -326,7 +362,8 @@ export async function getFinanceCommitmentDetail(
     throw new FinanceDomainError("FINANCE_NOT_FOUND", "Commitment not found.", 404);
   }
 
-  const [account, costCenter, responsible] = await Promise.all([
+  const [_account, costCenter, _responsible, approvalDecisions, approvalDecidedBy] =
+    await Promise.all([
     row.financialAccountId
       ? db.financialAccount.findUnique({
           where: { id: row.financialAccountId },
@@ -345,7 +382,40 @@ export async function getFinanceCommitmentDetail(
           select: { firstName: true, lastName: true },
         })
       : Promise.resolve(null),
+    db.financeCommitmentApprovalDecision.findMany({
+      where: { tenantId: ctx.tenantId, commitmentId: row.id },
+      orderBy: { decidedAt: "asc" },
+      select: {
+        decision: true,
+        comment: true,
+        decidedAt: true,
+        decidedByUserId: true,
+      },
+    }),
+    row.approvalDecidedByUserId
+      ? db.user.findUnique({
+          where: { id: row.approvalDecidedByUserId },
+          select: { firstName: true, lastName: true },
+        })
+      : Promise.resolve(null),
   ]);
+
+  const decisionActorIds = [
+    ...new Set(approvalDecisions.map((d) => d.decidedByUserId)),
+  ];
+  const decisionActors =
+    decisionActorIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: decisionActorIds } },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
+  const decisionActorName = new Map(
+    decisionActors.map((u) => [
+      u.id,
+      [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || u.id,
+    ]),
+  );
 
   const listBase = (
     await mapListRows(db, [
@@ -365,6 +435,11 @@ export async function getFinanceCommitmentDetail(
       row.lifecycleStatus === "SUBMITTED" ||
       row.lifecycleStatus === "ACTIVE");
 
+  const awaitingDecision =
+    row.lifecycleStatus === "SUBMITTED" && row.approvalStatus === "PENDING";
+  const canApprove = awaitingDecision && canApproveFinanceCommitments(ctx);
+  const canReject = canApprove;
+
   return {
     ...listBase,
     financialAccountId: row.financialAccountId,
@@ -374,8 +449,146 @@ export async function getFinanceCommitmentDetail(
     expectedEvidenceDateIso: dateToIso(row.expectedEvidenceDate),
     submittedAtIso: row.submittedAt?.toISOString() ?? null,
     cancelledAtIso: row.cancelledAt?.toISOString() ?? null,
+    approvalDecidedAtIso: row.approvalDecidedAt?.toISOString() ?? null,
+    approvalDecidedByDisplayName: approvalDecidedBy
+      ? [approvalDecidedBy.firstName, approvalDecidedBy.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || null
+      : null,
     canEdit,
     canSubmit,
     canCancel,
+    canApprove,
+    canReject,
+    approvalDecisionHistory: approvalDecisions.map((d) => ({
+      decision: d.decision,
+      comment: d.comment,
+      decidedAtIso: d.decidedAt.toISOString(),
+      decidedByDisplayName: decisionActorName.get(d.decidedByUserId) ?? null,
+    })),
+  };
+}
+
+export async function loadFinanceCommitmentApprovalInboxSnapshot(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input?: { financeYearId?: string | null },
+): Promise<FinanceCommitmentApprovalInboxSnapshot> {
+  requireFinanceCommitmentFoundationView(ctx);
+
+  const canApprove = canApproveFinanceCommitments(ctx);
+  if (!canApprove) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to access the approval inbox.",
+      403,
+    );
+  }
+
+  const [setup, yearsRows] = await Promise.all([
+    loadFinanceSetupSnapshot(db as never, ctx),
+    db.financeYear.findMany({
+      where: { tenantId: ctx.tenantId },
+      orderBy: { startDate: "desc" },
+      select: { id: true, name: true, startDate: true, endDate: true },
+    }),
+  ]);
+
+  const years = yearsRows.map((y) => ({
+    id: y.id,
+    name: y.name,
+    startDateIso: dateToIso(y.startDate) ?? "",
+    endDateIso: dateToIso(y.endDate) ?? "",
+  }));
+  const selectedYearId =
+    input?.financeYearId ??
+    setup.configuration?.currentFinanceYearId ??
+    years[0]?.id ??
+    null;
+
+  const pendingWhere: Prisma.FinanceCommitmentWhereInput = {
+    tenantId: ctx.tenantId,
+    lifecycleStatus: "SUBMITTED",
+    approvalStatus: "PENDING",
+    ...(selectedYearId ? { financeYearId: selectedYearId } : {}),
+  };
+
+  const [pendingRows, pendingCount, recentDecisionRows] = await Promise.all([
+    db.financeCommitment.findMany({
+      where: pendingWhere,
+      orderBy: [{ submittedAt: "asc" }, { updatedAt: "asc" }],
+      take: 50,
+      include: { financeYear: { select: { name: true } } },
+    }),
+    db.financeCommitment.count({ where: pendingWhere }),
+    db.financeCommitmentApprovalDecision.findMany({
+      where: { tenantId: ctx.tenantId },
+      orderBy: { decidedAt: "desc" },
+      take: 12,
+      select: {
+        decision: true,
+        comment: true,
+        decidedAt: true,
+        decidedByUserId: true,
+        commitment: {
+          select: {
+            id: true,
+            title: true,
+            amountMinor: true,
+            currency: true,
+            partyName: true,
+            lifecycleStatus: true,
+            approvalStatus: true,
+            responsibleUserId: true,
+            expectedPaymentDate: true,
+            commitmentDate: true,
+            financeYearId: true,
+            updatedAt: true,
+            financialAccountId: true,
+            financeYear: { select: { name: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const pendingItems = await mapListRows(db, pendingRows);
+  const recentListRows = recentDecisionRows.map((d) => d.commitment);
+  const recentMapped = await mapListRows(db, recentListRows);
+  const recentActorIds = [...new Set(recentDecisionRows.map((d) => d.decidedByUserId))];
+  const recentActors =
+    recentActorIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: recentActorIds } },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
+  const recentActorName = new Map(
+    recentActors.map((u) => [
+      u.id,
+      [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || u.id,
+    ]),
+  );
+
+  const recentDecisions = recentDecisionRows.map((row, index) => ({
+    ...recentMapped[index]!,
+    decision: row.decision,
+    decisionComment: row.comment,
+    decidedAtIso: row.decidedAt.toISOString(),
+    decidedByDisplayName: recentActorName.get(row.decidedByUserId) ?? null,
+  }));
+
+  return {
+    capabilities: {
+      canView: canViewFinanceCommitments(ctx),
+      canApprove,
+    },
+    pendingItems,
+    pendingCount,
+    selectedYearId,
+    years,
+    baseCurrency: setup.configuration?.baseCurrency ?? null,
+    recentDecisions,
   };
 }

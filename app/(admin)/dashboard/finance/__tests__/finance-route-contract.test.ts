@@ -28,6 +28,14 @@ describe("FIN-01B finance routes", () => {
     expect(read("lib/finance/capability-registry.ts")).toContain("COMMITMENTS");
   });
 
+  it("declares FIN-07C commitment approval inbox route", () => {
+    expect(read("app/(admin)/dashboard/finance/commitments/approvals/page.tsx")).toContain(
+      "FinanceCommitmentApprovalInboxPanel",
+    );
+    const panel = read("components/admin/finance/commitment/FinanceCommitmentApprovalInboxPanel.tsx");
+    expect(panel).not.toContain('type="checkbox"');
+  });
+
   it("declares FIN-03A actuals workspace route", () => {
     expect(read("app/(admin)/dashboard/finance/actuals/page.tsx")).toContain(
       "FinanceActualsWorkspacePanel",

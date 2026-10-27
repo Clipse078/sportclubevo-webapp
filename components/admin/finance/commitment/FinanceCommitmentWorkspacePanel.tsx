@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { Ban, MoreHorizontal, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -32,10 +33,12 @@ import {
 import type { FinanceCommitmentWorkspaceSnapshot } from "@/lib/finance/services/finance-commitment-query-service";
 import type { FinanceCommitmentDetailRecord } from "@/lib/finance/services/finance-commitment-query-service";
 import {
+  approveFinanceCommitmentAction,
   cancelFinanceCommitmentAction,
   createFinanceCommitmentAction,
   deleteDraftFinanceCommitmentAction,
   loadFinanceCommitmentDetailAction,
+  rejectFinanceCommitmentAction,
   submitFinanceCommitmentAction,
   updateFinanceCommitmentAction,
 } from "@/app/(admin)/dashboard/finance/commitments/actions";
@@ -151,6 +154,9 @@ export function FinanceCommitmentWorkspacePanel({
   >({});
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const detailMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [amountInput, setAmountInput] = useState("");
@@ -177,6 +183,7 @@ export function FinanceCommitmentWorkspacePanel({
   const referenceFieldId = `${formFieldId}-reference`;
   const descriptionFieldId = `${formFieldId}-description`;
   const cancelPhraseFieldId = `${formFieldId}-cancel-phrase`;
+  const rejectReasonFieldId = `${formFieldId}-reject-reason`;
 
   const formatMoney = (minor: number, cur: string) =>
     formatFinanceManagementPlanningMinor(minor, cur, formattingLocale);
@@ -305,6 +312,9 @@ export function FinanceCommitmentWorkspacePanel({
     setDeleteOpen(false);
     setCancelPhraseInput("");
     setDetailMenuOpen(false);
+    setRejectOpen(false);
+    setRejectReason("");
+    setRejectError(null);
   }
 
   function fillFormFromDetail(d: FinanceCommitmentDetailRecord) {
@@ -414,6 +424,46 @@ export function FinanceCommitmentWorkspacePanel({
         setFeedback(mapActionError(t, result));
         return;
       }
+      router.refresh();
+      await openDetail(detail.id);
+    });
+  }
+
+  function handleApprove() {
+    if (!detail || !selectedYearId) return;
+    startTransition(async () => {
+      const result = await approveFinanceCommitmentAction({
+        commitmentId: detail.id,
+        financeYearId: selectedYearId,
+      });
+      if (!result.ok) {
+        setFeedback(mapActionError(t, result));
+        return;
+      }
+      router.refresh();
+      await openDetail(detail.id);
+    });
+  }
+
+  function handleRejectConfirm() {
+    if (!detail || !selectedYearId) return;
+    const reason = rejectReason.trim();
+    if (reason.length < 3) {
+      setRejectError(t("approvalRejectReasonTooShort"));
+      return;
+    }
+    startTransition(async () => {
+      const result = await rejectFinanceCommitmentAction({
+        commitmentId: detail.id,
+        financeYearId: selectedYearId,
+        comment: reason,
+      });
+      if (!result.ok) {
+        setRejectError(mapActionError(t, result));
+        return;
+      }
+      setRejectOpen(false);
+      setRejectReason("");
       router.refresh();
       await openDetail(detail.id);
     });
@@ -649,6 +699,15 @@ export function FinanceCommitmentWorkspacePanel({
             >
               {snapshot.summary.submittedPendingCount}
             </div>
+            {snapshot.capabilities.canApprove && snapshot.summary.submittedPendingCount > 0 ? (
+              <Link
+                href="/dashboard/finance/commitments/approvals"
+                className="mt-1 inline-block text-xs font-medium text-[var(--link)] hover:underline"
+                data-finance-commitment-approval-inbox-link
+              >
+                {t("openApprovalInbox")}
+              </Link>
+            ) : null}
           </div>
           <div className="min-w-0 sm:px-4">
             <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryActive")}</div>
@@ -872,8 +931,16 @@ export function FinanceCommitmentWorkspacePanel({
                   </>
                 ) : null}
               </p>
-              {detail.approvalStatus === "PENDING" ? (
+              {detail.approvalStatus === "PENDING" && !detail.canApprove ? (
                 <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
+              ) : null}
+              {detail.approvalDecidedByDisplayName && detail.approvalDecidedAtIso ? (
+                <p className="text-xs text-[var(--muted)]">
+                  {t("approvalDecisionMeta", {
+                    name: detail.approvalDecidedByDisplayName,
+                    date: formatCalendarDate(detail.approvalDecidedAtIso.slice(0, 10)),
+                  })}
+                </p>
               ) : null}
               {!detail.canEdit && detail.lifecycleStatus !== "DRAFT" ? (
                 <p className="text-xs text-[var(--muted)]" data-finance-commitment-edit-blocked>
@@ -912,6 +979,35 @@ export function FinanceCommitmentWorkspacePanel({
               </dl>
             ) : null}
 
+            {detail.approvalDecisionHistory.length > 0 ? (
+              <div
+                className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm"
+                data-finance-commitment-approval-history
+              >
+                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {t("detailSectionApproval")}
+                </div>
+                <ul className="space-y-2">
+                  {detail.approvalDecisionHistory.map((row) => (
+                    <li key={row.decidedAtIso} className="min-w-0">
+                      <div className="font-medium text-[var(--foreground)]">
+                        {t(financeCommitmentApprovalLabelKey(row.decision))}
+                        {row.decidedByDisplayName ? (
+                          <span className="font-normal text-[var(--muted)]">
+                            {" "}
+                            · {row.decidedByDisplayName}
+                          </span>
+                        ) : null}
+                      </div>
+                      {row.comment ? (
+                        <p className="mt-0.5 break-words text-[var(--text-2)]">{row.comment}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
             {detail.externalReference || detail.description ? (
               <div className="min-w-0 space-y-3 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
                 {detail.externalReference ? (
@@ -936,6 +1032,33 @@ export function FinanceCommitmentWorkspacePanel({
               data-finance-commitment-detail-actions
             >
               <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                {detail.canApprove ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleApprove}
+                      disabled={pending}
+                      className="w-full sm:w-auto"
+                      data-finance-commitment-approve-action
+                    >
+                      {t("approveAction")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-full sm:w-auto"
+                      disabled={pending}
+                      onClick={() => {
+                        setRejectReason("");
+                        setRejectError(null);
+                        setRejectOpen(true);
+                      }}
+                      data-finance-commitment-reject-action
+                    >
+                      {t("rejectAction")}
+                    </Button>
+                  </>
+                ) : null}
                 {detail.canSubmit ? (
                   <Button type="button" onClick={handleSubmit} disabled={pending} className="w-full sm:w-auto">
                     {t("submitAction")}
@@ -1052,6 +1175,37 @@ export function FinanceCommitmentWorkspacePanel({
             onClick={handleCancel}
           >
             {t("cancelAction")}
+          </Button>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={rejectOpen}
+        onClose={() => setRejectOpen(false)}
+        title={t("rejectDialogTitle")}
+        description={t("rejectDialogDescription")}
+      >
+        <SceFormField label={t("rejectReasonLabel")} htmlFor={rejectReasonFieldId}>
+          <SceTextarea
+            id={rejectReasonFieldId}
+            className={cn(FINANCE_FIELD_CONTROL_CLASS, "min-h-[5rem]")}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            disabled={pending}
+            placeholder={t("rejectReasonPlaceholder")}
+          />
+        </SceFormField>
+        {rejectError ? (
+          <p className="mt-2 text-sm text-[var(--destructive)]" role="alert">
+            {rejectError}
+          </p>
+        ) : null}
+        <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+          <Button type="button" variant="secondary" onClick={() => setRejectOpen(false)}>
+            {t("dismiss")}
+          </Button>
+          <Button type="button" variant="danger" disabled={pending} onClick={handleRejectConfirm}>
+            {t("rejectConfirmAction")}
           </Button>
         </div>
       </Dialog>

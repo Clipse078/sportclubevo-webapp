@@ -316,8 +316,20 @@ export const FINANCE_07B_IMPLEMENTATION = {
   commitmentService: "lib/finance/services/finance-commitment-service.ts",
   commitmentQueryService: "lib/finance/services/finance-commitment-query-service.ts",
   architectureTestSuite: "lib/finance/__tests__/finance-07b-commitment-workspace.test.ts",
-  fin07bStatus: "IMPLEMENTED_PR_OPEN_PO_UAT_REQUIRED",
+  fin07bStatus: "COMPLETE_PO_APPROVED_MERGED",
   expectedEventSyncDeferred: "FIN-07F",
+} as const;
+
+export const FINANCE_07C_IMPLEMENTATION = {
+  approvalInboxRoute: "/dashboard/finance/commitments/approvals",
+  approvalInboxPanel:
+    "components/admin/finance/commitment/FinanceCommitmentApprovalInboxPanel.tsx",
+  approvalDecisionService: "lib/finance/services/finance-commitment-service.ts",
+  approvalInboxQuery: "lib/finance/services/finance-commitment-query-service.ts",
+  architectureTestSuite: "lib/finance/__tests__/finance-07c-approval-inbox.test.ts",
+  fin07cStatus: "IMPLEMENTED_PO_UAT_REQUIRED",
+  policyEngineDeferred: "FIN-07D",
+  reusesFin07aApprovalDecisionModel: true,
 } as const;
 
 export const FINANCE_07A_IMPLEMENTATION = {

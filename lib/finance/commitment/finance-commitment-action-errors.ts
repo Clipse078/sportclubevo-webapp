@@ -10,6 +10,7 @@ const COMMITMENT_MESSAGE_KEYS: Partial<Record<FinanceDomainErrorCode, string>> =
   FINANCE_COMMITMENT_DELETE_FORBIDDEN: "errors.deleteForbidden",
   FINANCE_COMMITMENT_VALIDATION: "errors.validation",
   FINANCE_COMMITMENT_IMMUTABLE_OBLIGATION: "errors.immutableObligation",
+  FINANCE_COMMITMENT_APPROVAL_ALREADY_DECIDED: "errors.approvalAlreadyDecided",
   FINANCE_INVALID_CURRENCY: "errors.invalidCurrency",
   FINANCE_INVALID_YEAR: "errors.invalidYear",
 };

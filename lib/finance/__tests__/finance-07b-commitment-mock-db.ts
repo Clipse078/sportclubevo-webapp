@@ -105,6 +105,11 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
         store.financeYear.find((y) => y.id === where.id) ?? null,
       findMany: async ({ where }: { where: { tenantId: string } }) =>
         store.financeYear.filter((y) => y.tenantId === where.tenantId),
+      count: async ({ where }: { where: { tenantId: string } }) =>
+        store.financeYear.filter((y) => y.tenantId === where.tenantId).length,
+    },
+    financeTenantCapability: {
+      count: async () => 1,
     },
     financeConfiguration: {
       findUnique: async ({ where }: { where: { tenantId: string } }) =>
@@ -141,22 +146,32 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
       },
       findFirst: async ({
         where,
+        include,
       }: {
         where: { id?: string; tenantId?: string };
-      }) =>
-        store.financeCommitment.find(
+        include?: { financeYear?: { select: { name: true } } };
+      }) => {
+        const row = store.financeCommitment.find(
           (c) =>
             (!where.id || c.id === where.id) &&
             (!where.tenantId || c.tenantId === where.tenantId),
-        ) ?? null,
+        );
+        if (!row) return null;
+        if (include?.financeYear) {
+          return { ...row, financeYear: { name: "2026" } };
+        }
+        return row;
+      },
       findMany: async ({
         where,
         skip,
         take,
+        orderBy,
       }: {
         where: Record<string, unknown>;
         skip?: number;
         take?: number;
+        orderBy?: Array<Record<string, string>>;
       }) => {
         let rows = store.financeCommitment.filter((c) => c.tenantId === where.tenantId);
         if (where.financeYearId) {
@@ -167,6 +182,12 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
         }
         if (where.approvalStatus) {
           rows = rows.filter((c) => c.approvalStatus === where.approvalStatus);
+        }
+        if (orderBy?.some((o) => o.submittedAt)) {
+          rows = [...rows].sort(
+            (a, b) =>
+              (a.submittedAt?.getTime() ?? 0) - (b.submittedAt?.getTime() ?? 0),
+          );
         }
         const slice = rows.slice(skip ?? 0, (skip ?? 0) + (take ?? rows.length));
         return slice.map((c) => ({
@@ -199,6 +220,29 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
         Object.assign(row, data, { updatedAt: new Date() });
         return row;
       },
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: {
+          id?: string;
+          tenantId?: string;
+          lifecycleStatus?: string;
+          approvalStatus?: string;
+        };
+        data: Partial<CommitmentRow>;
+      }) => {
+        let count = 0;
+        for (const row of store.financeCommitment) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.tenantId && row.tenantId !== where.tenantId) continue;
+          if (where.lifecycleStatus && row.lifecycleStatus !== where.lifecycleStatus) continue;
+          if (where.approvalStatus && row.approvalStatus !== where.approvalStatus) continue;
+          Object.assign(row, data, { updatedAt: new Date() });
+          count += 1;
+        }
+        return { count };
+      },
       delete: async ({ where }: { where: { id: string } }) => {
         const idx = store.financeCommitment.findIndex((c) => c.id === where.id);
         if (idx >= 0) store.financeCommitment.splice(idx, 1);
@@ -230,9 +274,65 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
     },
     financeCommitmentApprovalDecision: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
-        store.financeCommitmentApprovalDecision.push(data);
-        return data;
+        const row = { id: randomUUID(), decidedAt: new Date(), ...data };
+        store.financeCommitmentApprovalDecision.push(row);
+        return row;
       },
+      findMany: async (args: {
+        where: { tenantId?: string; commitmentId?: string };
+        orderBy?: { decidedAt: "asc" | "desc" };
+        take?: number;
+        select?: {
+          decision?: boolean;
+          comment?: boolean;
+          decidedAt?: boolean;
+          decidedByUserId?: boolean;
+          commitment?: { select: Record<string, unknown> };
+        };
+      }) => {
+        const { where, orderBy, take, select } = args;
+        let rows = store.financeCommitmentApprovalDecision.filter(
+          (d) => !where.tenantId || d.tenantId === where.tenantId,
+        );
+        if (where.commitmentId) {
+          rows = rows.filter((d) => d.commitmentId === where.commitmentId);
+        }
+        if (orderBy?.decidedAt === "asc") {
+          rows = [...rows].sort(
+            (a, b) =>
+              new Date(String(a.decidedAt)).getTime() - new Date(String(b.decidedAt)).getTime(),
+          );
+        }
+        if (orderBy?.decidedAt === "desc") {
+          rows = [...rows].sort(
+            (a, b) =>
+              new Date(String(b.decidedAt)).getTime() - new Date(String(a.decidedAt)).getTime(),
+          );
+        }
+        if (take != null) rows = rows.slice(0, take);
+        if (select?.commitment) {
+          return rows.map((d) => {
+            const commitment = store.financeCommitment.find((c) => c.id === d.commitmentId);
+            return {
+              decision: d.decision,
+              comment: d.comment ?? null,
+              decidedAt: d.decidedAt,
+              decidedByUserId: d.decidedByUserId,
+              commitment: commitment
+                ? {
+                    ...commitment,
+                    financeYear: { name: "2026" },
+                  }
+                : null,
+            };
+          });
+        }
+        return rows;
+      },
+    },
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = makeCommitmentMockDb(store);
+      return fn(tx);
     },
     auditLog: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
