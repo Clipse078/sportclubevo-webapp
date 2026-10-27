@@ -356,10 +356,10 @@ export function FinanceCommitmentWorkspacePanel({
     !detail.submittedAtIso &&
     detail.canEdit;
   const showCancelInOverflowMenu =
-    Boolean(detail) &&
+    detail != null &&
     detail.canCancel &&
     (detail.lifecycleStatus === "SUBMITTED" || detail.lifecycleStatus === "ACTIVE");
-  const showDeleteInOverflowMenu = Boolean(canDeleteDraft);
+  const showDeleteInOverflowMenu = canDeleteDraft === true;
   const showLifecycleOverflow = showCancelInOverflowMenu || showDeleteInOverflowMenu;
 
   const createDialogFooter = (
