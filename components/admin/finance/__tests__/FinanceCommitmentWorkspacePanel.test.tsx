@@ -61,7 +61,7 @@ function renderPanel(snapshot: FinanceCommitmentWorkspaceSnapshot = baseSnapshot
   );
 }
 
-describe("FinanceCommitmentWorkspacePanel create form (FIN-07B R4)", () => {
+describe("FinanceCommitmentWorkspacePanel create form (FIN-07B R4/R6)", () => {
   it("exposes canonical visible controls for every intended create field", async () => {
     const user = userEvent.setup();
     renderPanel();
@@ -93,6 +93,17 @@ describe("FinanceCommitmentWorkspacePanel create form (FIN-07B R4)", () => {
     const form = document.querySelector("[data-finance-commitment-form]");
     expect(form?.className).toContain("min-w-0");
   });
+
+  it("groups create fields into primary, secondary, and optional sections", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getAllByRole("button", { name: "New commitment" })[0]!);
+    expect(document.querySelector('[data-finance-commitment-form-section="primary"]')).toBeTruthy();
+    expect(document.querySelector('[data-finance-commitment-form-section="secondary"]')).toBeTruthy();
+    expect(document.querySelector('[data-finance-commitment-form-section="optional"]')).toBeTruthy();
+    expect(document.querySelector("[data-finance-commitment-create-dialog]")).toBeTruthy();
+  });
+
 });
 
 const uatDetail: FinanceCommitmentDetailRecord = {
@@ -167,7 +178,7 @@ describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {
     expect(within(detail as HTMLElement).queryByText("2027-01-14")).toBeNull();
   });
 
-  it("orders submit before edit and keeps destructive actions in a separate group", async () => {
+  it("orders submit before edit and places destructive lifecycle actions in overflow menu", async () => {
     const user = userEvent.setup();
     vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue(uatDetail);
 
@@ -204,5 +215,88 @@ describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {
     const buttons = within(actions as HTMLElement).getAllByRole("button");
     expect(buttons[0]?.textContent).toContain("Submit for review");
     expect(buttons[1]?.textContent).toContain("Edit");
+    expect(document.querySelector("[data-finance-commitment-lifecycle-menu]")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Delete draft" })).toBeNull();
+  });
+
+  it("requires confirmation before deleting a never-submitted draft", async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue(uatDetail);
+
+    renderPanel({
+      ...baseSnapshot,
+      items: [
+        {
+          id: uatDetail.id,
+          title: uatDetail.title,
+          amountMinor: uatDetail.amountMinor,
+          currency: uatDetail.currency,
+          partyName: uatDetail.partyName,
+          lifecycleStatus: uatDetail.lifecycleStatus,
+          approvalStatus: uatDetail.approvalStatus,
+          responsibleUserId: null,
+          responsibleDisplayName: null,
+          expectedPaymentDateIso: uatDetail.expectedPaymentDateIso,
+          commitmentDateIso: uatDetail.commitmentDateIso,
+          financialAccountName: uatDetail.financialAccountName,
+          financeYearId: uatDetail.financeYearId,
+          financeYearName: uatDetail.financeYearName,
+          updatedAtIso: uatDetail.updatedAtIso,
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole("button", { name: /UAT — Hallenturniere Winter/ }));
+    await waitFor(() => {
+      expect(document.querySelector("[data-finance-commitment-lifecycle-menu]")).toBeTruthy();
+    });
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Delete draft" }));
+
+    const deleteDialog = screen.getByRole("dialog", { name: "Delete draft" });
+    expect(
+      within(deleteDialog).getByText(/UAT — Hallenturniere Winter/),
+    ).toBeTruthy();
+  });
+
+  it("explains when edit is blocked for submitted commitments", async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue({
+      ...uatDetail,
+      lifecycleStatus: "SUBMITTED",
+      approvalStatus: "PENDING",
+      canEdit: false,
+      canSubmit: false,
+      submittedAtIso: "2026-10-27T12:00:00.000Z",
+    });
+
+    renderPanel({
+      ...baseSnapshot,
+      items: [
+        {
+          id: uatDetail.id,
+          title: uatDetail.title,
+          amountMinor: uatDetail.amountMinor,
+          currency: uatDetail.currency,
+          partyName: uatDetail.partyName,
+          lifecycleStatus: "SUBMITTED",
+          approvalStatus: "PENDING",
+          responsibleUserId: null,
+          responsibleDisplayName: null,
+          expectedPaymentDateIso: uatDetail.expectedPaymentDateIso,
+          commitmentDateIso: uatDetail.commitmentDateIso,
+          financialAccountName: uatDetail.financialAccountName,
+          financeYearId: uatDetail.financeYearId,
+          financeYearName: uatDetail.financeYearName,
+          updatedAtIso: uatDetail.updatedAtIso,
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole("button", { name: /UAT — Hallenturniere Winter/ }));
+    await waitFor(() => {
+      expect(document.querySelector("[data-finance-commitment-edit-blocked]")).toBeTruthy();
+    });
   });
 });

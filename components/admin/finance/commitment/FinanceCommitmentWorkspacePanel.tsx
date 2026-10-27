@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { Ban, MoreHorizontal, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +13,11 @@ import { SceTextInput } from "@/components/sce/forms/SceTextInput";
 import { SceTextarea } from "@/components/sce/forms/SceTextarea";
 import { FinanceBaseCurrencySelector } from "@/components/admin/finance/FinanceBaseCurrencySelector";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
+import {
+  SceOverflowMenu,
+  SceOverflowMenuDivider,
+  SceOverflowMenuItem,
+} from "@/components/sce/actions/SceOverflowMenu";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
@@ -38,12 +44,11 @@ import {
   FINANCE_FIELD_CONTROL_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SECTION_HEADER_CLASS,
-  FINANCE_SECTION_SURFACE_CLASS,
-  FINANCE_SUMMARY_GRID_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
   FINANCE_SUMMARY_RESULT_VALUE_CLASS,
-  FINANCE_SUMMARY_SURFACE_CLASS,
-  FINANCE_SUMMARY_VALUE_CLASS,
+  FINANCE_SUMMARY_STRIP_GRID_CLASS,
+  FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
+  FINANCE_SUMMARY_STRIP_VALUE_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import { formatFinanceCalendarDateLabel } from "@/lib/finance/setup/finance-year-period-display";
@@ -73,6 +78,32 @@ function mapActionError(
   return result.error;
 }
 
+function CommitmentFormSection({
+  label,
+  variant,
+  children,
+}: {
+  label: string;
+  variant: "primary" | "secondary" | "optional";
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={cn(
+        "grid min-w-0 gap-4",
+        variant === "optional" && "text-[var(--text-2)]",
+      )}
+      data-finance-commitment-form-section={variant}
+      aria-label={label}
+    >
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</h3>
+      {children}
+    </section>
+  );
+}
+
+const COMMITMENT_CREATE_DIALOG_SIZE = "standard" as const;
+
 export function FinanceCommitmentWorkspacePanel({
   snapshot,
   accounts,
@@ -88,8 +119,11 @@ export function FinanceCommitmentWorkspacePanel({
   const [detail, setDetail] = useState<FinanceCommitmentDetailRecord | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [cancelPhraseInput, setCancelPhraseInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [detailMenuOpen, setDetailMenuOpen] = useState(false);
+  const detailMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
   const [title, setTitle] = useState("");
   const [amountInput, setAmountInput] = useState("");
@@ -170,7 +204,9 @@ export function FinanceCommitmentWorkspacePanel({
     setDetail(null);
     setEditOpen(false);
     setCancelOpen(false);
+    setDeleteOpen(false);
     setCancelPhraseInput("");
+    setDetailMenuOpen(false);
   }
 
   function fillFormFromDetail(d: FinanceCommitmentDetailRecord) {
@@ -309,10 +345,19 @@ export function FinanceCommitmentWorkspacePanel({
         setFeedback(mapActionError(t, result));
         return;
       }
+      setDeleteOpen(false);
       closeDetail();
       router.refresh();
     });
   }
+
+  const canDeleteDraft =
+    detail?.lifecycleStatus === "DRAFT" &&
+    !detail.submittedAtIso &&
+    detail.canEdit;
+  const showLifecycleOverflow =
+    detail &&
+    ((detail.canCancel && detail.lifecycleStatus !== "CANCELLED") || canDeleteDraft);
 
   const createDialogFooter = (
     <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
@@ -337,41 +382,46 @@ export function FinanceCommitmentWorkspacePanel({
   );
 
   const formFields = (
-    <div className="grid min-w-0 gap-4" data-finance-commitment-form>
-      <SceFormField label={t("fieldTitle")} htmlFor={titleFieldId} required>
-        <SceTextInput
-          id={titleFieldId}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          autoComplete="off"
-          disabled={pending}
-        />
-      </SceFormField>
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <SceFormField label={t("fieldAmount")} htmlFor={amountFieldId} required>
+    <div className="grid min-w-0 gap-6" data-finance-commitment-form>
+      <CommitmentFormSection label={t("formSectionPrimary")} variant="primary">
+        <SceFormField label={t("fieldTitle")} htmlFor={titleFieldId} required>
           <SceTextInput
-            id={amountFieldId}
-            className="tabular-nums"
-            value={amountInput}
-            onChange={(e) => setAmountInput(e.target.value)}
-            inputMode="decimal"
+            id={titleFieldId}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoComplete="off"
             disabled={pending}
           />
         </SceFormField>
-        <SceFormField label={t("fieldCurrency")} required>
-          <div className="min-w-0 max-w-full [&>div]:min-w-0 [&>div]:max-w-full [&>div]:sm:min-w-0">
-            <FinanceBaseCurrencySelector
-              value={currency}
-              onChange={setCurrency}
+        <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]">
+          <SceFormField label={t("fieldAmount")} htmlFor={amountFieldId} required>
+            <SceTextInput
+              id={amountFieldId}
+              className="tabular-nums"
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              inputMode="decimal"
               disabled={pending}
-              ariaLabel={t("fieldCurrency")}
-              placeholder={t("fieldCurrency")}
             />
-          </div>
-        </SceFormField>
-      </div>
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <SceFormField label={t("fieldCommitmentDate")} htmlFor={commitmentDateFieldId} required>
+          </SceFormField>
+          <SceFormField label={t("fieldCurrency")} required>
+            <div className="min-w-0 max-w-full [&>div]:min-w-0 [&>div]:max-w-full [&>div]:sm:min-w-0">
+              <FinanceBaseCurrencySelector
+                value={currency}
+                onChange={setCurrency}
+                disabled={pending}
+                ariaLabel={t("fieldCurrency")}
+                placeholder={t("fieldCurrency")}
+              />
+            </div>
+          </SceFormField>
+        </div>
+        <SceFormField
+          label={t("fieldCommitmentDate")}
+          htmlFor={commitmentDateFieldId}
+          required
+          description={t("fieldCommitmentDateHint")}
+        >
           <SceTextInput
             id={commitmentDateFieldId}
             type="date"
@@ -380,7 +430,23 @@ export function FinanceCommitmentWorkspacePanel({
             disabled={pending}
           />
         </SceFormField>
-        <SceFormField label={t("fieldExpectedPayment")} htmlFor={expectedPaymentFieldId}>
+      </CommitmentFormSection>
+
+      <CommitmentFormSection label={t("formSectionSecondary")} variant="secondary">
+        <SceFormField label={t("fieldParty")} htmlFor={partyFieldId} optional>
+          <SceTextInput
+            id={partyFieldId}
+            value={partyName}
+            onChange={(e) => setPartyName(e.target.value)}
+            disabled={pending}
+          />
+        </SceFormField>
+        <SceFormField
+          label={t("fieldExpectedPayment")}
+          htmlFor={expectedPaymentFieldId}
+          optional
+          description={t("fieldExpectedPaymentHint")}
+        >
           <SceTextInput
             id={expectedPaymentFieldId}
             type="date"
@@ -389,44 +455,39 @@ export function FinanceCommitmentWorkspacePanel({
             disabled={pending}
           />
         </SceFormField>
-      </div>
-      <SceFormField label={t("fieldParty")} htmlFor={partyFieldId}>
-        <SceTextInput
-          id={partyFieldId}
-          value={partyName}
-          onChange={(e) => setPartyName(e.target.value)}
-          disabled={pending}
-        />
-      </SceFormField>
-      <SceFormField label={t("fieldAccount")}>
-        <div className="min-w-0 max-w-full">
-          <StaticOptionSearchablePicker
-            options={accountOptions}
-            value={accountId}
-            onChange={setAccountId}
-            placeholder={t("filterAll")}
+        <SceFormField label={t("fieldAccount")} optional>
+          <div className="min-w-0 max-w-full">
+            <StaticOptionSearchablePicker
+              options={accountOptions}
+              value={accountId}
+              onChange={setAccountId}
+              placeholder={t("filterAll")}
+              disabled={pending}
+              ariaLabel={t("fieldAccount")}
+            />
+          </div>
+        </SceFormField>
+      </CommitmentFormSection>
+
+      <CommitmentFormSection label={t("formSectionOptional")} variant="optional">
+        <SceFormField label={t("fieldReference")} htmlFor={referenceFieldId} optional>
+          <SceTextInput
+            id={referenceFieldId}
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
             disabled={pending}
-            ariaLabel={t("fieldAccount")}
           />
-        </div>
-      </SceFormField>
-      <SceFormField label={t("fieldReference")} htmlFor={referenceFieldId}>
-        <SceTextInput
-          id={referenceFieldId}
-          value={reference}
-          onChange={(e) => setReference(e.target.value)}
-          disabled={pending}
-        />
-      </SceFormField>
-      <SceFormField label={t("fieldDescription")} htmlFor={descriptionFieldId}>
-        <SceTextarea
-          id={descriptionFieldId}
-          className="min-h-[5rem]"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          disabled={pending}
-        />
-      </SceFormField>
+        </SceFormField>
+        <SceFormField label={t("fieldDescription")} htmlFor={descriptionFieldId} optional>
+          <SceTextarea
+            id={descriptionFieldId}
+            className="min-h-[4.5rem]"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={pending}
+          />
+        </SceFormField>
+      </CommitmentFormSection>
     </div>
   );
 
@@ -441,29 +502,56 @@ export function FinanceCommitmentWorkspacePanel({
         ) : null}
       </div>
 
-      <div className={FINANCE_SUMMARY_GRID_CLASS}>
-        <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
-          <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryPending")}</div>
-          <div className={FINANCE_SUMMARY_VALUE_CLASS}>{snapshot.summary.submittedPendingCount}</div>
-        </div>
-        <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
-          <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryActive")}</div>
-          <div className={FINANCE_SUMMARY_VALUE_CLASS}>{snapshot.summary.activeCount}</div>
-        </div>
-        <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
-          <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryDrafts")}</div>
-          <div className={FINANCE_SUMMARY_VALUE_CLASS}>{snapshot.summary.draftCount}</div>
+      <div
+        className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}
+        data-finance-commitment-status-summary
+      >
+        <div className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
+          <div
+            className={cn(
+              "min-w-0 sm:px-4",
+              snapshot.summary.submittedPendingCount > 0 &&
+                "sm:rounded-md sm:bg-[var(--surface-2)]/60 sm:py-1",
+            )}
+            data-finance-commitment-summary-pending
+          >
+            <div
+              className={cn(
+                FINANCE_SUMMARY_LABEL_CLASS,
+                snapshot.summary.submittedPendingCount > 0 && "text-[var(--foreground)]",
+              )}
+            >
+              {t("summaryPending")}
+            </div>
+            <div
+              className={cn(
+                FINANCE_SUMMARY_STRIP_VALUE_CLASS,
+                snapshot.summary.submittedPendingCount > 0 &&
+                  "text-base text-[var(--foreground)]",
+              )}
+            >
+              {snapshot.summary.submittedPendingCount}
+            </div>
+          </div>
+          <div className="min-w-0 sm:px-4">
+            <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryActive")}</div>
+            <div className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>{snapshot.summary.activeCount}</div>
+          </div>
+          <div className="min-w-0 sm:px-4">
+            <div className={FINANCE_SUMMARY_LABEL_CLASS}>{t("summaryDrafts")}</div>
+            <div className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>{snapshot.summary.draftCount}</div>
+          </div>
         </div>
         {activeAmountLabel && snapshot.summary.activeAmountMinor != null ? (
-          <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
-            <div className={FINANCE_SUMMARY_LABEL_CLASS}>{activeAmountLabel}</div>
-            <div className={FINANCE_SUMMARY_VALUE_CLASS}>
+          <p className="mt-2 border-t border-[var(--sce-surface-border-subtle)] pt-2 text-xs text-[var(--muted)]">
+            <span className="font-medium text-[var(--foreground)]">
               {formatMoney(
                 snapshot.summary.activeAmountMinor,
                 snapshot.summary.activeAmountCurrency ?? currency,
               )}
-            </div>
-          </div>
+            </span>
+            <span className="ms-2">{activeAmountLabel}</span>
+          </p>
         ) : null}
       </div>
 
@@ -550,31 +638,42 @@ export function FinanceCommitmentWorkspacePanel({
             ) : null}
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--sce-color-border-standard)]">
+          <ul
+            className="divide-y divide-[var(--sce-color-border-standard)]"
+            data-finance-commitment-list
+          >
             {snapshot.items.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
-                  className="flex w-full flex-col gap-2 px-1 py-3 text-left transition-colors hover:bg-[var(--surface-2)] sm:flex-row sm:items-center sm:justify-between"
+                  className="flex w-full min-w-0 flex-col gap-2 px-1 py-3 text-left transition-colors hover:bg-[var(--surface-2)] sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   onClick={() => void openDetail(item.id)}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-[var(--foreground)]">{item.title}</div>
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
-                      <span>{t(financeCommitmentLifecycleLabelKey(item.lifecycleStatus))}</span>
+                    {item.partyName ? (
+                      <div className="mt-0.5 truncate text-sm text-[var(--text-2)]">
+                        {item.partyName}
+                      </div>
+                    ) : null}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                      <span className="font-medium text-[var(--muted)]">
+                        {t(financeCommitmentLifecycleLabelKey(item.lifecycleStatus))}
+                      </span>
                       {item.approvalStatus === "PENDING" ? (
-                        <span>{t(financeCommitmentApprovalLabelKey(item.approvalStatus))}</span>
+                        <span className="rounded-full bg-[var(--surface-2)] px-2 py-0.5 font-medium text-[var(--foreground)]">
+                          {t(financeCommitmentApprovalLabelKey(item.approvalStatus))}
+                        </span>
                       ) : null}
-                      {item.partyName ? <span>{item.partyName}</span> : null}
-                      {item.responsibleDisplayName ? <span>{item.responsibleDisplayName}</span> : null}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <div className="tabular-nums font-medium">
+                  <div className="flex shrink-0 flex-col items-start gap-0.5 sm:items-end sm:text-right">
+                    <div className="tabular-nums text-sm font-semibold text-[var(--foreground)]">
                       {formatMoney(item.amountMinor, item.currency)}
                     </div>
                     {item.expectedPaymentDateIso ? (
                       <div className="text-xs text-[var(--muted)]">
+                        <span className="sr-only">{t("colExpectedPayment")}: </span>
                         {formatCalendarDate(item.expectedPaymentDateIso)}
                       </div>
                     ) : null}
@@ -623,24 +722,31 @@ export function FinanceCommitmentWorkspacePanel({
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         title={t("createTitle")}
-        size="lg"
+        description={t("createDescription")}
+        size={COMMITMENT_CREATE_DIALOG_SIZE}
         footer={createDialogFooter}
         panelClassName="min-w-0 max-w-full"
       >
-        {formFields}
+        <div className="min-w-0" data-finance-commitment-create-dialog>
+          {formFields}
+        </div>
       </Dialog>
 
       <Sheet open={Boolean(detailId && detail)} onClose={closeDetail} title={detail?.title ?? t("detailTitle")}>
         {detail ? (
           <div
-            className={cn(FINANCE_WORKSPACE_STACK_CLASS, "min-w-0 max-w-full overflow-x-hidden")}
+            className={cn("min-w-0 max-w-full space-y-5 overflow-x-hidden pb-2")}
             data-finance-commitment-detail
           >
+            {detail.partyName ? (
+              <p className="text-sm text-[var(--text-2)]">{detail.partyName}</p>
+            ) : null}
+
             <div className="min-w-0 space-y-1">
               <p className={cn(FINANCE_SUMMARY_RESULT_VALUE_CLASS, "break-words")}>
                 {formatMoney(detail.amountMinor, detail.currency)}
               </p>
-              <p className="text-sm text-[var(--foreground)]">
+              <p className="text-sm font-medium text-[var(--foreground)]">
                 {t(financeCommitmentLifecycleLabelKey(detail.lifecycleStatus))}
                 {detail.approvalStatus !== "NOT_REQUIRED" ? (
                   <>
@@ -652,43 +758,45 @@ export function FinanceCommitmentWorkspacePanel({
               {detail.approvalStatus === "PENDING" ? (
                 <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
               ) : null}
+              {!detail.canEdit && detail.lifecycleStatus !== "DRAFT" ? (
+                <p className="text-xs text-[var(--muted)]" data-finance-commitment-edit-blocked>
+                  {t("editUnavailableSubmitted")}
+                </p>
+              ) : null}
             </div>
 
-            <section className={FINANCE_SECTION_SURFACE_CLASS}>
-              <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionParty")}</h3>
-              <dl className="space-y-2 px-4 py-3 text-sm">
-                {detail.partyName
-                  ? commitmentDetailFieldRow(t("fieldParty"), detail.partyName)
-                  : null}
-                {commitmentDetailFieldRow(
-                  t("fieldCommitmentDate"),
-                  formatCalendarDate(detail.commitmentDateIso),
-                )}
-                {detail.expectedPaymentDateIso
-                  ? commitmentDetailFieldRow(
-                      t("fieldExpectedPayment"),
-                      formatCalendarDate(detail.expectedPaymentDateIso),
-                    )
-                  : null}
-              </dl>
-            </section>
+            <dl className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
+              {commitmentDetailFieldRow(
+                t("fieldCommitmentDate"),
+                formatCalendarDate(detail.commitmentDateIso),
+              )}
+              {detail.expectedPaymentDateIso
+                ? commitmentDetailFieldRow(
+                    t("fieldExpectedPayment"),
+                    formatCalendarDate(detail.expectedPaymentDateIso),
+                  )
+                : null}
+              {detail.responsibleDisplayName
+                ? commitmentDetailFieldRow(t("fieldResponsible"), detail.responsibleDisplayName)
+                : null}
+            </dl>
 
             {detail.financialAccountName || detail.costCenterName ? (
-              <section className={FINANCE_SECTION_SURFACE_CLASS}>
-                <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionClassification")}</h3>
-                <dl className="space-y-2 px-4 py-3 text-sm">
-                  {detail.financialAccountName
-                    ? commitmentDetailFieldRow(t("fieldAccount"), detail.financialAccountName)
-                    : null}
-                  {detail.costCenterName
-                    ? commitmentDetailFieldRow(t("fieldCostCenter"), detail.costCenterName)
-                    : null}
-                </dl>
-              </section>
+              <dl className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {t("detailSectionClassification")}
+                </dt>
+                {detail.financialAccountName
+                  ? commitmentDetailFieldRow(t("fieldAccount"), detail.financialAccountName)
+                  : null}
+                {detail.costCenterName
+                  ? commitmentDetailFieldRow(t("fieldCostCenter"), detail.costCenterName)
+                  : null}
+              </dl>
             ) : null}
 
             {detail.externalReference || detail.description ? (
-              <div className="min-w-0 space-y-3 text-sm">
+              <div className="min-w-0 space-y-3 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
                 {detail.externalReference ? (
                   <div className="min-w-0">
                     <div className="text-xs font-medium text-[var(--muted)]">{t("fieldReference")}</div>
@@ -707,42 +815,68 @@ export function FinanceCommitmentWorkspacePanel({
             ) : null}
 
             <div
-              className="flex min-w-0 flex-col gap-2 pt-1"
+              className="flex min-w-0 flex-col gap-3 border-t border-[var(--sce-surface-border-subtle)] pt-4"
               data-finance-commitment-detail-actions
             >
-              {detail.canSubmit ? (
-                <Button type="button" onClick={handleSubmit} disabled={pending} className="w-full sm:w-auto">
-                  {t("submitAction")}
-                </Button>
-              ) : null}
-              {detail.canEdit ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    fillFormFromDetail(detail);
-                    setEditOpen(true);
-                  }}
-                >
-                  {t("editAction")}
-                </Button>
-              ) : null}
-              {((detail.canCancel && detail.lifecycleStatus !== "CANCELLED") ||
-                (detail.lifecycleStatus === "DRAFT" && detail.canEdit)) && (
-                <div className="flex flex-wrap gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3">
-                  {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
-                    <Button type="button" variant="secondary" onClick={() => setCancelOpen(true)}>
-                      {t("cancelAction")}
-                    </Button>
-                  ) : null}
-                  {detail.lifecycleStatus === "DRAFT" && detail.canEdit ? (
-                    <Button type="button" variant="secondary" onClick={handleDeleteDraft}>
-                      {t("deleteDraftAction")}
-                    </Button>
-                  ) : null}
-                </div>
-              )}
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                {detail.canSubmit ? (
+                  <Button type="button" onClick={handleSubmit} disabled={pending} className="w-full sm:w-auto">
+                    {t("submitAction")}
+                  </Button>
+                ) : null}
+                {detail.canEdit ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full sm:w-auto"
+                    onClick={() => {
+                      fillFormFromDetail(detail);
+                      setEditOpen(true);
+                    }}
+                  >
+                    {t("editAction")}
+                  </Button>
+                ) : null}
+                {showLifecycleOverflow ? (
+                  <div className="sm:ms-auto" data-finance-commitment-lifecycle-menu>
+                    <SceOverflowMenu
+                      open={detailMenuOpen}
+                      onOpenChange={setDetailMenuOpen}
+                      anchorRef={detailMenuTriggerRef}
+                      triggerLabel={t("detailMenuTrigger")}
+                      menuLabel={t("detailMenuLabel")}
+                      triggerIcon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
+                    >
+                      {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
+                        <SceOverflowMenuItem
+                          icon={<Ban className="h-4 w-4" />}
+                          label={t("cancelAction")}
+                          onSelect={() => {
+                            setDetailMenuOpen(false);
+                            setCancelOpen(true);
+                          }}
+                        />
+                      ) : null}
+                      {canDeleteDraft ? (
+                        <>
+                          {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
+                            <SceOverflowMenuDivider />
+                          ) : null}
+                          <SceOverflowMenuItem
+                            icon={<Trash2 className="h-4 w-4" />}
+                            label={t("deleteDraftAction")}
+                            destructive
+                            onSelect={() => {
+                              setDetailMenuOpen(false);
+                              setDeleteOpen(true);
+                            }}
+                          />
+                        </>
+                      ) : null}
+                    </SceOverflowMenu>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : null}
@@ -752,11 +886,27 @@ export function FinanceCommitmentWorkspacePanel({
         open={editOpen}
         onClose={() => setEditOpen(false)}
         title={t("editAction")}
-        size="lg"
+        size={COMMITMENT_CREATE_DIALOG_SIZE}
         footer={editDialogFooter}
         panelClassName="min-w-0 max-w-full"
       >
-        {formFields}
+        <div className="min-w-0" data-finance-commitment-edit-dialog>
+          {formFields}
+        </div>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} title={t("deleteDraftTitle")}>
+        <div className="space-y-3 text-sm text-[var(--text-2)]" data-finance-commitment-delete-dialog>
+          <p>{t("deleteDraftBody", { title: detail?.title ?? "" })}</p>
+        </div>
+        <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+          <Button type="button" variant="secondary" onClick={() => setDeleteOpen(false)}>
+            {t("dismiss")}
+          </Button>
+          <Button type="button" variant="danger" disabled={pending} onClick={handleDeleteDraft}>
+            {t("deleteDraftConfirm")}
+          </Button>
+        </div>
       </Dialog>
 
       <Dialog open={cancelOpen} onClose={() => setCancelOpen(false)} title={t("cancelTitle")}>

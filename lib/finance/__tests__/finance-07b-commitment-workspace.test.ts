@@ -254,14 +254,29 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(panel).not.toContain("finance-money-presentation");
   });
 
-  it("FIN-07B R4 — create form uses canonical SCE inputs (not invalid sce-input class)", () => {
+  it("FIN-07B R4/R6 — create form uses canonical SCE inputs (not invalid sce-input class)", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
     expect(panel).toContain("SceTextInput");
     expect(panel).toContain("SceTextarea");
     expect(panel).toContain("data-finance-commitment-form");
     expect(panel).toContain("min-w-0");
     expect(panel).not.toContain("sce-input");
-    expect(panel).toContain('size="lg"');
+    expect(panel).toContain("COMMITMENT_CREATE_DIALOG_SIZE");
+    expect(panel).toContain("data-finance-commitment-create-dialog");
+    expect(panel).toContain("data-finance-commitment-form-section");
+    expect(panel).toContain("CommitmentFormSection");
+    expect(panel).toContain('formSectionPrimary');
+    expect(panel).not.toContain('size="lg"');
+    expect(panel).not.toContain('size="workspace"');
+  });
+
+  it("FIN-07B R6 — bounded create dialog and compact workspace status summary", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("data-finance-commitment-status-summary");
+    expect(panel).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
+    expect(panel).toContain("data-finance-commitment-delete-dialog");
+    expect(panel).toContain("data-finance-commitment-lifecycle-menu");
+    expect(panel).toContain("snapshot.baseCurrency");
   });
 
   it("FIN-07B R5 — presents calendar dates via canonical Finance locale formatter", () => {
