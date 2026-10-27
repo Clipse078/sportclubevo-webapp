@@ -253,4 +253,14 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(panel).toContain("@/lib/finance/budget/budget-amount-presentation");
     expect(panel).not.toContain("finance-money-presentation");
   });
+
+  it("FIN-07B R4 — create form uses canonical SCE inputs (not invalid sce-input class)", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("SceTextInput");
+    expect(panel).toContain("SceTextarea");
+    expect(panel).toContain("data-finance-commitment-form");
+    expect(panel).toContain("min-w-0");
+    expect(panel).not.toContain("sce-input");
+    expect(panel).toContain('size="lg"');
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +8,8 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Sheet } from "@/components/ui/Sheet";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
+import { SceTextInput } from "@/components/sce/forms/SceTextInput";
+import { SceTextarea } from "@/components/sce/forms/SceTextarea";
 import { FinanceBaseCurrencySelector } from "@/components/admin/finance/FinanceBaseCurrencySelector";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { cn } from "@/lib/cn";
@@ -33,6 +35,7 @@ import {
 } from "@/app/(admin)/dashboard/finance/commitments/actions";
 import {
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
+  FINANCE_FIELD_CONTROL_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
@@ -98,6 +101,15 @@ export function FinanceCommitmentWorkspacePanel({
 
   const selectedYearId = snapshot.selectedYearId ?? "";
   const cancelPhrase = t("cancelPhrase");
+  const formFieldId = useId();
+  const titleFieldId = `${formFieldId}-title`;
+  const amountFieldId = `${formFieldId}-amount`;
+  const commitmentDateFieldId = `${formFieldId}-commitment-date`;
+  const partyFieldId = `${formFieldId}-party`;
+  const expectedPaymentFieldId = `${formFieldId}-expected-payment`;
+  const referenceFieldId = `${formFieldId}-reference`;
+  const descriptionFieldId = `${formFieldId}-description`;
+  const cancelPhraseFieldId = `${formFieldId}-cancel-phrase`;
 
   const formatMoney = (minor: number, cur: string) =>
     formatFinanceManagementPlanningMinor(minor, cur, formattingLocale);
@@ -285,78 +297,117 @@ export function FinanceCommitmentWorkspacePanel({
     });
   }
 
+  const createDialogFooter = (
+    <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+      <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
+        {t("dismiss")}
+      </Button>
+      <Button type="button" onClick={handleCreate} disabled={pending}>
+        {t("createConfirm")}
+      </Button>
+    </div>
+  );
+
+  const editDialogFooter = (
+    <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+      <Button type="button" variant="secondary" onClick={() => setEditOpen(false)}>
+        {t("dismiss")}
+      </Button>
+      <Button type="button" onClick={handleUpdate} disabled={pending}>
+        {t("createConfirm")}
+      </Button>
+    </div>
+  );
+
   const formFields = (
-    <div className="grid gap-4">
-      <SceFormField label={t("fieldTitle")} required>
-        <input
-          className="sce-input w-full"
+    <div className="grid min-w-0 gap-4" data-finance-commitment-form>
+      <SceFormField label={t("fieldTitle")} htmlFor={titleFieldId} required>
+        <SceTextInput
+          id={titleFieldId}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoComplete="off"
+          disabled={pending}
         />
       </SceFormField>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <SceFormField label={t("fieldAmount")} required>
-          <input
-            className="sce-input w-full tabular-nums"
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <SceFormField label={t("fieldAmount")} htmlFor={amountFieldId} required>
+          <SceTextInput
+            id={amountFieldId}
+            className="tabular-nums"
             value={amountInput}
             onChange={(e) => setAmountInput(e.target.value)}
             inputMode="decimal"
+            disabled={pending}
           />
         </SceFormField>
         <SceFormField label={t("fieldCurrency")} required>
-          <FinanceBaseCurrencySelector
-            value={currency}
-            onChange={setCurrency}
+          <div className="min-w-0 max-w-full [&>div]:min-w-0 [&>div]:max-w-full [&>div]:sm:min-w-0">
+            <FinanceBaseCurrencySelector
+              value={currency}
+              onChange={setCurrency}
+              disabled={pending}
+              ariaLabel={t("fieldCurrency")}
+              placeholder={t("fieldCurrency")}
+            />
+          </div>
+        </SceFormField>
+      </div>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <SceFormField label={t("fieldCommitmentDate")} htmlFor={commitmentDateFieldId} required>
+          <SceTextInput
+            id={commitmentDateFieldId}
+            type="date"
+            value={commitmentDate}
+            onChange={(e) => setCommitmentDate(e.target.value)}
             disabled={pending}
-            ariaLabel={t("fieldCurrency")}
-            placeholder={t("fieldCurrency")}
+          />
+        </SceFormField>
+        <SceFormField label={t("fieldExpectedPayment")} htmlFor={expectedPaymentFieldId}>
+          <SceTextInput
+            id={expectedPaymentFieldId}
+            type="date"
+            value={expectedPaymentDate}
+            onChange={(e) => setExpectedPaymentDate(e.target.value)}
+            disabled={pending}
           />
         </SceFormField>
       </div>
-      <SceFormField label={t("fieldCommitmentDate")} required>
-        <input
-          type="date"
-          className="sce-input w-full"
-          value={commitmentDate}
-          onChange={(e) => setCommitmentDate(e.target.value)}
-        />
-      </SceFormField>
-      <SceFormField label={t("fieldParty")}>
-        <input
-          className="sce-input w-full"
+      <SceFormField label={t("fieldParty")} htmlFor={partyFieldId}>
+        <SceTextInput
+          id={partyFieldId}
           value={partyName}
           onChange={(e) => setPartyName(e.target.value)}
+          disabled={pending}
         />
       </SceFormField>
       <SceFormField label={t("fieldAccount")}>
-        <StaticOptionSearchablePicker
-          options={accountOptions}
-          value={accountId}
-          onChange={setAccountId}
-          placeholder={t("filterAll")}
-        />
+        <div className="min-w-0 max-w-full">
+          <StaticOptionSearchablePicker
+            options={accountOptions}
+            value={accountId}
+            onChange={setAccountId}
+            placeholder={t("filterAll")}
+            disabled={pending}
+            ariaLabel={t("fieldAccount")}
+          />
+        </div>
       </SceFormField>
-      <SceFormField label={t("fieldExpectedPayment")}>
-        <input
-          type="date"
-          className="sce-input w-full"
-          value={expectedPaymentDate}
-          onChange={(e) => setExpectedPaymentDate(e.target.value)}
-        />
-      </SceFormField>
-      <SceFormField label={t("fieldReference")}>
-        <input
-          className="sce-input w-full"
+      <SceFormField label={t("fieldReference")} htmlFor={referenceFieldId}>
+        <SceTextInput
+          id={referenceFieldId}
           value={reference}
           onChange={(e) => setReference(e.target.value)}
+          disabled={pending}
         />
       </SceFormField>
-      <SceFormField label={t("fieldDescription")}>
-        <textarea
-          className="sce-input min-h-[80px] w-full"
+      <SceFormField label={t("fieldDescription")} htmlFor={descriptionFieldId}>
+        <SceTextarea
+          id={descriptionFieldId}
+          className="min-h-[5rem]"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          disabled={pending}
         />
       </SceFormField>
     </div>
@@ -454,7 +505,7 @@ export function FinanceCommitmentWorkspacePanel({
           <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-[var(--muted)]">
             {t("filterSearch")}
             <input
-              className="sce-input w-full"
+              className={FINANCE_FIELD_CONTROL_CLASS}
               defaultValue={snapshot.filters.search ?? ""}
               placeholder={t("filterSearchPlaceholder")}
               onKeyDown={(e) => {
@@ -549,16 +600,15 @@ export function FinanceCommitmentWorkspacePanel({
         ) : null}
       </div>
 
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} title={t("createTitle")}>
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t("createTitle")}
+        size="lg"
+        footer={createDialogFooter}
+        panelClassName="min-w-0 max-w-full"
+      >
         {formFields}
-        <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-          <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
-            {t("dismiss")}
-          </Button>
-          <Button type="button" onClick={handleCreate} disabled={pending}>
-            {t("createConfirm")}
-          </Button>
-        </div>
       </Dialog>
 
       <Sheet open={Boolean(detailId && detail)} onClose={closeDetail} title={detail?.title ?? t("detailTitle")}>
@@ -649,16 +699,15 @@ export function FinanceCommitmentWorkspacePanel({
         ) : null}
       </Sheet>
 
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} title={t("editAction")}>
+      <Dialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title={t("editAction")}
+        size="lg"
+        footer={editDialogFooter}
+        panelClassName="min-w-0 max-w-full"
+      >
         {formFields}
-        <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-          <Button type="button" variant="secondary" onClick={() => setEditOpen(false)}>
-            {t("dismiss")}
-          </Button>
-          <Button type="button" onClick={handleUpdate} disabled={pending}>
-            {t("createConfirm")}
-          </Button>
-        </div>
       </Dialog>
 
       <Dialog open={cancelOpen} onClose={() => setCancelOpen(false)} title={t("cancelTitle")}>
@@ -666,12 +715,14 @@ export function FinanceCommitmentWorkspacePanel({
         <SceFormField
           className="mt-4"
           label={t("cancelConfirmLabel", { phrase: cancelPhrase })}
+          htmlFor={cancelPhraseFieldId}
         >
-          <input
-            className="sce-input w-full"
+          <SceTextInput
+            id={cancelPhraseFieldId}
             value={cancelPhraseInput}
             onChange={(e) => setCancelPhraseInput(e.target.value)}
             autoComplete="off"
+            disabled={pending}
           />
         </SceFormField>
         <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
