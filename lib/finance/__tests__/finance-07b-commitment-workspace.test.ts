@@ -279,6 +279,8 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(panel).toContain('floatingLayer="composer"');
     expect(panel).toContain("snapshot.baseCurrency");
     expect(panel).toContain("editSaveConfirm");
+    expect(panel).toContain("data-finance-commitment-form-feedback");
+    expect(panel).toContain("validateDraftFormFields");
   });
 
   it("FIN-07B R5 — presents calendar dates via canonical Finance locale formatter", () => {

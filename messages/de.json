@@ -984,6 +984,11 @@
           "immutableObligation": "Dieser Datensatz kann keiner anderen Verpflichtungskette zugeordnet werden.",
           "invalidCurrency": "Währung wird nicht unterstützt.",
           "invalidYear": "Ungültiges Geschäftsjahr.",
+          "commitmentDateOutsideYear": "Das Verpflichtungsdatum muss im Geschäftsjahr {yearName} ({startDate} – {endDate}) liegen.",
+          "fieldTitleRequired": "Bitte einen Titel eingeben.",
+          "fieldCommitmentDateRequired": "Bitte ein Verpflichtungsdatum wählen.",
+          "fieldAmountRequired": "Bitte einen Betrag größer als null eingeben.",
+          "noFinanceYearSelected": "Bitte zuerst ein Geschäftsjahr wählen.",
           "generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
         }
       },

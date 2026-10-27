@@ -104,6 +104,29 @@ function CommitmentFormSection({
 
 const COMMITMENT_CREATE_DIALOG_SIZE = "standard" as const;
 
+type CommitmentFormFieldKey = "title" | "amount" | "commitmentDate" | "currency";
+
+function isIsoCalendarDateInYearRange(
+  isoDate: string,
+  year: { startDateIso: string; endDateIso: string },
+): boolean {
+  return isoDate >= year.startDateIso && isoDate <= year.endDateIso;
+}
+
+function CommitmentFormFeedback({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <p
+      className="rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/5 px-3 py-2 text-sm text-[var(--destructive)]"
+      role="alert"
+      data-finance-commitment-form-feedback
+      data-testid="finance-commitment-form-feedback"
+    >
+      {message}
+    </p>
+  );
+}
+
 export function FinanceCommitmentWorkspacePanel({
   snapshot,
   accounts,
@@ -122,6 +145,10 @@ export function FinanceCommitmentWorkspacePanel({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [cancelPhraseInput, setCancelPhraseInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [formFeedback, setFormFeedback] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<CommitmentFormFieldKey, string>>
+  >({});
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const detailMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -136,6 +163,10 @@ export function FinanceCommitmentWorkspacePanel({
   const [reference, setReference] = useState("");
 
   const selectedYearId = snapshot.selectedYearId ?? "";
+  const selectedYear = useMemo(
+    () => snapshot.years.find((y) => y.id === selectedYearId) ?? null,
+    [snapshot.years, selectedYearId],
+  );
   const cancelPhrase = t("cancelPhrase");
   const formFieldId = useId();
   const titleFieldId = `${formFieldId}-title`;
@@ -175,6 +206,11 @@ export function FinanceCommitmentWorkspacePanel({
     router.push(`/dashboard/finance/commitments?${params.toString()}`);
   }
 
+  function clearFormFeedback() {
+    setFormFeedback(null);
+    setFieldErrors({});
+  }
+
   function resetForm() {
     setTitle("");
     setAmountInput("");
@@ -185,6 +221,68 @@ export function FinanceCommitmentWorkspacePanel({
     setExpectedPaymentDate("");
     setDescription("");
     setReference("");
+    clearFormFeedback();
+  }
+
+  function commitmentDateYearErrorMessage(): string {
+    if (!selectedYear) return t("errors.invalidYear");
+    return t("errors.commitmentDateOutsideYear", {
+      yearName: selectedYear.name,
+      startDate: formatFinanceCalendarDateLabel(selectedYear.startDateIso, formattingLocale),
+      endDate: formatFinanceCalendarDateLabel(selectedYear.endDateIso, formattingLocale),
+    });
+  }
+
+  function validateDraftFormFields(): boolean {
+    clearFormFeedback();
+    const nextErrors: Partial<Record<CommitmentFormFieldKey, string>> = {};
+    let summary: string | null = null;
+
+    if (!selectedYearId) {
+      summary = t("errors.noFinanceYearSelected");
+    }
+    if (!title.trim()) {
+      nextErrors.title = t("errors.fieldTitleRequired");
+    }
+    if (!commitmentDate.trim()) {
+      nextErrors.commitmentDate = t("errors.fieldCommitmentDateRequired");
+    } else if (selectedYear && !isIsoCalendarDateInYearRange(commitmentDate, selectedYear)) {
+      nextErrors.commitmentDate = commitmentDateYearErrorMessage();
+    }
+    const amountMinor = parseBudgetInputToMinor(amountInput);
+    if (amountMinor === null || amountMinor <= 0) {
+      nextErrors.amount = t("errors.fieldAmountRequired");
+    }
+    if (!currency.trim()) {
+      nextErrors.currency = t("errors.invalidCurrency");
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      setFormFeedback(summary ?? t("errors.validation"));
+      return false;
+    }
+    if (summary) {
+      setFormFeedback(summary);
+      return false;
+    }
+    return true;
+  }
+
+  function applyServerFormFailure(result: {
+    ok: false;
+    errorCode?: string;
+    errorKey?: string;
+    error: string;
+  }) {
+    const message = mapActionError(t, result);
+    setFormFeedback(message);
+    if (result.errorCode === "FINANCE_INVALID_YEAR") {
+      setFieldErrors((prev) => ({
+        ...prev,
+        commitmentDate: commitmentDateYearErrorMessage(),
+      }));
+    }
   }
 
   function openCreate() {
@@ -239,65 +337,69 @@ export function FinanceCommitmentWorkspacePanel({
   }, [snapshot.summary, t]);
 
   function handleCreate() {
-    if (!selectedYearId) return;
+    if (!validateDraftFormFields()) return;
+    const amountMinor = parseBudgetInputToMinor(amountInput);
+    if (amountMinor === null) return;
     startTransition(async () => {
       setFeedback(null);
-      const amountMinor = parseBudgetInputToMinor(amountInput);
-      if (amountMinor === null || amountMinor <= 0) {
-        setFeedback(t("errors.validation"));
-        return;
+      try {
+        const result = await createFinanceCommitmentAction({
+          financeYearId: selectedYearId,
+          title: title.trim(),
+          amountMinor,
+          currency,
+          commitmentDateIso: commitmentDate,
+          partyName: partyName || null,
+          financialAccountId: accountId || null,
+          expectedPaymentDateIso: expectedPaymentDate || null,
+          description: description || null,
+          externalReference: reference || null,
+        });
+        if (!result.ok) {
+          applyServerFormFailure(result);
+          return;
+        }
+        clearFormFeedback();
+        setCreateOpen(false);
+        router.refresh();
+        if (result.commitmentId) void openDetail(result.commitmentId);
+      } catch {
+        setFormFeedback(t("errors.generic"));
       }
-      const result = await createFinanceCommitmentAction({
-        financeYearId: selectedYearId,
-        title,
-        amountMinor,
-        currency,
-        commitmentDateIso: commitmentDate,
-        partyName: partyName || null,
-        financialAccountId: accountId || null,
-        expectedPaymentDateIso: expectedPaymentDate || null,
-        description: description || null,
-        externalReference: reference || null,
-      });
-      if (!result.ok) {
-        setFeedback(mapActionError(t, result));
-        return;
-      }
-      setCreateOpen(false);
-      router.refresh();
-      if (result.commitmentId) void openDetail(result.commitmentId);
     });
   }
 
   function handleUpdate() {
-    if (!detail || !selectedYearId) return;
+    if (!detail || !validateDraftFormFields()) return;
+    const amountMinor = parseBudgetInputToMinor(amountInput);
+    if (amountMinor === null) return;
     startTransition(async () => {
       setFeedback(null);
-      const amountMinor = parseBudgetInputToMinor(amountInput);
-      if (amountMinor === null || amountMinor <= 0) {
-        setFeedback(t("errors.validation"));
-        return;
+      try {
+        const result = await updateFinanceCommitmentAction({
+          commitmentId: detail.id,
+          financeYearId: selectedYearId,
+          title: title.trim(),
+          amountMinor,
+          currency,
+          commitmentDateIso: commitmentDate,
+          partyName: partyName || null,
+          financialAccountId: accountId || null,
+          expectedPaymentDateIso: expectedPaymentDate || null,
+          description: description || null,
+          externalReference: reference || null,
+        });
+        if (!result.ok) {
+          applyServerFormFailure(result);
+          return;
+        }
+        clearFormFeedback();
+        setEditOpen(false);
+        router.refresh();
+        await openDetail(detail.id);
+      } catch {
+        setFormFeedback(t("errors.generic"));
       }
-      const result = await updateFinanceCommitmentAction({
-        commitmentId: detail.id,
-        financeYearId: selectedYearId,
-        title,
-        amountMinor,
-        currency,
-        commitmentDateIso: commitmentDate,
-        partyName: partyName || null,
-        financialAccountId: accountId || null,
-        expectedPaymentDateIso: expectedPaymentDate || null,
-        description: description || null,
-        externalReference: reference || null,
-      });
-      if (!result.ok) {
-        setFeedback(mapActionError(t, result));
-        return;
-      }
-      setEditOpen(false);
-      router.refresh();
-      await openDetail(detail.id);
     });
   }
 
@@ -386,8 +488,14 @@ export function FinanceCommitmentWorkspacePanel({
 
   const formFields = (
     <div className="grid min-w-0 gap-6" data-finance-commitment-form>
+      <CommitmentFormFeedback message={formFeedback} />
       <CommitmentFormSection label={t("formSectionPrimary")} variant="primary">
-        <SceFormField label={t("fieldTitle")} htmlFor={titleFieldId} required>
+        <SceFormField
+          label={t("fieldTitle")}
+          htmlFor={titleFieldId}
+          required
+          error={fieldErrors.title}
+        >
           <SceTextInput
             id={titleFieldId}
             value={title}
@@ -397,7 +505,12 @@ export function FinanceCommitmentWorkspacePanel({
           />
         </SceFormField>
         <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]">
-          <SceFormField label={t("fieldAmount")} htmlFor={amountFieldId} required>
+          <SceFormField
+            label={t("fieldAmount")}
+            htmlFor={amountFieldId}
+            required
+            error={fieldErrors.amount}
+          >
             <SceTextInput
               id={amountFieldId}
               className="tabular-nums"
@@ -407,7 +520,7 @@ export function FinanceCommitmentWorkspacePanel({
               disabled={pending}
             />
           </SceFormField>
-          <SceFormField label={t("fieldCurrency")} required>
+          <SceFormField label={t("fieldCurrency")} required error={fieldErrors.currency}>
             <div className="min-w-0 max-w-full [&>div]:min-w-0 [&>div]:max-w-full [&>div]:sm:min-w-0">
               <FinanceBaseCurrencySelector
                 value={currency}
@@ -424,6 +537,7 @@ export function FinanceCommitmentWorkspacePanel({
           htmlFor={commitmentDateFieldId}
           required
           description={t("fieldCommitmentDateHint")}
+          error={fieldErrors.commitmentDate}
         >
           <SceTextInput
             id={commitmentDateFieldId}
@@ -834,6 +948,7 @@ export function FinanceCommitmentWorkspacePanel({
                     className="w-full sm:w-auto"
                     onClick={() => {
                       fillFormFromDetail(detail);
+                      clearFormFeedback();
                       setEditOpen(true);
                     }}
                   >

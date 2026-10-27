@@ -1,17 +1,20 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import enMessages from "@/messages/en.json";
 import { FinanceCommitmentWorkspacePanel } from "@/components/admin/finance/commitment/FinanceCommitmentWorkspacePanel";
 import type {
   FinanceCommitmentDetailRecord,
   FinanceCommitmentWorkspaceSnapshot,
 } from "@/lib/finance/services/finance-commitment-query-service";
-import { loadFinanceCommitmentDetailAction } from "@/app/(admin)/dashboard/finance/commitments/actions";
+import {
+  createFinanceCommitmentAction,
+  loadFinanceCommitmentDetailAction,
+} from "@/app/(admin)/dashboard/finance/commitments/actions";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -27,6 +30,10 @@ vi.mock("@/app/(admin)/dashboard/finance/commitments/actions", () => ({
   updateFinanceCommitmentAction: vi.fn(),
 }));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 const baseSnapshot: FinanceCommitmentWorkspaceSnapshot = {
   capabilities: { canView: true, canManage: true, canSubmit: true },
   summary: {
@@ -36,7 +43,14 @@ const baseSnapshot: FinanceCommitmentWorkspaceSnapshot = {
     activeAmountMinor: null,
     activeAmountCurrency: null,
   },
-  years: [{ id: "year-1", name: "2026" }],
+  years: [
+    {
+      id: "year-1",
+      name: "2026",
+      startDateIso: "2026-01-01",
+      endDateIso: "2026-12-31",
+    },
+  ],
   selectedYearId: "year-1",
   baseCurrency: "EUR",
   items: [],
@@ -92,6 +106,55 @@ describe("FinanceCommitmentWorkspacePanel create form (FIN-07B R4/R6)", () => {
     await user.click(screen.getAllByRole("button", { name: "New commitment" })[0]!);
     const form = document.querySelector("[data-finance-commitment-form]");
     expect(form?.className).toContain("min-w-0");
+  });
+
+  it("shows validation feedback inside the create dialog instead of failing silently", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getAllByRole("button", { name: "New commitment" })[0]!);
+    const dialog = screen.getByRole("dialog", { name: "New commitment" });
+    await user.click(within(dialog).getByRole("button", { name: "Save draft" }));
+    expect(within(dialog).getByText("Enter a title.")).toBeTruthy();
+    expect(within(dialog).getByTestId("finance-commitment-form-feedback")).toBeTruthy();
+  });
+
+  it("persists a valid draft and closes the create dialog", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createFinanceCommitmentAction).mockResolvedValue({
+      ok: true,
+      commitmentId: "new-draft-1",
+    });
+    renderPanel();
+    await user.click(screen.getAllByRole("button", { name: "New commitment" })[0]!);
+    const dialog = screen.getByRole("dialog", { name: "New commitment" });
+    await user.type(within(dialog).getByLabelText(/^Title/), "Test 2");
+    await user.type(within(dialog).getByLabelText(/^Amount/), "1000");
+    fireEvent.change(within(dialog).getByLabelText(/^Commitment date/), {
+      target: { value: "2026-02-14" },
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Save draft" }));
+
+    await waitFor(() => {
+      expect(vi.mocked(createFinanceCommitmentAction)).toHaveBeenCalled();
+    });
+    expect(screen.queryByRole("dialog", { name: "New commitment" })).toBeNull();
+  });
+
+  it("surfaces commitment date outside selected financial year in the create dialog", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(screen.getAllByRole("button", { name: "New commitment" })[0]!);
+    const dialog = screen.getByRole("dialog", { name: "New commitment" });
+    await user.type(within(dialog).getByLabelText(/^Title/), "Test 2");
+    await user.type(within(dialog).getByLabelText(/^Amount/), "1000");
+    fireEvent.change(within(dialog).getByLabelText(/^Commitment date/), {
+      target: { value: "2027-02-14" },
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Save draft" }));
+    expect(
+      within(dialog).getByText(/Commitment date must fall within 2026/i),
+    ).toBeTruthy();
+    expect(vi.mocked(createFinanceCommitmentAction)).not.toHaveBeenCalled();
   });
 
   it("groups create fields into primary, secondary, and optional sections", async () => {

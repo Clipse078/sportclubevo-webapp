@@ -49,7 +49,7 @@ export type FinanceCommitmentWorkspaceSnapshot = {
     activeAmountMinor: number | null;
     activeAmountCurrency: string | null;
   };
-  years: { id: string; name: string }[];
+  years: { id: string; name: string; startDateIso: string; endDateIso: string }[];
   selectedYearId: string | null;
   baseCurrency: string | null;
   items: FinanceCommitmentListItem[];
@@ -203,10 +203,15 @@ export async function loadFinanceCommitmentWorkspaceSnapshot(
     db.financeYear.findMany({
       where: { tenantId: ctx.tenantId },
       orderBy: { startDate: "desc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, startDate: true, endDate: true },
     }),
   ]);
-  const years = yearsRows.map((y) => ({ id: y.id, name: y.name }));
+  const years = yearsRows.map((y) => ({
+    id: y.id,
+    name: y.name,
+    startDateIso: dateToIso(y.startDate) ?? "",
+    endDateIso: dateToIso(y.endDate) ?? "",
+  }));
   const selectedYearId =
     input.financeYearId ??
     setup.configuration?.currentFinanceYearId ??

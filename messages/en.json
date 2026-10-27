@@ -521,6 +521,11 @@
           "immutableObligation": "This record cannot be relinked to a different obligation.",
           "invalidCurrency": "Unsupported currency.",
           "invalidYear": "Invalid financial year.",
+          "commitmentDateOutsideYear": "Commitment date must fall within {yearName} ({startDate} – {endDate}).",
+          "fieldTitleRequired": "Enter a title.",
+          "fieldCommitmentDateRequired": "Choose a commitment date.",
+          "fieldAmountRequired": "Enter an amount greater than zero.",
+          "noFinanceYearSelected": "Choose a financial year before saving.",
           "generic": "Something went wrong. Please try again."
         }
       },

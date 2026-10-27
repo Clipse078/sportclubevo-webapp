@@ -32,15 +32,33 @@ type Db = Pick<
 >;
 
 function parseDateOnly(value: Date | string, field: string): Date {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw new FinanceDomainError(
+        "FINANCE_COMMITMENT_VALIDATION",
+        `Invalid ${field}.`,
+        400,
+      );
+    }
+    return value;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
     throw new FinanceDomainError(
       "FINANCE_COMMITMENT_VALIDATION",
       `Invalid ${field}.`,
       400,
     );
   }
-  return date;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (!match) {
+    throw new FinanceDomainError(
+      "FINANCE_COMMITMENT_VALIDATION",
+      `Invalid ${field}.`,
+      400,
+    );
+  }
+  return new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00.000Z`);
 }
 
 function assertPositiveCommitmentAmount(amountMinor: number): void {
