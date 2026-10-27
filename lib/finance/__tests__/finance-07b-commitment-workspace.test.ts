@@ -263,4 +263,21 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(panel).not.toContain("sce-input");
     expect(panel).toContain('size="lg"');
   });
+
+  it("FIN-07B R5 — presents calendar dates via canonical Finance locale formatter", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("formatFinanceCalendarDateLabel");
+    expect(panel).toContain("finance-year-period-display");
+    expect(panel).not.toMatch(/\{detail\.commitmentDateIso\}/);
+    expect(panel).not.toMatch(/\{detail\.expectedPaymentDateIso\}/);
+    expect(panel).not.toMatch(/\{item\.expectedPaymentDateIso\}/);
+  });
+
+  it("FIN-07B R5 — detail sheet uses compact hierarchy (no status/amount section cards)", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("data-finance-commitment-detail");
+    expect(panel).toContain("data-finance-commitment-detail-actions");
+    expect(panel).not.toContain('detailSectionStatus');
+    expect(panel).not.toContain('detailSectionAmount');
+  });
 });

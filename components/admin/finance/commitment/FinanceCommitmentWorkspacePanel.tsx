@@ -41,10 +41,12 @@ import {
   FINANCE_SECTION_SURFACE_CLASS,
   FINANCE_SUMMARY_GRID_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
+  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
   FINANCE_SUMMARY_SURFACE_CLASS,
   FINANCE_SUMMARY_VALUE_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import { formatFinanceCalendarDateLabel } from "@/lib/finance/setup/finance-year-period-display";
 
 type AccountOption = { id: string; name: string };
 
@@ -113,6 +115,21 @@ export function FinanceCommitmentWorkspacePanel({
 
   const formatMoney = (minor: number, cur: string) =>
     formatFinanceManagementPlanningMinor(minor, cur, formattingLocale);
+
+  const formatCalendarDate = (iso: string) =>
+    formatFinanceCalendarDateLabel(iso, formattingLocale);
+
+  function commitmentDetailFieldRow(label: string, value: string) {
+    return (
+      <div
+        key={label}
+        className="grid min-w-0 gap-0.5 sm:grid-cols-[minmax(9rem,42%)_1fr] sm:gap-4"
+      >
+        <dt className="text-[var(--muted)]">{label}</dt>
+        <dd className="min-w-0 break-words text-[var(--foreground)]">{value}</dd>
+      </div>
+    );
+  }
 
   function pushFilters(next: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -557,7 +574,9 @@ export function FinanceCommitmentWorkspacePanel({
                       {formatMoney(item.amountMinor, item.currency)}
                     </div>
                     {item.expectedPaymentDateIso ? (
-                      <div className="text-xs text-[var(--muted)]">{item.expectedPaymentDateIso}</div>
+                      <div className="text-xs text-[var(--muted)]">
+                        {formatCalendarDate(item.expectedPaymentDateIso)}
+                      </div>
                     ) : null}
                   </div>
                 </button>
@@ -613,64 +632,94 @@ export function FinanceCommitmentWorkspacePanel({
 
       <Sheet open={Boolean(detailId && detail)} onClose={closeDetail} title={detail?.title ?? t("detailTitle")}>
         {detail ? (
-          <div className={FINANCE_WORKSPACE_STACK_CLASS}>
-            <section className={FINANCE_SECTION_SURFACE_CLASS}>
-              <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionStatus")}</h3>
-              <p className="mt-2 text-sm">
+          <div
+            className={cn(FINANCE_WORKSPACE_STACK_CLASS, "min-w-0 max-w-full overflow-x-hidden")}
+            data-finance-commitment-detail
+          >
+            <div className="min-w-0 space-y-1">
+              <p className={cn(FINANCE_SUMMARY_RESULT_VALUE_CLASS, "break-words")}>
+                {formatMoney(detail.amountMinor, detail.currency)}
+              </p>
+              <p className="text-sm text-[var(--foreground)]">
                 {t(financeCommitmentLifecycleLabelKey(detail.lifecycleStatus))}
                 {detail.approvalStatus !== "NOT_REQUIRED" ? (
-                  <> · {t(financeCommitmentApprovalLabelKey(detail.approvalStatus))}</>
+                  <>
+                    {" · "}
+                    {t(financeCommitmentApprovalLabelKey(detail.approvalStatus))}
+                  </>
                 ) : null}
               </p>
               {detail.approvalStatus === "PENDING" ? (
-                <p className="mt-2 text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
+                <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
               ) : null}
-            </section>
-            <section className={FINANCE_SECTION_SURFACE_CLASS}>
-              <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionAmount")}</h3>
-              <p className="mt-2 text-lg tabular-nums font-medium">
-                {formatMoney(detail.amountMinor, detail.currency)}
-              </p>
-            </section>
+            </div>
+
             <section className={FINANCE_SECTION_SURFACE_CLASS}>
               <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionParty")}</h3>
-              <dl className="mt-2 grid gap-2 text-sm">
-                {detail.partyName ? (
-                  <div>
-                    <dt className="text-[var(--muted)]">{t("fieldParty")}</dt>
-                    <dd>{detail.partyName}</dd>
-                  </div>
-                ) : null}
-                <div>
-                  <dt className="text-[var(--muted)]">{t("fieldCommitmentDate")}</dt>
-                  <dd>{detail.commitmentDateIso}</dd>
-                </div>
-                {detail.expectedPaymentDateIso ? (
-                  <div>
-                    <dt className="text-[var(--muted)]">{t("fieldExpectedPayment")}</dt>
-                    <dd>{detail.expectedPaymentDateIso}</dd>
-                  </div>
-                ) : null}
+              <dl className="space-y-2 px-4 py-3 text-sm">
+                {detail.partyName
+                  ? commitmentDetailFieldRow(t("fieldParty"), detail.partyName)
+                  : null}
+                {commitmentDetailFieldRow(
+                  t("fieldCommitmentDate"),
+                  formatCalendarDate(detail.commitmentDateIso),
+                )}
+                {detail.expectedPaymentDateIso
+                  ? commitmentDetailFieldRow(
+                      t("fieldExpectedPayment"),
+                      formatCalendarDate(detail.expectedPaymentDateIso),
+                    )
+                  : null}
               </dl>
             </section>
-            {(detail.financialAccountName || detail.costCenterName) && (
+
+            {detail.financialAccountName || detail.costCenterName ? (
               <section className={FINANCE_SECTION_SURFACE_CLASS}>
                 <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("detailSectionClassification")}</h3>
-                <dl className="mt-2 grid gap-2 text-sm">
-                  {detail.financialAccountName ? (
-                    <div>
-                      <dt className="text-[var(--muted)]">{t("fieldAccount")}</dt>
-                      <dd>{detail.financialAccountName}</dd>
-                    </div>
-                  ) : null}
+                <dl className="space-y-2 px-4 py-3 text-sm">
+                  {detail.financialAccountName
+                    ? commitmentDetailFieldRow(t("fieldAccount"), detail.financialAccountName)
+                    : null}
+                  {detail.costCenterName
+                    ? commitmentDetailFieldRow(t("fieldCostCenter"), detail.costCenterName)
+                    : null}
                 </dl>
               </section>
-            )}
-            <div className="flex flex-wrap gap-2">
+            ) : null}
+
+            {detail.externalReference || detail.description ? (
+              <div className="min-w-0 space-y-3 text-sm">
+                {detail.externalReference ? (
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium text-[var(--muted)]">{t("fieldReference")}</div>
+                    <p className="mt-1 break-words text-[var(--foreground)]">{detail.externalReference}</p>
+                  </div>
+                ) : null}
+                {detail.description ? (
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium text-[var(--muted)]">{t("fieldDescription")}</div>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-[var(--foreground)]">
+                      {detail.description}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div
+              className="flex min-w-0 flex-col gap-2 pt-1"
+              data-finance-commitment-detail-actions
+            >
+              {detail.canSubmit ? (
+                <Button type="button" onClick={handleSubmit} disabled={pending} className="w-full sm:w-auto">
+                  {t("submitAction")}
+                </Button>
+              ) : null}
               {detail.canEdit ? (
                 <Button
                   type="button"
                   variant="secondary"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     fillFormFromDetail(detail);
                     setEditOpen(true);
@@ -679,21 +728,21 @@ export function FinanceCommitmentWorkspacePanel({
                   {t("editAction")}
                 </Button>
               ) : null}
-              {detail.canSubmit ? (
-                <Button type="button" onClick={handleSubmit} disabled={pending}>
-                  {t("submitAction")}
-                </Button>
-              ) : null}
-              {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
-                <Button type="button" variant="secondary" onClick={() => setCancelOpen(true)}>
-                  {t("cancelAction")}
-                </Button>
-              ) : null}
-              {detail.lifecycleStatus === "DRAFT" && detail.canEdit ? (
-                <Button type="button" variant="secondary" onClick={handleDeleteDraft}>
-                  {t("deleteDraftAction")}
-                </Button>
-              ) : null}
+              {((detail.canCancel && detail.lifecycleStatus !== "CANCELLED") ||
+                (detail.lifecycleStatus === "DRAFT" && detail.canEdit)) && (
+                <div className="flex flex-wrap gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3">
+                  {detail.canCancel && detail.lifecycleStatus !== "CANCELLED" ? (
+                    <Button type="button" variant="secondary" onClick={() => setCancelOpen(true)}>
+                      {t("cancelAction")}
+                    </Button>
+                  ) : null}
+                  {detail.lifecycleStatus === "DRAFT" && detail.canEdit ? (
+                    <Button type="button" variant="secondary" onClick={handleDeleteDraft}>
+                      {t("deleteDraftAction")}
+                    </Button>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         ) : null}

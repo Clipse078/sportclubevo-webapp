@@ -16,6 +16,12 @@ function periodFormatter(locale: string): Intl.DateTimeFormat {
   return formatter;
 }
 
+/** User-facing label for a single Finance ISO calendar date (YYYY-MM-DD, UTC day semantics). */
+export function formatFinanceCalendarDateLabel(iso: string, locale: string): string {
+  const date = new Date(`${iso}T00:00:00.000Z`);
+  return periodFormatter(locale).format(date);
+}
+
 /** User-facing FinanceYear period label from ISO date input values (UTC calendar days). */
 export function formatFinanceYearPeriodLabel(
   startDateIso: string,
