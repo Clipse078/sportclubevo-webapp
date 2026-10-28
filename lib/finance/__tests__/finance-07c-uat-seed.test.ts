@@ -9,6 +9,7 @@ import {
   FIN_07C_UAT_PENDING_APPROVAL_TITLE,
   FIN_07C_UAT_REJECTION_TITLE,
 } from "@/lib/finance/commitment/finance-07c-uat-commitment-seed-ledger";
+import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 
 describe("FIN-07C STAGE UAT seed guards", () => {
   it("uses identifiable UAT titles", () => {
@@ -47,5 +48,16 @@ describe("FIN-07C STAGE UAT seed guards", () => {
 
   it("pins fc-allschwil club admin actor for seed writes", () => {
     expect(FIN_07C_UAT_SEED_ACTOR_USER_ID).toMatch(/^cms/);
+  });
+
+  it("targets configured current finance year instead of newest calendar year", () => {
+    const years = [{ id: "fy-2027" }, { id: "fy-2026" }];
+    expect(
+      resolveFinanceCommitmentSelectedYearId({
+        requestedYearId: null,
+        years,
+        currentFinanceYearId: "fy-2026",
+      }),
+    ).toBe("fy-2026");
   });
 });

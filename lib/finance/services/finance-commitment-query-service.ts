@@ -8,6 +8,7 @@ import {
   requireFinanceCommitmentFoundationView,
 } from "@/lib/finance/commitment/finance-commitment-authorization";
 import { FinanceDomainError } from "@/lib/finance/errors";
+import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configuration-service";
 
 type Db = Pick<
@@ -247,11 +248,11 @@ export async function loadFinanceCommitmentWorkspaceSnapshot(
     startDateIso: dateToIso(y.startDate) ?? "",
     endDateIso: dateToIso(y.endDate) ?? "",
   }));
-  const selectedYearId =
-    input.financeYearId ??
-    setup.configuration?.currentFinanceYearId ??
-    years[0]?.id ??
-    null;
+  const selectedYearId = resolveFinanceCommitmentSelectedYearId({
+    requestedYearId: input.financeYearId,
+    years,
+    currentFinanceYearId: setup.configuration?.currentFinanceYearId,
+  });
   const baseCurrency = setup.configuration?.baseCurrency ?? null;
 
   const page = Math.max(1, input.page ?? 1);
@@ -501,11 +502,11 @@ export async function loadFinanceCommitmentApprovalInboxSnapshot(
     startDateIso: dateToIso(y.startDate) ?? "",
     endDateIso: dateToIso(y.endDate) ?? "",
   }));
-  const selectedYearId =
-    input?.financeYearId ??
-    setup.configuration?.currentFinanceYearId ??
-    years[0]?.id ??
-    null;
+  const selectedYearId = resolveFinanceCommitmentSelectedYearId({
+    requestedYearId: input?.financeYearId,
+    years,
+    currentFinanceYearId: setup.configuration?.currentFinanceYearId,
+  });
 
   const pendingWhere: Prisma.FinanceCommitmentWhereInput = {
     tenantId: ctx.tenantId,

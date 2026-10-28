@@ -12,6 +12,7 @@ import {
   FIN_07C_UAT_SEED_TENANT_ID,
   FIN_07C_UAT_SEED_TENANT_KEY,
 } from "@/lib/finance/commitment/finance-07c-uat-commitment-seed-ledger";
+import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 import {
   createFinanceCommitment,
   submitFinanceCommitment,
@@ -41,7 +42,9 @@ export type SeedRowResult = {
   title: string;
   created: boolean;
   submitted: boolean;
+  realignedFinanceYear: boolean;
   commitmentId: string | null;
+  financeYearId: string | null;
   lifecycleStatus: string | null;
   approvalStatus: string | null;
 };
@@ -75,11 +78,23 @@ export async function seedFin07cUatCommitments(
   const blockingErrors: string[] = [];
   const ctx = buildSeedAuthContext();
 
-  const year = await db.financeYear.findFirst({
-    where: { tenantId: FIN_07C_UAT_SEED_TENANT_ID },
-    orderBy: { startDate: "desc" },
-    select: { id: true, startDate: true, endDate: true },
+  const [financeConfig, yearRows] = await Promise.all([
+    db.financeConfiguration.findUnique({
+      where: { tenantId: FIN_07C_UAT_SEED_TENANT_ID },
+      select: { currentFinanceYearId: true },
+    }),
+    db.financeYear.findMany({
+      where: { tenantId: FIN_07C_UAT_SEED_TENANT_ID },
+      orderBy: { startDate: "desc" },
+      select: { id: true, startDate: true, endDate: true },
+    }),
+  ]);
+  const targetYearId = resolveFinanceCommitmentSelectedYearId({
+    requestedYearId: null,
+    years: yearRows,
+    currentFinanceYearId: financeConfig?.currentFinanceYearId,
   });
+  const year = yearRows.find((row) => row.id === targetYearId) ?? null;
   if (!year) {
     blockingErrors.push("No finance year found for UAT tenant.");
     return { rows: [], blockingErrors };
@@ -91,17 +106,47 @@ export async function seedFin07cUatCommitments(
   for (const spec of FIN_07C_UAT_CONTROLLED_COMMITMENTS) {
     const existing = await db.financeCommitment.findFirst({
       where: { tenantId: FIN_07C_UAT_SEED_TENANT_ID, title: spec.title },
-      select: { id: true, lifecycleStatus: true, approvalStatus: true },
+      select: {
+        id: true,
+        financeYearId: true,
+        lifecycleStatus: true,
+        approvalStatus: true,
+      },
     });
 
     if (existing) {
+      let financeYearId = existing.financeYearId;
+      const lifecycleStatus = existing.lifecycleStatus;
+      const approvalStatus = existing.approvalStatus;
+      let realignedFinanceYear = false;
+
+      if (existing.financeYearId !== year.id) {
+        if (input.execute) {
+          await db.financeCommitment.update({
+            where: { id: existing.id },
+            data: {
+              financeYearId: year.id,
+              commitmentDate: year.startDate,
+            },
+          });
+          financeYearId = year.id;
+          realignedFinanceYear = true;
+        } else {
+          blockingErrors.push(
+            `${spec.title} is bound to finance year ${existing.financeYearId}, expected ${year.id}. Re-run with --execute to realign.`,
+          );
+        }
+      }
+
       rows.push({
         title: spec.title,
         created: false,
-        submitted: existing.lifecycleStatus === "SUBMITTED",
+        submitted: lifecycleStatus === "SUBMITTED",
+        realignedFinanceYear,
         commitmentId: existing.id,
-        lifecycleStatus: existing.lifecycleStatus,
-        approvalStatus: existing.approvalStatus,
+        financeYearId,
+        lifecycleStatus,
+        approvalStatus,
       });
       continue;
     }
@@ -111,7 +156,9 @@ export async function seedFin07cUatCommitments(
         title: spec.title,
         created: false,
         submitted: false,
+        realignedFinanceYear: false,
         commitmentId: null,
+        financeYearId: null,
         lifecycleStatus: null,
         approvalStatus: null,
       });
@@ -132,7 +179,9 @@ export async function seedFin07cUatCommitments(
       title: spec.title,
       created: true,
       submitted: true,
+      realignedFinanceYear: false,
       commitmentId: submitted.id,
+      financeYearId: year.id,
       lifecycleStatus: submitted.lifecycleStatus,
       approvalStatus: submitted.approvalStatus,
     });
