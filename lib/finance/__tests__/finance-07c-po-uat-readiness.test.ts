@@ -27,6 +27,12 @@ describe("FIN-07C PO UAT readiness", () => {
     expect(FIN_07C_UAT_REJECTION_TITLE).toContain("Ablehnung");
   });
 
+  it("wires fail-closed post-UAT cleanup for operators", () => {
+    const script = readRepo("scripts/sce-finance-07c-stage-uat-commitment-cleanup.ts");
+    expect(script).toContain("collectUatCommitmentCleanupInventory");
+    expect(script).toContain("SCE-FINANCE-07C-UAT-CLEANUP");
+  });
+
   it("exposes approval inbox discovery when pending work exists", () => {
     const workspace = readRepo(
       "components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx",
