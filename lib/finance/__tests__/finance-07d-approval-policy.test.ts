@@ -176,6 +176,33 @@ describe("FIN-07D approval policy & thresholds", () => {
     expect(store.financeCommitmentApprovalDecision).toHaveLength(0);
   });
 
+  it("submitted commitment retains approval policy snapshot when tenant policy changes", async () => {
+    const store = createCommitmentMockStore();
+    const db = makeCommitmentMockDb(store);
+    await saveFinanceCommitmentApprovalPolicy(db as never, policyCtx(), {
+      enabled: true,
+      thresholdAmountMinor: 1_000_00,
+    });
+    const created = await createFinanceCommitment(db as never, policyCtx(), {
+      financeYearId: commitmentYearId,
+      title: "Snapshot hold",
+      amountMinor: 1_500_00,
+      currency: "EUR",
+      commitmentDate: "2026-01-01",
+    });
+    await submitFinanceCommitment(db as never, policyCtx(), created.id);
+    await saveFinanceCommitmentApprovalPolicy(db as never, policyCtx(), {
+      enabled: false,
+      thresholdAmountMinor: 9_999_00,
+    });
+    const row = store.financeCommitment.find((c) => c.id === created.id)!;
+    expect(row.approvalThresholdMinorSnapshot).toBe(1_000_00);
+    expect(row.approvalPolicyEnabledSnapshot).toBe(true);
+    expect(row.approvalStatus).toBe("PENDING");
+    const detail = await getFinanceCommitmentDetail(db as never, policyCtx(), created.id);
+    expect(detail.approvalExplanation?.thresholdAmountMinor).toBe(1_000_00);
+  });
+
   it("historical APPROVED decisions unaffected by later policy change", async () => {
     const store = createCommitmentMockStore();
     const db = makeCommitmentMockDb(store);
