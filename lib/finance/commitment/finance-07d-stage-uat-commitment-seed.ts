@@ -157,7 +157,7 @@ export async function seedFin07dUatCommitments(
 
   const thresholdAmountMinor = effectivePolicy.thresholdAmountMinor;
   try {
-    buildFin07dUatAmountsForThreshold(thresholdAmountMinor);
+    buildFin07dUatAmountsForThreshold(thresholdAmountMinor, baseCurrency);
   } catch (error) {
     blockingErrors.push(
       error instanceof Error
@@ -197,7 +197,7 @@ export async function seedFin07dUatCommitments(
     return { policy: policyResult, rows: [], blockingErrors };
   }
 
-  const amounts = buildFin07dUatAmountsForThreshold(thresholdAmountMinor);
+  const amounts = buildFin07dUatAmountsForThreshold(thresholdAmountMinor, baseCurrency);
   const commitmentDate = year.startDate.toISOString().slice(0, 10);
   const currency = baseCurrency.toUpperCase();
   const rows: SeedRowResult[] = [];
@@ -222,10 +222,19 @@ export async function seedFin07dUatCommitments(
           `${spec.title} must remain DRAFT for PO UAT (found ${existing.lifecycleStatus}).`,
         );
       }
+      let realignedAmount = false;
       if (existing.amountMinor !== amountMinor || existing.currency !== currency) {
-        blockingErrors.push(
-          `${spec.title} amount/currency mismatch: expected ${amountMinor} ${currency}, got ${existing.amountMinor} ${existing.currency}.`,
-        );
+        if (input.execute) {
+          await db.financeCommitment.update({
+            where: { id: existing.id },
+            data: { amountMinor, currency },
+          });
+          realignedAmount = true;
+        } else {
+          blockingErrors.push(
+            `${spec.title} amount/currency mismatch: expected ${amountMinor} ${currency}, got ${existing.amountMinor} ${existing.currency}.`,
+          );
+        }
       }
       let financeYearId = existing.financeYearId;
       let realignedFinanceYear = false;
@@ -248,8 +257,8 @@ export async function seedFin07dUatCommitments(
         created: false,
         commitmentId: existing.id,
         financeYearId,
-        amountMinor: existing.amountMinor,
-        currency: existing.currency,
+        amountMinor: realignedAmount ? amountMinor : existing.amountMinor,
+        currency: realignedAmount ? currency : existing.currency,
         lifecycleStatus: existing.lifecycleStatus,
         approvalStatus: existing.approvalStatus,
         realignedFinanceYear,

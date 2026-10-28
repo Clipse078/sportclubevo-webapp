@@ -15,7 +15,10 @@ import {
   FIN_07D_UAT_CONTROLLED_COMMITMENT_TITLES,
   FIN_07D_UAT_SEED_TENANT_ID,
   buildFin07dUatAmountsForThreshold,
+  verifyFin07dUatEconomicBoundary,
 } from "@/lib/finance/commitment/finance-07d-uat-commitment-seed-ledger";
+import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
+import { iso4217MinorUnitsPerMajor } from "@/lib/finance/presentation/finance-money-presentation";
 import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 import { loadFinanceCommitmentWorkspaceSnapshot } from "@/lib/finance/services/finance-commitment-query-service";
 import { loadFinanceCommitmentApprovalPolicyReadModel } from "@/lib/finance/services/finance-commitment-approval-policy-service";
@@ -44,6 +47,9 @@ export type Fin07dPoUatReadinessReport = {
   dataEnvironment: string;
   productionTouched: "NO" | "YES";
 };
+
+/** PO UAT workspace uses Swiss German formatting for fc-allschwil. */
+const FIN_07D_UAT_PRESENTATION_LOCALE = "de-CH";
 
 const MANAGE_CTX_PERMISSIONS = [
   PERMISSIONS.FINANCE_VIEW,
@@ -181,8 +187,12 @@ export async function verifyFin07dPoUatReadiness(
   flags.push(flag("POLICY_CONFIGURATION_DISCOVERABLE", discovery.pass, discovery.detail));
 
   let amounts: ReturnType<typeof buildFin07dUatAmountsForThreshold> | null = null;
+  const thresholdCurrency = policyModel.thresholdCurrency ?? setup.configuration?.baseCurrency ?? "CHF";
   try {
-    amounts = buildFin07dUatAmountsForThreshold(policyModel.thresholdAmountMinor);
+    amounts = buildFin07dUatAmountsForThreshold(
+      policyModel.thresholdAmountMinor,
+      thresholdCurrency,
+    );
   } catch {
     amounts = null;
   }
@@ -240,9 +250,96 @@ export async function verifyFin07dPoUatReadiness(
       flag(
         "UAT_AMOUNTS_MATCH_THRESHOLD_TRIPLE",
         Boolean(amountOk),
-        amounts
-          ? `below=${amounts.belowMinor} exact=${amounts.exactMinor} above=${amounts.aboveMinor}`
-          : "threshold invalid",
+        `below=${amounts.belowMinor} exact=${amounts.exactMinor} above=${amounts.aboveMinor}`,
+      ),
+    );
+
+    const majorStep = iso4217MinorUnitsPerMajor(thresholdCurrency);
+    const boundary = verifyFin07dUatEconomicBoundary({
+      belowMinor: amounts.belowMinor,
+      exactMinor: amounts.exactMinor,
+      aboveMinor: amounts.aboveMinor,
+      thresholdMinor: policyModel.thresholdAmountMinor,
+    });
+    flags.push(
+      flag(
+        "UAT_BOUNDARY_BELOW_LT_THRESHOLD",
+        boundary.belowLtThreshold,
+        `${amounts.belowMinor} < ${policyModel.thresholdAmountMinor}`,
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_BOUNDARY_EXACT_EQ_THRESHOLD",
+        boundary.exactEqThreshold,
+        `${amounts.exactMinor} === ${policyModel.thresholdAmountMinor}`,
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_BOUNDARY_ABOVE_GT_THRESHOLD",
+        boundary.aboveGtThreshold,
+        `${amounts.aboveMinor} > ${policyModel.thresholdAmountMinor}`,
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_THRESHOLD_WHOLE_MAJOR_ALIGNED",
+        policyModel.thresholdAmountMinor % majorStep === 0,
+        `step=${majorStep} threshold=${policyModel.thresholdAmountMinor}`,
+      ),
+    );
+
+    const formatLedger = (minor: number | null | undefined) =>
+      minor == null
+        ? ""
+        : formatFinanceManagementPlanningMinor(minor, thresholdCurrency, FIN_07D_UAT_PRESENTATION_LOCALE);
+
+    const expectedBelowDisplay = formatLedger(amounts.belowMinor);
+    const expectedExactDisplay = formatLedger(amounts.exactMinor);
+    const expectedAboveDisplay = formatLedger(amounts.aboveMinor);
+    const expectedThresholdDisplay = formatLedger(policyModel.thresholdAmountMinor);
+
+    flags.push(
+      flag(
+        "UAT_BELOW_FORMATTED_LEDGER",
+        Boolean(below && formatLedger(below.amountMinor) === expectedBelowDisplay),
+        below ? formatLedger(below.amountMinor) : "missing",
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_EXACT_FORMATTED_LEDGER",
+        Boolean(exact && formatLedger(exact.amountMinor) === expectedExactDisplay),
+        exact ? formatLedger(exact.amountMinor) : "missing",
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_ABOVE_FORMATTED_LEDGER",
+        Boolean(above && formatLedger(above.amountMinor) === expectedAboveDisplay),
+        above ? formatLedger(above.amountMinor) : "missing",
+      ),
+    );
+    flags.push(
+      flag(
+        "UAT_THRESHOLD_FORMATTED",
+        expectedThresholdDisplay.length > 0,
+        expectedThresholdDisplay,
+      ),
+    );
+
+    const distinctLedgerDisplays =
+      new Set([
+        formatLedger(below?.amountMinor),
+        formatLedger(exact?.amountMinor),
+        formatLedger(above?.amountMinor),
+      ]).size === 3;
+    flags.push(
+      flag(
+        "UAT_LEDGER_DISPLAYS_DISTINCT",
+        distinctLedgerDisplays,
+        [below, exact, above].map((r) => formatLedger(r?.amountMinor)).join(" | "),
       ),
     );
   }

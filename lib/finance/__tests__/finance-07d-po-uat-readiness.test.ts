@@ -28,8 +28,8 @@ describe("FIN-07D PO UAT readiness", () => {
     expect(FIN_07D_UAT_BELOW_THRESHOLD_TITLE).toContain("Below Threshold");
     expect(FIN_07D_UAT_EXACT_THRESHOLD_TITLE).toContain("Exact Threshold");
     expect(FIN_07D_UAT_ABOVE_THRESHOLD_TITLE).toContain("Above Threshold");
-    const amounts = buildFin07dUatAmountsForThreshold(100_000);
-    expect(amounts).toEqual({ belowMinor: 99_999, exactMinor: 100_000, aboveMinor: 100_001 });
+    const amounts = buildFin07dUatAmountsForThreshold(100_000, "CHF");
+    expect(amounts).toEqual({ belowMinor: 99_900, exactMinor: 100_000, aboveMinor: 100_100 });
   });
 
   it("wires fail-closed post-UAT cleanup for operators", () => {

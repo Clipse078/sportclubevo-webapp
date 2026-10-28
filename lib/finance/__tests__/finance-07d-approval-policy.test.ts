@@ -61,6 +61,52 @@ describe("FIN-07D approval policy & thresholds", () => {
     expect(evaluation.approvalRequired).toBe(true);
   });
 
+  it("999 / 1'000 / 1'001 major-unit boundary submit statuses and snapshot threshold", async () => {
+    const store = createCommitmentMockStore();
+    const db = makeCommitmentMockDb(store);
+    const thresholdMinor = 1_000_00;
+    await saveFinanceCommitmentApprovalPolicy(db as never, policyCtx(), {
+      enabled: true,
+      thresholdAmountMinor: thresholdMinor,
+    });
+
+    const below = await createFinanceCommitment(db as never, policyCtx(), {
+      financeYearId: commitmentYearId,
+      title: "Below 999",
+      amountMinor: 999_00,
+      currency: "EUR",
+      commitmentDate: "2026-01-01",
+    });
+    const exact = await createFinanceCommitment(db as never, policyCtx(), {
+      financeYearId: commitmentYearId,
+      title: "Exact 1000",
+      amountMinor: 1_000_00,
+      currency: "EUR",
+      commitmentDate: "2026-01-01",
+    });
+    const above = await createFinanceCommitment(db as never, policyCtx(), {
+      financeYearId: commitmentYearId,
+      title: "Above 1001",
+      amountMinor: 1_001_00,
+      currency: "EUR",
+      commitmentDate: "2026-01-01",
+    });
+
+    const belowSubmitted = await submitFinanceCommitment(db as never, policyCtx(), below.id);
+    const exactSubmitted = await submitFinanceCommitment(db as never, policyCtx(), exact.id);
+    const aboveSubmitted = await submitFinanceCommitment(db as never, policyCtx(), above.id);
+
+    expect(belowSubmitted.approvalStatus).toBe("NOT_REQUIRED");
+    expect(exactSubmitted.approvalStatus).toBe("PENDING");
+    expect(aboveSubmitted.approvalStatus).toBe("PENDING");
+
+    for (const row of [exactSubmitted, aboveSubmitted]) {
+      expect(row.approvalThresholdMinorSnapshot).toBe(thresholdMinor);
+      expect(row.approvalPolicyEnabledSnapshot).toBe(true);
+    }
+    expect(belowSubmitted.approvalThresholdMinorSnapshot).toBe(thresholdMinor);
+  });
+
   it("uses inclusive >= threshold boundary", () => {
     const policy = { enabled: true, thresholdAmountMinor: 1_000_00, thresholdCurrency: "EUR" };
     expect(
