@@ -948,6 +948,7 @@
         "fieldReference": "Referenz",
         "fieldDescription": "Beschreibung",
         "submitAction": "Zur Prüfung einreichen",
+        "submitActionDirect": "Einreichen",
         "editAction": "Bearbeiten",
         "editSaveConfirm": "Änderungen speichern",
         "cancelAction": "Verpflichtung stornieren",

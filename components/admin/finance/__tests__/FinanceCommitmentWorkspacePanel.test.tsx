@@ -6,6 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import enMessages from "@/messages/en.json";
+import deMessages from "@/messages/de.json";
+import type { FinanceCommitmentApprovalExplanation } from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
 import { FinanceCommitmentWorkspacePanel } from "@/components/admin/finance/commitment/FinanceCommitmentWorkspacePanel";
 import type {
   FinanceCommitmentDetailRecord,
@@ -202,7 +204,35 @@ const uatDetail: FinanceCommitmentDetailRecord = {
   approvalDecidedAtIso: null,
   approvalDecidedByDisplayName: null,
   approvalDecisionHistory: [],
+  approvalExplanation: null,
 };
+
+function renderPanelDe(
+  snapshot: FinanceCommitmentWorkspaceSnapshot = baseSnapshot,
+  formattingLocale = "de-CH",
+) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      <FinanceCommitmentWorkspacePanel
+        snapshot={snapshot}
+        accounts={[{ id: "acc-1", name: "Betrieb" }]}
+        formattingLocale={formattingLocale}
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
+function draftUatDetail(
+  amountMinor: number,
+  explanation: FinanceCommitmentApprovalExplanation,
+): FinanceCommitmentDetailRecord {
+  return {
+    ...uatDetail,
+    amountMinor,
+    title: `UAT FIN-07D ${amountMinor / 100} CHF`,
+    approvalExplanation: explanation,
+  };
+}
 
 describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {
   it("shows locale-formatted calendar dates instead of raw ISO in detail and list", async () => {
@@ -453,5 +483,89 @@ describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {
     await waitFor(() => {
       expect(document.querySelector("[data-finance-commitment-edit-blocked]")).toBeTruthy();
     });
+  });
+});
+
+describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07D R2 UAT UX)", () => {
+  const thresholdMinor = 1_000_00;
+
+  async function openDraftDetail(
+    user: ReturnType<typeof userEvent.setup>,
+    detail: FinanceCommitmentDetailRecord,
+  ) {
+    vi.mocked(loadFinanceCommitmentDetailAction).mockResolvedValue(detail);
+    renderPanelDe({
+      ...baseSnapshot,
+      baseCurrency: "CHF",
+      items: [
+        {
+          id: detail.id,
+          title: detail.title,
+          amountMinor: detail.amountMinor,
+          currency: detail.currency,
+          partyName: detail.partyName,
+          lifecycleStatus: detail.lifecycleStatus,
+          approvalStatus: detail.approvalStatus,
+          responsibleUserId: null,
+          responsibleDisplayName: null,
+          expectedPaymentDateIso: detail.expectedPaymentDateIso,
+          commitmentDateIso: detail.commitmentDateIso,
+          financialAccountName: detail.financialAccountName,
+          financeYearId: detail.financeYearId,
+          financeYearName: detail.financeYearName,
+          updatedAtIso: detail.updatedAtIso,
+        },
+      ],
+    });
+    await user.click(screen.getByRole("button", { name: new RegExp(detail.title) }));
+    await waitFor(() => {
+      expect(document.querySelector("[data-finance-commitment-detail]")).toBeTruthy();
+    });
+  }
+
+  it("999 CHF draft — below-threshold copy, de-CH threshold, direct submit CTA", async () => {
+    const user = userEvent.setup();
+    const detail = draftUatDetail(999_00, {
+      kind: "NOT_REQUIRED_BELOW_THRESHOLD",
+      thresholdAmountMinor: thresholdMinor,
+      thresholdCurrency: "CHF",
+      isDraftPreview: true,
+      approvalRequired: false,
+    });
+    await openDraftDetail(user, detail);
+    const root = document.querySelector("[data-finance-commitment-detail]") as HTMLElement;
+    expect(within(root).getByText(/Voraussichtlich keine Freigabe — Betrag unter 1'000 CHF\./)).toBeTruthy();
+    const submit = within(root).getByRole("button", { name: "Einreichen" });
+    expect(submit).toHaveAttribute("data-finance-commitment-submit-action");
+  });
+
+  it("1'000 CHF draft — inclusive boundary copy and review submit CTA", async () => {
+    const user = userEvent.setup();
+    const detail = draftUatDetail(1_000_00, {
+      kind: "REQUIRED_AT_OR_ABOVE_THRESHOLD",
+      thresholdAmountMinor: thresholdMinor,
+      thresholdCurrency: "CHF",
+      isDraftPreview: true,
+      approvalRequired: true,
+    });
+    await openDraftDetail(user, detail);
+    const root = document.querySelector("[data-finance-commitment-detail]") as HTMLElement;
+    expect(within(root).getByText(/Voraussichtlich Freigabe nötig — Betrag ab 1'000 CHF\./)).toBeTruthy();
+    expect(within(root).getByRole("button", { name: "Zur Prüfung einreichen" })).toBeTruthy();
+  });
+
+  it("1'001 CHF draft — approval-required CTA matches preview", async () => {
+    const user = userEvent.setup();
+    const detail = draftUatDetail(1_001_00, {
+      kind: "REQUIRED_AT_OR_ABOVE_THRESHOLD",
+      thresholdAmountMinor: thresholdMinor,
+      thresholdCurrency: "CHF",
+      isDraftPreview: true,
+      approvalRequired: true,
+    });
+    await openDraftDetail(user, detail);
+    const root = document.querySelector("[data-finance-commitment-detail]") as HTMLElement;
+    expect(within(root).getByText(/Voraussichtlich Freigabe nötig — Betrag ab 1'000 CHF\./)).toBeTruthy();
+    expect(within(root).getByRole("button", { name: "Zur Prüfung einreichen" })).toBeTruthy();
   });
 });

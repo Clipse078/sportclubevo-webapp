@@ -1,27 +1,27 @@
 "use client";
 
 import type { FinanceCommitmentApprovalExplanation } from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
-import { formatBudgetPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
+import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
 export function FinanceCommitmentApprovalExplanationText({
   explanation,
   t,
-  locale,
+  formattingLocale,
 }: {
   explanation: FinanceCommitmentApprovalExplanation;
   t: TranslateFn;
-  locale: string;
+  formattingLocale: string;
 }) {
   const thresholdLabel =
     explanation.thresholdAmountMinor != null &&
     explanation.thresholdCurrency &&
     explanation.kind !== "POLICY_DISABLED"
-      ? formatBudgetPlanningMinor(
+      ? formatFinanceManagementPlanningMinor(
           explanation.thresholdAmountMinor,
           explanation.thresholdCurrency,
-          locale,
+          formattingLocale,
         )
       : null;
 

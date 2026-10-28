@@ -19,7 +19,7 @@ import {
   FINANCE_SUMMARY_RESULT_VALUE_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import { FinanceCommitmentApprovalExplanationText } from "@/components/admin/finance/commitment/FinanceCommitmentApprovalExplanation";
-import { useLocale } from "next-intl";
+import { resolveFinanceCommitmentDraftSubmitMessageKey } from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
@@ -108,6 +108,7 @@ export type FinanceCommitmentDetailSheetBodyProps = {
   detail: FinanceCommitmentDetailRecord;
   t: TranslateFn;
   formatMoney: (minor: number, cur: string) => string;
+  formattingLocale: string;
   formatCalendarDate: (iso: string) => string;
   pending: boolean;
   detailMenuOpen: boolean;
@@ -130,6 +131,7 @@ export function FinanceCommitmentDetailSheetBody({
   detail,
   t,
   formatMoney,
+  formattingLocale,
   formatCalendarDate,
   pending,
   detailMenuOpen,
@@ -146,7 +148,6 @@ export function FinanceCommitmentDetailSheetBody({
   onDeleteOpen,
   mode = "workspace",
 }: FinanceCommitmentDetailSheetBodyProps) {
-  const locale = useLocale();
   const basicsRows: Array<{ label: string; value: string }> = [
     { label: t("fieldCommitmentDate"), value: formatCalendarDate(detail.commitmentDateIso) },
   ];
@@ -216,7 +217,7 @@ export function FinanceCommitmentDetailSheetBody({
           <FinanceCommitmentApprovalExplanationText
             explanation={detail.approvalExplanation}
             t={t}
-            locale={locale}
+            formattingLocale={formattingLocale}
           />
         ) : null}
 
@@ -334,8 +335,14 @@ export function FinanceCommitmentDetailSheetBody({
           data-finance-commitment-detail-actions
         >
           {detail.canSubmit && onSubmit ? (
-            <Button type="button" onClick={onSubmit} disabled={pending} className="h-9 w-full sm:w-auto">
-              {t("submitAction")}
+            <Button
+              type="button"
+              onClick={onSubmit}
+              disabled={pending}
+              className="h-9 w-full sm:w-auto"
+              data-finance-commitment-submit-action
+            >
+              {t(resolveFinanceCommitmentDraftSubmitMessageKey(detail.approvalExplanation))}
             </Button>
           ) : null}
           {detail.canEdit && onEdit ? (

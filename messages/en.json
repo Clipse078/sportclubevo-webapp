@@ -485,6 +485,7 @@
         "fieldReference": "Reference",
         "fieldDescription": "Description",
         "submitAction": "Submit for review",
+        "submitActionDirect": "Submit",
         "editAction": "Edit",
         "editSaveConfirm": "Save changes",
         "cancelAction": "Cancel commitment",

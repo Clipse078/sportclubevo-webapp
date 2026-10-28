@@ -472,6 +472,7 @@ export async function getFinanceCommitmentDetail(
       evaluationKind: preview.explanationKind,
       thresholdAmountMinor: policy.thresholdAmountMinor,
       thresholdCurrency: policy.thresholdCurrency,
+      approvalRequired: preview.approvalRequired,
     });
   }
 

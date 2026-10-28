@@ -5,7 +5,22 @@ export type FinanceCommitmentApprovalExplanation = {
   thresholdAmountMinor: number | null;
   thresholdCurrency: string | null;
   isDraftPreview: boolean;
+  /** Canonical policy outcome — same evaluation drives preview copy and draft submit CTA. */
+  approvalRequired: boolean;
 };
+
+export type FinanceCommitmentDraftSubmitMessageKey =
+  | "submitAction"
+  | "submitActionDirect";
+
+export function resolveFinanceCommitmentDraftSubmitMessageKey(
+  explanation: FinanceCommitmentApprovalExplanation | null,
+): FinanceCommitmentDraftSubmitMessageKey {
+  if (explanation?.isDraftPreview && !explanation.approvalRequired) {
+    return "submitActionDirect";
+  }
+  return "submitAction";
+}
 
 export function buildSubmittedApprovalExplanation(input: {
   lifecycleStatus: string;
@@ -25,6 +40,7 @@ export function buildSubmittedApprovalExplanation(input: {
         thresholdAmountMinor: input.approvalThresholdMinorSnapshot,
         thresholdCurrency: input.approvalPolicyCurrencySnapshot,
         isDraftPreview: false,
+        approvalRequired: false,
       };
     }
     return {
@@ -32,6 +48,7 @@ export function buildSubmittedApprovalExplanation(input: {
       thresholdAmountMinor: input.approvalThresholdMinorSnapshot,
       thresholdCurrency: input.approvalPolicyCurrencySnapshot,
       isDraftPreview: false,
+      approvalRequired: false,
     };
   }
   if (input.approvalStatus === "PENDING") {
@@ -43,6 +60,7 @@ export function buildSubmittedApprovalExplanation(input: {
         thresholdAmountMinor: input.approvalThresholdMinorSnapshot,
         thresholdCurrency: input.approvalPolicyCurrencySnapshot,
         isDraftPreview: false,
+        approvalRequired: true,
       };
     }
     return {
@@ -50,6 +68,7 @@ export function buildSubmittedApprovalExplanation(input: {
       thresholdAmountMinor: input.approvalThresholdMinorSnapshot,
       thresholdCurrency: input.approvalPolicyCurrencySnapshot,
       isDraftPreview: false,
+      approvalRequired: true,
     };
   }
   if (input.approvalStatus === "APPROVED" || input.approvalStatus === "REJECTED") {
@@ -62,11 +81,13 @@ export function buildDraftApprovalPreviewExplanation(input: {
   evaluationKind: FinanceCommitmentApprovalPolicyExplanationKind;
   thresholdAmountMinor: number;
   thresholdCurrency: string;
+  approvalRequired: boolean;
 }): FinanceCommitmentApprovalExplanation {
   return {
     kind: input.evaluationKind,
     thresholdAmountMinor: input.thresholdAmountMinor,
     thresholdCurrency: input.thresholdCurrency,
     isDraftPreview: true,
+    approvalRequired: input.approvalRequired,
   };
 }

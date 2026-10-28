@@ -7,6 +7,9 @@ import {
   evaluateFinanceCommitmentApprovalRequirement,
   normalizeFinanceCommitmentApprovalPolicySnapshot,
 } from "@/lib/finance/commitment/finance-commitment-approval-policy-evaluation";
+import {
+  resolveFinanceCommitmentDraftSubmitMessageKey,
+} from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
 import { FINANCE_COMMITMENT_APPROVAL_POLICY_DEFAULTS } from "@/lib/finance/commitment/finance-commitment-approval-policy-contract";
 import {
   loadFinanceCommitmentApprovalInboxSnapshot,
@@ -59,6 +62,39 @@ describe("FIN-07D approval policy & thresholds", () => {
       currency: "EUR",
     });
     expect(evaluation.approvalRequired).toBe(true);
+  });
+
+  it("draft detail preview aligns CTA and approvalRequired at 999 / 1'000 / 1'001 boundary", async () => {
+    const store = createCommitmentMockStore();
+    const db = makeCommitmentMockDb(store);
+    const thresholdMinor = 1_000_00;
+    await saveFinanceCommitmentApprovalPolicy(db as never, policyCtx(), {
+      enabled: true,
+      thresholdAmountMinor: thresholdMinor,
+    });
+
+    const amounts = [
+      { minor: 999_00, required: false, cta: "submitActionDirect" as const },
+      { minor: 1_000_00, required: true, cta: "submitAction" as const },
+      { minor: 1_001_00, required: true, cta: "submitAction" as const },
+    ];
+
+    for (const row of amounts) {
+      const created = await createFinanceCommitment(db as never, policyCtx(), {
+        financeYearId: commitmentYearId,
+        title: `Boundary ${row.minor}`,
+        amountMinor: row.minor,
+        currency: "EUR",
+        commitmentDate: "2026-01-01",
+      });
+      const detail = await getFinanceCommitmentDetail(db as never, policyCtx(), created.id);
+      expect(detail.approvalExplanation?.isDraftPreview).toBe(true);
+      expect(detail.approvalExplanation?.approvalRequired).toBe(row.required);
+      expect(detail.approvalExplanation?.thresholdAmountMinor).toBe(thresholdMinor);
+      expect(resolveFinanceCommitmentDraftSubmitMessageKey(detail.approvalExplanation)).toBe(
+        row.cta,
+      );
+    }
   });
 
   it("999 / 1'000 / 1'001 major-unit boundary submit statuses and snapshot threshold", async () => {
@@ -349,6 +385,15 @@ describe("FIN-07D approval policy & thresholds", () => {
     const detail = await getFinanceCommitmentDetail(db as never, policyCtx(), created.id);
     expect(detail.approvalExplanation?.kind).toBe("REQUIRED_AT_OR_ABOVE_THRESHOLD");
     expect(detail.approvalExplanation?.thresholdAmountMinor).toBe(1_000_00);
+  });
+
+  it("detail sheet submit CTA reuses canonical presentation resolver (no duplicated threshold rules)", () => {
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("resolveFinanceCommitmentDraftSubmitMessageKey");
+    expect(detail).not.toContain("thresholdAmountMinor");
+    expect(detail).not.toContain("evaluateFinanceCommitmentApprovalRequirement");
   });
 
   it("BINARY_CONTROL_COMPLIANCE — settings use Toggle, no new checkboxes", () => {
