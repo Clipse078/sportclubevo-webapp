@@ -320,4 +320,22 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
     expect(list).toContain("FinanceCommitmentStatusBadgeRow");
   });
+
+  it("FIN-07C R3 — target visual convergence (operational surface, sheet, deduped decision)", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS");
+    expect(panel).toContain("data-finance-commitment-operational-surface");
+    const sheet = readRepo("components/ui/Sheet.tsx");
+    expect(sheet).toContain("fitContent ? \"!items-start\"");
+    expect(sheet).toContain("self-start");
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("detailSectionDecision");
+    expect(detail).not.toContain("detailSectionApproval");
+    expect(detail).toContain("history.length <= 1");
+    const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
+    expect(list).toContain("cursor-pointer");
+    expect(list).toContain("minmax(10.5rem");
+  });
 });

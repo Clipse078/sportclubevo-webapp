@@ -43,10 +43,11 @@ import {
   updateFinanceCommitmentAction,
 } from "@/app/(admin)/dashboard/finance/commitments/actions";
 import {
-  FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
+  FINANCE_COMMITMENT_EMPTY_IN_SURFACE_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_FILTERS_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_LIST_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS,
   FINANCE_FIELD_CONTROL_CLASS,
-  FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import { formatFinanceCalendarDateLabel } from "@/lib/finance/setup/finance-year-period-display";
@@ -643,10 +644,15 @@ export function FinanceCommitmentWorkspacePanel({
 
   return (
     <div className={FINANCE_WORKSPACE_STACK_CLASS} data-finance-commitment-workspace>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <p className="max-w-2xl text-sm text-[var(--muted)]">{t("intro")}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-2xl text-sm leading-relaxed text-[var(--muted)]">{t("intro")}</p>
         {snapshot.capabilities.canManage ? (
-          <Button type="button" onClick={openCreate} disabled={!selectedYearId || pending}>
+          <Button
+            type="button"
+            className="h-9 shrink-0 sm:ms-4"
+            onClick={openCreate}
+            disabled={!selectedYearId || pending}
+          >
             {t("newAction")}
           </Button>
         ) : null}
@@ -669,141 +675,156 @@ export function FinanceCommitmentWorkspacePanel({
         t={t}
       />
 
-      <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "flex flex-col gap-3 !px-4 !py-4")}>
-        <div className="flex flex-wrap gap-3">
-          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
-            {t("filterYear")}
-            <SceToolbarSelect
-              value={selectedYearId}
-              onChange={(e) => pushFilters({ yearId: e.target.value })}
-              aria-label={t("filterYear")}
-            >
-              {snapshot.years.map((y) => (
-                <option key={y.id} value={y.id}>
-                  {y.name}
-                </option>
-              ))}
-            </SceToolbarSelect>
-          </label>
-          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
-            {t("filterLifecycle")}
-            <SceToolbarSelect
-              value={snapshot.filters.lifecycleStatus ?? ""}
-              onChange={(e) =>
-                pushFilters({ lifecycle: e.target.value || undefined, page: "1" })
-              }
-              aria-label={t("filterLifecycle")}
-            >
-              {LIFECYCLE_FILTERS.map((value) => (
-                <option key={value || "all"} value={value}>
-                  {value
-                    ? t(financeCommitmentLifecycleLabelKey(value))
-                    : t("filterAll")}
-                </option>
-              ))}
-            </SceToolbarSelect>
-          </label>
-          <label className="flex min-w-[12rem] flex-col gap-1 text-xs text-[var(--muted)]">
-            {t("filterApproval")}
-            <SceToolbarSelect
-              value={snapshot.filters.approvalStatus ?? ""}
-              onChange={(e) =>
-                pushFilters({ approval: e.target.value || undefined, page: "1" })
-              }
-              aria-label={t("filterApproval")}
-            >
-              {APPROVAL_FILTERS.map((value) => (
-                <option key={value || "all"} value={value}>
-                  {value
-                    ? t(financeCommitmentApprovalLabelKey(value))
-                    : t("filterAll")}
-                </option>
-              ))}
-            </SceToolbarSelect>
-          </label>
-          <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-[var(--muted)]">
-            {t("filterSearch")}
-            <input
-              className={FINANCE_FIELD_CONTROL_CLASS}
-              defaultValue={snapshot.filters.search ?? ""}
-              placeholder={t("filterSearchPlaceholder")}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                pushFilters({ q: (e.target as HTMLInputElement).value, page: "1" });
-              }}
-            />
-          </label>
+      <div
+        className={FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS}
+        data-finance-commitment-operational-surface
+      >
+        <div className={FINANCE_COMMITMENT_OPERATIONAL_FILTERS_CLASS}>
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-2.5">
+            <label className="flex min-w-[10.5rem] flex-col gap-1 text-[0.6875rem] font-medium text-[var(--muted)]">
+              {t("filterYear")}
+              <SceToolbarSelect
+                value={selectedYearId}
+                onChange={(e) => pushFilters({ yearId: e.target.value })}
+                aria-label={t("filterYear")}
+              >
+                {snapshot.years.map((y) => (
+                  <option key={y.id} value={y.id}>
+                    {y.name}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            </label>
+            <label className="flex min-w-[10.5rem] flex-col gap-1 text-[0.6875rem] font-medium text-[var(--muted)]">
+              {t("filterLifecycle")}
+              <SceToolbarSelect
+                value={snapshot.filters.lifecycleStatus ?? ""}
+                onChange={(e) =>
+                  pushFilters({ lifecycle: e.target.value || undefined, page: "1" })
+                }
+                aria-label={t("filterLifecycle")}
+              >
+                {LIFECYCLE_FILTERS.map((value) => (
+                  <option key={value || "all"} value={value}>
+                    {value
+                      ? t(financeCommitmentLifecycleLabelKey(value))
+                      : t("filterAll")}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            </label>
+            <label className="flex min-w-[10.5rem] flex-col gap-1 text-[0.6875rem] font-medium text-[var(--muted)]">
+              {t("filterApproval")}
+              <SceToolbarSelect
+                value={snapshot.filters.approvalStatus ?? ""}
+                onChange={(e) =>
+                  pushFilters({ approval: e.target.value || undefined, page: "1" })
+                }
+                aria-label={t("filterApproval")}
+              >
+                {APPROVAL_FILTERS.map((value) => (
+                  <option key={value || "all"} value={value}>
+                    {value
+                      ? t(financeCommitmentApprovalLabelKey(value))
+                      : t("filterAll")}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            </label>
+            <label className="flex min-w-[10.5rem] flex-1 flex-col gap-1 text-[0.6875rem] font-medium text-[var(--muted)]">
+              {t("filterSearch")}
+              <input
+                className={cn(FINANCE_FIELD_CONTROL_CLASS, "h-9")}
+                defaultValue={snapshot.filters.search ?? ""}
+                placeholder={t("filterSearchPlaceholder")}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  pushFilters({ q: (e.target as HTMLInputElement).value, page: "1" });
+                }}
+              />
+            </label>
+          </div>
         </div>
 
-        {feedback ? (
-          <p className="text-sm text-[var(--destructive)]" role="alert">
-            {feedback}
-          </p>
-        ) : null}
+        <div className={FINANCE_COMMITMENT_OPERATIONAL_LIST_CLASS}>
+          {feedback ? (
+            <p className="px-2 py-2 text-sm text-[var(--destructive)]" role="alert">
+              {feedback}
+            </p>
+          ) : null}
 
-        {snapshot.items.length === 0 ? (
-          <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
-            <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("emptyTitle")}</h3>
-            <p className="mt-2 text-sm text-[var(--muted)]">{t("emptyBody")}</p>
-            {snapshot.capabilities.canManage ? (
-              <Button type="button" className="mt-4" onClick={openCreate} disabled={!selectedYearId}>
-                {t("newAction")}
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          <div data-finance-commitment-list className="min-w-0">
-            <FinanceCommitmentListHeader t={t} layout="workspace" />
-            <ul className="divide-y divide-[var(--sce-color-border-standard)]">
-              {snapshot.items.map((item) => (
-                <li key={item.id}>
-                  <FinanceCommitmentListRow
-                    item={item}
-                    t={t}
-                    formatMoney={formatMoney}
-                    formatCalendarDate={formatCalendarDate}
-                    selected={detailId === item.id}
-                    onOpen={() => void openDetail(item.id)}
-                    layout="workspace"
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {snapshot.pagination.totalPages > 1 ? (
-          <div className="flex items-center justify-between pt-2 text-sm">
-            <span className="text-[var(--muted)]">
-              {t("pagination", {
-                page: snapshot.pagination.page,
-                totalPages: snapshot.pagination.totalPages,
-              })}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={snapshot.pagination.page <= 1 || pending}
-                onClick={() =>
-                  pushFilters({ page: String(Math.max(1, snapshot.pagination.page - 1)) })
-                }
-              >
-                ←
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={snapshot.pagination.page >= snapshot.pagination.totalPages || pending}
-                onClick={() =>
-                  pushFilters({ page: String(snapshot.pagination.page + 1) })
-                }
-              >
-                →
-              </Button>
+          {snapshot.items.length === 0 ? (
+            <div
+              className={FINANCE_COMMITMENT_EMPTY_IN_SURFACE_CLASS}
+              data-finance-commitment-empty
+            >
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">{t("emptyTitle")}</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">{t("emptyBody")}</p>
+              {snapshot.capabilities.canManage ? (
+                <Button
+                  type="button"
+                  className="mt-5 h-9"
+                  onClick={openCreate}
+                  disabled={!selectedYearId}
+                >
+                  {t("newAction")}
+                </Button>
+              ) : null}
             </div>
-          </div>
-        ) : null}
+          ) : (
+            <div data-finance-commitment-list className="min-w-0">
+              <FinanceCommitmentListHeader t={t} layout="workspace" />
+              <ul className="divide-y divide-[var(--sce-surface-border-subtle)]/80">
+                {snapshot.items.map((item) => (
+                  <li key={item.id}>
+                    <FinanceCommitmentListRow
+                      item={item}
+                      t={t}
+                      formatMoney={formatMoney}
+                      formatCalendarDate={formatCalendarDate}
+                      selected={detailId === item.id}
+                      onOpen={() => void openDetail(item.id)}
+                      layout="workspace"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {snapshot.pagination.totalPages > 1 ? (
+            <div className="flex items-center justify-between border-t border-[var(--sce-surface-border-subtle)]/80 px-2 py-3 text-sm">
+              <span className="text-[var(--muted)]">
+                {t("pagination", {
+                  page: snapshot.pagination.page,
+                  totalPages: snapshot.pagination.totalPages,
+                })}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={snapshot.pagination.page <= 1 || pending}
+                  onClick={() =>
+                    pushFilters({ page: String(Math.max(1, snapshot.pagination.page - 1)) })
+                  }
+                >
+                  ←
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={snapshot.pagination.page >= snapshot.pagination.totalPages || pending}
+                  onClick={() =>
+                    pushFilters({ page: String(snapshot.pagination.page + 1) })
+                  }
+                >
+                  →
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <Dialog

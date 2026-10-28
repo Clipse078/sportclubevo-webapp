@@ -17,9 +17,11 @@ import {
   rejectFinanceCommitmentAction,
 } from "@/app/(admin)/dashboard/finance/commitments/actions";
 import {
-  FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
+  FINANCE_COMMITMENT_EMPTY_IN_SURFACE_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_FILTERS_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_LIST_CLASS,
+  FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import { formatFinanceCalendarDateLabel } from "@/lib/finance/setup/finance-year-period-display";
@@ -172,56 +174,63 @@ export function FinanceCommitmentApprovalInboxPanel({
         </div>
       </div>
 
-      <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "flex flex-col gap-3 !px-4 !py-4")}>
-        <label className="flex min-w-[12rem] max-w-xs flex-col gap-1 text-xs text-[var(--muted)]">
-          {tWorkspace("filterYear")}
-          <SceToolbarSelect
-            value={snapshot.selectedYearId ?? ""}
-            onChange={(e) => pushYear(e.target.value)}
-            aria-label={tWorkspace("filterYear")}
-          >
-            {snapshot.years.map((y) => (
-              <option key={y.id} value={y.id}>
-                {y.name}
-              </option>
-            ))}
-          </SceToolbarSelect>
-        </label>
-
-        {feedback ? (
-          <p className="text-sm text-[var(--destructive)]" role="alert">
-            {feedback}
-          </p>
-        ) : null}
-
-        {snapshot.pendingItems.length === 0 ? (
-          <div
-            className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}
-            data-finance-commitment-approval-zero
-          >
-            <h3 className={FINANCE_SECTION_HEADER_CLASS}>{t("zeroTitle")}</h3>
-            <p className="mt-2 text-sm text-[var(--muted)]">{t("zeroBody")}</p>
-          </div>
-        ) : (
-          <div data-finance-commitment-approval-pending-list className="min-w-0">
-            <FinanceCommitmentListHeader t={tWorkspace} layout="inbox" />
-            <ul className="divide-y divide-[var(--sce-color-border-standard)]">
-              {snapshot.pendingItems.map((item) => (
-                <li key={item.id}>
-                  <FinanceCommitmentListRow
-                    item={item}
-                    t={tWorkspace}
-                    formatMoney={formatMoney}
-                    formatCalendarDate={formatCalendarDate}
-                    selected={detailId === item.id}
-                    onOpen={() => void openDetail(item.id)}
-                    layout="inbox"
-                  />
-                </li>
+      <div
+        className={FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS}
+        data-finance-commitment-operational-surface
+      >
+        <div className={FINANCE_COMMITMENT_OPERATIONAL_FILTERS_CLASS}>
+          <label className="flex min-w-[10.5rem] max-w-xs flex-col gap-1 text-[0.6875rem] font-medium text-[var(--muted)]">
+            {tWorkspace("filterYear")}
+            <SceToolbarSelect
+              value={snapshot.selectedYearId ?? ""}
+              onChange={(e) => pushYear(e.target.value)}
+              aria-label={tWorkspace("filterYear")}
+            >
+              {snapshot.years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                </option>
               ))}
-            </ul>
-          </div>
-        )}
+            </SceToolbarSelect>
+          </label>
+        </div>
+
+        <div className={FINANCE_COMMITMENT_OPERATIONAL_LIST_CLASS}>
+          {feedback ? (
+            <p className="px-2 py-2 text-sm text-[var(--destructive)]" role="alert">
+              {feedback}
+            </p>
+          ) : null}
+
+          {snapshot.pendingItems.length === 0 ? (
+            <div
+              className={FINANCE_COMMITMENT_EMPTY_IN_SURFACE_CLASS}
+              data-finance-commitment-approval-zero
+            >
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">{t("zeroTitle")}</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">{t("zeroBody")}</p>
+            </div>
+          ) : (
+            <div data-finance-commitment-approval-pending-list className="min-w-0">
+              <FinanceCommitmentListHeader t={tWorkspace} layout="inbox" />
+              <ul className="divide-y divide-[var(--sce-surface-border-subtle)]/80">
+                {snapshot.pendingItems.map((item) => (
+                  <li key={item.id}>
+                    <FinanceCommitmentListRow
+                      item={item}
+                      t={tWorkspace}
+                      formatMoney={formatMoney}
+                      formatCalendarDate={formatCalendarDate}
+                      selected={detailId === item.id}
+                      onOpen={() => void openDetail(item.id)}
+                      layout="inbox"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {snapshot.recentDecisions.length > 0 ? (

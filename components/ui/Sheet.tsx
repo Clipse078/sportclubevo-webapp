@@ -63,7 +63,10 @@ export function Sheet({
       onBackdropClick={onClose}
       initialFocusRef={titleRef}
       testId="sce-sheet-overlay"
-      contentViewportClassName="!items-stretch !justify-end !p-0"
+      contentViewportClassName={cn(
+        "!justify-end !p-0",
+        fitContent ? "!items-start" : "!items-stretch",
+      )}
     >
       <div
         ref={panelRef}
@@ -76,10 +79,10 @@ export function Sheet({
         className={cn(
           "relative z-10 flex min-h-0 flex-col",
           fitContent
-            ? "h-auto max-h-[var(--sce-dialog-max-height)]"
+            ? "h-auto max-h-[var(--sce-dialog-max-height)] self-start"
             : "h-full max-h-[var(--sce-dialog-max-height)]",
           panelClassName ??
-            "w-full sm:w-[750px] lg:w-[820px]",
+            "w-full sm:w-[min(100%,720px)] lg:w-[min(100%,760px)]",
           "border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
         )}
       >
@@ -119,7 +122,7 @@ export function Sheet({
           <div
             className={cn(
               SCE_DIALOG_BODY,
-              fitContent && "flex-none overflow-y-auto",
+              fitContent && "flex-none overflow-y-auto py-4 sm:py-5",
             )}
           >
             {children}

@@ -499,6 +499,7 @@
         "detailSectionParty": "People & dates",
         "detailSectionClassification": "Classification",
         "detailSectionApproval": "Approval",
+        "detailSectionDecision": "Decision",
         "lifecycleDraft": "Draft",
         "lifecycleSubmitted": "Submitted",
         "lifecycleActive": "Active",

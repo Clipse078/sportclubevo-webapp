@@ -11,20 +11,22 @@ import {
 import { cn } from "@/lib/cn";
 import type { FinanceCommitmentDetailRecord } from "@/lib/finance/services/finance-commitment-query-service";
 import {
-  FinanceCommitmentApprovalBadge,
-  FinanceCommitmentStatusBadgeRow,
   financeCommitmentApproveButtonClassName,
+  FinanceCommitmentStatusBadgeRow,
 } from "@/components/admin/finance/commitment/FinanceCommitmentStatusBadge";
-import { FINANCE_SUMMARY_RESULT_VALUE_CLASS } from "@/lib/finance/finance-workspace-surfaces";
+import {
+  FINANCE_COMMITMENT_DETAIL_SECTION_TITLE_CLASS,
+  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+} from "@/lib/finance/finance-workspace-surfaces";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
 function DetailSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)] pt-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {title}
-      </h3>
+    <section
+      className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)]/80 pt-4"
+    >
+      <h3 className={FINANCE_COMMITMENT_DETAIL_SECTION_TITLE_CLASS}>{title}</h3>
       {children}
     </section>
   );
@@ -57,30 +59,35 @@ export function FinanceCommitmentDecisionHistory({
   t,
   formatCalendarDate,
 }: FinanceCommitmentDecisionHistoryProps) {
-  if (history.length === 0) return null;
+  if (history.length <= 1) return null;
   return (
     <DetailSection title={t("detailSectionDecisionHistory")}>
       <ol
-        className="min-w-0 space-y-2.5 text-sm"
+        className="min-w-0 space-y-2 text-sm"
         data-finance-commitment-approval-history
       >
         {history.map((row, index) => {
           const dateLabel = formatCalendarDate(row.decidedAtIso.slice(0, 10));
           return (
-            <li key={`${row.decidedAtIso}-${index}`} className="relative min-w-0 ps-4">
-              <span
-                className="absolute start-0 top-2 h-1.5 w-1.5 rounded-full bg-[var(--sce-surface-border-strong)]"
-                aria-hidden="true"
-              />
-              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                <FinanceCommitmentApprovalBadge status={row.decision} t={t} />
-                <span className="text-xs text-[var(--muted)] tabular-nums">{dateLabel}</span>
+            <li
+              key={`${row.decidedAtIso}-${index}`}
+              className="relative min-w-0 border-s border-[var(--sce-surface-border-subtle)] ps-3"
+            >
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs">
+                <span className="font-medium text-[var(--foreground)]">
+                  {t(
+                    row.decision === "APPROVED"
+                      ? "approvalApproved"
+                      : "approvalRejected",
+                  )}
+                </span>
+                <span className="text-[var(--muted)] tabular-nums">{dateLabel}</span>
                 {row.decidedByDisplayName ? (
                   <>
-                    <span className="text-xs text-[var(--muted)]" aria-hidden="true">
+                    <span className="text-[var(--muted)]" aria-hidden="true">
                       ·
                     </span>
-                    <span className="text-xs text-[var(--text-2)]">{row.decidedByDisplayName}</span>
+                    <span className="text-[var(--text-2)]">{row.decidedByDisplayName}</span>
                   </>
                 ) : null}
               </div>
@@ -159,10 +166,16 @@ export function FinanceCommitmentDetailSheetBody({
     basicsRows.push({ label: t("fieldResponsible"), value: detail.responsibleDisplayName });
   }
 
+  const latestDecisionComment =
+    detail.approvalDecisionHistory[detail.approvalDecisionHistory.length - 1]?.comment ?? null;
+
   const showDecisionMeta =
     detail.approvalDecidedByDisplayName &&
     detail.approvalDecidedAtIso &&
     detail.approvalStatus !== "PENDING";
+
+  const showDecisionReasonSection =
+    detail.approvalStatus === "REJECTED" && Boolean(latestDecisionComment?.trim());
 
   const showPrimaryDecisionActions =
     detail.canApprove && onApprove && onReject && mode === "workspace";
@@ -172,35 +185,43 @@ export function FinanceCommitmentDetailSheetBody({
 
   return (
     <div
-      className="min-w-0 max-w-full space-y-3 overflow-x-hidden pb-1"
+      className="min-w-0 max-w-full space-y-4 overflow-x-hidden"
       data-finance-commitment-detail
     >
-      {detail.partyName ? (
-        <p className="text-sm text-[var(--text-2)]">{detail.partyName}</p>
-      ) : null}
+      <div className="min-w-0 space-y-2.5">
+        {detail.partyName ? (
+          <p className="text-sm text-[var(--text-2)]">{detail.partyName}</p>
+        ) : null}
 
-      <div className="min-w-0 space-y-2">
-        <p className={cn(FINANCE_SUMMARY_RESULT_VALUE_CLASS, "text-2xl break-words sm:text-[1.65rem]")}>
+        <p
+          className={cn(
+            FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+            "text-[1.75rem] leading-none tracking-tight break-words sm:text-[1.875rem]",
+          )}
+        >
           {formatMoney(detail.amountMinor, detail.currency)}
         </p>
+
         <FinanceCommitmentStatusBadgeRow
           lifecycleStatus={detail.lifecycleStatus}
           approvalStatus={detail.approvalStatus}
           t={t}
+          className="gap-2"
         />
+
         {detail.approvalStatus === "PENDING" && !detail.canApprove ? (
           <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
         ) : null}
+
         {showDecisionMeta ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
-            <span>
-              {t("approvalDecisionMeta", {
-                name: detail.approvalDecidedByDisplayName ?? "",
-                date: formatCalendarDate(detail.approvalDecidedAtIso!.slice(0, 10)),
-              })}
-            </span>
-          </div>
+          <p className="text-xs text-[var(--muted)]">
+            {t("approvalDecisionMeta", {
+              name: detail.approvalDecidedByDisplayName ?? "",
+              date: formatCalendarDate(detail.approvalDecidedAtIso!.slice(0, 10)),
+            })}
+          </p>
         ) : null}
+
         {!detail.canEdit && detail.lifecycleStatus !== "DRAFT" ? (
           <p className="text-xs text-[var(--muted)]" data-finance-commitment-edit-blocked>
             {t("editUnavailableSubmitted")}
@@ -217,7 +238,7 @@ export function FinanceCommitmentDetailSheetBody({
             type="button"
             onClick={onApprove}
             disabled={pending}
-            className={cn("w-full sm:w-auto", financeCommitmentApproveButtonClassName())}
+            className={cn("h-9 w-full sm:w-auto", financeCommitmentApproveButtonClassName())}
             data-finance-commitment-approve-action
           >
             {t("approveAction")}
@@ -225,7 +246,7 @@ export function FinanceCommitmentDetailSheetBody({
           <Button
             type="button"
             variant="danger"
-            className="w-full sm:w-auto"
+            className="h-9 w-full sm:w-auto"
             disabled={pending}
             onClick={onReject}
             data-finance-commitment-reject-action
@@ -281,20 +302,11 @@ export function FinanceCommitmentDetailSheetBody({
         </DetailSection>
       ) : null}
 
-      {detail.approvalStatus !== "NOT_REQUIRED" &&
-      detail.approvalStatus !== "PENDING" &&
-      detail.approvalDecisionHistory.length > 0 ? (
-        <DetailSection title={t("detailSectionApproval")}>
-          <div className="space-y-2 text-sm">
-            <FinanceCommitmentApprovalBadge status={detail.approvalStatus} t={t} />
-            {detail.approvalDecisionHistory[detail.approvalDecisionHistory.length - 1]?.comment ? (
-              <p className="break-words text-xs text-[var(--text-2)]">
-                {
-                  detail.approvalDecisionHistory[detail.approvalDecisionHistory.length - 1]
-                    ?.comment
-                }
-              </p>
-            ) : null}
+      {showDecisionReasonSection ? (
+        <DetailSection title={t("detailSectionDecision")}>
+          <div className="space-y-1 text-sm">
+            <p className="text-xs font-medium text-[var(--muted)]">{t("rejectReasonLabel")}</p>
+            <p className="break-words text-[var(--foreground)]">&ldquo;{latestDecisionComment}&rdquo;</p>
           </div>
         </DetailSection>
       ) : null}
@@ -307,11 +319,11 @@ export function FinanceCommitmentDetailSheetBody({
 
       {!showPrimaryDecisionActions && !showInboxDecisionActions ? (
         <div
-          className="flex min-w-0 flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-3 sm:flex-row sm:flex-wrap sm:items-center"
+          className="flex min-w-0 flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)]/80 pt-4 sm:flex-row sm:flex-wrap sm:items-center"
           data-finance-commitment-detail-actions
         >
           {detail.canSubmit && onSubmit ? (
-            <Button type="button" onClick={onSubmit} disabled={pending} className="w-full sm:w-auto">
+            <Button type="button" onClick={onSubmit} disabled={pending} className="h-9 w-full sm:w-auto">
               {t("submitAction")}
             </Button>
           ) : null}
@@ -319,7 +331,7 @@ export function FinanceCommitmentDetailSheetBody({
             <Button
               type="button"
               variant="secondary"
-              className="w-full sm:w-auto"
+              className="h-9 w-full sm:w-auto"
               onClick={onEdit}
             >
               {t("editAction")}

@@ -7,10 +7,10 @@ import { FinanceCommitmentStatusBadgeRow } from "@/components/admin/finance/comm
 type TranslateFn = (key: string) => string;
 
 const WORKSPACE_GRID =
-  "sm:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.55fr)_minmax(4.5rem,0.55fr)_minmax(0,0.7fr)_minmax(0,7.5rem)]";
+  "sm:grid-cols-[minmax(0,1.55fr)_minmax(0,1.05fr)_minmax(6.5rem,0.72fr)_minmax(4.25rem,0.48fr)_minmax(4.25rem,0.48fr)_minmax(0,0.62fr)_minmax(10.5rem,1fr)]";
 
 const INBOX_GRID =
-  "sm:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(5rem,0.65fr)_minmax(4.5rem,0.55fr)_minmax(0,0.75fr)_minmax(0,7rem)]";
+  "sm:grid-cols-[minmax(0,1.5fr)_minmax(0,0.95fr)_minmax(6.5rem,0.72fr)_minmax(4.25rem,0.48fr)_minmax(0,0.68fr)_minmax(10rem,1fr)]";
 
 export type FinanceCommitmentListRowProps = {
   item: FinanceCommitmentListItem;
@@ -37,10 +37,11 @@ export function FinanceCommitmentListRow({
     <button
       type="button"
       className={cn(
-        "group flex w-full min-w-0 flex-col gap-2 px-2 py-2.5 text-left transition-colors",
-        "hover:bg-[var(--surface-2)]/80",
-        selected && "bg-[var(--surface-2)]",
-        "sm:grid sm:items-center sm:gap-x-3",
+        "group flex w-full min-w-0 cursor-pointer flex-col gap-1.5 px-2 py-2 text-left transition-[background-color,box-shadow] duration-150",
+        "hover:bg-[var(--surface-2)]/65",
+        selected &&
+          "bg-[var(--surface-2)]/90 shadow-[inset_2px_0_0_0_var(--sce-primary)]",
+        "sm:grid sm:items-center sm:gap-x-3 sm:py-[0.4375rem]",
         gridClass,
       )}
       onClick={onOpen}
@@ -48,7 +49,9 @@ export function FinanceCommitmentListRow({
       data-commitment-id={item.id}
     >
       <div className="min-w-0">
-        <div className="truncate font-medium text-[var(--foreground)]">{item.title}</div>
+        <div className="truncate text-sm font-medium leading-snug text-[var(--foreground)]">
+          {item.title}
+        </div>
         {item.partyName ? (
           <div className="truncate text-xs text-[var(--text-2)] sm:hidden">{item.partyName}</div>
         ) : null}
@@ -58,7 +61,7 @@ export function FinanceCommitmentListRow({
         {item.partyName ?? "—"}
       </div>
 
-      <div className="tabular-nums text-sm font-semibold text-[var(--foreground)] sm:text-end">
+      <div className="tabular-nums text-sm font-semibold tracking-tight text-[var(--foreground)] sm:text-end">
         {formatMoney(item.amountMinor, item.currency)}
       </div>
 
@@ -78,11 +81,12 @@ export function FinanceCommitmentListRow({
         {item.financialAccountName ?? "—"}
       </div>
 
-      <div className="min-w-0 justify-self-start sm:justify-self-end">
+      <div className="min-w-0 justify-self-stretch sm:min-w-[10rem] sm:justify-self-end">
         <FinanceCommitmentStatusBadgeRow
           lifecycleStatus={item.lifecycleStatus}
           approvalStatus={item.approvalStatus}
           t={t}
+          className="sm:flex-nowrap sm:justify-end"
         />
       </div>
     </button>
@@ -101,7 +105,7 @@ export function FinanceCommitmentListHeader({
   return (
     <div
       className={cn(
-        "hidden min-w-0 px-2 pb-1.5 text-[0.68rem] font-medium uppercase tracking-wide text-[var(--muted)] sm:grid sm:gap-x-3",
+        "hidden min-w-0 border-b border-[var(--sce-surface-border-subtle)]/70 px-2 pb-2 pt-0.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-[var(--muted)] sm:grid sm:gap-x-3",
         gridClass,
       )}
       data-finance-commitment-list-header

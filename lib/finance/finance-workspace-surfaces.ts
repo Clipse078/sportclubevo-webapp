@@ -149,3 +149,22 @@ export const FINANCE_EMPTY_DRAFT_SURFACE_CLASS = cn(
   SCE_SURFACE_STANDARD_PANEL,
   "border-dashed px-5 py-6",
 );
+
+/** FIN-07C R3 — single dominant operational workspace (filters + ledger). */
+export const FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS = cn(
+  SCE_SURFACE_STANDARD_PANEL,
+  "min-w-0 overflow-hidden p-0",
+);
+
+export const FINANCE_COMMITMENT_OPERATIONAL_FILTERS_CLASS = cn(
+  "border-b border-[var(--sce-surface-border-subtle)]/80 bg-[var(--sce-surface-dense)]/35 px-4 py-3 sm:px-5",
+);
+
+export const FINANCE_COMMITMENT_OPERATIONAL_LIST_CLASS = "min-w-0 px-1 py-1 sm:px-2 sm:py-1.5";
+
+/** Detail sheet section labels — restrained, target-aligned rhythm. */
+export const FINANCE_COMMITMENT_DETAIL_SECTION_TITLE_CLASS =
+  "text-[0.6875rem] font-semibold uppercase tracking-[0.04em] text-[var(--muted)]";
+
+export const FINANCE_COMMITMENT_EMPTY_IN_SURFACE_CLASS =
+  "px-4 py-10 text-center sm:px-6 sm:py-12";

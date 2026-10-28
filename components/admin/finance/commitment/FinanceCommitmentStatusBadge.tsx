@@ -130,7 +130,10 @@ export function FinanceCommitmentStatusBadgeRow({
     approvalStatus !== "NOT_REQUIRED" || showNotRequiredApproval;
   return (
     <div
-      className={cn("flex min-w-0 flex-wrap items-center gap-1.5", className)}
+      className={cn(
+        "flex min-w-0 flex-wrap items-center gap-1.5 sm:flex-nowrap",
+        className,
+      )}
       data-finance-commitment-status-row
     >
       <FinanceCommitmentLifecycleBadge status={lifecycleStatus} t={t} />
