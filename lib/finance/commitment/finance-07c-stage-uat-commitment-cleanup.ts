@@ -268,8 +268,9 @@ export async function collectUatCommitmentCleanupInventory(
       `Refusing cleanup: found ${titleMatches.length} FIN-07C UAT-titled commitments; ledger allows ${FIN_07C_UAT_CONTROLLED_COMMITMENTS.length}.`,
     );
   }
+  const allowedIds = new Set<string>(FIN_07C_UAT_CONTROLLED_COMMITMENT_IDS);
   for (const match of titleMatches) {
-    if (!FIN_07C_UAT_CONTROLLED_COMMITMENT_IDS.includes(match.id)) {
+    if (!allowedIds.has(match.id)) {
       blockingErrors.push(
         `Unexpected FIN-07C UAT title on commitment ${match.id} ("${match.title}").`,
       );
