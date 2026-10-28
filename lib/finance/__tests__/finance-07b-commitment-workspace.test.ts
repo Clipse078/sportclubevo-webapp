@@ -272,8 +272,12 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
 
   it("FIN-07B R6 — bounded create dialog and compact workspace status summary", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
-    expect(panel).toContain("data-finance-commitment-status-summary");
-    expect(panel).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
+    expect(panel).toContain("FinanceCommitmentSummarySegments");
+    const summary = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentSummarySegments.tsx",
+    );
+    expect(summary).toContain("data-finance-commitment-status-summary");
+    expect(summary).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
     expect(panel).toContain("data-finance-commitment-delete-dialog");
     expect(panel).toContain("data-finance-commitment-lifecycle-menu");
     expect(panel).toContain('floatingLayer="composer"');
@@ -294,9 +298,23 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
 
   it("FIN-07B R5 — detail sheet uses compact hierarchy (no status/amount section cards)", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
-    expect(panel).toContain("data-finance-commitment-detail");
-    expect(panel).toContain("data-finance-commitment-detail-actions");
-    expect(panel).not.toContain('detailSectionStatus');
-    expect(panel).not.toContain('detailSectionAmount');
+    expect(panel).toContain("FinanceCommitmentDetailSheetBody");
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("data-finance-commitment-detail");
+    expect(detail).toContain("data-finance-commitment-detail-actions");
+    expect(detail).not.toContain("detailSectionStatus");
+    expect(detail).not.toContain("detailSectionAmount");
+  });
+
+  it("FIN-07C R2 — semantic status badges in list and detail", () => {
+    const badge = readRepo("components/admin/finance/commitment/FinanceCommitmentStatusBadge.tsx");
+    expect(badge).toContain("FinanceCommitmentLifecycleBadge");
+    expect(badge).toContain("FinanceCommitmentApprovalBadge");
+    expect(badge).toContain("data-finance-commitment-lifecycle-badge");
+    expect(badge).toContain("data-finance-commitment-approval-badge");
+    const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
+    expect(list).toContain("FinanceCommitmentStatusBadgeRow");
   });
 });

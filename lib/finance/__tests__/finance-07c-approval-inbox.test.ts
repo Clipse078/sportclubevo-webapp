@@ -186,8 +186,10 @@ describe("FIN-07C approval inbox & decisions", () => {
     const workspace = readRepo(
       "components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx",
     );
+    const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
     expect(inboxPanel).not.toContain('type="checkbox"');
     expect(workspace).not.toContain('type="checkbox"');
+    expect(list).not.toContain('type="checkbox"');
   });
 
   it("declares approval inbox route under commitments IA", () => {

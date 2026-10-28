@@ -26,6 +26,8 @@ export type SheetProps = {
   footer?: ReactNode;
   /** Optional panel width/layout override (e.g. Activity Detail). */
   panelClassName?: string;
+  /** Shrink panel/body to content height (avoids empty trailing sheet space). */
+  fitContent?: boolean;
 };
 
 /**
@@ -39,6 +41,7 @@ export function Sheet({
   children,
   footer,
   panelClassName,
+  fitContent = false,
 }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -71,7 +74,10 @@ export function Sheet({
         tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
         className={cn(
-          "relative z-10 flex h-full max-h-[var(--sce-dialog-max-height)] min-h-0 flex-col",
+          "relative z-10 flex min-h-0 flex-col",
+          fitContent
+            ? "h-auto max-h-[var(--sce-dialog-max-height)]"
+            : "h-full max-h-[var(--sce-dialog-max-height)]",
           panelClassName ??
             "w-full sm:w-[750px] lg:w-[820px]",
           "border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
@@ -109,7 +115,16 @@ export function Sheet({
           </button>
         </div>
 
-        {children !== undefined && <div className={SCE_DIALOG_BODY}>{children}</div>}
+        {children !== undefined && (
+          <div
+            className={cn(
+              SCE_DIALOG_BODY,
+              fitContent && "flex-none overflow-y-auto",
+            )}
+          >
+            {children}
+          </div>
+        )}
 
         {footer && <div className={SCE_DIALOG_FOOTER}>{footer}</div>}
       </div>

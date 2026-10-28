@@ -519,6 +519,11 @@
         "rejectConfirmAction": "Confirm rejection",
         "approvalRejectReasonTooShort": "Please enter at least a few words explaining the rejection.",
         "approvalDecisionMeta": "Decision by {name} on {date}",
+        "detailSectionBasics": "Key details",
+        "detailSectionDecisionHistory": "Decision history",
+        "colCommitmentDate": "Date",
+        "summaryPendingOpenApprovals": "Review pending approvals",
+        "rejectReasonHint": "Required — visible to the submitter and kept in the audit trail.",
         "errors": {
           "approvalAlreadyDecided": "An approval decision has already been recorded for this commitment.",
           "forbidden": "You do not have permission for this action.",

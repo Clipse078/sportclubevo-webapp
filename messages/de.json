@@ -982,6 +982,11 @@
         "rejectConfirmAction": "Ablehnung bestätigen",
         "approvalRejectReasonTooShort": "Bitte mindestens ein paar Worte als Begründung angeben.",
         "approvalDecisionMeta": "Entscheidung durch {name} am {date}",
+        "detailSectionBasics": "Basisinformationen",
+        "detailSectionDecisionHistory": "Entscheidungsverlauf",
+        "colCommitmentDate": "Datum",
+        "summaryPendingOpenApprovals": "Ausstehende Freigaben prüfen",
+        "rejectReasonHint": "Pflichtfeld — für die einreichende Person sichtbar und im Verlauf gespeichert.",
         "errors": {
           "approvalAlreadyDecided": "Für diese Verpflichtung liegt bereits eine Freigabeentscheidung vor.",
           "forbidden": "Für diese Aktion fehlt die Berechtigung.",

@@ -31,10 +31,14 @@ describe("FIN-07C PO UAT readiness", () => {
     const workspace = readRepo(
       "components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx",
     );
-    expect(workspace).toContain("data-finance-commitment-approval-inbox-link");
-    expect(workspace).toContain("/dashboard/finance/commitments/approvals");
-    expect(workspace).toContain("openApprovalInbox");
-    expect(workspace).toContain("submittedPendingCount > 0");
-    expect(workspace).toContain("canApprove");
+    expect(workspace).toContain("FinanceCommitmentSummarySegments");
+    const summary = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentSummarySegments.tsx",
+    );
+    expect(summary).toContain("data-finance-commitment-approval-inbox-link");
+    expect(summary).toContain("/dashboard/finance/commitments/approvals");
+    expect(summary).toContain("summaryPendingOpenApprovals");
+    expect(summary).toContain("pendingCount > 0");
+    expect(summary).toContain("canApprove");
   });
 });

@@ -1,22 +1,12 @@
 "use client";
 
-import { useCallback, useId, useMemo, useState, useTransition } from "react";
+import { useCallback, useId, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
-import { Sheet } from "@/components/ui/Sheet";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
-import { SceFormField } from "@/components/sce/forms/SceFormField";
-import { SceTextarea } from "@/components/sce/forms/SceTextarea";
 import { cn } from "@/lib/cn";
-import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
-import {
-  financeCommitmentApprovalLabelKey,
-  financeCommitmentLifecycleLabelKey,
-} from "@/lib/finance/commitment/finance-commitment-status-presentation";
 import type {
   FinanceCommitmentApprovalInboxSnapshot,
   FinanceCommitmentDetailRecord,
@@ -28,12 +18,19 @@ import {
 } from "@/app/(admin)/dashboard/finance/commitments/actions";
 import {
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
-  FINANCE_FIELD_CONTROL_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SECTION_HEADER_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import { formatFinanceCalendarDateLabel } from "@/lib/finance/setup/finance-year-period-display";
+import { FinanceCommitmentApprovalBadge } from "@/components/admin/finance/commitment/FinanceCommitmentStatusBadge";
+import { FinanceCommitmentDetailSheetBody } from "@/components/admin/finance/commitment/FinanceCommitmentDetailSheetBody";
+import {
+  FinanceCommitmentListHeader,
+  FinanceCommitmentListRow,
+} from "@/components/admin/finance/commitment/FinanceCommitmentListRow";
+import { FinanceCommitmentRejectDialog } from "@/components/admin/finance/commitment/FinanceCommitmentRejectDialog";
+import { Sheet } from "@/components/ui/Sheet";
 
 type FinanceCommitmentApprovalInboxPanelProps = {
   snapshot: FinanceCommitmentApprovalInboxSnapshot;
@@ -73,7 +70,6 @@ export function FinanceCommitmentApprovalInboxPanel({
   const [showRecent, setShowRecent] = useState(false);
 
   const rejectFieldId = useId();
-  const selectedYearId = snapshot.selectedYearId ?? "";
 
   const formatMoney = useCallback(
     (minor: number, cur: string) =>
@@ -147,15 +143,6 @@ export function FinanceCommitmentApprovalInboxPanel({
     });
   }
 
-  const decisionContext = useMemo(() => {
-    if (!detail) return null;
-    return {
-      amount: formatMoney(detail.amountMinor, detail.currency),
-      lifecycle: tWorkspace(financeCommitmentLifecycleLabelKey(detail.lifecycleStatus)),
-      approval: tWorkspace(financeCommitmentApprovalLabelKey(detail.approvalStatus)),
-    };
-  }, [detail, formatMoney, tWorkspace]);
-
   return (
     <div className={FINANCE_WORKSPACE_STACK_CLASS} data-finance-commitment-approval-inbox>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -168,21 +155,28 @@ export function FinanceCommitmentApprovalInboxPanel({
             {t("backToWorkspace")}
           </Link>
         </div>
-        <div className="text-right">
-          <div className="text-xs uppercase tracking-wide text-[var(--muted)]">
+        <div
+          className={cn(
+            "rounded-md border border-[var(--sce-surface-border-subtle)] px-3 py-2 text-end",
+            snapshot.pendingCount > 0 &&
+              "border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)]/20",
+          )}
+          data-finance-commitment-approval-pending-kpi
+        >
+          <div className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
             {t("pendingCountLabel")}
           </div>
-          <div className="text-2xl font-semibold tabular-nums text-[var(--foreground)]">
+          <div className="text-2xl font-semibold tabular-nums leading-tight text-[var(--foreground)]">
             {snapshot.pendingCount}
           </div>
         </div>
       </div>
 
-      <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "flex flex-col gap-3 p-4")}>
+      <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "flex flex-col gap-3 !px-4 !py-4")}>
         <label className="flex min-w-[12rem] max-w-xs flex-col gap-1 text-xs text-[var(--muted)]">
           {tWorkspace("filterYear")}
           <SceToolbarSelect
-            value={selectedYearId}
+            value={snapshot.selectedYearId ?? ""}
             onChange={(e) => pushYear(e.target.value)}
             aria-label={tWorkspace("filterYear")}
           >
@@ -209,55 +203,29 @@ export function FinanceCommitmentApprovalInboxPanel({
             <p className="mt-2 text-sm text-[var(--muted)]">{t("zeroBody")}</p>
           </div>
         ) : (
-          <ul
-            className="divide-y divide-[var(--sce-color-border-standard)]"
-            data-finance-commitment-approval-pending-list
-          >
-            {snapshot.pendingItems.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className="flex w-full min-w-0 flex-col gap-2 px-1 py-3 text-left transition-colors hover:bg-[var(--surface-2)] sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-                  onClick={() => void openDetail(item.id)}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium text-[var(--foreground)]">{item.title}</div>
-                    {item.partyName ? (
-                      <div className="mt-0.5 truncate text-sm text-[var(--text-2)]">
-                        {item.partyName}
-                      </div>
-                    ) : null}
-                    <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--muted)]">
-                      <span>{formatCalendarDate(item.commitmentDateIso)}</span>
-                      {item.financialAccountName ? (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <span className="break-words">{item.financialAccountName}</span>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-start gap-0.5 sm:items-end sm:text-right">
-                    <div className="tabular-nums text-base font-semibold text-[var(--foreground)]">
-                      {formatMoney(item.amountMinor, item.currency)}
-                    </div>
-                    {item.expectedPaymentDateIso ? (
-                      <div className="text-xs text-[var(--muted)]">
-                        {t("expectedPaymentShort", {
-                          date: formatCalendarDate(item.expectedPaymentDateIso),
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div data-finance-commitment-approval-pending-list className="min-w-0">
+            <FinanceCommitmentListHeader t={tWorkspace} layout="inbox" />
+            <ul className="divide-y divide-[var(--sce-color-border-standard)]">
+              {snapshot.pendingItems.map((item) => (
+                <li key={item.id}>
+                  <FinanceCommitmentListRow
+                    item={item}
+                    t={tWorkspace}
+                    formatMoney={formatMoney}
+                    formatCalendarDate={formatCalendarDate}
+                    selected={detailId === item.id}
+                    onOpen={() => void openDetail(item.id)}
+                    layout="inbox"
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 
       {snapshot.recentDecisions.length > 0 ? (
-        <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "p-4")}>
+        <div className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "!px-4 !py-3")}>
           <button
             type="button"
             className="flex w-full items-center justify-between text-left text-sm font-medium text-[var(--foreground)]"
@@ -268,17 +236,18 @@ export function FinanceCommitmentApprovalInboxPanel({
             <span className="text-[var(--muted)]">{showRecent ? "−" : "+"}</span>
           </button>
           {showRecent ? (
-            <ul className="mt-3 divide-y divide-[var(--sce-color-border-standard)] text-sm">
+            <ul className="mt-2 divide-y divide-[var(--sce-color-border-standard)] text-sm">
               {snapshot.recentDecisions.map((row) => (
                 <li key={`${row.id}-${row.decidedAtIso}`} className="py-2">
-                  <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:justify-between">
-                    <div className="min-w-0">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 space-y-1">
                       <span className="font-medium">{row.title}</span>
-                      <span className="ms-2 text-[var(--muted)]">
-                        {tWorkspace(financeCommitmentApprovalLabelKey(row.approvalStatus))}
-                      </span>
+                      <FinanceCommitmentApprovalBadge
+                        status={row.approvalStatus}
+                        t={tWorkspace}
+                      />
                     </div>
-                    <div className="tabular-nums text-[var(--foreground)]">
+                    <div className="tabular-nums font-medium text-[var(--foreground)]">
                       {formatMoney(row.amountMinor, row.currency)}
                     </div>
                   </div>
@@ -298,121 +267,50 @@ export function FinanceCommitmentApprovalInboxPanel({
         open={Boolean(detailId && detail)}
         onClose={closeDetail}
         title={detail?.title ?? t("decisionSheetTitle")}
+        fitContent
       >
-        {detail && decisionContext ? (
-          <div
-            className="min-w-0 max-w-full space-y-5 overflow-x-hidden pb-2"
-            data-finance-commitment-approval-decision
-          >
-            <div className="min-w-0 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {t("decisionPrompt")}
-              </p>
-              <p className="text-2xl font-semibold tabular-nums text-[var(--foreground)]">
-                {decisionContext.amount}
-              </p>
-              {detail.partyName ? (
-                <p className="text-sm text-[var(--text-2)]">{detail.partyName}</p>
-              ) : null}
-              <p className="text-sm text-[var(--foreground)]">
-                {decisionContext.lifecycle} · {decisionContext.approval}
-              </p>
-            </div>
-
-            <dl className="min-w-0 space-y-2 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
-              <div className="grid min-w-0 gap-0.5 sm:grid-cols-[minmax(9rem,42%)_1fr]">
-                <dt className="text-[var(--muted)]">{tWorkspace("fieldCommitmentDate")}</dt>
-                <dd className="break-words">{formatCalendarDate(detail.commitmentDateIso)}</dd>
-              </div>
-              {detail.expectedPaymentDateIso ? (
-                <div className="grid min-w-0 gap-0.5 sm:grid-cols-[minmax(9rem,42%)_1fr]">
-                  <dt className="text-[var(--muted)]">{tWorkspace("fieldExpectedPayment")}</dt>
-                  <dd className="break-words">
-                    {formatCalendarDate(detail.expectedPaymentDateIso)}
-                  </dd>
-                </div>
-              ) : null}
-              {detail.financialAccountName ? (
-                <div className="grid min-w-0 gap-0.5 sm:grid-cols-[minmax(9rem,42%)_1fr]">
-                  <dt className="text-[var(--muted)]">{tWorkspace("fieldAccount")}</dt>
-                  <dd className="break-words">{detail.financialAccountName}</dd>
-                </div>
-              ) : null}
-            </dl>
-
-            {detail.description ? (
-              <div className="min-w-0 border-t border-[var(--sce-surface-border-subtle)] pt-4 text-sm">
-                <div className="text-xs font-medium text-[var(--muted)]">
-                  {tWorkspace("fieldDescription")}
-                </div>
-                <p className="mt-1 whitespace-pre-wrap break-words">{detail.description}</p>
-              </div>
-            ) : null}
-
-            {detail.canApprove ? (
-              <div
-                className="flex min-w-0 flex-col gap-2 border-t border-[var(--sce-surface-border-subtle)] pt-4 sm:flex-row sm:flex-wrap"
-                data-finance-commitment-approval-actions
-              >
-                <Button
-                  type="button"
-                  className="w-full sm:w-auto"
-                  disabled={pending}
-                  onClick={handleApprove}
-                >
-                  {t("approveAction")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                  disabled={pending}
-                  onClick={() => {
-                    setRejectReason("");
-                    setRejectError(null);
-                    setRejectOpen(true);
-                  }}
-                >
-                  {t("rejectAction")}
-                </Button>
-              </div>
-            ) : null}
+        {detail ? (
+          <div data-finance-commitment-approval-decision>
+            <FinanceCommitmentDetailSheetBody
+              detail={detail}
+              t={tWorkspace}
+              formatMoney={formatMoney}
+              formatCalendarDate={formatCalendarDate}
+              pending={pending}
+              detailMenuOpen={false}
+              onDetailMenuOpenChange={() => {}}
+              detailMenuTriggerRef={{ current: null }}
+              showLifecycleOverflow={false}
+              showCancelInOverflowMenu={false}
+              showDeleteInOverflowMenu={false}
+              onApprove={detail.canApprove ? handleApprove : undefined}
+              onReject={
+                detail.canApprove
+                  ? () => {
+                      setRejectReason("");
+                      setRejectError(null);
+                      setRejectOpen(true);
+                    }
+                  : undefined
+              }
+              mode="inbox"
+            />
           </div>
         ) : null}
       </Sheet>
 
-      <Dialog
+      <FinanceCommitmentRejectDialog
         open={rejectOpen}
         onClose={() => setRejectOpen(false)}
-        title={t("rejectDialogTitle")}
-        description={t("rejectDialogDescription")}
-        footer={
-          <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-            <Button type="button" variant="secondary" onClick={() => setRejectOpen(false)}>
-              {tWorkspace("dismiss")}
-            </Button>
-            <Button type="button" variant="danger" disabled={pending} onClick={handleRejectConfirm}>
-              {t("rejectConfirmAction")}
-            </Button>
-          </div>
-        }
-      >
-        <SceFormField label={t("rejectReasonLabel")} htmlFor={rejectFieldId}>
-          <SceTextarea
-            id={rejectFieldId}
-            className={cn(FINANCE_FIELD_CONTROL_CLASS, "min-h-[5rem]")}
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            disabled={pending}
-            placeholder={t("rejectReasonPlaceholder")}
-          />
-        </SceFormField>
-        {rejectError ? (
-          <p className="mt-2 text-sm text-[var(--destructive)]" role="alert">
-            {rejectError}
-          </p>
-        ) : null}
-      </Dialog>
+        rejectReason={rejectReason}
+        onRejectReasonChange={setRejectReason}
+        rejectError={rejectError}
+        pending={pending}
+        onConfirm={handleRejectConfirm}
+        fieldId={rejectFieldId}
+        t={t}
+        dismissLabel={tWorkspace("dismiss")}
+      />
     </div>
   );
 }
