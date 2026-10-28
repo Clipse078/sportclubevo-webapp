@@ -279,8 +279,11 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
     expect(summary).toContain("data-finance-commitment-status-summary");
     expect(summary).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
     expect(panel).toContain("data-finance-commitment-delete-dialog");
-    expect(panel).toContain("data-finance-commitment-lifecycle-menu");
-    expect(panel).toContain('floatingLayer="composer"');
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("data-finance-commitment-lifecycle-menu");
+    expect(detail).toContain('floatingLayer="composer"');
     expect(panel).toContain("snapshot.baseCurrency");
     expect(panel).toContain("editSaveConfirm");
     expect(panel).toContain("data-finance-commitment-form-feedback");
