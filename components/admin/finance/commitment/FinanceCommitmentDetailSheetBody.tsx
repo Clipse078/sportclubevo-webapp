@@ -18,6 +18,8 @@ import {
   FINANCE_COMMITMENT_DETAIL_SECTION_TITLE_CLASS,
   FINANCE_SUMMARY_RESULT_VALUE_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import { FinanceCommitmentApprovalExplanationText } from "@/components/admin/finance/commitment/FinanceCommitmentApprovalExplanation";
+import { useLocale } from "next-intl";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
@@ -144,6 +146,7 @@ export function FinanceCommitmentDetailSheetBody({
   onDeleteOpen,
   mode = "workspace",
 }: FinanceCommitmentDetailSheetBodyProps) {
+  const locale = useLocale();
   const basicsRows: Array<{ label: string; value: string }> = [
     { label: t("fieldCommitmentDate"), value: formatCalendarDate(detail.commitmentDateIso) },
   ];
@@ -209,7 +212,15 @@ export function FinanceCommitmentDetailSheetBody({
           className="gap-2"
         />
 
-        {detail.approvalStatus === "PENDING" && !detail.canApprove ? (
+        {detail.approvalExplanation ? (
+          <FinanceCommitmentApprovalExplanationText
+            explanation={detail.approvalExplanation}
+            t={t}
+            locale={locale}
+          />
+        ) : null}
+
+        {detail.approvalStatus === "PENDING" && !detail.canApprove && !detail.approvalExplanation ? (
           <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
         ) : null}
 

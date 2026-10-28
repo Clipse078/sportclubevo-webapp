@@ -44,6 +44,9 @@ type CommitmentRow = {
   responsibleUserId: string | null;
   requestedByUserId: string | null;
   submittedAt: Date | null;
+  approvalPolicyEnabledSnapshot: boolean | null;
+  approvalThresholdMinorSnapshot: number | null;
+  approvalPolicyCurrencySnapshot: string | null;
   approvalDecidedAt: Date | null;
   approvalDecidedByUserId: string | null;
   fulfilledAt: Date | null;
@@ -68,6 +71,14 @@ export function createCommitmentMockStore() {
     financeConfiguration: [
       { tenantId: commitmentTenantA, baseCurrency: "EUR", currentFinanceYearId: commitmentYearId },
     ],
+    financeCommitmentApprovalPolicy: [] as Array<{
+      id: string;
+      tenantId: string;
+      enabled: boolean;
+      thresholdAmountMinor: number;
+      thresholdCurrency: string;
+      updatedByUserId: string | null;
+    }>,
     financialAccount: [
       {
         id: "acc-expense",
@@ -115,6 +126,42 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
       findUnique: async ({ where }: { where: { tenantId: string } }) =>
         store.financeConfiguration.find((c) => c.tenantId === where.tenantId) ?? null,
     },
+    financeCommitmentApprovalPolicy: {
+      findUnique: async ({ where }: { where: { tenantId: string } }) =>
+        store.financeCommitmentApprovalPolicy.find((p) => p.tenantId === where.tenantId) ?? null,
+      create: async ({
+        data,
+      }: {
+        data: {
+          tenantId: string;
+          enabled: boolean;
+          thresholdAmountMinor: number;
+          thresholdCurrency: string;
+          updatedByUserId: string | null;
+        };
+      }) => {
+        const row = { id: `policy_${++seq}`, ...data };
+        store.financeCommitmentApprovalPolicy.push(row);
+        return row;
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: Partial<{
+          enabled: boolean;
+          thresholdAmountMinor: number;
+          thresholdCurrency: string;
+          updatedByUserId: string | null;
+        }>;
+      }) => {
+        const row = store.financeCommitmentApprovalPolicy.find((p) => p.id === where.id);
+        if (!row) throw new Error("not found");
+        Object.assign(row, data);
+        return row;
+      },
+    },
     financialAccount: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.financialAccount.find((a) => a.id === where.id) ?? null,
@@ -136,6 +183,9 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
     financeCommitment: {
       create: async ({ data }: { data: Omit<CommitmentRow, "id" | "createdAt" | "updatedAt"> }) => {
         const row: CommitmentRow = {
+          approvalPolicyEnabledSnapshot: null,
+          approvalThresholdMinorSnapshot: null,
+          approvalPolicyCurrencySnapshot: null,
           ...data,
           id: nextId(),
           createdAt: new Date(),

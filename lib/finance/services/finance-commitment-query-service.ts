@@ -10,11 +10,20 @@ import {
 import { FinanceDomainError } from "@/lib/finance/errors";
 import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configuration-service";
+import { evaluateFinanceCommitmentApprovalRequirement } from "@/lib/finance/commitment/finance-commitment-approval-policy-evaluation";
+import { resolveEffectiveFinanceCommitmentApprovalPolicy } from "@/lib/finance/services/finance-commitment-approval-policy-service";
+import {
+  buildDraftApprovalPreviewExplanation,
+  buildSubmittedApprovalExplanation,
+  type FinanceCommitmentApprovalExplanation,
+} from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
 
 type Db = Pick<
   PrismaClient,
   | "financeCommitment"
   | "financeCommitmentApprovalDecision"
+  | "financeCommitmentApprovalPolicy"
+  | "financeConfiguration"
   | "financeYear"
   | "financialAccount"
   | "financeCostCenter"
@@ -96,6 +105,7 @@ export type FinanceCommitmentDetailRecord = FinanceCommitmentListItem & {
   canApprove: boolean;
   canReject: boolean;
   approvalDecisionHistory: FinanceCommitmentApprovalDecisionRecord[];
+  approvalExplanation: FinanceCommitmentApprovalExplanation | null;
 };
 
 export type FinanceCommitmentApprovalInboxSnapshot = {
@@ -441,6 +451,30 @@ export async function getFinanceCommitmentDetail(
   const canApprove = awaitingDecision && canApproveFinanceCommitments(ctx);
   const canReject = canApprove;
 
+  let approvalExplanation: FinanceCommitmentApprovalExplanation | null =
+    buildSubmittedApprovalExplanation({
+      lifecycleStatus: row.lifecycleStatus,
+      approvalStatus: row.approvalStatus,
+      currency: row.currency,
+      approvalPolicyEnabledSnapshot: row.approvalPolicyEnabledSnapshot,
+      approvalThresholdMinorSnapshot: row.approvalThresholdMinorSnapshot,
+      approvalPolicyCurrencySnapshot: row.approvalPolicyCurrencySnapshot,
+    });
+
+  if (row.lifecycleStatus === "DRAFT") {
+    const policy = await resolveEffectiveFinanceCommitmentApprovalPolicy(db as never, ctx);
+    const preview = evaluateFinanceCommitmentApprovalRequirement({
+      policy,
+      amountMinor: row.amountMinor,
+      currency: row.currency,
+    });
+    approvalExplanation = buildDraftApprovalPreviewExplanation({
+      evaluationKind: preview.explanationKind,
+      thresholdAmountMinor: policy.thresholdAmountMinor,
+      thresholdCurrency: policy.thresholdCurrency,
+    });
+  }
+
   return {
     ...listBase,
     financialAccountId: row.financialAccountId,
@@ -468,6 +502,7 @@ export async function getFinanceCommitmentDetail(
       decidedAtIso: d.decidedAt.toISOString(),
       decidedByDisplayName: decisionActorName.get(d.decidedByUserId) ?? null,
     })),
+    approvalExplanation,
   };
 }
 
