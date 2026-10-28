@@ -155,7 +155,7 @@ export async function seedFin07dUatCommitments(
     }
   }
 
-  let thresholdAmountMinor = effectivePolicy.thresholdAmountMinor;
+  const thresholdAmountMinor = effectivePolicy.thresholdAmountMinor;
   try {
     buildFin07dUatAmountsForThreshold(thresholdAmountMinor);
   } catch (error) {
