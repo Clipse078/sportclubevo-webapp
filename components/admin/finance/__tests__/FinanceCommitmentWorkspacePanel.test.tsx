@@ -28,6 +28,8 @@ vi.mock("@/app/(admin)/dashboard/finance/commitments/actions", () => ({
   loadFinanceCommitmentDetailAction: vi.fn(),
   submitFinanceCommitmentAction: vi.fn(),
   updateFinanceCommitmentAction: vi.fn(),
+  approveFinanceCommitmentAction: vi.fn(),
+  rejectFinanceCommitmentAction: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -35,7 +37,7 @@ beforeEach(() => {
 });
 
 const baseSnapshot: FinanceCommitmentWorkspaceSnapshot = {
-  capabilities: { canView: true, canManage: true, canSubmit: true },
+  capabilities: { canView: true, canManage: true, canSubmit: true, canApprove: false },
   summary: {
     draftCount: 0,
     submittedPendingCount: 0,
@@ -195,6 +197,11 @@ const uatDetail: FinanceCommitmentDetailRecord = {
   canEdit: true,
   canSubmit: true,
   canCancel: true,
+  canApprove: false,
+  canReject: false,
+  approvalDecidedAtIso: null,
+  approvalDecidedByDisplayName: null,
+  approvalDecisionHistory: [],
 };
 
 describe("FinanceCommitmentWorkspacePanel detail sheet (FIN-07B R5)", () => {

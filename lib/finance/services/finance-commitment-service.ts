@@ -14,10 +14,12 @@ import {
   assertFinanceCommitmentMayBecomeActive,
 } from "@/lib/finance/commitment/finance-commitment-lifecycle";
 import {
+  canApproveFinanceCommitments,
   canManageFinanceCommitments,
   canSubmitFinanceCommitments,
   requireFinanceCommitmentFoundationView,
 } from "@/lib/finance/commitment/finance-commitment-authorization";
+import type { FinanceCommitmentApprovalDecisionKind } from "@/lib/finance/commitment/finance-commitment-architecture-contract";
 import { FINANCE_COMMITMENT_PERSISTENCE_MODEL } from "@/lib/finance/commitment/finance-commitment-architecture-contract";
 import { auditFinanceCommitmentLifecycle } from "@/lib/finance/audit/finance-commitment-audit";
 
@@ -28,7 +30,9 @@ type Db = Pick<
   | "financialAccount"
   | "financeCostCenter"
   | "financeEconomicEvidenceLink"
+  | "financeCommitmentApprovalDecision"
   | "auditLog"
+  | "$transaction"
 >;
 
 function parseDateOnly(value: Date | string, field: string): Date {
@@ -431,50 +435,169 @@ export async function submitFinanceCommitment(
   return updated;
 }
 
-/** FIN-07C will own approver UX — domain helper for tests and future inbox. */
-export async function approveFinanceCommitmentForDomain(
-  db: Db & Pick<PrismaClient, "financeCommitmentApprovalDecision">,
+function normalizeApprovalDecisionComment(
+  decision: FinanceCommitmentApprovalDecisionKind,
+  comment: string | null | undefined,
+): string | null {
+  const trimmed = comment?.trim() ?? "";
+  if (!trimmed) {
+    if (decision === "REJECTED") {
+      throw new FinanceDomainError(
+        "FINANCE_COMMITMENT_VALIDATION",
+        "A short rejection reason is required.",
+        400,
+      );
+    }
+    return null;
+  }
+  if (trimmed.length < 3 && decision === "REJECTED") {
+    throw new FinanceDomainError(
+      "FINANCE_COMMITMENT_VALIDATION",
+      "Rejection reason is too short.",
+      400,
+    );
+  }
+  if (trimmed.length > 500) {
+    throw new FinanceDomainError(
+      "FINANCE_COMMITMENT_VALIDATION",
+      "Decision comment is too long.",
+      400,
+    );
+  }
+  return trimmed;
+}
+
+type ApprovalDecisionDb = Pick<
+  PrismaClient,
+  "financeCommitment" | "financeCommitmentApprovalDecision" | "auditLog"
+>;
+
+async function applyFinanceCommitmentApprovalDecision(
+  db: Db,
   ctx: FinanceAuthContext,
   commitmentId: string,
+  decision: FinanceCommitmentApprovalDecisionKind,
+  comment: string | null | undefined,
 ) {
-  const { canApproveFinanceCommitments } = await import(
-    "@/lib/finance/commitment/finance-commitment-authorization"
-  );
   if (!canApproveFinanceCommitments(ctx)) {
     throw new FinanceDomainError("FINANCE_FORBIDDEN", "Insufficient permission.", 403);
   }
+
   const existing = await getCommitmentForTenantOrThrow(db, ctx, commitmentId);
   if (existing.lifecycleStatus !== "SUBMITTED") {
     throw new FinanceDomainError(
       "FINANCE_COMMITMENT_INVALID_STATE",
-      "Only submitted commitments can be approved.",
+      "Only submitted commitments can receive an approval decision.",
       409,
     );
   }
-  await db.financeCommitmentApprovalDecision.create({
-    data: {
+  if (existing.approvalStatus !== "PENDING") {
+    throw new FinanceDomainError(
+      "FINANCE_COMMITMENT_APPROVAL_ALREADY_DECIDED",
+      "This commitment no longer awaits an approval decision.",
+      409,
+    );
+  }
+
+  const normalizedComment = normalizeApprovalDecisionComment(decision, comment);
+  const decidedAt = new Date();
+  const nextApprovalStatus = decision === "APPROVED" ? "APPROVED" : "REJECTED";
+
+  const runDecision = async (tx: ApprovalDecisionDb) => {
+    const locked = await tx.financeCommitment.updateMany({
+      where: {
+        id: existing.id,
+        tenantId: ctx.tenantId,
+        lifecycleStatus: "SUBMITTED",
+        approvalStatus: "PENDING",
+      },
+      data: {
+        approvalStatus: nextApprovalStatus,
+        approvalDecidedAt: decidedAt,
+        approvalDecidedByUserId: ctx.userId,
+        updatedByUserId: ctx.userId,
+      },
+    });
+    if (locked.count !== 1) {
+      throw new FinanceDomainError(
+        "FINANCE_COMMITMENT_APPROVAL_ALREADY_DECIDED",
+        "This commitment no longer awaits an approval decision.",
+        409,
+      );
+    }
+
+    await tx.financeCommitmentApprovalDecision.create({
+      data: {
+        tenantId: ctx.tenantId,
+        commitmentId: existing.id,
+        decision,
+        comment: normalizedComment,
+        decidedByUserId: ctx.userId,
+        decidedAt,
+      },
+    });
+
+    const updated = await tx.financeCommitment.findFirst({
+      where: { id: existing.id, tenantId: ctx.tenantId },
+    });
+    if (!updated) {
+      throw new FinanceDomainError("FINANCE_NOT_FOUND", "Commitment not found.", 404);
+    }
+
+    await auditFinanceCommitmentLifecycle(tx, {
       tenantId: ctx.tenantId,
-      commitmentId: existing.id,
-      decision: "APPROVED",
-      decidedByUserId: ctx.userId,
-    },
-  });
-  const updated = await db.financeCommitment.update({
-    where: { id: existing.id },
-    data: {
-      approvalStatus: "APPROVED",
-      approvalDecidedAt: new Date(),
-      approvalDecidedByUserId: ctx.userId,
-      updatedByUserId: ctx.userId,
-    },
-  });
-  await auditFinanceCommitmentLifecycle(db, {
-    tenantId: ctx.tenantId,
-    actorUserId: ctx.userId,
-    commitmentId: updated.id,
-    action: "COMMITMENT_APPROVED",
-  });
-  return updated;
+      actorUserId: ctx.userId,
+      commitmentId: updated.id,
+      action: decision === "APPROVED" ? "COMMITMENT_APPROVED" : "COMMITMENT_REJECTED",
+      metadataJson: normalizedComment ? { hasComment: true } : undefined,
+    });
+
+    return updated;
+  };
+
+  if (typeof db.$transaction === "function") {
+    return db.$transaction((tx: ApprovalDecisionDb) => runDecision(tx));
+  }
+  return runDecision(db);
+}
+
+export async function approveFinanceCommitment(
+  db: Db,
+  ctx: FinanceAuthContext,
+  commitmentId: string,
+  input?: { comment?: string | null },
+) {
+  return applyFinanceCommitmentApprovalDecision(
+    db,
+    ctx,
+    commitmentId,
+    "APPROVED",
+    input?.comment,
+  );
+}
+
+export async function rejectFinanceCommitment(
+  db: Db,
+  ctx: FinanceAuthContext,
+  commitmentId: string,
+  input: { comment: string },
+) {
+  return applyFinanceCommitmentApprovalDecision(
+    db,
+    ctx,
+    commitmentId,
+    "REJECTED",
+    input.comment,
+  );
+}
+
+/** @deprecated Use approveFinanceCommitment — retained for FIN-07B tests. */
+export async function approveFinanceCommitmentForDomain(
+  db: Db,
+  ctx: FinanceAuthContext,
+  commitmentId: string,
+) {
+  return approveFinanceCommitment(db, ctx, commitmentId);
 }
 
 /** Domain-only activation after approval — UI inbox deferred to FIN-07C. */

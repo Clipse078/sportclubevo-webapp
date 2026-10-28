@@ -272,11 +272,18 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
 
   it("FIN-07B R6 — bounded create dialog and compact workspace status summary", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
-    expect(panel).toContain("data-finance-commitment-status-summary");
-    expect(panel).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
+    expect(panel).toContain("FinanceCommitmentSummarySegments");
+    const summary = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentSummarySegments.tsx",
+    );
+    expect(summary).toContain("data-finance-commitment-status-summary");
+    expect(summary).toContain("FINANCE_SUMMARY_STRIP_SURFACE_CLASS");
     expect(panel).toContain("data-finance-commitment-delete-dialog");
-    expect(panel).toContain("data-finance-commitment-lifecycle-menu");
-    expect(panel).toContain('floatingLayer="composer"');
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("data-finance-commitment-lifecycle-menu");
+    expect(detail).toContain('floatingLayer="composer"');
     expect(panel).toContain("snapshot.baseCurrency");
     expect(panel).toContain("editSaveConfirm");
     expect(panel).toContain("data-finance-commitment-form-feedback");
@@ -294,9 +301,41 @@ describe("FIN-07B commitment workspace & lifecycle", () => {
 
   it("FIN-07B R5 — detail sheet uses compact hierarchy (no status/amount section cards)", () => {
     const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
-    expect(panel).toContain("data-finance-commitment-detail");
-    expect(panel).toContain("data-finance-commitment-detail-actions");
-    expect(panel).not.toContain('detailSectionStatus');
-    expect(panel).not.toContain('detailSectionAmount');
+    expect(panel).toContain("FinanceCommitmentDetailSheetBody");
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("data-finance-commitment-detail");
+    expect(detail).toContain("data-finance-commitment-detail-actions");
+    expect(detail).not.toContain("detailSectionStatus");
+    expect(detail).not.toContain("detailSectionAmount");
+  });
+
+  it("FIN-07C R2 — semantic status badges in list and detail", () => {
+    const badge = readRepo("components/admin/finance/commitment/FinanceCommitmentStatusBadge.tsx");
+    expect(badge).toContain("FinanceCommitmentLifecycleBadge");
+    expect(badge).toContain("FinanceCommitmentApprovalBadge");
+    expect(badge).toContain("data-finance-commitment-lifecycle-badge");
+    expect(badge).toContain("data-finance-commitment-approval-badge");
+    const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
+    expect(list).toContain("FinanceCommitmentStatusBadgeRow");
+  });
+
+  it("FIN-07C R3 — target visual convergence (operational surface, sheet, deduped decision)", () => {
+    const panel = readRepo("components/admin/finance/commitment/FinanceCommitmentWorkspacePanel.tsx");
+    expect(panel).toContain("FINANCE_COMMITMENT_OPERATIONAL_SURFACE_CLASS");
+    expect(panel).toContain("data-finance-commitment-operational-surface");
+    const sheet = readRepo("components/ui/Sheet.tsx");
+    expect(sheet).toContain("fitContent ? \"!items-start\"");
+    expect(sheet).toContain("self-start");
+    const detail = readRepo(
+      "components/admin/finance/commitment/FinanceCommitmentDetailSheetBody.tsx",
+    );
+    expect(detail).toContain("detailSectionDecision");
+    expect(detail).not.toContain("detailSectionApproval");
+    expect(detail).toContain("history.length <= 1");
+    const list = readRepo("components/admin/finance/commitment/FinanceCommitmentListRow.tsx");
+    expect(list).toContain("cursor-pointer");
+    expect(list).toContain("minmax(10.5rem");
   });
 });

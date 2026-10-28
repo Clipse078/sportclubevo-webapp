@@ -6,9 +6,11 @@ import { FinanceDomainError } from "@/lib/finance/errors";
 import { resolveFinanceCommitmentActionMessageKey } from "@/lib/finance/commitment/finance-commitment-action-errors";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import {
+  approveFinanceCommitment,
   cancelFinanceCommitment,
   createFinanceCommitment,
   deleteDraftFinanceCommitment,
+  rejectFinanceCommitment,
   submitFinanceCommitment,
   updateFinanceCommitment,
 } from "@/lib/finance/services/finance-commitment-service";
@@ -20,8 +22,10 @@ export type FinanceCommitmentActionResult =
 
 function revalidateCommitments(financeYearId?: string | null) {
   revalidatePath("/dashboard/finance/commitments", "layout");
+  revalidatePath("/dashboard/finance/commitments/approvals", "layout");
   if (financeYearId) {
     revalidatePath(`/dashboard/finance/commitments?yearId=${financeYearId}`);
+    revalidatePath(`/dashboard/finance/commitments/approvals?yearId=${financeYearId}`);
   }
 }
 
@@ -153,4 +157,38 @@ export async function deleteDraftFinanceCommitmentAction(input: {
 export async function loadFinanceCommitmentDetailAction(commitmentId: string) {
   const ctx = await commitmentCtx();
   return getFinanceCommitmentDetail(prisma, ctx, commitmentId);
+}
+
+export async function approveFinanceCommitmentAction(input: {
+  commitmentId: string;
+  financeYearId: string;
+  comment?: string | null;
+}): Promise<FinanceCommitmentActionResult> {
+  try {
+    const ctx = await commitmentCtx();
+    await approveFinanceCommitment(prisma, ctx, input.commitmentId, {
+      comment: input.comment,
+    });
+    revalidateCommitments(input.financeYearId);
+    return { ok: true, commitmentId: input.commitmentId };
+  } catch (error) {
+    return mapError(error);
+  }
+}
+
+export async function rejectFinanceCommitmentAction(input: {
+  commitmentId: string;
+  financeYearId: string;
+  comment: string;
+}): Promise<FinanceCommitmentActionResult> {
+  try {
+    const ctx = await commitmentCtx();
+    await rejectFinanceCommitment(prisma, ctx, input.commitmentId, {
+      comment: input.comment,
+    });
+    revalidateCommitments(input.financeYearId);
+    return { ok: true, commitmentId: input.commitmentId };
+  } catch (error) {
+    return mapError(error);
+  }
 }
