@@ -340,6 +340,10 @@ export const FINANCE_07D_IMPLEMENTATION = {
   settingsSection:
     "components/admin/finance/commitment/FinanceCommitmentApprovalPolicySettingsSection.tsx",
   architectureTestSuite: "lib/finance/__tests__/finance-07d-approval-policy.test.ts",
+  poUatReadiness: "lib/finance/commitment/finance-07d-po-uat-readiness.ts",
+  stageUatSeedScript: "scripts/sce-finance-07d-stage-uat-commitment-seed.ts",
+  stagePoUatReadinessScript: "scripts/sce-finance-07d-stage-po-uat-readiness.ts",
+  stageUatCleanupScript: "scripts/sce-finance-07d-stage-uat-commitment-cleanup.ts",
   fin07dStatus: "IMPLEMENTED_PO_UAT_READY",
   migration: "20261028120000_sce_finance_07d_commitment_approval_policy",
   submitResolvesApprovalRequirement: true,
