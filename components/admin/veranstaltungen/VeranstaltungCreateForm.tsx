@@ -21,13 +21,16 @@ import {
   resolveClubEventCreateStepValid,
   validateClubEventCreateWorkflowStep,
 } from "@/lib/veranstaltungen/club-event-create-step-validation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 import { TRAINING_ALLOCATION_GROUP_LABELS } from "@/lib/training/allocation-groups";
-import { parseClubEventScheduleInput } from "@/lib/events/club-event-scheduling";
+import {
+  formatClubEventComposerScheduleReviewLine,
+  parseClubEventScheduleInput,
+} from "@/lib/events/club-event-scheduling";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
@@ -45,11 +48,9 @@ import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
 import ClubEventOrganisationalAudienceEditor, {
-  clubEventOrganisationalAudienceEditorToApiPayload,
   type ClubEventOrganisationalAudienceEditorValue,
 } from "./ClubEventOrganisationalAudienceEditor";
 import VeranstaltungRecurrenceFields, {
-  recurrenceValuesToApiPayload,
   type VeranstaltungRecurrenceFieldValues,
 } from "./VeranstaltungRecurrenceFields";
 import {
@@ -138,6 +139,7 @@ export default function VeranstaltungCreateForm({
   reviewerComment = null,
 }: VeranstaltungCreateFormProps) {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
   const tc = useTranslations("PlanningEditor.common");
@@ -262,6 +264,22 @@ export default function VeranstaltungCreateForm({
       return null;
     }
   }, [schedule, timeZone]);
+
+  const scheduleReviewLine = useMemo(
+    () =>
+      formatClubEventComposerScheduleReviewLine(
+        {
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+        },
+        locale,
+        timeZone ?? "Europe/Zurich",
+      ) ?? "Termin offen",
+    [schedule, locale, timeZone],
+  );
 
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
     enabled: scheduleInterval != null,
@@ -895,11 +913,7 @@ export default function VeranstaltungCreateForm({
         activityKind="VERANSTALTUNG"
         title={title.trim() || "—"}
         typeLabel={category || "Veranstaltung"}
-        scheduleLine={
-          schedule.startDate
-            ? `${schedule.startDate}${schedule.startTime ? ` · ${schedule.startTime}` : ""}`
-            : "Termin offen"
-        }
+        scheduleLine={scheduleReviewLine}
       />
       <p className="mt-3 text-sm text-[var(--text-2)]">
         {description.trim() || "Keine Beschreibung"}

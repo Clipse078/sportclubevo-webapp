@@ -34,3 +34,9 @@ export type ClubEventOrganisationalAudienceInput = {
   teamIds?: readonly string[];
   orgUnitIds?: readonly string[];
 };
+
+/** Wizard/editor state for organisational audience (labels are UI-only). */
+export type ClubEventOrganisationalAudienceEditorValue = {
+  scope: ClubEventOrganisationalScope;
+  targets: ClubEventOrganisationalAudienceTargetDto[];
+};

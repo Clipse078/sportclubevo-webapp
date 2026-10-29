@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   allDayInclusiveDayKeys,
+  formatClubEventComposerScheduleReviewLine,
   formatClubEventTimingLabel,
   parseClubEventScheduleInput,
   zonedDateKeyFromInstant,
@@ -54,6 +55,22 @@ describe("SCE-EVENTS-01 club event scheduling", () => {
         TZ,
       ),
     ).toThrow(/Enddatum/);
+  });
+
+  it("formats composer review line for all-day without clock time", () => {
+    const line = formatClubEventComposerScheduleReviewLine(
+      {
+        allDay: true,
+        startDate: "2026-09-25",
+        endDate: "2026-09-25",
+        startTime: "18:00",
+        endTime: "20:00",
+      },
+      "de-CH",
+      TZ,
+    );
+    expect(line).toContain("Ganztägig");
+    expect(line).not.toMatch(/18:00/);
   });
 
   it("keeps calendar date stable through UTC serialization", () => {

@@ -1,7 +1,17 @@
 import type {
+  ClubEventOrganisationalAudienceEditorValue,
   ClubEventOrganisationalAudienceInput,
   ClubEventOrganisationalAudienceTargetKind,
 } from "./club-event-organisational-audience-types";
+
+export function clubEventOrganisationalAudienceEditorToApiPayload(
+  value: ClubEventOrganisationalAudienceEditorValue,
+): ClubEventOrganisationalAudienceInput {
+  return {
+    scope: value.scope,
+    targets: value.targets.map((t) => ({ kind: t.kind, id: t.id })),
+  };
+}
 
 export function parseClubEventOrganisationalAudienceFromApiBody(
   raw: unknown,

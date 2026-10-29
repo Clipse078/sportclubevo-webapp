@@ -272,6 +272,67 @@ export function clubEventScheduleFormFromPersisted(
   };
 }
 
+/**
+ * Create/edit wizard Übersicht schedule line — date + timing with all-day semantics.
+ */
+export function formatClubEventComposerScheduleReviewLine(
+  input: ClubEventScheduleFormInput,
+  locale: string,
+  timeZone: string,
+): string | null {
+  const startDate = String(input.startDate ?? "").trim();
+  if (!startDate) return null;
+
+  const tz = resolveTenantEventTimezone(timeZone);
+
+  const shortReviewDateFmt = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: tz,
+  });
+
+  try {
+    const parsed = parseClubEventScheduleInput({ ...input, startDate }, tz);
+    let dateLabel: string;
+    if (parsed.allDay) {
+      const endInclusive = parsed.endAt
+        ? inclusiveEndDateKeyFromExclusiveEnd(parsed.endAt, tz)
+        : zonedDateKeyFromInstant(parsed.startAt, tz);
+      const startKey = zonedDateKeyFromInstant(parsed.startAt, tz);
+      dateLabel =
+        endInclusive !== startKey
+          ? formatClubEventDateHeading(
+              { allDay: true, startAt: parsed.startAt, endAt: parsed.endAt },
+              locale,
+              tz,
+            )
+          : shortReviewDateFmt.format(parsed.startAt);
+    } else {
+      dateLabel = shortReviewDateFmt.format(parsed.startAt);
+    }
+    const timeLabel = formatClubEventTimingLabel(parsed, locale, tz);
+    return `${dateLabel} · ${timeLabel}`;
+  } catch {
+    if (input.allDay) {
+      try {
+        const day = startOfTenantCalendarDay(startDate, tz);
+        const dateLabel = new Intl.DateTimeFormat(locale, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: tz,
+        }).format(day);
+        return `${dateLabel} · Ganztägig`;
+      } catch {
+        return null;
+      }
+    }
+    const time = String(input.startTime ?? "").trim();
+    return time ? `${startDate} · ${time}` : startDate;
+  }
+}
+
 export function formatClubEventListDateColumn(
   input: {
     allDay: boolean;

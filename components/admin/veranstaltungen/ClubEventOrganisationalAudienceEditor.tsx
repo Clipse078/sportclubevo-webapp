@@ -6,14 +6,16 @@ import {
   SceChipMultiSelectorField,
   type SceChipSelection,
 } from "@/components/sce/list-selector/SceChipMultiSelectorField";
-import type { ClubEventOrganisationalAudienceDto } from "@/lib/events/club-event-organisational-audience-types";
+import { clubEventOrganisationalAudienceEditorToApiPayload } from "@/lib/events/club-event-organisational-audience-api";
+import type {
+  ClubEventOrganisationalAudienceDto,
+  ClubEventOrganisationalAudienceEditorValue,
+} from "@/lib/events/club-event-organisational-audience-types";
+
+export type { ClubEventOrganisationalAudienceEditorValue };
+export { clubEventOrganisationalAudienceEditorToApiPayload };
 import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
 import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
-
-export type ClubEventOrganisationalAudienceEditorValue = {
-  scope: "CLUB_WIDE" | "SELECTED_ORG_UNITS";
-  targets: Array<{ kind: "TEAM" | "ORG_UNIT"; id: string; label: string }>;
-};
 
 type Props = {
   initial: ClubEventOrganisationalAudienceDto;
@@ -167,13 +169,4 @@ export default function ClubEventOrganisationalAudienceEditor({
       ) : null}
     </div>
   );
-}
-
-export function clubEventOrganisationalAudienceEditorToApiPayload(
-  value: ClubEventOrganisationalAudienceEditorValue,
-) {
-  return {
-    scope: value.scope,
-    targets: value.targets.map((t) => ({ kind: t.kind, id: t.id })),
-  };
 }
