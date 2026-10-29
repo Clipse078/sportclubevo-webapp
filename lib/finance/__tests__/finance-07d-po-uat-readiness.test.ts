@@ -38,6 +38,19 @@ describe("FIN-07D PO UAT readiness", () => {
     expect(script).toContain("SCE-FINANCE-07D-UAT-CLEANUP");
   });
 
+  it("wires fail-closed post-submit verification for operators", () => {
+    const script = readRepo("scripts/sce-finance-07d-stage-po-uat-post-submit-verify.ts");
+    expect(script).toContain("verifyFin07dPoUatPostSubmit");
+    expect(script).toContain("process.exitCode = 1");
+    const postSubmitVerifier = readRepo("lib/finance/commitment/finance-07d-po-uat-post-submit.ts");
+    expect(postSubmitVerifier).toContain("evaluateFinanceCommitmentApprovalRequirement");
+    expect(postSubmitVerifier).toContain("loadFinanceCommitmentApprovalInboxSnapshot");
+    expect(postSubmitVerifier).toContain('assertUatRow("FIN_07D_BELOW"');
+    expect(postSubmitVerifier).toContain("PENDING_APPROVAL_UAT_COUNT");
+    expect(postSubmitVerifier).not.toContain("amountMinor >=");
+    expect(postSubmitVerifier).not.toContain("amountMinor <");
+  });
+
   it("exposes policy configuration in Finance settings workspace", () => {
     const settings = readRepo("app/(admin)/dashboard/finance/settings/page.tsx");
     expect(settings).toContain("loadFinanceCommitmentApprovalPolicyReadModel");
