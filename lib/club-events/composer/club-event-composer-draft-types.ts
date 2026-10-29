@@ -1,4 +1,4 @@
-import type { ClubEventOrganisationalAudienceEditorValue } from "@/components/admin/veranstaltungen/ClubEventOrganisationalAudienceEditor";
+import type { ClubEventOrganisationalAudienceEditorValue } from "@/lib/events/club-event-organisational-audience-types";
 import type { VeranstaltungAusspielungValues } from "@/components/admin/veranstaltungen/VeranstaltungAusspielungFields";
 import type { VeranstaltungScheduleFieldValues } from "@/components/admin/veranstaltungen/VeranstaltungScheduleFields";
 import type { VeranstaltungRecurrenceFieldValues } from "@/components/admin/veranstaltungen/VeranstaltungRecurrenceFields";

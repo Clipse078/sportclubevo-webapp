@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { createClubEventFromRequest } from "@/lib/events/club-event-create-service";
-import { clubEventOrganisationalAudienceEditorToApiPayload } from "@/components/admin/veranstaltungen/ClubEventOrganisationalAudienceEditor";
-import { recurrenceValuesToApiPayload } from "@/components/admin/veranstaltungen/VeranstaltungRecurrenceFields";
+import { clubEventOrganisationalAudienceEditorToApiPayload } from "@/lib/events/club-event-organisational-audience-api";
+import { clubEventRecurrenceEditorToApiPayload } from "@/lib/events/club-event-recurrence-editor-payload";
 import { parseClubEventScheduleInput } from "@/lib/events/club-event-scheduling";
 import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
 import type { ClubEventComposerDraftPayload } from "./club-event-composer-draft-types";
@@ -159,10 +159,7 @@ export async function commitClubEventComposerDraft(input: {
   );
 
   const audiencePayload = clubEventOrganisationalAudienceEditorToApiPayload(input.payload.audience);
-  const recurrencePayload = recurrenceValuesToApiPayload(
-    input.payload.schedule,
-    input.payload.recurrence,
-  );
+  const recurrencePayload = clubEventRecurrenceEditorToApiPayload(input.payload.recurrence);
 
   const createResult = await createClubEventFromRequest({
     tenantId: input.tenantId,

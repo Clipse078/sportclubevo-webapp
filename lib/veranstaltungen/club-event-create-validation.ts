@@ -1,4 +1,4 @@
-import type { ClubEventOrganisationalAudienceEditorValue } from "@/components/admin/veranstaltungen/ClubEventOrganisationalAudienceEditor";
+import type { ClubEventOrganisationalAudienceEditorValue } from "@/lib/events/club-event-organisational-audience-types";
 import type { VeranstaltungScheduleFieldValues } from "@/components/admin/veranstaltungen/VeranstaltungScheduleFields";
 import type { ClubEventCreateTabId } from "@/lib/veranstaltungen/club-event-create-workflow-config";
 

@@ -172,3 +172,11 @@ export function parseClubEventRecurrenceFromApiBody(
 
   return { enabled: true, rule };
 }
+
+export type {
+  ClubEventRecurrenceEditorValues,
+} from "@/lib/events/club-event-recurrence-editor-payload";
+export {
+  clubEventRecurrenceEditorToApiPayload,
+  recurrenceValuesToApiPayload,
+} from "@/lib/events/club-event-recurrence-editor-payload";

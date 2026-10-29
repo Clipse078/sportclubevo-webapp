@@ -10,20 +10,14 @@ import {
   formatClubEventRecurrenceSummaryDe,
   formatOccurrenceDateListDe,
 } from "@/lib/events/club-event-recurrence-presentation";
+import {
+  clubEventRecurrenceEditorToApiPayload,
+  type ClubEventRecurrenceEditorValues,
+} from "@/lib/events/club-event-recurrence-editor-payload";
 import type { VeranstaltungScheduleFieldValues } from "./VeranstaltungScheduleFields";
 
-export type VeranstaltungRecurrenceFieldValues = {
-  enabled: boolean;
-  frequency: "WEEKLY" | "MONTHLY";
-  intervalCount: number;
-  weekday: string;
-  monthlyPatternKind: "DAY_OF_MONTH" | "ORDINAL_WEEKDAY";
-  monthDay: number;
-  monthOrdinal: "FIRST" | "SECOND" | "THIRD" | "FOURTH" | "LAST";
-  endMode: "ON_DATE" | "AFTER_COUNT";
-  endDate: string;
-  occurrenceCount: number;
-};
+export type VeranstaltungRecurrenceFieldValues = ClubEventRecurrenceEditorValues;
+export const recurrenceValuesToApiPayload = clubEventRecurrenceEditorToApiPayload;
 
 type Props = {
   schedule: VeranstaltungScheduleFieldValues;
@@ -365,25 +359,6 @@ export default function VeranstaltungRecurrenceFields({
       ) : null}
     </div>
   );
-}
-
-export function recurrenceValuesToApiPayload(
-  schedule: VeranstaltungScheduleFieldValues,
-  values: VeranstaltungRecurrenceFieldValues,
-) {
-  if (!values.enabled) return { enabled: false };
-  return {
-    enabled: true,
-    frequency: values.frequency,
-    intervalCount: values.intervalCount,
-    weekday: values.weekday,
-    monthlyPatternKind: values.frequency === "MONTHLY" ? values.monthlyPatternKind : undefined,
-    monthDay: values.monthlyPatternKind === "DAY_OF_MONTH" ? values.monthDay : undefined,
-    monthOrdinal: values.monthlyPatternKind === "ORDINAL_WEEKDAY" ? values.monthOrdinal : undefined,
-    endMode: values.endMode,
-    endDate: values.endMode === "ON_DATE" ? values.endDate : undefined,
-    occurrenceCount: values.endMode === "AFTER_COUNT" ? values.occurrenceCount : undefined,
-  };
 }
 
 /** Client-side materialization helper for tests / previews. */
