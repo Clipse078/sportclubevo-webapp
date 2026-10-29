@@ -431,7 +431,9 @@ export async function verifyFin07dPoUatPostSubmit(
     stageDataTarget &&
     productionTouched === "NO" &&
     !awaitingPoSubmit &&
-    flags.every((f) => f.value === "YES");
+    flags.every((f) =>
+      f.key === "PRODUCTION_TOUCHED" ? f.value === "NO" : f.value === "YES",
+    );
 
   return {
     pass,
