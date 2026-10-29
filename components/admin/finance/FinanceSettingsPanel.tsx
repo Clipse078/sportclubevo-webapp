@@ -26,6 +26,10 @@ import { FinanceBaseCurrencySelector } from "@/components/admin/finance/FinanceB
 import { formatIso4217CurrencyOptionLabel } from "@/lib/finance/currency/iso4217-currency";
 import { formatFinanceYearPeriodLabel } from "@/lib/finance/setup/finance-year-period-display";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
+import {
+  FinanceCommitmentApprovalPolicySettingsSection,
+  type FinanceCommitmentApprovalPolicySettingsProps,
+} from "@/components/admin/finance/commitment/FinanceCommitmentApprovalPolicySettingsSection";
 
 type FinanceYearSettingsRow = {
   id: string;
@@ -41,6 +45,7 @@ type FinanceSettingsPanelProps = {
   capabilityRows: { capability: FinanceCapabilityKey; enabled: boolean; configurable: boolean }[];
   existingYears: FinanceYearSettingsRow[];
   newYearDraftDefaults: { startDate: string; endDate: string };
+  commitmentApprovalPolicy: FinanceCommitmentApprovalPolicySettingsProps;
 };
 
 type FinanceYearFormValues = {
@@ -355,6 +360,7 @@ export function FinanceSettingsPanel({
   capabilityRows,
   existingYears,
   newYearDraftDefaults,
+  commitmentApprovalPolicy,
 }: FinanceSettingsPanelProps) {
   const t = useTranslations("Finance");
   const locale = useLocale();
@@ -429,6 +435,8 @@ export function FinanceSettingsPanel({
           </Button>
         </div>
       </section>
+
+      <FinanceCommitmentApprovalPolicySettingsSection {...commitmentApprovalPolicy} />
 
       <section
         className={FINANCE_SETTINGS_SECTION_CLASS}

@@ -20,6 +20,7 @@ import {
   ensureDefaultFinanceCapabilities,
   setFinanceCapabilityEnabled,
 } from "@/lib/finance/services/finance-capability-service";
+import { saveFinanceCommitmentApprovalPolicy } from "@/lib/finance/services/finance-commitment-approval-policy-service";
 import type { FinanceCapabilityKey } from "@prisma/client";
 
 async function financeActionContext(): Promise<FinanceAuthContext> {
@@ -116,6 +117,22 @@ export async function completeFinanceSetupAction(): Promise<FinanceActionResult>
     await ensureDefaultFinanceCapabilities(prisma, ctx.tenantId);
     revalidatePath("/dashboard/finance");
     revalidatePath("/dashboard/finance/settings");
+    return { ok: true };
+  } catch (e) {
+    return toResult(e);
+  }
+}
+
+export async function saveFinanceCommitmentApprovalPolicyAction(input: {
+  enabled: boolean;
+  thresholdAmountMinor: number;
+}): Promise<FinanceActionResult> {
+  try {
+    const ctx = await financeActionContext();
+    await saveFinanceCommitmentApprovalPolicy(prisma, ctx, input);
+    revalidatePath("/dashboard/finance/settings");
+    revalidatePath("/dashboard/finance/commitments");
+    revalidatePath("/dashboard/finance/commitments/approvals");
     return { ok: true };
   } catch (e) {
     return toResult(e);

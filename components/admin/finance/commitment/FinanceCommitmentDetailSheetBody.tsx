@@ -18,6 +18,8 @@ import {
   FINANCE_COMMITMENT_DETAIL_SECTION_TITLE_CLASS,
   FINANCE_SUMMARY_RESULT_VALUE_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import { FinanceCommitmentApprovalExplanationText } from "@/components/admin/finance/commitment/FinanceCommitmentApprovalExplanation";
+import { resolveFinanceCommitmentDraftSubmitMessageKey } from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
@@ -106,6 +108,7 @@ export type FinanceCommitmentDetailSheetBodyProps = {
   detail: FinanceCommitmentDetailRecord;
   t: TranslateFn;
   formatMoney: (minor: number, cur: string) => string;
+  formattingLocale: string;
   formatCalendarDate: (iso: string) => string;
   pending: boolean;
   detailMenuOpen: boolean;
@@ -128,6 +131,7 @@ export function FinanceCommitmentDetailSheetBody({
   detail,
   t,
   formatMoney,
+  formattingLocale,
   formatCalendarDate,
   pending,
   detailMenuOpen,
@@ -209,7 +213,15 @@ export function FinanceCommitmentDetailSheetBody({
           className="gap-2"
         />
 
-        {detail.approvalStatus === "PENDING" && !detail.canApprove ? (
+        {detail.approvalExplanation ? (
+          <FinanceCommitmentApprovalExplanationText
+            explanation={detail.approvalExplanation}
+            t={t}
+            formattingLocale={formattingLocale}
+          />
+        ) : null}
+
+        {detail.approvalStatus === "PENDING" && !detail.canApprove && !detail.approvalExplanation ? (
           <p className="text-xs text-[var(--muted)]">{t("awaitingApprovalHint")}</p>
         ) : null}
 
@@ -323,8 +335,14 @@ export function FinanceCommitmentDetailSheetBody({
           data-finance-commitment-detail-actions
         >
           {detail.canSubmit && onSubmit ? (
-            <Button type="button" onClick={onSubmit} disabled={pending} className="h-9 w-full sm:w-auto">
-              {t("submitAction")}
+            <Button
+              type="button"
+              onClick={onSubmit}
+              disabled={pending}
+              className="h-9 w-full sm:w-auto"
+              data-finance-commitment-submit-action
+            >
+              {t(resolveFinanceCommitmentDraftSubmitMessageKey(detail.approvalExplanation))}
             </Button>
           ) : null}
           {detail.canEdit && onEdit ? (

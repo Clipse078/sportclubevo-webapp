@@ -134,7 +134,8 @@ export type FinanceCommitmentApprovalDecisionKind =
   (typeof FINANCE_COMMITMENT_APPROVAL_DECISION_KIND)[number];
 
 export const FINANCE_COMMITMENT_APPROVAL_ARCHITECTURE = {
-  v1NoConfigurableRulesEngine: true,
+  v1NoConfigurableRulesEngine: false,
+  v1AmountThresholdPolicyOnly: true,
   futurePolicyDimensions: [
     "amountThreshold",
     "organisationalRole",
@@ -327,9 +328,26 @@ export const FINANCE_07C_IMPLEMENTATION = {
   approvalDecisionService: "lib/finance/services/finance-commitment-service.ts",
   approvalInboxQuery: "lib/finance/services/finance-commitment-query-service.ts",
   architectureTestSuite: "lib/finance/__tests__/finance-07c-approval-inbox.test.ts",
-  fin07cStatus: "IMPLEMENTED_PO_UAT_REQUIRED",
-  policyEngineDeferred: "FIN-07D",
+  fin07cStatus: "COMPLETE_PO_APPROVED_MERGED",
+  policyEngineDeferred: null,
   reusesFin07aApprovalDecisionModel: true,
+} as const;
+
+export const FINANCE_07D_IMPLEMENTATION = {
+  policyService: "lib/finance/services/finance-commitment-approval-policy-service.ts",
+  evaluationModule:
+    "lib/finance/commitment/finance-commitment-approval-policy-evaluation.ts",
+  settingsSection:
+    "components/admin/finance/commitment/FinanceCommitmentApprovalPolicySettingsSection.tsx",
+  architectureTestSuite: "lib/finance/__tests__/finance-07d-approval-policy.test.ts",
+  poUatReadiness: "lib/finance/commitment/finance-07d-po-uat-readiness.ts",
+  stageUatSeedScript: "scripts/sce-finance-07d-stage-uat-commitment-seed.ts",
+  stagePoUatReadinessScript: "scripts/sce-finance-07d-stage-po-uat-readiness.ts",
+  stageUatCleanupScript: "scripts/sce-finance-07d-stage-uat-commitment-cleanup.ts",
+  fin07dStatus: "IMPLEMENTED_PO_UAT_READY",
+  migration: "20261028120000_sce_finance_07d_commitment_approval_policy",
+  submitResolvesApprovalRequirement: true,
+  policySnapshotOnSubmit: true,
 } as const;
 
 export const FINANCE_07A_IMPLEMENTATION = {

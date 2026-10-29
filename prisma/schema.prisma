@@ -1402,6 +1402,7 @@ model Tenant {
   financeScenarioRebases          FinanceScenarioRebase[]
   financeExpectedFinancialEvents  FinanceExpectedFinancialEvent[]
   financeCommitments              FinanceCommitment[]
+  financeCommitmentApprovalPolicy FinanceCommitmentApprovalPolicy?
   financeCommitmentApprovalDecisions FinanceCommitmentApprovalDecision[]
   financeEconomicEvidenceLinks    FinanceEconomicEvidenceLink[]
   financeDisclosurePolicy         FinanceDisclosurePolicy?
@@ -1591,6 +1592,7 @@ model User {
   financeCommitmentsRequested          FinanceCommitment[] @relation("FinanceCommitmentRequested")
   financeCommitmentsApprovalDecided    FinanceCommitment[] @relation("FinanceCommitmentApprovalDecided")
   financeCommitmentApprovalDecisions   FinanceCommitmentApprovalDecision[] @relation("FinanceCommitmentApprovalDecisionBy")
+  financeCommitmentApprovalPoliciesUpdated FinanceCommitmentApprovalPolicy[] @relation("FinanceCommitmentApprovalPolicyUpdatedBy")
   financeEconomicEvidenceLinksCreated  FinanceEconomicEvidenceLink[] @relation("FinanceEconomicEvidenceLinkCreatedBy")
 
   @@index([isActive])
@@ -11335,6 +11337,10 @@ model FinanceCommitment {
   responsibleUserId       String?
   requestedByUserId       String?
   submittedAt             DateTime?
+  /// Policy snapshot at submit — explainability when policy changes later (FIN-07D).
+  approvalPolicyEnabledSnapshot   Boolean?
+  approvalThresholdMinorSnapshot  Int?
+  approvalPolicyCurrencySnapshot  String?
   approvalDecidedAt       DateTime?
   approvalDecidedByUserId String?
   fulfilledAt             DateTime?
@@ -11363,6 +11369,22 @@ model FinanceCommitment {
   @@index([tenantId, economicObligationKey])
   @@index([financialAccountId])
   @@index([costCenterId])
+}
+
+/// Organisation-level commitment approval policy — amount threshold v1 (FIN-07D).
+model FinanceCommitmentApprovalPolicy {
+  id                   String   @id @default(cuid())
+  tenantId             String   @unique
+  enabled              Boolean  @default(true)
+  thresholdAmountMinor Int      @default(0)
+  /// ISO 4217 — aligned with tenant finance base currency at save time.
+  thresholdCurrency    String
+  updatedByUserId      String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updatedBy User?  @relation("FinanceCommitmentApprovalPolicyUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 }
 
 /// Immutable approval decision audit row (FIN-07A).

@@ -138,8 +138,9 @@ describe("FIN-07A lifecycle semantics", () => {
     ).not.toThrow();
   });
 
-  it("keeps approval architecture extensible without rules engine in 07A", () => {
-    expect(FINANCE_COMMITMENT_APPROVAL_ARCHITECTURE.v1NoConfigurableRulesEngine).toBe(true);
+  it("keeps approval architecture extensible — threshold policy in 07D, not a generic rules engine", () => {
+    expect(FINANCE_COMMITMENT_APPROVAL_ARCHITECTURE.v1NoConfigurableRulesEngine).toBe(false);
+    expect(FINANCE_COMMITMENT_APPROVAL_ARCHITECTURE.v1AmountThresholdPolicyOnly).toBe(true);
     expect(FINANCE_COMMITMENT_LIFECYCLE.activeRequiresApprovalApprovedOrNotRequired).toBe(true);
     expect(FINANCE_COMMITMENT_CONCEPTUAL_LOCK.approvedDoesNotMeanPaid).toBe(true);
   });

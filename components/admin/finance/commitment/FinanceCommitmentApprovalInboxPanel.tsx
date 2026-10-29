@@ -284,6 +284,7 @@ export function FinanceCommitmentApprovalInboxPanel({
               detail={detail}
               t={tWorkspace}
               formatMoney={formatMoney}
+              formattingLocale={formattingLocale}
               formatCalendarDate={formatCalendarDate}
               pending={pending}
               detailMenuOpen={false}

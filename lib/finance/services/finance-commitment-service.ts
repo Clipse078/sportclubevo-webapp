@@ -22,6 +22,11 @@ import {
 import type { FinanceCommitmentApprovalDecisionKind } from "@/lib/finance/commitment/finance-commitment-architecture-contract";
 import { FINANCE_COMMITMENT_PERSISTENCE_MODEL } from "@/lib/finance/commitment/finance-commitment-architecture-contract";
 import { auditFinanceCommitmentLifecycle } from "@/lib/finance/audit/finance-commitment-audit";
+import {
+  evaluateFinanceCommitmentApprovalRequirement,
+  resolveSubmitApprovalStatus,
+} from "@/lib/finance/commitment/finance-commitment-approval-policy-evaluation";
+import { resolveEffectiveFinanceCommitmentApprovalPolicy } from "@/lib/finance/services/finance-commitment-approval-policy-service";
 
 type Db = Pick<
   PrismaClient,
@@ -31,6 +36,8 @@ type Db = Pick<
   | "financeCostCenter"
   | "financeEconomicEvidenceLink"
   | "financeCommitmentApprovalDecision"
+  | "financeCommitmentApprovalPolicy"
+  | "financeConfiguration"
   | "auditLog"
   | "$transaction"
 >;
@@ -398,8 +405,7 @@ function assertSubmitReady(commitment: {
 }
 
 /**
- * FIN-07B v1: every submission enters organisational review (PENDING).
- * Activation after approval is FIN-07C; service helper below supports domain tests only.
+ * FIN-07D: submission resolves approval requirement from tenant policy (snapshot at submit).
  */
 export async function submitFinanceCommitment(
   db: Db,
@@ -414,12 +420,23 @@ export async function submitFinanceCommitment(
   assertFinanceCommitmentLifecycleTransition(existing.lifecycleStatus, "SUBMITTED");
   assertSubmitReady(existing);
 
+  const policy = await resolveEffectiveFinanceCommitmentApprovalPolicy(db, ctx);
+  const evaluation = evaluateFinanceCommitmentApprovalRequirement({
+    policy,
+    amountMinor: existing.amountMinor,
+    currency: existing.currency,
+  });
+  const approvalStatus = resolveSubmitApprovalStatus(evaluation);
+
   const updated = await db.financeCommitment.update({
     where: { id: existing.id },
     data: {
       lifecycleStatus: "SUBMITTED",
-      approvalStatus: "PENDING",
+      approvalStatus,
       submittedAt: new Date(),
+      approvalPolicyEnabledSnapshot: policy.enabled,
+      approvalThresholdMinorSnapshot: policy.thresholdAmountMinor,
+      approvalPolicyCurrencySnapshot: policy.thresholdCurrency || null,
       updatedByUserId: ctx.userId,
     },
   });
@@ -429,7 +446,12 @@ export async function submitFinanceCommitment(
     actorUserId: ctx.userId,
     commitmentId: updated.id,
     action: "COMMITMENT_SUBMITTED",
-    metadataJson: { approvalStatus: updated.approvalStatus },
+    metadataJson: {
+      approvalStatus: updated.approvalStatus,
+      approvalPolicyEnabled: policy.enabled,
+      approvalThresholdMinor: policy.thresholdAmountMinor,
+      approvalPolicyCurrency: policy.thresholdCurrency || null,
+    },
   });
 
   return updated;

@@ -852,6 +852,7 @@ export function FinanceCommitmentWorkspacePanel({
             detail={detail}
             t={t}
             formatMoney={formatMoney}
+            formattingLocale={formattingLocale}
             formatCalendarDate={formatCalendarDate}
             pending={pending}
             detailMenuOpen={detailMenuOpen}

@@ -15,6 +15,7 @@ import {
 } from "@/lib/finance/services/finance-year-service";
 import { formatFinanceYearDateInputValue } from "@/lib/finance/setup/finance-year-date-input";
 import { prisma } from "@/lib/db/prisma";
+import { loadFinanceCommitmentApprovalPolicyReadModel } from "@/lib/finance/services/finance-commitment-approval-policy-service";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,10 @@ export default async function FinanceSettingsPage() {
     startDate: "2026-01-01",
     endDate: "2026-12-31",
   };
+
+  const approvalPolicy = workspace.canAdmin
+    ? await loadFinanceCommitmentApprovalPolicyReadModel(prisma, workspace.ctx)
+    : null;
 
   return (
     <PageShell>
@@ -99,6 +104,13 @@ export default async function FinanceSettingsPage() {
             capabilityRows={capabilityRows}
             existingYears={existingYears}
             newYearDraftDefaults={newYearDraftDefaults}
+            commitmentApprovalPolicy={{
+              enabled: approvalPolicy?.enabled ?? true,
+              thresholdAmountMinor: approvalPolicy?.thresholdAmountMinor ?? 0,
+              thresholdCurrency: approvalPolicy?.thresholdCurrency ?? config?.baseCurrency ?? "",
+              baseCurrency: config?.baseCurrency ?? null,
+              canManage: approvalPolicy?.canManage ?? false,
+            }}
           />
         ) : (
           <p className="text-sm text-[var(--muted)]">{t("settings.structureOnlyHint")}</p>
