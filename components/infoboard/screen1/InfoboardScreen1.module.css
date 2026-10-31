@@ -134,30 +134,31 @@
  * ────────────────────────────────────────────────────────────────────────── */
 
 .root[data-theme="light"] {
-  --ib-page-bg:        #F4EFE6;
+  /* SCE venue display v2 — FCA-aligned cool light canvas */
+  --ib-page-bg:        #F5F7FA;
   --ib-card-bg:        #FFFFFF;
-  --ib-card-current:   #FFF8EC;
+  --ib-card-current:   #FFF5F5;
   --ib-header-bg:      #FFFFFF;
 
-  --ib-border:         rgba(60, 48, 32, 0.10);
-  --ib-border-strong:  rgba(60, 48, 32, 0.20);
-  --ib-border-current: rgba(232, 124, 36, 0.35);
+  --ib-border:         rgba(11, 31, 58, 0.10);
+  --ib-border-strong:  rgba(11, 31, 58, 0.18);
+  --ib-border-current: rgba(216, 48, 51, 0.35);
 
-  --ib-text:           #241C12;
-  --ib-text-muted:     #6B5F4E;
-  --ib-text-dim:       #8C8272;
+  --ib-text:           #0B1F3A;
+  --ib-text-muted:     #4A6078;
+  --ib-text-dim:       #6E87A0;
 
-  --ib-match:          #C22A2D;
-  --ib-training:       #1849A6;
-  --ib-tournament:     #C2670F;
+  --ib-match:          #D83033;
+  --ib-training:       #1E5BC6;
+  --ib-tournament:     #E87C24;
   --ib-free:           #167A46;
   --ib-warning:        #9A6300;
 
-  --ib-match-soft:      rgba(194, 42, 45, 0.88);
-  --ib-training-soft:   rgba(24, 73, 166, 0.88);
-  --ib-tournament-soft: rgba(194, 103, 15, 0.88);
+  --ib-match-soft:      rgba(216, 48, 51, 0.92);
+  --ib-training-soft:   rgba(30, 91, 198, 0.92);
+  --ib-tournament-soft: rgba(232, 124, 36, 0.92);
 
-  --ib-text-secondary: rgba(36, 28, 18, 0.62);
+  --ib-text-secondary: rgba(11, 31, 58, 0.72);
 
   --ib-red:            var(--ib-match);
   --ib-blue:           var(--ib-training);
@@ -377,11 +378,16 @@
 
 .boardTitleText {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-board-title);
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  font-size: clamp(1.1rem, 1.45vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ib-text-muted);
+  color: var(--ib-text);
+}
+
+.root[data-theme="light"] .boardTitle {
+  background: var(--ib-page-bg);
+  border-bottom: 1px solid var(--ib-border);
 }
 
 /* ─── Main: event list ───────────────────────────────────────────────────── */

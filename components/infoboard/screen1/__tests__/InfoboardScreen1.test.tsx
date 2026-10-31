@@ -957,32 +957,33 @@ describe("Match row", () => {
     expect(row.textContent).toContain("FC Opponent");
   });
 
-  it("renders competition label as event type header", () => {
+  it("renders competition label as secondary match metadata", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: "Meisterschaft" })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
     expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
-  it("renders SPIEL fallback when competitionLabel is null", () => {
+  it("renders MATCH semantic label when competitionLabel is null", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: null })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("SPIEL")).toBeTruthy();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
-  it("does not display raw MATCH string as the user-facing type label", () => {
+  it("displays MATCH as the user-facing semantic activity label", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other" })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
     const row = screen.getByTestId("event-row");
-    expect(row.textContent).not.toContain("MATCH");
+    expect(row.textContent).toContain("MATCH");
   });
 
   it("renders pitch label", () => {
@@ -2007,13 +2008,13 @@ describe("Event-type labels", () => {
     expect(screen.getByText("TRAINING")).toBeTruthy();
   });
 
-  it("renders SPIEL fallback for MATCH events without competition label", () => {
+  it("renders MATCH semantic label for MATCH events without competition label", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: null })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("SPIEL")).toBeTruthy();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
   it("renders TURNIER label for TOURNAMENT events", () => {
@@ -2210,7 +2211,8 @@ describe("Light theme â€” INFOBOARD-INTEGRATION-01B", () => {
       />,
     );
     expect(screen.getByTestId("kiosk-shell-header")).toBeTruthy();
-    expect(screen.getByTestId("board-title")).toBeTruthy();
+    expect(screen.getByTestId("kiosk-header-welcome")).toBeTruthy();
+    expect(screen.queryByTestId("board-title")).toBeNull();
     expect(screen.getByTestId("kiosk-shell-footer")).toBeTruthy();
     expect(screen.getAllByTestId("event-row").length).toBeGreaterThan(0);
   });

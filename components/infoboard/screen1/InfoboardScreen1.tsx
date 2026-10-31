@@ -90,6 +90,14 @@ import {
   EMPTY_SCREEN1_STUDIO_CONFIG,
   type Screen1StudioConfig,
 } from "@/lib/infoboard/screen1-studio-types";
+import {
+  VenueActivityCard,
+  VenueActivityIdentity,
+  VenueActivityKabine,
+  VenueActivityPlatz,
+  VenueActivityTime,
+} from "@/components/infoboard/venue-display/VenueActivityCard";
+import { isVenueDisplayLightTheme } from "@/lib/infoboard/venue-display-grid";
 import styles from "./InfoboardScreen1.module.css";
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -133,6 +141,8 @@ export type InfoboardScreen1Props = {
   headerConfig?: {
     readonly subtitleEnabled?: boolean;
     readonly subtitleText?: string | null;
+    /** Contextual section heading below the header (venue display light theme). */
+    readonly pageHeadingText?: string | null;
     readonly showTime?: boolean;
     readonly showDate?: boolean;
     readonly showWeather?: boolean;
@@ -402,7 +412,7 @@ export function layoutModeTier(totalDemand: number): "sparse" | "fill" {
 
 const EVENT_TYPE_LABELS: Record<PublishingEventType, string> = {
   TRAINING: "TRAINING",
-  MATCH: "SPIEL",
+  MATCH: "MATCH",
   TOURNAMENT: "TURNIER",
   OTHER: "EVENT",
   VACATION_PERIOD: "FERIENBLOCK",
@@ -859,9 +869,9 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
 
   return (
     <>
-      <div
+      <VenueActivityKabine
         className={styles.cardDressingRoomZone}
-        data-testid="match-allocation"
+        testId="match-allocation"
       >
         <span className={styles.destLabel}>KABINE</span>
 
@@ -893,9 +903,9 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityKabine>
 
-      <div className={styles.cardPitchZone}>
+      <VenueActivityPlatz className={styles.cardPitchZone}>
         <span className={styles.destLabel}>PLATZ</span>
 
         {pitchLabel !== null ? (
@@ -913,7 +923,7 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -931,9 +941,9 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
 
   return (
     <>
-      <div
+      <VenueActivityKabine
         className={styles.cardDressingRoomZone}
-        data-testid="training-allocation"
+        testId="training-allocation"
       >
         <span className={styles.destLabel}>KABINE</span>
 
@@ -949,9 +959,9 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityKabine>
 
-      <div className={styles.cardPitchZone}>
+      <VenueActivityPlatz className={styles.cardPitchZone}>
         <span className={styles.destLabel}>PLATZ</span>
 
         {pitchLabel !== null ? (
@@ -969,7 +979,7 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -988,7 +998,7 @@ function TournamentDestination({
 
   return (
     <>
-      <div className={styles.cardDressingRoomZone}>
+      <VenueActivityKabine className={styles.cardDressingRoomZone}>
         <span
           className={styles.destLabel}
         >
@@ -1006,9 +1016,9 @@ function TournamentDestination({
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityKabine>
 
-      <div className={styles.cardPitchZone}>
+      <VenueActivityPlatz className={styles.cardPitchZone}>
         <span
           className={styles.destLabel}
         >
@@ -1030,7 +1040,7 @@ function TournamentDestination({
             NOCH NICHT ZUGETEILT
           </span>
         )}
-      </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -1088,6 +1098,7 @@ function TrainingGroupCard({
     <li
       className={styles.eventCard}
       data-testid="event-row"
+      data-venue-activity-grid="true"
       data-type="TRAINING"
       data-temporal={temporal}
       data-stripe={stripe}
@@ -1109,8 +1120,10 @@ function TrainingGroupCard({
         } as CSSProperties
       }
     >
-      {/* TIME — shared start + majority end once in the left card */}
-      <div className={styles.cardTimeZone} data-testid="training-group-time-zone">
+      <VenueActivityTime
+        className={styles.cardTimeZone}
+        testId="training-group-time-zone"
+      >
         {label !== null && (
           <span
             className={styles.statusLabel}
@@ -1138,22 +1151,31 @@ function TrainingGroupCard({
             bis {timePresentation.primaryEndTime}
           </span>
         )}
-      </div>
+      </VenueActivityTime>
 
-      {/* TRAINING / KABINE / PLATZ — one shared row matrix (cols 2–4) */}
       <div className={styles.trainingMatrix} data-testid="training-group">
         <div
           className={styles.trainingMatrixHeaders}
           data-testid="training-matrix-headers"
         >
-          <span
+          <VenueActivityIdentity
             className={styles.eventTypeLabel}
             data-event-type="TRAINING"
           >
             TRAINING
+          </VenueActivityIdentity>
+          <span
+            className={styles.destLabel}
+            data-venue-column="kabine"
+          >
+            KABINE
           </span>
-          <span className={styles.destLabel}>KABINE</span>
-          <span className={styles.destLabel}>PLATZ</span>
+          <span
+            className={styles.destLabel}
+            data-venue-column="platz"
+          >
+            PLATZ
+          </span>
         </div>
 
         <div className={styles.trainingRowMatrix} data-testid="training-row-matrix">
@@ -1311,49 +1333,49 @@ function EventCard({
   const label = statusLabel(temporal);
   const stripe = stripeKey(event.type);
 
-  const typeDisplayLabel = isMatch
-    ? (event.competitionLabel ?? EVENT_TYPE_LABELS["MATCH"])
-    : EVENT_TYPE_LABELS[event.type] ?? event.type;
+  const semanticActivityLabel = EVENT_TYPE_LABELS[event.type] ?? event.type;
 
   return (
-    <li
+    <VenueActivityCard
       className={styles.eventCard}
-      data-testid="event-row"
       data-type={event.type}
       data-temporal={temporal}
       data-stripe={stripe}
       data-card-demand={demand.toFixed(2)}
       style={{ "--ib-card-demand": demand, ...cardStyle } as CSSProperties}
-    >
-      {/* ── LEFT ZONE: Status + Time ─────────────────────────────────── */}
-      <div className={styles.cardTimeZone}>
-        {label !== null && (
-          <span
-            className={styles.statusLabel}
-            data-testid={`status-label-${temporal}`}
-            data-status={temporal === "current" ? "current" : "next"}
-          >
-            {label}
-          </span>
-        )}
-        <time className={styles.eventTime} dateTime={event.startAt}>
-          {startTime}
-        </time>
-        {endTime !== null && (
-          <span className={styles.eventEndTime} aria-label="Bis">
-            bis {endTime}
-          </span>
-        )}
-      </div>
-
-      {/* ── CENTER ZONE: Event identity ──────────────────────────────── */}
-      <div className={styles.cardEventZone}>
+      time={
+        <VenueActivityTime className={styles.cardTimeZone}>
+          {label !== null && (
+            <span
+              className={styles.statusLabel}
+              data-testid={`status-label-${temporal}`}
+              data-status={temporal === "current" ? "current" : "next"}
+            >
+              {label}
+            </span>
+          )}
+          <time className={styles.eventTime} dateTime={event.startAt}>
+            {startTime}
+          </time>
+          {endTime !== null && (
+            <span className={styles.eventEndTime} aria-label="Bis">
+              bis {endTime}
+            </span>
+          )}
+        </VenueActivityTime>
+      }
+      identity={
+        <VenueActivityIdentity className={styles.cardEventZone}>
         <span
           className={styles.eventTypeLabel}
           data-event-type={event.type}
         >
-          {typeDisplayLabel}
+          {semanticActivityLabel}
         </span>
+
+        {isMatch && event.competitionLabel !== null && (
+          <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
+        )}
 
         {isMatch && event.matchPresentation ? (
           <div className={styles.matchIdentity}>
@@ -1376,6 +1398,20 @@ function EventCard({
                 showLogos={matchShowLogos}
               />
             )}
+          </div>
+        ) : isMatch && event.opponentDisplayName !== null ? (
+          <div className={styles.matchIdentity} data-testid="match-identity-fallback">
+            {event.teamDisplayName !== null && (
+              <span className={styles.eventTeamMain} data-testid="match-home-team-row">
+                {event.teamDisplayName}
+              </span>
+            )}
+            <span className={styles.vsLabel} aria-hidden="true">
+              vs.
+            </span>
+            <span className={styles.eventTeamOpponent} data-testid="match-away-team-row">
+              {event.opponentDisplayName}
+            </span>
           </div>
         ) : isTournament ? (
           <div className={styles.tournamentIdentity}>
@@ -1421,20 +1457,22 @@ function EventCard({
             )}
           </>
         )}
-      </div>
-
-      {/* ── KABINE + PLATZ ─────────────────────────────────────────── */}
-      {isMatch ? (
-        <MatchDestination event={event} />
-      ) : isTournament ? (
-        <TournamentDestination
-          event={event}
-          participantAllocations={participantAllocations}
-        />
-      ) : (
-        <TrainingDestination event={event} />
-      )}
-    </li>
+        </VenueActivityIdentity>
+      }
+      kabine={
+        isMatch ? (
+          <MatchDestination event={event} />
+        ) : isTournament ? (
+          <TournamentDestination
+            event={event}
+            participantAllocations={participantAllocations}
+          />
+        ) : (
+          <TrainingDestination event={event} />
+        )
+      }
+      platz={undefined}
+    />
   );
 }
 
@@ -1475,6 +1513,8 @@ export function InfoboardScreen1({
   const showWeather = headerConfig?.showWeather === true;
   const subtitleEnabled = headerConfig?.subtitleEnabled !== false;
   const subtitleText = headerConfig?.subtitleText?.trim() ?? null;
+  const pageHeadingText = headerConfig?.pageHeadingText?.trim() ?? null;
+  const venueDisplayLight = isVenueDisplayLightTheme(theme);
 
   // Club name for prefix stripping (presentation-only)
   const clubNameUpper = tenant.name.toUpperCase();
@@ -1679,9 +1719,17 @@ export function InfoboardScreen1({
         staticDateFallback={staticDateLine}
         subtitle={subtitleText != null ? subtitleText.toUpperCase() : null}
         subtitleEnabled={subtitleEnabled}
+        shellTheme={venueDisplayLight ? "light" : "dark"}
+        subtitlePlacement={venueDisplayLight ? "header-inline" : "band"}
         liveClock={liveClock}
         liveWeather={liveClock}
       />
+
+      {venueDisplayLight && pageHeadingText !== null && pageHeadingText.length > 0 && (
+        <div className={styles.boardTitle} data-testid="venue-page-heading">
+          <span className={styles.boardTitleText}>{pageHeadingText.toUpperCase()}</span>
+        </div>
+      )}
 
       {/* ── Main: event list (demand-paginated, rotated when multi-page) ── */}
       <main
