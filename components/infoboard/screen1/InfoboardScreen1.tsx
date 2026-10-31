@@ -98,6 +98,7 @@ import {
   VenueActivityTime,
 } from "@/components/infoboard/venue-display/VenueActivityCard";
 import { isVenueDisplayLightTheme } from "@/lib/infoboard/venue-display-grid";
+import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
 import styles from "./InfoboardScreen1.module.css";
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -1301,6 +1302,8 @@ type EventCardProps = {
   presentation?: Screen1PresentationConfig;
   cardStyle?: CSSProperties;
   resolvedPresentation?: ResolvedCardPresentation;
+  tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
 };
 
 function EventCard({
@@ -1311,6 +1314,8 @@ function EventCard({
   presentation = DEFAULT_SCREEN1_PRESENTATION,
   cardStyle,
   resolvedPresentation,
+  tenantLogoUrl = null,
+  tenantClubName = null,
 }: EventCardProps): ReactElement {
   const { event, temporal } = item;
   const startTime = formatTime(event.startAt, timeZone);
@@ -1334,6 +1339,10 @@ function EventCard({
   const stripe = stripeKey(event.type);
 
   const semanticActivityLabel = EVENT_TYPE_LABELS[event.type] ?? event.type;
+  // Canonical feed field: event.matchPresentation; resolver mirrors mapper when absent.
+  const matchPresentation = isMatch
+    ? resolveScreen1EventMatchPresentation(event, tenantLogoUrl, tenantClubName)
+    : null;
 
   return (
     <VenueActivityCard
@@ -1377,10 +1386,10 @@ function EventCard({
           <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
         )}
 
-        {isMatch && event.matchPresentation ? (
+        {isMatch && matchPresentation ? (
           <div className={styles.matchIdentity}>
             <MatchSideIdentity
-              side={event.matchPresentation.home}
+              side={matchPresentation.home}
               rowTestId="match-home-team-row"
               logoTestId="home-team-logo"
               primaryClassName={styles.eventTeamMain}
@@ -1389,29 +1398,15 @@ function EventCard({
             <span className={styles.vsLabel} aria-hidden="true">
               vs.
             </span>
-            {event.matchPresentation.away !== null && (
+            {matchPresentation.away !== null && (
               <MatchSideIdentity
-                side={event.matchPresentation.away}
+                side={matchPresentation.away}
                 rowTestId="match-away-team-row"
                 logoTestId="away-team-logo"
                 primaryClassName={styles.eventTeamOpponent}
                 showLogos={matchShowLogos}
               />
             )}
-          </div>
-        ) : isMatch && event.opponentDisplayName !== null ? (
-          <div className={styles.matchIdentity} data-testid="match-identity-fallback">
-            {event.teamDisplayName !== null && (
-              <span className={styles.eventTeamMain} data-testid="match-home-team-row">
-                {event.teamDisplayName}
-              </span>
-            )}
-            <span className={styles.vsLabel} aria-hidden="true">
-              vs.
-            </span>
-            <span className={styles.eventTeamOpponent} data-testid="match-away-team-row">
-              {event.opponentDisplayName}
-            </span>
           </div>
         ) : isTournament ? (
           <div className={styles.tournamentIdentity}>
@@ -1673,6 +1668,8 @@ export function InfoboardScreen1({
               presentation={presentation}
               cardStyle={cardStyle}
               resolvedPresentation={resolved}
+              tenantLogoUrl={clubLogoSrc}
+              tenantClubName={tenant.name}
             />
           );
         })}

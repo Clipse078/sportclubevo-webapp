@@ -152,7 +152,7 @@ describe("INFOBOARD-SCREEN1-VISUAL-01H — single-event hero", () => {
           tenant: {
             id: "tenant-1",
             key: "tenant",
-            name: "TEST CLUB",
+            name: "FC ALLSCHWIL",
             timezone: "Europe/Zurich",
           },
           displayDate: "2026-08-27",

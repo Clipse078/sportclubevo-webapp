@@ -96,8 +96,10 @@ describe("Wednesday 2026-08-26 golden fixture", () => {
 
   it("19:45 — renders 1. Mannschaft match card", () => {
     renderWednesdayAt("19:45");
-    expect(screen.getByText("1. MANNSCHAFT")).toBeTruthy();
-    expect(screen.getByText("FC MUTTENZ")).toBeTruthy();
+    const matchRow = screen.getAllByTestId("event-row").find((row) => row.getAttribute("data-type") === "MATCH");
+    expect(matchRow).toBeTruthy();
+    expect(within(matchRow!).getByText("FC ALLSCHWIL")).toBeTruthy();
+    expect(within(matchRow!).getByText("FC MUTTENZ")).toBeTruthy();
   });
 
   it("20:15 — renders Senioren 30+ and Junioren A cohort", () => {
