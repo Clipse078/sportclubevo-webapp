@@ -111,6 +111,7 @@ const HEADER_ALEXA_SAFE_ZONE_WIDTH_PX = KIOSK_SHELL_ALEXA_SAFE_ZONE_WIDTH_PX;
 function renderCanonicalWeather(
   weather: WeatherResult,
   liveWeather: boolean,
+  shellTheme: "dark" | "light",
 ): ReactElement | null {
   if (weather.isAvailable !== true) {
     return null;
@@ -121,11 +122,14 @@ function renderCanonicalWeather(
       <LiveKioskShellWeather
         initialWeather={weather}
         live={true}
+        shellTheme={shellTheme}
       />
     );
   }
 
-  return <KioskShellWeatherDisplay weather={weather} />;
+  return (
+    <KioskShellWeatherDisplay weather={weather} shellTheme={shellTheme} />
+  );
 }
 
 export function KioskShellHeader({
@@ -156,7 +160,7 @@ export function KioskShellHeader({
 
   const weatherContent =
     weather != null
-      ? renderCanonicalWeather(weather, liveWeather)
+      ? renderCanonicalWeather(weather, liveWeather, shellTheme)
       : rightContent ?? null;
 
   return (
@@ -191,7 +195,7 @@ export function KioskShellHeader({
             display: "flex",
             alignItems: "center",
             gap: "16px",
-            flex: "1 1 0",
+            flex: showInlineWelcome ? "0 1 38%" : "1 1 0",
             minWidth: 0,
             overflow: "hidden",
           }}
@@ -289,13 +293,13 @@ export function KioskShellHeader({
               data-testid="board-title-text"
               style={{
                 fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-subtitle-font"],
-                fontWeight: 600,
-                letterSpacing: "0.08em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 textTransform: "none",
                 color: palette.inlineWelcome,
                 whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                overflow: shellTheme === "light" ? "visible" : "hidden",
+                textOverflow: shellTheme === "light" ? "clip" : "ellipsis",
               }}
             >
               {subtitle}
@@ -349,6 +353,7 @@ export function KioskShellHeader({
                   showDate={false}
                   mode="time"
                   live={liveClock}
+                  shellTheme={shellTheme}
                 />
               ) : null}
             </div>
@@ -375,6 +380,7 @@ export function KioskShellHeader({
                   showDate={true}
                   mode="date"
                   live={liveClock}
+                  shellTheme={shellTheme}
                 />
               ) : staticDateFallback != null && showDate ? (
                 <span

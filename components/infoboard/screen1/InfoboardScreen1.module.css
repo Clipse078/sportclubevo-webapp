@@ -401,6 +401,16 @@
   padding: var(--ib-sp-3) var(--ib-sp-8) var(--ib-sp-3);
 }
 
+.main[data-has-page-heading="true"] {
+  padding-top: 0;
+}
+
+.main[data-has-page-heading="true"] .boardTitle {
+  margin-left: calc(-1 * var(--ib-sp-8));
+  margin-right: calc(-1 * var(--ib-sp-8));
+  width: calc(100% + 2 * var(--ib-sp-8));
+}
+
 /* Rolling pagination stage — fills main so each page list can distribute vertically. */
 .pageRotator {
   flex: 1;

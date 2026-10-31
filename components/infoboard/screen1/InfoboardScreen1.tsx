@@ -98,6 +98,7 @@ import {
   VenueActivityTime,
 } from "@/components/infoboard/venue-display/VenueActivityCard";
 import { isVenueDisplayLightTheme } from "@/lib/infoboard/venue-display-grid";
+import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
 import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
 import styles from "./InfoboardScreen1.module.css";
 
@@ -1510,6 +1511,12 @@ export function InfoboardScreen1({
   const subtitleText = headerConfig?.subtitleText?.trim() ?? null;
   const pageHeadingText = headerConfig?.pageHeadingText?.trim() ?? null;
   const venueDisplayLight = isVenueDisplayLightTheme(theme);
+  const headerWelcomeSubtitle =
+    subtitleText != null
+      ? venueDisplayLight
+        ? resolveLightInlineWelcome(subtitleText)
+        : subtitleText.toUpperCase()
+      : null;
 
   // Club name for prefix stripping (presentation-only)
   const clubNameUpper = tenant.name.toUpperCase();
@@ -1714,7 +1721,7 @@ export function InfoboardScreen1({
         showTime={showTime}
         showDate={showDate}
         staticDateFallback={staticDateLine}
-        subtitle={subtitleText != null ? subtitleText.toUpperCase() : null}
+        subtitle={headerWelcomeSubtitle}
         subtitleEnabled={subtitleEnabled}
         shellTheme={venueDisplayLight ? "light" : "dark"}
         subtitlePlacement={venueDisplayLight ? "header-inline" : "band"}
@@ -1722,18 +1729,22 @@ export function InfoboardScreen1({
         liveWeather={liveClock}
       />
 
-      {venueDisplayLight && pageHeadingText !== null && pageHeadingText.length > 0 && (
-        <div className={styles.boardTitle} data-testid="venue-page-heading">
-          <span className={styles.boardTitleText}>{pageHeadingText.toUpperCase()}</span>
-        </div>
-      )}
-
       {/* ── Main: event list (demand-paginated, rotated when multi-page) ── */}
       <main
         className={styles.main}
         data-testid="infoboard-content-region"
         data-safe-page-capacity={pageDemandMax.toFixed(2)}
+        data-has-page-heading={
+          venueDisplayLight && pageHeadingText != null && pageHeadingText.length > 0
+            ? "true"
+            : undefined
+        }
       >
+        {venueDisplayLight && pageHeadingText !== null && pageHeadingText.length > 0 && (
+          <div className={styles.boardTitle} data-testid="venue-page-heading">
+            <span className={styles.boardTitleText}>{pageHeadingText.toUpperCase()}</span>
+          </div>
+        )}
         {visibleFeed.isEmpty ? (
           <div className={styles.emptyFull} data-testid="empty-state-full">
             <p className={styles.emptyFullMessage}>
