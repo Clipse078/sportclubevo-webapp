@@ -9,6 +9,7 @@ import {
   buildScreen1PreviewData,
   buildScreen2PreviewData,
 } from "@/lib/infoboard/preview-data";
+import { parseInfoboardPreviewDisplayTheme } from "@/lib/infoboard/preview-display-theme";
 import { parseInfoboardPreviewMoment } from "@/lib/infoboard/preview-time";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -49,9 +50,20 @@ export default async function InfoboardPreviewFramePage({
   );
 
   if (preview.screen === "1") {
-    const { payload, weather } = await buildScreen1PreviewData(
+    const displayThemeQuery = first(params.displayTheme);
+    const previewBuildOptions =
+      displayThemeQuery != null && displayThemeQuery.trim() !== ""
+        ? {
+            displayThemeOverride: parseInfoboardPreviewDisplayTheme(
+              displayThemeQuery,
+              null,
+            ),
+          }
+        : undefined;
+    const { payload, weather, headerConfig } = await buildScreen1PreviewData(
       previewTenant,
       preview.now,
+      previewBuildOptions,
     );
     return (
       <PreviewFrameScreen1
@@ -62,7 +74,7 @@ export default async function InfoboardPreviewFramePage({
         announcement={payload.announcement ?? undefined}
         eventPresentation={payload.eventPresentation}
         theme={payload.theme}
-        headerConfig={payload.headerConfig ?? undefined}
+        headerConfig={headerConfig ?? payload.headerConfig ?? undefined}
         presentation={payload.presentation ?? undefined}
         studio={payload.studio ?? undefined}
         autoRotate={first(params.auto) === "1"}

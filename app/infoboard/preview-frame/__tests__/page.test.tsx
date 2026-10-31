@@ -81,8 +81,23 @@ describe("authenticated Infoboard Preview frame", () => {
     expect(mocks.buildScreen1PreviewData).toHaveBeenCalledWith(
       tenant,
       new Date("2026-08-29T06:30:00.000Z"),
+      undefined,
     );
     expect(screen.getByTestId("screen-1-renderer")).toBeTruthy();
+  });
+
+  it("passes preview-only LIGHT displayTheme override without persisting", async () => {
+    await renderPage({
+      screen: "1",
+      date: "2026-08-29",
+      time: "08:30",
+      displayTheme: "LIGHT",
+    });
+    expect(mocks.buildScreen1PreviewData).toHaveBeenCalledWith(
+      tenant,
+      new Date("2026-08-29T06:30:00.000Z"),
+      { displayThemeOverride: "LIGHT" },
+    );
   });
 
   it("switches to the production Screen 2 renderer", async () => {
