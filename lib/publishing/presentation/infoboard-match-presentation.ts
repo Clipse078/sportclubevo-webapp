@@ -169,6 +169,30 @@ function resolveSidePresentation(
     teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
   });
 
+  const canonicalClubLine = meaningful(identity.clubName) ?? null;
+  const subBase =
+    canonicalClubLine ??
+    meaningful(
+      resolveInfoboardClubDisplayName(identity.clubName, identity.fallbackDisplayName),
+    ) ??
+    teamDisplayName;
+
+  let teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
+    clubDisplayName: subBase,
+    teamName: identity.teamName,
+    teamShortName: identity.teamShortName,
+    teamAlternativeName: identity.teamAlternativeName,
+    teamInfoboardDisplayName: identity.teamInfoboardDisplayName,
+    teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
+  });
+
+  if (
+    teamSubDisplayName !== null &&
+    teamSubDisplayName.trim().toUpperCase() === teamDisplayName.trim().toUpperCase()
+  ) {
+    teamSubDisplayName = null;
+  }
+
   const clubLogoUrl = resolveClubIdentityLogoUrl(
     {
       isOwnTeam: identity.isOwnTeam,
@@ -179,7 +203,7 @@ function resolveSidePresentation(
 
   return {
     clubDisplayName: teamDisplayName,
-    teamSubDisplayName: null,
+    teamSubDisplayName,
     clubLogoUrl,
   };
 }

@@ -14,8 +14,13 @@ import type { InfoboardTeamAllocationPresentation } from "@/components/infoboard
 import {
   VENUE_ACTIVITY_COLUMN_ATTR,
   VENUE_ACTIVITY_COLUMN_MARKERS,
+  VENUE_ACTIVITY_CONTENT_TOP_CLASS,
   VENUE_ACTIVITY_GRID_TEMPLATE_COLUMNS,
   VENUE_ACTIVITY_GRID_ZONE_WIDTHS,
+  VENUE_MATCH_LAYOUT_ATTR,
+  VENUE_MATCH_LAYOUT_HORIZONTAL,
+  VENUE_TEAM_TYPOGRAPHY_ATTR,
+  VENUE_TEAM_TYPOGRAPHY_PRIMARY,
 } from "@/lib/infoboard/venue-display-grid";
 import { EMPTY_SCREEN1_STUDIO_CONFIG } from "@/lib/infoboard/screen1-studio-types";
 import {
@@ -324,6 +329,82 @@ describe("SCE-INFOBOARD-V2-01 venue activity grid contract", () => {
     );
 
     expect(screen.getByTestId("kiosk-header-club-name").textContent).toContain("SC Examplestadt");
+  });
+
+  it("MATCH uses horizontal presentation with website team typography and VS without duplicate time", () => {
+    render(
+      <InfoboardScreen1
+        feed={makeFeed({ current: [makeMatch()] })}
+        branding={BRANDING}
+        theme="LIGHT"
+        currentTimeIso="2026-11-01T08:00:00.000Z"
+        studio={EMPTY_SCREEN1_STUDIO_CONFIG}
+      />,
+    );
+
+    const row = screen.getByTestId("event-row");
+    const horizontal = screen.getByTestId("venue-match-horizontal");
+    expect(horizontal.getAttribute(VENUE_MATCH_LAYOUT_ATTR)).toBe(
+      VENUE_MATCH_LAYOUT_HORIZONTAL,
+    );
+    expect(screen.getByTestId("match-home-team-row")).toBeTruthy();
+    expect(screen.getByTestId("match-away-team-row")).toBeTruthy();
+    expect(screen.getByTestId("venue-match-vs").textContent).toContain("VS");
+
+    const primaryLabels = row.querySelectorAll(
+      `[${VENUE_TEAM_TYPOGRAPHY_ATTR}="${VENUE_TEAM_TYPOGRAPHY_PRIMARY}"]`,
+    );
+    expect(primaryLabels.length).toBeGreaterThanOrEqual(2);
+
+    const timeZone = row.querySelector(
+      `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.time}"]`,
+    );
+    expect(timeZone?.textContent).toMatch(/10:30|11:30/);
+    expect(horizontal.textContent).not.toMatch(/\b10:30\b|\b11:30\b/);
+  });
+
+  it("ACTIVITY, KABINE and PLATZ share the top-alignment contract on each card", () => {
+    render(
+      <InfoboardScreen1
+        feed={makeFeed({
+          current: [makeMatch()],
+          next: [makeTournament()],
+        })}
+        branding={BRANDING}
+        theme="LIGHT"
+        currentTimeIso="2026-11-01T08:00:00.000Z"
+        eventPresentation={[
+          {
+            eventId: "tournament-1",
+            participantAllocations: kabineAllocations(),
+          },
+        ]}
+        studio={EMPTY_SCREEN1_STUDIO_CONFIG}
+      />,
+    );
+
+    expect(CSS).toContain(`.${VENUE_ACTIVITY_CONTENT_TOP_CLASS}`);
+    expect(CSS).toMatch(
+      /\.venueActivityContentTop[\s\S]*justify-content:\s*flex-start/,
+    );
+    expect(CSS).toMatch(
+      /SCE-INFOBOARD-V2-01-R3[\s\S]*justify-content:\s*flex-start/,
+    );
+
+    for (const row of screen.getAllByTestId("event-row")) {
+      const activity = row.querySelector(
+        `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.identity}"]`,
+      );
+      const kabine = row.querySelector(
+        `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.kabine}"]`,
+      );
+      const platz = row.querySelector(
+        `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.platz}"]`,
+      );
+      for (const zone of [activity, kabine, platz]) {
+        expect(zone?.className).toContain(VENUE_ACTIVITY_CONTENT_TOP_CLASS);
+      }
+    }
   });
 
   it("light theme enables venue page heading without hardcoded facility strings", () => {

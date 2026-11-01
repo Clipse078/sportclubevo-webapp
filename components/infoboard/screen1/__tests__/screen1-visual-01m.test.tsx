@@ -164,12 +164,15 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — canonical Kabine pill CSS", () => {
     );
   });
 
-  it("preserves 01L training matrix vertical centering", () => {
+  it("keeps training matrix top-aligned with shared column baseline (R3)", () => {
     expect(CSS).toMatch(
       /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*height:\s*100%/,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*safe center/,
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*start/,
+    );
+    expect(CSS).toMatch(
+      /SCE-INFOBOARD-V2-01-R3[\s\S]*\.eventCard\[data-type="MATCH"\] \.cardPitchZone[\s\S]*justify-content:\s*flex-start/,
     );
   });
 });

@@ -38,6 +38,18 @@ export const VENUE_ACTIVITY_COLUMN_TEST_IDS = {
 
 export const VENUE_ACTIVITY_GRID_DATA_ATTR = "data-venue-activity-grid";
 
+/** Shared top-alignment class for ACTIVITY / KABINE / PLATZ (and TIME) content columns. */
+export const VENUE_ACTIVITY_CONTENT_TOP_CLASS = "venueActivityContentTop";
+
+/** Horizontal website-style match presentation inside the ACTIVITY column. */
+export const VENUE_MATCH_LAYOUT_ATTR = "data-venue-match-layout";
+export const VENUE_MATCH_LAYOUT_HORIZONTAL = "horizontal";
+
+/** Primary vs secondary team identity typography markers (website grammar). */
+export const VENUE_TEAM_TYPOGRAPHY_ATTR = "data-venue-team-typography";
+export const VENUE_TEAM_TYPOGRAPHY_PRIMARY = "primary";
+export const VENUE_TEAM_TYPOGRAPHY_SECONDARY = "secondary";
+
 /** Light-theme venue display uses compact header + optional page heading. */
 export function isVenueDisplayLightTheme(
   theme: "DARK" | "LIGHT" | "dark" | "light",
