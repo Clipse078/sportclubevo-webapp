@@ -4524,7 +4524,6 @@ describe("INFOBOARD-REGRESSION-01E — card geometry invariants", () => {
   it("sparse 4-row card stretches the activity row while training rows stay content-driven", () => {
     renderTrainingGroup(4);
     const list = screen.getByTestId("event-list");
-    const card = trainingCard("4");
 
     expect(list.getAttribute("data-layout-mode")).toBe("sparse");
     expect(list.getAttribute("data-count")).toBe("1");
