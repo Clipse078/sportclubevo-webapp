@@ -37,32 +37,35 @@ export const TRAINING_PARTICIPANT_LOGO_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(3.5rem, 4.5vw, 5rem)",
-  standard: "clamp(3rem, 3.75vw, 4.25rem)",
-  compact: "clamp(2.65rem, 3.25vw, 3.75rem)",
-  dense: "clamp(2.35rem, 2.85vw, 3.25rem)",
+  spacious: "clamp(3.75rem, 4.85vw, 5.35rem)",
+  standard: "clamp(3.25rem, 4.05vw, 4.5rem)",
+  compact: "clamp(2.85rem, 3.55vw, 4rem)",
+  dense: "clamp(2.55rem, 3.15vw, 3.65rem)",
 };
 
-/** Club line typography per density. */
+/** Single-team training — XL team line (R11 distance readability). */
+export const TRAINING_SINGLE_TEAM_NAME_CLAMP = "clamp(2.35rem, 3.15vw, 3.75rem)" as const;
+
+/** Club line typography per density (context when stacked). */
 export const TRAINING_PARTICIPANT_CLUB_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(1.2rem, 1.55vw, 1.65rem)",
-  standard: "clamp(1.1rem, 1.38vw, 1.5rem)",
-  compact: "clamp(1.02rem, 1.25vw, 1.38rem)",
-  dense: "clamp(0.98rem, 1.15vw, 1.28rem)",
+  spacious: "clamp(1.15rem, 1.45vw, 1.55rem)",
+  standard: "clamp(1.08rem, 1.32vw, 1.45rem)",
+  compact: "clamp(1rem, 1.22vw, 1.35rem)",
+  dense: "clamp(0.95rem, 1.12vw, 1.28rem)",
 };
 
-/** Team line typography per density — never below readable venue minimum. */
+/** Team line typography per density — R11 signage scale. */
 export const TRAINING_PARTICIPANT_TEAM_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(1.05rem, 1.32vw, 1.42rem)",
-  standard: "clamp(1rem, 1.22vw, 1.32rem)",
-  compact: "clamp(0.95rem, 1.12vw, 1.22rem)",
-  dense: "clamp(0.92rem, 1.06vw, 1.15rem)",
+  spacious: "clamp(1.45rem, 1.85vw, 2.05rem)",
+  standard: "clamp(1.32rem, 1.65vw, 1.85rem)",
+  compact: "clamp(1.22rem, 1.52vw, 1.72rem)",
+  dense: "clamp(1.12rem, 1.38vw, 1.58rem)",
 };
 
 export const TRAINING_PARTICIPANT_ROW_GAP: Record<

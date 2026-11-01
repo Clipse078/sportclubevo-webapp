@@ -39,9 +39,9 @@ export const TOURNAMENT_PARTICIPANT_NAME_CLAMP: Record<
   TournamentParticipantDensity,
   string
 > = {
-  large: "clamp(1.125rem, 1.35vw, 1.3125rem)",
-  medium: "clamp(1rem, 1.22vw, 1.2rem)",
-  compact: "clamp(0.92rem, 1.12vw, 1.05rem)",
+  large: "clamp(1.28rem, 1.55vw, 1.48rem)",
+  medium: "clamp(1.15rem, 1.38vw, 1.32rem)",
+  compact: "clamp(1.05rem, 1.25vw, 1.18rem)",
 };
 
 export function resolveTournamentParticipantDensity(

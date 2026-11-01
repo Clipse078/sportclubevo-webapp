@@ -254,7 +254,7 @@ describe("R10 TRAINING", () => {
       />,
     );
     expect(screen.getByTestId("training-group-row")).toBeTruthy();
-    expect(screen.getByText("FC Allschwil")).toBeTruthy();
+    expect(screen.getByText(/JUNIOREN D-7 D1/i)).toBeTruthy();
   });
 
   it("preserves all teams and row alignment contract for 5/6 cohorts", () => {

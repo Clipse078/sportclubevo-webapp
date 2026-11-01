@@ -24,14 +24,14 @@ export const VENUE_DISTANCE_TIME_PRIMARY_BY_COUNT = {
   6: "clamp(1.95rem, 2.55cqw, 2.95rem)",
 } as const;
 
-/** R9 secondary end-time clamps (~35–45% of primary visual weight). */
+/** R11 secondary end-time clamps — subordinate but paired tightly with primary. */
 export const VENUE_DISTANCE_TIME_SECONDARY_BY_COUNT = {
-  1: "clamp(1.35rem, 1.65cqw, 1.65rem)",
-  2: "clamp(1.3rem, 1.58cqw, 1.6rem)",
-  3: "clamp(1.2rem, 1.45cqw, 1.55rem)",
-  4: "clamp(1.1rem, 1.35cqw, 1.45rem)",
-  5: "clamp(1.05rem, 1.28cqw, 1.38rem)",
-  6: "clamp(1rem, 1.22cqw, 1.32rem)",
+  1: "clamp(1.28rem, 1.55cqw, 1.58rem)",
+  2: "clamp(1.22rem, 1.48cqw, 1.52rem)",
+  3: "clamp(1.15rem, 1.38cqw, 1.48rem)",
+  4: "clamp(1.08rem, 1.28cqw, 1.38rem)",
+  5: "clamp(1.02rem, 1.22cqw, 1.32rem)",
+  6: "clamp(0.98rem, 1.16cqw, 1.28rem)",
 } as const;
 
 /** ~25% above R8 VS token — still subordinate to club blocks and crests. */

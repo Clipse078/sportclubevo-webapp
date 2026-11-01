@@ -48,6 +48,9 @@ export const VENUE_ACTIVITY_COLUMN_TEST_IDS = {
 
 export const VENUE_ACTIVITY_GRID_DATA_ATTR = "data-venue-activity-grid";
 
+/** R11 column shell (context + vertically centred primary). */
+export const VENUE_ACTIVITY_COLUMN_SHELL_CLASS = "venueColumnShell";
+
 /** Shared top-alignment class for ACTIVITY / KABINE / PLATZ (and TIME) content columns. */
 export const VENUE_ACTIVITY_CONTENT_TOP_CLASS = "venueActivityContentTop";
 

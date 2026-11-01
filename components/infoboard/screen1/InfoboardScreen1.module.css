@@ -187,6 +187,14 @@
   --ib-zone-surface-platz:           #FFFFFF;
   --ib-zone-separator:               #E4EAF2;
 
+  /* R11 semantic typography — distance-readable venue signage */
+  --ib-fs-venue-time-primary:   var(--ib-fs-event-time);
+  --ib-fs-venue-time-secondary: var(--ib-fs-event-end-time);
+  --ib-fs-activity-type:        var(--ib-fs-dest-label);
+  --ib-fs-training-team:        var(--ib-training-team-font-size, clamp(1.22rem, 1.52vw, 1.72rem));
+  --ib-fs-match-club:           var(--ib-match-font-size);
+  --ib-fs-tournament-participant: var(--ib-tournament-participant-name-size, clamp(1.05rem, 1.25vw, 1.18rem));
+
   /* R9 LIGHT typography — distance-readable TIME; end time stays secondary */
   --ib-fs-status-label:     clamp(1.15rem, 1.45vw, 1.375rem);
   --ib-fs-event-time:       clamp(2.85rem, 3.75vw, 4rem);
@@ -644,9 +652,10 @@
 }
 
 .eventEndTime {
-  font-size: var(--ib-fs-event-end-time);
+  font-size: var(--ib-fs-venue-time-secondary, var(--ib-fs-event-end-time));
   color: var(--ib-text-muted);
   line-height: 1;
+  margin-top: clamp(1px, 0.15vh, 3px);
   white-space: nowrap;
 }
 
@@ -679,7 +688,7 @@
 .activityPrimaryZone {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: stretch;
   flex: 1 1 auto;
   width: 100%;
@@ -727,6 +736,45 @@
   align-content: flex-start;
   align-self: start;
   padding-top: var(--ib-activity-content-top, var(--ib-card-pad-v));
+}
+
+/* R11 — CONTEXT ↓ PRIMARY vertical alignment grammar (all venue columns). */
+.venueColumnShell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(4px, 0.45vh, 7px);
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.venueColumnContext {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.venueColumnPrimary {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  gap: clamp(2px, 0.25vh, 4px);
+}
+
+.cardTimeZone.venueColumnPrimary,
+.cardPitchZone > .destPitchValue.venueColumnPrimary {
+  align-items: flex-start;
+}
+
+.cardTimeZone .venueColumnPrimary {
+  justify-content: center;
 }
 
 .venueTeamDisplayName {
@@ -906,9 +954,13 @@
   column-gap: clamp(10px, 1.2vw, 18px);
   row-gap: clamp(8px, 0.9vh, 12px);
   align-items: start;
+  align-content: center;
+  justify-content: center;
+  flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   max-width: 100%;
+  min-height: 0;
 }
 
 .tournamentParticipantBlock {
@@ -2053,42 +2105,42 @@
   flex: 0 0 var(--ib-training-logo-size);
 }
 
-/* R10R1 — single training: vertical identity block in ACTIVITY primary height */
-.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(1) {
+/* R11 — single training: horizontal crest + XL team, vertically centred in row */
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell {
   align-items: center;
-  justify-content: center;
 }
 
 .eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow {
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: clamp(8px, 0.85vh, 14px);
+  justify-content: flex-start;
+  text-align: left;
+  gap: clamp(10px, 1vw, 16px);
 }
 
 .eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow .matchSideText {
-  align-items: center;
-  text-align: center;
-}
-
-.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow .matchCrestSlot {
-  width: var(--ib-training-logo-size);
-  height: var(--ib-training-logo-size);
-}
-
-.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(2),
-.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(3) {
   align-items: flex-start;
-  justify-content: flex-start;
+  text-align: left;
+}
+
+.trainingIdentityRow .matchSideText {
+  align-items: flex-start;
+  text-align: left;
 }
 
 .trainingIdentityRow .venueTeamDisplayName {
-  font-size: var(--ib-training-club-font-size, var(--ib-training-font-size));
+  font-size: var(--ib-fs-training-team, var(--ib-training-team-font-size, var(--ib-training-font-size)));
+  font-weight: 800;
+  line-height: 1.02;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-overflow: clip;
 }
 
 .trainingIdentityRow .venueTeamCategoryLabel {
-  font-size: var(--ib-training-team-font-size, var(--ib-match-secondary-font-size));
+  font-size: var(--ib-training-club-font-size, var(--ib-match-secondary-font-size));
   font-style: normal;
 }
 
@@ -2301,8 +2353,8 @@
 /* Tournament ACTIVITY participant names: wrap without ellipsis (R6 no-clip). */
 .eventCard[data-type="TOURNAMENT"] .tournamentParticipantName,
 .eventCard[data-type="TOURNAMENT"] .tournamentParticipantText .venueTeamCategoryLabel {
-  font-size: clamp(0.875rem, 1.05vw, 1.0625rem);
-  font-weight: 600;
+  font-size: var(--ib-fs-tournament-participant, var(--ib-tournament-participant-name-size, clamp(1.05rem, 1.25vw, 1.18rem)));
+  font-weight: 700;
   white-space: normal;
   overflow: visible;
   overflow-wrap: anywhere;

@@ -136,7 +136,10 @@ import {
   tournamentParticipantDisplayRows,
   tournamentParticipantRowPattern,
 } from "@/lib/infoboard/tournament-participant-density";
-import { resolveTrainingIdentityLines } from "@/lib/infoboard/training-identity-display";
+import {
+  R11_TRAINING_IDENTITY_HORIZONTAL,
+  resolveTrainingIdentityLines,
+} from "@/lib/infoboard/training-identity-display";
 import {
   resolveTrainingParticipantDensity,
   TRAINING_PARTICIPANT_CLUB_CLAMP,
@@ -146,6 +149,7 @@ import {
   TRAINING_PARTICIPANT_TEAM_CLAMP,
   TRAINING_ROW_COUNT_ATTR,
   TRAINING_ROW_COUNT_VAR,
+  TRAINING_SINGLE_TEAM_NAME_CLAMP,
 } from "@/lib/infoboard/training-participant-density";
 import styles from "./InfoboardScreen1.module.css";
 
@@ -824,6 +828,9 @@ function TrainingIdentityRow({
       className={styles.trainingIdentityRow}
       data-testid="training-group-row"
       data-training-identity-row="true"
+      data-training-identity-orientation={
+        R11_TRAINING_IDENTITY_HORIZONTAL ? "horizontal" : "vertical"
+      }
     >
       <div className={styles.matchCrestSlot}>
         {showLogos && clubLogoSrc !== null ? (
@@ -962,6 +969,7 @@ function TournamentParticipantIdentity({
 
 type ParticipantAllocationBlockProps = {
   allocations: readonly InfoboardTeamAllocationPresentation[];
+  className?: string;
 };
 
 /**
@@ -970,10 +978,15 @@ type ParticipantAllocationBlockProps = {
  */
 function ParticipantAllocationBlock({
   allocations,
+  className,
 }: ParticipantAllocationBlockProps): ReactElement {
   return (
     <div
-      className={styles.participantAllocationBlock}
+      className={
+        className
+          ? `${styles.participantAllocationBlock} ${className}`
+          : styles.participantAllocationBlock
+      }
       data-testid="participant-allocation-block"
     >
       {allocations.map((alloc) => {
@@ -1043,13 +1056,13 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
   return (
     <>
       <VenueActivityKabine
-        className={`${styles.cardDressingRoomZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
         testId="match-allocation"
       >
-        <span className={styles.destLabel}>KABINE</span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>KABINE</span>
 
         {hasHome || hasAway ? (
-          <div className={styles.matchAllocation}>
+          <div className={`${styles.matchAllocation} ${styles.venueColumnPrimary}`}>
             {hasHome && (
               <div className={styles.matchAllocRow}>
                 <span className={styles.matchAllocRoom}>
@@ -1079,20 +1092,20 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
       </VenueActivityKabine>
 
       <VenueActivityPlatz
-        className={`${styles.cardPitchZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
       >
-        <span className={styles.destLabel}>PLATZ</span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>PLATZ</span>
 
         {pitchLabel !== null ? (
           <span
-            className={styles.destPitchValue}
+            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
             data-testid="pitch-value"
           >
             {pitchLabel}
           </span>
         ) : (
           <span
-            className={styles.pitchMissing}
+            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
             data-testid="pitch-unassigned-warning"
           >
             NOCH NICHT ZUGETEILT
@@ -1117,13 +1130,13 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
   return (
     <>
       <VenueActivityKabine
-        className={`${styles.cardDressingRoomZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
         testId="training-allocation"
       >
-        <span className={styles.destLabel}>KABINE</span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>KABINE</span>
 
         {homeDressingRoomLabel !== null ? (
-          <span className={styles.destRoomValue}>
+          <span className={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}>
             {formatDressingRoomLabel(homeDressingRoomLabel)}
           </span>
         ) : (
@@ -1137,20 +1150,20 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
       </VenueActivityKabine>
 
       <VenueActivityPlatz
-        className={`${styles.cardPitchZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
       >
-        <span className={styles.destLabel}>PLATZ</span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>PLATZ</span>
 
         {pitchLabel !== null ? (
           <span
-            className={styles.destPitchValue}
+            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
             data-testid="pitch-value"
           >
             {pitchLabel}
           </span>
         ) : (
           <span
-            className={styles.pitchMissing}
+            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
             data-testid="pitch-unassigned-warning"
           >
             NOCH NICHT ZUGETEILT
@@ -1176,17 +1189,16 @@ function TournamentDestination({
   return (
     <>
       <VenueActivityKabine
-        className={`${styles.cardDressingRoomZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
       >
-        <span
-          className={styles.destLabel}
-        >
-          KABINE
-        </span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>KABINE</span>
 
         {participantAllocations !== undefined &&
         participantAllocations.length > 0 ? (
-          <ParticipantAllocationBlock allocations={participantAllocations} />
+          <ParticipantAllocationBlock
+            allocations={participantAllocations}
+            className={styles.venueColumnPrimary}
+          />
         ) : (
           <span
             className={styles.dressingRoomMissing}
@@ -1198,24 +1210,20 @@ function TournamentDestination({
       </VenueActivityKabine>
 
       <VenueActivityPlatz
-        className={`${styles.cardPitchZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
       >
-        <span
-          className={styles.destLabel}
-        >
-          PLATZ
-        </span>
+        <span className={`${styles.destLabel} ${styles.venueColumnContext}`}>PLATZ</span>
 
         {pitchLabel !== null ? (
           <span
-            className={styles.destPitchValue}
+            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
             data-testid="pitch-value"
           >
             {pitchLabel}
           </span>
         ) : (
           <span
-            className={styles.pitchMissing}
+            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
             data-testid="pitch-unassigned-warning"
           >
             NOCH NICHT ZUGETEILT
@@ -1321,7 +1329,9 @@ function TrainingGroupCard({
             venuePresentationDensity,
           ),
           "--ib-training-team-font-size": scaleVenuePresentationClamp(
-            TRAINING_PARTICIPANT_TEAM_CLAMP[participantDensity],
+            isSingleTraining
+              ? TRAINING_SINGLE_TEAM_NAME_CLAMP
+              : TRAINING_PARTICIPANT_TEAM_CLAMP[participantDensity],
             venuePresentationDensity,
           ),
           "--ib-training-participant-row-gap":
@@ -1330,12 +1340,12 @@ function TrainingGroupCard({
       }
     >
       <VenueActivityTime
-        className={`${styles.cardTimeZone} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardTimeZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
         testId="training-group-time-zone"
       >
         {label !== null && (
           <span
-            className={styles.statusLabel}
+            className={`${styles.statusLabel} ${styles.venueColumnContext}`}
             data-testid={`status-label-${temporal}`}
             data-status={temporal === "current" ? "current" : "next"}
           >
@@ -1343,23 +1353,25 @@ function TrainingGroupCard({
           </span>
         )}
 
-        <time
-          className={styles.eventTime}
-          dateTime={startAt}
-          data-testid="training-cohort-start-time"
-        >
-          {timePresentation.startTime}
-        </time>
-
-        {timePresentation.primaryEndTime !== null && (
-          <span
-            className={styles.eventEndTime}
-            aria-label="Bis"
-            data-testid="training-cohort-end-time"
+        <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+          <time
+            className={styles.eventTime}
+            dateTime={startAt}
+            data-testid="training-cohort-start-time"
           >
-            bis {timePresentation.primaryEndTime}
-          </span>
-        )}
+            {timePresentation.startTime}
+          </time>
+
+          {timePresentation.primaryEndTime !== null && (
+            <span
+              className={styles.eventEndTime}
+              aria-label="Bis"
+              data-testid="training-cohort-end-time"
+            >
+              bis {timePresentation.primaryEndTime}
+            </span>
+          )}
+        </div>
       </VenueActivityTime>
 
       <div className={styles.trainingMatrix} data-testid="training-group">
@@ -1581,30 +1593,32 @@ function EventCard({
       style={{ "--ib-card-demand": demand, ...cardStyle } as CSSProperties}
       time={
         <VenueActivityTime
-          className={`${styles.cardTimeZone} ${styles.venueActivityContentTop}`}
+          className={`${styles.cardTimeZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
         >
           {label !== null && (
             <span
-              className={styles.statusLabel}
+              className={`${styles.statusLabel} ${styles.venueColumnContext}`}
               data-testid={`status-label-${temporal}`}
               data-status={temporal === "current" ? "current" : "next"}
             >
               {label}
             </span>
           )}
-          <time className={styles.eventTime} dateTime={event.startAt}>
-            {startTime}
-          </time>
-          {endTime !== null && (
-            <span className={styles.eventEndTime} aria-label="Bis">
-              bis {endTime}
-            </span>
-          )}
+          <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+            <time className={styles.eventTime} dateTime={event.startAt}>
+              {startTime}
+            </time>
+            {endTime !== null && (
+              <span className={styles.eventEndTime} aria-label="Bis">
+                bis {endTime}
+              </span>
+            )}
+          </div>
         </VenueActivityTime>
       }
       identity={
         <VenueActivityIdentity
-          className={`${styles.cardEventZone} ${styles.venueActivityContentTop}`}
+          className={`${styles.cardEventZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
         >
           <div
             className={styles.activityContextZone}

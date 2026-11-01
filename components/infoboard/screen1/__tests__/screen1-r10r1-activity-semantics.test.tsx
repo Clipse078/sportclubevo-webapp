@@ -150,8 +150,8 @@ describe("R10R1 TRAINING SINGLE", () => {
     const card = screen.getByTestId("event-row");
     expect(within(card).getAllByText("TRAINING")).toHaveLength(1);
     expect(within(card).getByTestId("training-team-logo-placeholder")).toBeTruthy();
-    expect(within(card).getByText(/FC ALLSCHWIL/i)).toBeTruthy();
     expect(within(card).getByText(/Junioren D-7 D1/i)).toBeTruthy();
+    expect(within(card).queryByText(/^FC ALLSCHWIL$/i)).toBeNull();
     expect(within(card).getByText("KABINE")).toBeTruthy();
     expect(within(card).getByText("PLATZ")).toBeTruthy();
     expect(trainingGroupDensityTier(1)).toBe("spacious");
@@ -187,7 +187,7 @@ describe("R10R1 TRAINING MULTI", () => {
       for (let index = 0; index < count; index += 1) {
         const row = screen.getAllByTestId("training-matrix-row")[index]!;
         expect(row.getAttribute("data-training-row-index")).toBe(String(index));
-        expect(within(row).getByText(/FC ALLSCHWIL/i)).toBeTruthy();
+        expect(within(row).getByText(/Junioren D-/i)).toBeTruthy();
       }
     });
   }
