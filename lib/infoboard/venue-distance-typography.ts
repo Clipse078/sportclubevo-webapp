@@ -51,13 +51,12 @@ export const MICRO_TEXT_AUDIT = {
   SECONDARY_MIN_FONT: VENUE_DISTANCE_KABINE_TEAM_BASE,
   REMAINING_MICRO_TEXT: [
     "--ib-fs-powered-by (footer brand attribution)",
-    ".destLabel (KABINE / PLATZ semantic headings)",
     ".matchAllocRole (HEIM / GAST operational labels)",
-    ".eventTypeLabel competition line when present",
+    ".eventTeamSubtitle / competition line when present",
   ],
   RATIONALE:
     "R9 raises distance-readable A-tier tokens (start time, club identity, pitch, room numbers) " +
-    "and important B-tier Kabine team lines while leaving C-tier footer and semantic micro-labels unchanged.",
+    "and important B-tier Kabine team lines; R11R1 unifies semantic badges and training team scale.",
 } as const;
 
 export function resolveVenueDistanceActivityCount(count: number): keyof typeof VENUE_DISTANCE_TIME_PRIMARY_BY_COUNT {

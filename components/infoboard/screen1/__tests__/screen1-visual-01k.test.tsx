@@ -124,7 +124,7 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — canonical grid alignment", () => {
   });
 
   it("removes nested horizontal inset padding from training matrix containers", () => {
-    expect(CSS).toMatch(/\.trainingMatrixHeaders[\s\S]*padding:\s*var\(--ib-card-pad-v\)\s+0\s+0/);
+    expect(CSS).toMatch(/\.trainingMatrixHeaders[\s\S]*padding:\s*0/);
     expect(CSS).not.toMatch(/\.trainingRowMatrix[\s\S]*padding:\s*0 var\(--ib-card-pad-h\)/);
   });
 

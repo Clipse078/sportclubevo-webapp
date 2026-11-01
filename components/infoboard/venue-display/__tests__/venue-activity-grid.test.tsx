@@ -471,7 +471,7 @@ describe("SCE-INFOBOARD-V2-01 venue activity grid contract", () => {
     expect(firstBlock.textContent).toContain("FCA Junioren F1");
   });
 
-  it("ACTIVITY, KABINE and PLATZ share the top-alignment contract on each card", () => {
+  it("ACTIVITY, KABINE and PLATZ share the R11R1 vertical composition contract on each card", () => {
     render(
       <InfoboardScreen1
         feed={makeFeed({
@@ -491,26 +491,18 @@ describe("SCE-INFOBOARD-V2-01 venue activity grid contract", () => {
       />,
     );
 
-    expect(CSS).toContain(`.${VENUE_ACTIVITY_CONTENT_TOP_CLASS}`);
-    expect(CSS).toMatch(
-      /\.venueActivityContentTop[\s\S]*justify-content:\s*flex-start/,
-    );
-    expect(CSS).toMatch(
-      /SCE-INFOBOARD-V2-01-R3[\s\S]*justify-content:\s*flex-start/,
-    );
+    expect(CSS).toMatch(/\.venueColumnComposition/);
+    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*center/);
 
     for (const row of screen.getAllByTestId("event-row")) {
-      const activity = row.querySelector(
-        `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.identity}"]`,
-      );
       const kabine = row.querySelector(
         `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.kabine}"]`,
       );
       const platz = row.querySelector(
         `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.platz}"]`,
       );
-      for (const zone of [activity, kabine, platz]) {
-        expect(zone?.className).toContain(VENUE_ACTIVITY_CONTENT_TOP_CLASS);
+      for (const zone of [kabine, platz]) {
+        expect(zone?.querySelector('[data-venue-column-composition="true"]')).toBeTruthy();
       }
     }
   });

@@ -190,7 +190,9 @@
   /* R11 semantic typography — distance-readable venue signage */
   --ib-fs-venue-time-primary:   var(--ib-fs-event-time);
   --ib-fs-venue-time-secondary: var(--ib-fs-event-end-time);
-  --ib-fs-activity-type:        var(--ib-fs-dest-label);
+  --ib-semantic-label-font-size: clamp(0.95rem, 1.15vw, 1.28rem);
+  --ib-venue-label-primary-gap:  clamp(6px, 0.65vh, 10px);
+  --ib-fs-activity-type:        var(--ib-semantic-label-font-size);
   --ib-fs-training-team:        var(--ib-training-team-font-size, clamp(1.22rem, 1.52vw, 1.72rem));
   --ib-fs-match-club:           var(--ib-match-font-size);
   --ib-fs-tournament-participant: var(--ib-tournament-participant-name-size, clamp(1.05rem, 1.25vw, 1.18rem));
@@ -267,6 +269,8 @@
     --ib-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
     --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
+    --ib-semantic-label-font-size: clamp(0.72rem, 0.95cqw, 1.12rem);
+    --ib-venue-label-primary-gap: clamp(4px, 0.5cqh, 8px);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
     --ib-fs-dest-team: clamp(0.92rem, 1.15cqw, 1.35rem);
@@ -664,7 +668,7 @@
 .cardEventZone {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
   gap: clamp(6px, 0.65vh, 10px);
   padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
@@ -688,38 +692,12 @@
 .activityPrimaryZone {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: stretch;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: 100%;
   min-width: 0;
   min-height: 0;
-}
-
-/* R10 — single spacious card: match identity vertically centred in ACTIVITY */
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
-  justify-content: flex-start;
-  padding-top: clamp(10px, 1.35vh, 22px);
-  gap: clamp(8px, 0.85vh, 14px);
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"])
-  .eventCard[data-type="MATCH"]
-  .activityPrimaryZone {
-  justify-content: center;
-  padding-top: 0;
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"])
-  .eventCard[data-type="TRAINING"]
-  .activityPrimaryZone {
-  justify-content: center;
-  padding-top: 0;
-}
-
-.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
-  justify-content: flex-start;
-  padding-top: clamp(6px, 0.9vh, 16px);
 }
 
 .trainingIdentity {
@@ -738,16 +716,35 @@
   padding-top: var(--ib-activity-content-top, var(--ib-card-pad-v));
 }
 
-/* R11 — CONTEXT ↓ PRIMARY vertical alignment grammar (all venue columns). */
+/* R11R1 — centre label + primary as one composition group in each column. */
 .venueColumnShell {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-start;
-  gap: clamp(4px, 0.45vh, 7px);
+  justify-content: center;
+  gap: 0;
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+}
+
+.venueColumnComposition {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--ib-venue-label-primary-gap, clamp(6px, 0.65vh, 10px));
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  width: 100%;
+}
+
+.venueColumnComposition > .venueColumnPrimary,
+.venueColumnComposition > .activityPrimaryZone {
+  flex: 0 0 auto;
+  justify-content: flex-start;
 }
 
 .venueColumnContext {
@@ -757,15 +754,20 @@
 }
 
 .venueColumnPrimary {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   min-height: 0;
   min-width: 0;
   width: 100%;
   gap: clamp(2px, 0.25vh, 4px);
+}
+
+.cardTimeZone.venueColumnShell .venueColumnPrimary {
+  flex: 0 1 auto;
+  justify-content: center;
 }
 
 .cardTimeZone.venueColumnPrimary,
@@ -803,38 +805,58 @@
   word-break: normal;
 }
 
+.venueSemanticLabel,
 .eventTypeLabel {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-activity-type, var(--ib-fs-dest-label));
+  font-size: var(--ib-fs-activity-type, var(--ib-semantic-label-font-size));
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   line-height: 1;
   margin: 0;
-  padding: clamp(3px, 0.35vh, 6px) clamp(8px, 0.9vw, 14px);
+  padding: clamp(4px, 0.42vh, 7px) clamp(9px, 0.95vw, 15px);
   border-radius: var(--ib-radius-sm);
   border: 1px solid transparent;
+  min-height: clamp(22px, 2.4vh, 30px);
+  box-sizing: border-box;
 }
 
-.eventTypeLabel[data-event-type="MATCH"] {
+.eventTypeLabel[data-event-type="MATCH"],
+.venueSemanticLabel[data-semantic-label="MATCH"] {
   color: var(--ib-match);
   background: rgba(216, 48, 51, 0.1);
   border-color: rgba(216, 48, 51, 0.22);
 }
 
-.eventTypeLabel[data-event-type="TOURNAMENT"] {
+.eventTypeLabel[data-event-type="TOURNAMENT"],
+.venueSemanticLabel[data-semantic-label="TURNIER"] {
   color: var(--ib-tournament);
   background: rgba(232, 124, 36, 0.12);
   border-color: rgba(232, 124, 36, 0.28);
 }
 
-.eventTypeLabel[data-event-type="TRAINING"] {
+.eventTypeLabel[data-event-type="TRAINING"],
+.venueSemanticLabel[data-semantic-label="TRAINING"] {
   color: var(--ib-training);
   background: rgba(30, 91, 198, 0.1);
   border-color: rgba(30, 91, 198, 0.22);
+}
+
+.eventTypeLabel[data-event-type="KABINE"],
+.venueSemanticLabel[data-semantic-label="KABINE"] {
+  color: #1849A6;
+  background: rgba(24, 73, 166, 0.1);
+  border-color: rgba(24, 73, 166, 0.24);
+}
+
+.eventTypeLabel[data-event-type="PLATZ"],
+.venueSemanticLabel[data-semantic-label="PLATZ"] {
+  color: #174D38;
+  background: rgba(23, 77, 56, 0.1);
+  border-color: rgba(23, 77, 56, 0.24);
 }
 
 .matchIdentity {
@@ -1183,9 +1205,9 @@
 .cardPitchZone {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
-  gap: clamp(5px, 0.55vh, 8px);
+  gap: 0;
   min-height: 0;
   height: 100%;
 }
@@ -1851,8 +1873,8 @@
   grid-column: 2 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-content: stretch;
+  grid-template-rows: auto auto;
+  align-content: center;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -1864,29 +1886,22 @@
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  align-items: end;
-  padding: var(--ib-card-pad-v) 0 0;
+  align-items: start;
+  padding: 0;
   column-gap: 0;
   min-width: 0;
 }
 
-.trainingMatrixHeaders > .destLabel,
-.trainingMatrixHeaders > .eventTypeLabel {
-  display: block;
+.trainingMatrixHeaders > span,
+.trainingMatrixHeaders > .eventTypeLabel,
+.trainingMatrixHeaders > .venueSemanticLabel,
+.trainingActivityHeader .eventTypeLabel,
+.trainingActivityHeader .venueSemanticLabel {
+  display: flex;
+  align-items: flex-start;
   align-self: start;
   justify-self: start;
   margin: 0;
-  font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-dest-label);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.trainingMatrixHeaders > .eventTypeLabel,
-.trainingActivityHeader .eventTypeLabel {
-  color: var(--ib-training-soft);
 }
 
 .trainingActivityHeader {
@@ -1894,10 +1909,6 @@
   flex-direction: column;
   align-items: flex-start;
   min-width: 0;
-}
-
-.trainingMatrixHeaders > .destLabel {
-  color: var(--ib-training-soft);
 }
 
 .trainingMatrixHeaders > :nth-child(1) {
@@ -2296,33 +2307,29 @@
   line-height: 1.02;
 }
 
-/* SCE-INFOBOARD-V2-01-R3 / R4 — shared top baseline for ACTIVITY / KABINE / PLATZ */
-.eventCard[data-type="MATCH"] .cardEventZone,
+/* SCE-INFOBOARD-V2-01-R3 / R11R1 — vertically centred composition in ACTIVITY / KABINE / PLATZ */
 .eventCard[data-type="MATCH"] .cardDressingRoomZone,
 .eventCard[data-type="MATCH"] .cardPitchZone,
-.eventCard[data-type="TOURNAMENT"] .cardEventZone,
 .eventCard[data-type="TOURNAMENT"] .cardDressingRoomZone,
 .eventCard[data-type="TOURNAMENT"] .cardPitchZone,
-.eventCard[data-type="TRAINING"] .cardTimeZone {
+.eventCard[data-type="TRAINING"] .cardDressingRoomZone,
+.eventCard[data-type="TRAINING"] .cardPitchZone {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
-  gap: clamp(5px, 0.55vh, 8px);
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Labels: single-line, no overflow into adjacent zones. */
+/* Semantic badges: single-line containment without stripping badge geometry. */
+.eventCard[data-type="MATCH"] .venueSemanticLabel,
+.eventCard[data-type="TOURNAMENT"] .venueSemanticLabel,
+.eventCard[data-type="TRAINING"] .venueSemanticLabel,
 .eventCard[data-type="MATCH"] .activityContextZone > .eventTypeLabel,
-.eventCard[data-type="MATCH"] .cardEventZone > .eventTypeLabel,
-.eventCard[data-type="MATCH"] .cardDressingRoomZone > .destLabel,
-.eventCard[data-type="MATCH"] .cardPitchZone > .destLabel,
-.eventCard[data-type="TOURNAMENT"] .activityContextZone > .eventTypeLabel,
-.eventCard[data-type="TOURNAMENT"] .cardEventZone > .eventTypeLabel,
-.eventCard[data-type="TOURNAMENT"] .cardDressingRoomZone > .destLabel,
-.eventCard[data-type="TOURNAMENT"] .cardPitchZone > .destLabel {
-  margin: 0;
-  padding: 0;
-  line-height: 1;
+.eventCard[data-type="TOURNAMENT"] .activityContextZone > .eventTypeLabel {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

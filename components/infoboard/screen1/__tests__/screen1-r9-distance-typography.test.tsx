@@ -353,10 +353,9 @@ describe("R9 surfaces and grid invariants", () => {
     expect(kabine.textContent).toMatch(/04[\s\S]*Heim/);
   });
 
-  it("R9 single-activity composition anchors primary zone to flex-start", () => {
-    expect(CSS).toMatch(
-      /\.eventList\[data-count="1"\][\s\S]*\.activityPrimaryZone[\s\S]*justify-content:\s*flex-start/,
-    );
+  it("R11R1 single-activity composition centres label + primary as one group", () => {
+    expect(CSS).toMatch(/\.venueColumnComposition/);
+    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*center/);
   });
 });
 
