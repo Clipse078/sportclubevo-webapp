@@ -428,6 +428,7 @@
 .main {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
@@ -1537,10 +1538,34 @@
   --ib-tournament-logo-size: var(--ib-tournament-logo-size-large);
 }
 
-/* Single-event hero — ~35–45% usable body height, content vertically composed */
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
-  flex: 0 0 clamp(300px, 40vh, 460px);
-  max-height: 45vh;
+/* R8R1 — low-count pages distribute the activity canvas across equal rows. */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+}
+
+.eventList[data-count="3"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  align-content: stretch;
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard,
+.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard,
+.eventList[data-count="3"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .statusLabel {
@@ -1635,11 +1660,6 @@
   --ib-fs-event-team:  clamp(1.8rem, 2.5vw, 3.4rem);
   --ib-fs-dest-pitch:  clamp(2rem, 2.8vw, 3.6rem);
   --ib-fs-dest-room:   clamp(1.3rem, 1.8vw, 2.4rem);
-}
-
-.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
-  flex: 0 0 clamp(280px, 38vh, 420px);
-  max-height: 40vh;
 }
 
 /* 3 events — generous */
@@ -1884,7 +1904,7 @@
 /* Fill-mode pages with headroom — center the stack and widen card gaps slightly
  * without stretching card interiors. Dense/ultra tiers keep top alignment so
  * multi-card pages (e.g. dense training cohort + matches) stay clip-safe. */
-.eventList[data-layout-mode="fill"][data-density="normal"] {
+.eventList[data-layout-mode="fill"][data-density="normal"]:not([data-count="1"]):not([data-count="2"]):not([data-count="3"]) {
   justify-content: center;
   padding-top: clamp(10px, 1.4vh, 20px);
   padding-bottom: clamp(8px, 1.1vh, 16px);

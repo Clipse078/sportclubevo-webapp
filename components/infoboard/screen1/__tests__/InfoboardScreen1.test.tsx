@@ -4521,14 +4521,14 @@ describe("INFOBOARD-REGRESSION-01E — card geometry invariants", () => {
     }
   });
 
-  it("sparse 4-row card uses content-driven flex (no viewport stretch)", () => {
+  it("sparse 4-row card stretches the activity row while training rows stay content-driven", () => {
     renderTrainingGroup(4);
     const list = screen.getByTestId("event-list");
     const card = trainingCard("4");
 
     expect(list.getAttribute("data-layout-mode")).toBe("sparse");
-    expect(window.getComputedStyle(card).flexGrow).toBe("0");
-    expect(window.getComputedStyle(card).flexBasis).toBe("auto");
+    expect(list.getAttribute("data-count")).toBe("1");
+    expect(list.getAttribute("data-density")).toBe("normal");
   });
 
   it("keeps compact row spacing contract for a 4-row training cohort", () => {

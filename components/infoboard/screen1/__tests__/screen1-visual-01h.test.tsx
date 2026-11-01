@@ -138,9 +138,12 @@ describe("INFOBOARD-SCREEN1-VISUAL-01H — Platz presentation", () => {
 });
 
 describe("INFOBOARD-SCREEN1-VISUAL-01H — single-event hero", () => {
-  it("uses hero card height rules for a single match", () => {
+  it("uses flexible canvas row geometry for a single match", () => {
     expect(CSS).toMatch(
-      /\.eventList\[data-count="1"\]:not\(\[data-density="dense"\]\):not\(\[data-density="ultra"\]\)\s+\.eventCard[\s\S]*flex:\s*0\s+0\s+clamp/,
+      /\.eventList\[data-count="1"\]:not\(\[data-density="dense"\]\):not\(\[data-density="ultra"\]\)[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\)/,
+    );
+    expect(CSS).toMatch(
+      /\.eventList\[data-count="1"\]:not\(\[data-density="dense"\]\):not\(\[data-density="ultra"\]\)\s+\.eventCard[\s\S]*height:\s*100%/,
     );
   });
 
