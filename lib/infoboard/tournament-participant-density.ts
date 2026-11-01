@@ -1,9 +1,12 @@
 /**
- * SCE Infoboard V2 R6 — tournament participant grid density (independent of page density).
+ * SCE Infoboard V2 R6/R7 — tournament participant grid density (independent of page density).
  *
  * Controls participant column layout, crest scale, and name typography inside ACTIVITY.
  * Does not alter the global TIME | ACTIVITY | KABINE | PLATZ card grid.
  */
+
+/** Canonical max participants per row at 1920×1080 activity width (R7). */
+export const TOURNAMENT_MAX_PARTICIPANTS_PER_ROW = 4;
 
 export const TOURNAMENT_PARTICIPANT_DENSITY_ATTR =
   "data-tournament-participant-density";
@@ -50,21 +53,38 @@ export function resolveTournamentParticipantDensity(
 }
 
 /**
- * Deterministic equal-column grid for 2–6 participants at 1920×1080 activity width.
+ * Per-row slot counts (e.g. 5 → [4, 1], 8 → [4, 4]).
+ */
+export function tournamentParticipantRowPattern(
+  participantCount: number,
+): readonly number[] {
+  if (participantCount <= 0) return [];
+  const rows = Math.ceil(participantCount / TOURNAMENT_MAX_PARTICIPANTS_PER_ROW);
+  const pattern: number[] = [];
+  let remaining = participantCount;
+  for (let row = 0; row < rows; row++) {
+    const slots = Math.min(TOURNAMENT_MAX_PARTICIPANTS_PER_ROW, remaining);
+    pattern.push(slots);
+    remaining -= slots;
+  }
+  return pattern;
+}
+
+/**
+ * Deterministic equal-column grid — max four participants per row (R7).
  */
 export function resolveTournamentParticipantGrid(participantCount: number): {
   readonly columns: number;
   readonly rows: number;
 } {
   if (participantCount <= 0) return { columns: 0, rows: 0 };
-  if (participantCount === 1) return { columns: 1, rows: 1 };
-  if (participantCount === 2) return { columns: 2, rows: 1 };
-  if (participantCount === 3) return { columns: 3, rows: 1 };
-  if (participantCount === 4) return { columns: 4, rows: 1 };
-  if (participantCount <= 6) {
-    return { columns: 3, rows: Math.ceil(participantCount / 3) };
+  if (participantCount <= TOURNAMENT_MAX_PARTICIPANTS_PER_ROW) {
+    return { columns: participantCount, rows: 1 };
   }
-  return { columns: 3, rows: Math.ceil(participantCount / 3) };
+  return {
+    columns: TOURNAMENT_MAX_PARTICIPANTS_PER_ROW,
+    rows: Math.ceil(participantCount / TOURNAMENT_MAX_PARTICIPANTS_PER_ROW),
+  };
 }
 
 /** Display rows for pagination demand — mirrors resolved grid rows. */

@@ -120,11 +120,13 @@ import {
 import {
   resolveTournamentParticipantDensity,
   resolveTournamentParticipantGrid,
+  TOURNAMENT_MAX_PARTICIPANTS_PER_ROW,
   TOURNAMENT_PARTICIPANT_COLUMNS_VAR,
   TOURNAMENT_PARTICIPANT_DENSITY_ATTR,
   TOURNAMENT_PARTICIPANT_LOGO_CLAMP,
   TOURNAMENT_PARTICIPANT_NAME_CLAMP,
   tournamentParticipantDisplayRows,
+  tournamentParticipantRowPattern,
 } from "@/lib/infoboard/tournament-participant-density";
 import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
 import { resolveTrainingIdentityLines } from "@/lib/infoboard/training-identity-display";
@@ -335,7 +337,7 @@ export function trainingGroupDensityTier(
 
 /**
  * Centre participant display rows for tournament identity presentation.
- * Reflects the two-column grid used when participant names are shown.
+ * Reflects the max-four-per-row participant grid (R7).
  * Exported for regression testing.
  */
 export function computeTournamentParticipantDisplayRows(
@@ -1581,6 +1583,13 @@ function EventCard({
                 <div
                   className={styles.tournamentParticipantBlocks}
                   data-testid="tournament-participants"
+                  data-tournament-participant-count={participantAllocations.length}
+                  data-tournament-participant-max-columns={
+                    TOURNAMENT_MAX_PARTICIPANTS_PER_ROW
+                  }
+                  data-tournament-participant-row-pattern={tournamentParticipantRowPattern(
+                    participantAllocations.length,
+                  ).join("+")}
                   {...{
                     [TOURNAMENT_PARTICIPANT_DENSITY_ATTR]:
                       resolveTournamentParticipantDensity(

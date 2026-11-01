@@ -170,6 +170,13 @@
   --ib-red:            var(--ib-match);
   --ib-blue:           var(--ib-training);
   --ib-orange:         var(--ib-tournament);
+
+  /* R7 — subtle venue zone surfaces (~2–4% tint); one unified card read */
+  --ib-zone-surface-time:     rgba(30, 91, 198, 0.045);
+  --ib-zone-surface-activity: rgba(255, 255, 255, 0.72);
+  --ib-zone-surface-kabine:   rgba(11, 31, 58, 0.028);
+  --ib-zone-surface-platz:  rgba(22, 122, 70, 0.035);
+  --ib-zone-separator:        rgba(11, 31, 58, 0.07);
 }
 
 /* ─── Root container ─────────────────────────────────────────────────────── */
@@ -508,6 +515,48 @@
 
 .statusLabel[data-status="next"] {
   color: var(--ib-training);
+}
+
+/* R7 LIGHT — TIME navigation hierarchy (premium signage, not a blue panel) */
+.root[data-theme="light"] [data-venue-column="time"] .statusLabel {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.root[data-theme="light"] [data-venue-column="time"] .statusLabel[data-status="next"] {
+  color: var(--ib-training);
+}
+
+.root[data-theme="light"] [data-venue-column="time"] .eventTime {
+  color: #0b1f3a;
+  font-weight: 800;
+}
+
+.root[data-theme="light"] [data-venue-column="time"] .eventEndTime {
+  color: rgba(11, 31, 58, 0.78);
+  font-weight: 600;
+  font-size: clamp(0.92rem, 1.15vw, 1.42rem);
+}
+
+/* R7 LIGHT — zone tint hierarchy + softer vertical separators */
+.root[data-theme="light"] [data-venue-column="time"].cardTimeZone {
+  background: var(--ib-zone-surface-time);
+  border-right-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="activity"].cardEventZone {
+  background: var(--ib-zone-surface-activity);
+  border-right-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="kabine"].cardDressingRoomZone {
+  background: var(--ib-zone-surface-kabine);
+  border-left-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="platz"].cardPitchZone {
+  background: var(--ib-zone-surface-platz);
+  border-left-color: var(--ib-zone-separator);
 }
 
 .eventTime {
@@ -2051,12 +2100,12 @@
   line-height: 1.12;
 }
 
-/* Kabine allocation team labels remain single-line secondary metadata. */
+/* Kabine allocation team labels — secondary but readable (R7 wrap, no ellipsis). */
 .eventCard[data-type="TOURNAMENT"] .participantTeamName {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  overflow-wrap: normal;
+  font-size: clamp(0.82rem, 1.02vw, 1.14rem);
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
   word-break: normal;
   line-height: 1.15;
 }

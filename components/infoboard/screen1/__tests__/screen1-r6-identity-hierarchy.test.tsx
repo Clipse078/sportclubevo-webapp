@@ -205,7 +205,7 @@ describe("R6 match identity hierarchy", () => {
 });
 
 describe("R6 tournament capacity", () => {
-  it.each([2, 3, 4, 5, 6] as const)(
+  it.each([1, 2, 3, 4, 5, 6, 7, 8] as const)(
     "renders all %i participants with density contract",
     (count) => {
       const grid = renderTournament(count);
@@ -234,9 +234,15 @@ describe("R6 tournament capacity", () => {
     expect(rule).toMatch(/overflow:\s*visible/);
     expect(rule).not.toMatch(/text-overflow:\s*ellipsis/);
     expect(rule).not.toMatch(/-webkit-line-clamp/);
-    expect(CSS).toMatch(
-      /Kabine allocation team labels remain single-line[\s\S]*\.eventCard\[data-type="TOURNAMENT"\] \.participantTeamName[\s\S]*text-overflow:\s*ellipsis/,
-    );
+    const kabineRules = [
+      ...CSS.matchAll(
+        /\.eventCard\[data-type="TOURNAMENT"\] \.participantTeamName\s*\{[^}]+\}/g,
+      ),
+    ].map((m) => m[0]);
+    expect(kabineRules.length).toBeGreaterThan(0);
+    const kabineRule = kabineRules[kabineRules.length - 1]!;
+    expect(kabineRule).toMatch(/overflow:\s*visible/);
+    expect(kabineRule).not.toMatch(/text-overflow:\s*ellipsis/);
   });
 
   it("preserves locked four-column card grid", () => {

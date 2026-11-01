@@ -3501,13 +3501,15 @@ describe("Content-demand â€” computeTournamentDemand", () => {
     expect(rich).toBeCloseTo(CARD_DEMAND_TOURNAMENT_BASE + 4 * CARD_DEMAND_TOURNAMENT_PARTICIPANT);
   });
 
-  it("participant display rows follow R6 participant grid layout", () => {
+  it("participant display rows follow R7 max-four participant grid layout", () => {
     expect(computeTournamentParticipantDisplayRows(1)).toBe(1);
     expect(computeTournamentParticipantDisplayRows(2)).toBe(1);
     expect(computeTournamentParticipantDisplayRows(3)).toBe(1);
     expect(computeTournamentParticipantDisplayRows(4)).toBe(1);
     expect(computeTournamentParticipantDisplayRows(5)).toBe(2);
     expect(computeTournamentParticipantDisplayRows(6)).toBe(2);
+    expect(computeTournamentParticipantDisplayRows(7)).toBe(2);
+    expect(computeTournamentParticipantDisplayRows(8)).toBe(2);
   });
 
   it("small tournament demand accounts for every allocation row", () => {
