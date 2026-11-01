@@ -63,11 +63,11 @@ afterEach(() => {
 });
 
 describe("INFOBOARD-SCREEN1-VISUAL-01I — grid proportions", () => {
-  it("uses stadium wayfinding column proportions 12/36/26/26", () => {
-    expect(CSS).toMatch(/--ib-zone-time:\s*12%/);
-    expect(CSS).toMatch(/--ib-zone-event:\s*36%/);
-    expect(CSS).toMatch(/--ib-zone-room:\s*26%/);
-    expect(CSS).toMatch(/--ib-zone-pitch:\s*26%/);
+  it("uses stadium wayfinding column proportions 15/43/22/20", () => {
+    expect(CSS).toMatch(/--ib-zone-time:\s*15%/);
+    expect(CSS).toMatch(/--ib-zone-event:\s*43%/);
+    expect(CSS).toMatch(/--ib-zone-room:\s*22%/);
+    expect(CSS).toMatch(/--ib-zone-pitch:\s*20%/);
   });
 
   it("aligns training matrix to parent eventCard columns via subgrid", () => {
@@ -215,9 +215,9 @@ describe("INFOBOARD-SCREEN1-VISUAL-01I — sparse hero and dense safety", () => 
     );
   });
 
-  it("equalizes match opponent typography in single-event hero CSS", () => {
+  it("equalizes match home/away typography in single-event hero CSS", () => {
     expect(CSS).toMatch(
-      /\.eventList\[data-count="1"\][\s\S]*\.eventTeamOpponent[\s\S]*font-weight:\s*700/,
+      /\.eventList\[data-count="1"\][\s\S]*\.matchSideBlock \.venueTeamDisplayName[\s\S]*font-weight:\s*700/,
     );
   });
 

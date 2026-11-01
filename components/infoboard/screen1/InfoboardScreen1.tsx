@@ -99,8 +99,11 @@ import {
 } from "@/components/infoboard/venue-display/VenueActivityCard";
 import {
   isVenueDisplayLightTheme,
+  VENUE_ACTIVITY_ZONE_ATTR,
+  VENUE_ACTIVITY_ZONE_CONTEXT,
+  VENUE_ACTIVITY_ZONE_PRIMARY,
   VENUE_MATCH_LAYOUT_ATTR,
-  VENUE_MATCH_LAYOUT_HORIZONTAL,
+  VENUE_MATCH_LAYOUT_SYMMETRIC,
   VENUE_TEAM_TYPOGRAPHY_ATTR,
   VENUE_TEAM_TYPOGRAPHY_PRIMARY,
   VENUE_TEAM_TYPOGRAPHY_SECONDARY,
@@ -778,8 +781,6 @@ type MatchSideIdentityProps = {
   side: InfoboardMatchSidePresentation;
   rowTestId: string;
   logoTestId: string;
-  primaryClassName: string;
-  sideAlign: "home" | "away";
   showLogos?: boolean;
 };
 
@@ -787,58 +788,68 @@ function MatchSideIdentity({
   side,
   rowTestId,
   logoTestId,
-  primaryClassName,
-  sideAlign,
   showLogos = true,
 }: MatchSideIdentityProps): ReactElement {
-  const identityText = (
-    <div className={styles.matchSideText}>
-      <span
-        className={`${styles.venueTeamDisplayName} ${primaryClassName}`}
-        {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
-        data-match-team-label
-        data-match-name-size={matchTeamNameSize(side.clubDisplayName)}
-      >
-        {side.clubDisplayName}
-      </span>
-      {side.teamSubDisplayName !== null && (
+  return (
+    <div className={styles.matchSideBlock} data-testid={rowTestId}>
+      <div className={styles.matchCrestSlot}>
+        <MatchClubLogo
+          logoUrl={side.clubLogoUrl}
+          clubName={side.clubDisplayName}
+          testId={logoTestId}
+          showLogos={showLogos}
+        />
+      </div>
+      <div className={styles.matchSideText}>
         <span
-          className={styles.venueTeamCategoryLabel}
-          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+          className={styles.venueTeamDisplayName}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+          data-match-team-label
         >
-          {side.teamSubDisplayName}
+          {side.clubDisplayName}
         </span>
-      )}
+        {side.teamSubDisplayName !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+          >
+            {side.teamSubDisplayName}
+          </span>
+        )}
+      </div>
     </div>
   );
+}
 
-  const crest = (
-    <MatchClubLogo
-      logoUrl={side.clubLogoUrl}
-      clubName={side.clubDisplayName}
-      testId={logoTestId}
-      showLogos={showLogos}
-    />
-  );
+type TournamentParticipantIdentityProps = {
+  participant: InfoboardTeamAllocationPresentation;
+  showLogos: boolean;
+};
 
+function TournamentParticipantIdentity({
+  participant,
+  showLogos,
+}: TournamentParticipantIdentityProps): ReactElement {
   return (
     <div
-      className={
-        sideAlign === "home" ? styles.matchSideHome : styles.matchSideAway
-      }
-      data-testid={rowTestId}
+      className={styles.tournamentParticipantBlock}
+      data-testid={`tournament-participant-${participant.id}`}
     >
-      {sideAlign === "home" ? (
-        <>
-          {identityText}
-          {crest}
-        </>
-      ) : (
-        <>
-          {crest}
-          {identityText}
-        </>
-      )}
+      <div className={styles.matchCrestSlot}>
+        <MatchClubLogo
+          logoUrl={participant.clubLogoUrl ?? null}
+          clubName={participant.teamDisplayName}
+          testId={`tournament-participant-logo-${participant.id}`}
+          presentation="tournament"
+          showLogos={showLogos}
+        />
+      </div>
+      <span
+        className={`${styles.venueTeamDisplayName} ${styles.tournamentParticipantName}`}
+        {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+      >
+        {participant.teamDisplayName}
+      </span>
     </div>
   );
 }
@@ -1428,105 +1439,120 @@ function EventCard({
         <VenueActivityIdentity
           className={`${styles.cardEventZone} ${styles.venueActivityContentTop}`}
         >
-        <span
-          className={styles.eventTypeLabel}
-          data-event-type={event.type}
-        >
-          {semanticActivityLabel}
-        </span>
-
-        {isMatch && event.competitionLabel !== null && (
-          <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
-        )}
-
-        {isMatch && matchPresentation ? (
           <div
-            className={styles.matchIdentity}
-            {...{ [VENUE_MATCH_LAYOUT_ATTR]: VENUE_MATCH_LAYOUT_HORIZONTAL }}
-            data-testid="venue-match-horizontal"
+            className={styles.activityContextZone}
+            {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT }}
+            data-testid="venue-activity-context"
           >
-            <MatchSideIdentity
-              side={matchPresentation.home}
-              rowTestId="match-home-team-row"
-              logoTestId="home-team-logo"
-              primaryClassName={styles.eventTeamMain}
-              sideAlign="home"
-              showLogos={matchShowLogos}
-            />
             <span
-              className={styles.vsLabel}
-              aria-hidden="true"
-              data-testid="venue-match-vs"
+              className={styles.eventTypeLabel}
+              data-event-type={event.type}
             >
-              VS.
-            </span>
-            {matchPresentation.away !== null && (
-              <MatchSideIdentity
-                side={matchPresentation.away}
-                rowTestId="match-away-team-row"
-                logoTestId="away-team-logo"
-                primaryClassName={styles.eventTeamOpponent}
-                sideAlign="away"
-                showLogos={matchShowLogos}
-              />
-            )}
-          </div>
-        ) : isTournament ? (
-          <div className={styles.tournamentIdentity}>
-            <span
-              className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
-            >
-              {event.displayTitle}
+              {semanticActivityLabel}
             </span>
 
-            {event.organizerDisplayName !== null && (
-              <span className={styles.eventTeamSubtitle}>
-                {event.organizerDisplayName}
-              </span>
+            {isMatch && event.competitionLabel !== null && (
+              <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
             )}
 
-            {participantAllocations !== undefined && participantAllocations.length > 0 && (
-              <div
-                className={styles.tournamentParticipantLogos}
-                data-testid="tournament-participants"
-              >
-                {participantAllocations.map((participant) => (
-                  <MatchClubLogo
-                    key={participant.id}
-                    logoUrl={participant.clubLogoUrl ?? null}
-                    clubName={participant.teamDisplayName}
-                    testId={`tournament-participant-logo-${participant.id}`}
-                    presentation="tournament"
-                    showLogos={tournamentShowLogos}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {event.teamDisplayName !== null ? (
-              <span
-                className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
-              >
-                {event.teamDisplayName}
-              </span>
-            ) : (
-              event.displayTitle !== null && (
+            {isTournament && (
+              <>
                 <span
-                  className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
+                  className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
                 >
                   {event.displayTitle}
                 </span>
+                {event.organizerDisplayName !== null && (
+                  <span className={styles.eventTeamSubtitle}>
+                    {event.organizerDisplayName}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          <div
+            className={styles.activityPrimaryZone}
+            {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_PRIMARY }}
+            data-testid="venue-activity-primary"
+          >
+            {isMatch && matchPresentation ? (
+              <div
+                className={styles.matchIdentity}
+                {...{ [VENUE_MATCH_LAYOUT_ATTR]: VENUE_MATCH_LAYOUT_SYMMETRIC }}
+                data-testid="venue-match-identity"
+              >
+                <MatchSideIdentity
+                  side={matchPresentation.home}
+                  rowTestId="match-home-team-row"
+                  logoTestId="home-team-logo"
+                  showLogos={matchShowLogos}
+                />
+                <span
+                  className={styles.vsLabel}
+                  aria-hidden="true"
+                  data-testid="venue-match-vs"
+                >
+                  VS.
+                </span>
+                {matchPresentation.away !== null && (
+                  <MatchSideIdentity
+                    side={matchPresentation.away}
+                    rowTestId="match-away-team-row"
+                    logoTestId="away-team-logo"
+                    showLogos={matchShowLogos}
+                  />
+                )}
+              </div>
+            ) : isTournament ? (
+              participantAllocations !== undefined &&
+              participantAllocations.length > 0 ? (
+                <div
+                  className={styles.tournamentParticipantBlocks}
+                  data-testid="tournament-participants"
+                  style={
+                    {
+                      "--ib-tournament-participant-count":
+                        participantAllocations.length,
+                    } as CSSProperties
+                  }
+                >
+                  {participantAllocations.map((participant) => (
+                    <TournamentParticipantIdentity
+                      key={participant.id}
+                      participant={participant}
+                      showLogos={tournamentShowLogos}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.tournamentIdentity} />
               )
+            ) : (
+              <div className={styles.trainingIdentity}>
+                {event.teamDisplayName !== null ? (
+                  <span
+                    className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
+                  >
+                    {event.teamDisplayName}
+                  </span>
+                ) : (
+                  event.displayTitle !== null && (
+                    <span
+                      className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
+                    >
+                      {event.displayTitle}
+                    </span>
+                  )
+                )}
+                {event.organizerDisplayName !== null && (
+                  <span className={styles.eventTeamSubtitle}>
+                    {event.organizerDisplayName}
+                  </span>
+                )}
+              </div>
             )}
-            {event.organizerDisplayName !== null && (
-              <span className={styles.eventTeamSubtitle}>
-                {event.organizerDisplayName}
-              </span>
-            )}
-          </>
-        )}
+          </div>
         </VenueActivityIdentity>
       }
       kabine={

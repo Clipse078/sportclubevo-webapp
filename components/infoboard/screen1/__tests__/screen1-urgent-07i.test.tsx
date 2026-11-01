@@ -100,25 +100,24 @@ describe("responsive one-line Match team names (07I)", () => {
     expect(homeRow.querySelectorAll("[data-match-team-label]")).toHaveLength(1);
   });
 
-  it("assigns responsive tiers only when the Match label needs them", () => {
+  it("does not apply per-side Match name size tiers in the card UI", () => {
     expect(matchTeamNameSize("FC ALLSCHWIL")).toBe("normal");
     expect(matchTeamNameSize(HOME_NAME)).toBe("medium");
-    expect(matchTeamNameSize("FC ALLSCHWIL SENIOREN 50+/7")).toBe("minimum");
 
-    const { rerender } = render(
-      <InfoboardScreen1 feed={makeFeed(HOME_NAME)} />,
-    );
-    expect(
-      screen.getByTestId("match-home-team-row").querySelector("[data-match-team-label]"),
-    ).toHaveAttribute("data-match-name-size", "medium");
-
-    rerender(<InfoboardScreen1 feed={makeFeed("FC ALLSCHWIL")} />);
-    expect(
-      screen.getByTestId("match-home-team-row").querySelector("[data-match-team-label]"),
-    ).toHaveAttribute("data-match-name-size", "normal");
+    render(<InfoboardScreen1 feed={makeFeed(HOME_NAME)} />);
+    const homeLabel = screen
+      .getByTestId("match-home-team-row")
+      .querySelector("[data-match-team-label]");
+    const awayLabel = screen
+      .getByTestId("match-away-team-row")
+      .querySelector("[data-match-team-label]");
+    expect(homeLabel).not.toHaveAttribute("data-match-name-size");
+    expect(awayLabel).not.toHaveAttribute("data-match-name-size");
+    expect(homeLabel?.className).toContain("venueTeamDisplayName");
+    expect(awayLabel?.className).toContain("venueTeamDisplayName");
   });
 
-  it("supports an XLARGE Match logo with the responsive long-name tier", () => {
+  it("supports an XLARGE Match logo with shared long-name typography", () => {
     const { container } = render(
       <InfoboardScreen1
         feed={makeFeed(HOME_NAME)}
@@ -138,9 +137,8 @@ describe("responsive one-line Match team names (07I)", () => {
       MATCH_LOGO_SIZE_CSS.XLARGE,
     );
     expect(homeRow.querySelector("img")).toBeInTheDocument();
-    expect(homeRow.querySelector("[data-match-team-label]")).toHaveAttribute(
+    expect(homeRow.querySelector("[data-match-team-label]")).not.toHaveAttribute(
       "data-match-name-size",
-      "medium",
     );
   });
 

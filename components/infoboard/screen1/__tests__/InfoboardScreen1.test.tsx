@@ -1177,7 +1177,7 @@ describe("4-team tournament allocation", () => {
     expect(screen.getByTestId("participant-allocation-block")).toBeTruthy();
   });
 
-  it("renders all four team names in kabinen allocation block only", () => {
+  it("renders all four team names in kabinen block and under activity crests", () => {
     render(
       <InfoboardScreen1
         feed={PREVIEW_FIXTURE_TOURNAMENT_4TEAM}
@@ -1190,7 +1190,7 @@ describe("4-team tournament allocation", () => {
     expect(within(block).getByText("FC Binningen")).toBeTruthy();
     expect(within(block).getByText("FC Aesch")).toBeTruthy();
     const logoArea = screen.getByTestId("tournament-participants");
-    expect(logoArea.textContent).not.toContain("FC Allschwil E1");
+    expect(logoArea.textContent).toContain("FC Allschwil E1");
     expect(logoArea.querySelectorAll("img").length).toBeGreaterThan(0);
   });
 
@@ -1277,7 +1277,7 @@ describe("4-team tournament allocation", () => {
     expect(screen.getAllByText("FC Allschwil E2").length).toBeGreaterThan(0);
   });
 
-  it("logo strip stays left-aligned and renders all four logos", () => {
+  it("participant identity grid renders crest and name for all four teams", () => {
     render(
       <InfoboardScreen1
         feed={PREVIEW_FIXTURE_TOURNAMENT_4TEAM}
@@ -1285,10 +1285,9 @@ describe("4-team tournament allocation", () => {
       />,
     );
     const logoArea = screen.getByTestId("tournament-participants");
-    expect(logoArea.getAttribute("data-layout")).toBeNull();
-    expect(logoArea.className).toContain("tournamentParticipantLogos");
+    expect(logoArea.className).toContain("tournamentParticipantBlocks");
     expect(logoArea.querySelectorAll("img").length).toBe(4);
-    expect(logoArea.textContent?.trim()).toBe("");
+    expect(logoArea.textContent).toContain("FC Allschwil E1");
   });
 
   it("tournament title keeps dedicated overflow handling class", () => {
@@ -1341,13 +1340,14 @@ describe("Tournament logo strip alignment â€” INFOBOARD-LOGO-08A", () => {
   }
 
   it.each([1, 2, 3, 4])(
-    "keeps %i-logo tournament strip left-aligned without participant text",
+    "keeps %i-logo tournament participant blocks with names under crests",
     (count) => {
       const logoArea = renderTournamentWithLogoCount(count);
-      expect(logoArea.getAttribute("data-layout")).toBeNull();
-      expect(logoArea.className).toContain("tournamentParticipantLogos");
+      expect(logoArea.className).toContain("tournamentParticipantBlocks");
       expect(logoArea.querySelectorAll("img").length).toBe(count);
-      expect(logoArea.textContent?.trim()).toBe("");
+      expect(logoArea.querySelectorAll('[class*="tournamentParticipantBlock"]').length).toBe(
+        count,
+      );
     },
   );
 });
@@ -1476,7 +1476,7 @@ describe("Dynamic tournament participants — INFOBOARD-SATURDAY-02A", () => {
     expect(screen.getByTestId("pitch-value").textContent).toBe("Kunstrasen 1");
   });
 
-  it("uses a wrapping, width-bounded logo container", () => {
+  it("uses a width-bounded equal-column participant identity grid", () => {
     const css = readFileSync(
       join(
         dirname(fileURLToPath(import.meta.url)),
@@ -1485,10 +1485,10 @@ describe("Dynamic tournament participants — INFOBOARD-SATURDAY-02A", () => {
       "utf8",
     );
     const rule = css.match(
-      /\.tournamentParticipantLogos\s*\{[\s\S]*?\}/,
+      /\.tournamentParticipantBlocks\s*\{[\s\S]*?\}/,
     )?.[0];
 
-    expect(rule).toMatch(/flex-wrap:\s*wrap;/);
+    expect(rule).toMatch(/grid-template-columns:/);
     expect(rule).toMatch(/max-width:\s*100%;/);
   });
 

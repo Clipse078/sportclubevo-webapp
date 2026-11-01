@@ -17,10 +17,11 @@ import {
   VENUE_ACTIVITY_CONTENT_TOP_CLASS,
   VENUE_ACTIVITY_GRID_TEMPLATE_COLUMNS,
   VENUE_ACTIVITY_GRID_ZONE_WIDTHS,
+  VENUE_ACTIVITY_ZONE_ATTR,
+  VENUE_ACTIVITY_ZONE_CONTEXT,
+  VENUE_ACTIVITY_ZONE_PRIMARY,
   VENUE_MATCH_LAYOUT_ATTR,
-  VENUE_MATCH_LAYOUT_HORIZONTAL,
-  VENUE_TEAM_TYPOGRAPHY_ATTR,
-  VENUE_TEAM_TYPOGRAPHY_PRIMARY,
+  VENUE_MATCH_LAYOUT_SYMMETRIC,
 } from "@/lib/infoboard/venue-display-grid";
 import { EMPTY_SCREEN1_STUDIO_CONFIG } from "@/lib/infoboard/screen1-studio-types";
 import {
@@ -331,7 +332,7 @@ describe("SCE-INFOBOARD-V2-01 venue activity grid contract", () => {
     expect(screen.getByTestId("kiosk-header-club-name").textContent).toContain("SC Examplestadt");
   });
 
-  it("MATCH uses horizontal presentation with website team typography and VS without duplicate time", () => {
+  it("MATCH_IDENTITY: symmetric blocks with crest above name and central VS without kickoff time", () => {
     render(
       <InfoboardScreen1
         feed={makeFeed({ current: [makeMatch()] })}
@@ -343,24 +344,131 @@ describe("SCE-INFOBOARD-V2-01 venue activity grid contract", () => {
     );
 
     const row = screen.getByTestId("event-row");
-    const horizontal = screen.getByTestId("venue-match-horizontal");
-    expect(horizontal.getAttribute(VENUE_MATCH_LAYOUT_ATTR)).toBe(
-      VENUE_MATCH_LAYOUT_HORIZONTAL,
+    const matchIdentity = screen.getByTestId("venue-match-identity");
+    expect(matchIdentity.getAttribute(VENUE_MATCH_LAYOUT_ATTR)).toBe(
+      VENUE_MATCH_LAYOUT_SYMMETRIC,
     );
-    expect(screen.getByTestId("match-home-team-row")).toBeTruthy();
-    expect(screen.getByTestId("match-away-team-row")).toBeTruthy();
     expect(screen.getByTestId("venue-match-vs").textContent).toContain("VS");
 
-    const primaryLabels = row.querySelectorAll(
-      `[${VENUE_TEAM_TYPOGRAPHY_ATTR}="${VENUE_TEAM_TYPOGRAPHY_PRIMARY}"]`,
-    );
-    expect(primaryLabels.length).toBeGreaterThanOrEqual(2);
+    const homeRow = screen.getByTestId("match-home-team-row");
+    const awayRow = screen.getByTestId("match-away-team-row");
+    const crestSelector =
+      '[data-testid="home-team-logo"], [data-testid="home-team-logo-placeholder"]';
+    const awayCrestSelector =
+      '[data-testid="away-team-logo"], [data-testid="away-team-logo-placeholder"]';
+    expect(homeRow.children[0]?.querySelector(crestSelector)).toBeTruthy();
+    expect(homeRow.children[1]?.querySelector("[data-match-team-label]")).toBeTruthy();
+    expect(awayRow.children[0]?.querySelector(awayCrestSelector)).toBeTruthy();
+    expect(awayRow.children[1]?.querySelector("[data-match-team-label]")).toBeTruthy();
 
     const timeZone = row.querySelector(
       `[${VENUE_ACTIVITY_COLUMN_ATTR}="${VENUE_ACTIVITY_COLUMN_MARKERS.time}"]`,
     );
     expect(timeZone?.textContent).toMatch(/10:30|11:30/);
-    expect(horizontal.textContent).not.toMatch(/\b10:30\b|\b11:30\b/);
+    expect(matchIdentity.textContent).not.toMatch(/\b10:30\b|\b11:30\b/);
+  });
+
+  it("TEAM_TYPOGRAPHY: both sides share venueTeamDisplayName without per-side size tiers", () => {
+    render(
+      <InfoboardScreen1
+        feed={makeFeed({
+          current: [
+            makeMatch({
+              matchPresentation: resolveInfoboardMatchPresentation(
+                buildInfoboardMatchIdentityFromFixtureFields({
+                  homeAway: "HOME",
+                  team: null,
+                  teamDisplayName: "FC ALLSCHWIL SENIOREN 50+ EXTRA LONG",
+                  opponentDisplayName: "FC NORDSTERN",
+                  opponentLogoUrl: "/away.png",
+                }),
+                null,
+                null,
+              ),
+            }),
+          ],
+        })}
+        branding={BRANDING}
+        theme="LIGHT"
+        currentTimeIso="2026-11-01T08:00:00.000Z"
+        studio={EMPTY_SCREEN1_STUDIO_CONFIG}
+      />,
+    );
+
+    const homeLabel = screen
+      .getByTestId("match-home-team-row")
+      .querySelector("[data-match-team-label]") as HTMLElement;
+    const awayLabel = screen
+      .getByTestId("match-away-team-row")
+      .querySelector("[data-match-team-label]") as HTMLElement;
+
+    expect(homeLabel.className).toContain("venueTeamDisplayName");
+    expect(awayLabel.className).toContain("venueTeamDisplayName");
+    expect(homeLabel.getAttribute("data-match-name-size")).toBeNull();
+    expect(awayLabel.getAttribute("data-match-name-size")).toBeNull();
+    expect(CSS).toMatch(
+      /\.eventCard\[data-type="MATCH"\] \.matchSideBlock \.venueTeamDisplayName[\s\S]*font-size:\s*var\(--ib-match-font-size\)/,
+    );
+    expect(CSS).toMatch(/\.venueTeamDisplayName[\s\S]*font-style:\s*italic/);
+  });
+
+  it("MATCH_SYMMETRY: equal-width identity containers and shared crest bounding boxes", () => {
+    expect(CSS).toMatch(/\.matchSideBlock[\s\S]*align-items:\s*center/);
+    expect(CSS).toMatch(
+      /\.matchIdentity\[data-venue-match-layout="symmetric-block"\][\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*minmax\(0,\s*1fr\)/,
+    );
+    expect(CSS).toMatch(/\.matchCrestSlot[\s\S]*width:\s*var\(--ib-match-logo-size\)/);
+    expect(CSS).toMatch(/\.matchClubLogo[\s\S]*object-fit:\s*contain/);
+  });
+
+  it("ACTIVITY_STRUCTURE: context header zone and primary presentation zone", () => {
+    render(
+      <InfoboardScreen1
+        feed={makeFeed({ current: [makeMatch()] })}
+        branding={BRANDING}
+        theme="LIGHT"
+        currentTimeIso="2026-11-01T08:00:00.000Z"
+        studio={EMPTY_SCREEN1_STUDIO_CONFIG}
+      />,
+    );
+
+    const context = screen.getByTestId("venue-activity-context");
+    const primary = screen.getByTestId("venue-activity-primary");
+    expect(context.getAttribute(VENUE_ACTIVITY_ZONE_ATTR)).toBe(
+      VENUE_ACTIVITY_ZONE_CONTEXT,
+    );
+    expect(primary.getAttribute(VENUE_ACTIVITY_ZONE_ATTR)).toBe(
+      VENUE_ACTIVITY_ZONE_PRIMARY,
+    );
+    expect(context.compareDocumentPosition(primary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(context.textContent).toContain("MATCH");
+    expect(primary.querySelector("[data-testid='venue-match-identity']")).toBeTruthy();
+  });
+
+  it("TOURNAMENT_IDENTITY: participant name under crest in equal-width blocks", () => {
+    render(
+      <InfoboardScreen1
+        feed={makeFeed({ current: [makeTournament()] })}
+        branding={BRANDING}
+        theme="LIGHT"
+        currentTimeIso="2026-11-01T08:00:00.000Z"
+        eventPresentation={[
+          {
+            eventId: "tournament-1",
+            participantAllocations: kabineAllocations(),
+          },
+        ]}
+        studio={EMPTY_SCREEN1_STUDIO_CONFIG}
+      />,
+    );
+
+    const participants = screen.getByTestId("tournament-participants");
+    expect(participants.className).toContain("tournamentParticipantBlocks");
+    expect(CSS).toMatch(/\.tournamentParticipantBlocks[\s\S]*grid-template-columns:/);
+
+    const firstBlock = screen.getByTestId("tournament-participant-p1");
+    expect(firstBlock.children[0]?.querySelector("img, span[aria-hidden='true']")).toBeTruthy();
+    expect(firstBlock.textContent).toContain("FCA Junioren F1");
   });
 
   it("ACTIVITY, KABINE and PLATZ share the top-alignment contract on each card", () => {

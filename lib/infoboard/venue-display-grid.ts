@@ -41,9 +41,17 @@ export const VENUE_ACTIVITY_GRID_DATA_ATTR = "data-venue-activity-grid";
 /** Shared top-alignment class for ACTIVITY / KABINE / PLATZ (and TIME) content columns. */
 export const VENUE_ACTIVITY_CONTENT_TOP_CLASS = "venueActivityContentTop";
 
-/** Horizontal website-style match presentation inside the ACTIVITY column. */
+/** Symmetric vertical team blocks (crest → name → category) with central VS. */
 export const VENUE_MATCH_LAYOUT_ATTR = "data-venue-match-layout";
+export const VENUE_MATCH_LAYOUT_SYMMETRIC = "symmetric-block";
+
+/** @deprecated R3 horizontal name–crest row — replaced by VENUE_MATCH_LAYOUT_SYMMETRIC (R4). */
 export const VENUE_MATCH_LAYOUT_HORIZONTAL = "horizontal";
+
+/** ACTIVITY column vertical zones: event context header vs primary presentation. */
+export const VENUE_ACTIVITY_ZONE_ATTR = "data-venue-activity-zone";
+export const VENUE_ACTIVITY_ZONE_CONTEXT = "context";
+export const VENUE_ACTIVITY_ZONE_PRIMARY = "primary";
 
 /** Primary vs secondary team identity typography markers (website grammar). */
 export const VENUE_TEAM_TYPOGRAPHY_ATTR = "data-venue-team-typography";
