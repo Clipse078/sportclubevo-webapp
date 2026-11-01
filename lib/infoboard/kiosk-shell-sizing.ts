@@ -66,7 +66,7 @@ export const KIOSK_SHELL_ALEXA_SAFE_ZONE_WIDTH_PX = 192;
 export const KIOSK_SHELL_SUBTITLE_FONT_PX = 28;
 
 /** Inline welcome in LIGHT venue header — slightly smaller to preserve full string at 1920×1080. */
-export const KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX = 24;
+export const KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX = 22;
 
 /** Footer ticker / left-label typography. */
 export const KIOSK_SHELL_FOOTER_TICKER_FONT_PX = 26;

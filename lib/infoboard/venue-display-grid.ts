@@ -41,6 +41,23 @@ export const VENUE_ACTIVITY_GRID_DATA_ATTR = "data-venue-activity-grid";
 /** Shared top-alignment class for ACTIVITY / KABINE / PLATZ (and TIME) content columns. */
 export const VENUE_ACTIVITY_CONTENT_TOP_CLASS = "venueActivityContentTop";
 
+/** Canonical padding-top anchor shared by TIME / ACTIVITY / KABINE / PLATZ (R8). */
+export const VENUE_ACTIVITY_CONTENT_TOP_VAR = "--ib-activity-content-top";
+
+/** LIGHT TIME column activity-type surface tokens (only coloured zone in R8). */
+export const VENUE_LIGHT_TIME_SURFACE_VARS = {
+  match: "--ib-zone-surface-time-match",
+  training: "--ib-zone-surface-time-training",
+  tournament: "--ib-zone-surface-time-tournament",
+  other: "--ib-zone-surface-time-other",
+} as const;
+
+/** Semantic marker for central match VS presentation (R8). */
+export const VENUE_MATCH_VERSUS_ATTR = "data-match-versus";
+
+/** CSS module class for R8 VS typography (paired with vsLabel). */
+export const VENUE_MATCH_VERSUS_DISPLAY_CLASS = "matchVersusLabel";
+
 /** Symmetric vertical team blocks (crest → name → category) with central VS. */
 export const VENUE_MATCH_LAYOUT_ATTR = "data-venue-match-layout";
 export const VENUE_MATCH_LAYOUT_SYMMETRIC = "symmetric-block";

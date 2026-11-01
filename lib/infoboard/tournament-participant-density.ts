@@ -29,9 +29,9 @@ export const TOURNAMENT_PARTICIPANT_LOGO_CLAMP: Record<
   TournamentParticipantDensity,
   string
 > = {
-  large: "clamp(2.85rem, 3.55vw, 4.35rem)",
-  medium: "clamp(2.35rem, 2.95vw, 3.55rem)",
-  compact: "clamp(1.95rem, 2.45vw, 2.95rem)",
+  large: "clamp(3.625rem, 4.5vw, 4.5rem)",
+  medium: "clamp(3.25rem, 4vw, 4.125rem)",
+  compact: "clamp(2.75rem, 3.4vw, 3.625rem)",
 };
 
 /** Participant name typography per density (supporting identification). */
@@ -39,9 +39,9 @@ export const TOURNAMENT_PARTICIPANT_NAME_CLAMP: Record<
   TournamentParticipantDensity,
   string
 > = {
-  large: "clamp(0.78rem, 1.02vw, 1.18rem)",
-  medium: "clamp(0.72rem, 0.92vw, 1.05rem)",
-  compact: "clamp(0.66rem, 0.85vw, 0.98rem)",
+  large: "clamp(1.125rem, 1.35vw, 1.3125rem)",
+  medium: "clamp(1rem, 1.22vw, 1.2rem)",
+  compact: "clamp(0.92rem, 1.12vw, 1.05rem)",
 };
 
 export function resolveTournamentParticipantDensity(

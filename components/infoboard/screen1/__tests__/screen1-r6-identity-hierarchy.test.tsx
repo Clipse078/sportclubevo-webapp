@@ -188,9 +188,9 @@ describe("R6 match identity hierarchy", () => {
     expect(screen.getByTestId("away-team-logo")).toBeTruthy();
   });
 
-  it("uses reduced team-name and enlarged crest tokens relative to pre-R6 XLARGE baselines", () => {
-    expect(MATCH_FONT_SIZE_CSS.XLARGE.primary).toContain("1.79rem");
-    expect(MATCH_LOGO_SIZE_CSS.XLARGE).toContain("4.05rem");
+  it("uses R8-calibrated team-name and crest tokens at XLARGE preset", () => {
+    expect(MATCH_FONT_SIZE_CSS.XLARGE.primary).toContain("2rem");
+    expect(MATCH_LOGO_SIZE_CSS.XLARGE).toContain("6.875rem");
   });
 
   it("primary match labels avoid text-overflow ellipsis in CSS", () => {

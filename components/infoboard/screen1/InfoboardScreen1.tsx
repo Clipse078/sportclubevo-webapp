@@ -104,10 +104,12 @@ import {
   VENUE_ACTIVITY_ZONE_PRIMARY,
   VENUE_MATCH_LAYOUT_ATTR,
   VENUE_MATCH_LAYOUT_SYMMETRIC,
+  VENUE_MATCH_VERSUS_ATTR,
   VENUE_TEAM_TYPOGRAPHY_ATTR,
   VENUE_TEAM_TYPOGRAPHY_PRIMARY,
   VENUE_TEAM_TYPOGRAPHY_SECONDARY,
 } from "@/lib/infoboard/venue-display-grid";
+import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
 import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
 import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
 import {
@@ -128,7 +130,6 @@ import {
   tournamentParticipantDisplayRows,
   tournamentParticipantRowPattern,
 } from "@/lib/infoboard/tournament-participant-density";
-import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
 import { resolveTrainingIdentityLines } from "@/lib/infoboard/training-identity-display";
 import styles from "./InfoboardScreen1.module.css";
 
@@ -911,7 +912,23 @@ function ParticipantAllocationBlock({
               {roomLabel}
             </span>
             <span className={styles.participantTeamName}>
-              {alloc.teamDisplayName}
+              {(() => {
+                const identity = resolveTournamentParticipantIdentity(alloc);
+                if (identity.secondary !== null) {
+                  return (
+                    <>
+                      <span data-kabine-team-primary>{identity.primary}</span>
+                      <span
+                        className={styles.venueTeamCategoryLabel}
+                        data-kabine-team-secondary
+                      >
+                        {identity.secondary}
+                      </span>
+                    </>
+                  );
+                }
+                return identity.primary;
+              })()}
             </span>
           </div>
         );
@@ -1562,9 +1579,10 @@ function EventCard({
                   showLogos={matchShowLogos}
                 />
                 <span
-                  className={styles.vsLabel}
+                  className={`${styles.vsLabel} ${styles.matchVersusLabel}`}
                   aria-hidden="true"
                   data-testid="venue-match-vs"
+                  {...{ [VENUE_MATCH_VERSUS_ATTR]: "true" }}
                 >
                   VS.
                 </span>

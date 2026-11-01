@@ -150,16 +150,16 @@ describe("R7 tournament grid — max four per row", () => {
 });
 
 describe("R7 light zone surface contract", () => {
-  it("defines distinct LIGHT zone surface tokens", () => {
-    expect(CSS).toMatch(/--ib-zone-surface-time:/);
-    expect(CSS).toMatch(/--ib-zone-surface-activity:/);
-    expect(CSS).toMatch(/--ib-zone-surface-kabine:/);
-    expect(CSS).toMatch(/--ib-zone-surface-platz:/);
+  it("defines R8 LIGHT zone surface tokens (TIME tint + white operational columns)", () => {
+    expect(CSS).toMatch(/--ib-zone-surface-time-match:/);
+    expect(CSS).toMatch(/--ib-zone-surface-activity:\s*#FFFFFF/);
+    expect(CSS).toMatch(/--ib-zone-surface-kabine:\s*#FFFFFF/);
+    expect(CSS).toMatch(/--ib-zone-surface-platz:\s*#FFFFFF/);
   });
 
   it("applies zone backgrounds only under LIGHT theme", () => {
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \[data-venue-column="time"\]\.cardTimeZone[\s\S]*--ib-zone-surface-time/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\][\s\S]*--ib-zone-surface-time-match/,
     );
     expect(CSS).toMatch(
       /\.root\[data-theme="light"\] \[data-venue-column="activity"\]\.cardEventZone/,
@@ -171,7 +171,7 @@ describe("R7 light zone surface contract", () => {
       /\.root\[data-theme="light"\] \[data-venue-column="platz"\]\.cardPitchZone/,
     );
     expect(CSS).not.toMatch(
-      /\.root\[data-theme="dark"\][\s\S]*--ib-zone-surface-time/,
+      /\.root\[data-theme="dark"\][\s\S]*--ib-zone-surface-time-match/,
     );
   });
 
@@ -230,9 +230,9 @@ describe("R7 light zone surface contract", () => {
 });
 
 describe("R7 TIME hierarchy (LIGHT)", () => {
-  it("styles next-activity time stack with FCA blue label and navy dominant clock", () => {
+  it("styles next-activity time stack with activity-coloured label and navy dominant clock", () => {
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \[data-venue-column="time"\] \.statusLabel\[data-status="next"\]/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\] \.statusLabel\[data-status="next"\]/,
     );
     expect(CSS).toMatch(
       /\.root\[data-theme="light"\] \[data-venue-column="time"\] \.eventTime[\s\S]*font-weight:\s*800/,

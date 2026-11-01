@@ -57,6 +57,8 @@
 .toneLight.headerCurrentTime,
 .toneLight .headerCurrentTime {
   color: #0b1f3a;
+  font-size: clamp(3rem, 3.5vw, 3.5rem);
+  font-weight: 800;
 }
 
 .toneLight .headerTimeSeparator {
@@ -65,9 +67,12 @@
 
 .toneLight .headerWeekday {
   color: #0b1f3a;
+  font-size: clamp(1.0625rem, 1.05vw, 1.25rem);
+  font-weight: 700;
 }
 
 .toneLight .headerDateLine,
 .toneLight.headerDateFallback {
   color: #4a6078;
+  font-size: clamp(1rem, 1vw, 1.125rem);
 }
