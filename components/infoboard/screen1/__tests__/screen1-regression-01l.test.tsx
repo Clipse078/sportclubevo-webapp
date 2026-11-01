@@ -39,7 +39,9 @@ const BRANDING = {
 };
 
 const NORMAL_SELECTOR =
-  '.eventCard[data-type="TRAINING"][data-group-density="normal"]';
+  '.eventCard[data-type="TRAINING"][data-group-density="spacious"]';
+const STANDARD_SELECTOR =
+  '.eventCard[data-type="TRAINING"][data-group-density="standard"]';
 const COMPACT_SELECTOR =
   '.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix';
 const DENSE_SELECTOR =
@@ -189,7 +191,7 @@ describe("INFOBOARD-ROLLING-01L — normal two-row matrix", () => {
 
   it("TEST B — 20:15 renders both complete TRAINING / KABINE / PLATZ rows", () => {
     const card = renderTwoRow2015();
-    expect(card.getAttribute("data-group-density")).toBe("normal");
+    expect(card.getAttribute("data-group-density")).toBe("spacious");
 
     const rows = within(card).getAllByTestId("training-matrix-row");
     expect(rows).toHaveLength(2);
@@ -248,9 +250,9 @@ describe("INFOBOARD-ROLLING-01L — normal two-row matrix", () => {
   });
 
   it.each([
-    ["15:45", "4", "normal"],
-    ["17:15", "5", "normal"],
-    ["18:45", "6", "normal"],
+    ["15:45", "4", "standard"],
+    ["17:15", "5", "compact"],
+    ["18:45", "6", "compact"],
   ] as const)("TEST E — %s cohort (%s rows) preserves accepted %s density", (at, count, density) => {
     const nowIso = resolveWednesdayPreviewCurrentTimeIso(at);
     render(

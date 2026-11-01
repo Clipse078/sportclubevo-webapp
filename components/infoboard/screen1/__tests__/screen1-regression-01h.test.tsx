@@ -73,20 +73,15 @@ function trainingCard(rowCount: string): HTMLElement {
 
 function readTrainingMatrixTokens(card: HTMLElement) {
   const density = card.getAttribute("data-group-density");
-  if (density === "normal") {
+  if (density === "spacious" || density === "standard" || density === "normal") {
+    const selector =
+      density === "standard"
+        ? '.eventCard[data-type="TRAINING"][data-group-density="standard"]'
+        : '.eventCard[data-type="TRAINING"][data-group-density="spacious"]';
     return {
-      rowHeight: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-row-height",
-      ),
-      rowGap: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-row-gap",
-      ),
-      cellPaddingY: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-cell-padding-y",
-      ),
+      rowHeight: readCssToken(selector, "--ib-training-row-height"),
+      rowGap: readCssToken(selector, "--ib-training-row-gap"),
+      cellPaddingY: readCssToken(selector, "--ib-training-cell-padding-y"),
     };
   }
   if (density === "compact" || density === "dense") {
@@ -211,7 +206,7 @@ describe("INFOBOARD-ROLLING-01H — shared row alignment", () => {
 });
 
 describe("INFOBOARD-ROLLING-01H — row spacing tokens", () => {
-  it("TEST D — row-spacing tokens stay on the normal tier for all cohort sizes", () => {
+  it("TEST D — row-spacing tokens stay positive for all R10 cohort tiers", () => {
     renderWednesdayAt("20:15");
     const twoRowTokens = readTrainingMatrixTokens(trainingCard("2"));
 
@@ -221,9 +216,9 @@ describe("INFOBOARD-ROLLING-01H — row spacing tokens", () => {
     renderWednesdayAt("18:45");
     const sixRowTokens = readTrainingMatrixTokens(trainingCard("6"));
 
-    expect(fourRowTokens.rowHeight).toBe(twoRowTokens.rowHeight);
-    expect(sixRowTokens.rowHeight).toBe(twoRowTokens.rowHeight);
     expect(clampMax(twoRowTokens.rowGap)).toBeGreaterThan(0);
+    expect(clampMax(fourRowTokens.rowGap)).toBeGreaterThan(0);
+    expect(clampMax(sixRowTokens.rowGap)).toBeGreaterThan(0);
   });
 
   it("compact and dense tiers expose non-zero row gap on the shared matrix", () => {
@@ -246,7 +241,7 @@ describe("INFOBOARD-ROLLING-01H — clip-safe dense cohort", () => {
 
     expect(within(denseCard).getAllByTestId("training-group-row")).toHaveLength(6);
     expect(denseCard.querySelectorAll('[data-testid="training-matrix-row"]')).toHaveLength(6);
-    expect(denseCard.getAttribute("data-group-density")).toBe("normal");
+    expect(denseCard.getAttribute("data-group-density")).toBe("compact");
   });
 });
 

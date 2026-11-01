@@ -108,6 +108,8 @@ import {
   VENUE_TEAM_TYPOGRAPHY_ATTR,
   VENUE_TEAM_TYPOGRAPHY_PRIMARY,
   VENUE_TEAM_TYPOGRAPHY_SECONDARY,
+  VENUE_ACTIVITY_COLUMN_ATTR,
+  VENUE_ACTIVITY_COLUMN_MARKERS,
 } from "@/lib/infoboard/venue-display-grid";
 import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
 import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
@@ -135,6 +137,14 @@ import {
   tournamentParticipantRowPattern,
 } from "@/lib/infoboard/tournament-participant-density";
 import { resolveTrainingIdentityLines } from "@/lib/infoboard/training-identity-display";
+import {
+  resolveTrainingParticipantDensity,
+  TRAINING_PARTICIPANT_CLUB_CLAMP,
+  TRAINING_PARTICIPANT_DENSITY_ATTR,
+  TRAINING_PARTICIPANT_LOGO_CLAMP,
+  TRAINING_PARTICIPANT_ROW_GAP,
+  TRAINING_PARTICIPANT_TEAM_CLAMP,
+} from "@/lib/infoboard/training-participant-density";
 import styles from "./InfoboardScreen1.module.css";
 
 export {
@@ -335,9 +345,9 @@ export function expandOversizedTrainingGroups(
  * Exported for regression testing.
  */
 export function trainingGroupDensityTier(
-  _rowCount: number,
-): "normal" | "compact" | "dense" {
-  return "normal";
+  rowCount: number,
+): ReturnType<typeof resolveTrainingParticipantDensity> {
+  return resolveTrainingParticipantDensity(rowCount);
 }
 
 /**
@@ -792,6 +802,77 @@ type MatchSideIdentityProps = {
   showLogos?: boolean;
 };
 
+type TrainingIdentityRowProps = {
+  lines: { readonly primary: string; readonly secondary: string | null };
+  clubLogoSrc: string | null;
+  showLogos: boolean;
+  eventId: string;
+  rowEndAnnotation?: string | null;
+};
+
+function TrainingIdentityRow({
+  lines,
+  clubLogoSrc,
+  showLogos,
+  eventId,
+  rowEndAnnotation = null,
+}: TrainingIdentityRowProps): ReactElement {
+  return (
+    <div
+      className={styles.trainingIdentityRow}
+      data-testid="training-group-row"
+      data-training-identity-row="true"
+    >
+      <div className={styles.matchCrestSlot}>
+        {showLogos && clubLogoSrc !== null ? (
+          // eslint-disable-next-line @next/next/no-img-element -- tenant-managed crest URL.
+          <img
+            src={clubLogoSrc}
+            alt=""
+            aria-hidden="true"
+            className={styles.trainingClubLogo}
+            data-testid="training-team-logo"
+            data-event-id={eventId}
+          />
+        ) : (
+          <span
+            className={styles.matchClubLogoPlaceholder}
+            aria-hidden="true"
+            data-testid="training-team-logo-placeholder"
+          />
+        )}
+      </div>
+      <div className={styles.matchSideText}>
+        <span
+          className={styles.venueTeamDisplayName}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+          data-training-identity-primary
+        >
+          {lines.primary}
+        </span>
+        {lines.secondary !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+            data-training-identity-secondary
+          >
+            {lines.secondary}
+          </span>
+        )}
+        {rowEndAnnotation !== null && (
+          <span
+            className={styles.trainingGroupRowEndTime}
+            aria-label="Bis"
+            data-testid="training-row-end-annotation"
+          >
+            bis {rowEndAnnotation}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function MatchSideIdentity({
   side,
   rowTestId,
@@ -1193,6 +1274,7 @@ function TrainingGroupCard({
   const stripe = stripeKey("TRAINING");
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
+  const participantDensity = resolveTrainingParticipantDensity(items.length);
 
   return (
     <li
@@ -1206,6 +1288,7 @@ function TrainingGroupCard({
       data-group-density={groupDensity}
       data-cohort-continuation={cohortContinuation ? "true" : "false"}
       data-card-demand={demand.toFixed(2)}
+      {...{ [TRAINING_PARTICIPANT_DENSITY_ATTR]: participantDensity }}
       style={
         {
           "--ib-card-demand": demand,
@@ -1222,9 +1305,19 @@ function TrainingGroupCard({
             venuePresentationDensity,
           ),
           "--ib-training-logo-size": scaleVenuePresentationClamp(
-            TRAINING_LOGO_SIZE_CSS[cardPresentation.logoSize],
+            TRAINING_PARTICIPANT_LOGO_CLAMP[participantDensity],
             venuePresentationDensity,
           ),
+          "--ib-training-club-font-size": scaleVenuePresentationClamp(
+            TRAINING_PARTICIPANT_CLUB_CLAMP[participantDensity],
+            venuePresentationDensity,
+          ),
+          "--ib-training-team-font-size": scaleVenuePresentationClamp(
+            TRAINING_PARTICIPANT_TEAM_CLAMP[participantDensity],
+            venuePresentationDensity,
+          ),
+          "--ib-training-participant-row-gap":
+            TRAINING_PARTICIPANT_ROW_GAP[participantDensity],
         } as CSSProperties
       }
     >
@@ -1266,22 +1359,24 @@ function TrainingGroupCard({
           className={styles.trainingMatrixHeaders}
           data-testid="training-matrix-headers"
         >
-          <VenueActivityIdentity
-            className={styles.eventTypeLabel}
-            data-event-type="TRAINING"
+          <div
+            className={styles.trainingActivityHeader}
+            {...{
+              [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT,
+              [VENUE_ACTIVITY_COLUMN_ATTR]: VENUE_ACTIVITY_COLUMN_MARKERS.identity,
+            }}
           >
-            TRAINING
-          </VenueActivityIdentity>
-          <span
-            className={styles.destLabel}
-            data-venue-column="kabine"
-          >
+            <span
+              className={styles.eventTypeLabel}
+              data-event-type="TRAINING"
+            >
+              TRAINING
+            </span>
+          </div>
+          <span className={styles.destLabel} data-venue-column="kabine">
             KABINE
           </span>
-          <span
-            className={styles.destLabel}
-            data-venue-column="platz"
-          >
+          <span className={styles.destLabel} data-venue-column="platz">
             PLATZ
           </span>
         </div>
@@ -1290,6 +1385,10 @@ function TrainingGroupCard({
           {items.map((it, index) => {
             const rowEndAnnotation = timePresentation.rowEndAnnotations[index];
             const { homeDressingRoomLabel, pitchLabel } = it.event.allocation;
+            const lines = resolveTrainingIdentityLines(
+              it.event.teamDisplayName ?? it.event.displayTitle,
+              clubName,
+            );
 
             return (
               <div
@@ -1298,55 +1397,13 @@ function TrainingGroupCard({
                 data-testid="training-matrix-row"
               >
                 <div className={styles.trainingMatrixCell}>
-                  <span
-                    className={styles.trainingGroupTeamName}
-                    data-testid="training-group-row"
-                  >
-                    {showLogos && clubLogoSrc !== null && (
-                      // eslint-disable-next-line @next/next/no-img-element -- tenant-managed crest URL.
-                      <img
-                        src={clubLogoSrc}
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.trainingClubLogo}
-                        data-testid="training-team-logo"
-                        data-event-id={it.event.id}
-                      />
-                    )}
-                    <span className={styles.trainingGroupTeamText}>
-                      {(() => {
-                        const lines = resolveTrainingIdentityLines(
-                          it.event.teamDisplayName ?? it.event.displayTitle,
-                          clubName,
-                        );
-                        if (lines.secondary !== null) {
-                          return (
-                            <>
-                              <span data-training-identity-primary>
-                                {lines.primary}
-                              </span>
-                              <span
-                                className={styles.trainingGroupTeamSub}
-                                data-training-identity-secondary
-                              >
-                                {lines.secondary}
-                              </span>
-                            </>
-                          );
-                        }
-                        return lines.primary;
-                      })()}
-                    </span>
-                    {rowEndAnnotation !== null && (
-                      <span
-                        className={styles.trainingGroupRowEndTime}
-                        aria-label="Bis"
-                        data-testid="training-row-end-annotation"
-                      >
-                        bis {rowEndAnnotation}
-                      </span>
-                    )}
-                  </span>
+                  <TrainingIdentityRow
+                    lines={lines}
+                    clubLogoSrc={clubLogoSrc}
+                    showLogos={showLogos}
+                    eventId={it.event.id}
+                    rowEndAnnotation={rowEndAnnotation}
+                  />
                 </div>
 
                 <div className={styles.trainingMatrixCell}>
@@ -1670,22 +1727,16 @@ function EventCard({
                   );
                   if (!lines.primary) return null;
                   return (
-                    <>
-                      <span
-                        className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
-                        data-training-identity-primary
-                      >
-                        {lines.primary}
-                      </span>
-                      {lines.secondary !== null && (
-                        <span
-                          className={styles.venueTeamCategoryLabel}
-                          data-training-identity-secondary
-                        >
-                          {lines.secondary}
-                        </span>
-                      )}
-                    </>
+                    <TrainingIdentityRow
+                      lines={lines}
+                      clubLogoSrc={tenantLogoUrl}
+                      showLogos={
+                        resolvedPresentation?.kind === "training"
+                          ? resolvedPresentation.presentation.showLogos
+                          : presentation.trainingShowLogos
+                      }
+                      eventId={event.id}
+                    />
                   );
                 })()}
                 {event.organizerDisplayName !== null && (

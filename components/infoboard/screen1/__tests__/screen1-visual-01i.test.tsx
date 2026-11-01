@@ -65,10 +65,10 @@ afterEach(() => {
 
 describe("INFOBOARD-SCREEN1-VISUAL-01I — grid proportions", () => {
   it("uses stadium wayfinding column proportions 15/43/22/20", () => {
-    expect(CSS).toMatch(/--ib-zone-time:\s*12%/);
-    expect(CSS).toMatch(/--ib-zone-event:\s*45%/);
+    expect(CSS).toMatch(/--ib-zone-time:\s*15%/);
+    expect(CSS).toMatch(/--ib-zone-event:\s*43%/);
     expect(CSS).toMatch(/--ib-zone-room:\s*22%/);
-    expect(CSS).toMatch(/--ib-zone-pitch:\s*21%/);
+    expect(CSS).toMatch(/--ib-zone-pitch:\s*20%/);
   });
 
   it("aligns training matrix to parent eventCard columns via subgrid", () => {

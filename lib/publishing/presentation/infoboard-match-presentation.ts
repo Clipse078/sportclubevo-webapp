@@ -155,6 +155,25 @@ export function resolveInfoboardTeamSubDisplayName(input: {
   return name;
 }
 
+function dedupeTeamSubLine(
+  clubDisplayName: string,
+  teamSubDisplayName: string | null,
+): string | null {
+  if (teamSubDisplayName === null) return null;
+  if (
+    teamSubDisplayName.trim().toUpperCase() === clubDisplayName.trim().toUpperCase()
+  ) {
+    return null;
+  }
+  const clubUpper = clubDisplayName.trim().toUpperCase();
+  const subUpper = teamSubDisplayName.trim().toUpperCase();
+  if (subUpper.startsWith(`${clubUpper} `)) {
+    const stripped = teamSubDisplayName.slice(clubDisplayName.length).trim();
+    return stripped.length > 0 ? stripped : null;
+  }
+  return teamSubDisplayName;
+}
+
 function resolveSidePresentation(
   identity: InfoboardMatchSideIdentity,
   tenantLogoUrl: string | null | undefined,
@@ -166,15 +185,6 @@ function resolveSidePresentation(
     },
     tenantLogoUrl,
   );
-
-  const explicitMatchLabel = meaningful(identity.teamInfoboardMatchDisplayName);
-  if (explicitMatchLabel) {
-    return {
-      clubDisplayName: explicitMatchLabel,
-      teamSubDisplayName: null,
-      clubLogoUrl,
-    };
-  }
 
   const clubLine = resolveInfoboardClubDisplayName(
     identity.clubName,
@@ -192,19 +202,29 @@ function resolveSidePresentation(
     teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
   });
 
-  if (canonicalClub && teamSubDisplayName) {
-    const primary = clubLine;
-    if (teamSubDisplayName.trim().toUpperCase() === primary.trim().toUpperCase()) {
-      teamSubDisplayName = null;
-    }
+  if (teamSubDisplayName === null && meaningful(identity.fallbackDisplayName)) {
+    teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
+      clubDisplayName: teamSubBase,
+      teamName: identity.fallbackDisplayName,
+      teamShortName: identity.teamShortName,
+      teamAlternativeName: identity.teamAlternativeName,
+      teamInfoboardDisplayName: identity.teamInfoboardDisplayName,
+      teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
+    });
+  }
+
+  const primaryClub = canonicalClub ?? clubLine;
+  const dedupedTeamSub = dedupeTeamSubLine(primaryClub, teamSubDisplayName);
+
+  if (dedupedTeamSub !== null) {
     return {
-      clubDisplayName: primary,
-      teamSubDisplayName,
+      clubDisplayName: primaryClub,
+      teamSubDisplayName: dedupedTeamSub,
       clubLogoUrl,
     };
   }
 
-  const teamDisplayName = resolveInfoboardMatchTeamDisplayName({
+  const unified = resolveInfoboardMatchTeamDisplayName({
     clubName: identity.clubName,
     fallbackDisplayName: identity.fallbackDisplayName,
     teamName: identity.teamName,
@@ -214,16 +234,9 @@ function resolveSidePresentation(
     teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
   });
 
-  if (
-    teamSubDisplayName !== null &&
-    teamSubDisplayName.trim().toUpperCase() === teamDisplayName.trim().toUpperCase()
-  ) {
-    teamSubDisplayName = null;
-  }
-
   return {
-    clubDisplayName: teamDisplayName,
-    teamSubDisplayName,
+    clubDisplayName: unified,
+    teamSubDisplayName: null,
     clubLogoUrl,
   };
 }

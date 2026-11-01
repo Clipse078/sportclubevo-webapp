@@ -4385,7 +4385,7 @@ describe("FC Allschwil regression â€” Fixture B dense 17:15â€“18:45 gr
 
     const groupCard = screen.getByTestId("event-row");
     expect(groupCard.getAttribute("data-training-count")).toBe("4");
-    expect(groupCard.getAttribute("data-group-density")).toBe("normal");
+    expect(groupCard.getAttribute("data-group-density")).toBe("standard");
 
     const rows = screen.getAllByTestId("training-group-row");
     expect(rows).toHaveLength(4);
@@ -4466,19 +4466,24 @@ describe("FC Allschwil regression â€” Fixture D boundary visibility", () =>
   });
 });
 
-describe("trainingGroupDensityTier â€” sparse groups unchanged", () => {
-  it("1â€“3 rows use normal density", () => {
-    expect(trainingGroupDensityTier(1)).toBe("normal");
-    expect(trainingGroupDensityTier(3)).toBe("normal");
+describe("trainingGroupDensityTier — R10 participant density", () => {
+  it("1–2 rows use spacious density", () => {
+    expect(trainingGroupDensityTier(1)).toBe("spacious");
+    expect(trainingGroupDensityTier(2)).toBe("spacious");
   });
 
-  it("4â€“5 rows use compact density", () => {
-    expect(trainingGroupDensityTier(4)).toBe("normal");
-    expect(trainingGroupDensityTier(5)).toBe("normal");
+  it("3–4 rows use standard density", () => {
+    expect(trainingGroupDensityTier(3)).toBe("standard");
+    expect(trainingGroupDensityTier(4)).toBe("standard");
   });
 
-  it("6+ rows use dense density", () => {
-    expect(trainingGroupDensityTier(6)).toBe("normal");
+  it("5–6 rows use compact density", () => {
+    expect(trainingGroupDensityTier(5)).toBe("compact");
+    expect(trainingGroupDensityTier(6)).toBe("compact");
+  });
+
+  it("7+ rows use dense density", () => {
+    expect(trainingGroupDensityTier(7)).toBe("dense");
   });
 });
 
@@ -4514,10 +4519,16 @@ describe("INFOBOARD-REGRESSION-01E — card geometry invariants", () => {
     return card;
   }
 
-  it("assigns normal group-density for all cohort sizes", () => {
+  it("assigns R10 participant density per cohort size", () => {
+    const expected: Record<string, string> = {
+      "1": "spacious",
+      "4": "standard",
+      "5": "compact",
+      "6": "compact",
+    };
     for (const rows of ["1", "4", "5", "6"] as const) {
       renderTrainingGroup(Number(rows));
-      expect(trainingCard(rows).getAttribute("data-group-density")).toBe("normal");
+      expect(trainingCard(rows).getAttribute("data-group-density")).toBe(expected[rows]);
     }
   });
 

@@ -269,7 +269,7 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
 
   it("TEST H — preserves non-zero normal > compact > dense row spacing", () => {
     const normal = cssBlock(
-      '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
+      '.eventCard[data-type="TRAINING"][data-group-density="spacious"]',
     );
     const compact = cssBlock(
       '.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix',

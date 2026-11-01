@@ -16,12 +16,12 @@ export const VENUE_ACTIVITY_GRID_ZONE_WIDTHS = {
   platz: "var(--ib-zone-pitch)",
 } as const;
 
-/** Canonical proportional split (must sum to 100%) — R8R2 full-width venue grid. */
+/** Canonical proportional split (must sum to 100%) — R10 collision-safe TIME geometry. */
 export const VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES = {
-  time: 12,
-  activity: 45,
+  time: 15,
+  activity: 43,
   kabine: 22,
-  platz: 21,
+  platz: 20,
 } as const;
 
 export const VENUE_ACTIVITY_GRID_CANONICAL_COLUMN_COUNT = 4 as const;

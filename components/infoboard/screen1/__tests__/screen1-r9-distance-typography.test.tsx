@@ -308,13 +308,13 @@ describe("R9 surfaces and grid invariants", () => {
 
   it("FULL_WIDTH_GRID_PRESERVED", () => {
     expect(VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES).toEqual({
-      time: 12,
-      activity: 45,
+      time: 15,
+      activity: 43,
       kabine: 22,
-      platz: 21,
+      platz: 20,
     });
     expect(VENUE_ACTIVITY_GRID_TEMPLATE_COLUMNS).toContain("var(--ib-zone-time)");
-    expect(CSS).toMatch(/--ib-zone-time:\s*12%/);
+    expect(CSS).toMatch(/--ib-zone-time:\s*15%/);
   });
 
   it("R8R1_VERTICAL_GEOMETRY_PRESERVED — low-count equal row distribution", () => {

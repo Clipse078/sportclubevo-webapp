@@ -116,10 +116,10 @@
   --ib-fs-powered-by:       clamp(0.5rem, 0.62vw, 0.72rem);
 
   /* Card zone proportions — stadium wayfinding: TIME | ACTIVITY | KABINE | PLATZ (sum 100%) */
-  --ib-zone-time:       12%;
-  --ib-zone-event:      45%;
+  --ib-zone-time:       15%;
+  --ib-zone-event:      43%;
   --ib-zone-room:       22%;
-  --ib-zone-pitch:      21%;
+  --ib-zone-pitch:      20%;
 
   /* Border radius */
   --ib-radius:          8px;
@@ -521,11 +521,13 @@
   align-items: flex-start;
   justify-content: flex-start;
   gap: 4px;
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  padding: var(--ib-card-pad-v) clamp(10px, 1.1vw, var(--ib-card-pad-h));
   border-right: 1px solid var(--ib-border);
+  min-width: 0;
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .statusLabel {
@@ -634,6 +636,8 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .eventEndTime {
@@ -680,11 +684,25 @@
   min-height: 0;
 }
 
-/* R9 — single spacious card: primary identity in upper-middle, not dead centre */
+/* R10 — single spacious card: match identity vertically centred in ACTIVITY */
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
   justify-content: flex-start;
   padding-top: clamp(10px, 1.35vh, 22px);
   gap: clamp(8px, 0.85vh, 14px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"])
+  .eventCard[data-type="MATCH"]
+  .activityPrimaryZone {
+  justify-content: center;
+  padding-top: 0;
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"])
+  .eventCard[data-type="TRAINING"]
+  .activityPrimaryZone {
+  justify-content: center;
+  padding-top: 0;
 }
 
 .eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
@@ -1723,10 +1741,10 @@
 
 @media (max-width: 1366px) {
   .root {
-    --ib-zone-time:   12%;
-    --ib-zone-event:  45%;
+    --ib-zone-time:   15%;
+    --ib-zone-event:  43%;
     --ib-zone-room:   22%;
-    --ib-zone-pitch:  21%;
+    --ib-zone-pitch:  20%;
     --ib-card-gap:    3px;
   }
 
@@ -1811,8 +1829,16 @@
   text-transform: uppercase;
 }
 
-.trainingMatrixHeaders > .eventTypeLabel {
+.trainingMatrixHeaders > .eventTypeLabel,
+.trainingActivityHeader .eventTypeLabel {
   color: var(--ib-training-soft);
+}
+
+.trainingActivityHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .trainingMatrixHeaders > .destLabel {
@@ -2005,6 +2031,33 @@
   --ib-training-cell-padding-y: 1px;
 }
 
+.trainingIdentityRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: clamp(8px, 0.85vw, 14px);
+  width: 100%;
+  min-width: 0;
+}
+
+.trainingIdentityRow .venueTeamDisplayName {
+  font-size: var(--ib-training-club-font-size, var(--ib-training-font-size));
+}
+
+.trainingIdentityRow .venueTeamCategoryLabel {
+  font-size: var(--ib-training-team-font-size, var(--ib-match-secondary-font-size));
+  font-style: normal;
+}
+
+.eventCard[data-type="TRAINING"] .trainingRowMatrix {
+  row-gap: var(--ib-training-participant-row-gap, 0);
+}
+
+.eventCard[data-type="TRAINING"][data-training-participant-density="compact"] .trainingIdentityRow .venueTeamDisplayName,
+.eventCard[data-type="TRAINING"][data-training-participant-density="dense"] .trainingIdentityRow .venueTeamDisplayName {
+  font-weight: 700;
+}
+
 .trainingGroupTeamName {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-training-font-size);
@@ -2104,13 +2157,21 @@
  * Typography is presentation-controlled. Pagination splits oversized cohorts
  * instead of shrinking team-name font sizes by row count.
  */
-.eventCard[data-type="TRAINING"][data-group-density="normal"] {
+.eventCard[data-type="TRAINING"][data-group-density="normal"],
+.eventCard[data-type="TRAINING"][data-group-density="spacious"] {
   /* Normal labels can resolve to a ~63px line box at 1080p. Keep the shared
      matrix track taller than that line box so adjacent records cannot overlap. */
   --ib-training-row-height: clamp(52px, 6vh, 68px);
   --ib-training-row-gap: clamp(8px, 0.9vh, 12px);
   --ib-training-cell-padding-y: clamp(3px, 0.4vh, 7px);
   --ib-training-header-gap: clamp(5px, 0.55vh, 8px);
+}
+
+.eventCard[data-type="TRAINING"][data-group-density="standard"] {
+  --ib-training-row-height: clamp(46px, 5.4vh, 62px);
+  --ib-training-row-gap: clamp(6px, 0.75vh, 10px);
+  --ib-training-cell-padding-y: clamp(3px, 0.38vh, 6px);
+  --ib-training-header-gap: clamp(4px, 0.5vh, 7px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingMatrixHeaders {

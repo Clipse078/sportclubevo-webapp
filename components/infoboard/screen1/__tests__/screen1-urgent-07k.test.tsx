@@ -131,7 +131,7 @@ describe("Training font presets", () => {
     const root = rootFor(trainings, { trainingFontSize: "XLARGE" });
     expect(screen.getByTestId("training-group").closest("li")).toHaveAttribute(
       "data-group-density",
-      "normal",
+      "compact",
     );
     expect(root.style.getPropertyValue("--ib-training-font-size")).toBe(
       TRAINING_FONT_SIZE_CSS.XLARGE.normal,

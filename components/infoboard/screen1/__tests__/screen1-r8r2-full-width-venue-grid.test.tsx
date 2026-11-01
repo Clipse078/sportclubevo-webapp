@@ -219,10 +219,10 @@ describe("R8R2 — width contract (CSS source chain)", () => {
   it("CANONICAL_COLUMN_COUNT and zone percentages sum to 100%", () => {
     const values = Object.values(VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES);
     expect(values.reduce((sum, n) => sum + n, 0)).toBe(100);
-    expect(CSS).toMatch(/--ib-zone-time:\s*12%/);
-    expect(CSS).toMatch(/--ib-zone-event:\s*45%/);
+    expect(CSS).toMatch(/--ib-zone-time:\s*15%/);
+    expect(CSS).toMatch(/--ib-zone-event:\s*43%/);
     expect(CSS).toMatch(/--ib-zone-room:\s*22%/);
-    expect(CSS).toMatch(/--ib-zone-pitch:\s*21%/);
+    expect(CSS).toMatch(/--ib-zone-pitch:\s*20%/);
   });
 
   it("NO_UNUSED_GRID_TRACK — low-count lists use a single full-width column track", () => {
