@@ -19,6 +19,7 @@ import {
   TRAINING_KABINE_FONT_SIZE_CSS,
   TRAINING_PLATZ_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenueDistanceMatchLogoSize } from "@/lib/infoboard/venue-distance-typography";
 import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import type { InfoboardScreen1Event } from "@/lib/publishing/event-types";
 import type { InfoboardTeamAllocationPresentation } from "@/components/infoboard/screen1/screen1-presentation-types";
@@ -175,7 +176,7 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — rendered XL defaults", () => {
       ),
     );
     expect(card.style.getPropertyValue("--ib-match-logo-size")).toBe(
-      scaleVenuePresentationClamp(MATCH_LOGO_SIZE_CSS.XLARGE, SPACIOUS_PAGE_DENSITY),
+      scaleVenueDistanceMatchLogoSize(MATCH_LOGO_SIZE_CSS.XLARGE, SPACIOUS_PAGE_DENSITY),
     );
   });
 

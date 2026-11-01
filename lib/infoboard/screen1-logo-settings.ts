@@ -66,19 +66,19 @@ export const MATCH_FONT_SIZE_CSS: Record<
 > = {
   SMALL: {
     primary: "clamp(1.12rem, 1.44vw, 1.8rem)",
-    opponent: "clamp(0.77rem, 1.05vw, 1.4rem)",
+    opponent: "clamp(0.88rem, 1.12vw, 1.45rem)",
   },
   MEDIUM: {
     primary: "clamp(1.32rem, 1.72vw, 2.2rem)",
-    opponent: "clamp(0.935rem, 1.25vw, 1.65rem)",
+    opponent: "clamp(1rem, 1.32vw, 1.72rem)",
   },
   LARGE: {
     primary: "clamp(1.6rem, 2.4vw, 3.2rem)",
-    opponent: "clamp(1.1rem, 1.5vw, 2rem)",
+    opponent: "clamp(1.15rem, 1.55vw, 2.05rem)",
   },
   XLARGE: {
     primary: "clamp(1.75rem, 2.1vw, 2rem)",
-    opponent: "clamp(1.125rem, 1.35vw, 1.375rem)",
+    opponent: "clamp(1.2rem, 1.45vw, 1.55rem)",
   },
 };
 

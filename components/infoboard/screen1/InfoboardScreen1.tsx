@@ -113,6 +113,10 @@ import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament
 import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
 import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
 import {
+  resolveVenueDistanceEventListCssVars,
+  scaleVenueDistanceMatchLogoSize,
+} from "@/lib/infoboard/venue-distance-typography";
+import {
   resolveVenueDensityEventListCssVars,
   resolveVenuePresentationDensity,
   scaleVenuePresentationClamp,
@@ -1409,7 +1413,10 @@ function resolveEventCardStyle(
       "--ib-match-platz-font-size": scale(
         MATCH_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
       ),
-      "--ib-match-logo-size": scale(MATCH_LOGO_SIZE_CSS[p.logoSize]),
+      "--ib-match-logo-size": scaleVenueDistanceMatchLogoSize(
+        MATCH_LOGO_SIZE_CSS[p.logoSize],
+        venuePresentationDensity,
+      ),
     } as CSSProperties;
   }
   if (resolved.kind === "tournament") {
@@ -1866,6 +1873,10 @@ export function InfoboardScreen1({
             "--ib-page-demand-max": CARD_DEMAND_PAGE_MAX,
             "--ib-page-demand-total": pageTotalDemand,
             ...resolveVenueDensityEventListCssVars(venuePresentationDensity),
+            ...resolveVenueDistanceEventListCssVars(
+              venuePresentationDensity,
+              pageItems.length,
+            ),
           } as CSSProperties
         }
       >

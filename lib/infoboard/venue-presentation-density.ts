@@ -55,10 +55,10 @@ const VENUE_DENSITY_LIST_TOKEN_BASE = {
   activityType: "clamp(0.82rem, 1.08cqw, 1.32rem)",
   matchSecondary: "clamp(0.78rem, 1cqw, 1.15rem)",
   tournamentParticipant: "clamp(0.78rem, 1.02cqw, 1.18rem)",
-  destRoom: "clamp(1.15rem, 1.55cqw, 2.05rem)",
-  destPitch: "clamp(1.65rem, 2.35cqw, 3.05rem)",
-  statusLabel: "clamp(0.88rem, 1.12cqw, 1.38rem)",
-  eventEndTime: "clamp(0.92rem, 1.18cqw, 1.48rem)",
+  destRoom: "clamp(1.22rem, 1.62cqw, 2.12rem)",
+  destPitch: "clamp(1.72rem, 2.42cqw, 3.12rem)",
+  statusLabel: "clamp(0.92rem, 1.16cqw, 1.42rem)",
+  eventEndTime: "clamp(1.05rem, 1.28cqw, 1.48rem)",
 } as const;
 
 export function resolveVenueDensityEventListCssVars(

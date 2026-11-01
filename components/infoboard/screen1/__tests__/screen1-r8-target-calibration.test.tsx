@@ -265,7 +265,7 @@ describe("R8 VS presentation", () => {
     expect(vs.getAttribute(VENUE_MATCH_VERSUS_ATTR)).toBe("true");
     expect(vs.className).toContain(VENUE_MATCH_VERSUS_DISPLAY_CLASS);
     expect(CSS).toMatch(/\.matchVersusLabel[\s\S]*font-weight:\s*800/);
-    expect(CSS).toMatch(/--ib-fs-vs-label:[\s\S]*1\.65rem/);
+    expect(CSS).toMatch(/--ib-fs-vs-label:[\s\S]*2\.05rem/);
   });
 });
 

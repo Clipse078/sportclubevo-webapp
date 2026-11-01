@@ -85,7 +85,7 @@
   --ib-fs-event-type:       clamp(0.7rem, 0.9vw, 1.1rem);
   --ib-fs-event-team:       clamp(1.4rem, 1.9vw, 2.6rem);
   --ib-fs-event-opponent:   clamp(1.1rem, 1.5vw, 2rem);
-  --ib-fs-vs-label:         clamp(1.65rem, 2.15vw, 2.125rem);
+  --ib-fs-vs-label:         clamp(2.05rem, 2.68vw, 2.65rem);
   --ib-fs-match-role:       clamp(0.62rem, 0.75vw, 0.88rem);
   --ib-training-logo-size:  clamp(1.75rem, 2.8vh, 2.625rem);
   --ib-match-logo-size:     clamp(5rem, 5.85vw, 6.875rem);
@@ -109,7 +109,7 @@
   --ib-tournament-participant-name-size: var(--ib-tournament-participant-font-size);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
-  --ib-fs-dest-team:        clamp(0.75rem, 0.95vw, 1.2rem);
+  --ib-fs-dest-team:        clamp(0.92rem, 1.15vw, 1.35rem);
   --ib-fs-participant:      clamp(0.8rem, 1vw, 1.25rem);
   --ib-fs-participant-room: clamp(0.9rem, 1.15vw, 1.45rem);
   --ib-fs-footer:           clamp(0.8rem, 1vw, 1.15rem);
@@ -184,10 +184,10 @@
   --ib-zone-surface-platz:           #FFFFFF;
   --ib-zone-separator:               #E4EAF2;
 
-  /* R8 LIGHT typography calibration (1920×1080 equivalent) */
+  /* R9 LIGHT typography — distance-readable TIME; end time stays secondary */
   --ib-fs-status-label:     clamp(1.15rem, 1.45vw, 1.375rem);
-  --ib-fs-event-time:       clamp(2.625rem, 3.5vw, 3rem);
-  --ib-fs-event-end-time:   clamp(1.5rem, 1.85vw, 1.75rem);
+  --ib-fs-event-time:       clamp(2.85rem, 3.75vw, 4rem);
+  --ib-fs-event-end-time:   clamp(1.2rem, 1.45vw, 1.55rem);
   --ib-fs-dest-label:       clamp(1rem, 1.12vw, 1.125rem);
   --ib-fs-dest-pitch:       clamp(1.5rem, 1.75vw, 1.75rem);
   --ib-fs-dest-room:        clamp(1.5625rem, 1.85vw, 1.875rem);
@@ -241,7 +241,7 @@
     --ib-fs-event-type: clamp(0.7rem, 0.9cqw, 1.1rem);
     --ib-fs-event-team: clamp(1.4rem, 1.9cqw, 2.6rem);
     --ib-fs-event-opponent: clamp(1.1rem, 1.5cqw, 2rem);
-    --ib-fs-vs-label: clamp(1.65rem, 2.15cqw, 2.125rem);
+    --ib-fs-vs-label: clamp(2.05rem, 2.68cqw, 2.65rem);
     --ib-fs-match-role: clamp(0.62rem, 0.75cqw, 0.88rem);
     --ib-training-logo-size: clamp(1.75rem, 2.8cqh, 2.625rem);
     --ib-match-logo-size: clamp(5rem, 5.85cqw, 6.875rem);
@@ -258,7 +258,7 @@
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
-    --ib-fs-dest-team: clamp(0.75rem, 0.95cqw, 1.2rem);
+    --ib-fs-dest-team: clamp(0.92rem, 1.15cqw, 1.35rem);
     --ib-fs-participant: clamp(0.8rem, 1cqw, 1.25rem);
     --ib-fs-participant-room: clamp(0.9rem, 1.15cqw, 1.45rem);
     --ib-fs-footer: clamp(0.8rem, 1cqw, 1.15rem);
@@ -672,12 +672,24 @@
 .activityPrimaryZone {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: stretch;
   flex: 1 1 auto;
   width: 100%;
   min-width: 0;
   min-height: 0;
+}
+
+/* R9 — single spacious card: primary identity in upper-middle, not dead centre */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
+  justify-content: flex-start;
+  padding-top: clamp(10px, 1.35vh, 22px);
+  gap: clamp(8px, 0.85vh, 14px);
+}
+
+.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .activityPrimaryZone {
+  justify-content: flex-start;
+  padding-top: clamp(6px, 0.9vh, 16px);
 }
 
 .trainingIdentity {
@@ -1307,7 +1319,7 @@
 }
 
 .matchAllocTeam {
-  font-size: var(--ib-fs-dest-team);
+  font-size: var(--ib-kabine-team-font-size, var(--ib-fs-dest-team));
   color: var(--ib-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1539,11 +1551,10 @@
 /* Cards become taller when fewer events are shown.                           */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
-/* 1 event — hero card */
+/* 1 event — hero card (TIME scale via R9 venue-distance tokens on event list) */
 .eventList[data-count="1"] {
   --ib-card-pad-v:  clamp(24px, 4vh, 48px);
   --ib-card-pad-h:  clamp(24px, 2.8vw, 40px);
-  --ib-fs-event-time:  clamp(3rem, 4.5vw, 5.5rem);
   --ib-fs-event-team:  clamp(2rem, 3vw, 4rem);
   --ib-fs-dest-pitch:  clamp(2.2rem, 3.2vw, 4.2rem);
   --ib-fs-dest-room:   clamp(1.5rem, 2.2vw, 3rem);
@@ -1588,14 +1599,6 @@
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .statusLabel {
   font-size: clamp(0.95rem, 1.25vw, 1.55rem);
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventTime {
-  font-size: clamp(3.4rem, 5vw, 6rem);
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventEndTime {
-  font-size: clamp(1rem, 1.35vw, 1.65rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardTimeZone,
@@ -1674,7 +1677,6 @@
 .eventList[data-count="2"] {
   --ib-card-pad-v:  clamp(20px, 3.5vh, 40px);
   --ib-card-pad-h:  clamp(22px, 2.4vw, 36px);
-  --ib-fs-event-time:  clamp(2.6rem, 3.8vw, 4.8rem);
   --ib-fs-event-team:  clamp(1.8rem, 2.5vw, 3.4rem);
   --ib-fs-dest-pitch:  clamp(2rem, 2.8vw, 3.6rem);
   --ib-fs-dest-room:   clamp(1.3rem, 1.8vw, 2.4rem);
@@ -1684,7 +1686,6 @@
 .eventList[data-count="3"] {
   --ib-card-pad-v:  clamp(14px, 2.4vh, 28px);
   --ib-card-pad-h:  clamp(18px, 2vw, 30px);
-  --ib-fs-event-time:  clamp(2.4rem, 3.2vw, 4.2rem);
   --ib-fs-event-team:  clamp(1.6rem, 2.1vw, 2.8rem);
   --ib-fs-dest-pitch:  clamp(1.8rem, 2.4vw, 3.2rem);
   --ib-fs-dest-room:   clamp(1.2rem, 1.6vw, 2.1rem);
@@ -1694,7 +1695,6 @@
 .eventList[data-count="4"] {
   --ib-card-pad-v:  clamp(10px, 1.6vh, 20px);
   --ib-card-pad-h:  clamp(16px, 1.8vw, 26px);
-  --ib-fs-event-time:  clamp(2rem, 2.6vw, 3.4rem);
   --ib-fs-event-team:  clamp(1.3rem, 1.7vw, 2.3rem);
   --ib-fs-dest-pitch:  clamp(1.5rem, 2vw, 2.7rem);
   --ib-fs-dest-room:   clamp(1rem, 1.35vw, 1.8rem);
@@ -1704,7 +1704,6 @@
 .eventList[data-count="5"] {
   --ib-card-pad-v:  clamp(8px, 1.1vh, 14px);
   --ib-card-pad-h:  clamp(14px, 1.6vw, 22px);
-  --ib-fs-event-time:  clamp(1.8rem, 2.3vw, 3rem);
   --ib-fs-event-team:  clamp(1.2rem, 1.55vw, 2.1rem);
   --ib-fs-dest-pitch:  clamp(1.4rem, 1.8vw, 2.4rem);
   --ib-fs-dest-room:   clamp(0.9rem, 1.2vw, 1.6rem);
@@ -1715,7 +1714,6 @@
   --ib-card-pad-v:  clamp(6px, 0.9vh, 12px);
   --ib-card-pad-h:  clamp(12px, 1.4vw, 20px);
   --ib-card-gap:    clamp(3px, 0.4vh, 6px);
-  --ib-fs-event-time:  clamp(1.6rem, 2vw, 2.6rem);
   --ib-fs-event-team:  clamp(1.1rem, 1.4vw, 1.9rem);
   --ib-fs-dest-pitch:  clamp(1.3rem, 1.6vw, 2.1rem);
   --ib-fs-dest-room:   clamp(0.85rem, 1.1vw, 1.45rem);
@@ -2221,7 +2219,7 @@
 
 /* Kabine allocation team labels — secondary but readable (R7 wrap, no ellipsis). */
 .eventCard[data-type="TOURNAMENT"] .participantTeamName {
-  font-size: clamp(0.82rem, 1.02vw, 1.14rem);
+  font-size: var(--ib-kabine-team-font-size, clamp(0.9rem, 1.12vw, 1.28rem));
   white-space: normal;
   overflow: visible;
   overflow-wrap: anywhere;
