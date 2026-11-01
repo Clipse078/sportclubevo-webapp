@@ -169,15 +169,15 @@ describe("resolveInfoboardMatchPresentation", () => {
     expect(result?.home.teamSubDisplayName).toBeNull();
   });
 
-  it("13 — external opponent uses unified club label", () => {
+  it("13 — external opponent uses club + team hierarchy when canonical club exists", () => {
     const result = resolveInfoboardMatchPresentation(
       makeIdentity(),
       "https://cdn.example.com/tenant.png",
       "FC Allschwil",
     );
 
-    expect(result?.away?.clubDisplayName).toBe("C Gelb");
-    expect(result?.away?.teamSubDisplayName).toBeNull();
+    expect(result?.away?.clubDisplayName).toBe("FC Therwil");
+    expect(result?.away?.teamSubDisplayName).toBe("C Gelb");
   });
 
   it("resolves tenant logo for own-team side and external logo for opponent", () => {
@@ -187,11 +187,11 @@ describe("resolveInfoboardMatchPresentation", () => {
       "FC Allschwil",
     );
 
-    expect(result?.home.clubDisplayName).toBe("Junioren C2");
-    expect(result?.home.teamSubDisplayName).toBeNull();
+    expect(result?.home.clubDisplayName).toBe("FC Allschwil");
+    expect(result?.home.teamSubDisplayName).toBe("Junioren C2");
     expect(result?.home.clubLogoUrl).toBe("https://cdn.example.com/tenant.png");
-    expect(result?.away?.clubDisplayName).toBe("C Gelb");
-    expect(result?.away?.teamSubDisplayName).toBeNull();
+    expect(result?.away?.clubDisplayName).toBe("FC Therwil");
+    expect(result?.away?.teamSubDisplayName).toBe("C Gelb");
     expect(result?.away?.clubLogoUrl).toBe("https://cdn.example.com/therwil.png");
   });
 

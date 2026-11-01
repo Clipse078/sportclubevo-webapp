@@ -102,7 +102,9 @@
   --ib-kabine-font-size-fallback: clamp(1.2rem, 1.6vw, 1.9rem);
   --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
   --ib-fs-dest-label:       clamp(0.68rem, 0.88vw, 1.05rem);
-  --ib-fs-activity-type:    clamp(0.72rem, 0.95vw, 1.08rem);
+  --ib-fs-activity-type:    clamp(0.82rem, 1.08vw, 1.32rem);
+  --ib-match-secondary-font-size: clamp(0.78rem, 1vw, 1.15rem);
+  --ib-tournament-participant-font-size: clamp(1.05rem, 1.35vw, 1.65rem);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
   --ib-fs-dest-team:        clamp(0.75rem, 0.95vw, 1.2rem);
@@ -161,7 +163,7 @@
 
   --ib-text-secondary: rgba(11, 31, 58, 0.72);
 
-  --ib-card-shadow:    0 2px 8px rgba(11, 31, 58, 0.07);
+  --ib-card-shadow:    0 3px 14px rgba(11, 31, 58, 0.09);
 
   --ib-red:            var(--ib-match);
   --ib-blue:           var(--ib-training);
@@ -382,11 +384,13 @@
 
 .boardTitleText {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: clamp(1.15rem, 1.55vw, 1.85rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-size: clamp(1.95rem, 2.65vw, 3.05rem);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ib-text);
+  line-height: 1;
 }
 
 .root[data-theme="light"] .boardTitle {
@@ -586,17 +590,21 @@
 
 .venueTeamCategoryLabel {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: clamp(0.65rem, 0.82vw, 0.95rem);
+  font-size: var(--ib-match-secondary-font-size, clamp(0.78rem, 1vw, 1.15rem));
   font-weight: 600;
   font-style: normal;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ib-text-muted);
   line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .eventTypeLabel {
@@ -807,8 +815,9 @@
 
 .tournamentParticipantName {
   min-width: 0;
-  font-size: clamp(0.9rem, 1.12vw, 1.3rem);
+  font-size: var(--ib-tournament-participant-font-size, clamp(1.05rem, 1.35vw, 1.65rem));
   font-weight: 700;
+  font-style: italic;
   line-height: 1.12;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -836,6 +845,7 @@
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-event-team);
   font-weight: 700;
+  font-style: italic;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ib-text);
@@ -843,6 +853,18 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.eventCard[data-type="TRAINING"] .eventTeamMain.venueTeamDisplayName {
+  font-size: var(--ib-training-font-size, var(--ib-fs-event-team));
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  max-width: 100%;
 }
 
 .eventTeamOpponent {
@@ -857,6 +879,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.eventCard[data-type="MATCH"] .matchSideBlock .venueTeamCategoryLabel {
+  font-size: var(
+    --ib-match-secondary-font-size,
+    var(--ib-match-opponent-font-size)
+  );
 }
 
 .eventCard[data-type="MATCH"] .matchSideBlock .venueTeamDisplayName {

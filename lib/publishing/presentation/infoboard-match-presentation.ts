@@ -159,9 +159,32 @@ function resolveSidePresentation(
   identity: InfoboardMatchSideIdentity,
   tenantLogoUrl: string | null | undefined,
 ): InfoboardMatchSidePresentation {
-  const teamDisplayName = resolveInfoboardMatchTeamDisplayName({
-    clubName: identity.clubName,
-    fallbackDisplayName: identity.fallbackDisplayName,
+  const clubLogoUrl = resolveClubIdentityLogoUrl(
+    {
+      isOwnTeam: identity.isOwnTeam,
+      externalLogoUrl: identity.clubLogoUrl,
+    },
+    tenantLogoUrl,
+  );
+
+  const explicitMatchLabel = meaningful(identity.teamInfoboardMatchDisplayName);
+  if (explicitMatchLabel) {
+    return {
+      clubDisplayName: explicitMatchLabel,
+      teamSubDisplayName: null,
+      clubLogoUrl,
+    };
+  }
+
+  const clubLine = resolveInfoboardClubDisplayName(
+    identity.clubName,
+    identity.fallbackDisplayName,
+  );
+  const canonicalClub = meaningful(identity.clubName);
+  const teamSubBase = canonicalClub ?? clubLine;
+
+  let teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
+    clubDisplayName: teamSubBase,
     teamName: identity.teamName,
     teamShortName: identity.teamShortName,
     teamAlternativeName: identity.teamAlternativeName,
@@ -169,16 +192,21 @@ function resolveSidePresentation(
     teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
   });
 
-  const canonicalClubLine = meaningful(identity.clubName) ?? null;
-  const subBase =
-    canonicalClubLine ??
-    meaningful(
-      resolveInfoboardClubDisplayName(identity.clubName, identity.fallbackDisplayName),
-    ) ??
-    teamDisplayName;
+  if (canonicalClub && teamSubDisplayName) {
+    const primary = clubLine;
+    if (teamSubDisplayName.trim().toUpperCase() === primary.trim().toUpperCase()) {
+      teamSubDisplayName = null;
+    }
+    return {
+      clubDisplayName: primary,
+      teamSubDisplayName,
+      clubLogoUrl,
+    };
+  }
 
-  let teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
-    clubDisplayName: subBase,
+  const teamDisplayName = resolveInfoboardMatchTeamDisplayName({
+    clubName: identity.clubName,
+    fallbackDisplayName: identity.fallbackDisplayName,
     teamName: identity.teamName,
     teamShortName: identity.teamShortName,
     teamAlternativeName: identity.teamAlternativeName,
@@ -192,14 +220,6 @@ function resolveSidePresentation(
   ) {
     teamSubDisplayName = null;
   }
-
-  const clubLogoUrl = resolveClubIdentityLogoUrl(
-    {
-      isOwnTeam: identity.isOwnTeam,
-      externalLogoUrl: identity.clubLogoUrl,
-    },
-    tenantLogoUrl,
-  );
 
   return {
     clubDisplayName: teamDisplayName,

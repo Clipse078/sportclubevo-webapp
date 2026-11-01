@@ -110,7 +110,20 @@ import {
 } from "@/lib/infoboard/venue-display-grid";
 import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
 import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
+import {
+  resolveVenueDensityEventListCssVars,
+  resolveVenuePresentationDensity,
+  scaleVenuePresentationClamp,
+  VENUE_PRESENTATION_DENSITY_ATTR,
+  type VenuePresentationDensity,
+} from "@/lib/infoboard/venue-presentation-density";
 import styles from "./InfoboardScreen1.module.css";
+
+export {
+  resolveVenuePresentationDensity,
+  VENUE_PRESENTATION_DENSITY_ATTR,
+} from "@/lib/infoboard/venue-presentation-density";
+export type { VenuePresentationDensity } from "@/lib/infoboard/venue-presentation-density";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -1120,6 +1133,7 @@ type TrainingGroupCardProps = {
   cohortContinuation?: boolean;
   /** Resolved per-card typography and logo sizes. */
   cardPresentation: ResolvedTrainingCardPresentation;
+  venuePresentationDensity: VenuePresentationDensity;
 };
 
 /**
@@ -1146,6 +1160,7 @@ function TrainingGroupCard({
   showLogos,
   cohortContinuation = false,
   cardPresentation,
+  venuePresentationDensity,
 }: TrainingGroupCardProps): ReactElement {
   const first = items[0];
   const temporal = first.temporal;
@@ -1170,14 +1185,22 @@ function TrainingGroupCard({
       style={
         {
           "--ib-card-demand": demand,
-          "--ib-training-font-size":
+          "--ib-training-font-size": scaleVenuePresentationClamp(
             TRAINING_FONT_SIZE_CSS[cardPresentation.teamFontSize].normal,
-          "--ib-training-kabine-font-size":
+            venuePresentationDensity,
+          ),
+          "--ib-training-kabine-font-size": scaleVenuePresentationClamp(
             TRAINING_KABINE_FONT_SIZE_CSS[cardPresentation.kabineFontSize],
-          "--ib-training-platz-font-size":
+            venuePresentationDensity,
+          ),
+          "--ib-training-platz-font-size": scaleVenuePresentationClamp(
             TRAINING_PLATZ_FONT_SIZE_CSS[cardPresentation.platzFontSize],
-          "--ib-training-logo-size":
+            venuePresentationDensity,
+          ),
+          "--ib-training-logo-size": scaleVenuePresentationClamp(
             TRAINING_LOGO_SIZE_CSS[cardPresentation.logoSize],
+            venuePresentationDensity,
+          ),
         } as CSSProperties
       }
     >
@@ -1328,26 +1351,53 @@ function TrainingGroupCard({
 
 function resolveEventCardStyle(
   resolved: ResolvedCardPresentation,
+  venuePresentationDensity: VenuePresentationDensity,
 ): CSSProperties {
+  const scale = (value: string) =>
+    scaleVenuePresentationClamp(value, venuePresentationDensity);
   if (resolved.kind === "match" || resolved.kind === "other") {
     const p = resolved.presentation;
     return {
-      "--ib-match-font-size": MATCH_FONT_SIZE_CSS[p.teamFontSize].primary,
-      "--ib-match-opponent-font-size": MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
-      "--ib-match-kabine-font-size": MATCH_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
-      "--ib-match-platz-font-size": MATCH_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
-      "--ib-match-logo-size": MATCH_LOGO_SIZE_CSS[p.logoSize],
+      "--ib-match-font-size": scale(MATCH_FONT_SIZE_CSS[p.teamFontSize].primary),
+      "--ib-match-opponent-font-size": scale(
+        MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
+      ),
+      "--ib-match-secondary-font-size": scale(
+        MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
+      ),
+      "--ib-match-kabine-font-size": scale(
+        MATCH_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
+      ),
+      "--ib-match-platz-font-size": scale(
+        MATCH_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
+      ),
+      "--ib-match-logo-size": scale(MATCH_LOGO_SIZE_CSS[p.logoSize]),
     } as CSSProperties;
   }
   if (resolved.kind === "tournament") {
     const p = resolved.presentation;
     return {
-      "--ib-tournament-font-size": TOURNAMENT_FONT_SIZE_CSS[p.teamFontSize],
-      "--ib-tournament-kabine-font-size":
+      "--ib-tournament-font-size": scale(TOURNAMENT_FONT_SIZE_CSS[p.teamFontSize]),
+      "--ib-tournament-kabine-font-size": scale(
         TOURNAMENT_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
-      "--ib-tournament-platz-font-size":
+      ),
+      "--ib-tournament-platz-font-size": scale(
         TOURNAMENT_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
-      "--ib-tournament-logo-size": TOURNAMENT_LOGO_SIZE_CSS[p.logoSize],
+      ),
+      "--ib-tournament-logo-size": scale(TOURNAMENT_LOGO_SIZE_CSS[p.logoSize]),
+    } as CSSProperties;
+  }
+  if (resolved.kind === "training") {
+    const p = resolved.presentation;
+    return {
+      "--ib-training-font-size": scale(TRAINING_FONT_SIZE_CSS[p.teamFontSize].normal),
+      "--ib-training-kabine-font-size": scale(
+        TRAINING_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
+      ),
+      "--ib-training-platz-font-size": scale(
+        TRAINING_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
+      ),
+      "--ib-training-logo-size": scale(TRAINING_LOGO_SIZE_CSS[p.logoSize]),
     } as CSSProperties;
   }
   return {} as CSSProperties;
@@ -1711,6 +1761,9 @@ export function InfoboardScreen1({
     const pageTotalDemand = pageDemands.reduce((sum, d) => sum + d, 0);
     const pageDensity = densityTier(pageTotalDemand);
     const pageLayoutMode = layoutModeTier(pageTotalDemand);
+    const venuePresentationDensity = resolveVenuePresentationDensity(
+      pageItems.length,
+    );
 
     return (
       <ul
@@ -1721,10 +1774,12 @@ export function InfoboardScreen1({
         data-count={pageItems.length}
         data-density={pageDensity}
         data-layout-mode={pageLayoutMode}
+        {...{ [VENUE_PRESENTATION_DENSITY_ATTR]: venuePresentationDensity }}
         style={
           {
             "--ib-page-demand-max": CARD_DEMAND_PAGE_MAX,
             "--ib-page-demand-total": pageTotalDemand,
+            ...resolveVenueDensityEventListCssVars(venuePresentationDensity),
           } as CSSProperties
         }
       >
@@ -1756,6 +1811,7 @@ export function InfoboardScreen1({
                     ? trainingResolved.presentation
                     : resolveTrainingCardPresentation(presentation, undefined)
                 }
+                venuePresentationDensity={venuePresentationDensity}
               />
             );
           }
@@ -1764,7 +1820,19 @@ export function InfoboardScreen1({
           const allocs = extension?.participantAllocations;
           const participantAllocations =
             allocs !== undefined && allocs.length > 0 ? allocs : undefined;
-          const cardStyle = resolveEventCardStyle(resolved);
+          const cardStyle = resolveEventCardStyle(
+            resolved,
+            venuePresentationDensity,
+          );
+          const trainingCardStyle =
+            item.event.type === "TRAINING" && resolved.kind !== "training"
+              ? ({
+                  "--ib-training-font-size": scaleVenuePresentationClamp(
+                    TRAINING_FONT_SIZE_CSS[presentation.trainingFontSize].normal,
+                    venuePresentationDensity,
+                  ),
+                } as CSSProperties)
+              : {};
           return (
             <EventCard
               key={item.event.id}
@@ -1773,7 +1841,7 @@ export function InfoboardScreen1({
               participantAllocations={participantAllocations}
               demand={demand}
               presentation={presentation}
-              cardStyle={cardStyle}
+              cardStyle={{ ...cardStyle, ...trainingCardStyle }}
               resolvedPresentation={resolved}
               tenantLogoUrl={clubLogoSrc}
               tenantClubName={tenant.name}
