@@ -174,11 +174,14 @@
   /* R8 — shared content-top anchor for TIME | ACTIVITY | KABINE | PLATZ */
   --ib-activity-content-top: clamp(10px, 1.15vh, 16px);
 
-  /* R8 — TIME-only activity tints; operational columns stay white */
-  --ib-zone-surface-time-match:      #EEF5FF;
-  --ib-zone-surface-time-training:   #F1F6FC;
+  /* R8 / R10R1 — TIME-only activity tints; operational columns stay white */
+  --ib-zone-surface-time-match:      #FFF3F2;
+  --ib-zone-surface-time-training:   #F1F6FD;
   --ib-zone-surface-time-tournament: #FFF6EA;
   --ib-zone-surface-time-other:      #FFF5F5;
+  --ib-time-surface-match:           var(--ib-zone-surface-time-match);
+  --ib-time-surface-training:        var(--ib-zone-surface-time-training);
+  --ib-time-surface-tournament:      var(--ib-zone-surface-time-tournament);
   --ib-zone-surface-activity:        #FFFFFF;
   --ib-zone-surface-kabine:          #FFFFFF;
   --ib-zone-surface-platz:           #FFFFFF;
@@ -586,15 +589,15 @@
 
 /* R8 LIGHT — TIME-only tint; white operational columns + neutral separators */
 .root[data-theme="light"] .eventCard[data-type="MATCH"] [data-venue-column="time"].cardTimeZone {
-  background: var(--ib-zone-surface-time-match);
+  background: var(--ib-time-surface-match);
 }
 
 .root[data-theme="light"] .eventCard[data-type="TRAINING"] [data-venue-column="time"].cardTimeZone {
-  background: var(--ib-zone-surface-time-training);
+  background: var(--ib-time-surface-training);
 }
 
 .root[data-theme="light"] .eventCard[data-type="TOURNAMENT"] [data-venue-column="time"].cardTimeZone {
-  background: var(--ib-zone-surface-time-tournament);
+  background: var(--ib-time-surface-tournament);
 }
 
 .root[data-theme="light"] .eventCard[data-type="OTHER"] [data-venue-column="time"].cardTimeZone {
@@ -1796,8 +1799,8 @@
   grid-column: 2 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-auto-rows: auto;
-  align-content: start;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -1864,11 +1867,17 @@
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-auto-rows: var(--ib-training-row-height, minmax(clamp(24px, 3.2vh, 44px), auto));
+  grid-template-rows: repeat(
+    var(--ib-training-row-count, 1),
+    minmax(var(--ib-training-row-min, clamp(40px, 4.5vh, 56px)), 1fr)
+  );
   row-gap: var(--ib-training-row-gap, 0);
-  align-content: start;
+  align-content: stretch;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   padding-bottom: var(--ib-card-pad-v);
+  box-sizing: border-box;
 }
 
 .trainingMatrixRow {
@@ -1876,7 +1885,7 @@
   display: grid;
   grid-template-columns: subgrid;
   align-items: center;
-  min-height: var(--ib-training-row-height, clamp(24px, 3.2vh, 44px));
+  min-height: var(--ib-training-row-min, clamp(40px, 4.5vh, 56px));
   min-width: 0;
 }
 
@@ -1972,11 +1981,10 @@
   min-height: 0;
 }
 
-/* Fill-mode training cards keep compact row tracks; the shared matrix centers
- * as one block instead of stretching individual rows to absorb card height. */
+/* Fill-mode training cards distribute cohort rows across available card height. */
 .eventList[data-layout-mode="fill"] .trainingRowMatrix {
   min-height: 0;
-  align-content: start;
+  align-content: stretch;
 }
 
 /* ─── Adaptive density tiers ────────────────────────────────────────────────
@@ -2004,13 +2012,12 @@
   padding-bottom: clamp(6px, 0.75vh, 11px);
 }
 
-.eventList[data-density="dense"] .trainingRowMatrix {
-  grid-auto-rows: minmax(clamp(26px, 2.9vh, 38px), auto);
+.eventList[data-density="dense"] .eventCard[data-type="TRAINING"] {
+  --ib-training-row-min: clamp(34px, 3.8vh, 48px);
 }
 
 .eventList[data-density="dense"] .trainingMatrixRow {
-  min-height: clamp(26px, 2.9vh, 38px);
-  --ib-training-cell-padding-y: 1px;
+  --ib-training-cell-padding-y: 2px;
 }
 
 /* ultra tier */
@@ -2022,22 +2029,58 @@
   padding-bottom: clamp(5px, 0.65vh, 9px);
 }
 
-.eventList[data-density="ultra"] .trainingRowMatrix {
-  grid-auto-rows: minmax(clamp(24px, 2.7vh, 36px), auto);
+.eventList[data-density="ultra"] .eventCard[data-type="TRAINING"] {
+  --ib-training-row-min: clamp(30px, 3.4vh, 44px);
 }
 
 .eventList[data-density="ultra"] .trainingMatrixRow {
-  min-height: clamp(24px, 2.7vh, 36px);
   --ib-training-cell-padding-y: 1px;
 }
 
 .trainingIdentityRow {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   gap: clamp(8px, 0.85vw, 14px);
   width: 100%;
   min-width: 0;
+  height: 100%;
+}
+
+.trainingIdentityRow .matchCrestSlot {
+  width: var(--ib-training-logo-size);
+  height: var(--ib-training-logo-size);
+  flex: 0 0 var(--ib-training-logo-size);
+}
+
+/* R10R1 — single training: vertical identity block in ACTIVITY primary height */
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(1) {
+  align-items: center;
+  justify-content: center;
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(8px, 0.85vh, 14px);
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow .matchSideText {
+  align-items: center;
+  text-align: center;
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow .matchCrestSlot {
+  width: var(--ib-training-logo-size);
+  height: var(--ib-training-logo-size);
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(2),
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell:nth-child(3) {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .trainingIdentityRow .venueTeamDisplayName {
@@ -2157,20 +2200,17 @@
  * Typography is presentation-controlled. Pagination splits oversized cohorts
  * instead of shrinking team-name font sizes by row count.
  */
-.eventCard[data-type="TRAINING"][data-group-density="normal"],
 .eventCard[data-type="TRAINING"][data-group-density="spacious"] {
-  /* Normal labels can resolve to a ~63px line box at 1080p. Keep the shared
-     matrix track taller than that line box so adjacent records cannot overlap. */
-  --ib-training-row-height: clamp(52px, 6vh, 68px);
-  --ib-training-row-gap: clamp(8px, 0.9vh, 12px);
-  --ib-training-cell-padding-y: clamp(3px, 0.4vh, 7px);
+  --ib-training-row-min: clamp(52px, 6.2vh, 80px);
+  --ib-training-row-gap: clamp(8px, 0.9vh, 14px);
+  --ib-training-cell-padding-y: clamp(4px, 0.45vh, 8px);
   --ib-training-header-gap: clamp(5px, 0.55vh, 8px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="standard"] {
-  --ib-training-row-height: clamp(46px, 5.4vh, 62px);
-  --ib-training-row-gap: clamp(6px, 0.75vh, 10px);
-  --ib-training-cell-padding-y: clamp(3px, 0.38vh, 6px);
+  --ib-training-row-min: clamp(46px, 5.4vh, 72px);
+  --ib-training-row-gap: clamp(6px, 0.75vh, 11px);
+  --ib-training-cell-padding-y: clamp(3px, 0.38vh, 7px);
   --ib-training-header-gap: clamp(4px, 0.5vh, 7px);
 }
 
@@ -2178,10 +2218,10 @@
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix {
-  --ib-training-row-height: clamp(26px, 3.1vh, 38px);
-  --ib-training-row-gap: clamp(2px, 0.35vh, 5px);
-  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 5px);
+.eventCard[data-type="TRAINING"][data-group-density="compact"] {
+  --ib-training-row-min: clamp(40px, 4.8vh, 64px);
+  --ib-training-row-gap: clamp(4px, 0.5vh, 8px);
+  --ib-training-cell-padding-y: clamp(3px, 0.35vh, 6px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupPitchValue {
@@ -2193,10 +2233,10 @@
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingRowMatrix {
-  --ib-training-row-height: clamp(24px, 2.8vh, 34px);
-  --ib-training-row-gap: clamp(2px, 0.28vh, 4px);
-  --ib-training-cell-padding-y: clamp(1px, 0.2vh, 3px);
+.eventCard[data-type="TRAINING"][data-group-density="dense"] {
+  --ib-training-row-min: clamp(36px, 4.2vh, 56px);
+  --ib-training-row-gap: clamp(3px, 0.4vh, 6px);
+  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 5px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {

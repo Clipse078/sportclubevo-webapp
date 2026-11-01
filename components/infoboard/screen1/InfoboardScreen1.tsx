@@ -144,6 +144,8 @@ import {
   TRAINING_PARTICIPANT_LOGO_CLAMP,
   TRAINING_PARTICIPANT_ROW_GAP,
   TRAINING_PARTICIPANT_TEAM_CLAMP,
+  TRAINING_ROW_COUNT_ATTR,
+  TRAINING_ROW_COUNT_VAR,
 } from "@/lib/infoboard/training-participant-density";
 import styles from "./InfoboardScreen1.module.css";
 
@@ -1275,6 +1277,10 @@ function TrainingGroupCard({
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
   const participantDensity = resolveTrainingParticipantDensity(items.length);
+  const isSingleTraining = items.length === 1;
+  const singleTrainingLogoClamp = isSingleTraining
+    ? "clamp(4.25rem, 5.5vw, 6.25rem)"
+    : TRAINING_PARTICIPANT_LOGO_CLAMP[participantDensity];
 
   return (
     <li
@@ -1285,6 +1291,7 @@ function TrainingGroupCard({
       data-temporal={temporal}
       data-stripe={stripe}
       data-training-count={items.length}
+      {...{ [TRAINING_ROW_COUNT_ATTR]: items.length }}
       data-group-density={groupDensity}
       data-cohort-continuation={cohortContinuation ? "true" : "false"}
       data-card-demand={demand.toFixed(2)}
@@ -1304,8 +1311,9 @@ function TrainingGroupCard({
             TRAINING_PLATZ_FONT_SIZE_CSS[cardPresentation.platzFontSize],
             venuePresentationDensity,
           ),
+          [TRAINING_ROW_COUNT_VAR]: items.length,
           "--ib-training-logo-size": scaleVenuePresentationClamp(
-            TRAINING_PARTICIPANT_LOGO_CLAMP[participantDensity],
+            singleTrainingLogoClamp,
             venuePresentationDensity,
           ),
           "--ib-training-club-font-size": scaleVenuePresentationClamp(
@@ -1381,7 +1389,11 @@ function TrainingGroupCard({
           </span>
         </div>
 
-        <div className={styles.trainingRowMatrix} data-testid="training-row-matrix">
+        <div
+          className={styles.trainingRowMatrix}
+          data-testid="training-row-matrix"
+          data-training-row-matrix="true"
+        >
           {items.map((it, index) => {
             const rowEndAnnotation = timePresentation.rowEndAnnotations[index];
             const { homeDressingRoomLabel, pitchLabel } = it.event.allocation;
@@ -1395,6 +1407,7 @@ function TrainingGroupCard({
                 key={it.event.id}
                 className={styles.trainingMatrixRow}
                 data-testid="training-matrix-row"
+                data-training-row-index={index}
               >
                 <div className={styles.trainingMatrixCell}>
                   <TrainingIdentityRow

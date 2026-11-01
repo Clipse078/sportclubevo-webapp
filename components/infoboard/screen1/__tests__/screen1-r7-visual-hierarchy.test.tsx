@@ -159,7 +159,7 @@ describe("R7 light zone surface contract", () => {
 
   it("applies zone backgrounds only under LIGHT theme", () => {
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\][\s\S]*--ib-zone-surface-time-match/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\][\s\S]*--ib-time-surface-match/,
     );
     expect(CSS).toMatch(
       /\.root\[data-theme="light"\] \[data-venue-column="activity"\]\.cardEventZone/,

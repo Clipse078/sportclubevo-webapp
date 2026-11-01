@@ -102,13 +102,13 @@ describe("R8 LIGHT zone surfaces", () => {
 
   it("applies per-type TIME tint only under LIGHT theme", () => {
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\][\s\S]*--ib-zone-surface-time-match/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="MATCH"\] \[data-venue-column="time"\][\s\S]*--ib-time-surface-match/,
     );
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \.eventCard\[data-type="TRAINING"\] \[data-venue-column="time"\][\s\S]*--ib-zone-surface-time-training/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="TRAINING"\] \[data-venue-column="time"\][\s\S]*--ib-time-surface-training/,
     );
     expect(CSS).toMatch(
-      /\.root\[data-theme="light"\] \.eventCard\[data-type="TOURNAMENT"\] \[data-venue-column="time"\][\s\S]*--ib-zone-surface-time-tournament/,
+      /\.root\[data-theme="light"\] \.eventCard\[data-type="TOURNAMENT"\] \[data-venue-column="time"\][\s\S]*--ib-time-surface-tournament/,
     );
     expect(CSS).not.toMatch(
       /\.root\[data-theme="dark"\][\s\S]*--ib-zone-surface-time-match/,

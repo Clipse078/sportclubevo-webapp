@@ -8,6 +8,11 @@
 export const TRAINING_PARTICIPANT_DENSITY_ATTR =
   "data-training-participant-density";
 
+/** Shared N-row track model — ACTIVITY / KABINE / PLATZ stay index-aligned. */
+export const TRAINING_ROW_COUNT_ATTR = "data-training-row-count";
+export const TRAINING_ROW_COUNT_VAR = "--ib-training-row-count";
+export const TRAINING_ROW_MIN_VAR = "--ib-training-row-min";
+
 export const TRAINING_PARTICIPANT_DENSITIES = [
   "spacious",
   "standard",
@@ -32,10 +37,10 @@ export const TRAINING_PARTICIPANT_LOGO_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(3.25rem, 4vw, 4.25rem)",
-  standard: "clamp(2.85rem, 3.5vw, 3.75rem)",
-  compact: "clamp(2.35rem, 2.9vw, 3.1rem)",
-  dense: "clamp(2rem, 2.5vw, 2.75rem)",
+  spacious: "clamp(3.5rem, 4.5vw, 5rem)",
+  standard: "clamp(3rem, 3.75vw, 4.25rem)",
+  compact: "clamp(2.65rem, 3.25vw, 3.75rem)",
+  dense: "clamp(2.35rem, 2.85vw, 3.25rem)",
 };
 
 /** Club line typography per density. */
@@ -43,10 +48,10 @@ export const TRAINING_PARTICIPANT_CLUB_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(1.15rem, 1.45vw, 1.55rem)",
-  standard: "clamp(1.05rem, 1.3vw, 1.4rem)",
-  compact: "clamp(0.98rem, 1.18vw, 1.25rem)",
-  dense: "clamp(0.92rem, 1.1vw, 1.15rem)",
+  spacious: "clamp(1.2rem, 1.55vw, 1.65rem)",
+  standard: "clamp(1.1rem, 1.38vw, 1.5rem)",
+  compact: "clamp(1.02rem, 1.25vw, 1.38rem)",
+  dense: "clamp(0.98rem, 1.15vw, 1.28rem)",
 };
 
 /** Team line typography per density — never below readable venue minimum. */
@@ -54,10 +59,10 @@ export const TRAINING_PARTICIPANT_TEAM_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(1rem, 1.25vw, 1.35rem)",
-  standard: "clamp(0.95rem, 1.15vw, 1.25rem)",
-  compact: "clamp(0.9rem, 1.08vw, 1.15rem)",
-  dense: "clamp(0.88rem, 1.02vw, 1.08rem)",
+  spacious: "clamp(1.05rem, 1.32vw, 1.42rem)",
+  standard: "clamp(1rem, 1.22vw, 1.32rem)",
+  compact: "clamp(0.95rem, 1.12vw, 1.22rem)",
+  dense: "clamp(0.92rem, 1.06vw, 1.15rem)",
 };
 
 export const TRAINING_PARTICIPANT_ROW_GAP: Record<

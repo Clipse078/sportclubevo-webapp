@@ -100,9 +100,21 @@ function itemLabel(item: DisplayItem): string {
 }
 
 function cssBlock(selector: string): string {
-  const start = CSS.indexOf(selector);
-  expect(start, `Missing CSS selector ${selector}`).toBeGreaterThanOrEqual(0);
-  return CSS.slice(start, CSS.indexOf("}", start));
+  const requireTrainingRowMin = selector.includes("data-group-density");
+  let searchFrom = 0;
+  while (searchFrom < CSS.length) {
+    const start = CSS.indexOf(selector, searchFrom);
+    if (start < 0) {
+      break;
+    }
+    const block = CSS.slice(start, CSS.indexOf("}", start));
+    if (!requireTrainingRowMin || block.includes("--ib-training-row-min:")) {
+      return block;
+    }
+    searchFrom = start + selector.length;
+  }
+  expect(undefined, `Missing CSS selector ${selector}`).toBeTruthy();
+  return "";
 }
 
 function clampMax(block: string, token: string): number {
@@ -272,13 +284,13 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
       '.eventCard[data-type="TRAINING"][data-group-density="spacious"]',
     );
     const compact = cssBlock(
-      '.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix',
+      '.eventCard[data-type="TRAINING"][data-group-density="compact"]',
     );
     const dense = cssBlock(
-      '.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingRowMatrix',
+      '.eventCard[data-type="TRAINING"][data-group-density="dense"]',
     );
     const spacing = (block: string) =>
-      clampMax(block, "--ib-training-row-height")
+      clampMax(block, "--ib-training-row-min")
       + clampMax(block, "--ib-training-row-gap")
       + clampMax(block, "--ib-training-cell-padding-y") * 2;
 

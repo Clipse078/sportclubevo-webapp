@@ -165,13 +165,14 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — canonical Kabine pill CSS", () => {
     );
   });
 
-  it("keeps training matrix top-aligned with shared column baseline (R3)", () => {
+  it("keeps training matrix filling card height with shared row tracks (R10R1)", () => {
     expect(CSS).toMatch(
       /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*height:\s*100%/,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*start/,
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\)/,
     );
+    expect(CSS).toMatch(/\.trainingRowMatrix[\s\S]*align-content:\s*stretch/);
     expect(CSS).toMatch(
       /SCE-INFOBOARD-V2-01-R3[\s\S]*\.eventCard\[data-type="MATCH"\] \.cardPitchZone[\s\S]*justify-content:\s*flex-start/,
     );

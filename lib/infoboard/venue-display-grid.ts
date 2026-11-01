@@ -62,6 +62,13 @@ export const VENUE_LIGHT_TIME_SURFACE_VARS = {
   other: "--ib-zone-surface-time-other",
 } as const;
 
+/** R10R1 semantic aliases (same values as VENUE_LIGHT_TIME_SURFACE_VARS). */
+export const VENUE_TIME_SURFACE_SEMANTIC_ALIASES = {
+  match: "--ib-time-surface-match",
+  training: "--ib-time-surface-training",
+  tournament: "--ib-time-surface-tournament",
+} as const;
+
 /** Semantic marker for central match VS presentation (R8). */
 export const VENUE_MATCH_VERSUS_ATTR = "data-match-versus";
 
