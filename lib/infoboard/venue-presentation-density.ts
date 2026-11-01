@@ -54,7 +54,7 @@ export function scaleVenuePresentationClamp(
 const VENUE_DENSITY_LIST_TOKEN_BASE = {
   activityType: "clamp(0.82rem, 1.08cqw, 1.32rem)",
   matchSecondary: "clamp(0.78rem, 1cqw, 1.15rem)",
-  tournamentParticipant: "clamp(1.05rem, 1.35cqw, 1.65rem)",
+  tournamentParticipant: "clamp(0.78rem, 1.02cqw, 1.18rem)",
   destRoom: "clamp(1.15rem, 1.55cqw, 2.05rem)",
   destPitch: "clamp(1.65rem, 2.35cqw, 3.05rem)",
   statusLabel: "clamp(0.88rem, 1.12cqw, 1.38rem)",

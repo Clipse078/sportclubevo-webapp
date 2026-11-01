@@ -52,6 +52,10 @@ export type InfoboardTeamAllocationPresentation = {
   readonly isHomeTeam?: boolean;
   /** Canonical club crest URL for tournament logo row; null when unavailable. */
   readonly clubLogoUrl?: string | null;
+  /** Optional canonical club line when supplied by the publisher. */
+  readonly clubDisplayName?: string | null;
+  /** Optional team-specific line (e.g. age group) when supplied by the publisher. */
+  readonly teamSubDisplayName?: string | null;
 };
 
 /**

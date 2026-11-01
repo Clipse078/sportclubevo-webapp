@@ -117,6 +117,17 @@ import {
   VENUE_PRESENTATION_DENSITY_ATTR,
   type VenuePresentationDensity,
 } from "@/lib/infoboard/venue-presentation-density";
+import {
+  resolveTournamentParticipantDensity,
+  resolveTournamentParticipantGrid,
+  TOURNAMENT_PARTICIPANT_COLUMNS_VAR,
+  TOURNAMENT_PARTICIPANT_DENSITY_ATTR,
+  TOURNAMENT_PARTICIPANT_LOGO_CLAMP,
+  TOURNAMENT_PARTICIPANT_NAME_CLAMP,
+  tournamentParticipantDisplayRows,
+} from "@/lib/infoboard/tournament-participant-density";
+import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
+import { resolveTrainingIdentityLines } from "@/lib/infoboard/training-identity-display";
 import styles from "./InfoboardScreen1.module.css";
 
 export {
@@ -228,7 +239,7 @@ export const CARD_DEMAND_TOURNAMENT_BASE = 1.5;
 export const CARD_DEMAND_TOURNAMENT_DISPLAY_ROW = 0.25;
 /** Added demand per canonical KABINE allocation row. */
 export const CARD_DEMAND_TOURNAMENT_PARTICIPANT = 0.3;
-/** Centre participant grid columns — matches tournamentParticipants CSS. */
+/** @deprecated Use resolveTournamentParticipantGrid() — kept for legacy demand tests. */
 export const TOURNAMENT_PARTICIPANT_DISPLAY_COLUMNS = 2;
 /**
  * Maximum total demand per rendered page inside the footer-safe content area.
@@ -330,8 +341,7 @@ export function trainingGroupDensityTier(
 export function computeTournamentParticipantDisplayRows(
   participantCount: number,
 ): number {
-  if (participantCount <= 0) return 0;
-  return Math.ceil(participantCount / TOURNAMENT_PARTICIPANT_DISPLAY_COLUMNS);
+  return tournamentParticipantDisplayRows(participantCount);
 }
 
 export function computeMatchDemand(event: InfoboardScreen1Event): number {
@@ -690,28 +700,6 @@ export function buildDisplayList(flatList: FlatEvent[]): DisplayItem[] {
   return result;
 }
 
-/**
- * Strips a club name prefix from a team display name for Infoboard rendering.
- *
- * Example: "FC ALLSCHWIL JUNIOREN D-9 D1" → "JUNIOREN D-9 D1"
- *
- * The club identity is already established in the header, so repeating it
- * on every training row is redundant. This is a presentation-only
- * transformation — canonical team names are never mutated.
- *
- * Matching is case-insensitive. Returns the original name when no match.
- */
-function stripClubPrefix(teamName: string, clubName: string): string {
-  if (!clubName) return teamName;
-  const prefixLower = clubName.toUpperCase();
-  const nameLower = teamName.toUpperCase();
-  if (nameLower.startsWith(prefixLower)) {
-    const stripped = teamName.slice(clubName.length).trimStart();
-    return stripped.length > 0 ? stripped : teamName;
-  }
-  return teamName;
-}
-
 export type MatchTeamNameSize = "normal" | "medium" | "minimum";
 
 /**
@@ -843,6 +831,7 @@ function TournamentParticipantIdentity({
   participant,
   showLogos,
 }: TournamentParticipantIdentityProps): ReactElement {
+  const identity = resolveTournamentParticipantIdentity(participant);
   return (
     <div
       className={styles.tournamentParticipantBlock}
@@ -851,18 +840,30 @@ function TournamentParticipantIdentity({
       <div className={styles.matchCrestSlot}>
         <MatchClubLogo
           logoUrl={participant.clubLogoUrl ?? null}
-          clubName={participant.teamDisplayName}
+          clubName={identity.primary}
           testId={`tournament-participant-logo-${participant.id}`}
           presentation="tournament"
           showLogos={showLogos}
         />
       </div>
-      <span
-        className={`${styles.venueTeamDisplayName} ${styles.tournamentParticipantName}`}
-        {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
-      >
-        {participant.teamDisplayName}
-      </span>
+      <div className={styles.tournamentParticipantText}>
+        <span
+          className={`${styles.venueTeamDisplayName} ${styles.tournamentParticipantName}`}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+          data-tournament-participant-primary
+        >
+          {identity.primary}
+        </span>
+        {identity.secondary !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+            data-tournament-participant-secondary
+          >
+            {identity.secondary}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -1290,10 +1291,28 @@ function TrainingGroupCard({
                       />
                     )}
                     <span className={styles.trainingGroupTeamText}>
-                      {stripClubPrefix(
-                        it.event.teamDisplayName ?? it.event.displayTitle,
-                        clubName,
-                      )}
+                      {(() => {
+                        const lines = resolveTrainingIdentityLines(
+                          it.event.teamDisplayName ?? it.event.displayTitle,
+                          clubName,
+                        );
+                        if (lines.secondary !== null) {
+                          return (
+                            <>
+                              <span data-training-identity-primary>
+                                {lines.primary}
+                              </span>
+                              <span
+                                className={styles.trainingGroupTeamSub}
+                                data-training-identity-secondary
+                              >
+                                {lines.secondary}
+                              </span>
+                            </>
+                          );
+                        }
+                        return lines.primary;
+                      })()}
                     </span>
                     {rowEndAnnotation !== null && (
                       <span
@@ -1414,6 +1433,7 @@ type EventCardProps = {
   resolvedPresentation?: ResolvedCardPresentation;
   tenantLogoUrl?: string | null;
   tenantClubName?: string | null;
+  venuePresentationDensity?: VenuePresentationDensity;
 };
 
 function EventCard({
@@ -1426,6 +1446,7 @@ function EventCard({
   resolvedPresentation,
   tenantLogoUrl = null,
   tenantClubName = null,
+  venuePresentationDensity = "standard",
 }: EventCardProps): ReactElement {
   const { event, temporal } = item;
   const startTime = formatTime(event.startAt, timeZone);
@@ -1560,10 +1581,36 @@ function EventCard({
                 <div
                   className={styles.tournamentParticipantBlocks}
                   data-testid="tournament-participants"
+                  {...{
+                    [TOURNAMENT_PARTICIPANT_DENSITY_ATTR]:
+                      resolveTournamentParticipantDensity(
+                        participantAllocations.length,
+                      ),
+                  }}
                   style={
                     {
-                      "--ib-tournament-participant-count":
-                        participantAllocations.length,
+                      [TOURNAMENT_PARTICIPANT_COLUMNS_VAR]:
+                        resolveTournamentParticipantGrid(
+                          participantAllocations.length,
+                        ).columns,
+                      "--ib-tournament-participant-logo-size":
+                        scaleVenuePresentationClamp(
+                          TOURNAMENT_PARTICIPANT_LOGO_CLAMP[
+                            resolveTournamentParticipantDensity(
+                              participantAllocations.length,
+                            )
+                          ],
+                          venuePresentationDensity,
+                        ),
+                      "--ib-tournament-participant-name-size":
+                        scaleVenuePresentationClamp(
+                          TOURNAMENT_PARTICIPANT_NAME_CLAMP[
+                            resolveTournamentParticipantDensity(
+                              participantAllocations.length,
+                            )
+                          ],
+                          venuePresentationDensity,
+                        ),
                     } as CSSProperties
                   }
                 >
@@ -1580,21 +1627,33 @@ function EventCard({
               )
             ) : (
               <div className={styles.trainingIdentity}>
-                {event.teamDisplayName !== null ? (
-                  <span
-                    className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
-                  >
-                    {event.teamDisplayName}
-                  </span>
-                ) : (
-                  event.displayTitle !== null && (
-                    <span
-                      className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
-                    >
-                      {event.displayTitle}
-                    </span>
-                  )
-                )}
+                {(() => {
+                  const trainingLabel =
+                    event.teamDisplayName ?? event.displayTitle;
+                  const lines = resolveTrainingIdentityLines(
+                    trainingLabel,
+                    tenantClubName,
+                  );
+                  if (!lines.primary) return null;
+                  return (
+                    <>
+                      <span
+                        className={`${styles.eventTeamMain} ${styles.venueTeamDisplayName}`}
+                        data-training-identity-primary
+                      >
+                        {lines.primary}
+                      </span>
+                      {lines.secondary !== null && (
+                        <span
+                          className={styles.venueTeamCategoryLabel}
+                          data-training-identity-secondary
+                        >
+                          {lines.secondary}
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
                 {event.organizerDisplayName !== null && (
                   <span className={styles.eventTeamSubtitle}>
                     {event.organizerDisplayName}
@@ -1845,6 +1904,7 @@ export function InfoboardScreen1({
               resolvedPresentation={resolved}
               tenantLogoUrl={clubLogoSrc}
               tenantClubName={tenant.name}
+              venuePresentationDensity={venuePresentationDensity}
             />
           );
         })}

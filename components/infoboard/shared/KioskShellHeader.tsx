@@ -195,7 +195,7 @@ export function KioskShellHeader({
             display: "flex",
             alignItems: "center",
             gap: "16px",
-            flex: showInlineWelcome ? "0 1 38%" : "1 1 0",
+            flex: showInlineWelcome ? "0 1 28%" : "1 1 0",
             minWidth: 0,
             overflow: "hidden",
           }}
@@ -283,23 +283,29 @@ export function KioskShellHeader({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              flex: "1 1 0",
-              minWidth: 0,
+              flex: shellTheme === "light" ? "1 1 26%" : "1 1 0",
+              minWidth: shellTheme === "light" ? "160px" : 0,
               padding: `0 ${HEADER_ZONE_PADDING_X}`,
-              overflow: "hidden",
+              overflow: "visible",
             }}
           >
             <span
               data-testid="board-title-text"
               style={{
-                fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-subtitle-font"],
+                fontSize:
+                  shellTheme === "light"
+                    ? KIOSK_SHELL_CSS_VARS["--kiosk-shell-light-inline-welcome-font"]
+                    : KIOSK_SHELL_CSS_VARS["--kiosk-shell-subtitle-font"],
                 fontWeight: 500,
                 letterSpacing: "0.04em",
                 textTransform: "none",
                 color: palette.inlineWelcome,
-                whiteSpace: "nowrap",
-                overflow: shellTheme === "light" ? "visible" : "hidden",
-                textOverflow: shellTheme === "light" ? "clip" : "ellipsis",
+                whiteSpace: shellTheme === "light" ? "normal" : "nowrap",
+                overflow: "visible",
+                textOverflow: "clip",
+                textAlign: "center",
+                lineHeight: 1.15,
+                maxWidth: "100%",
               }}
             >
               {subtitle}

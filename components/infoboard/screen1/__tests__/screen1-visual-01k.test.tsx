@@ -19,10 +19,13 @@ import {
   TRAINING_KABINE_FONT_SIZE_CSS,
   TRAINING_PLATZ_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import type { InfoboardScreen1Event } from "@/lib/publishing/event-types";
 import type { InfoboardTeamAllocationPresentation } from "@/components/infoboard/screen1/screen1-presentation-types";
 import { InfoboardScreen1 } from "@/components/infoboard/screen1/InfoboardScreen1";
 import { EMPTY_SCREEN1_STUDIO_CONFIG } from "@/lib/infoboard/screen1-studio-types";
+
+const SPACIOUS_PAGE_DENSITY = "spacious" as const;
 
 const CSS = readFileSync(
   resolve(process.cwd(), "components/infoboard/screen1/InfoboardScreen1.module.css"),
@@ -160,12 +163,20 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — rendered XL defaults", () => {
 
     const card = container.querySelector("[data-type='MATCH']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-match-kabine-font-size")).toBe(
-      MATCH_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        MATCH_KABINE_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
     expect(card.style.getPropertyValue("--ib-match-platz-font-size")).toBe(
-      MATCH_PLATZ_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        MATCH_PLATZ_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
-    expect(card.style.getPropertyValue("--ib-match-logo-size")).toBe(MATCH_LOGO_SIZE_CSS.XLARGE);
+    expect(card.style.getPropertyValue("--ib-match-logo-size")).toBe(
+      scaleVenuePresentationClamp(MATCH_LOGO_SIZE_CSS.XLARGE, SPACIOUS_PAGE_DENSITY),
+    );
   });
 
   it("tournament card applies XLARGE kabine, platz, and logo CSS variables by default", () => {
@@ -200,13 +211,22 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — rendered XL defaults", () => {
 
     const card = container.querySelector("[data-type='TOURNAMENT']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-tournament-kabine-font-size")).toBe(
-      TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
     expect(card.style.getPropertyValue("--ib-tournament-platz-font-size")).toBe(
-      TOURNAMENT_PLATZ_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        TOURNAMENT_PLATZ_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
     expect(card.style.getPropertyValue("--ib-tournament-logo-size")).toBe(
-      TOURNAMENT_LOGO_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        TOURNAMENT_LOGO_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
   });
 
@@ -268,10 +288,16 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — rendered XL defaults", () => {
 
     const card = container.querySelector("[data-type='TRAINING']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-training-kabine-font-size")).toBe(
-      TRAINING_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        TRAINING_KABINE_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
     expect(card.style.getPropertyValue("--ib-training-platz-font-size")).toBe(
-      TRAINING_PLATZ_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(
+        TRAINING_PLATZ_FONT_SIZE_CSS.XLARGE,
+        SPACIOUS_PAGE_DENSITY,
+      ),
     );
   });
 });

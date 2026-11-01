@@ -13,6 +13,7 @@ import {
   TOURNAMENT_FONT_SIZE_CSS,
   TOURNAMENT_KABINE_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import {
   PREVIEW_FIXTURE_TOURNAMENT_4TEAM,
   PREVIEW_TOURNAMENT_4TEAM_EXTENSIONS,
@@ -251,7 +252,7 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
 
     const card = container.querySelector("[data-type='TOURNAMENT']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-tournament-kabine-font-size")).toBe(
-      TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE, "spacious"),
     );
   });
 

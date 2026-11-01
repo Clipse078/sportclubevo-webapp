@@ -65,19 +65,19 @@ export const MATCH_FONT_SIZE_CSS: Record<
   { primary: string; opponent: string }
 > = {
   SMALL: {
-    primary: "clamp(1.4rem, 1.8vw, 2.25rem)",
+    primary: "clamp(1.12rem, 1.44vw, 1.8rem)",
     opponent: "clamp(0.77rem, 1.05vw, 1.4rem)",
   },
   MEDIUM: {
-    primary: "clamp(1.65rem, 2.15vw, 2.75rem)",
+    primary: "clamp(1.32rem, 1.72vw, 2.2rem)",
     opponent: "clamp(0.935rem, 1.25vw, 1.65rem)",
   },
   LARGE: {
-    primary: "clamp(2rem, 3vw, 4rem)",
+    primary: "clamp(1.6rem, 2.4vw, 3.2rem)",
     opponent: "clamp(1.1rem, 1.5vw, 2rem)",
   },
   XLARGE: {
-    primary: "clamp(2.24rem, 3.36vw, 4.48rem)",
+    primary: "clamp(1.79rem, 2.69vw, 3.58rem)",
     opponent: "clamp(1.232rem, 1.68vw, 2.24rem)",
   },
 };
@@ -127,10 +127,10 @@ export const TOURNAMENT_PLATZ_FONT_SIZE_CSS: Record<InfoboardFontSize, string> =
  * MEDIUM reproduces the accepted baseline (--ib-match-logo-size).
  */
 export const MATCH_LOGO_SIZE_CSS: Record<InfoboardLogoSize, string> = {
-  SMALL: "clamp(1.6rem, 1.85vw, 2rem)",
-  MEDIUM: "clamp(2rem, 2.35vw, 2.375rem)",
-  LARGE: "clamp(2.5rem, 3vw, 3rem)",
-  XLARGE: "clamp(3rem, 3.65vw, 3.5rem)",
+  SMALL: "clamp(2.16rem, 2.5vw, 2.7rem)",
+  MEDIUM: "clamp(2.7rem, 3.17vw, 3.2rem)",
+  LARGE: "clamp(3.38rem, 4.05vw, 4.05rem)",
+  XLARGE: "clamp(4.05rem, 4.93vw, 4.73rem)",
 };
 
 /**

@@ -14,6 +14,7 @@ import {
   TOURNAMENT_KABINE_FONT_SIZE_CSS,
   TRAINING_KABINE_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import type { InfoboardScreen1Event } from "@/lib/publishing/event-types";
 import type { InfoboardTeamAllocationPresentation } from "@/components/infoboard/screen1/screen1-presentation-types";
 import { InfoboardScreen1 } from "@/components/infoboard/screen1/InfoboardScreen1";
@@ -375,9 +376,15 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — rendered Kabine pill parity", () => {
       trainingRender.container.querySelector("[data-type='TRAINING']") as HTMLElement
     ).style.getPropertyValue("--ib-training-kabine-font-size");
 
-    expect(matchKabineFont).toBe(MATCH_KABINE_FONT_SIZE_CSS.XLARGE);
-    expect(tournamentKabineFont).toBe(TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE);
-    expect(trainingKabineFont).toBe(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE);
+    const spaciousKabine = (css: string) =>
+      scaleVenuePresentationClamp(css, "spacious");
+    expect(matchKabineFont).toBe(spaciousKabine(MATCH_KABINE_FONT_SIZE_CSS.XLARGE));
+    expect(tournamentKabineFont).toBe(
+      spaciousKabine(TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE),
+    );
+    expect(trainingKabineFont).toBe(
+      spaciousKabine(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE),
+    );
     expect(matchKabineFont).toBe(tournamentKabineFont);
     expect(trainingKabineFont).toBe(tournamentKabineFont);
   });

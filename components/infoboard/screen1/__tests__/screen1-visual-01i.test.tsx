@@ -12,6 +12,7 @@ import {
   DEFAULT_SCREEN1_PRESENTATION,
   TRAINING_KABINE_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import {
   buildWednesday20260826Feed,
   resolveWednesdayPreviewCurrentTimeIso,
@@ -203,7 +204,7 @@ describe("INFOBOARD-SCREEN1-VISUAL-01I — training presentation", () => {
 
     const card = container.querySelector("[data-type='TRAINING']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-training-kabine-font-size")).toBe(
-      TRAINING_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE, "spacious"),
     );
   });
 });

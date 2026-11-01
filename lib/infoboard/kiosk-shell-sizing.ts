@@ -65,6 +65,9 @@ export const KIOSK_SHELL_ALEXA_SAFE_ZONE_WIDTH_PX = 192;
 /** Welcome / subtitle strip typography. */
 export const KIOSK_SHELL_SUBTITLE_FONT_PX = 28;
 
+/** Inline welcome in LIGHT venue header — slightly smaller to preserve full string at 1920×1080. */
+export const KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX = 24;
+
 /** Footer ticker / left-label typography. */
 export const KIOSK_SHELL_FOOTER_TICKER_FONT_PX = 26;
 
@@ -103,6 +106,7 @@ export const KIOSK_SHELL_CSS_VARS = {
   "--kiosk-shell-weather-temp-font": `${KIOSK_SHELL_WEATHER_TEMP_FONT_PX}px`,
   "--kiosk-shell-weather-condition-font": `${KIOSK_SHELL_WEATHER_CONDITION_FONT_PX}px`,
   "--kiosk-shell-subtitle-font": `${KIOSK_SHELL_SUBTITLE_FONT_PX}px`,
+  "--kiosk-shell-light-inline-welcome-font": `${KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX}px`,
   "--kiosk-shell-footer-ticker-font": `${KIOSK_SHELL_FOOTER_TICKER_FONT_PX}px`,
   "--kiosk-shell-footer-announcement-icon": `${KIOSK_SHELL_FOOTER_ANNOUNCEMENT_ICON_PX}px`,
   "--kiosk-shell-footer-gap": `${KIOSK_SHELL_FOOTER_GAP_PX}px`,
