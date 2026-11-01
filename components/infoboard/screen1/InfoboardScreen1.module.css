@@ -115,11 +115,11 @@
   --ib-fs-footer:           clamp(0.8rem, 1vw, 1.15rem);
   --ib-fs-powered-by:       clamp(0.5rem, 0.62vw, 0.72rem);
 
-  /* Card zone proportions — stadium wayfinding: TIME | EVENT | KABINE | PLATZ */
-  --ib-zone-time:       15%;
-  --ib-zone-event:      43%;
+  /* Card zone proportions — stadium wayfinding: TIME | ACTIVITY | KABINE | PLATZ (sum 100%) */
+  --ib-zone-time:       12%;
+  --ib-zone-event:      45%;
   --ib-zone-room:       22%;
-  --ib-zone-pitch:      20%;
+  --ib-zone-pitch:      21%;
 
   /* Border radius */
   --ib-radius:          8px;
@@ -429,6 +429,9 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
@@ -450,6 +453,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
   max-height: 100%;
@@ -465,6 +471,9 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
@@ -475,6 +484,9 @@
 .eventCard {
   display: grid;
   grid-template-columns: var(--ib-zone-time) var(--ib-zone-event) var(--ib-zone-room) var(--ib-zone-pitch);
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   align-items: stretch;
   background: var(--ib-card-bg);
   border: 1px solid var(--ib-border);
@@ -1541,20 +1553,26 @@
 /* R8R1 — low-count pages distribute the activity canvas across equal rows. */
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   align-content: stretch;
+  justify-items: stretch;
 }
 
 .eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: repeat(2, minmax(0, 1fr));
   align-content: stretch;
+  justify-items: stretch;
 }
 
 .eventList[data-count="3"]:not([data-density="dense"]):not([data-density="ultra"]) {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: repeat(3, minmax(0, 1fr));
   align-content: stretch;
+  justify-items: stretch;
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard,
@@ -1707,8 +1725,8 @@
 
 @media (max-width: 1366px) {
   .root {
-    --ib-zone-time:   15%;
-    --ib-zone-event:  42%;
+    --ib-zone-time:   12%;
+    --ib-zone-event:  45%;
     --ib-zone-room:   22%;
     --ib-zone-pitch:  21%;
     --ib-card-gap:    3px;

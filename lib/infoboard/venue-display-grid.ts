@@ -16,6 +16,16 @@ export const VENUE_ACTIVITY_GRID_ZONE_WIDTHS = {
   platz: "var(--ib-zone-pitch)",
 } as const;
 
+/** Canonical proportional split (must sum to 100%) — R8R2 full-width venue grid. */
+export const VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES = {
+  time: 12,
+  activity: 45,
+  kabine: 22,
+  platz: 21,
+} as const;
+
+export const VENUE_ACTIVITY_GRID_CANONICAL_COLUMN_COUNT = 4 as const;
+
 export const VENUE_ACTIVITY_CARD_TEST_ID = "venue-activity-card";
 
 /** Stable column markers for grid-contract tests (legacy test ids may differ per card). */
