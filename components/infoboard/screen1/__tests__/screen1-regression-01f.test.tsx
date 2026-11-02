@@ -65,7 +65,7 @@ function measureRowCenterY(row: HTMLElement, cellIndex: 0 | 1 | 2): number {
 
 function mockAlignedTrainingMatrixGeometry(card: HTMLElement): void {
   const rows = card.querySelectorAll('[data-testid="training-matrix-row"]');
-  let rowTop = 200;
+  const rowTop = 200;
   const rowHeight = 44;
 
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
