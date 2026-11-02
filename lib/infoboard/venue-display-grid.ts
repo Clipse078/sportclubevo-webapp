@@ -48,11 +48,16 @@ export const VENUE_ACTIVITY_COLUMN_TEST_IDS = {
 
 export const VENUE_ACTIVITY_GRID_DATA_ATTR = "data-venue-activity-grid";
 
-/** R11 column shell — vertically centres {@link VENUE_COLUMN_COMPOSITION_CLASS}. */
+/** R11 column shell — hosts {@link VENUE_COLUMN_COMPOSITION_CLASS} (R11R2 top header + centred body). */
 export const VENUE_ACTIVITY_COLUMN_SHELL_CLASS = "venueColumnShell";
 
-/** R11R1 — semantic label + primary as one centred group (re-export for grid tests). */
-export { VENUE_COLUMN_COMPOSITION_CLASS } from "@/lib/infoboard/venue-column-composition";
+/** R11R2 — header/body column composition (re-export for grid tests). */
+export {
+  VENUE_COLUMN_BODY_CLASS,
+  VENUE_COLUMN_COMPOSITION_CLASS,
+  VENUE_COLUMN_HEADER_CLASS,
+  SEMANTIC_HEADERS_TOP_ALIGNED,
+} from "@/lib/infoboard/venue-column-composition";
 
 /** Shared top-alignment class for ACTIVITY / KABINE / PLATZ (and TIME) content columns. */
 export const VENUE_ACTIVITY_CONTENT_TOP_CLASS = "venueActivityContentTop";

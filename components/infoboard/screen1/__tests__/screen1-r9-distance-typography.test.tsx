@@ -353,9 +353,11 @@ describe("R9 surfaces and grid invariants", () => {
     expect(kabine.textContent).toMatch(/04[\s\S]*Heim/);
   });
 
-  it("R11R1 single-activity composition centres label + primary as one group", () => {
+  it("R11R2 single-activity composition separates top header from centred primary body", () => {
     expect(CSS).toMatch(/\.venueColumnComposition/);
-    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*center/);
+    expect(CSS).toMatch(/\.venueColumnHeader/);
+    expect(CSS).toMatch(/\.venueColumnBody[\s\S]*justify-content:\s*center/);
+    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*flex-start/);
   });
 });
 

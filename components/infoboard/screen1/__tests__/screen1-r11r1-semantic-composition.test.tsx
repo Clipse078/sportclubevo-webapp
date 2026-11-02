@@ -122,8 +122,8 @@ describe("R11R1 SEMANTIC_COLORS (CSS)", () => {
 describe("R11R1 VERTICAL_COMPOSITION", () => {
   it("uses venueColumnComposition in CSS and DOM for destination columns", () => {
     expect(CSS).toMatch(new RegExp(`\\.${VENUE_COLUMN_COMPOSITION_CLASS}`));
-    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*center/);
-    expect(CSS).toMatch(/\.trainingMatrix[\s\S]*align-content:\s*center/);
+    expect(CSS).toMatch(/\.venueColumnShell[\s\S]*justify-content:\s*flex-start/);
+    expect(CSS).toMatch(/\.trainingRowMatrix[\s\S]*align-content:\s*center/);
     const match: InfoboardScreen1Event = {
       ...trainingEvent(0),
       id: "m1",

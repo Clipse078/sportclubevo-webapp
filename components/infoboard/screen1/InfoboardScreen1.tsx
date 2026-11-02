@@ -100,8 +100,12 @@ import {
 import { VenueSemanticLabel } from "@/components/infoboard/venue-display/VenueSemanticLabel";
 import { venueSemanticLabelKindForEventType } from "@/lib/infoboard/venue-semantic-label";
 import {
+  VENUE_COLUMN_BODY_ATTR,
+  VENUE_COLUMN_BODY_MARKER,
   VENUE_COLUMN_COMPOSITION_ATTR,
   VENUE_COLUMN_COMPOSITION_MARKER,
+  VENUE_COLUMN_HEADER_ATTR,
+  VENUE_COLUMN_HEADER_MARKER,
 } from "@/lib/infoboard/venue-column-composition";
 import {
   isVenueDisplayLightTheme,
@@ -151,6 +155,7 @@ import {
   TRAINING_PARTICIPANT_CLUB_CLAMP,
   TRAINING_PARTICIPANT_DENSITY_ATTR,
   TRAINING_PARTICIPANT_LOGO_CLAMP,
+  TRAINING_PARTICIPANT_PITCH_CLAMP,
   TRAINING_PARTICIPANT_ROW_GAP,
   TRAINING_PARTICIPANT_TEAM_CLAMP,
   TRAINING_ROW_COUNT_ATTR,
@@ -1069,39 +1074,49 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="KABINE"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {hasHome || hasAway ? (
-          <div className={`${styles.matchAllocation} ${styles.venueColumnPrimary}`}>
-            {hasHome && (
-              <div className={styles.matchAllocRow}>
-                <span className={styles.matchAllocRoom}>
-                  {formatDressingRoomLabel(homeDressingRoomLabel)}
-                </span>
-                <span className={styles.matchAllocRole}>Heim</span>
-              </div>
-            )}
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {hasHome || hasAway ? (
+              <div className={`${styles.matchAllocation} ${styles.venueColumnPrimary}`}>
+                {hasHome && (
+                  <div className={styles.matchAllocRow}>
+                    <span className={styles.matchAllocRoom}>
+                      {formatDressingRoomLabel(homeDressingRoomLabel)}
+                    </span>
+                    <span className={styles.matchAllocRole}>Heim</span>
+                  </div>
+                )}
 
-            {hasAway && (
-              <div className={styles.matchAllocRow}>
-                <span className={styles.matchAllocRoom}>
-                  {formatDressingRoomLabel(awayDressingRoomLabel)}
-                </span>
-                <span className={styles.matchAllocRole}>Gast</span>
+                {hasAway && (
+                  <div className={styles.matchAllocRow}>
+                    <span className={styles.matchAllocRoom}>
+                      {formatDressingRoomLabel(awayDressingRoomLabel)}
+                    </span>
+                    <span className={styles.matchAllocRole}>Gast</span>
+                  </div>
+                )}
               </div>
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
             )}
           </div>
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
         </div>
       </VenueActivityKabine>
 
@@ -1112,26 +1127,36 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="PLATZ"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {pitchLabel !== null ? (
-          <span
-            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-value"
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
         </div>
       </VenueActivityPlatz>
     </>
@@ -1159,23 +1184,33 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="KABINE"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
-
-        {homeDressingRoomLabel !== null ? (
-          <span className={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}>
-            {formatDressingRoomLabel(homeDressingRoomLabel)}
-          </span>
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
           >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
+
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {homeDressingRoomLabel !== null ? (
+              <span className={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}>
+                {formatDressingRoomLabel(homeDressingRoomLabel)}
+              </span>
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
         </div>
       </VenueActivityKabine>
 
@@ -1186,26 +1221,36 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="PLATZ"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {pitchLabel !== null ? (
-          <span
-            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-value"
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
         </div>
       </VenueActivityPlatz>
     </>
@@ -1233,25 +1278,35 @@ function TournamentDestination({
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="KABINE"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
-
-        {participantAllocations !== undefined &&
-        participantAllocations.length > 0 ? (
-          <ParticipantAllocationBlock
-            allocations={participantAllocations}
-            className={styles.venueColumnPrimary}
-          />
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
           >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
+
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {participantAllocations !== undefined &&
+            participantAllocations.length > 0 ? (
+              <ParticipantAllocationBlock
+                allocations={participantAllocations}
+                className={styles.venueColumnPrimary}
+              />
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
         </div>
       </VenueActivityKabine>
 
@@ -1262,26 +1317,36 @@ function TournamentDestination({
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          <VenueSemanticLabel
-            kind="PLATZ"
-            className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-          />
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {pitchLabel !== null ? (
-          <span
-            className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-value"
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
-            data-testid="pitch-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
         </div>
       </VenueActivityPlatz>
     </>
@@ -1390,6 +1455,10 @@ function TrainingGroupCard({
           ),
           "--ib-training-participant-row-gap":
             TRAINING_PARTICIPANT_ROW_GAP[participantDensity],
+          "--ib-training-group-pitch-font-size": scaleVenuePresentationClamp(
+            TRAINING_PARTICIPANT_PITCH_CLAMP[participantDensity],
+            venuePresentationDensity,
+          ),
         } as CSSProperties
       }
     >
@@ -1684,55 +1753,64 @@ function EventCard({
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
             <div
-              className={styles.activityContextZone}
-              {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT }}
-              data-testid="venue-activity-context"
+              className={styles.venueColumnHeader}
+              {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
             >
-              {(() => {
-                const labelKind = venueSemanticLabelKindForEventType(event.type);
-                if (labelKind !== null) {
+              <div
+                className={styles.activityContextZone}
+                {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT }}
+                data-testid="venue-activity-context"
+              >
+                {(() => {
+                  const labelKind = venueSemanticLabelKindForEventType(event.type);
+                  if (labelKind !== null) {
+                    return (
+                      <VenueSemanticLabel
+                        kind={labelKind}
+                        legacyEventTypeAttr={event.type}
+                        className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+                      >
+                        {semanticActivityLabel}
+                      </VenueSemanticLabel>
+                    );
+                  }
                   return (
-                    <VenueSemanticLabel
-                      kind={labelKind}
-                      legacyEventTypeAttr={event.type}
-                      className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
-                    >
+                    <span className={styles.eventTypeLabel} data-event-type={event.type}>
                       {semanticActivityLabel}
-                    </VenueSemanticLabel>
-                  );
-                }
-                return (
-                  <span className={styles.eventTypeLabel} data-event-type={event.type}>
-                    {semanticActivityLabel}
-                  </span>
-                );
-              })()}
-
-              {isMatch && event.competitionLabel !== null && (
-                <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
-              )}
-
-              {isTournament && (
-                <>
-                  <span
-                    className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
-                  >
-                    {event.displayTitle}
-                  </span>
-                  {event.organizerDisplayName !== null && (
-                    <span className={styles.eventTeamSubtitle}>
-                      {event.organizerDisplayName}
                     </span>
-                  )}
-                </>
-              )}
+                  );
+                })()}
+
+                {isMatch && event.competitionLabel !== null && (
+                  <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
+                )}
+
+                {isTournament && (
+                  <>
+                    <span
+                      className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
+                    >
+                      {event.displayTitle}
+                    </span>
+                    {event.organizerDisplayName !== null && (
+                      <span className={styles.eventTeamSubtitle}>
+                        {event.organizerDisplayName}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             <div
-              className={styles.activityPrimaryZone}
-              {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_PRIMARY }}
-              data-testid="venue-activity-primary"
+              className={styles.venueColumnBody}
+              {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
             >
+              <div
+                className={styles.activityPrimaryZone}
+                {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_PRIMARY }}
+                data-testid="venue-activity-primary"
+              >
             {isMatch && matchPresentation ? (
               <div
                 className={styles.matchIdentity}
@@ -1849,6 +1927,7 @@ function EventCard({
                 )}
               </div>
             )}
+              </div>
             </div>
           </div>
         </VenueActivityIdentity>

@@ -47,10 +47,13 @@ export const TRAINING_PARTICIPANT_LOGO_CLAMP: Record<
 export const TRAINING_SINGLE_TEAM_NAME_CLAMP = "clamp(2.35rem, 3.15vw, 3.75rem)" as const;
 
 /**
- * R11R1 — minimum team-name scale on dense multi-training cards (~ pitch-badge parity).
+ * R11R2 — minimum team-name scale on dense multi-training cards (~ pitch-badge parity).
  * Must stay at or above this floor when density tiers scale down.
  */
-export const TRAINING_TEAM_NAME_MIN_READABLE_REM = 1.35 as const;
+export const TRAINING_TEAM_NAME_MIN_READABLE_REM = 1.55 as const;
+
+/** R11R2 — minimum pitch-badge text on dense multi-training cards. */
+export const TRAINING_PITCH_NAME_MIN_READABLE_REM = 1.12 as const;
 
 /** Pitch-badge parity reference (KUNSTRASEN 2 A class labels). */
 export const TRAINING_TEAM_PITCH_PARITY_CLAMP =
@@ -67,15 +70,26 @@ export const TRAINING_PARTICIPANT_CLUB_CLAMP: Record<
   dense: "clamp(0.95rem, 1.12vw, 1.28rem)",
 };
 
-/** Team line typography per density — R11R1 signage scale (pitch-badge parity). */
+/** Team line typography per density — R11R2 signage scale (pitch-badge parity). */
 export const TRAINING_PARTICIPANT_TEAM_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
   spacious: "clamp(1.85rem, 2.35vw, 2.85rem)",
-  standard: "clamp(1.72rem, 2.15vw, 2.65rem)",
-  compact: "clamp(1.58rem, 1.95vw, 2.45rem)",
-  dense: "clamp(1.35rem, 1.65vw, 2.15rem)",
+  standard: "clamp(1.78rem, 2.22vw, 2.72rem)",
+  compact: "clamp(1.72rem, 2.05vw, 2.55rem)",
+  dense: "clamp(1.55rem, 1.88vw, 2.35rem)",
+};
+
+/** Multi-training pitch badge text per participant density (badge geometry unchanged). */
+export const TRAINING_PARTICIPANT_PITCH_CLAMP: Record<
+  TrainingParticipantDensity,
+  string
+> = {
+  spacious: "clamp(1.22rem, 1.65vw, 2.05rem)",
+  standard: "clamp(1.18rem, 1.58vw, 1.95rem)",
+  compact: "clamp(1.12rem, 1.48vw, 1.82rem)",
+  dense: "clamp(1.12rem, 1.38vw, 1.72rem)",
 };
 
 export const TRAINING_PARTICIPANT_ROW_GAP: Record<

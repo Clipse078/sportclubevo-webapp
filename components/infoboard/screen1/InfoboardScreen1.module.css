@@ -668,7 +668,7 @@
 .cardEventZone {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: clamp(6px, 0.65vh, 10px);
   padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
@@ -716,12 +716,12 @@
   padding-top: var(--ib-activity-content-top, var(--ib-card-pad-v));
 }
 
-/* R11R1 — centre label + primary as one composition group in each column. */
+/* R11R2 — semantic header at column top; primary block centred in body. */
 .venueColumnShell {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0;
   min-height: 0;
   height: 100%;
@@ -732,17 +732,36 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  gap: var(--ib-venue-label-primary-gap, clamp(6px, 0.65vh, 10px));
+  justify-content: flex-start;
+  gap: 0;
   min-height: 0;
   min-width: 0;
   max-width: 100%;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+}
+
+.venueColumnHeader {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.venueColumnBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+  min-width: 0;
   width: 100%;
 }
 
-.venueColumnComposition > .venueColumnPrimary,
-.venueColumnComposition > .activityPrimaryZone {
+.venueColumnBody > .venueColumnPrimary,
+.venueColumnBody > .activityPrimaryZone {
   flex: 0 0 auto;
   justify-content: flex-start;
 }
@@ -1873,8 +1892,8 @@
   grid-column: 2 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-template-rows: auto auto;
-  align-content: center;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -1887,7 +1906,8 @@
   display: grid;
   grid-template-columns: subgrid;
   align-items: start;
-  padding: 0;
+  align-self: start;
+  padding: var(--ib-card-pad-v) 0 0;
   column-gap: 0;
   min-width: 0;
 }
@@ -1935,7 +1955,8 @@
     minmax(var(--ib-training-row-min, clamp(40px, 4.5vh, 56px)), 1fr)
   );
   row-gap: var(--ib-training-row-gap, 0);
-  align-content: stretch;
+  align-content: center;
+  align-self: stretch;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -2227,7 +2248,10 @@
    * For standard pitch designations (STADION, KR 1, KUNSTRASEN 2) this
    * produces legible two-line wrapping when the column is narrow.
    */
-  font-size: var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)));
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)))
+  );
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -2288,7 +2312,10 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupPitchValue {
-  font-size: clamp(1rem, 1.35vw, 1.75rem);
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    clamp(1.12rem, 1.48vw, 1.82rem)
+  );
   line-height: 1.05;
 }
 
@@ -2303,11 +2330,14 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {
-  font-size: clamp(0.95rem, 1.25vw, 1.6rem);
-  line-height: 1.02;
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    clamp(1.12rem, 1.38vw, 1.72rem)
+  );
+  line-height: 1.05;
 }
 
-/* SCE-INFOBOARD-V2-01-R3 / R11R1 — vertically centred composition in ACTIVITY / KABINE / PLATZ */
+/* SCE-INFOBOARD-V2-01-R3 / R11R2 — top header + centred primary in ACTIVITY / KABINE / PLATZ */
 .eventCard[data-type="MATCH"] .cardDressingRoomZone,
 .eventCard[data-type="MATCH"] .cardPitchZone,
 .eventCard[data-type="TOURNAMENT"] .cardDressingRoomZone,
@@ -2316,7 +2346,7 @@
 .eventCard[data-type="TRAINING"] .cardPitchZone {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
   min-height: 0;

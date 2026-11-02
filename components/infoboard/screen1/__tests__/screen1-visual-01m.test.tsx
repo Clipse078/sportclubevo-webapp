@@ -165,19 +165,19 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — canonical Kabine pill CSS", () => {
     );
   });
 
-  it("keeps training matrix filling card height with shared row tracks (R11R1)", () => {
+  it("keeps training matrix filling card height with shared row tracks (R11R2)", () => {
     expect(CSS).toMatch(
       /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*height:\s*100%/,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*grid-template-rows:\s*auto auto/,
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\)/,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*center/,
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*stretch/,
     );
-    expect(CSS).toMatch(/\.trainingRowMatrix[\s\S]*align-content:\s*stretch/);
+    expect(CSS).toMatch(/\.trainingRowMatrix[\s\S]*align-content:\s*center/);
     expect(CSS).toMatch(
-      /R11R1[\s\S]*\.eventCard\[data-type="MATCH"\] \.cardPitchZone[\s\S]*justify-content:\s*center/,
+      /R11R2[\s\S]*\.eventCard\[data-type="MATCH"\] \.cardPitchZone[\s\S]*justify-content:\s*flex-start/,
     );
   });
 });
