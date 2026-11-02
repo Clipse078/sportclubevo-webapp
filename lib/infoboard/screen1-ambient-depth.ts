@@ -25,6 +25,9 @@ export const VENUE_OPERATIONAL_AMBIENT_STACK_Z_INDEX_CSS_VARS = {
   foreground: "--venue-ambient-z-foreground",
 } as const;
 
+/** Operational Kabine foreground must never participate in ambient opacity. */
+export const KABINE_FOREGROUND_OPACITY = 1 as const;
+
 /** Light-theme activity raster opacity — artwork discovered, not read. */
 export const VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT = {
   MATCH: 0.42,

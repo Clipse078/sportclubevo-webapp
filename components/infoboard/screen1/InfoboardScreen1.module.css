@@ -752,9 +752,10 @@
   border-left-color: var(--ib-zone-separator-operational-soft);
 }
 
-/* R16 — localized Kabine readability veil lives in the background stack of each cell. */
+/* R16/R17 — localized Kabine readability veil lives in the background stack of each cell. */
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) {
+  position: relative;
   isolation: isolate;
 }
 
