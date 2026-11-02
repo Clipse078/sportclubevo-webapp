@@ -94,6 +94,7 @@ export function VenueJumbotronAmbientLayer({
       className={`${styles.ambientLayer} ${styles.jumbotronAmbientLayer}`}
       data-testid={testId}
       data-venue-ambient-layer="jumbotron"
+      data-venue-ambient-surface="dark"
       aria-hidden="true"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

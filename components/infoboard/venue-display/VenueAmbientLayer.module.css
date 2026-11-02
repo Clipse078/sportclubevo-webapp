@@ -20,18 +20,36 @@
   height: auto;
   max-width: none;
   object-fit: none;
-  object-position: left top;
+  object-position: var(--ambient-position-x, left) var(--ambient-position-y, top);
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+  opacity: 1;
+}
+
+/* ── Activity kinds: width-driven scale, semantic positioning ─────────── */
+
+.activityMatch {
+  --ambient-position-x: 0%;
+  --ambient-position-y: 0%;
 }
 
 .activityMatch .ambientImage {
   top: 0;
 }
 
+.activityTournament {
+  --ambient-position-x: 8%;
+  --ambient-position-y: 18%;
+}
+
 .activityTournament .ambientImage {
-  top: -8%;
+  top: 0;
+}
+
+.activityTraining {
+  --ambient-position-x: 0%;
+  --ambient-position-y: 6%;
 }
 
 .activityTraining .ambientImage {
@@ -42,100 +60,159 @@
   inset: 0;
 }
 
-.activityMatch .ambientScrim {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.72) 0%,
-    rgba(255, 255, 255, 0.38) 42%,
-    rgba(255, 255, 255, 0.18) 100%
-  );
+/*
+ * Light venue: artwork PNGs already carry pale activity surfaces — minimal
+ * localized readability scrims only (no full-card white wash).
+ */
+[data-theme="light"] .activityMatch .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.36) 0%,
+      rgba(255, 255, 255, 0.1) 26%,
+      transparent 46%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      transparent 68%
+    );
 }
 
-.activityTournament .ambientScrim {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.74) 0%,
-    rgba(255, 255, 255, 0.4) 45%,
-    rgba(255, 255, 255, 0.16) 100%
-  );
+[data-theme="light"] .activityTournament .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.38) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      transparent 52%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      transparent 62%
+    );
 }
 
-.activityTraining .ambientScrim {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.7) 0%,
-    rgba(255, 255, 255, 0.36) 40%,
-    rgba(255, 255, 255, 0.14) 100%
-  );
+[data-theme="light"] .activityTraining .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.08) 24%,
+      transparent 42%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      transparent 58%
+    );
 }
 
-[data-shell-theme="dark"] .activityMatch .ambientScrim,
-[data-shell-theme="dark"] .activityTournament .ambientScrim,
-[data-shell-theme="dark"] .activityTraining .ambientScrim {
-  background: linear-gradient(
-    180deg,
-    rgba(10, 24, 40, 0.82) 0%,
-    rgba(10, 24, 40, 0.55) 45%,
-    rgba(10, 24, 40, 0.35) 100%
-  );
+[data-theme="light"] .trainingMatrixActivity .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.32) 0%,
+      rgba(255, 255, 255, 0.06) 22%,
+      transparent 40%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      transparent 55%
+    );
 }
 
-[data-shell-theme="dark"] .ambientImage {
-  opacity: 0.42;
+[data-theme="dark"] .activityMatch .ambientScrim,
+[data-theme="dark"] .activityTournament .ambientScrim,
+[data-theme="dark"] .activityTraining .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 24, 40, 0.62) 0%,
+      rgba(10, 24, 40, 0.28) 35%,
+      transparent 55%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 24, 40, 0.4) 0%,
+      transparent 70%
+    );
 }
 
-[data-shell-theme="light"] .ambientImage {
-  opacity: 0.55;
+[data-theme="dark"] .activityMatch .ambientImage,
+[data-theme="dark"] .activityTournament .ambientImage,
+[data-theme="dark"] .activityTraining .ambientImage {
+  opacity: 0.88;
 }
+
+/* ── Header: light surface, one tier more visible ambience ─────────────── */
 
 .headerAmbientLayer .ambientImage {
   top: 0;
-  opacity: 0.35;
+  opacity: 0.78;
 }
 
 [data-shell-theme="dark"] .headerAmbientLayer .ambientImage {
-  opacity: 0.28;
+  opacity: 0.55;
 }
 
 .headerAmbientLayer .ambientScrim {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.88) 100%
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.28) 58%,
+    rgba(255, 255, 255, 0.12) 100%
   );
 }
 
 [data-shell-theme="dark"] .headerAmbientLayer .ambientScrim {
   background: linear-gradient(
     180deg,
-    rgba(10, 24, 40, 0.94) 0%,
-    rgba(10, 24, 40, 0.9) 100%
+    rgba(10, 24, 40, 0.78) 0%,
+    rgba(10, 24, 40, 0.52) 100%
   );
+}
+
+/* ── Jumbotron: always dark communication surface (not light-theme washed) */
+
+.jumbotronAmbientLayer {
+  --ambient-position-x: 50%;
+  --ambient-position-y: bottom;
 }
 
 .jumbotronAmbientLayer .ambientImage {
   top: auto;
   bottom: 0;
-  opacity: 0.45;
-}
-
-[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientImage {
-  opacity: 0.32;
+  opacity: 1;
 }
 
 .jumbotronAmbientLayer .ambientScrim {
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.88) 0%,
-    rgba(255, 255, 255, 0.78) 100%
+    90deg,
+    rgba(10, 24, 40, 0.55) 0%,
+    rgba(10, 24, 40, 0.22) 42%,
+    rgba(10, 24, 40, 0.08) 100%
   );
 }
 
+/*
+ * Footer may carry data-shell-theme="light" for typography — jumbotron raster
+ * stays on the approved dark navy strip; never apply a light white wash here.
+ */
+[data-shell-theme="light"] .jumbotronAmbientLayer .ambientImage,
+[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientImage {
+  opacity: 1;
+}
+
+[data-shell-theme="light"] .jumbotronAmbientLayer .ambientScrim,
 [data-shell-theme="dark"] .jumbotronAmbientLayer .ambientScrim {
   background: linear-gradient(
-    180deg,
-    rgba(10, 24, 40, 0.9) 0%,
-    rgba(10, 24, 40, 0.82) 100%
+    90deg,
+    rgba(10, 24, 40, 0.55) 0%,
+    rgba(10, 24, 40, 0.22) 42%,
+    rgba(10, 24, 40, 0.08) 100%
   );
 }
 
