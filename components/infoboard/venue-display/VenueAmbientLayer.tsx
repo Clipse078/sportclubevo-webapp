@@ -43,15 +43,21 @@ export function VenueActivityAmbientLayer({
         data-venue-ambient-base-atmosphere="true"
         aria-hidden="true"
       />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className={styles.ambientImage}
-        src={src}
-        alt=""
+      <div
+        className={styles.ambientIllustrationClip}
+        data-venue-ambient-illustration-clip="true"
         aria-hidden="true"
-        draggable={false}
-        data-venue-ambient-raster="true"
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.ambientImage}
+          src={src}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          data-venue-ambient-raster="true"
+        />
+      </div>
       <div className={styles.ambientScrim} aria-hidden="true" />
     </div>
   );

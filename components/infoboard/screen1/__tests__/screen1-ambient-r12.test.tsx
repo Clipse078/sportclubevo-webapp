@@ -157,7 +157,7 @@ describe("R12 decorative contract", () => {
     expect(AMBIENT_CSS).toMatch(/\.ambientLayer[\s\S]*pointer-events:\s*none/);
     expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*width:\s*100%/);
     expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*height:\s*auto/);
-    expect(AMBIENT_CSS).not.toMatch(/\.ambientImage[\s\S]*height:\s*100%/);
+    expect(AMBIENT_CSS).not.toMatch(/(?<!min-)height:\s*100%/);
   });
 
   it("keeps ambient DOM accessibility-hidden", () => {

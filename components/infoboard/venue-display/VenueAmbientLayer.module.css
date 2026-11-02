@@ -13,6 +13,26 @@
   z-index: 2;
 }
 
+.ambientIllustrationClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 calc(100% - clamp(36px, 12%, 96px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 calc(100% - clamp(36px, 12%, 96px)),
+    transparent 100%
+  );
+}
+
 .ambientImage {
   position: absolute;
   left: 0;
@@ -26,6 +46,21 @@
   -webkit-user-drag: none;
   opacity: 1;
   z-index: 1;
+}
+
+/*
+ * R15 — bounded cover: preserve aspect ratio, cap vertical enlargement on tall cards.
+ * Full-card continuity is supplied by baseActivityAtmosphere + illustration fade.
+ */
+.activityMatch .ambientIllustrationClip .ambientImage,
+.activityTournament .ambientIllustrationClip .ambientImage,
+.activityTraining .ambientIllustrationClip .ambientImage {
+  top: 0;
+  width: 100%;
+  height: auto;
+  max-height: var(--ambient-raster-max-height, 128%);
+  object-fit: cover;
+  object-position: var(--ambient-position-x, left) var(--ambient-position-y, top);
 }
 
 /* R14 — full-height operational tint (raster remains width-driven above). */
@@ -45,19 +80,11 @@
   --ambient-kabine-scrim-start: 58%;
 }
 
-.activityMatch .ambientImage {
-  top: 0;
-}
-
 .activityTournament {
   /* R13 — recalibrated for 85% operational canvas (was 43% activity column) */
   --ambient-position-x: 2%;
   --ambient-position-y: 16%;
   --ambient-kabine-scrim-start: 56%;
-}
-
-.activityTournament .ambientImage {
-  top: 0;
 }
 
 .activityTraining {
@@ -66,23 +93,22 @@
   --ambient-kabine-scrim-start: 54%;
 }
 
-.activityTraining .ambientImage {
-  top: 0;
-}
-
 [data-theme="light"] .activityMatch {
-  --ambient-image-opacity: 0.68;
-  --ambient-base-atmosphere: #fff8f7;
+  --ambient-image-opacity: 0.42;
+  --ambient-base-atmosphere: #fff6f5;
+  --ambient-raster-max-height: 124%;
 }
 
 [data-theme="light"] .activityTournament {
-  --ambient-image-opacity: 0.64;
-  --ambient-base-atmosphere: #fffaf6;
+  --ambient-image-opacity: 0.38;
+  --ambient-base-atmosphere: #fff9f4;
+  --ambient-raster-max-height: 126%;
 }
 
 [data-theme="light"] .activityTraining {
-  --ambient-image-opacity: 0.62;
-  --ambient-base-atmosphere: #f7faff;
+  --ambient-image-opacity: 0.34;
+  --ambient-base-atmosphere: #f5f8ff;
+  --ambient-raster-max-height: 128%;
 }
 
 [data-theme="light"] .activityMatch .ambientImage,
@@ -115,8 +141,8 @@
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 58%),
-      rgba(255, 255, 255, 0.06) 72%,
-      rgba(255, 255, 255, 0.14) 100%
+      rgba(255, 246, 245, 0.12) 68%,
+      rgba(255, 246, 245, 0.22) 100%
     );
 }
 
@@ -136,8 +162,8 @@
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 56%),
-      rgba(255, 255, 255, 0.08) 70%,
-      rgba(255, 255, 255, 0.16) 100%
+      rgba(255, 249, 244, 0.14) 66%,
+      rgba(255, 249, 244, 0.24) 100%
     );
 }
 
@@ -157,8 +183,8 @@
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 54%),
-      rgba(255, 255, 255, 0.06) 68%,
-      rgba(255, 255, 255, 0.12) 100%
+      rgba(245, 248, 255, 0.16) 64%,
+      rgba(245, 248, 255, 0.28) 100%
     );
 }
 

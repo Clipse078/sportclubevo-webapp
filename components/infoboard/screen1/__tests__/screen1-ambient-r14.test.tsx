@@ -108,18 +108,18 @@ afterEach(() => {
 describe("R14 activity-specific raster opacity", () => {
   it("declares separate opacity tokens per activity kind", () => {
     expect(VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT).toEqual({
-      MATCH: 0.68,
-      TOURNAMENT: 0.64,
-      TRAINING: 0.62,
+      MATCH: 0.42,
+      TOURNAMENT: 0.38,
+      TRAINING: 0.34,
     });
     expect(AMBIENT_CSS).toMatch(
-      /\[data-theme="light"\]\s*\.activityMatch[\s\S]*--ambient-image-opacity:\s*0\.68/,
+      /\[data-theme="light"\]\s*\.activityMatch[\s\S]*--ambient-image-opacity:\s*0\.42/,
     );
     expect(AMBIENT_CSS).toMatch(
-      /\[data-theme="light"\]\s*\.activityTournament[\s\S]*--ambient-image-opacity:\s*0\.64/,
+      /\[data-theme="light"\]\s*\.activityTournament[\s\S]*--ambient-image-opacity:\s*0\.38/,
     );
     expect(AMBIENT_CSS).toMatch(
-      /\[data-theme="light"\]\s*\.activityTraining[\s\S]*--ambient-image-opacity:\s*0\.62/,
+      /\[data-theme="light"\]\s*\.activityTraining[\s\S]*--ambient-image-opacity:\s*0\.34/,
     );
     expect(AMBIENT_CSS).toMatch(
       /\[data-theme="light"\]\s*\.activityMatch \.ambientImage[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,

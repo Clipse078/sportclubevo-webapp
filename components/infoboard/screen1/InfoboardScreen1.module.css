@@ -746,6 +746,33 @@
   border-left-color: var(--ib-zone-separator-operational-soft);
 }
 
+/* R15 — localized Kabine readability field (translucent, not an opaque sub-card). */
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) {
+  isolation: isolate;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone::before,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(247, 250, 255, 0.28) 22%,
+    rgba(247, 250, 255, 0.36) 100%
+  );
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone > *,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) > * {
+  position: relative;
+  z-index: 1;
+}
+
 .eventCard[data-type="TRAINING"] .trainingMatrix {
   position: relative;
   z-index: 1;
