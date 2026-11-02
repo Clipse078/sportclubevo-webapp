@@ -167,7 +167,9 @@
 
   --ib-text-secondary: rgba(11, 31, 58, 0.72);
 
-  --ib-card-shadow:    0 3px 14px rgba(11, 31, 58, 0.09);
+  --ib-card-shadow:    none;
+  --ib-card-gap:       0;
+  --ib-row-separator:  rgba(11, 31, 58, 0.08);
 
   --ib-red:            var(--ib-match);
   --ib-blue:           var(--ib-training);
@@ -342,9 +344,9 @@
 .headerClubName {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-club-name);
-  font-weight: 700;
+  font-weight: 800;
   font-style: italic;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ib-text);
   line-height: 1;
@@ -439,6 +441,11 @@
   text-transform: uppercase;
   color: var(--ib-text);
   line-height: 1;
+}
+
+.root[data-theme="light"] .boardTitleText {
+  font-style: normal;
+  letter-spacing: 0.08em;
 }
 
 .root[data-theme="light"] .boardTitle {
@@ -653,6 +660,37 @@
 .root[data-theme="light"] [data-venue-column="platz"].cardPitchZone {
   background: var(--ib-zone-surface-platz);
   border-left-color: var(--ib-zone-separator);
+}
+
+/* R18 — continuous schedule-board rows (no floating white card frames) */
+.root[data-theme="light"] .eventList {
+  gap: 0;
+}
+
+.root[data-theme="light"] .eventCard {
+  border: none;
+  border-left: var(--ib-stripe-width) solid transparent;
+  border-bottom: 1px solid var(--ib-row-separator);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.root[data-theme="light"] .eventCard[data-temporal="current"] {
+  border: none;
+  border-left: var(--ib-stripe-width) solid transparent;
+  border-bottom: 1px solid var(--ib-row-separator);
+}
+
+.root[data-theme="light"] .eventList > .eventCard:last-child {
+  border-bottom: none;
+}
+
+.root[data-theme="light"] .eventList[data-layout-mode="fill"][data-density="normal"]:not([data-count="1"]):not([data-count="2"]):not([data-count="3"]) {
+  gap: 0;
+}
+
+.root[data-theme="light"] .eventList[data-layout-mode="fill"][data-density="dense"] {
+  gap: 0;
 }
 
 .root[data-theme="light"] .cardTimeZone,

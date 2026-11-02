@@ -957,13 +957,13 @@ describe("Match row", () => {
     expect(row.textContent).toContain("FC Opponent");
   });
 
-  it("renders competition label as secondary match metadata", () => {
+  it("does not render competition label as Screen 1 match subtitle (R18)", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: "Meisterschaft" })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
     expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
@@ -2956,9 +2956,9 @@ describe("Physical-TV alignment â€” MATCH info fields preserved", () => {
     expect(row.getAttribute("data-type")).toBe("MATCH");
   });
 
-  it("MATCH card preserves competition label (Meisterschaft/Turnier row)", () => {
+  it("MATCH card omits competition subtitle on Screen 1 (R18)", () => {
     render(<InfoboardScreen1 feed={MATCH_FEED} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
   });
 
   it("MATCH card preserves home team name", () => {
@@ -3121,8 +3121,7 @@ describe("Physical-TV alignment â€” internal grid structure for Meisterscha
     render(<InfoboardScreen1 feed={feed} />);
     // Both cards rendered
     expect(screen.getAllByTestId("event-row")).toHaveLength(2);
-    // Both have Meisterschaft/Turnier labels, KABINE, PLATZ
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
     expect(screen.getByText("TURNIER")).toBeTruthy();
     expect(screen.getAllByText("KABINE").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("PLATZ").length).toBeGreaterThanOrEqual(2);
@@ -3855,7 +3854,7 @@ describe("Content-demand â€” layout contract (MATCH / TOURNAMENT unchanged)
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
     expect(screen.getAllByText("FC Demand Home").length).toBeGreaterThan(0);
     expect(screen.getAllByText("FC Demand Away").length).toBeGreaterThan(0);
     expect(screen.getAllByText("KABINE").length).toBeGreaterThan(0);
@@ -4107,7 +4106,7 @@ describe("INFOBOARD-FINAL-C: Match/Tournament shared vertical content-band", () 
     });
   }
 
-  it("Match card renders with data-type=MATCH and contains MEISTERSCHAFT, KABINE, PLATZ labels", () => {
+  it("Match card renders with data-type=MATCH and contains MATCH, KABINE, PLATZ labels", () => {
     render(
       <InfoboardScreen1
         feed={makeFeed({ current: [makeMatchCard()], isEmpty: false })}
@@ -4115,7 +4114,8 @@ describe("INFOBOARD-FINAL-C: Match/Tournament shared vertical content-band", () 
     );
     const card = screen.getByTestId("event-row");
     expect(card.getAttribute("data-type")).toBe("MATCH");
-    expect(within(card).getByText("Meisterschaft")).toBeTruthy();
+    expect(within(card).queryByText("Meisterschaft")).toBeNull();
+    expect(within(card).getByText("MATCH")).toBeTruthy();
     expect(within(card).getAllByText("KABINE").length).toBeGreaterThan(0);
     expect(within(card).getAllByText("PLATZ").length).toBeGreaterThan(0);
   });

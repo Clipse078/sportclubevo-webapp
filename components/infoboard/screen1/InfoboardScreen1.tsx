@@ -1858,23 +1858,12 @@ function EventCard({
                   );
                 })()}
 
-                {isMatch && event.competitionLabel !== null && (
-                  <span className={styles.eventTeamSubtitle}>{event.competitionLabel}</span>
-                )}
-
                 {isTournament && (
-                  <>
-                    <span
-                      className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
-                    >
-                      {event.displayTitle}
-                    </span>
-                    {event.organizerDisplayName !== null && (
-                      <span className={styles.eventTeamSubtitle}>
-                        {event.organizerDisplayName}
-                      </span>
-                    )}
-                  </>
+                  <span
+                    className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
+                  >
+                    {event.displayTitle}
+                  </span>
                 )}
               </div>
             </div>

@@ -282,10 +282,20 @@ export function KioskShellHeader({
           >
             <span
               data-testid="kiosk-header-club-name"
+              data-venue-header-identity={
+                venueHeaderAmbient && shellTheme === "light" ? "true" : undefined
+              }
               style={{
                 fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-club-name-font"],
                 fontWeight: 800,
-                letterSpacing: "0.06em",
+                letterSpacing:
+                  venueHeaderAmbient && shellTheme === "light" ? "0.02em" : "0.06em",
+                fontFamily:
+                  venueHeaderAmbient && shellTheme === "light"
+                    ? 'var(--font-display, "Barlow Condensed", sans-serif)'
+                    : undefined,
+                fontStyle:
+                  venueHeaderAmbient && shellTheme === "light" ? "italic" : undefined,
                 color: palette.clubName,
                 lineHeight: 1,
                 textTransform: "uppercase",
