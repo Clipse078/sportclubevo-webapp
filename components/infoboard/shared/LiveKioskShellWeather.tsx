@@ -14,11 +14,13 @@ export type LiveKioskShellWeatherProps = {
   initialWeather: WeatherResult;
   /** Preview-only escape hatch. Production defaults to live refresh. */
   live?: boolean;
+  shellTheme?: "dark" | "light";
 };
 
 export function LiveKioskShellWeather({
   initialWeather,
   live = true,
+  shellTheme = "dark",
 }: LiveKioskShellWeatherProps): ReactElement | null {
   const weather = useKioskWeather(initialWeather, live);
 
@@ -26,5 +28,7 @@ export function LiveKioskShellWeather({
     return null;
   }
 
-  return <KioskShellWeatherDisplay weather={weather} />;
+  return (
+    <KioskShellWeatherDisplay weather={weather} shellTheme={shellTheme} />
+  );
 }

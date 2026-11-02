@@ -39,19 +39,19 @@ export const KIOSK_SHELL_CLUB_NAME_FONT_PX = 38;
 export const KIOSK_SHELL_CLOCK_FONT_PX = 65;
 
 /** Weekday label in the date block. */
-export const KIOSK_SHELL_WEEKDAY_FONT_PX = 18;
+export const KIOSK_SHELL_WEEKDAY_FONT_PX = 21;
 
 /** Date line in the date block. */
-export const KIOSK_SHELL_DATE_FONT_PX = 17;
+export const KIOSK_SHELL_DATE_FONT_PX = 20;
 
 /** Shared header weather icon (KioskShellHeader weather prop). */
-export const KIOSK_SHELL_WEATHER_ICON_PX = 34;
+export const KIOSK_SHELL_WEATHER_ICON_PX = 38;
 
 /** Shared header weather temperature. */
-export const KIOSK_SHELL_WEATHER_TEMP_FONT_PX = 40;
+export const KIOSK_SHELL_WEATHER_TEMP_FONT_PX = 44;
 
 /** Shared header weather condition label. */
-export const KIOSK_SHELL_WEATHER_CONDITION_FONT_PX = 16;
+export const KIOSK_SHELL_WEATHER_CONDITION_FONT_PX = 18;
 
 /** Minimum width reserved for the header weather zone. */
 export const KIOSK_SHELL_WEATHER_ZONE_MIN_WIDTH_PX = 220;
@@ -63,7 +63,10 @@ export const KIOSK_SHELL_WEATHER_ZONE_MAX_WIDTH_PX = 360;
 export const KIOSK_SHELL_ALEXA_SAFE_ZONE_WIDTH_PX = 192;
 
 /** Welcome / subtitle strip typography. */
-export const KIOSK_SHELL_SUBTITLE_FONT_PX = 19;
+export const KIOSK_SHELL_SUBTITLE_FONT_PX = 28;
+
+/** Inline welcome in LIGHT venue header — slightly smaller to preserve full string at 1920×1080. */
+export const KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX = 22;
 
 /** Footer ticker / left-label typography. */
 export const KIOSK_SHELL_FOOTER_TICKER_FONT_PX = 26;
@@ -103,6 +106,7 @@ export const KIOSK_SHELL_CSS_VARS = {
   "--kiosk-shell-weather-temp-font": `${KIOSK_SHELL_WEATHER_TEMP_FONT_PX}px`,
   "--kiosk-shell-weather-condition-font": `${KIOSK_SHELL_WEATHER_CONDITION_FONT_PX}px`,
   "--kiosk-shell-subtitle-font": `${KIOSK_SHELL_SUBTITLE_FONT_PX}px`,
+  "--kiosk-shell-light-inline-welcome-font": `${KIOSK_SHELL_LIGHT_INLINE_WELCOME_FONT_PX}px`,
   "--kiosk-shell-footer-ticker-font": `${KIOSK_SHELL_FOOTER_TICKER_FONT_PX}px`,
   "--kiosk-shell-footer-announcement-icon": `${KIOSK_SHELL_FOOTER_ANNOUNCEMENT_ICON_PX}px`,
   "--kiosk-shell-footer-gap": `${KIOSK_SHELL_FOOTER_GAP_PX}px`,

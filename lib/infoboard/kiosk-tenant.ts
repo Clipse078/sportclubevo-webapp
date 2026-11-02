@@ -45,6 +45,8 @@ const KIOSK_TENANT_SELECT = {
   timezone: true,
   logoUrl: true,
   infoboardDisplayTheme: true,
+  primaryColor: true,
+  secondaryColor: true,
 } as const;
 
 export type KioskTenant = {
@@ -54,6 +56,8 @@ export type KioskTenant = {
   readonly timezone: string | null;
   readonly logoUrl: string | null;
   readonly infoboardDisplayTheme: string | null;
+  readonly primaryColor: string | null;
+  readonly secondaryColor: string | null;
 };
 
 // ── Pure hostname helper ──────────────────────────────────────────────────────

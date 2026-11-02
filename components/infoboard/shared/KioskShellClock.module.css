@@ -53,3 +53,26 @@
   color: rgba(255, 255, 255, 0.55);
   white-space: nowrap;
 }
+
+.toneLight.headerCurrentTime,
+.toneLight .headerCurrentTime {
+  color: #0b1f3a;
+  font-size: clamp(3rem, 3.5vw, 3.5rem);
+  font-weight: 800;
+}
+
+.toneLight .headerTimeSeparator {
+  color: rgba(11, 31, 58, 0.28);
+}
+
+.toneLight .headerWeekday {
+  color: #0b1f3a;
+  font-size: clamp(1.0625rem, 1.05vw, 1.25rem);
+  font-weight: 700;
+}
+
+.toneLight .headerDateLine,
+.toneLight.headerDateFallback {
+  color: #4a6078;
+  font-size: clamp(1rem, 1vw, 1.125rem);
+}

@@ -20,10 +20,17 @@ import {
 } from "@/lib/infoboard/kiosk-shell-sizing";
 import type { WeatherResult } from "@/lib/weather/weather-types";
 
+const WEATHER_TEXT = {
+  dark: { temp: "#ffffff", condition: "rgba(255,255,255,0.74)" },
+  light: { temp: "#0B1F3A", condition: "#4A6078" },
+} as const;
+
 export function KioskShellWeatherDisplay({
   weather,
+  shellTheme = "dark",
 }: {
   weather: WeatherResult;
+  shellTheme?: "dark" | "light";
 }): ReactElement | null {
   if (weather.isAvailable !== true) {
     return null;
@@ -48,6 +55,7 @@ export function KioskShellWeatherDisplay({
 
   const iconColor = weatherVisual.color;
   const temperature = Math.round(weather.temperatureC);
+  const textTone = WEATHER_TEXT[shellTheme];
 
   return (
     <div
@@ -78,7 +86,7 @@ export function KioskShellWeatherDisplay({
         style={{
           fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-weather-temp-font"],
           fontWeight: 800,
-          color: "#ffffff",
+          color: textTone.temp,
           lineHeight: 1,
           letterSpacing: "0.01em",
         }}
@@ -91,7 +99,7 @@ export function KioskShellWeatherDisplay({
         style={{
           fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-weather-condition-font"],
           fontWeight: 500,
-          color: "rgba(255,255,255,0.74)",
+          color: textTone.condition,
           lineHeight: 1,
           overflow: "hidden",
           textOverflow: "ellipsis",

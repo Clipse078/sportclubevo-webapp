@@ -35,6 +35,8 @@ export type LiveClockScreen1Props = {
   mode?: "combined" | "time" | "date";
   /** Preview-only escape hatch. Production defaults to the live kiosk clock. */
   live?: boolean;
+  /** Matches kiosk shell palette — light header needs dark clock typography. */
+  shellTheme?: "dark" | "light";
 };
 
 export function LiveClockScreen1({
@@ -44,8 +46,10 @@ export function LiveClockScreen1({
   showDate,
   mode = "combined",
   live = true,
+  shellTheme = "dark",
 }: LiveClockScreen1Props): ReactElement | null {
   const timeIso = useKioskClock(initialTimeIso, live);
+  const toneClass = shellTheme === "light" ? styles.toneLight : styles.toneDark;
 
   const currentTime = formatKioskTime(timeIso, timezone);
   const weekday = formatKioskWeekday(timeIso, timezone);
@@ -55,7 +59,10 @@ export function LiveClockScreen1({
     if (!showTime) return null;
 
     return (
-      <time className={styles.headerCurrentTime} dateTime={timeIso}>
+      <time
+        className={`${styles.headerCurrentTime} ${toneClass}`}
+        dateTime={timeIso}
+      >
         {currentTime}
       </time>
     );
@@ -65,7 +72,7 @@ export function LiveClockScreen1({
     if (!showDate) return null;
 
     return (
-      <div className={styles.headerDateBlock}>
+      <div className={`${styles.headerDateBlock} ${toneClass}`}>
         <span className={styles.headerWeekday}>{weekday}</span>
         <span className={styles.headerDateLine}>{dateLine}</span>
       </div>
@@ -74,7 +81,7 @@ export function LiveClockScreen1({
 
   if (showTime) {
     return (
-      <div className={styles.headerTimeBlock}>
+      <div className={`${styles.headerTimeBlock} ${toneClass}`}>
         <time className={styles.headerCurrentTime} dateTime={timeIso}>
           {currentTime}
         </time>
@@ -94,7 +101,11 @@ export function LiveClockScreen1({
   }
 
   if (showDate) {
-    return <span className={styles.headerDateFallback}>{dateLine}</span>;
+    return (
+      <span className={`${styles.headerDateFallback} ${toneClass}`}>
+        {dateLine}
+      </span>
+    );
   }
 
   return null;

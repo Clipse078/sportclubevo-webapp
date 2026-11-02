@@ -283,7 +283,7 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B display controls", () => {
       MATCH_LOGO_SIZE_CSS.XLARGE,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="MATCH"\] \.eventTeamMain[\s\S]*--ib-match-team-name-base:\s*var\(--ib-match-font-size\)/,
+      /\.eventCard\[data-type="MATCH"\] \.matchSideBlock \.venueTeamDisplayName[\s\S]*font-size:\s*var\(--ib-match-font-size\)/,
     );
   });
 

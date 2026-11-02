@@ -23,6 +23,8 @@ import {
 import { buildAnlageplanLivePayload } from "@/lib/publishing/infoboard/anlageplan-live-service";
 import { getCanonicalKioskWeather } from "@/lib/infoboard/kiosk-weather";
 import { getCanonicalKioskTransport } from "@/lib/infoboard/kiosk-transport";
+import { enrichPreviewScreen1HeaderConfig } from "@/lib/infoboard/preview-header-config";
+import type { InfoboardDisplayTheme } from "@/lib/publishing/infoboard/display-theme";
 
 const FC_ALLSCHWIL_TENANT_KEY = "fc-allschwil";
 const FC_ALLSCHWIL_LOGO_SRC = "/images/logos/fc-allschwil.png";
@@ -62,22 +64,53 @@ function createPreviewDatabase(): Screen2SourceDatabase {
   };
 }
 
-export async function buildScreen1PreviewData(tenant: PreviewTenant, now: Date) {
+export type Screen1PreviewBuildOptions = {
+  /** Preview/UAT override — never written to the board record. */
+  readonly displayThemeOverride?: InfoboardDisplayTheme;
+};
+
+export async function buildScreen1PreviewData(
+  tenant: PreviewTenant,
+  now: Date,
+  options?: Screen1PreviewBuildOptions,
+) {
   const database = createPreviewDatabase();
   const board = await getInfoboardBySlug("screen-1", tenant.id);
+  const baseBoardConfig = board != null ? buildBoardConfig(board) : null;
+  const boardConfig =
+    options?.displayThemeOverride != null
+      ? {
+          ...(baseBoardConfig ?? {}),
+          displayTheme: options.displayThemeOverride,
+        }
+      : baseBoardConfig;
+
   const presentation = await buildScreen1KioskPresentation({
     tenant: tenant as Screen1TenantContext,
     now,
     loader: createCanonicalInfoboardSourceLoader(database),
     board,
+    boardConfig,
     tournamentPresentationDatabase: createScreen1TournamentPresentationDatabase(),
     resolveOrganizerClubsByName: (organizerNames) =>
       resolveScreen1OrganizerClubsByName(tenant.id, organizerNames),
   });
+
+  const headerConfig = enrichPreviewScreen1HeaderConfig({
+    headerConfig: presentation.payload.headerConfig,
+    theme: presentation.payload.theme,
+    tenant,
+    board,
+  });
+
   return {
     payload: presentation.payload,
     weather: presentation.weather,
-    infoboardScreen1Props: presentation.infoboardScreen1Props,
+    headerConfig,
+    infoboardScreen1Props: {
+      ...presentation.infoboardScreen1Props,
+      headerConfig: headerConfig ?? presentation.infoboardScreen1Props.headerConfig,
+    },
   };
 }
 

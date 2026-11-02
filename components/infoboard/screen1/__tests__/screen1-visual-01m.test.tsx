@@ -14,6 +14,7 @@ import {
   TOURNAMENT_KABINE_FONT_SIZE_CSS,
   TRAINING_KABINE_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import type { InfoboardScreen1Event } from "@/lib/publishing/event-types";
 import type { InfoboardTeamAllocationPresentation } from "@/components/infoboard/screen1/screen1-presentation-types";
 import { InfoboardScreen1 } from "@/components/infoboard/screen1/InfoboardScreen1";
@@ -164,12 +165,19 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — canonical Kabine pill CSS", () => {
     );
   });
 
-  it("preserves 01L training matrix vertical centering", () => {
+  it("keeps training matrix filling card height with shared row tracks (R11R2)", () => {
     expect(CSS).toMatch(
       /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*height:\s*100%/,
     );
     expect(CSS).toMatch(
-      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*safe center/,
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*grid-template-rows:\s*auto minmax\(0,\s*1fr\)/,
+    );
+    expect(CSS).toMatch(
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*align-content:\s*stretch/,
+    );
+    expect(CSS).toMatch(/\.trainingRowMatrix[\s\S]*align-content:\s*center/);
+    expect(CSS).toMatch(
+      /R11R2[\s\S]*\.eventCard\[data-type="MATCH"\] \.cardPitchZone[\s\S]*justify-content:\s*flex-start/,
     );
   });
 });
@@ -372,9 +380,15 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — rendered Kabine pill parity", () => {
       trainingRender.container.querySelector("[data-type='TRAINING']") as HTMLElement
     ).style.getPropertyValue("--ib-training-kabine-font-size");
 
-    expect(matchKabineFont).toBe(MATCH_KABINE_FONT_SIZE_CSS.XLARGE);
-    expect(tournamentKabineFont).toBe(TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE);
-    expect(trainingKabineFont).toBe(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE);
+    const spaciousKabine = (css: string) =>
+      scaleVenuePresentationClamp(css, "spacious");
+    expect(matchKabineFont).toBe(spaciousKabine(MATCH_KABINE_FONT_SIZE_CSS.XLARGE));
+    expect(tournamentKabineFont).toBe(
+      spaciousKabine(TOURNAMENT_KABINE_FONT_SIZE_CSS.XLARGE),
+    );
+    expect(trainingKabineFont).toBe(
+      spaciousKabine(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE),
+    );
     expect(matchKabineFont).toBe(tournamentKabineFont);
     expect(trainingKabineFont).toBe(tournamentKabineFont);
   });

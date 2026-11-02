@@ -34,7 +34,13 @@
  *   - No countdown text (IN X MIN.); temporal labels are JETZT or ALS NÄCHSTES.
  */
 
-import { useMemo, useEffect, type ReactElement, type CSSProperties } from "react";
+import {
+  useMemo,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
 import type {
   InfoboardScreen1Feed,
   InfoboardScreen1Event,
@@ -90,13 +96,105 @@ import {
   EMPTY_SCREEN1_STUDIO_CONFIG,
   type Screen1StudioConfig,
 } from "@/lib/infoboard/screen1-studio-types";
+import {
+  VenueActivityCard,
+  VenueActivityIdentity,
+  VenueActivityKabine,
+  VenueActivityPlatz,
+  VenueActivityTime,
+} from "@/components/infoboard/venue-display/VenueActivityCard";
+import { VenueSemanticLabel } from "@/components/infoboard/venue-display/VenueSemanticLabel";
+import { venueSemanticLabelKindForEventType } from "@/lib/infoboard/venue-semantic-label";
+import {
+  TIME_COLUMN_BODY_ATTR,
+  TIME_COLUMN_BODY_MARKER,
+  TIME_COLUMN_COMPOSITION_ATTR,
+  TIME_COLUMN_COMPOSITION_MARKER,
+  TIME_COLUMN_HEADER_ATTR,
+  TIME_COLUMN_HEADER_MARKER,
+  VENUE_COLUMN_BODY_ATTR,
+  VENUE_COLUMN_BODY_MARKER,
+  VENUE_COLUMN_COMPOSITION_ATTR,
+  VENUE_COLUMN_COMPOSITION_MARKER,
+  VENUE_COLUMN_HEADER_ATTR,
+  VENUE_COLUMN_HEADER_MARKER,
+} from "@/lib/infoboard/venue-column-composition";
+import {
+  isVenueDisplayLightTheme,
+  VENUE_ACTIVITY_ZONE_ATTR,
+  VENUE_ACTIVITY_ZONE_CONTEXT,
+  VENUE_ACTIVITY_ZONE_PRIMARY,
+  VENUE_MATCH_LAYOUT_ATTR,
+  VENUE_MATCH_LAYOUT_SYMMETRIC,
+  VENUE_MATCH_VERSUS_ATTR,
+  VENUE_TEAM_TYPOGRAPHY_ATTR,
+  VENUE_TEAM_TYPOGRAPHY_PRIMARY,
+  VENUE_TEAM_TYPOGRAPHY_SECONDARY,
+  VENUE_ACTIVITY_COLUMN_ATTR,
+  VENUE_ACTIVITY_COLUMN_MARKERS,
+} from "@/lib/infoboard/venue-display-grid";
+import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
+import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
+import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
+import {
+  resolveVenueDistanceEventListCssVars,
+  scaleVenueDistanceMatchLogoSize,
+} from "@/lib/infoboard/venue-distance-typography";
+import {
+  resolveVenueDensityEventListCssVars,
+  resolveVenuePresentationDensity,
+  scaleVenuePresentationClamp,
+  VENUE_PRESENTATION_DENSITY_ATTR,
+  type VenuePresentationDensity,
+} from "@/lib/infoboard/venue-presentation-density";
+import {
+  resolveTournamentParticipantDensity,
+  resolveTournamentParticipantGrid,
+  TOURNAMENT_MAX_PARTICIPANTS_PER_ROW,
+  TOURNAMENT_PARTICIPANT_COLUMNS_VAR,
+  TOURNAMENT_PARTICIPANT_DENSITY_ATTR,
+  TOURNAMENT_PARTICIPANT_LOGO_CLAMP,
+  TOURNAMENT_PARTICIPANT_NAME_CLAMP,
+  tournamentParticipantDisplayRows,
+  tournamentParticipantRowPattern,
+} from "@/lib/infoboard/tournament-participant-density";
+import {
+  R11_TRAINING_IDENTITY_HORIZONTAL,
+  resolveTrainingIdentityLines,
+} from "@/lib/infoboard/training-identity-display";
+import {
+  resolveTrainingParticipantDensity,
+  TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+  TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+  TRAINING_IDENTITY_CREST_SIZE_VAR,
+  TRAINING_PARTICIPANT_CLUB_CLAMP,
+  TRAINING_PARTICIPANT_DENSITY_ATTR,
+  TRAINING_PARTICIPANT_PITCH_CLAMP,
+  TRAINING_PARTICIPANT_ROW_GAP,
+  TRAINING_ROW_COUNT_ATTR,
+  TRAINING_ROW_COUNT_VAR,
+  TRAINING_TEAM_NAME_SIZE_VAR,
+} from "@/lib/infoboard/training-participant-density";
+import { VenueActivityAmbientLayer } from "@/components/infoboard/venue-display/VenueAmbientLayer";
+import {
+  isInfoboardActivityAmbientKind,
+  resolveActivityAmbientSrc,
+} from "@/lib/infoboard/screen1-ambient-assets";
 import styles from "./InfoboardScreen1.module.css";
+
+export {
+  resolveVenuePresentationDensity,
+  VENUE_PRESENTATION_DENSITY_ATTR,
+} from "@/lib/infoboard/venue-presentation-density";
+export type { VenuePresentationDensity } from "@/lib/infoboard/venue-presentation-density";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
 export type InfoboardScreen1Branding = {
   clubLogoSrc?: string | null;
   productLogoSrc?: string | null;
+  tenantPrimaryColor?: string | null;
+  tenantSecondaryColor?: string | null;
 };
 
 export type InfoboardScreen1Props = {
@@ -133,6 +231,8 @@ export type InfoboardScreen1Props = {
   headerConfig?: {
     readonly subtitleEnabled?: boolean;
     readonly subtitleText?: string | null;
+    /** Contextual section heading below the header (venue display light theme). */
+    readonly pageHeadingText?: string | null;
     readonly showTime?: boolean;
     readonly showDate?: boolean;
     readonly showWeather?: boolean;
@@ -193,7 +293,7 @@ export const CARD_DEMAND_TOURNAMENT_BASE = 1.5;
 export const CARD_DEMAND_TOURNAMENT_DISPLAY_ROW = 0.25;
 /** Added demand per canonical KABINE allocation row. */
 export const CARD_DEMAND_TOURNAMENT_PARTICIPANT = 0.3;
-/** Centre participant grid columns — matches tournamentParticipants CSS. */
+/** @deprecated Use resolveTournamentParticipantGrid() — kept for legacy demand tests. */
 export const TOURNAMENT_PARTICIPANT_DISPLAY_COLUMNS = 2;
 /**
  * Maximum total demand per rendered page inside the footer-safe content area.
@@ -282,21 +382,20 @@ export function expandOversizedTrainingGroups(
  * Exported for regression testing.
  */
 export function trainingGroupDensityTier(
-  _rowCount: number,
-): "normal" | "compact" | "dense" {
-  return "normal";
+  rowCount: number,
+): ReturnType<typeof resolveTrainingParticipantDensity> {
+  return resolveTrainingParticipantDensity(rowCount);
 }
 
 /**
  * Centre participant display rows for tournament identity presentation.
- * Reflects the two-column grid used when participant names are shown.
+ * Reflects the max-four-per-row participant grid (R7).
  * Exported for regression testing.
  */
 export function computeTournamentParticipantDisplayRows(
   participantCount: number,
 ): number {
-  if (participantCount <= 0) return 0;
-  return Math.ceil(participantCount / TOURNAMENT_PARTICIPANT_DISPLAY_COLUMNS);
+  return tournamentParticipantDisplayRows(participantCount);
 }
 
 export function computeMatchDemand(event: InfoboardScreen1Event): number {
@@ -402,7 +501,7 @@ export function layoutModeTier(totalDemand: number): "sparse" | "fill" {
 
 const EVENT_TYPE_LABELS: Record<PublishingEventType, string> = {
   TRAINING: "TRAINING",
-  MATCH: "SPIEL",
+  MATCH: "MATCH",
   TOURNAMENT: "TURNIER",
   OTHER: "EVENT",
   VACATION_PERIOD: "FERIENBLOCK",
@@ -583,6 +682,52 @@ function statusLabel(temporal: TemporalBucket): string | null {
   return null;
 }
 
+type VenueTimeColumnContentProps = {
+  temporal: TemporalBucket;
+  label: string | null;
+  children: ReactNode;
+};
+
+/** R11R3 — ALS NÄCHSTES / JETZT in header; start + end time centred in body. */
+function VenueTimeColumnContent({
+  temporal,
+  label,
+  children,
+}: VenueTimeColumnContentProps): ReactElement {
+  return (
+    <div
+      className={styles.venueColumnComposition}
+      {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+      {...{ [TIME_COLUMN_COMPOSITION_ATTR]: TIME_COLUMN_COMPOSITION_MARKER }}
+    >
+      <div
+        className={styles.venueColumnHeader}
+        {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+        {...{ [TIME_COLUMN_HEADER_ATTR]: TIME_COLUMN_HEADER_MARKER }}
+      >
+        {label !== null && (
+          <span
+            className={`${styles.statusLabel} ${styles.venueColumnContext}`}
+            data-testid={`status-label-${temporal}`}
+            data-status={temporal === "current" ? "current" : "next"}
+          >
+            {label}
+          </span>
+        )}
+      </div>
+      <div
+        className={styles.venueColumnBody}
+        {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+        {...{ [TIME_COLUMN_BODY_ATTR]: TIME_COLUMN_BODY_MARKER }}
+      >
+        <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function findEventExtension(
@@ -653,28 +798,6 @@ export function buildDisplayList(flatList: FlatEvent[]): DisplayItem[] {
   }
 
   return result;
-}
-
-/**
- * Strips a club name prefix from a team display name for Infoboard rendering.
- *
- * Example: "FC ALLSCHWIL JUNIOREN D-9 D1" → "JUNIOREN D-9 D1"
- *
- * The club identity is already established in the header, so repeating it
- * on every training row is redundant. This is a presentation-only
- * transformation — canonical team names are never mutated.
- *
- * Matching is case-insensitive. Returns the original name when no match.
- */
-function stripClubPrefix(teamName: string, clubName: string): string {
-  if (!clubName) return teamName;
-  const prefixLower = clubName.toUpperCase();
-  const nameLower = teamName.toUpperCase();
-  if (nameLower.startsWith(prefixLower)) {
-    const stripped = teamName.slice(clubName.length).trimStart();
-    return stripped.length > 0 ? stripped : teamName;
-  }
-  return teamName;
 }
 
 export type MatchTeamNameSize = "normal" | "medium" | "minimum";
@@ -759,33 +882,161 @@ type MatchSideIdentityProps = {
   side: InfoboardMatchSidePresentation;
   rowTestId: string;
   logoTestId: string;
-  primaryClassName: string;
   showLogos?: boolean;
 };
+
+type TrainingIdentityRowProps = {
+  lines: { readonly primary: string; readonly secondary: string | null };
+  clubLogoSrc: string | null;
+  showLogos: boolean;
+  eventId: string;
+  rowEndAnnotation?: string | null;
+};
+
+function TrainingIdentityRow({
+  lines,
+  clubLogoSrc,
+  showLogos,
+  eventId,
+  rowEndAnnotation = null,
+}: TrainingIdentityRowProps): ReactElement {
+  return (
+    <div
+      className={styles.trainingIdentityRow}
+      data-testid="training-group-row"
+      data-training-identity-row="true"
+      data-training-identity-orientation={
+        R11_TRAINING_IDENTITY_HORIZONTAL ? "horizontal" : "vertical"
+      }
+    >
+      <div className={styles.matchCrestSlot}>
+        {showLogos && clubLogoSrc !== null ? (
+          // eslint-disable-next-line @next/next/no-img-element -- tenant-managed crest URL.
+          <img
+            src={clubLogoSrc}
+            alt=""
+            aria-hidden="true"
+            className={styles.trainingClubLogo}
+            data-testid="training-team-logo"
+            data-event-id={eventId}
+          />
+        ) : (
+          <span
+            className={styles.matchClubLogoPlaceholder}
+            aria-hidden="true"
+            data-testid="training-team-logo-placeholder"
+          />
+        )}
+      </div>
+      <div className={styles.matchSideText}>
+        <span
+          className={styles.venueTeamDisplayName}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+          data-training-identity-primary
+        >
+          {lines.primary}
+        </span>
+        {lines.secondary !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+            data-training-identity-secondary
+          >
+            {lines.secondary}
+          </span>
+        )}
+        {rowEndAnnotation !== null && (
+          <span
+            className={styles.trainingGroupRowEndTime}
+            aria-label="Bis"
+            data-testid="training-row-end-annotation"
+          >
+            bis {rowEndAnnotation}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function MatchSideIdentity({
   side,
   rowTestId,
   logoTestId,
-  primaryClassName,
   showLogos = true,
 }: MatchSideIdentityProps): ReactElement {
   return (
-    <div className={styles.matchTeamRow} data-testid={rowTestId}>
-      <MatchClubLogo
-        logoUrl={side.clubLogoUrl}
-        clubName={side.clubDisplayName}
-        testId={logoTestId}
-        showLogos={showLogos}
-      />
-      <div className={styles.matchTeamText}>
+    <div className={styles.matchSideBlock} data-testid={rowTestId}>
+      <div className={styles.matchCrestSlot}>
+        <MatchClubLogo
+          logoUrl={side.clubLogoUrl}
+          clubName={side.clubDisplayName}
+          testId={logoTestId}
+          showLogos={showLogos}
+        />
+      </div>
+      <div className={styles.matchSideText}>
         <span
-          className={primaryClassName}
+          className={styles.venueTeamDisplayName}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
           data-match-team-label
-          data-match-name-size={matchTeamNameSize(side.clubDisplayName)}
         >
           {side.clubDisplayName}
         </span>
+        {side.teamSubDisplayName !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+          >
+            {side.teamSubDisplayName}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type TournamentParticipantIdentityProps = {
+  participant: InfoboardTeamAllocationPresentation;
+  showLogos: boolean;
+};
+
+function TournamentParticipantIdentity({
+  participant,
+  showLogos,
+}: TournamentParticipantIdentityProps): ReactElement {
+  const identity = resolveTournamentParticipantIdentity(participant);
+  return (
+    <div
+      className={styles.tournamentParticipantBlock}
+      data-testid={`tournament-participant-${participant.id}`}
+    >
+      <div className={styles.matchCrestSlot}>
+        <MatchClubLogo
+          logoUrl={participant.clubLogoUrl ?? null}
+          clubName={identity.primary}
+          testId={`tournament-participant-logo-${participant.id}`}
+          presentation="tournament"
+          showLogos={showLogos}
+        />
+      </div>
+      <div className={styles.tournamentParticipantText}>
+        <span
+          className={`${styles.venueTeamDisplayName} ${styles.tournamentParticipantName}`}
+          {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_PRIMARY }}
+          data-tournament-participant-primary
+        >
+          {identity.primary}
+        </span>
+        {identity.secondary !== null && (
+          <span
+            className={styles.venueTeamCategoryLabel}
+            {...{ [VENUE_TEAM_TYPOGRAPHY_ATTR]: VENUE_TEAM_TYPOGRAPHY_SECONDARY }}
+            data-tournament-participant-secondary
+          >
+            {identity.secondary}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -795,6 +1046,7 @@ function MatchSideIdentity({
 
 type ParticipantAllocationBlockProps = {
   allocations: readonly InfoboardTeamAllocationPresentation[];
+  className?: string;
 };
 
 /**
@@ -803,10 +1055,15 @@ type ParticipantAllocationBlockProps = {
  */
 function ParticipantAllocationBlock({
   allocations,
+  className,
 }: ParticipantAllocationBlockProps): ReactElement {
   return (
     <div
-      className={styles.participantAllocationBlock}
+      className={
+        className
+          ? `${styles.participantAllocationBlock} ${className}`
+          : styles.participantAllocationBlock
+      }
       data-testid="participant-allocation-block"
     >
       {allocations.map((alloc) => {
@@ -832,7 +1089,23 @@ function ParticipantAllocationBlock({
               {roomLabel}
             </span>
             <span className={styles.participantTeamName}>
-              {alloc.teamDisplayName}
+              {(() => {
+                const identity = resolveTournamentParticipantIdentity(alloc);
+                if (identity.secondary !== null) {
+                  return (
+                    <>
+                      <span data-kabine-team-primary>{identity.primary}</span>
+                      <span
+                        className={styles.venueTeamCategoryLabel}
+                        data-kabine-team-secondary
+                      >
+                        {identity.secondary}
+                      </span>
+                    </>
+                  );
+                }
+                return identity.primary;
+              })()}
             </span>
           </div>
         );
@@ -859,61 +1132,99 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
 
   return (
     <>
-      <div
-        className={styles.cardDressingRoomZone}
-        data-testid="match-allocation"
+      <VenueActivityKabine
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell}`}
+        testId="match-allocation"
       >
-        <span className={styles.destLabel}>KABINE</span>
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+        >
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {hasHome || hasAway ? (
-          <div className={styles.matchAllocation}>
-            {hasHome && (
-              <div className={styles.matchAllocRow}>
-                <span className={styles.matchAllocRoom}>
-                  {formatDressingRoomLabel(homeDressingRoomLabel)}
-                </span>
-                <span className={styles.matchAllocRole}>Heim</span>
-              </div>
-            )}
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {hasHome || hasAway ? (
+              <div className={`${styles.matchAllocation} ${styles.venueColumnPrimary}`}>
+                {hasHome && (
+                  <div className={styles.matchAllocRow}>
+                    <span className={styles.matchAllocRoom}>
+                      {formatDressingRoomLabel(homeDressingRoomLabel)}
+                    </span>
+                    <span className={styles.matchAllocRole}>Heim</span>
+                  </div>
+                )}
 
-            {hasAway && (
-              <div className={styles.matchAllocRow}>
-                <span className={styles.matchAllocRoom}>
-                  {formatDressingRoomLabel(awayDressingRoomLabel)}
-                </span>
-                <span className={styles.matchAllocRole}>Gast</span>
+                {hasAway && (
+                  <div className={styles.matchAllocRow}>
+                    <span className={styles.matchAllocRoom}>
+                      {formatDressingRoomLabel(awayDressingRoomLabel)}
+                    </span>
+                    <span className={styles.matchAllocRole}>Gast</span>
+                  </div>
+                )}
               </div>
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
             )}
           </div>
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+        </div>
+      </VenueActivityKabine>
 
-      <div className={styles.cardPitchZone}>
-        <span className={styles.destLabel}>PLATZ</span>
+      <VenueActivityPlatz
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell}`}
+      >
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+        >
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {pitchLabel !== null ? (
-          <span
-            className={styles.destPitchValue}
-            data-testid="pitch-value"
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={styles.pitchMissing}
-            data-testid="pitch-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
+        </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -931,45 +1242,83 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
 
   return (
     <>
-      <div
-        className={styles.cardDressingRoomZone}
-        data-testid="training-allocation"
+      <VenueActivityKabine
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell}`}
+        testId="training-allocation"
       >
-        <span className={styles.destLabel}>KABINE</span>
-
-        {homeDressingRoomLabel !== null ? (
-          <span className={styles.destRoomValue}>
-            {formatDressingRoomLabel(homeDressingRoomLabel)}
-          </span>
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+        >
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
           >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-      <div className={styles.cardPitchZone}>
-        <span className={styles.destLabel}>PLATZ</span>
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {homeDressingRoomLabel !== null ? (
+              <span className={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}>
+                {formatDressingRoomLabel(homeDressingRoomLabel)}
+              </span>
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
+        </div>
+      </VenueActivityKabine>
 
-        {pitchLabel !== null ? (
-          <span
-            className={styles.destPitchValue}
-            data-testid="pitch-value"
+      <VenueActivityPlatz
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell}`}
+      >
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+        >
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={styles.pitchMissing}
-            data-testid="pitch-unassigned-warning"
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
+
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
+        </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -988,49 +1337,84 @@ function TournamentDestination({
 
   return (
     <>
-      <div className={styles.cardDressingRoomZone}>
-        <span
-          className={styles.destLabel}
+      <VenueActivityKabine
+        className={`${styles.cardDressingRoomZone} ${styles.venueColumnShell}`}
+      >
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          KABINE
-        </span>
-
-        {participantAllocations !== undefined &&
-        participantAllocations.length > 0 ? (
-          <ParticipantAllocationBlock allocations={participantAllocations} />
-        ) : (
-          <span
-            className={styles.dressingRoomMissing}
-            data-testid="dressing-room-unassigned-warning"
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
           >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-      <div className={styles.cardPitchZone}>
-        <span
-          className={styles.destLabel}
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+          >
+            {participantAllocations !== undefined &&
+            participantAllocations.length > 0 ? (
+              <ParticipantAllocationBlock
+                allocations={participantAllocations}
+                className={styles.venueColumnPrimary}
+              />
+            ) : (
+              <span
+                className={styles.dressingRoomMissing}
+                data-testid="dressing-room-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
+        </div>
+      </VenueActivityKabine>
+
+      <VenueActivityPlatz
+        className={`${styles.cardPitchZone} ${styles.venueColumnShell}`}
+      >
+        <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
         >
-          PLATZ
-        </span>
+          <div
+            className={styles.venueColumnHeader}
+            {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+          >
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
 
-        {pitchLabel !== null ? (
-          <span
-            className={styles.destPitchValue}
-            data-testid="pitch-value"
+          <div
+            className={styles.venueColumnBody}
+            {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
-            {pitchLabel}
-          </span>
-        ) : (
-          <span
-            className={styles.pitchMissing}
-            data-testid="pitch-unassigned-warning"
-          >
-            NOCH NICHT ZUGETEILT
-          </span>
-        )}
-      </div>
+            {pitchLabel !== null ? (
+              <span
+                className={`${styles.destPitchValue} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-value"
+              >
+                {pitchLabel}
+              </span>
+            ) : (
+              <span
+                className={`${styles.pitchMissing} ${styles.venueColumnPrimary}`}
+                data-testid="pitch-unassigned-warning"
+              >
+                NOCH NICHT ZUGETEILT
+              </span>
+            )}
+          </div>
+        </div>
+      </VenueActivityPlatz>
     </>
   );
 }
@@ -1049,6 +1433,7 @@ type TrainingGroupCardProps = {
   cohortContinuation?: boolean;
   /** Resolved per-card typography and logo sizes. */
   cardPresentation: ResolvedTrainingCardPresentation;
+  venuePresentationDensity: VenuePresentationDensity;
 };
 
 /**
@@ -1075,6 +1460,7 @@ function TrainingGroupCard({
   showLogos,
   cohortContinuation = false,
   cardPresentation,
+  venuePresentationDensity,
 }: TrainingGroupCardProps): ReactElement {
   const first = items[0];
   const temporal = first.temporal;
@@ -1083,122 +1469,164 @@ function TrainingGroupCard({
   const stripe = stripeKey("TRAINING");
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
+  const participantDensity = resolveTrainingParticipantDensity(items.length);
+  const trainingAmbientSrc = resolveActivityAmbientSrc("TRAINING");
+  const canonicalCrestClamp = scaleVenuePresentationClamp(
+    TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+    venuePresentationDensity,
+  );
+  const canonicalTeamNameClamp = scaleVenuePresentationClamp(
+    TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+    venuePresentationDensity,
+  );
 
   return (
     <li
       className={styles.eventCard}
       data-testid="event-row"
+      data-venue-activity-grid="true"
       data-type="TRAINING"
       data-temporal={temporal}
       data-stripe={stripe}
       data-training-count={items.length}
+      {...{ [TRAINING_ROW_COUNT_ATTR]: items.length }}
       data-group-density={groupDensity}
       data-cohort-continuation={cohortContinuation ? "true" : "false"}
       data-card-demand={demand.toFixed(2)}
+      data-venue-operational-ambient={trainingAmbientSrc != null ? "true" : undefined}
+      {...{ [TRAINING_PARTICIPANT_DENSITY_ATTR]: participantDensity }}
       style={
         {
           "--ib-card-demand": demand,
-          "--ib-training-font-size":
+          "--ib-training-font-size": scaleVenuePresentationClamp(
             TRAINING_FONT_SIZE_CSS[cardPresentation.teamFontSize].normal,
-          "--ib-training-kabine-font-size":
+            venuePresentationDensity,
+          ),
+          "--ib-training-kabine-font-size": scaleVenuePresentationClamp(
             TRAINING_KABINE_FONT_SIZE_CSS[cardPresentation.kabineFontSize],
-          "--ib-training-platz-font-size":
+            venuePresentationDensity,
+          ),
+          "--ib-training-platz-font-size": scaleVenuePresentationClamp(
             TRAINING_PLATZ_FONT_SIZE_CSS[cardPresentation.platzFontSize],
-          "--ib-training-logo-size":
-            TRAINING_LOGO_SIZE_CSS[cardPresentation.logoSize],
+            venuePresentationDensity,
+          ),
+          [TRAINING_ROW_COUNT_VAR]: items.length,
+          "--ib-training-logo-size": canonicalCrestClamp,
+          [TRAINING_IDENTITY_CREST_SIZE_VAR]: canonicalCrestClamp,
+          "--ib-training-club-font-size": scaleVenuePresentationClamp(
+            TRAINING_PARTICIPANT_CLUB_CLAMP[participantDensity],
+            venuePresentationDensity,
+          ),
+          "--ib-training-team-font-size": canonicalTeamNameClamp,
+          [TRAINING_TEAM_NAME_SIZE_VAR]: canonicalTeamNameClamp,
+          "--ib-training-participant-row-gap":
+            TRAINING_PARTICIPANT_ROW_GAP[participantDensity],
+          "--ib-training-group-pitch-font-size": scaleVenuePresentationClamp(
+            TRAINING_PARTICIPANT_PITCH_CLAMP[participantDensity],
+            venuePresentationDensity,
+          ),
         } as CSSProperties
       }
     >
-      {/* TIME — shared start + majority end once in the left card */}
-      <div className={styles.cardTimeZone} data-testid="training-group-time-zone">
-        {label !== null && (
-          <span
-            className={styles.statusLabel}
-            data-testid={`status-label-${temporal}`}
-            data-status={temporal === "current" ? "current" : "next"}
+      <VenueActivityTime
+        className={`${styles.cardTimeZone} ${styles.venueColumnShell}`}
+        testId="training-group-time-zone"
+      >
+        <VenueTimeColumnContent temporal={temporal} label={label}>
+          <time
+            className={styles.eventTime}
+            dateTime={startAt}
+            data-testid="training-cohort-start-time"
           >
-            {label}
-          </span>
-        )}
+            {timePresentation.startTime}
+          </time>
 
-        <time
-          className={styles.eventTime}
-          dateTime={startAt}
-          data-testid="training-cohort-start-time"
+          {timePresentation.primaryEndTime !== null && (
+            <span
+              className={styles.eventEndTime}
+              aria-label="Bis"
+              data-testid="training-cohort-end-time"
+            >
+              bis {timePresentation.primaryEndTime}
+            </span>
+          )}
+        </VenueTimeColumnContent>
+      </VenueActivityTime>
+
+      {trainingAmbientSrc != null ? (
+        <div
+          className={styles.operationalAmbientAnchor}
+          data-venue-operational-ambient-anchor="true"
+          aria-hidden="true"
         >
-          {timePresentation.startTime}
-        </time>
-
-        {timePresentation.primaryEndTime !== null && (
-          <span
-            className={styles.eventEndTime}
-            aria-label="Bis"
-            data-testid="training-cohort-end-time"
-          >
-            bis {timePresentation.primaryEndTime}
-          </span>
-        )}
-      </div>
-
-      {/* TRAINING / KABINE / PLATZ — one shared row matrix (cols 2–4) */}
+          <VenueActivityAmbientLayer
+            src={trainingAmbientSrc}
+            kind="TRAINING"
+            placement="training-matrix-activity"
+            testId="venue-training-matrix-ambient"
+          />
+        </div>
+      ) : null}
       <div className={styles.trainingMatrix} data-testid="training-group">
         <div
           className={styles.trainingMatrixHeaders}
           data-testid="training-matrix-headers"
         >
-          <span
-            className={styles.eventTypeLabel}
-            data-event-type="TRAINING"
+          <div
+            className={styles.trainingActivityHeader}
+            {...{
+              [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT,
+              [VENUE_ACTIVITY_COLUMN_ATTR]: VENUE_ACTIVITY_COLUMN_MARKERS.identity,
+            }}
           >
-            TRAINING
+            <VenueSemanticLabel
+              kind="TRAINING"
+              legacyEventTypeAttr="TRAINING"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </div>
+          <span {...{ [VENUE_ACTIVITY_COLUMN_ATTR]: VENUE_ACTIVITY_COLUMN_MARKERS.kabine }}>
+            <VenueSemanticLabel
+              kind="KABINE"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
           </span>
-          <span className={styles.destLabel}>KABINE</span>
-          <span className={styles.destLabel}>PLATZ</span>
+          <span {...{ [VENUE_ACTIVITY_COLUMN_ATTR]: VENUE_ACTIVITY_COLUMN_MARKERS.platz }}>
+            <VenueSemanticLabel
+              kind="PLATZ"
+              className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+            />
+          </span>
         </div>
 
-        <div className={styles.trainingRowMatrix} data-testid="training-row-matrix">
+        <div
+          className={styles.trainingRowMatrix}
+          data-testid="training-row-matrix"
+          data-training-row-matrix="true"
+        >
           {items.map((it, index) => {
             const rowEndAnnotation = timePresentation.rowEndAnnotations[index];
             const { homeDressingRoomLabel, pitchLabel } = it.event.allocation;
+            const lines = resolveTrainingIdentityLines(
+              it.event.teamDisplayName ?? it.event.displayTitle,
+              clubName,
+            );
 
             return (
               <div
                 key={it.event.id}
                 className={styles.trainingMatrixRow}
                 data-testid="training-matrix-row"
+                data-training-row-index={index}
               >
                 <div className={styles.trainingMatrixCell}>
-                  <span
-                    className={styles.trainingGroupTeamName}
-                    data-testid="training-group-row"
-                  >
-                    {showLogos && clubLogoSrc !== null && (
-                      // eslint-disable-next-line @next/next/no-img-element -- tenant-managed crest URL.
-                      <img
-                        src={clubLogoSrc}
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.trainingClubLogo}
-                        data-testid="training-team-logo"
-                        data-event-id={it.event.id}
-                      />
-                    )}
-                    <span className={styles.trainingGroupTeamText}>
-                      {stripClubPrefix(
-                        it.event.teamDisplayName ?? it.event.displayTitle,
-                        clubName,
-                      )}
-                    </span>
-                    {rowEndAnnotation !== null && (
-                      <span
-                        className={styles.trainingGroupRowEndTime}
-                        aria-label="Bis"
-                        data-testid="training-row-end-annotation"
-                      >
-                        bis {rowEndAnnotation}
-                      </span>
-                    )}
-                  </span>
+                  <TrainingIdentityRow
+                    lines={lines}
+                    clubLogoSrc={clubLogoSrc}
+                    showLogos={showLogos}
+                    eventId={it.event.id}
+                    rowEndAnnotation={rowEndAnnotation}
+                  />
                 </div>
 
                 <div className={styles.trainingMatrixCell}>
@@ -1245,26 +1673,56 @@ function TrainingGroupCard({
 
 function resolveEventCardStyle(
   resolved: ResolvedCardPresentation,
+  venuePresentationDensity: VenuePresentationDensity,
 ): CSSProperties {
+  const scale = (value: string) =>
+    scaleVenuePresentationClamp(value, venuePresentationDensity);
   if (resolved.kind === "match" || resolved.kind === "other") {
     const p = resolved.presentation;
     return {
-      "--ib-match-font-size": MATCH_FONT_SIZE_CSS[p.teamFontSize].primary,
-      "--ib-match-opponent-font-size": MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
-      "--ib-match-kabine-font-size": MATCH_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
-      "--ib-match-platz-font-size": MATCH_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
-      "--ib-match-logo-size": MATCH_LOGO_SIZE_CSS[p.logoSize],
+      "--ib-match-font-size": scale(MATCH_FONT_SIZE_CSS[p.teamFontSize].primary),
+      "--ib-match-opponent-font-size": scale(
+        MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
+      ),
+      "--ib-match-secondary-font-size": scale(
+        MATCH_FONT_SIZE_CSS[p.teamFontSize].opponent,
+      ),
+      "--ib-match-kabine-font-size": scale(
+        MATCH_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
+      ),
+      "--ib-match-platz-font-size": scale(
+        MATCH_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
+      ),
+      "--ib-match-logo-size": scaleVenueDistanceMatchLogoSize(
+        MATCH_LOGO_SIZE_CSS[p.logoSize],
+        venuePresentationDensity,
+      ),
     } as CSSProperties;
   }
   if (resolved.kind === "tournament") {
     const p = resolved.presentation;
     return {
-      "--ib-tournament-font-size": TOURNAMENT_FONT_SIZE_CSS[p.teamFontSize],
-      "--ib-tournament-kabine-font-size":
+      "--ib-tournament-font-size": scale(TOURNAMENT_FONT_SIZE_CSS[p.teamFontSize]),
+      "--ib-tournament-kabine-font-size": scale(
         TOURNAMENT_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
-      "--ib-tournament-platz-font-size":
+      ),
+      "--ib-tournament-platz-font-size": scale(
         TOURNAMENT_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
-      "--ib-tournament-logo-size": TOURNAMENT_LOGO_SIZE_CSS[p.logoSize],
+      ),
+      "--ib-tournament-logo-size": scale(TOURNAMENT_LOGO_SIZE_CSS[p.logoSize]),
+    } as CSSProperties;
+  }
+  if (resolved.kind === "training") {
+    const p = resolved.presentation;
+    return {
+      "--ib-training-font-size": scale(TRAINING_FONT_SIZE_CSS[p.teamFontSize].normal),
+      "--ib-training-kabine-font-size": scale(
+        TRAINING_KABINE_FONT_SIZE_CSS[p.kabineFontSize],
+      ),
+      "--ib-training-platz-font-size": scale(
+        TRAINING_PLATZ_FONT_SIZE_CSS[p.platzFontSize],
+      ),
+      "--ib-training-logo-size": scale(TRAINING_LOGO_SIZE_CSS[p.logoSize]),
     } as CSSProperties;
   }
   return {} as CSSProperties;
@@ -1279,6 +1737,9 @@ type EventCardProps = {
   presentation?: Screen1PresentationConfig;
   cardStyle?: CSSProperties;
   resolvedPresentation?: ResolvedCardPresentation;
+  tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
+  venuePresentationDensity?: VenuePresentationDensity;
 };
 
 function EventCard({
@@ -1289,6 +1750,9 @@ function EventCard({
   presentation = DEFAULT_SCREEN1_PRESENTATION,
   cardStyle,
   resolvedPresentation,
+  tenantLogoUrl = null,
+  tenantClubName = null,
+  venuePresentationDensity = "standard",
 }: EventCardProps): ReactElement {
   const { event, temporal } = item;
   const startTime = formatTime(event.startAt, timeZone);
@@ -1299,6 +1763,10 @@ function EventCard({
   const endTime = rawEndTime !== null && rawEndTime !== startTime ? rawEndTime : null;
   const isMatch = event.type === "MATCH";
   const isTournament = event.type === "TOURNAMENT";
+  const activityAmbientSrc = resolveActivityAmbientSrc(event.type);
+  const activityAmbientKind = isInfoboardActivityAmbientKind(event.type)
+    ? event.type
+    : null;
   const matchShowLogos =
     resolvedPresentation?.kind === "match" || resolvedPresentation?.kind === "other"
       ? resolvedPresentation.presentation.showLogos
@@ -1311,130 +1779,239 @@ function EventCard({
   const label = statusLabel(temporal);
   const stripe = stripeKey(event.type);
 
-  const typeDisplayLabel = isMatch
-    ? (event.competitionLabel ?? EVENT_TYPE_LABELS["MATCH"])
-    : EVENT_TYPE_LABELS[event.type] ?? event.type;
+  const semanticActivityLabel = EVENT_TYPE_LABELS[event.type] ?? event.type;
+  // Canonical feed field: event.matchPresentation; resolver mirrors mapper when absent.
+  const matchPresentation = isMatch
+    ? resolveScreen1EventMatchPresentation(event, tenantLogoUrl, tenantClubName)
+    : null;
+
+  const operationalAmbient =
+    activityAmbientSrc != null && activityAmbientKind != null ? (
+      <div
+        className={styles.operationalAmbientAnchor}
+        data-venue-operational-ambient-anchor="true"
+        aria-hidden="true"
+      >
+        <VenueActivityAmbientLayer src={activityAmbientSrc} kind={activityAmbientKind} />
+      </div>
+    ) : undefined;
 
   return (
-    <li
+    <VenueActivityCard
       className={styles.eventCard}
-      data-testid="event-row"
       data-type={event.type}
       data-temporal={temporal}
       data-stripe={stripe}
       data-card-demand={demand.toFixed(2)}
       style={{ "--ib-card-demand": demand, ...cardStyle } as CSSProperties}
-    >
-      {/* ── LEFT ZONE: Status + Time ─────────────────────────────────── */}
-      <div className={styles.cardTimeZone}>
-        {label !== null && (
-          <span
-            className={styles.statusLabel}
-            data-testid={`status-label-${temporal}`}
-            data-status={temporal === "current" ? "current" : "next"}
-          >
-            {label}
-          </span>
-        )}
-        <time className={styles.eventTime} dateTime={event.startAt}>
-          {startTime}
-        </time>
-        {endTime !== null && (
-          <span className={styles.eventEndTime} aria-label="Bis">
-            bis {endTime}
-          </span>
-        )}
-      </div>
-
-      {/* ── CENTER ZONE: Event identity ──────────────────────────────── */}
-      <div className={styles.cardEventZone}>
-        <span
-          className={styles.eventTypeLabel}
-          data-event-type={event.type}
+      operationalAmbient={operationalAmbient}
+      time={
+        <VenueActivityTime
+          className={`${styles.cardTimeZone} ${styles.venueColumnShell}`}
         >
-          {typeDisplayLabel}
-        </span>
-
-        {isMatch && event.matchPresentation ? (
-          <div className={styles.matchIdentity}>
-            <MatchSideIdentity
-              side={event.matchPresentation.home}
-              rowTestId="match-home-team-row"
-              logoTestId="home-team-logo"
-              primaryClassName={styles.eventTeamMain}
-              showLogos={matchShowLogos}
-            />
-            <span className={styles.vsLabel} aria-hidden="true">
-              vs.
-            </span>
-            {event.matchPresentation.away !== null && (
-              <MatchSideIdentity
-                side={event.matchPresentation.away}
-                rowTestId="match-away-team-row"
-                logoTestId="away-team-logo"
-                primaryClassName={styles.eventTeamOpponent}
-                showLogos={matchShowLogos}
-              />
-            )}
-          </div>
-        ) : isTournament ? (
-          <div className={styles.tournamentIdentity}>
-            <span className={styles.tournamentTitle}>{event.displayTitle}</span>
-
-            {event.organizerDisplayName !== null && (
-              <span className={styles.eventTeamSubtitle}>
-                {event.organizerDisplayName}
+          <VenueTimeColumnContent temporal={temporal} label={label}>
+            <time className={styles.eventTime} dateTime={event.startAt}>
+              {startTime}
+            </time>
+            {endTime !== null && (
+              <span className={styles.eventEndTime} aria-label="Bis">
+                bis {endTime}
               </span>
             )}
-
-            {participantAllocations !== undefined && participantAllocations.length > 0 && (
+          </VenueTimeColumnContent>
+        </VenueActivityTime>
+      }
+      identity={
+        <VenueActivityIdentity
+          className={`${styles.cardEventZone} ${styles.venueColumnShell}`}
+        >
+          <div
+          className={styles.venueColumnComposition}
+          {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+        >
+            <div
+              className={styles.venueColumnHeader}
+              {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+            >
               <div
-                className={styles.tournamentParticipantLogos}
-                data-testid="tournament-participants"
+                className={styles.activityContextZone}
+                {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_CONTEXT }}
+                data-testid="venue-activity-context"
               >
-                {participantAllocations.map((participant) => (
-                  <MatchClubLogo
-                    key={participant.id}
-                    logoUrl={participant.clubLogoUrl ?? null}
-                    clubName={participant.teamDisplayName}
-                    testId={`tournament-participant-logo-${participant.id}`}
-                    presentation="tournament"
-                    showLogos={tournamentShowLogos}
+                {(() => {
+                  const labelKind = venueSemanticLabelKindForEventType(event.type);
+                  if (labelKind !== null) {
+                    return (
+                      <VenueSemanticLabel
+                        kind={labelKind}
+                        legacyEventTypeAttr={event.type}
+                        className={`${styles.eventTypeLabel} ${styles.venueSemanticLabel}`}
+                      >
+                        {semanticActivityLabel}
+                      </VenueSemanticLabel>
+                    );
+                  }
+                  return (
+                    <span className={styles.eventTypeLabel} data-event-type={event.type}>
+                      {semanticActivityLabel}
+                    </span>
+                  );
+                })()}
+
+                {isTournament && (
+                  <span
+                    className={`${styles.tournamentTitle} ${styles.venueTeamDisplayName}`}
+                  >
+                    {event.displayTitle}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div
+              className={styles.venueColumnBody}
+              {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+            >
+              <div
+                className={styles.activityPrimaryZone}
+                {...{ [VENUE_ACTIVITY_ZONE_ATTR]: VENUE_ACTIVITY_ZONE_PRIMARY }}
+                data-testid="venue-activity-primary"
+              >
+            {isMatch && matchPresentation ? (
+              <div
+                className={styles.matchIdentity}
+                {...{ [VENUE_MATCH_LAYOUT_ATTR]: VENUE_MATCH_LAYOUT_SYMMETRIC }}
+                data-testid="venue-match-identity"
+              >
+                <MatchSideIdentity
+                  side={matchPresentation.home}
+                  rowTestId="match-home-team-row"
+                  logoTestId="home-team-logo"
+                  showLogos={matchShowLogos}
+                />
+                <span
+                  className={`${styles.vsLabel} ${styles.matchVersusLabel}`}
+                  aria-hidden="true"
+                  data-testid="venue-match-vs"
+                  {...{ [VENUE_MATCH_VERSUS_ATTR]: "true" }}
+                >
+                  VS.
+                </span>
+                {matchPresentation.away !== null && (
+                  <MatchSideIdentity
+                    side={matchPresentation.away}
+                    rowTestId="match-away-team-row"
+                    logoTestId="away-team-logo"
+                    showLogos={matchShowLogos}
                   />
-                ))}
+                )}
+              </div>
+            ) : isTournament ? (
+              participantAllocations !== undefined &&
+              participantAllocations.length > 0 ? (
+                <div
+                  className={styles.tournamentParticipantBlocks}
+                  data-testid="tournament-participants"
+                  data-tournament-participant-count={participantAllocations.length}
+                  data-tournament-participant-max-columns={
+                    TOURNAMENT_MAX_PARTICIPANTS_PER_ROW
+                  }
+                  data-tournament-participant-row-pattern={tournamentParticipantRowPattern(
+                    participantAllocations.length,
+                  ).join("+")}
+                  {...{
+                    [TOURNAMENT_PARTICIPANT_DENSITY_ATTR]:
+                      resolveTournamentParticipantDensity(
+                        participantAllocations.length,
+                      ),
+                  }}
+                  style={
+                    {
+                      [TOURNAMENT_PARTICIPANT_COLUMNS_VAR]:
+                        resolveTournamentParticipantGrid(
+                          participantAllocations.length,
+                        ).columns,
+                      "--ib-tournament-participant-logo-size":
+                        scaleVenuePresentationClamp(
+                          TOURNAMENT_PARTICIPANT_LOGO_CLAMP[
+                            resolveTournamentParticipantDensity(
+                              participantAllocations.length,
+                            )
+                          ],
+                          venuePresentationDensity,
+                        ),
+                      "--ib-tournament-participant-name-size":
+                        scaleVenuePresentationClamp(
+                          TOURNAMENT_PARTICIPANT_NAME_CLAMP[
+                            resolveTournamentParticipantDensity(
+                              participantAllocations.length,
+                            )
+                          ],
+                          venuePresentationDensity,
+                        ),
+                    } as CSSProperties
+                  }
+                >
+                  {participantAllocations.map((participant) => (
+                    <TournamentParticipantIdentity
+                      key={participant.id}
+                      participant={participant}
+                      showLogos={tournamentShowLogos}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.tournamentIdentity} />
+              )
+            ) : (
+              <div className={styles.trainingIdentity}>
+                {(() => {
+                  const trainingLabel =
+                    event.teamDisplayName ?? event.displayTitle;
+                  const lines = resolveTrainingIdentityLines(
+                    trainingLabel,
+                    tenantClubName,
+                  );
+                  if (!lines.primary) return null;
+                  return (
+                    <TrainingIdentityRow
+                      lines={lines}
+                      clubLogoSrc={tenantLogoUrl}
+                      showLogos={
+                        resolvedPresentation?.kind === "training"
+                          ? resolvedPresentation.presentation.showLogos
+                          : presentation.trainingShowLogos
+                      }
+                      eventId={event.id}
+                    />
+                  );
+                })()}
+                {event.organizerDisplayName !== null && (
+                  <span className={styles.eventTeamSubtitle}>
+                    {event.organizerDisplayName}
+                  </span>
+                )}
               </div>
             )}
+              </div>
+            </div>
           </div>
+        </VenueActivityIdentity>
+      }
+      kabine={
+        isMatch ? (
+          <MatchDestination event={event} />
+        ) : isTournament ? (
+          <TournamentDestination
+            event={event}
+            participantAllocations={participantAllocations}
+          />
         ) : (
-          <>
-            {event.teamDisplayName !== null ? (
-              <span className={styles.eventTeamMain}>{event.teamDisplayName}</span>
-            ) : (
-              event.displayTitle !== null && (
-                <span className={styles.eventTeamMain}>{event.displayTitle}</span>
-              )
-            )}
-            {event.organizerDisplayName !== null && (
-              <span className={styles.eventTeamSubtitle}>
-                {event.organizerDisplayName}
-              </span>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── KABINE + PLATZ ─────────────────────────────────────────── */}
-      {isMatch ? (
-        <MatchDestination event={event} />
-      ) : isTournament ? (
-        <TournamentDestination
-          event={event}
-          participantAllocations={participantAllocations}
-        />
-      ) : (
-        <TrainingDestination event={event} />
-      )}
-    </li>
+          <TrainingDestination event={event} />
+        )
+      }
+      platz={undefined}
+    />
   );
 }
 
@@ -1475,6 +2052,14 @@ export function InfoboardScreen1({
   const showWeather = headerConfig?.showWeather === true;
   const subtitleEnabled = headerConfig?.subtitleEnabled !== false;
   const subtitleText = headerConfig?.subtitleText?.trim() ?? null;
+  const pageHeadingText = headerConfig?.pageHeadingText?.trim() ?? null;
+  const venueDisplayLight = isVenueDisplayLightTheme(theme);
+  const headerWelcomeSubtitle =
+    subtitleText != null
+      ? venueDisplayLight
+        ? resolveLightInlineWelcome(subtitleText)
+        : subtitleText.toUpperCase()
+      : null;
 
   // Club name for prefix stripping (presentation-only)
   const clubNameUpper = tenant.name.toUpperCase();
@@ -1558,6 +2143,10 @@ export function InfoboardScreen1({
 
   const clubLogoSrc = branding?.clubLogoSrc ?? null;
   const productLogoSrc = branding?.productLogoSrc ?? null;
+  const venueHeaderBranding = {
+    tenantPrimaryColor: branding?.tenantPrimaryColor ?? null,
+    tenantSecondaryColor: branding?.tenantSecondaryColor ?? null,
+  };
 
   // Static date fallback used only when currentTimeIso is absent.
   const staticDateLine =
@@ -1569,6 +2158,9 @@ export function InfoboardScreen1({
     const pageTotalDemand = pageDemands.reduce((sum, d) => sum + d, 0);
     const pageDensity = densityTier(pageTotalDemand);
     const pageLayoutMode = layoutModeTier(pageTotalDemand);
+    const venuePresentationDensity = resolveVenuePresentationDensity(
+      pageItems.length,
+    );
 
     return (
       <ul
@@ -1579,10 +2171,16 @@ export function InfoboardScreen1({
         data-count={pageItems.length}
         data-density={pageDensity}
         data-layout-mode={pageLayoutMode}
+        {...{ [VENUE_PRESENTATION_DENSITY_ATTR]: venuePresentationDensity }}
         style={
           {
             "--ib-page-demand-max": CARD_DEMAND_PAGE_MAX,
             "--ib-page-demand-total": pageTotalDemand,
+            ...resolveVenueDensityEventListCssVars(venuePresentationDensity),
+            ...resolveVenueDistanceEventListCssVars(
+              venuePresentationDensity,
+              pageItems.length,
+            ),
           } as CSSProperties
         }
       >
@@ -1614,6 +2212,7 @@ export function InfoboardScreen1({
                     ? trainingResolved.presentation
                     : resolveTrainingCardPresentation(presentation, undefined)
                 }
+                venuePresentationDensity={venuePresentationDensity}
               />
             );
           }
@@ -1622,7 +2221,19 @@ export function InfoboardScreen1({
           const allocs = extension?.participantAllocations;
           const participantAllocations =
             allocs !== undefined && allocs.length > 0 ? allocs : undefined;
-          const cardStyle = resolveEventCardStyle(resolved);
+          const cardStyle = resolveEventCardStyle(
+            resolved,
+            venuePresentationDensity,
+          );
+          const trainingCardStyle =
+            item.event.type === "TRAINING" && resolved.kind !== "training"
+              ? ({
+                  "--ib-training-font-size": scaleVenuePresentationClamp(
+                    TRAINING_FONT_SIZE_CSS[presentation.trainingFontSize].normal,
+                    venuePresentationDensity,
+                  ),
+                } as CSSProperties)
+              : {};
           return (
             <EventCard
               key={item.event.id}
@@ -1631,8 +2242,11 @@ export function InfoboardScreen1({
               participantAllocations={participantAllocations}
               demand={demand}
               presentation={presentation}
-              cardStyle={cardStyle}
+              cardStyle={{ ...cardStyle, ...trainingCardStyle }}
               resolvedPresentation={resolved}
+              tenantLogoUrl={clubLogoSrc}
+              tenantClubName={tenant.name}
+              venuePresentationDensity={venuePresentationDensity}
             />
           );
         })}
@@ -1677,10 +2291,14 @@ export function InfoboardScreen1({
         showTime={showTime}
         showDate={showDate}
         staticDateFallback={staticDateLine}
-        subtitle={subtitleText != null ? subtitleText.toUpperCase() : null}
+        subtitle={headerWelcomeSubtitle}
         subtitleEnabled={subtitleEnabled}
+        shellTheme={venueDisplayLight ? "light" : "dark"}
+        subtitlePlacement={venueDisplayLight ? "header-inline" : "band"}
         liveClock={liveClock}
         liveWeather={liveClock}
+        venueHeaderAmbient
+        venueHeaderBranding={venueHeaderBranding}
       />
 
       {/* ── Main: event list (demand-paginated, rotated when multi-page) ── */}
@@ -1688,7 +2306,17 @@ export function InfoboardScreen1({
         className={styles.main}
         data-testid="infoboard-content-region"
         data-safe-page-capacity={pageDemandMax.toFixed(2)}
+        data-has-page-heading={
+          venueDisplayLight && pageHeadingText != null && pageHeadingText.length > 0
+            ? "true"
+            : undefined
+        }
       >
+        {venueDisplayLight && pageHeadingText !== null && pageHeadingText.length > 0 && (
+          <div className={styles.boardTitle} data-testid="venue-page-heading">
+            <span className={styles.boardTitleText}>{pageHeadingText.toUpperCase()}</span>
+          </div>
+        )}
         {visibleFeed.isEmpty ? (
           <div className={styles.emptyFull} data-testid="empty-state-full">
             <p className={styles.emptyFullMessage}>
@@ -1717,6 +2345,8 @@ export function InfoboardScreen1({
       <KioskShellFooter
         productLogoSrc={productLogoSrc}
         announcement={announcement}
+        jumbotronAmbient
+        shellTheme={venueDisplayLight ? "light" : "dark"}
       />
     </div>
   );

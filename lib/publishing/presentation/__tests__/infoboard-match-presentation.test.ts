@@ -165,19 +165,19 @@ describe("resolveInfoboardMatchPresentation", () => {
       "FC Allschwil",
     );
 
-    expect(result?.home.clubDisplayName).toBe("FC Allschwil E1");
-    expect(result?.home.teamSubDisplayName).toBeNull();
+    expect(result?.home.clubDisplayName).toBe("FC Allschwil");
+    expect(result?.home.teamSubDisplayName).toBe("E1");
   });
 
-  it("13 — external opponent uses unified club label", () => {
+  it("13 — external opponent uses club + team hierarchy when canonical club exists", () => {
     const result = resolveInfoboardMatchPresentation(
       makeIdentity(),
       "https://cdn.example.com/tenant.png",
       "FC Allschwil",
     );
 
-    expect(result?.away?.clubDisplayName).toBe("C Gelb");
-    expect(result?.away?.teamSubDisplayName).toBeNull();
+    expect(result?.away?.clubDisplayName).toBe("FC Therwil");
+    expect(result?.away?.teamSubDisplayName).toBe("C Gelb");
   });
 
   it("resolves tenant logo for own-team side and external logo for opponent", () => {
@@ -187,12 +187,37 @@ describe("resolveInfoboardMatchPresentation", () => {
       "FC Allschwil",
     );
 
-    expect(result?.home.clubDisplayName).toBe("Junioren C2");
-    expect(result?.home.teamSubDisplayName).toBeNull();
+    expect(result?.home.clubDisplayName).toBe("FC Allschwil");
+    expect(result?.home.teamSubDisplayName).toBe("Junioren C2");
     expect(result?.home.clubLogoUrl).toBe("https://cdn.example.com/tenant.png");
-    expect(result?.away?.clubDisplayName).toBe("C Gelb");
-    expect(result?.away?.teamSubDisplayName).toBeNull();
+    expect(result?.away?.clubDisplayName).toBe("FC Therwil");
+    expect(result?.away?.teamSubDisplayName).toBe("C Gelb");
     expect(result?.away?.clubLogoUrl).toBe("https://cdn.example.com/therwil.png");
+  });
+
+  it("R10 — never flattens FCA FF-14 when structured team display exists", () => {
+    const result = resolveInfoboardMatchPresentation(
+      makeIdentity({
+        home: {
+          isOwnTeam: true,
+          clubName: null,
+          clubLogoUrl: null,
+          teamName: "FC Allschwil Juniorinnen FF-14",
+          teamShortName: "FF-14",
+          teamAlternativeName: "Juniorinnen FF-14",
+          teamInfoboardDisplayName: "JUNIORINNEN FF-14",
+          teamInfoboardMatchDisplayName: null,
+          fallbackDisplayName: "FC Allschwil Juniorinnen FF-14",
+        },
+      }),
+      "https://cdn.example.com/tenant.png",
+      "FC Allschwil",
+    );
+    expect(result?.home.clubDisplayName).toBe("FC Allschwil");
+    expect(result?.home.teamSubDisplayName).toBe("JUNIORINNEN FF-14");
+    expect(`${result?.home.clubDisplayName} ${result?.home.teamSubDisplayName}`).not.toBe(
+      "FC Allschwil FF-14",
+    );
   });
 
   it("returns null when identity is absent", () => {

@@ -35,6 +35,7 @@
   --ib-text:           #E8EEF4;
   --ib-text-muted:     #6E87A0;
   --ib-text-dim:       #4A6078;
+  --ib-match-kabine-role-color: #8BA8C4;
 
   /* Event type / status accents */
   --ib-match:          #D83033;
@@ -85,36 +86,41 @@
   --ib-fs-event-type:       clamp(0.7rem, 0.9vw, 1.1rem);
   --ib-fs-event-team:       clamp(1.4rem, 1.9vw, 2.6rem);
   --ib-fs-event-opponent:   clamp(1.1rem, 1.5vw, 2rem);
-  --ib-fs-vs-label:         clamp(0.65rem, 0.82vw, 1rem);
-  --ib-fs-match-role:       clamp(0.62rem, 0.75vw, 0.88rem);
+  --ib-fs-vs-label:         clamp(2.05rem, 2.68vw, 2.65rem);
+  --ib-fs-match-role:       clamp(0.88rem, 1.08vw, 1.25rem);
   --ib-training-logo-size:  clamp(1.75rem, 2.8vh, 2.625rem);
-  --ib-match-logo-size:     clamp(2rem, 2.35vw, 2.375rem);
+  --ib-match-logo-size:     clamp(5rem, 5.85vw, 6.875rem);
   --ib-tournament-logo-size: clamp(2.25rem, 2.8vw, 3.4375rem);
   --ib-tournament-logo-size-large: clamp(2.75rem, 3.4vw, 3.4375rem);
   --ib-training-font-size:  clamp(2rem, 3vw, 4rem);
   --ib-training-font-size-compact: clamp(1.15rem, 1.55vw, 2.2rem);
   --ib-training-font-size-dense: clamp(1.05rem, 1.4vw, 2rem);
-  --ib-match-font-size:     clamp(1.65rem, 2.15vw, 2.75rem);
-  --ib-match-opponent-font-size: clamp(0.935rem, 1.25vw, 1.65rem);
+  --ib-match-font-size:     clamp(1.75rem, 2.1vw, 2rem);
+  --ib-match-opponent-font-size: clamp(1.125rem, 1.35vw, 1.375rem);
   --ib-tournament-font-size: clamp(1.85rem, 2.5vw, 2.9rem);
   /* Canonical Kabine pill geometry — tournament reference (01M). */
   --ib-kabine-badge-width: clamp(52px, 4.8vw, 76px);
   --ib-kabine-font-size-fallback: clamp(1.2rem, 1.6vw, 1.9rem);
   --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
-  --ib-fs-dest-label:       clamp(0.6rem, 0.78vw, 0.92rem);
+  --ib-fs-dest-label:       clamp(0.68rem, 0.88vw, 1.05rem);
+  --ib-fs-activity-type:    clamp(0.82rem, 1.08vw, 1.32rem);
+  --ib-match-secondary-font-size: clamp(1.125rem, 1.35vw, 1.375rem);
+  --ib-tournament-participant-font-size: clamp(1.125rem, 1.35vw, 1.3125rem);
+  --ib-tournament-participant-logo-size: var(--ib-tournament-logo-size);
+  --ib-tournament-participant-name-size: var(--ib-tournament-participant-font-size);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
-  --ib-fs-dest-team:        clamp(0.75rem, 0.95vw, 1.2rem);
+  --ib-fs-dest-team:        clamp(0.92rem, 1.15vw, 1.35rem);
   --ib-fs-participant:      clamp(0.8rem, 1vw, 1.25rem);
   --ib-fs-participant-room: clamp(0.9rem, 1.15vw, 1.45rem);
   --ib-fs-footer:           clamp(0.8rem, 1vw, 1.15rem);
   --ib-fs-powered-by:       clamp(0.5rem, 0.62vw, 0.72rem);
 
-  /* Card zone proportions — stadium wayfinding: TIME | EVENT | KABINE | PLATZ */
-  --ib-zone-time:       12%;
-  --ib-zone-event:      36%;
-  --ib-zone-room:       26%;
-  --ib-zone-pitch:      26%;
+  /* Card zone proportions — stadium wayfinding: TIME | ACTIVITY | KABINE | PLATZ (sum 100%) */
+  --ib-zone-time:       15%;
+  --ib-zone-event:      43%;
+  --ib-zone-room:       22%;
+  --ib-zone-pitch:      20%;
 
   /* Border radius */
   --ib-radius:          8px;
@@ -134,34 +140,82 @@
  * ────────────────────────────────────────────────────────────────────────── */
 
 .root[data-theme="light"] {
-  --ib-page-bg:        #F4EFE6;
+  /* SCE venue display v2 — predominantly white operational canvas (R8) */
+  --ib-page-bg:        #FFFFFF;
   --ib-card-bg:        #FFFFFF;
-  --ib-card-current:   #FFF8EC;
+  --ib-card-current:   #FFF5F5;
   --ib-header-bg:      #FFFFFF;
 
-  --ib-border:         rgba(60, 48, 32, 0.10);
-  --ib-border-strong:  rgba(60, 48, 32, 0.20);
-  --ib-border-current: rgba(232, 124, 36, 0.35);
+  --ib-border:         rgba(11, 31, 58, 0.10);
+  --ib-border-strong:  rgba(11, 31, 58, 0.18);
+  --ib-border-current: rgba(216, 48, 51, 0.35);
 
-  --ib-text:           #241C12;
-  --ib-text-muted:     #6B5F4E;
-  --ib-text-dim:       #8C8272;
+  --ib-text:           #0B1F3A;
+  --ib-text-muted:     #4A6078;
+  --ib-text-dim:       #6E87A0;
+  --ib-match-kabine-role-color: #1B3A5C;
 
-  --ib-match:          #C22A2D;
-  --ib-training:       #1849A6;
-  --ib-tournament:     #C2670F;
+  --ib-match:          #D83033;
+  --ib-training:       #1E5BC6;
+  --ib-tournament:     #E87C24;
   --ib-free:           #167A46;
   --ib-warning:        #9A6300;
 
-  --ib-match-soft:      rgba(194, 42, 45, 0.88);
-  --ib-training-soft:   rgba(24, 73, 166, 0.88);
-  --ib-tournament-soft: rgba(194, 103, 15, 0.88);
+  --ib-match-soft:      rgba(216, 48, 51, 0.92);
+  --ib-training-soft:   rgba(30, 91, 198, 0.92);
+  --ib-tournament-soft: rgba(232, 124, 36, 0.92);
 
-  --ib-text-secondary: rgba(36, 28, 18, 0.62);
+  --ib-text-secondary: rgba(11, 31, 58, 0.72);
+
+  --ib-card-shadow:    none;
+  --ib-card-gap:       0;
+  --ib-row-separator:  rgba(11, 31, 58, 0.08);
 
   --ib-red:            var(--ib-match);
   --ib-blue:           var(--ib-training);
   --ib-orange:         var(--ib-tournament);
+
+  /* R8 — shared content-top anchor for TIME | ACTIVITY | KABINE | PLATZ */
+  --ib-activity-content-top: clamp(10px, 1.15vh, 16px);
+
+  /* R8 / R10R1 — TIME-only activity tints; operational columns stay white */
+  --ib-zone-surface-time-match:      #FFF3F2;
+  --ib-zone-surface-time-training:   #F1F6FD;
+  --ib-zone-surface-time-tournament: #FFF6EA;
+  --ib-zone-surface-time-other:      #FFF5F5;
+  --ib-time-surface-match:           var(--ib-zone-surface-time-match);
+  --ib-time-surface-training:        var(--ib-zone-surface-time-training);
+  --ib-time-surface-tournament:      var(--ib-zone-surface-time-tournament);
+  --ib-zone-surface-activity:        #FFFFFF;
+  --ib-zone-surface-kabine:          #FFFFFF;
+  --ib-zone-surface-platz:           #FFFFFF;
+  /* R13 — ambient presentation layer only (foreground grid stays 15/43/22/20) */
+  --ib-zone-operational-ambient-left: var(--ib-zone-time);
+  --ib-zone-operational-ambient-span: 85%;
+  /* R16 — operational environment stacking (background anchor vs foreground grid) */
+  --venue-ambient-z-foreground: 10;
+  --ib-zone-separator:               #E4EAF2;
+  --ib-zone-separator-operational-soft: rgba(11, 31, 58, 0.05);
+
+  /* R11 semantic typography — distance-readable venue signage */
+  --ib-fs-venue-time-primary:   var(--ib-fs-event-time);
+  --ib-fs-venue-time-secondary: var(--ib-fs-event-end-time);
+  --ib-semantic-label-font-size: clamp(0.95rem, 1.15vw, 1.28rem);
+  --ib-venue-label-primary-gap:  clamp(6px, 0.65vh, 10px);
+  --ib-fs-activity-type:        var(--ib-semantic-label-font-size);
+  --ib-fs-training-team:        var(--ib-training-team-font-size, clamp(1.22rem, 1.52vw, 1.72rem));
+  --ib-fs-match-club:           var(--ib-match-font-size);
+  --ib-fs-tournament-participant: var(--ib-tournament-participant-name-size, clamp(1.05rem, 1.25vw, 1.18rem));
+
+  /* R9 LIGHT typography — distance-readable TIME; end time stays secondary */
+  --ib-fs-status-label:     clamp(1.15rem, 1.45vw, 1.375rem);
+  --ib-fs-event-time:       clamp(2.85rem, 3.75vw, 4rem);
+  --ib-fs-event-end-time:   clamp(1.2rem, 1.45vw, 1.55rem);
+  --ib-fs-dest-label:       clamp(1rem, 1.12vw, 1.125rem);
+  --ib-fs-dest-pitch:       clamp(1.5rem, 1.75vw, 1.75rem);
+  --ib-fs-dest-room:        clamp(1.5625rem, 1.85vw, 1.875rem);
+  --ib-fs-match-role:       clamp(1.3rem, 1.48vw, 1.55rem);
+  --ib-fs-board-title:      clamp(1.5rem, 1.75vw, 1.75rem);
 }
 
 /* ─── Root container ─────────────────────────────────────────────────────── */
@@ -210,10 +264,10 @@
     --ib-fs-event-type: clamp(0.7rem, 0.9cqw, 1.1rem);
     --ib-fs-event-team: clamp(1.4rem, 1.9cqw, 2.6rem);
     --ib-fs-event-opponent: clamp(1.1rem, 1.5cqw, 2rem);
-    --ib-fs-vs-label: clamp(0.65rem, 0.82cqw, 1rem);
-    --ib-fs-match-role: clamp(0.62rem, 0.75cqw, 0.88rem);
+    --ib-fs-vs-label: clamp(2.05rem, 2.68cqw, 2.65rem);
+    --ib-fs-match-role: clamp(0.88rem, 1.08cqw, 1.25rem);
     --ib-training-logo-size: clamp(1.75rem, 2.8cqh, 2.625rem);
-    --ib-match-logo-size: clamp(2rem, 2.35cqw, 2.375rem);
+    --ib-match-logo-size: clamp(5rem, 5.85cqw, 6.875rem);
     --ib-tournament-logo-size: clamp(2.25rem, 2.8cqw, 3.4375rem);
     --ib-tournament-logo-size-large: clamp(2.75rem, 3.4cqw, 3.4375rem);
     --ib-training-font-size: clamp(2rem, 3cqw, 4rem);
@@ -225,9 +279,11 @@
     --ib-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
     --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
+    --ib-semantic-label-font-size: clamp(0.72rem, 0.95cqw, 1.12rem);
+    --ib-venue-label-primary-gap: clamp(4px, 0.5cqh, 8px);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
-    --ib-fs-dest-team: clamp(0.75rem, 0.95cqw, 1.2rem);
+    --ib-fs-dest-team: clamp(0.92rem, 1.15cqw, 1.35rem);
     --ib-fs-participant: clamp(0.8rem, 1cqw, 1.25rem);
     --ib-fs-participant-room: clamp(0.9rem, 1.15cqw, 1.45rem);
     --ib-fs-footer: clamp(0.8rem, 1cqw, 1.15rem);
@@ -288,8 +344,9 @@
 .headerClubName {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-club-name);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ib-text);
   line-height: 1;
@@ -377,11 +434,23 @@
 
 .boardTitleText {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-board-title);
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  font-size: var(--ib-fs-board-title, clamp(1.95rem, 2.65vw, 3.05rem));
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ib-text-muted);
+  color: var(--ib-text);
+  line-height: 1;
+}
+
+.root[data-theme="light"] .boardTitleText {
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.root[data-theme="light"] .boardTitle {
+  background: var(--ib-page-bg);
+  border-bottom: 1px solid var(--ib-border);
 }
 
 /* ─── Main: event list ───────────────────────────────────────────────────── */
@@ -389,10 +458,24 @@
 .main {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
   padding: var(--ib-sp-3) var(--ib-sp-8) var(--ib-sp-3);
+}
+
+.main[data-has-page-heading="true"] {
+  padding-top: 0;
+}
+
+.main[data-has-page-heading="true"] .boardTitle {
+  margin-left: calc(-1 * var(--ib-sp-8));
+  margin-right: calc(-1 * var(--ib-sp-8));
+  width: calc(100% + 2 * var(--ib-sp-8));
 }
 
 /* Rolling pagination stage — fills main so each page list can distribute vertically. */
@@ -400,6 +483,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
   max-height: 100%;
@@ -415,6 +501,9 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
@@ -423,13 +512,18 @@
 /* ─── Event card ─────────────────────────────────────────────────────────── */
 
 .eventCard {
+  position: relative;
   display: grid;
   grid-template-columns: var(--ib-zone-time) var(--ib-zone-event) var(--ib-zone-room) var(--ib-zone-pitch);
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
   align-items: stretch;
   background: var(--ib-card-bg);
   border: 1px solid var(--ib-border);
   border-left: var(--ib-stripe-width) solid transparent;
   border-radius: var(--ib-radius);
+  box-shadow: var(--ib-card-shadow, none);
   /* Content-driven card height: demand metadata informs density tiers and
      pagination only — cards never stretch to absorb leftover viewport height. */
   flex-grow: 0;
@@ -456,14 +550,26 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  justify-content: flex-start;
+  gap: 0;
+  padding: var(--ib-card-pad-v) clamp(10px, 1.1vw, var(--ib-card-pad-h));
   border-right: 1px solid var(--ib-border);
-  /* Definite height ensures justify-content:center properly distributes space. */
+  min-width: 0;
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* R11R3 — TIME header/body split mirrors ACTIVITY / KABINE / PLATZ. */
+.cardTimeZone.venueColumnShell .venueColumnComposition {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+}
+
+.cardTimeZone .venueColumnBody > .venueColumnPrimary {
+  width: 100%;
 }
 
 .statusLabel {
@@ -484,6 +590,116 @@
   color: var(--ib-training);
 }
 
+/* R8 LIGHT — TIME navigation hierarchy */
+.root[data-theme="light"] [data-venue-column="time"] .statusLabel {
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.root[data-theme="light"] .eventCard[data-type="MATCH"] [data-venue-column="time"] .statusLabel[data-status="next"],
+.root[data-theme="light"] .eventCard[data-type="MATCH"] [data-venue-column="time"] .statusLabel[data-status="current"] {
+  color: var(--ib-match);
+}
+
+.root[data-theme="light"] .eventCard[data-type="TRAINING"] [data-venue-column="time"] .statusLabel[data-status="next"],
+.root[data-theme="light"] .eventCard[data-type="TRAINING"] [data-venue-column="time"] .statusLabel[data-status="current"] {
+  color: var(--ib-training);
+}
+
+.root[data-theme="light"] .eventCard[data-type="TOURNAMENT"] [data-venue-column="time"] .statusLabel[data-status="next"],
+.root[data-theme="light"] .eventCard[data-type="TOURNAMENT"] [data-venue-column="time"] .statusLabel[data-status="current"] {
+  color: var(--ib-tournament);
+}
+
+.root[data-theme="light"] .eventCard[data-type="OTHER"] [data-venue-column="time"] .statusLabel[data-status="next"],
+.root[data-theme="light"] .eventCard[data-type="OTHER"] [data-venue-column="time"] .statusLabel[data-status="current"] {
+  color: var(--ib-match);
+}
+
+.root[data-theme="light"] [data-venue-column="time"] .eventTime {
+  color: #0b1f3a;
+  font-weight: 800;
+}
+
+.root[data-theme="light"] [data-venue-column="time"] .eventEndTime {
+  color: rgba(11, 31, 58, 0.78);
+  font-weight: 600;
+}
+
+/* R8 LIGHT — TIME-only tint; white operational columns + neutral separators */
+.root[data-theme="light"] .eventCard[data-type="MATCH"] [data-venue-column="time"].cardTimeZone {
+  background: var(--ib-time-surface-match);
+}
+
+.root[data-theme="light"] .eventCard[data-type="TRAINING"] [data-venue-column="time"].cardTimeZone {
+  background: var(--ib-time-surface-training);
+}
+
+.root[data-theme="light"] .eventCard[data-type="TOURNAMENT"] [data-venue-column="time"].cardTimeZone {
+  background: var(--ib-time-surface-tournament);
+}
+
+.root[data-theme="light"] .eventCard[data-type="OTHER"] [data-venue-column="time"].cardTimeZone {
+  background: var(--ib-zone-surface-time-other);
+}
+
+.root[data-theme="light"] [data-venue-column="time"].cardTimeZone {
+  border-right-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="activity"].cardEventZone {
+  background: var(--ib-zone-surface-activity);
+  border-right-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="kabine"].cardDressingRoomZone {
+  background: var(--ib-zone-surface-kabine);
+  border-left-color: var(--ib-zone-separator);
+}
+
+.root[data-theme="light"] [data-venue-column="platz"].cardPitchZone {
+  background: var(--ib-zone-surface-platz);
+  border-left-color: var(--ib-zone-separator);
+}
+
+/* R18 — continuous schedule-board rows (no floating white card frames) */
+.root[data-theme="light"] .eventList {
+  gap: 0;
+}
+
+.root[data-theme="light"] .eventCard {
+  border: none;
+  border-left: var(--ib-stripe-width) solid transparent;
+  border-bottom: 1px solid var(--ib-row-separator);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.root[data-theme="light"] .eventCard[data-temporal="current"] {
+  border: none;
+  border-left: var(--ib-stripe-width) solid transparent;
+  border-bottom: 1px solid var(--ib-row-separator);
+}
+
+.root[data-theme="light"] .eventList > .eventCard:last-child {
+  border-bottom: none;
+}
+
+.root[data-theme="light"] .eventList[data-layout-mode="fill"][data-density="normal"]:not([data-count="1"]):not([data-count="2"]):not([data-count="3"]) {
+  gap: 0;
+}
+
+.root[data-theme="light"] .eventList[data-layout-mode="fill"][data-density="dense"] {
+  gap: 0;
+}
+
+.root[data-theme="light"] .cardTimeZone,
+.root[data-theme="light"] .cardEventZone,
+.root[data-theme="light"] .cardDressingRoomZone,
+.root[data-theme="light"] .cardPitchZone {
+  padding-top: var(--ib-activity-content-top);
+}
+
 .eventTime {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-event-time);
@@ -493,51 +709,363 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .eventEndTime {
-  font-size: var(--ib-fs-event-end-time);
+  font-size: var(--ib-fs-venue-time-secondary, var(--ib-fs-event-end-time));
   color: var(--ib-text-muted);
   line-height: 1;
+  margin-top: clamp(1px, 0.15vh, 3px);
   white-space: nowrap;
 }
 
 /* ─── CENTER ZONE: Event identity ───────────────────────────────────────── */
 
 .cardEventZone {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: clamp(6px, 0.65vh, 10px);
   padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
   border-right: 1px solid var(--ib-border);
   min-width: 0;
-  /* Definite height ensures justify-content:center properly distributes space. */
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.cardEventZone .venueColumnComposition {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+/* R13 — one decorative ambient instance per row; spans ACTIVITY + KABINE + PLATZ */
+.operationalAmbientAnchor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--ib-zone-operational-ambient-left);
+  width: var(--ib-zone-operational-ambient-span);
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.eventCard[data-venue-operational-ambient="true"] .cardTimeZone {
+  position: relative;
+  z-index: var(--venue-ambient-z-foreground, 10);
+  opacity: 1;
+}
+
+.eventCard[data-venue-operational-ambient="true"] .cardEventZone,
+.eventCard[data-venue-operational-ambient="true"] .cardDressingRoomZone,
+.eventCard[data-venue-operational-ambient="true"] .cardPitchZone,
+.eventCard[data-venue-operational-ambient="true"] .trainingMatrix {
+  position: relative;
+  z-index: var(--venue-ambient-z-foreground, 10);
+  opacity: 1;
+  isolation: isolate;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="activity"].cardEventZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="platz"].cardPitchZone {
+  background: transparent;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="activity"].cardEventZone {
+  border-right-color: var(--ib-zone-separator-operational-soft);
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="platz"].cardPitchZone {
+  border-left-color: var(--ib-zone-separator-operational-soft);
+}
+
+/* R16/R17 — localized Kabine readability veil lives in the background stack of each cell. */
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) {
+  position: relative;
+  isolation: isolate;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone::before,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(247, 250, 255, 0.28) 22%,
+    rgba(247, 250, 255, 0.36) 100%
+  );
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone > *,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) > * {
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(1) > *,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(3) > * {
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+}
+
+.eventCard[data-type="TRAINING"] .trainingMatrix {
+  position: relative;
+  z-index: var(--venue-ambient-z-foreground, 10);
+}
+
+.activityContextZone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(4px, 0.45vh, 7px);
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.activityPrimaryZone {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.trainingIdentity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(4px, 0.45vh, 7px);
+  width: 100%;
+  min-width: 0;
+}
+
+.venueActivityContentTop {
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-self: start;
+  padding-top: var(--ib-activity-content-top, var(--ib-card-pad-v));
+}
+
+/* R11R2 — semantic header at column top; primary block centred in body. */
+.venueColumnShell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0;
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
 }
 
-.eventTypeLabel {
-  font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-dest-label);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: var(--ib-text-muted);
-  margin: 0 0 2px;
+.venueColumnComposition {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
 }
 
-.eventTypeLabel[data-event-type="MATCH"]      { color: var(--ib-match-soft); }
-.eventTypeLabel[data-event-type="TOURNAMENT"] { color: var(--ib-tournament-soft); }
-.eventTypeLabel[data-event-type="TRAINING"]   { color: var(--ib-training-soft); }
+.venueColumnHeader {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.venueColumnBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.venueColumnBody > .venueColumnPrimary,
+.venueColumnBody > .activityPrimaryZone {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+
+.venueColumnContext {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.venueColumnPrimary {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  gap: clamp(2px, 0.25vh, 4px);
+}
+
+.cardPitchZone > .destPitchValue.venueColumnPrimary {
+  align-items: flex-start;
+}
+
+.venueTeamDisplayName {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ib-text);
+  line-height: 1.05;
+}
+
+.venueTeamCategoryLabel {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: var(--ib-match-secondary-font-size, clamp(0.78rem, 1vw, 1.15rem));
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ib-text-muted);
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.venueSemanticLabel,
+.eventTypeLabel {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: var(--ib-fs-activity-type, var(--ib-semantic-label-font-size));
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  margin: 0;
+  padding: clamp(4px, 0.42vh, 7px) clamp(9px, 0.95vw, 15px);
+  border-radius: var(--ib-radius-sm);
+  border: 1px solid transparent;
+  min-height: clamp(22px, 2.4vh, 30px);
+  box-sizing: border-box;
+}
+
+.eventTypeLabel[data-event-type="MATCH"],
+.venueSemanticLabel[data-semantic-label="MATCH"] {
+  color: var(--ib-match);
+  background: rgba(216, 48, 51, 0.1);
+  border-color: rgba(216, 48, 51, 0.22);
+}
+
+.eventTypeLabel[data-event-type="TOURNAMENT"],
+.venueSemanticLabel[data-semantic-label="TURNIER"] {
+  color: var(--ib-tournament);
+  background: rgba(232, 124, 36, 0.12);
+  border-color: rgba(232, 124, 36, 0.28);
+}
+
+.eventTypeLabel[data-event-type="TRAINING"],
+.venueSemanticLabel[data-semantic-label="TRAINING"] {
+  color: var(--ib-training);
+  background: rgba(30, 91, 198, 0.1);
+  border-color: rgba(30, 91, 198, 0.22);
+}
+
+.eventTypeLabel[data-event-type="KABINE"],
+.venueSemanticLabel[data-semantic-label="KABINE"] {
+  color: #1849A6;
+  background: rgba(24, 73, 166, 0.1);
+  border-color: rgba(24, 73, 166, 0.24);
+}
+
+.eventTypeLabel[data-event-type="PLATZ"],
+.venueSemanticLabel[data-semantic-label="PLATZ"] {
+  color: #174D38;
+  background: rgba(23, 77, 56, 0.1);
+  border-color: rgba(23, 77, 56, 0.24);
+}
 
 .matchIdentity {
   display: flex;
   flex-direction: column;
   gap: 0;
   min-width: 0;
+  width: 100%;
+}
+
+.matchIdentity[data-venue-match-layout="symmetric-block"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(10px, 1.2vw, 20px);
+  row-gap: clamp(4px, 0.45vh, 8px);
+  width: 100%;
+  min-height: 0;
+}
+
+.matchSideBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(6px, 0.65vh, 10px);
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.matchCrestSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ib-match-logo-size);
+  height: var(--ib-match-logo-size);
+  flex: 0 0 auto;
+}
+
+.matchSideText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 0.25vh, 4px);
+  min-width: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .matchTeamText {
@@ -553,6 +1081,17 @@
   width: var(--ib-match-logo-size);
   height: var(--ib-match-logo-size);
   flex: 0 0 var(--ib-match-logo-size);
+}
+
+.matchCrestSlot .matchClubLogo,
+.matchCrestSlot .matchClubLogoPlaceholder,
+.matchCrestSlot .tournamentClubLogo,
+.matchCrestSlot .tournamentClubLogoPlaceholder {
+  width: 100%;
+  height: 100%;
+  flex: 0 0 auto;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .tournamentClubLogo,
@@ -589,16 +1128,47 @@
   color: var(--ib-text-dim);
 }
 
-.tournamentParticipantLogos {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  column-gap: clamp(12px, 1.4vw, 22px);
-  row-gap: clamp(8px, 1vh, 14px);
-  flex-wrap: wrap;
+.tournamentParticipantBlocks {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--ib-tournament-participant-columns, 2),
+    minmax(0, 1fr)
+  );
+  column-gap: clamp(10px, 1.2vw, 18px);
+  row-gap: clamp(8px, 0.9vh, 12px);
+  align-items: start;
+  align-content: center;
+  justify-content: center;
+  flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   max-width: 100%;
+  min-height: 0;
+}
+
+.tournamentParticipantBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(5px, 0.55vh, 8px);
+  min-width: 0;
+  text-align: center;
+}
+
+.tournamentParticipantBlock .matchCrestSlot {
+  width: var(--ib-tournament-participant-logo-size, var(--ib-tournament-logo-size));
+  height: var(--ib-tournament-participant-logo-size, var(--ib-tournament-logo-size));
+}
+
+.tournamentParticipantText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 0.25vh, 4px);
+  min-width: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .tournamentIdentity {
@@ -638,15 +1208,22 @@
 
 .tournamentParticipantName {
   min-width: 0;
-  font-size: clamp(0.9rem, 1.12vw, 1.3rem);
-  font-weight: 600;
-  line-height: 1.15;
+  font-size: var(
+    --ib-tournament-participant-name-size,
+    var(--ib-tournament-participant-font-size, clamp(0.78rem, 1.02vw, 1.18rem))
+  );
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.12;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--ib-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--ib-text);
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  max-width: 100%;
+  width: 100%;
 }
 
 .matchTeamRow {
@@ -661,6 +1238,7 @@
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-event-team);
   font-weight: 700;
+  font-style: italic;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ib-text);
@@ -668,6 +1246,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.eventCard[data-type="TRAINING"] .eventTeamMain.venueTeamDisplayName {
+  font-size: var(--ib-training-font-size, var(--ib-fs-event-team));
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  max-width: 100%;
 }
 
 .eventTeamOpponent {
@@ -684,65 +1271,76 @@
   text-overflow: ellipsis;
 }
 
-.eventCard[data-type="MATCH"] .eventTeamMain {
-  --ib-match-team-name-base: var(--ib-match-font-size);
-  font-size: var(--ib-match-team-name-base);
+.eventCard[data-type="MATCH"] .matchSideBlock .venueTeamCategoryLabel {
+  font-size: var(
+    --ib-match-secondary-font-size,
+    var(--ib-match-opponent-font-size)
+  );
 }
 
-.eventCard[data-type="MATCH"] .eventTeamOpponent {
-  --ib-match-team-name-base: var(--ib-match-opponent-font-size);
-  font-size: var(--ib-match-team-name-base);
+.eventCard[data-type="MATCH"] .matchSideBlock .venueTeamDisplayName {
+  font-size: var(--ib-match-font-size);
+  font-weight: 800;
+  font-style: italic;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  max-width: 100%;
+  width: 100%;
 }
 
-/*
- * Match display names remain one semantic label on one line. Length-based
- * presentation tiers cap only names that need less width; short names retain
- * the existing event-count/density size. At 1920px the medium and minimum
- * tiers resolve to 41.28px and 34.56px respectively, leaving room for an
- * XLARGE 56px crest in the Match content column.
- */
 .eventCard[data-type="MATCH"] [data-match-team-label] {
   display: block;
   min-width: 0;
   max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-}
-
-.eventCard[data-type="MATCH"] [data-match-name-size="medium"] {
-  font-size: min(
-    var(--ib-match-team-name-base),
-    clamp(1.65rem, 2.15vw, 2.75rem)
-  );
-}
-
-.eventCard[data-type="MATCH"] [data-match-name-size="minimum"] {
-  font-size: min(
-    var(--ib-match-team-name-base),
-    clamp(1.4rem, 1.8vw, 2.25rem)
-  );
 }
 
 .vsLabel {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-vs-label);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  font-style: normal;
+  letter-spacing: 0.12em;
   color: var(--ib-text-dim);
   text-transform: uppercase;
   line-height: 1;
-  align-self: flex-start;
-  padding-left: calc(var(--ib-match-logo-size) + var(--ib-sp-3));
-  margin: clamp(2px, 0.25vh, 4px) 0;
+  justify-self: center;
+  align-self: center;
+  padding: 0 clamp(6px, 0.75vw, 12px);
+  margin: 0;
+}
+
+/* R8 — website-inspired VS (subordinate to club blocks, readable at distance) */
+.matchVersusLabel {
+  font-weight: 800;
+  font-style: italic;
+  color: var(--ib-text);
+  letter-spacing: 0.06em;
+}
+
+.matchIdentity[data-venue-match-layout="symmetric-block"] .matchSideBlock:first-of-type {
+  grid-column: 1;
+}
+
+.matchIdentity[data-venue-match-layout="symmetric-block"] .vsLabel {
+  grid-column: 2;
+  align-self: center;
+}
+
+.matchIdentity[data-venue-match-layout="symmetric-block"] .matchSideBlock:last-of-type {
+  grid-column: 3;
 }
 
 .eventTeamSubtitle {
-  font-size: clamp(0.75rem, 0.95vw, 1.2rem);
-  font-weight: 500;
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: clamp(0.72rem, 0.9vw, 1.05rem);
+  font-weight: 600;
+  font-style: normal;
   color: var(--ib-text-muted);
-  line-height: 1;
+  line-height: 1.1;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
 }
 
 /* ─── RIGHT ZONE: Destination ───────────────────────────────────────────── */
@@ -769,11 +1367,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--ib-sp-3);
-  /* Ensure the zone has a definite height so justify-content:center works.
-   * Grid items with align-self:stretch receive the grid area height, but
-   * height:100% explicitly establishes a definite height for the flex
-   * algorithm's justify-content calculation. */
+  align-items: flex-start;
+  gap: 0;
   min-height: 0;
   height: 100%;
 }
@@ -914,12 +1509,17 @@
 .root[data-theme="light"] .cardDressingRoomZone > .destRoomValue {
   background: rgba(24, 73, 166, 0.1);
   border-color: rgba(24, 73, 166, 0.28);
+  color: #0B1F3A;
+  font-weight: 800;
 }
 
 .root[data-theme="light"] .destPitchValue,
-.root[data-theme="light"] .trainingGroupPitchValue {
-  background: rgba(22, 122, 70, 0.12);
-  border-color: rgba(22, 122, 70, 0.32);
+.root[data-theme="light"] .trainingGroupPitchValue,
+.root[data-theme="light"] .cardPitchZone > .destPitchValue {
+  background: #E8F3ED;
+  border-color: rgba(23, 77, 56, 0.22);
+  color: #174D38;
+  font-weight: 800;
 }
 
 .destRoomRow {
@@ -947,7 +1547,7 @@
 
 .matchAllocRow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--ib-sp-2);
   flex-wrap: nowrap;
 }
@@ -963,9 +1563,8 @@
 
 .matchAllocRole {
   font-size: var(--ib-fs-match-role);
-  font-weight: 500;
-  color: var(--ib-text-dim);
-  opacity: 0.82;
+  font-weight: 600;
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -975,7 +1574,7 @@
 }
 
 .matchAllocTeam {
-  font-size: var(--ib-fs-dest-team);
+  font-size: var(--ib-kabine-team-font-size, var(--ib-fs-dest-team));
   color: var(--ib-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1012,7 +1611,7 @@
 }
 
 .participantAllocationRow.homeTeamEmphasis .participantTeamName {
-  color: var(--ib-text);
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
 }
 
 .participantRoomValue {
@@ -1031,15 +1630,15 @@
 }
 
 .participantTeamName {
-  font-size: clamp(0.9rem, 1.12vw, 1.3rem);
+  font-size: var(--ib-fs-match-role);
   font-weight: 600;
-  color: var(--ib-text-secondary);
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1.15;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
 }
 
 /* ─── Empty state ────────────────────────────────────────────────────────── */
@@ -1207,33 +1806,54 @@
 /* Cards become taller when fewer events are shown.                           */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
-/* 1 event — hero card */
+/* 1 event — hero card (TIME scale via R9 venue-distance tokens on event list) */
 .eventList[data-count="1"] {
   --ib-card-pad-v:  clamp(24px, 4vh, 48px);
   --ib-card-pad-h:  clamp(24px, 2.8vw, 40px);
-  --ib-fs-event-time:  clamp(3rem, 4.5vw, 5.5rem);
   --ib-fs-event-team:  clamp(2rem, 3vw, 4rem);
   --ib-fs-dest-pitch:  clamp(2.2rem, 3.2vw, 4.2rem);
   --ib-fs-dest-room:   clamp(1.5rem, 2.2vw, 3rem);
   --ib-tournament-logo-size: var(--ib-tournament-logo-size-large);
 }
 
-/* Single-event hero — ~35–45% usable body height, content vertically composed */
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
-  flex: 0 0 clamp(300px, 40vh, 460px);
-  max-height: 45vh;
+/* R8R1 — low-count pages distribute the activity canvas across equal rows. */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-content: stretch;
+  justify-items: stretch;
+}
+
+.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+  justify-items: stretch;
+}
+
+.eventList[data-count="3"]:not([data-density="dense"]):not([data-density="ultra"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  align-content: stretch;
+  justify-items: stretch;
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard,
+.eventList[data-count="2"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard,
+.eventList[data-count="3"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .statusLabel {
   font-size: clamp(0.95rem, 1.25vw, 1.55rem);
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventTime {
-  font-size: clamp(3.4rem, 5vw, 6rem);
-}
-
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventEndTime {
-  font-size: clamp(1rem, 1.35vw, 1.65rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardTimeZone,
@@ -1247,9 +1867,8 @@
   gap: clamp(6px, 0.75vh, 12px);
 }
 
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .vsLabel {
-  margin: clamp(8px, 1vh, 14px) 0;
-  font-size: clamp(0.75rem, 0.95vw, 1.15rem);
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchVersusLabel {
+  font-size: var(--ib-fs-vs-label);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocation {
@@ -1257,7 +1876,7 @@
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocRole {
-  font-size: clamp(0.72rem, 0.9vw, 1.05rem);
+  font-size: clamp(1.02rem, 1.28vw, 1.48rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .destPitchValue,
@@ -1275,9 +1894,8 @@
   font-size: var(--ib-training-font-size);
 }
 
-/* Single-event match hero — equal home/away prominence */
-.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="MATCH"] .eventTeamOpponent {
-  --ib-match-team-name-base: var(--ib-match-font-size);
+/* Single-event match hero — equal home/away prominence (shared venueTeamDisplayName) */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="MATCH"] .matchSideBlock .venueTeamDisplayName {
   font-size: var(--ib-match-font-size);
   font-weight: 700;
   color: var(--ib-text);
@@ -1296,7 +1914,7 @@
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantTeamName {
-  font-size: clamp(1rem, 1.35vw, 1.55rem);
+  font-size: clamp(1.02rem, 1.28vw, 1.48rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantAllocationBlock {
@@ -1310,11 +1928,10 @@
   flex: 0 0 var(--ib-tournament-logo-size-large);
 }
 
-/* 2 events — large balanced */
+/* 2 events — large balanced (~37–40% canvas height per card at 1080p) */
 .eventList[data-count="2"] {
   --ib-card-pad-v:  clamp(20px, 3.5vh, 40px);
   --ib-card-pad-h:  clamp(22px, 2.4vw, 36px);
-  --ib-fs-event-time:  clamp(2.6rem, 3.8vw, 4.8rem);
   --ib-fs-event-team:  clamp(1.8rem, 2.5vw, 3.4rem);
   --ib-fs-dest-pitch:  clamp(2rem, 2.8vw, 3.6rem);
   --ib-fs-dest-room:   clamp(1.3rem, 1.8vw, 2.4rem);
@@ -1324,7 +1941,6 @@
 .eventList[data-count="3"] {
   --ib-card-pad-v:  clamp(14px, 2.4vh, 28px);
   --ib-card-pad-h:  clamp(18px, 2vw, 30px);
-  --ib-fs-event-time:  clamp(2.4rem, 3.2vw, 4.2rem);
   --ib-fs-event-team:  clamp(1.6rem, 2.1vw, 2.8rem);
   --ib-fs-dest-pitch:  clamp(1.8rem, 2.4vw, 3.2rem);
   --ib-fs-dest-room:   clamp(1.2rem, 1.6vw, 2.1rem);
@@ -1334,7 +1950,6 @@
 .eventList[data-count="4"] {
   --ib-card-pad-v:  clamp(10px, 1.6vh, 20px);
   --ib-card-pad-h:  clamp(16px, 1.8vw, 26px);
-  --ib-fs-event-time:  clamp(2rem, 2.6vw, 3.4rem);
   --ib-fs-event-team:  clamp(1.3rem, 1.7vw, 2.3rem);
   --ib-fs-dest-pitch:  clamp(1.5rem, 2vw, 2.7rem);
   --ib-fs-dest-room:   clamp(1rem, 1.35vw, 1.8rem);
@@ -1344,7 +1959,6 @@
 .eventList[data-count="5"] {
   --ib-card-pad-v:  clamp(8px, 1.1vh, 14px);
   --ib-card-pad-h:  clamp(14px, 1.6vw, 22px);
-  --ib-fs-event-time:  clamp(1.8rem, 2.3vw, 3rem);
   --ib-fs-event-team:  clamp(1.2rem, 1.55vw, 2.1rem);
   --ib-fs-dest-pitch:  clamp(1.4rem, 1.8vw, 2.4rem);
   --ib-fs-dest-room:   clamp(0.9rem, 1.2vw, 1.6rem);
@@ -1355,7 +1969,6 @@
   --ib-card-pad-v:  clamp(6px, 0.9vh, 12px);
   --ib-card-pad-h:  clamp(12px, 1.4vw, 20px);
   --ib-card-gap:    clamp(3px, 0.4vh, 6px);
-  --ib-fs-event-time:  clamp(1.6rem, 2vw, 2.6rem);
   --ib-fs-event-team:  clamp(1.1rem, 1.4vw, 1.9rem);
   --ib-fs-dest-pitch:  clamp(1.3rem, 1.6vw, 2.1rem);
   --ib-fs-dest-room:   clamp(0.85rem, 1.1vw, 1.45rem);
@@ -1365,10 +1978,10 @@
 
 @media (max-width: 1366px) {
   .root {
-    --ib-zone-time:   13%;
-    --ib-zone-event:  35%;
-    --ib-zone-room:   26%;
-    --ib-zone-pitch:  26%;
+    --ib-zone-time:   15%;
+    --ib-zone-event:  43%;
+    --ib-zone-room:   22%;
+    --ib-zone-pitch:  20%;
     --ib-card-gap:    3px;
   }
 
@@ -1420,10 +2033,8 @@
   grid-column: 2 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-auto-rows: auto;
-  /* Center the complete TRAINING/KABINE/PLATZ block when the card has
-     headroom; safe center falls back to start before clipping dense groups. */
-  align-content: safe center;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -1435,32 +2046,30 @@
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  align-items: end;
+  align-items: start;
+  align-self: start;
   padding: var(--ib-card-pad-v) 0 0;
   column-gap: 0;
   min-width: 0;
 }
 
-.trainingMatrixHeaders > .destLabel,
-.trainingMatrixHeaders > .eventTypeLabel {
-  display: block;
+.trainingMatrixHeaders > span,
+.trainingMatrixHeaders > .eventTypeLabel,
+.trainingMatrixHeaders > .venueSemanticLabel,
+.trainingActivityHeader .eventTypeLabel,
+.trainingActivityHeader .venueSemanticLabel {
+  display: flex;
+  align-items: flex-start;
   align-self: start;
   justify-self: start;
   margin: 0;
-  font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-dest-label);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
-.trainingMatrixHeaders > .eventTypeLabel {
-  color: var(--ib-training-soft);
-}
-
-.trainingMatrixHeaders > .destLabel {
-  color: var(--ib-training-soft);
+.trainingActivityHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .trainingMatrixHeaders > :nth-child(1) {
@@ -1482,11 +2091,18 @@
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  grid-auto-rows: var(--ib-training-row-height, minmax(clamp(24px, 3.2vh, 44px), auto));
+  grid-template-rows: repeat(
+    var(--ib-training-row-count, 1),
+    minmax(var(--ib-training-row-min, clamp(40px, 4.5vh, 56px)), 1fr)
+  );
   row-gap: var(--ib-training-row-gap, 0);
-  align-content: start;
+  align-content: center;
+  align-self: stretch;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   padding-bottom: var(--ib-card-pad-v);
+  box-sizing: border-box;
 }
 
 .trainingMatrixRow {
@@ -1494,7 +2110,7 @@
   display: grid;
   grid-template-columns: subgrid;
   align-items: center;
-  min-height: var(--ib-training-row-height, clamp(24px, 3.2vh, 44px));
+  min-height: var(--ib-training-row-min, clamp(40px, 4.5vh, 56px));
   min-width: 0;
 }
 
@@ -1564,7 +2180,7 @@
 /* Fill-mode pages with headroom — center the stack and widen card gaps slightly
  * without stretching card interiors. Dense/ultra tiers keep top alignment so
  * multi-card pages (e.g. dense training cohort + matches) stay clip-safe. */
-.eventList[data-layout-mode="fill"][data-density="normal"] {
+.eventList[data-layout-mode="fill"][data-density="normal"]:not([data-count="1"]):not([data-count="2"]):not([data-count="3"]) {
   justify-content: center;
   padding-top: clamp(10px, 1.4vh, 20px);
   padding-bottom: clamp(8px, 1.1vh, 16px);
@@ -1590,11 +2206,10 @@
   min-height: 0;
 }
 
-/* Fill-mode training cards keep compact row tracks; the shared matrix centers
- * as one block instead of stretching individual rows to absorb card height. */
+/* Fill-mode training cards distribute cohort rows across available card height. */
 .eventList[data-layout-mode="fill"] .trainingRowMatrix {
   min-height: 0;
-  align-content: start;
+  align-content: stretch;
 }
 
 /* ─── Adaptive density tiers ────────────────────────────────────────────────
@@ -1622,13 +2237,12 @@
   padding-bottom: clamp(6px, 0.75vh, 11px);
 }
 
-.eventList[data-density="dense"] .trainingRowMatrix {
-  grid-auto-rows: minmax(clamp(26px, 2.9vh, 38px), auto);
+.eventList[data-density="dense"] .eventCard[data-type="TRAINING"] {
+  --ib-training-row-min: clamp(34px, 3.8vh, 48px);
 }
 
 .eventList[data-density="dense"] .trainingMatrixRow {
-  min-height: clamp(26px, 2.9vh, 38px);
-  --ib-training-cell-padding-y: 1px;
+  --ib-training-cell-padding-y: 2px;
 }
 
 /* ultra tier */
@@ -1640,13 +2254,79 @@
   padding-bottom: clamp(5px, 0.65vh, 9px);
 }
 
-.eventList[data-density="ultra"] .trainingRowMatrix {
-  grid-auto-rows: minmax(clamp(24px, 2.7vh, 36px), auto);
+.eventList[data-density="ultra"] .eventCard[data-type="TRAINING"] {
+  --ib-training-row-min: clamp(30px, 3.4vh, 44px);
 }
 
 .eventList[data-density="ultra"] .trainingMatrixRow {
-  min-height: clamp(24px, 2.7vh, 36px);
   --ib-training-cell-padding-y: 1px;
+}
+
+.trainingIdentityRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(8px, 0.85vw, 14px);
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.trainingIdentityRow .matchCrestSlot {
+  width: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  height: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  flex: 0 0 var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+}
+
+/* R11 — single training: horizontal crest + XL team, vertically centred in row */
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingMatrixCell {
+  align-items: center;
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: clamp(10px, 1vw, 16px);
+}
+
+.eventCard[data-type="TRAINING"][data-training-count="1"] .trainingIdentityRow .matchSideText {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.trainingIdentityRow .matchSideText {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.trainingIdentityRow .venueTeamDisplayName {
+  font-size: var(
+    --ib-training-team-name-size,
+    var(--ib-fs-training-team, var(--ib-training-team-font-size, var(--ib-training-font-size)))
+  );
+  font-weight: 800;
+  line-height: 1.02;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-overflow: clip;
+}
+
+.trainingIdentityRow .venueTeamCategoryLabel {
+  font-size: var(--ib-training-club-font-size, var(--ib-match-secondary-font-size));
+  font-style: normal;
+}
+
+.eventCard[data-type="TRAINING"] .trainingRowMatrix {
+  row-gap: var(--ib-training-participant-row-gap, 0);
+}
+
+.eventCard[data-type="TRAINING"][data-training-participant-density="compact"] .trainingIdentityRow .venueTeamDisplayName,
+.eventCard[data-type="TRAINING"][data-training-participant-density="dense"] .trainingIdentityRow .venueTeamDisplayName {
+  font-weight: 700;
 }
 
 .trainingGroupTeamName {
@@ -1657,28 +2337,42 @@
   text-transform: uppercase;
   color: var(--ib-text);
   line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: var(--ib-sp-2);
   min-width: 0;
 }
 
 .trainingClubLogo {
-  width: var(--ib-training-logo-size);
-  height: var(--ib-training-logo-size);
-  flex: 0 0 var(--ib-training-logo-size);
+  width: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  height: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  flex: 0 0 var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
   object-fit: contain;
   align-self: center;
 }
 
 .trainingGroupTeamText {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.trainingGroupTeamSub {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: var(--ib-match-secondary-font-size, clamp(0.78rem, 1vw, 1.15rem));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ib-text-muted);
+  line-height: 1.1;
 }
 
 .trainingGroupRowEndTime {
@@ -1698,7 +2392,10 @@
    * For standard pitch designations (STADION, KR 1, KUNSTRASEN 2) this
    * produces legible two-line wrapping when the column is narrow.
    */
-  font-size: var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)));
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)))
+  );
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -1734,27 +2431,35 @@
  * Typography is presentation-controlled. Pagination splits oversized cohorts
  * instead of shrinking team-name font sizes by row count.
  */
-.eventCard[data-type="TRAINING"][data-group-density="normal"] {
-  /* Normal labels can resolve to a ~63px line box at 1080p. Keep the shared
-     matrix track taller than that line box so adjacent records cannot overlap. */
-  --ib-training-row-height: clamp(52px, 6vh, 68px);
-  --ib-training-row-gap: clamp(8px, 0.9vh, 12px);
-  --ib-training-cell-padding-y: clamp(3px, 0.4vh, 7px);
+.eventCard[data-type="TRAINING"][data-group-density="spacious"] {
+  --ib-training-row-min: clamp(52px, 6.2vh, 80px);
+  --ib-training-row-gap: clamp(8px, 0.9vh, 14px);
+  --ib-training-cell-padding-y: clamp(4px, 0.45vh, 8px);
   --ib-training-header-gap: clamp(5px, 0.55vh, 8px);
+}
+
+.eventCard[data-type="TRAINING"][data-group-density="standard"] {
+  --ib-training-row-min: clamp(46px, 5.4vh, 72px);
+  --ib-training-row-gap: clamp(6px, 0.75vh, 11px);
+  --ib-training-cell-padding-y: clamp(3px, 0.38vh, 7px);
+  --ib-training-header-gap: clamp(4px, 0.5vh, 7px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingMatrixHeaders {
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix {
-  --ib-training-row-height: clamp(26px, 3.1vh, 38px);
+.eventCard[data-type="TRAINING"][data-group-density="compact"] {
+  --ib-training-row-min: clamp(36px, 4.2vh, 58px);
   --ib-training-row-gap: clamp(2px, 0.35vh, 5px);
-  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 5px);
+  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 4px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupPitchValue {
-  font-size: clamp(1rem, 1.35vw, 1.75rem);
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    clamp(1.12rem, 1.48vw, 1.82rem)
+  );
   line-height: 1.05;
 }
 
@@ -1762,53 +2467,43 @@
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingRowMatrix {
-  --ib-training-row-height: clamp(24px, 2.8vh, 34px);
-  --ib-training-row-gap: clamp(2px, 0.28vh, 4px);
+.eventCard[data-type="TRAINING"][data-group-density="dense"] {
+  --ib-training-row-min: clamp(32px, 3.6vh, 50px);
+  --ib-training-row-gap: clamp(1px, 0.22vh, 4px);
   --ib-training-cell-padding-y: clamp(1px, 0.2vh, 3px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {
-  font-size: clamp(0.95rem, 1.25vw, 1.6rem);
-  line-height: 1.02;
+  font-size: var(
+    --ib-training-group-pitch-font-size,
+    clamp(1.12rem, 1.38vw, 1.72rem)
+  );
+  line-height: 1.05;
 }
 
-/* INFOBOARD-TV-UX-04 — MATCH/TOURNAMENT vertical centering
- *
- * Match and Tournament zones vertically center their [label + content]
- * block within the available card height. The base flex layout
- * (justify-content: center) already achieves this; these rules add
- * precise gap control and prevent overflow.
- *
- * Cross-zone alignment: all three zones (MEISTERSCHAFT/TURNIER, KABINE,
- * PLATZ) use the same flex centering, so their content blocks share
- * approximate vertical positions. No fixed top offsets are used.
- */
-.eventCard[data-type="MATCH"] .cardEventZone,
+/* SCE-INFOBOARD-V2-01-R3 / R11R2 — top header + centred primary in ACTIVITY / KABINE / PLATZ */
 .eventCard[data-type="MATCH"] .cardDressingRoomZone,
 .eventCard[data-type="MATCH"] .cardPitchZone,
-.eventCard[data-type="TOURNAMENT"] .cardEventZone,
 .eventCard[data-type="TOURNAMENT"] .cardDressingRoomZone,
-.eventCard[data-type="TOURNAMENT"] .cardPitchZone {
-  /* Explicitly restore flex centering that INFOBOARD-TV-UX-04 previously
-   * suppressed by switching to display:grid/align-content:stretch. */
+.eventCard[data-type="TOURNAMENT"] .cardPitchZone,
+.eventCard[data-type="TRAINING"] .cardDressingRoomZone,
+.eventCard[data-type="TRAINING"] .cardPitchZone {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: clamp(5px, 0.55vh, 8px);
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Labels: single-line, no overflow into adjacent zones. */
-.eventCard[data-type="MATCH"] .cardEventZone > .eventTypeLabel,
-.eventCard[data-type="MATCH"] .cardDressingRoomZone > .destLabel,
-.eventCard[data-type="MATCH"] .cardPitchZone > .destLabel,
-.eventCard[data-type="TOURNAMENT"] .cardEventZone > .eventTypeLabel,
-.eventCard[data-type="TOURNAMENT"] .cardDressingRoomZone > .destLabel,
-.eventCard[data-type="TOURNAMENT"] .cardPitchZone > .destLabel {
-  margin: 0;
-  padding: 0;
-  line-height: 1;
+/* Semantic badges: single-line containment without stripping badge geometry. */
+.eventCard[data-type="MATCH"] .venueSemanticLabel,
+.eventCard[data-type="TOURNAMENT"] .venueSemanticLabel,
+.eventCard[data-type="TRAINING"] .venueSemanticLabel,
+.eventCard[data-type="MATCH"] .activityContextZone > .eventTypeLabel,
+.eventCard[data-type="TOURNAMENT"] .activityContextZone > .eventTypeLabel {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1827,24 +2522,52 @@
   max-width: 100%;
 }
 
-/* Kabine team label: ellipsize rather than overflow across column boundary. */
+/* Kabine team label — wrap primary identity; avoid single-line ellipsis (R8). */
 .eventCard[data-type="MATCH"] .matchAllocTeam {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
   word-break: normal;
   line-height: 1.15;
 }
 
-/* Tournament participant names: controlled wrapping within the zone. */
-.eventCard[data-type="TOURNAMENT"] .participantTeamName,
-.eventCard[data-type="TOURNAMENT"] .tournamentParticipantName {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  overflow-wrap: normal;
+/* Tournament ACTIVITY participant names: wrap without ellipsis (R6 no-clip). */
+.eventCard[data-type="TOURNAMENT"] .tournamentParticipantName,
+.eventCard[data-type="TOURNAMENT"] .tournamentParticipantText .venueTeamCategoryLabel {
+  font-size: var(--ib-fs-tournament-participant, var(--ib-tournament-participant-name-size, clamp(1.05rem, 1.25vw, 1.18rem)));
+  font-weight: 700;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.12;
+}
+
+.eventCard[data-type="TOURNAMENT"] .participantTeamName {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Kabine allocation team labels — B-tier association (R11R5 ≡ match HEIM/GAST). */
+.eventCard[data-type="TOURNAMENT"] .participantTeamName {
+  font-size: var(--ib-fs-match-role);
+  font-weight: 600;
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
   word-break: normal;
   line-height: 1.15;
+}
+
+.eventCard[data-type="TOURNAMENT"] .participantTeamName .venueTeamCategoryLabel {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  letter-spacing: inherit;
 }
 
 /* Keep room number and team visually associated when the team wraps. */

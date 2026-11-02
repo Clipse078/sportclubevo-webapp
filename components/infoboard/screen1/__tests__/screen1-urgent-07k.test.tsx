@@ -131,7 +131,7 @@ describe("Training font presets", () => {
     const root = rootFor(trainings, { trainingFontSize: "XLARGE" });
     expect(screen.getByTestId("training-group").closest("li")).toHaveAttribute(
       "data-group-density",
-      "normal",
+      "compact",
     );
     expect(root.style.getPropertyValue("--ib-training-font-size")).toBe(
       TRAINING_FONT_SIZE_CSS.XLARGE.normal,
@@ -182,17 +182,20 @@ describe("Match font presets and responsive ceiling", () => {
     expect(row.querySelector('[class*="matchTeamSubName"]')).toBeNull();
   });
 
-  it("applies the selected preset before the long-name cap", () => {
-    rootFor([longMatch], { matchFontSize: "SMALL" });
+  it("applies the selected font preset through shared match team typography", () => {
+    const root = rootFor([longMatch], { matchFontSize: "SMALL" });
     expect(
       screen.getByTestId("match-home-team-row").querySelector(
         "[data-match-team-label]",
       ),
-    ).toHaveAttribute("data-match-name-size", "medium");
-    expect(CSS).toMatch(
-      /\.eventCard\[data-type="MATCH"\] \.eventTeamMain[\s\S]*--ib-match-team-name-base:\s*var\(--ib-match-font-size\)/,
+    ).not.toHaveAttribute("data-match-name-size");
+    expect(root.style.getPropertyValue("--ib-match-font-size")).toBe(
+      MATCH_FONT_SIZE_CSS.SMALL.primary,
     );
-    expect(CSS).toContain("text-overflow: clip");
+    expect(CSS).toMatch(
+      /\.eventCard\[data-type="MATCH"\] \.matchSideBlock \.venueTeamDisplayName[\s\S]*font-size:\s*var\(--ib-match-font-size\)/,
+    );
+    expect(CSS).toMatch(/-webkit-line-clamp:\s*2/);
   });
 
   it.each(["SMALL", "MEDIUM"] as const)(

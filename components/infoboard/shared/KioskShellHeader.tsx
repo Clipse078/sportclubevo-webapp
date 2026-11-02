@@ -24,6 +24,15 @@
 import type { ReactElement, ReactNode } from "react";
 import { LiveKioskShellWeather } from "@/components/infoboard/shared/LiveKioskShellWeather";
 import { KioskShellWeatherDisplay } from "@/components/infoboard/shared/KioskShellWeatherDisplay";
+import {
+  VenueHeaderAmbientLayer,
+  VenueHeaderTenantAccent,
+} from "@/components/infoboard/venue-display/VenueAmbientLayer";
+import { INFOBOARD_AMBIENT_ASSET_PATHS } from "@/lib/infoboard/screen1-ambient-assets";
+import {
+  resolveVenueHeaderCssVars,
+  type VenueHeaderBrandingInput,
+} from "@/lib/infoboard/venue-header-presentation";
 
 import { LiveClockScreen1 } from "@/components/infoboard/screen1/LiveClockScreen1";
 import {
@@ -68,13 +77,43 @@ export type KioskShellHeaderProps = {
    * New callers should prefer the `weather` prop.
    */
   rightContent?: ReactNode;
+
+  /** Venue display shell palette — defaults to dark stadium header. */
+  shellTheme?: "dark" | "light";
+
+  /** Full-width subtitle band (legacy) vs compact inline welcome in the header row. */
+  subtitlePlacement?: "band" | "header-inline";
+
+  /** Screen 1 tenant ambient header (decorative raster + accent). */
+  venueHeaderAmbient?: boolean;
+  venueHeaderBranding?: VenueHeaderBrandingInput | null;
 };
 
-const HEADER_BG = "#0A1828";
-const SUBTITLE_BORDER = "1px solid rgba(99, 135, 175, 0.16)";
-const MUTED_TEXT = "#6E87A0";
+const HEADER_THEME = {
+  dark: {
+    headerBg: "#0A1828",
+    subtitleBorder: "1px solid rgba(99, 135, 175, 0.16)",
+    mutedText: "#6E87A0",
+    clubName: "#ffffff",
+    facilityLine: "rgba(255,255,255,0.45)",
+    zoneBorder: "1px solid rgba(148, 163, 184, 0.28)",
+    dateFallback: "rgba(255,255,255,0.55)",
+    accentBorder: "#e87722",
+    inlineWelcome: "rgba(255,255,255,0.72)",
+  },
+  light: {
+    headerBg: "#FFFFFF",
+    subtitleBorder: "1px solid rgba(11, 31, 58, 0.08)",
+    mutedText: "#4A6078",
+    clubName: "#0B1F3A",
+    facilityLine: "#4A6078",
+    zoneBorder: "1px solid rgba(11, 31, 58, 0.12)",
+    dateFallback: "#4A6078",
+    accentBorder: "#1E5BC6",
+    inlineWelcome: "#0B1F3A",
+  },
+} as const;
 
-const HEADER_ZONE_BORDER = "1px solid rgba(148, 163, 184, 0.28)";
 const HEADER_ZONE_HEIGHT = "72%";
 const HEADER_ZONE_PADDING_X =
   KIOSK_SHELL_CSS_VARS["--kiosk-shell-header-zone-padding-x"];
@@ -85,6 +124,7 @@ const HEADER_ALEXA_SAFE_ZONE_WIDTH_PX = KIOSK_SHELL_ALEXA_SAFE_ZONE_WIDTH_PX;
 function renderCanonicalWeather(
   weather: WeatherResult,
   liveWeather: boolean,
+  shellTheme: "dark" | "light",
 ): ReactElement | null {
   if (weather.isAvailable !== true) {
     return null;
@@ -95,11 +135,14 @@ function renderCanonicalWeather(
       <LiveKioskShellWeather
         initialWeather={weather}
         live={true}
+        shellTheme={shellTheme}
       />
     );
   }
 
-  return <KioskShellWeatherDisplay weather={weather} />;
+  return (
+    <KioskShellWeatherDisplay weather={weather} shellTheme={shellTheme} />
+  );
 }
 
 export function KioskShellHeader({
@@ -117,15 +160,25 @@ export function KioskShellHeader({
   weather,
   liveWeather = true,
   rightContent,
+  shellTheme = "dark",
+  subtitlePlacement = "band",
+  venueHeaderAmbient = false,
+  venueHeaderBranding = null,
 }: KioskShellHeaderProps): ReactElement {
+  const palette = HEADER_THEME[shellTheme];
+  const venueHeaderCssVars = venueHeaderAmbient
+    ? resolveVenueHeaderCssVars(venueHeaderBranding)
+    : null;
   const showSubtitle =
     subtitleEnabled === true &&
     subtitle != null &&
     subtitle.length > 0;
+  const showSubtitleBand = showSubtitle && subtitlePlacement === "band";
+  const showInlineWelcome = showSubtitle && subtitlePlacement === "header-inline";
 
   const weatherContent =
     weather != null
-      ? renderCanonicalWeather(weather, liveWeather)
+      ? renderCanonicalWeather(weather, liveWeather, shellTheme)
       : rightContent ?? null;
 
   return (
@@ -136,7 +189,10 @@ export function KioskShellHeader({
     >
       <header
         data-testid="kiosk-shell-header-bar"
+        data-shell-theme={shellTheme}
+        data-venue-header-ambient={venueHeaderAmbient ? "true" : undefined}
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           width: "100%",
@@ -144,14 +200,33 @@ export function KioskShellHeader({
 
           paddingLeft: KIOSK_SHELL_CSS_VARS["--kiosk-shell-padding-x"],
           paddingRight: 0,
-          background: HEADER_BG,
-          borderBottom: `${KIOSK_SHELL_CSS_VARS["--kiosk-shell-header-border"]} solid #e87722`,
+          background: palette.headerBg,
+          borderBottom: `${KIOSK_SHELL_CSS_VARS["--kiosk-shell-header-border"]} solid ${palette.accentBorder}`,
 
           height: KIOSK_SHELL_CSS_VARS["--kiosk-shell-header-height"],
           flexShrink: 0,
           overflow: "hidden",
+          ...(venueHeaderCssVars ?? {}),
         }}
       >
+        {venueHeaderAmbient ? (
+          <>
+            <VenueHeaderAmbientLayer src={INFOBOARD_AMBIENT_ASSET_PATHS.header} />
+            <VenueHeaderTenantAccent />
+          </>
+        ) : null}
+        <div
+          data-testid="kiosk-header-content"
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+            minWidth: 0,
+          }}
+        >
         {/* CLUB */}
         <div
           data-testid="kiosk-header-left"
@@ -159,7 +234,7 @@ export function KioskShellHeader({
             display: "flex",
             alignItems: "center",
             gap: "16px",
-            flex: "1 1 0",
+            flex: showInlineWelcome ? "0 1 28%" : "1 1 0",
             minWidth: 0,
             overflow: "hidden",
           }}
@@ -207,11 +282,21 @@ export function KioskShellHeader({
           >
             <span
               data-testid="kiosk-header-club-name"
+              data-venue-header-identity={
+                venueHeaderAmbient && shellTheme === "light" ? "true" : undefined
+              }
               style={{
                 fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-club-name-font"],
                 fontWeight: 800,
-                letterSpacing: "0.06em",
-                color: "#ffffff",
+                letterSpacing:
+                  venueHeaderAmbient && shellTheme === "light" ? "0.02em" : "0.06em",
+                fontFamily:
+                  venueHeaderAmbient && shellTheme === "light"
+                    ? 'var(--font-display, "Barlow Condensed", sans-serif)'
+                    : undefined,
+                fontStyle:
+                  venueHeaderAmbient && shellTheme === "light" ? "italic" : undefined,
+                color: palette.clubName,
                 lineHeight: 1,
                 textTransform: "uppercase",
                 whiteSpace: "nowrap",
@@ -227,7 +312,7 @@ export function KioskShellHeader({
                 style={{
                   fontSize: "14px",
                   letterSpacing: "0.18em",
-                  color: "rgba(255,255,255,0.45)",
+                  color: palette.facilityLine,
                   textTransform: "uppercase",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
@@ -239,6 +324,43 @@ export function KioskShellHeader({
             )}
           </div>
         </div>
+
+        {showInlineWelcome && (
+          <div
+            data-testid="kiosk-header-welcome"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: shellTheme === "light" ? "1 1 26%" : "1 1 0",
+              minWidth: shellTheme === "light" ? "160px" : 0,
+              padding: `0 ${HEADER_ZONE_PADDING_X}`,
+              overflow: "visible",
+            }}
+          >
+            <span
+              data-testid="board-title-text"
+              style={{
+                fontSize:
+                  shellTheme === "light"
+                    ? KIOSK_SHELL_CSS_VARS["--kiosk-shell-light-inline-welcome-font"]
+                    : KIOSK_SHELL_CSS_VARS["--kiosk-shell-subtitle-font"],
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                textTransform: "none",
+                color: palette.inlineWelcome,
+                whiteSpace: shellTheme === "light" ? "normal" : "nowrap",
+                overflow: "visible",
+                textOverflow: "clip",
+                textAlign: "center",
+                lineHeight: 1.15,
+                maxWidth: "100%",
+              }}
+            >
+              {subtitle}
+            </span>
+          </div>
+        )}
 
         {/*
          * CLOCK / DATE / WEATHER / ALEXA — fixed flex cluster on the right.
@@ -275,7 +397,7 @@ export function KioskShellHeader({
                 flexShrink: 0,
                 paddingLeft: HEADER_ZONE_PADDING_X,
                 paddingRight: HEADER_ZONE_PADDING_X,
-                borderLeft: HEADER_ZONE_BORDER,
+                borderLeft: palette.zoneBorder,
               }}
             >
               {initialTimeIso != null && showTime ? (
@@ -286,6 +408,7 @@ export function KioskShellHeader({
                   showDate={false}
                   mode="time"
                   live={liveClock}
+                  shellTheme={shellTheme}
                 />
               ) : null}
             </div>
@@ -301,7 +424,7 @@ export function KioskShellHeader({
                 flexShrink: 0,
                 paddingLeft: HEADER_ZONE_PADDING_X,
                 paddingRight: HEADER_ZONE_PADDING_X,
-                borderLeft: HEADER_ZONE_BORDER,
+                borderLeft: palette.zoneBorder,
               }}
             >
               {initialTimeIso != null && showDate ? (
@@ -312,13 +435,14 @@ export function KioskShellHeader({
                   showDate={true}
                   mode="date"
                   live={liveClock}
+                  shellTheme={shellTheme}
                 />
               ) : staticDateFallback != null && showDate ? (
                 <span
                   style={{
                     fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-date-font"],
                     letterSpacing: "0.06em",
-                    color: "rgba(255,255,255,0.55)",
+                    color: palette.dateFallback,
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -341,7 +465,7 @@ export function KioskShellHeader({
               height: HEADER_ZONE_HEIGHT,
               paddingLeft: HEADER_ZONE_PADDING_X,
               paddingRight: HEADER_ZONE_PADDING_X,
-              borderLeft: HEADER_ZONE_BORDER,
+              borderLeft: palette.zoneBorder,
               overflow: "hidden",
             }}
           >
@@ -361,9 +485,10 @@ export function KioskShellHeader({
             }}
           />
         </div>
+        </div>
       </header>
 
-      {showSubtitle && (
+      {showSubtitleBand && (
         <div
           data-testid="board-title"
           style={{
@@ -371,8 +496,8 @@ export function KioskShellHeader({
             alignItems: "center",
             height: KIOSK_SHELL_CSS_VARS["--kiosk-shell-subtitle-height"],
             padding: `0 ${KIOSK_SHELL_CSS_VARS["--kiosk-shell-padding-x"]}`,
-            borderBottom: SUBTITLE_BORDER,
-            background: HEADER_BG,
+            borderBottom: palette.subtitleBorder,
+            background: palette.headerBg,
             flexShrink: 0,
           }}
         >
@@ -383,7 +508,7 @@ export function KioskShellHeader({
               fontWeight: 600,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: MUTED_TEXT,
+              color: palette.mutedText,
             }}
           >
             {subtitle}

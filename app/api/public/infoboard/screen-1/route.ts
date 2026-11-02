@@ -58,6 +58,8 @@ const INFOBOARD_TENANT_SELECT = {
   status: true,
   timezone: true,
   logoUrl: true,
+  primaryColor: true,
+  secondaryColor: true,
 } as const;
 
 type InforboardTenantRow = {
@@ -67,6 +69,8 @@ type InforboardTenantRow = {
   status: string;
   timezone: string | null;
   logoUrl: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
 };
 
 // ── Prisma adapter ────────────────────────────────────────────────────────────
@@ -137,6 +141,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       name: tenantRow.name,
       timezone: tenantRow.timezone,
       logoUrl: tenantRow.logoUrl,
+      primaryColor: tenantRow.primaryColor,
+      secondaryColor: tenantRow.secondaryColor,
     };
 
     // ── Request time ────────────────────────────────────────────────────────

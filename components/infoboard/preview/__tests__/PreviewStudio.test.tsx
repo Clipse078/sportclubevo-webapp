@@ -29,6 +29,7 @@ describe("PreviewStudio", () => {
         initialScreen="1"
         initialDate="2026-08-26"
         initialTime="18:20"
+        initialDisplayTheme="DARK"
         timeZone="Europe/Zurich"
       />,
     );
@@ -42,7 +43,7 @@ describe("PreviewStudio", () => {
       expect.stringContaining("screen=2"),
     );
     expect(mocks.replace).toHaveBeenLastCalledWith(
-      "/dashboard/infoboard/preview?screen=2&date=2026-08-26&time=18%3A20",
+      "/dashboard/infoboard/preview?screen=2&date=2026-08-26&time=18%3A20&displayTheme=DARK",
       { scroll: false },
     );
   });
@@ -67,7 +68,20 @@ describe("PreviewStudio", () => {
     renderStudio();
     fireEvent.click(screen.getByRole("button", { name: /Jetzt/ }));
     expect(mocks.replace).toHaveBeenLastCalledWith(
-      "/dashboard/infoboard/preview?screen=1&date=2026-08-27&time=07%3A10",
+      "/dashboard/infoboard/preview?screen=1&date=2026-08-27&time=07%3A10&displayTheme=DARK",
+      { scroll: false },
+    );
+  });
+
+  it("propagates LIGHT displayTheme to the preview frame and shareable URL", async () => {
+    renderStudio();
+    await userEvent.click(screen.getByTestId("preview-display-theme-light"));
+    expect(screen.getByTitle("Infoboard Vorschau Screen 1")).toHaveAttribute(
+      "src",
+      expect.stringContaining("displayTheme=LIGHT"),
+    );
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      expect.stringContaining("displayTheme=LIGHT"),
       { scroll: false },
     );
   });

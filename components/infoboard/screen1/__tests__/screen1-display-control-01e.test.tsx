@@ -153,7 +153,15 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01E universal training typography", () => {
 
   it("always resolves grouped training cards to normal density tier", () => {
     for (const count of [1, 3, 5, 8, 10, 15]) {
-      expect(trainingGroupDensityTier(count)).toBe("normal");
+      expect(trainingGroupDensityTier(count)).toBe(
+        count <= 2
+          ? "spacious"
+          : count <= 4
+            ? "standard"
+            : count <= 6
+              ? "compact"
+              : "dense",
+      );
     }
   });
 

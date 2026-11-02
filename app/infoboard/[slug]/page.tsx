@@ -184,6 +184,8 @@ export default async function InfoboardSlugPage({ params }: PageProps) {
     timezone: tenantRow.timezone,
     logoUrl: tenantRow.logoUrl,
     infoboardDisplayTheme: tenantRow.infoboardDisplayTheme,
+    primaryColor: tenantRow.primaryColor,
+    secondaryColor: tenantRow.secondaryColor,
   };
 
   const loader = createCanonicalInfoboardSourceLoader(db);

@@ -12,6 +12,7 @@ import {
   DEFAULT_SCREEN1_PRESENTATION,
   TRAINING_KABINE_FONT_SIZE_CSS,
 } from "@/lib/infoboard/screen1-logo-settings";
+import { scaleVenuePresentationClamp } from "@/lib/infoboard/venue-presentation-density";
 import {
   buildWednesday20260826Feed,
   resolveWednesdayPreviewCurrentTimeIso,
@@ -63,11 +64,11 @@ afterEach(() => {
 });
 
 describe("INFOBOARD-SCREEN1-VISUAL-01I — grid proportions", () => {
-  it("uses stadium wayfinding column proportions 12/36/26/26", () => {
-    expect(CSS).toMatch(/--ib-zone-time:\s*12%/);
-    expect(CSS).toMatch(/--ib-zone-event:\s*36%/);
-    expect(CSS).toMatch(/--ib-zone-room:\s*26%/);
-    expect(CSS).toMatch(/--ib-zone-pitch:\s*26%/);
+  it("uses stadium wayfinding column proportions 15/43/22/20", () => {
+    expect(CSS).toMatch(/--ib-zone-time:\s*15%/);
+    expect(CSS).toMatch(/--ib-zone-event:\s*43%/);
+    expect(CSS).toMatch(/--ib-zone-room:\s*22%/);
+    expect(CSS).toMatch(/--ib-zone-pitch:\s*20%/);
   });
 
   it("aligns training matrix to parent eventCard columns via subgrid", () => {
@@ -203,21 +204,24 @@ describe("INFOBOARD-SCREEN1-VISUAL-01I — training presentation", () => {
 
     const card = container.querySelector("[data-type='TRAINING']") as HTMLElement;
     expect(card.style.getPropertyValue("--ib-training-kabine-font-size")).toBe(
-      TRAINING_KABINE_FONT_SIZE_CSS.XLARGE,
+      scaleVenuePresentationClamp(TRAINING_KABINE_FONT_SIZE_CSS.XLARGE, "spacious"),
     );
   });
 });
 
 describe("INFOBOARD-SCREEN1-VISUAL-01I — sparse hero and dense safety", () => {
-  it("uses hero card height rules for a single match", () => {
+  it("uses flexible canvas row geometry for a single match", () => {
     expect(CSS).toMatch(
-      /\.eventList\[data-count="1"\][\s\S]*\.eventCard[\s\S]*flex:\s*0\s+0\s+clamp/,
+      /\.eventList\[data-count="1"\]:not\(\[data-density="dense"\]\):not\(\[data-density="ultra"\]\)[\s\S]*grid-template-rows:\s*minmax\(0,\s*1fr\)/,
+    );
+    expect(CSS).toMatch(
+      /\.eventList\[data-count="1"\]:not\(\[data-density="dense"\]\):not\(\[data-density="ultra"\]\)\s+\.eventCard[\s\S]*height:\s*100%/,
     );
   });
 
-  it("equalizes match opponent typography in single-event hero CSS", () => {
+  it("equalizes match home/away typography in single-event hero CSS", () => {
     expect(CSS).toMatch(
-      /\.eventList\[data-count="1"\][\s\S]*\.eventTeamOpponent[\s\S]*font-weight:\s*700/,
+      /\.eventList\[data-count="1"\][\s\S]*\.matchSideBlock \.venueTeamDisplayName[\s\S]*font-weight:\s*700/,
     );
   });
 

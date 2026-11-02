@@ -16,15 +16,26 @@ import {
 } from "@/components/infoboard/studio/Screen1Studio";
 import { resolveStudioPageIndex } from "@/lib/infoboard/screen1-studio-page-retention";
 import type { Screen1StudioConfig } from "@/lib/infoboard/screen1-studio-types";
+import type { InfoboardDisplayTheme } from "@/lib/publishing/infoboard/display-theme";
+import { cn } from "@/lib/cn";
 
 type PreviewStudioProps = {
   initialScreen: InfoboardPreviewScreen;
   initialDate: string;
   initialTime: string;
+  initialDisplayTheme: InfoboardDisplayTheme;
   timeZone: string;
   screen1BoardId?: string | null;
   initialStudio?: Screen1StudioConfig;
 };
+
+const DISPLAY_THEME_OPTIONS: ReadonlyArray<{
+  value: InfoboardDisplayTheme;
+  label: string;
+}> = [
+  { value: "LIGHT", label: "Hell" },
+  { value: "DARK", label: "Dunkel" },
+];
 
 const STUDIO_SOURCE = "infoboard-preview-studio";
 const FRAME_SOURCE = "infoboard-preview-frame";
@@ -33,6 +44,7 @@ export function PreviewStudio({
   initialScreen,
   initialDate,
   initialTime,
+  initialDisplayTheme,
   timeZone,
   screen1BoardId = null,
   initialStudio,
@@ -44,6 +56,8 @@ export function PreviewStudio({
   const [screen, setScreen] = useState(initialScreen);
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
+  const [displayTheme, setDisplayTheme] =
+    useState<InfoboardDisplayTheme>(initialDisplayTheme);
   const [page, setPage] = useState(0);
   const [pageCount, setPageCount] = useState(1);
   const [autoRotate, setAutoRotate] = useState(false);
@@ -68,6 +82,10 @@ export function PreviewStudio({
   useEffect(() => {
     if (initialStudio != null) setStudio(initialStudio);
   }, [initialStudio]);
+
+  useEffect(() => {
+    setDisplayTheme(initialDisplayTheme);
+  }, [initialDisplayTheme]);
 
   useEffect(() => {
     function receiveFrameState(event: MessageEvent) {
@@ -133,17 +151,25 @@ export function PreviewStudio({
     nextScreen: InfoboardPreviewScreen,
     nextDate: string,
     nextTime: string,
+    nextDisplayTheme: InfoboardDisplayTheme = displayTheme,
   ) {
     const query = new URLSearchParams({
       screen: nextScreen,
       date: nextDate,
       time: nextTime,
+      displayTheme: nextDisplayTheme,
     });
     startTransition(() => {
       router.replace(`/dashboard/infoboard/preview?${query.toString()}`, {
         scroll: false,
       });
     });
+  }
+
+  function selectDisplayTheme(nextTheme: InfoboardDisplayTheme) {
+    if (nextTheme === displayTheme) return;
+    setDisplayTheme(nextTheme);
+    updateUrl(screen, date, time, nextTheme);
   }
 
   function applyMoment(nextDate: string, nextTime: string) {
@@ -193,11 +219,44 @@ export function PreviewStudio({
     date,
     time,
     auto: autoRotate ? "1" : "0",
+    displayTheme,
   });
 
   return (
     <section className="space-y-4" aria-busy={isPending}>
       <div className="flex flex-wrap items-end gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm">
+        <div className="grid gap-1 text-xs font-medium text-[var(--muted)]">
+          Darstellung
+          <div
+            role="radiogroup"
+            aria-label="Darstellung"
+            data-testid="preview-display-theme"
+            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] p-1"
+          >
+            {DISPLAY_THEME_OPTIONS.map((option) => {
+              const isActive = option.value === displayTheme;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  data-testid={`preview-display-theme-${option.value.toLowerCase()}`}
+                  onClick={() => selectDisplayTheme(option.value)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    isActive
+                      ? "bg-[var(--sce-primary)] text-white shadow-sm"
+                      : "text-[var(--muted)] hover:text-[var(--foreground)]",
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <label className="grid gap-1 text-xs font-medium text-[var(--muted)]">
           Screen
           <select

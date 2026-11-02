@@ -39,25 +39,48 @@ const BRANDING = {
 };
 
 const NORMAL_SELECTOR =
-  '.eventCard[data-type="TRAINING"][data-group-density="normal"]';
+  '.eventCard[data-type="TRAINING"][data-group-density="spacious"]';
+const STANDARD_SELECTOR =
+  '.eventCard[data-type="TRAINING"][data-group-density="standard"]';
 const COMPACT_SELECTOR =
-  '.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingRowMatrix';
+  '.eventCard[data-type="TRAINING"][data-group-density="compact"]';
 const DENSE_SELECTOR =
-  '.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingRowMatrix';
+  '.eventCard[data-type="TRAINING"][data-group-density="dense"]';
 
 function cssToken(selector: string, token: string): string {
-  const start = CSS.indexOf(selector);
-  expect(start, `Missing CSS selector ${selector}`).toBeGreaterThanOrEqual(0);
-  const block = CSS.slice(start, CSS.indexOf("}", start));
-  const value = new RegExp(`${token}:\\s*([^;]+);`).exec(block)?.[1]?.trim();
-  expect(value, `Missing ${token} in ${selector}`).toBeTruthy();
-  return value!;
+  let searchFrom = 0;
+  while (searchFrom < CSS.length) {
+    const start = CSS.indexOf(selector, searchFrom);
+    if (start < 0) {
+      break;
+    }
+    const block = CSS.slice(start, CSS.indexOf("}", start));
+    const value = new RegExp(`${token}:\\s*([^;]+);`).exec(block)?.[1]?.trim();
+    if (value) {
+      return value;
+    }
+    searchFrom = start + selector.length;
+  }
+  expect(undefined, `Missing ${token} in ${selector}`).toBeTruthy();
+  return "";
 }
 
 function cssBlock(selector: string): string {
-  const start = CSS.indexOf(selector);
-  expect(start, `Missing CSS selector ${selector}`).toBeGreaterThanOrEqual(0);
-  return CSS.slice(start, CSS.indexOf("}", start));
+  const requireTrainingRowMin = selector.includes("data-group-density");
+  let searchFrom = 0;
+  while (searchFrom < CSS.length) {
+    const start = CSS.indexOf(selector, searchFrom);
+    if (start < 0) {
+      break;
+    }
+    const block = CSS.slice(start, CSS.indexOf("}", start));
+    if (!requireTrainingRowMin || block.includes("--ib-training-row-min:")) {
+      return block;
+    }
+    searchFrom = start + selector.length;
+  }
+  expect(undefined, `Missing CSS selector ${selector}`).toBeTruthy();
+  return "";
 }
 
 function clampMax(value: string): number {
@@ -173,23 +196,23 @@ afterEach(() => {
 
 describe("INFOBOARD-ROLLING-01L — normal two-row matrix", () => {
   it("TEST A — normal density increases shared row height and gap", () => {
-    expect(cssToken(NORMAL_SELECTOR, "--ib-training-row-height")).toBe(
-      "clamp(52px, 6vh, 68px)",
+    expect(cssToken(NORMAL_SELECTOR, "--ib-training-row-min")).toBe(
+      "clamp(52px, 6.2vh, 80px)",
     );
     expect(cssToken(NORMAL_SELECTOR, "--ib-training-row-gap")).toBe(
-      "clamp(8px, 0.9vh, 12px)",
+      "clamp(8px, 0.9vh, 14px)",
     );
     expect(cssToken(NORMAL_SELECTOR, "--ib-training-cell-padding-y")).toBe(
-      "clamp(3px, 0.4vh, 7px)",
+      "clamp(4px, 0.45vh, 8px)",
     );
 
-    expect(clampMax(cssToken(NORMAL_SELECTOR, "--ib-training-row-height"))).toBeGreaterThan(48);
+    expect(clampMax(cssToken(NORMAL_SELECTOR, "--ib-training-row-min"))).toBeGreaterThan(48);
     expect(clampMax(cssToken(NORMAL_SELECTOR, "--ib-training-row-gap"))).toBeGreaterThan(7);
   });
 
   it("TEST B — 20:15 renders both complete TRAINING / KABINE / PLATZ rows", () => {
     const card = renderTwoRow2015();
-    expect(card.getAttribute("data-group-density")).toBe("normal");
+    expect(card.getAttribute("data-group-density")).toBe("spacious");
 
     const rows = within(card).getAllByTestId("training-matrix-row");
     expect(rows).toHaveLength(2);
@@ -239,7 +262,7 @@ describe("INFOBOARD-ROLLING-01L — normal two-row matrix", () => {
 
   it("TEST D — spacing hierarchy remains normal > compact > dense", () => {
     const spacing = (selector: string) =>
-      clampMax(cssToken(selector, "--ib-training-row-height"))
+      clampMax(cssToken(selector, "--ib-training-row-min"))
       + clampMax(cssToken(selector, "--ib-training-row-gap"))
       + clampMax(cssToken(selector, "--ib-training-cell-padding-y")) * 2;
 
@@ -248,9 +271,9 @@ describe("INFOBOARD-ROLLING-01L — normal two-row matrix", () => {
   });
 
   it.each([
-    ["15:45", "4", "normal"],
-    ["17:15", "5", "normal"],
-    ["18:45", "6", "normal"],
+    ["15:45", "4", "standard"],
+    ["17:15", "5", "compact"],
+    ["18:45", "6", "compact"],
   ] as const)("TEST E — %s cohort (%s rows) preserves accepted %s density", (at, count, density) => {
     const nowIso = resolveWednesdayPreviewCurrentTimeIso(at);
     render(

@@ -280,7 +280,7 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday cohort visibility", () => {
       (row) => row.getAttribute("data-training-count") === "3",
     );
     expect(card).toBeTruthy();
-    expect(card?.getAttribute("data-group-density")).toBe("normal");
+    expect(card?.getAttribute("data-group-density")).toBe("standard");
     expect(within(card!).getAllByTestId("training-matrix-row")).toHaveLength(3);
     expect(within(card!).getByText("JUNIOREN B2")).toBeTruthy();
   });

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireAnyPermission: vi.fn(),
   getActiveTenant: vi.fn(),
+  getInfoboardBySlug: vi.fn(),
   notFound: vi.fn(),
 }));
 
@@ -16,6 +17,9 @@ vi.mock("@/lib/permissions/require-any-permission", () => ({
 vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: mocks.getActiveTenant,
 }));
+vi.mock("@/lib/infoboard/queries", () => ({
+  getInfoboardBySlug: mocks.getInfoboardBySlug,
+}));
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/components/infoboard/preview/PreviewStudio", () => ({
   PreviewStudio: (props: Record<string, string>) => (
@@ -24,6 +28,7 @@ vi.mock("@/components/infoboard/preview/PreviewStudio", () => ({
       data-screen={props.initialScreen}
       data-date={props.initialDate}
       data-time={props.initialTime}
+      data-display-theme={props.initialDisplayTheme}
     />
   ),
 }));
@@ -37,6 +42,17 @@ describe("/dashboard/infoboard/preview", () => {
       key: "fc-allschwil",
       name: "FC Allschwil",
       timezone: "Europe/Zurich",
+      infoboardDisplayTheme: null,
+    });
+    mocks.getInfoboardBySlug.mockResolvedValue({
+      id: "board-1",
+      displayTheme: "DARK",
+      headerSubtitleEnabled: true,
+      headerSubtitleText: null,
+      headerShowTime: true,
+      headerShowDate: true,
+      headerShowWeather: false,
+      screen1StudioJson: null,
     });
   });
 
@@ -59,6 +75,24 @@ describe("/dashboard/infoboard/preview", () => {
     expect(screen.getByTestId("preview-studio")).toHaveAttribute(
       "data-time",
       "08:30",
+    );
+  });
+
+  it("initializes displayTheme from the preview query param", async () => {
+    const { default: Page } = await import("../page");
+    render(
+      await Page({
+        searchParams: Promise.resolve({
+          screen: "1",
+          date: "2026-08-29",
+          time: "08:30",
+          displayTheme: "LIGHT",
+        }),
+      }),
+    );
+    expect(screen.getByTestId("preview-studio")).toHaveAttribute(
+      "data-display-theme",
+      "LIGHT",
     );
   });
 

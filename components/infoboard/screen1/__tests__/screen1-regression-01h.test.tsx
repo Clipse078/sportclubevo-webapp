@@ -38,17 +38,21 @@ const TRAINING_SPACING_CSS = readFileSync(
 );
 
 function readCssToken(blockSelector: string, token: string): string {
-  const blockStart = TRAINING_SPACING_CSS.indexOf(blockSelector);
-  if (blockStart < 0) {
-    throw new Error(`Missing CSS block: ${blockSelector}`);
+  let searchFrom = 0;
+  while (searchFrom < TRAINING_SPACING_CSS.length) {
+    const blockStart = TRAINING_SPACING_CSS.indexOf(blockSelector, searchFrom);
+    if (blockStart < 0) {
+      break;
+    }
+    const blockEnd = TRAINING_SPACING_CSS.indexOf("}", blockStart);
+    const block = TRAINING_SPACING_CSS.slice(blockStart, blockEnd);
+    const match = new RegExp(`${token}:\\s*([^;]+);`).exec(block);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+    searchFrom = blockStart + blockSelector.length;
   }
-  const blockEnd = TRAINING_SPACING_CSS.indexOf("}", blockStart);
-  const block = TRAINING_SPACING_CSS.slice(blockStart, blockEnd);
-  const match = new RegExp(`${token}:\\s*([^;]+);`).exec(block);
-  if (!match?.[1]) {
-    throw new Error(`Missing token ${token} in ${blockSelector}`);
-  }
-  return match[1].trim();
+  throw new Error(`Missing token ${token} in ${blockSelector}`);
 }
 
 function renderWednesdayAt(at: keyof typeof WEDNESDAY_2026_08_26_PREVIEW_TIMES) {
@@ -73,36 +77,23 @@ function trainingCard(rowCount: string): HTMLElement {
 
 function readTrainingMatrixTokens(card: HTMLElement) {
   const density = card.getAttribute("data-group-density");
-  if (density === "normal") {
+  if (density === "spacious" || density === "standard" || density === "normal") {
+    const selector =
+      density === "standard"
+        ? '.eventCard[data-type="TRAINING"][data-group-density="standard"]'
+        : '.eventCard[data-type="TRAINING"][data-group-density="spacious"]';
     return {
-      rowHeight: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-row-height",
-      ),
-      rowGap: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-row-gap",
-      ),
-      cellPaddingY: readCssToken(
-        '.eventCard[data-type="TRAINING"][data-group-density="normal"]',
-        "--ib-training-cell-padding-y",
-      ),
+      rowHeight: readCssToken(selector, "--ib-training-row-min"),
+      rowGap: readCssToken(selector, "--ib-training-row-gap"),
+      cellPaddingY: readCssToken(selector, "--ib-training-cell-padding-y"),
     };
   }
   if (density === "compact" || density === "dense") {
+    const densitySelector = `.eventCard[data-type="TRAINING"][data-group-density="${density}"]`;
     return {
-      rowHeight: readCssToken(
-        `.eventCard[data-type="TRAINING"][data-group-density="${density}"] .trainingRowMatrix`,
-        "--ib-training-row-height",
-      ),
-      rowGap: readCssToken(
-        `.eventCard[data-type="TRAINING"][data-group-density="${density}"] .trainingRowMatrix`,
-        "--ib-training-row-gap",
-      ),
-      cellPaddingY: readCssToken(
-        `.eventCard[data-type="TRAINING"][data-group-density="${density}"] .trainingRowMatrix`,
-        "--ib-training-cell-padding-y",
-      ),
+      rowHeight: readCssToken(densitySelector, "--ib-training-row-min"),
+      rowGap: readCssToken(densitySelector, "--ib-training-row-gap"),
+      cellPaddingY: readCssToken(densitySelector, "--ib-training-cell-padding-y"),
     };
   }
   throw new Error(`Unexpected training group density: ${density ?? "null"}`);
@@ -128,7 +119,7 @@ function measureRowCenterY(row: HTMLElement, cellIndex: 0 | 1 | 2): number {
 
 function mockAlignedTrainingMatrixGeometry(card: HTMLElement): void {
   const rows = card.querySelectorAll('[data-testid="training-matrix-row"]');
-  let rowTop = 200;
+  const rowTop = 200;
   const rowHeight = 44;
 
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
@@ -211,7 +202,7 @@ describe("INFOBOARD-ROLLING-01H — shared row alignment", () => {
 });
 
 describe("INFOBOARD-ROLLING-01H — row spacing tokens", () => {
-  it("TEST D — row-spacing tokens stay on the normal tier for all cohort sizes", () => {
+  it("TEST D — row-spacing tokens stay positive for all R10 cohort tiers", () => {
     renderWednesdayAt("20:15");
     const twoRowTokens = readTrainingMatrixTokens(trainingCard("2"));
 
@@ -221,9 +212,9 @@ describe("INFOBOARD-ROLLING-01H — row spacing tokens", () => {
     renderWednesdayAt("18:45");
     const sixRowTokens = readTrainingMatrixTokens(trainingCard("6"));
 
-    expect(fourRowTokens.rowHeight).toBe(twoRowTokens.rowHeight);
-    expect(sixRowTokens.rowHeight).toBe(twoRowTokens.rowHeight);
     expect(clampMax(twoRowTokens.rowGap)).toBeGreaterThan(0);
+    expect(clampMax(fourRowTokens.rowGap)).toBeGreaterThan(0);
+    expect(clampMax(sixRowTokens.rowGap)).toBeGreaterThan(0);
   });
 
   it("compact and dense tiers expose non-zero row gap on the shared matrix", () => {
@@ -246,7 +237,7 @@ describe("INFOBOARD-ROLLING-01H — clip-safe dense cohort", () => {
 
     expect(within(denseCard).getAllByTestId("training-group-row")).toHaveLength(6);
     expect(denseCard.querySelectorAll('[data-testid="training-matrix-row"]')).toHaveLength(6);
-    expect(denseCard.getAttribute("data-group-density")).toBe("normal");
+    expect(denseCard.getAttribute("data-group-density")).toBe("compact");
   });
 });
 

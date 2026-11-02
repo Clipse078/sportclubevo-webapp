@@ -155,11 +155,76 @@ export function resolveInfoboardTeamSubDisplayName(input: {
   return name;
 }
 
+function dedupeTeamSubLine(
+  clubDisplayName: string,
+  teamSubDisplayName: string | null,
+): string | null {
+  if (teamSubDisplayName === null) return null;
+  if (
+    teamSubDisplayName.trim().toUpperCase() === clubDisplayName.trim().toUpperCase()
+  ) {
+    return null;
+  }
+  const clubUpper = clubDisplayName.trim().toUpperCase();
+  const subUpper = teamSubDisplayName.trim().toUpperCase();
+  if (subUpper.startsWith(`${clubUpper} `)) {
+    const stripped = teamSubDisplayName.slice(clubDisplayName.length).trim();
+    return stripped.length > 0 ? stripped : null;
+  }
+  return teamSubDisplayName;
+}
+
 function resolveSidePresentation(
   identity: InfoboardMatchSideIdentity,
   tenantLogoUrl: string | null | undefined,
 ): InfoboardMatchSidePresentation {
-  const teamDisplayName = resolveInfoboardMatchTeamDisplayName({
+  const clubLogoUrl = resolveClubIdentityLogoUrl(
+    {
+      isOwnTeam: identity.isOwnTeam,
+      externalLogoUrl: identity.clubLogoUrl,
+    },
+    tenantLogoUrl,
+  );
+
+  const clubLine = resolveInfoboardClubDisplayName(
+    identity.clubName,
+    identity.fallbackDisplayName,
+  );
+  const canonicalClub = meaningful(identity.clubName);
+  const teamSubBase = canonicalClub ?? clubLine;
+
+  let teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
+    clubDisplayName: teamSubBase,
+    teamName: identity.teamName,
+    teamShortName: identity.teamShortName,
+    teamAlternativeName: identity.teamAlternativeName,
+    teamInfoboardDisplayName: identity.teamInfoboardDisplayName,
+    teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
+  });
+
+  if (teamSubDisplayName === null && meaningful(identity.fallbackDisplayName)) {
+    teamSubDisplayName = resolveInfoboardTeamSubDisplayName({
+      clubDisplayName: teamSubBase,
+      teamName: identity.fallbackDisplayName,
+      teamShortName: identity.teamShortName,
+      teamAlternativeName: identity.teamAlternativeName,
+      teamInfoboardDisplayName: identity.teamInfoboardDisplayName,
+      teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
+    });
+  }
+
+  const primaryClub = canonicalClub ?? clubLine;
+  const dedupedTeamSub = dedupeTeamSubLine(primaryClub, teamSubDisplayName);
+
+  if (dedupedTeamSub !== null) {
+    return {
+      clubDisplayName: primaryClub,
+      teamSubDisplayName: dedupedTeamSub,
+      clubLogoUrl,
+    };
+  }
+
+  const unified = resolveInfoboardMatchTeamDisplayName({
     clubName: identity.clubName,
     fallbackDisplayName: identity.fallbackDisplayName,
     teamName: identity.teamName,
@@ -169,16 +234,8 @@ function resolveSidePresentation(
     teamInfoboardMatchDisplayName: identity.teamInfoboardMatchDisplayName,
   });
 
-  const clubLogoUrl = resolveClubIdentityLogoUrl(
-    {
-      isOwnTeam: identity.isOwnTeam,
-      externalLogoUrl: identity.clubLogoUrl,
-    },
-    tenantLogoUrl,
-  );
-
   return {
-    clubDisplayName: teamDisplayName,
+    clubDisplayName: unified,
     teamSubDisplayName: null,
     clubLogoUrl,
   };

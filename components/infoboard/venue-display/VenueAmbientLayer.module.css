@@ -1,0 +1,317 @@
+.ambientLayer {
+  --venue-ambient-z-base: 0;
+  --venue-ambient-z-raster: 1;
+  --venue-ambient-z-scrims: 2;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.ambientScrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--venue-ambient-z-scrims, 2);
+}
+
+.ambientIllustrationClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: var(--venue-ambient-z-raster, 1);
+}
+
+.ambientRasterOpacity {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.ambientImage {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  object-fit: none;
+  object-position: var(--ambient-position-x, left) var(--ambient-position-y, top);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 1;
+}
+
+/*
+ * R16 — true full-surface cover: scale until both dimensions of the operational
+ * environment are covered (aspect ratio preserved; crop/zoom acceptable).
+ */
+.activityMatch .ambientIllustrationClip .ambientImage,
+.activityTournament .ambientIllustrationClip .ambientImage,
+.activityTraining .ambientIllustrationClip .ambientImage {
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--ambient-position-x, left) var(--ambient-position-y, top);
+}
+
+.baseActivityAtmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--venue-ambient-z-base, 0);
+  background: var(--ambient-base-atmosphere, transparent);
+}
+
+/* ── Activity kinds: semantic cover positioning ─────────────────────────── */
+
+.activityMatch {
+  --ambient-position-x: 0%;
+  --ambient-position-y: 0%;
+  --ambient-kabine-scrim-start: 58%;
+}
+
+.activityTournament {
+  /* R13 — recalibrated for 85% operational canvas (was 43% activity column) */
+  --ambient-position-x: 2%;
+  --ambient-position-y: 16%;
+  --ambient-kabine-scrim-start: 56%;
+}
+
+.activityTraining {
+  --ambient-position-x: 0%;
+  --ambient-position-y: 4%;
+  --ambient-kabine-scrim-start: 54%;
+}
+
+[data-theme="light"] .activityMatch {
+  --ambient-image-opacity: 0.42;
+  --ambient-base-atmosphere: #fff6f5;
+}
+
+[data-theme="light"] .activityTournament {
+  --ambient-image-opacity: 0.38;
+  --ambient-base-atmosphere: #fff9f4;
+}
+
+[data-theme="light"] .activityTraining {
+  --ambient-image-opacity: 0.34;
+  --ambient-base-atmosphere: #f5f8ff;
+}
+
+[data-theme="light"] .activityMatch .ambientRasterOpacity,
+[data-theme="light"] .activityTournament .ambientRasterOpacity,
+[data-theme="light"] .activityTraining .ambientRasterOpacity {
+  opacity: var(--ambient-image-opacity);
+}
+
+.trainingMatrixActivity .ambientLayer {
+  inset: 0;
+}
+
+/*
+ * Light venue: artwork PNGs already carry pale activity surfaces — minimal
+ * localized readability scrims only (no full-card white wash).
+ */
+[data-theme="light"] .activityMatch .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.06) 26%,
+      transparent 46%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      transparent 52%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 58%),
+      rgba(255, 246, 245, 0.12) 68%,
+      rgba(255, 246, 245, 0.22) 100%
+    );
+}
+
+[data-theme="light"] .activityTournament .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.08) 30%,
+      transparent 52%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      transparent 48%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 56%),
+      rgba(255, 249, 244, 0.14) 66%,
+      rgba(255, 249, 244, 0.24) 100%
+    );
+}
+
+[data-theme="light"] .activityTraining .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.05) 24%,
+      transparent 42%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      transparent 46%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 54%),
+      rgba(245, 248, 255, 0.16) 64%,
+      rgba(245, 248, 255, 0.28) 100%
+    );
+}
+
+[data-theme="light"] .trainingMatrixActivity .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.04) 22%,
+      transparent 40%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 55%
+    );
+}
+
+[data-theme="dark"] .activityMatch .ambientScrim,
+[data-theme="dark"] .activityTournament .ambientScrim,
+[data-theme="dark"] .activityTraining .ambientScrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 24, 40, 0.62) 0%,
+      rgba(10, 24, 40, 0.28) 35%,
+      transparent 55%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 24, 40, 0.4) 0%,
+      transparent 70%
+    );
+}
+
+[data-theme="dark"] .activityMatch .ambientRasterOpacity,
+[data-theme="dark"] .activityTournament .ambientRasterOpacity,
+[data-theme="dark"] .activityTraining .ambientRasterOpacity {
+  opacity: 0.88;
+}
+
+/* ── Header: light surface, one tier more visible ambience ─────────────── */
+
+.headerAmbientLayer .ambientImage {
+  top: 0;
+  opacity: 0.78;
+}
+
+[data-shell-theme="dark"] .headerAmbientLayer .ambientImage {
+  opacity: 0.55;
+}
+
+.headerAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.28) 58%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
+}
+
+[data-shell-theme="dark"] .headerAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 24, 40, 0.78) 0%,
+    rgba(10, 24, 40, 0.52) 100%
+  );
+}
+
+/* ── Jumbotron: always dark communication surface (not light-theme washed) */
+
+.jumbotronAmbientLayer {
+  --ambient-position-x: 50%;
+  --ambient-position-y: bottom;
+}
+
+.jumbotronAmbientLayer .ambientImage {
+  top: auto;
+  bottom: 0;
+  opacity: 1;
+}
+
+.jumbotronAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    90deg,
+    rgba(10, 24, 40, 0.55) 0%,
+    rgba(10, 24, 40, 0.22) 42%,
+    rgba(10, 24, 40, 0.08) 100%
+  );
+}
+
+/*
+ * Footer may carry data-shell-theme="light" for typography — jumbotron raster
+ * stays on the approved dark navy strip; never apply a light white wash here.
+ */
+[data-shell-theme="light"] .jumbotronAmbientLayer .ambientImage,
+[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientImage {
+  opacity: 1;
+}
+
+[data-shell-theme="light"] .jumbotronAmbientLayer .ambientScrim,
+[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    90deg,
+    rgba(10, 24, 40, 0.55) 0%,
+    rgba(10, 24, 40, 0.22) 42%,
+    rgba(10, 24, 40, 0.08) 100%
+  );
+}
+
+.tenantAccent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  pointer-events: none;
+  z-index: 2;
+  background: var(--venue-header-accent-gradient, var(--venue-header-accent-primary));
+  opacity: 0.85;
+}
+
+.headerContentLayer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.jumbotronContentLayer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: inherit;
+}

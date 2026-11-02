@@ -957,32 +957,33 @@ describe("Match row", () => {
     expect(row.textContent).toContain("FC Opponent");
   });
 
-  it("renders competition label as event type header", () => {
+  it("does not render competition label as Screen 1 match subtitle (R18)", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: "Meisterschaft" })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
-  it("renders SPIEL fallback when competitionLabel is null", () => {
+  it("renders MATCH semantic label when competitionLabel is null", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: null })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("SPIEL")).toBeTruthy();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
-  it("does not display raw MATCH string as the user-facing type label", () => {
+  it("displays MATCH as the user-facing semantic activity label", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other" })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
     const row = screen.getByTestId("event-row");
-    expect(row.textContent).not.toContain("MATCH");
+    expect(row.textContent).toContain("MATCH");
   });
 
   it("renders pitch label", () => {
@@ -1176,7 +1177,7 @@ describe("4-team tournament allocation", () => {
     expect(screen.getByTestId("participant-allocation-block")).toBeTruthy();
   });
 
-  it("renders all four team names in kabinen allocation block only", () => {
+  it("renders all four team names in kabinen block and under activity crests", () => {
     render(
       <InfoboardScreen1
         feed={PREVIEW_FIXTURE_TOURNAMENT_4TEAM}
@@ -1189,7 +1190,7 @@ describe("4-team tournament allocation", () => {
     expect(within(block).getByText("FC Binningen")).toBeTruthy();
     expect(within(block).getByText("FC Aesch")).toBeTruthy();
     const logoArea = screen.getByTestId("tournament-participants");
-    expect(logoArea.textContent).not.toContain("FC Allschwil E1");
+    expect(logoArea.textContent).toContain("FC Allschwil E1");
     expect(logoArea.querySelectorAll("img").length).toBeGreaterThan(0);
   });
 
@@ -1276,7 +1277,7 @@ describe("4-team tournament allocation", () => {
     expect(screen.getAllByText("FC Allschwil E2").length).toBeGreaterThan(0);
   });
 
-  it("logo strip stays left-aligned and renders all four logos", () => {
+  it("participant identity grid renders crest and name for all four teams", () => {
     render(
       <InfoboardScreen1
         feed={PREVIEW_FIXTURE_TOURNAMENT_4TEAM}
@@ -1284,10 +1285,9 @@ describe("4-team tournament allocation", () => {
       />,
     );
     const logoArea = screen.getByTestId("tournament-participants");
-    expect(logoArea.getAttribute("data-layout")).toBeNull();
-    expect(logoArea.className).toContain("tournamentParticipantLogos");
+    expect(logoArea.className).toContain("tournamentParticipantBlocks");
     expect(logoArea.querySelectorAll("img").length).toBe(4);
-    expect(logoArea.textContent?.trim()).toBe("");
+    expect(logoArea.textContent).toContain("FC Allschwil E1");
   });
 
   it("tournament title keeps dedicated overflow handling class", () => {
@@ -1340,13 +1340,14 @@ describe("Tournament logo strip alignment â€” INFOBOARD-LOGO-08A", () => {
   }
 
   it.each([1, 2, 3, 4])(
-    "keeps %i-logo tournament strip left-aligned without participant text",
+    "keeps %i-logo tournament participant blocks with names under crests",
     (count) => {
       const logoArea = renderTournamentWithLogoCount(count);
-      expect(logoArea.getAttribute("data-layout")).toBeNull();
-      expect(logoArea.className).toContain("tournamentParticipantLogos");
+      expect(logoArea.className).toContain("tournamentParticipantBlocks");
       expect(logoArea.querySelectorAll("img").length).toBe(count);
-      expect(logoArea.textContent?.trim()).toBe("");
+      expect(logoArea.querySelectorAll('[class*="tournamentParticipantBlock"]').length).toBe(
+        count,
+      );
     },
   );
 });
@@ -1475,7 +1476,7 @@ describe("Dynamic tournament participants — INFOBOARD-SATURDAY-02A", () => {
     expect(screen.getByTestId("pitch-value").textContent).toBe("Kunstrasen 1");
   });
 
-  it("uses a wrapping, width-bounded logo container", () => {
+  it("uses a width-bounded equal-column participant identity grid", () => {
     const css = readFileSync(
       join(
         dirname(fileURLToPath(import.meta.url)),
@@ -1484,10 +1485,10 @@ describe("Dynamic tournament participants — INFOBOARD-SATURDAY-02A", () => {
       "utf8",
     );
     const rule = css.match(
-      /\.tournamentParticipantLogos\s*\{[\s\S]*?\}/,
+      /\.tournamentParticipantBlocks\s*\{[\s\S]*?\}/,
     )?.[0];
 
-    expect(rule).toMatch(/flex-wrap:\s*wrap;/);
+    expect(rule).toMatch(/grid-template-columns:/);
     expect(rule).toMatch(/max-width:\s*100%;/);
   });
 
@@ -2007,13 +2008,13 @@ describe("Event-type labels", () => {
     expect(screen.getByText("TRAINING")).toBeTruthy();
   });
 
-  it("renders SPIEL fallback for MATCH events without competition label", () => {
+  it("renders MATCH semantic label for MATCH events without competition label", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", competitionLabel: null })],
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("SPIEL")).toBeTruthy();
+    expect(screen.getByText("MATCH")).toBeTruthy();
   });
 
   it("renders TURNIER label for TOURNAMENT events", () => {
@@ -2210,7 +2211,8 @@ describe("Light theme â€” INFOBOARD-INTEGRATION-01B", () => {
       />,
     );
     expect(screen.getByTestId("kiosk-shell-header")).toBeTruthy();
-    expect(screen.getByTestId("board-title")).toBeTruthy();
+    expect(screen.getByTestId("kiosk-header-welcome")).toBeTruthy();
+    expect(screen.queryByTestId("board-title")).toBeNull();
     expect(screen.getByTestId("kiosk-shell-footer")).toBeTruthy();
     expect(screen.getAllByTestId("event-row").length).toBeGreaterThan(0);
   });
@@ -2954,9 +2956,9 @@ describe("Physical-TV alignment â€” MATCH info fields preserved", () => {
     expect(row.getAttribute("data-type")).toBe("MATCH");
   });
 
-  it("MATCH card preserves competition label (Meisterschaft/Turnier row)", () => {
+  it("MATCH card omits competition subtitle on Screen 1 (R18)", () => {
     render(<InfoboardScreen1 feed={MATCH_FEED} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
   });
 
   it("MATCH card preserves home team name", () => {
@@ -3119,8 +3121,7 @@ describe("Physical-TV alignment â€” internal grid structure for Meisterscha
     render(<InfoboardScreen1 feed={feed} />);
     // Both cards rendered
     expect(screen.getAllByTestId("event-row")).toHaveLength(2);
-    // Both have Meisterschaft/Turnier labels, KABINE, PLATZ
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
     expect(screen.getByText("TURNIER")).toBeTruthy();
     expect(screen.getAllByText("KABINE").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("PLATZ").length).toBeGreaterThanOrEqual(2);
@@ -3499,13 +3500,15 @@ describe("Content-demand â€” computeTournamentDemand", () => {
     expect(rich).toBeCloseTo(CARD_DEMAND_TOURNAMENT_BASE + 4 * CARD_DEMAND_TOURNAMENT_PARTICIPANT);
   });
 
-  it("participant display rows follow two-column layout", () => {
+  it("participant display rows follow R7 max-four participant grid layout", () => {
     expect(computeTournamentParticipantDisplayRows(1)).toBe(1);
     expect(computeTournamentParticipantDisplayRows(2)).toBe(1);
-    expect(computeTournamentParticipantDisplayRows(3)).toBe(2);
-    expect(computeTournamentParticipantDisplayRows(4)).toBe(2);
-    expect(computeTournamentParticipantDisplayRows(5)).toBe(3);
-    expect(computeTournamentParticipantDisplayRows(6)).toBe(3);
+    expect(computeTournamentParticipantDisplayRows(3)).toBe(1);
+    expect(computeTournamentParticipantDisplayRows(4)).toBe(1);
+    expect(computeTournamentParticipantDisplayRows(5)).toBe(2);
+    expect(computeTournamentParticipantDisplayRows(6)).toBe(2);
+    expect(computeTournamentParticipantDisplayRows(7)).toBe(2);
+    expect(computeTournamentParticipantDisplayRows(8)).toBe(2);
   });
 
   it("small tournament demand accounts for every allocation row", () => {
@@ -3851,7 +3854,7 @@ describe("Content-demand â€” layout contract (MATCH / TOURNAMENT unchanged)
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("Meisterschaft")).toBeTruthy();
+    expect(screen.queryByText("Meisterschaft")).toBeNull();
     expect(screen.getAllByText("FC Demand Home").length).toBeGreaterThan(0);
     expect(screen.getAllByText("FC Demand Away").length).toBeGreaterThan(0);
     expect(screen.getAllByText("KABINE").length).toBeGreaterThan(0);
@@ -4103,7 +4106,7 @@ describe("INFOBOARD-FINAL-C: Match/Tournament shared vertical content-band", () 
     });
   }
 
-  it("Match card renders with data-type=MATCH and contains MEISTERSCHAFT, KABINE, PLATZ labels", () => {
+  it("Match card renders with data-type=MATCH and contains MATCH, KABINE, PLATZ labels", () => {
     render(
       <InfoboardScreen1
         feed={makeFeed({ current: [makeMatchCard()], isEmpty: false })}
@@ -4111,7 +4114,8 @@ describe("INFOBOARD-FINAL-C: Match/Tournament shared vertical content-band", () 
     );
     const card = screen.getByTestId("event-row");
     expect(card.getAttribute("data-type")).toBe("MATCH");
-    expect(within(card).getByText("Meisterschaft")).toBeTruthy();
+    expect(within(card).queryByText("Meisterschaft")).toBeNull();
+    expect(within(card).getByText("MATCH")).toBeTruthy();
     expect(within(card).getAllByText("KABINE").length).toBeGreaterThan(0);
     expect(within(card).getAllByText("PLATZ").length).toBeGreaterThan(0);
   });
@@ -4381,7 +4385,7 @@ describe("FC Allschwil regression â€” Fixture B dense 17:15â€“18:45 gr
 
     const groupCard = screen.getByTestId("event-row");
     expect(groupCard.getAttribute("data-training-count")).toBe("4");
-    expect(groupCard.getAttribute("data-group-density")).toBe("normal");
+    expect(groupCard.getAttribute("data-group-density")).toBe("standard");
 
     const rows = screen.getAllByTestId("training-group-row");
     expect(rows).toHaveLength(4);
@@ -4462,19 +4466,24 @@ describe("FC Allschwil regression â€” Fixture D boundary visibility", () =>
   });
 });
 
-describe("trainingGroupDensityTier â€” sparse groups unchanged", () => {
-  it("1â€“3 rows use normal density", () => {
-    expect(trainingGroupDensityTier(1)).toBe("normal");
-    expect(trainingGroupDensityTier(3)).toBe("normal");
+describe("trainingGroupDensityTier — R10 participant density", () => {
+  it("1–2 rows use spacious density", () => {
+    expect(trainingGroupDensityTier(1)).toBe("spacious");
+    expect(trainingGroupDensityTier(2)).toBe("spacious");
   });
 
-  it("4â€“5 rows use compact density", () => {
-    expect(trainingGroupDensityTier(4)).toBe("normal");
-    expect(trainingGroupDensityTier(5)).toBe("normal");
+  it("3–4 rows use standard density", () => {
+    expect(trainingGroupDensityTier(3)).toBe("standard");
+    expect(trainingGroupDensityTier(4)).toBe("standard");
   });
 
-  it("6+ rows use dense density", () => {
-    expect(trainingGroupDensityTier(6)).toBe("normal");
+  it("5–6 rows use compact density", () => {
+    expect(trainingGroupDensityTier(5)).toBe("compact");
+    expect(trainingGroupDensityTier(6)).toBe("compact");
+  });
+
+  it("7+ rows use dense density", () => {
+    expect(trainingGroupDensityTier(7)).toBe("dense");
   });
 });
 
@@ -4510,21 +4519,26 @@ describe("INFOBOARD-REGRESSION-01E — card geometry invariants", () => {
     return card;
   }
 
-  it("assigns normal group-density for all cohort sizes", () => {
+  it("assigns R10 participant density per cohort size", () => {
+    const expected: Record<string, string> = {
+      "1": "spacious",
+      "4": "standard",
+      "5": "compact",
+      "6": "compact",
+    };
     for (const rows of ["1", "4", "5", "6"] as const) {
       renderTrainingGroup(Number(rows));
-      expect(trainingCard(rows).getAttribute("data-group-density")).toBe("normal");
+      expect(trainingCard(rows).getAttribute("data-group-density")).toBe(expected[rows]);
     }
   });
 
-  it("sparse 4-row card uses content-driven flex (no viewport stretch)", () => {
+  it("sparse 4-row card stretches the activity row while training rows stay content-driven", () => {
     renderTrainingGroup(4);
     const list = screen.getByTestId("event-list");
-    const card = trainingCard("4");
 
     expect(list.getAttribute("data-layout-mode")).toBe("sparse");
-    expect(window.getComputedStyle(card).flexGrow).toBe("0");
-    expect(window.getComputedStyle(card).flexBasis).toBe("auto");
+    expect(list.getAttribute("data-count")).toBe("1");
+    expect(list.getAttribute("data-density")).toBe("normal");
   });
 
   it("keeps compact row spacing contract for a 4-row training cohort", () => {
