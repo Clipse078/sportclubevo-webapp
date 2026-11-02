@@ -32,15 +32,19 @@ export function resolveTrainingParticipantDensity(
   return "dense";
 }
 
-/** R11R4 — canonical training crest (~22% below R11R3; density-invariant). */
+/** R11R5 — canonical training crest (~25% below R11R4; density-invariant). */
 export const TRAINING_IDENTITY_CREST_SIZE_VAR = "--ib-training-identity-crest-size" as const;
 
 /** R11R3 approved baseline — regression comparison only. */
 export const TRAINING_R11R3_IDENTITY_CREST_BASELINE_CLAMP =
   "clamp(4.25rem, 5.5vw, 6.25rem)" as const;
 
-export const TRAINING_CANONICAL_IDENTITY_CREST_CLAMP =
+/** R11R4 crest clamp — regression comparison only. */
+export const TRAINING_R11R4_IDENTITY_CREST_BASELINE_CLAMP =
   "clamp(3.2rem, 4.1vw, 4.75rem)" as const;
+
+export const TRAINING_CANONICAL_IDENTITY_CREST_CLAMP =
+  "clamp(2.4rem, 3.1vw, 3.55rem)" as const;
 
 /** @deprecated R11R3 — all tiers resolve to the canonical crest clamp. */
 export const TRAINING_PARTICIPANT_LOGO_CLAMP: Record<

@@ -1,11 +1,15 @@
 /**
- * SCE Infoboard V2 R11R4 — match KABINE HEIM / GAST operational role labels.
+ * SCE Infoboard V2 R11R4 / R11R5 — venue KABINE secondary association labels.
  *
- * Room number stays primary; role labels are secondary but distance-readable.
- * Team names are not duplicated into this column.
+ * MATCH HEIM / GAST and tournament Kabine team association share this B-tier token.
+ * Room number stays primary; association labels are secondary but distance-readable.
  */
 
 export const MATCH_KABINE_ROLE_FONT_SIZE_VAR = "--ib-fs-match-role" as const;
+
+/** Semantic alias — tournament Kabine team lines consume the same token as match roles. */
+export const VENUE_KABINE_SECONDARY_ASSOCIATION_FONT_SIZE_VAR =
+  MATCH_KABINE_ROLE_FONT_SIZE_VAR;
 
 export const MATCH_KABINE_ROLE_COLOR_VAR = "--ib-match-kabine-role-color" as const;
 
@@ -31,4 +35,13 @@ export const MATCH_KABINE_ROLE_FONT_SIZE_SPACIOUS_SINGLE =
 
 export const MATCH_KABINE_ROLE_FONT_WEIGHT = 600 as const;
 
+/** Tournament Kabine team association — same weight tier as HEIM / GAST. */
+export const VENUE_KABINE_SECONDARY_ASSOCIATION_FONT_WEIGHT =
+  MATCH_KABINE_ROLE_FONT_WEIGHT;
+
+export const VENUE_KABINE_SECONDARY_ASSOCIATION_COLOR_VAR =
+  MATCH_KABINE_ROLE_COLOR_VAR;
+
 export const MATCH_KABINE_ROLE_USES_TEAM_NAMES = false as const;
+
+export const TOURNAMENT_KABINE_USES_SECONDARY_ASSOCIATION_TIER = true as const;

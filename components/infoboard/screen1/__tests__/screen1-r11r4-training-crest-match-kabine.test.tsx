@@ -29,6 +29,7 @@ import {
   TRAINING_PARTICIPANT_LOGO_CLAMP,
   TRAINING_PARTICIPANT_TEAM_CLAMP,
   TRAINING_R11R3_IDENTITY_CREST_BASELINE_CLAMP,
+  TRAINING_R11R4_IDENTITY_CREST_BASELINE_CLAMP,
   TRAINING_TEAM_NAME_SIZE_VAR,
 } from "@/lib/infoboard/training-participant-density";
 import {
@@ -157,9 +158,9 @@ describe("R11R4 TRAINING_CREST_SIZE_INVARIANT", () => {
 
   it("R11R4 crest is smaller than R11R3 baseline (~20–25%)", () => {
     const before = parseClampMinRem(TRAINING_R11R3_IDENTITY_CREST_BASELINE_CLAMP);
-    const after = parseClampMinRem(TRAINING_CANONICAL_IDENTITY_CREST_CLAMP);
-    expect(after).toBeLessThan(before);
-    const reduction = (before - after) / before;
+    const r11r4 = parseClampMinRem(TRAINING_R11R4_IDENTITY_CREST_BASELINE_CLAMP);
+    expect(r11r4).toBeLessThan(before);
+    const reduction = (before - r11r4) / before;
     expect(reduction).toBeGreaterThanOrEqual(0.2);
     expect(reduction).toBeLessThanOrEqual(0.28);
 
@@ -169,6 +170,11 @@ describe("R11R4 TRAINING_CREST_SIZE_INVARIANT", () => {
       TRAINING_PAGE_VENUE_DENSITY,
     );
     expect(parseClampMinRem(crest)).toBeLessThan(parseClampMinRem(scaledR11R3));
+    const scaledR11R4 = scaleVenuePresentationClamp(
+      TRAINING_R11R4_IDENTITY_CREST_BASELINE_CLAMP,
+      TRAINING_PAGE_VENUE_DENSITY,
+    );
+    expect(parseClampMinRem(crest)).toBeLessThan(parseClampMinRem(scaledR11R4));
   });
 });
 

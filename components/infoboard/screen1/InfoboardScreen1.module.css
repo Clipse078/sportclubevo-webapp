@@ -1472,7 +1472,7 @@
 }
 
 .participantAllocationRow.homeTeamEmphasis .participantTeamName {
-  color: var(--ib-text);
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
 }
 
 .participantRoomValue {
@@ -1491,15 +1491,15 @@
 }
 
 .participantTeamName {
-  font-size: clamp(0.9rem, 1.12vw, 1.3rem);
+  font-size: var(--ib-fs-match-role);
   font-weight: 600;
-  color: var(--ib-text-secondary);
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1.15;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
 }
 
 /* ─── Empty state ────────────────────────────────────────────────────────── */
@@ -1775,7 +1775,7 @@
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantTeamName {
-  font-size: clamp(1rem, 1.35vw, 1.55rem);
+  font-size: clamp(1.02rem, 1.28vw, 1.48rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantAllocationBlock {
@@ -2412,14 +2412,23 @@
   min-width: 0;
 }
 
-/* Kabine allocation team labels — secondary but readable (R7 wrap, no ellipsis). */
+/* Kabine allocation team labels — B-tier association (R11R5 ≡ match HEIM/GAST). */
 .eventCard[data-type="TOURNAMENT"] .participantTeamName {
-  font-size: var(--ib-kabine-team-font-size, clamp(0.9rem, 1.12vw, 1.28rem));
+  font-size: var(--ib-fs-match-role);
+  font-weight: 600;
+  color: var(--ib-match-kabine-role-color, var(--ib-text-muted));
   white-space: normal;
   overflow: visible;
   overflow-wrap: anywhere;
   word-break: normal;
   line-height: 1.15;
+}
+
+.eventCard[data-type="TOURNAMENT"] .participantTeamName .venueTeamCategoryLabel {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  letter-spacing: inherit;
 }
 
 /* Keep room number and team visually associated when the team wraps. */

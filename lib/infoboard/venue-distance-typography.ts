@@ -130,6 +130,13 @@ export function parseClampMinRem(clampCss: string): number {
   return Number.parseFloat(match[1] ?? "0");
 }
 
+/** Extract the maximum rem value (third clamp argument) for regression comparisons. */
+export function parseClampMaxRem(clampCss: string): number {
+  const match = clampCss.match(/clamp\([^,]+,[^,]+,\s*([\d.]+)rem/i);
+  if (!match) return 0;
+  return Number.parseFloat(match[1] ?? "0");
+}
+
 export function r9TimePrimaryExceedsR8Baseline(count: number): boolean {
   return (
     parseClampMinRem(resolveVenueDistanceTimePrimary(count)) >
