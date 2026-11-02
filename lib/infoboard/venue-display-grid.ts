@@ -24,6 +24,15 @@ export const VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES = {
   platz: 20,
 } as const;
 
+/** R13 — ambient presentation layer spans operational columns (not the TIME column). */
+export const VENUE_OPERATIONAL_AMBIENT_PRESENTATION = {
+  leftPercent: VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES.time,
+  widthPercent:
+    VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES.activity +
+    VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES.kabine +
+    VENUE_ACTIVITY_GRID_ZONE_PERCENTAGES.platz,
+} as const;
+
 export const VENUE_ACTIVITY_GRID_CANONICAL_COLUMN_COUNT = 4 as const;
 
 export const VENUE_ACTIVITY_CARD_TEST_ID = "venue-activity-card";

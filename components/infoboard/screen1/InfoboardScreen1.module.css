@@ -187,7 +187,11 @@
   --ib-zone-surface-activity:        #FFFFFF;
   --ib-zone-surface-kabine:          #FFFFFF;
   --ib-zone-surface-platz:           #FFFFFF;
+  /* R13 — ambient presentation layer only (foreground grid stays 15/43/22/20) */
+  --ib-zone-operational-ambient-left: var(--ib-zone-time);
+  --ib-zone-operational-ambient-span: 85%;
   --ib-zone-separator:               #E4EAF2;
+  --ib-zone-separator-operational-soft: rgba(11, 31, 58, 0.07);
 
   /* R11 semantic typography — distance-readable venue signage */
   --ib-fs-venue-time-primary:   var(--ib-fs-event-time);
@@ -702,15 +706,44 @@
   min-width: 0;
 }
 
-.trainingMatrixAmbientAnchor {
+/* R13 — one decorative ambient instance per row; spans ACTIVITY + KABINE + PLATZ */
+.operationalAmbientAnchor {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: var(--ib-zone-time);
-  width: var(--ib-zone-event);
+  left: var(--ib-zone-operational-ambient-left);
+  width: var(--ib-zone-operational-ambient-span);
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+}
+
+.eventCard[data-venue-operational-ambient="true"] .cardTimeZone {
+  position: relative;
+  z-index: 2;
+}
+
+.eventCard[data-venue-operational-ambient="true"] .cardEventZone,
+.eventCard[data-venue-operational-ambient="true"] .cardDressingRoomZone,
+.eventCard[data-venue-operational-ambient="true"] .cardPitchZone,
+.eventCard[data-venue-operational-ambient="true"] .trainingMatrix {
+  position: relative;
+  z-index: 1;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="activity"].cardEventZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="platz"].cardPitchZone {
+  background: transparent;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="activity"].cardEventZone {
+  border-right-color: var(--ib-zone-separator-operational-soft);
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="platz"].cardPitchZone {
+  border-left-color: var(--ib-zone-separator-operational-soft);
 }
 
 .eventCard[data-type="TRAINING"] .trainingMatrix {

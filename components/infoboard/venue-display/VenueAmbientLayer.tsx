@@ -9,7 +9,8 @@ import styles from "./VenueAmbientLayer.module.css";
 export type VenueActivityAmbientLayerProps = {
   readonly src: string;
   readonly kind: InfoboardActivityAmbientKind;
-  readonly placement?: "identity-column" | "training-matrix-activity";
+  /** @deprecated R13 — ambient always mounts on the unified operational environment. */
+  readonly placement?: "operational-environment" | "identity-column" | "training-matrix-activity";
   readonly testId?: string;
 };
 
@@ -22,7 +23,7 @@ const KIND_CLASS: Record<InfoboardActivityAmbientKind, string> = {
 export function VenueActivityAmbientLayer({
   src,
   kind,
-  placement = "identity-column",
+  placement = "operational-environment",
   testId = "venue-activity-ambient",
 }: VenueActivityAmbientLayerProps): ReactElement {
   const placementClass =
@@ -33,6 +34,7 @@ export function VenueActivityAmbientLayer({
       className={`${styles.ambientLayer} ${KIND_CLASS[kind]} ${placementClass}`}
       data-testid={testId}
       data-venue-ambient-layer="activity"
+      data-venue-ambient-scope="operational-environment"
       data-venue-ambient-kind={kind}
       aria-hidden="true"
     >

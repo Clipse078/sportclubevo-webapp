@@ -1493,6 +1493,7 @@ function TrainingGroupCard({
       data-group-density={groupDensity}
       data-cohort-continuation={cohortContinuation ? "true" : "false"}
       data-card-demand={demand.toFixed(2)}
+      data-venue-operational-ambient={trainingAmbientSrc != null ? "true" : undefined}
       {...{ [TRAINING_PARTICIPANT_DENSITY_ATTR]: participantDensity }}
       style={
         {
@@ -1553,7 +1554,11 @@ function TrainingGroupCard({
       </VenueActivityTime>
 
       {trainingAmbientSrc != null ? (
-        <div className={styles.trainingMatrixAmbientAnchor} aria-hidden="true">
+        <div
+          className={styles.operationalAmbientAnchor}
+          data-venue-operational-ambient-anchor="true"
+          aria-hidden="true"
+        >
           <VenueActivityAmbientLayer
             src={trainingAmbientSrc}
             kind="TRAINING"
@@ -1780,6 +1785,17 @@ function EventCard({
     ? resolveScreen1EventMatchPresentation(event, tenantLogoUrl, tenantClubName)
     : null;
 
+  const operationalAmbient =
+    activityAmbientSrc != null && activityAmbientKind != null ? (
+      <div
+        className={styles.operationalAmbientAnchor}
+        data-venue-operational-ambient-anchor="true"
+        aria-hidden="true"
+      >
+        <VenueActivityAmbientLayer src={activityAmbientSrc} kind={activityAmbientKind} />
+      </div>
+    ) : undefined;
+
   return (
     <VenueActivityCard
       className={styles.eventCard}
@@ -1788,6 +1804,7 @@ function EventCard({
       data-stripe={stripe}
       data-card-demand={demand.toFixed(2)}
       style={{ "--ib-card-demand": demand, ...cardStyle } as CSSProperties}
+      operationalAmbient={operationalAmbient}
       time={
         <VenueActivityTime
           className={`${styles.cardTimeZone} ${styles.venueColumnShell}`}
@@ -1808,12 +1825,6 @@ function EventCard({
         <VenueActivityIdentity
           className={`${styles.cardEventZone} ${styles.venueColumnShell}`}
         >
-          {activityAmbientSrc != null && activityAmbientKind != null ? (
-            <VenueActivityAmbientLayer
-              src={activityAmbientSrc}
-              kind={activityAmbientKind}
-            />
-          ) : null}
           <div
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}

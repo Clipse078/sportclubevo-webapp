@@ -118,10 +118,14 @@ describe("R12 ambient asset mapping", () => {
 });
 
 describe("R12 activity presentation", () => {
-  it("renders match ambient on MATCH activity column only", () => {
+  it("renders match ambient on the unified operational environment (R13)", () => {
     renderSingle(baseEvent({ type: "MATCH" }));
+    const row = screen.getByTestId("event-row");
     const ambient = screen.getByTestId("venue-activity-ambient");
     expect(ambient.getAttribute("data-venue-ambient-kind")).toBe("MATCH");
+    expect(ambient.getAttribute("data-venue-ambient-scope")).toBe("operational-environment");
+    expect(ambient.closest('[data-venue-operational-ambient-anchor="true"]')).toBeTruthy();
+    expect(within(row).getByTestId("venue-activity-identity").contains(ambient)).toBe(false);
     const raster = ambient.querySelector('img[data-venue-ambient-raster="true"]');
     expect(raster?.getAttribute("src")).toBe(INFOBOARD_AMBIENT_ASSET_PATHS.match);
   });
@@ -176,7 +180,7 @@ describe("R12 grid geometry unchanged", () => {
 describe("R12 height integrity", () => {
   it("does not let ambient layers participate in card height (absolute positioning)", () => {
     expect(CSS).toMatch(/\.eventCard[\s\S]*position:\s*relative/);
-    expect(CSS).toMatch(/\.trainingMatrixAmbientAnchor[\s\S]*position:\s*absolute/);
+    expect(CSS).toMatch(/\.operationalAmbientAnchor[\s\S]*position:\s*absolute/);
     expect(AMBIENT_CSS).toMatch(/\.ambientLayer[\s\S]*position:\s*absolute/);
     expect(AMBIENT_CSS).toMatch(/\.ambientLayer[\s\S]*inset:\s*0/);
   });

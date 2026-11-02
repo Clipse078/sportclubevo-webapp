@@ -15,6 +15,8 @@ import {
 } from "@/lib/infoboard/venue-display-grid";
 
 export type VenueActivityCardProps = {
+  /** Decorative ambient raster spanning ACTIVITY + KABINE + PLATZ (absolute, out of flow). */
+  readonly operationalAmbient?: ReactNode;
   readonly time: ReactNode;
   readonly identity: ReactNode;
   /**
@@ -120,6 +122,7 @@ export function VenueActivityPlatz({
 }
 
 export function VenueActivityCard({
+  operationalAmbient,
   time,
   identity,
   kabine,
@@ -136,8 +139,10 @@ export function VenueActivityCard({
       data-testid={dataTestId}
       {...{ [VENUE_ACTIVITY_GRID_DATA_ATTR]: "true" }}
       data-venue-activity-card={VENUE_ACTIVITY_CARD_TEST_ID}
+      data-venue-operational-ambient={operationalAmbient != null ? "true" : undefined}
       {...dataAttrs}
     >
+      {operationalAmbient ?? null}
       {time}
       {identity}
       {kabine}

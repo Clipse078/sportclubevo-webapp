@@ -32,6 +32,7 @@
 .activityMatch {
   --ambient-position-x: 0%;
   --ambient-position-y: 0%;
+  --ambient-kabine-scrim-start: 58%;
 }
 
 .activityMatch .ambientImage {
@@ -39,8 +40,10 @@
 }
 
 .activityTournament {
-  --ambient-position-x: 8%;
-  --ambient-position-y: 18%;
+  /* R13 — recalibrated for 85% operational canvas (was 43% activity column) */
+  --ambient-position-x: 2%;
+  --ambient-position-y: 16%;
+  --ambient-kabine-scrim-start: 56%;
 }
 
 .activityTournament .ambientImage {
@@ -49,7 +52,8 @@
 
 .activityTraining {
   --ambient-position-x: 0%;
-  --ambient-position-y: 6%;
+  --ambient-position-y: 4%;
+  --ambient-kabine-scrim-start: 54%;
 }
 
 .activityTraining .ambientImage {
@@ -75,7 +79,13 @@
     linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.22) 0%,
-      transparent 68%
+      transparent 52%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 58%),
+      rgba(255, 255, 255, 0.1) 72%,
+      rgba(255, 255, 255, 0.2) 100%
     );
 }
 
@@ -90,7 +100,13 @@
     linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.24) 0%,
-      transparent 62%
+      transparent 48%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 56%),
+      rgba(255, 255, 255, 0.12) 70%,
+      rgba(255, 255, 255, 0.22) 100%
     );
 }
 
@@ -105,7 +121,13 @@
     linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.18) 0%,
-      transparent 58%
+      transparent 46%
+    ),
+    linear-gradient(
+      90deg,
+      transparent var(--ambient-kabine-scrim-start, 54%),
+      rgba(255, 255, 255, 0.1) 68%,
+      rgba(255, 255, 255, 0.18) 100%
     );
 }
 
