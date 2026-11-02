@@ -174,8 +174,11 @@ describe("R12C decorative flow contract", () => {
     expect(AMBIENT_CSS).toMatch(/\.ambientLayer[\s\S]*pointer-events:\s*none/);
   });
 
-  it("uses full raster opacity on light activity artwork (no global attenuation)", () => {
-    expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*opacity:\s*1/);
+  it("uses R14 per-activity raster opacity on light operational artwork", () => {
+    expect(AMBIENT_CSS).toMatch(/--ambient-image-opacity:\s*0\.68/);
+    expect(AMBIENT_CSS).toMatch(
+      /\[data-theme="light"\]\s*\.activityMatch \.ambientImage[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,
+    );
     expect(AMBIENT_CSS).not.toMatch(
       /\[data-shell-theme="light"\]\s*\.ambientImage[\s\S]*opacity:\s*0\.55/,
     );

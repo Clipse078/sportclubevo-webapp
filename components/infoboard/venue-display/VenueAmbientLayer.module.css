@@ -10,7 +10,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .ambientImage {
@@ -25,6 +25,16 @@
   user-select: none;
   -webkit-user-drag: none;
   opacity: 1;
+  z-index: 1;
+}
+
+/* R14 — full-height operational tint (raster remains width-driven above). */
+.baseActivityAtmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--ambient-base-atmosphere, transparent);
 }
 
 /* ── Activity kinds: width-driven scale, semantic positioning ─────────── */
@@ -60,6 +70,27 @@
   top: 0;
 }
 
+[data-theme="light"] .activityMatch {
+  --ambient-image-opacity: 0.68;
+  --ambient-base-atmosphere: #fff8f7;
+}
+
+[data-theme="light"] .activityTournament {
+  --ambient-image-opacity: 0.64;
+  --ambient-base-atmosphere: #fffaf6;
+}
+
+[data-theme="light"] .activityTraining {
+  --ambient-image-opacity: 0.62;
+  --ambient-base-atmosphere: #f7faff;
+}
+
+[data-theme="light"] .activityMatch .ambientImage,
+[data-theme="light"] .activityTournament .ambientImage,
+[data-theme="light"] .activityTraining .ambientImage {
+  opacity: var(--ambient-image-opacity);
+}
+
 .trainingMatrixActivity .ambientLayer {
   inset: 0;
 }
@@ -72,20 +103,20 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.36) 0%,
-      rgba(255, 255, 255, 0.1) 26%,
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.06) 26%,
       transparent 46%
     ),
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.14) 0%,
       transparent 52%
     ),
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 58%),
-      rgba(255, 255, 255, 0.1) 72%,
-      rgba(255, 255, 255, 0.2) 100%
+      rgba(255, 255, 255, 0.06) 72%,
+      rgba(255, 255, 255, 0.14) 100%
     );
 }
 
@@ -93,20 +124,20 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.38) 0%,
-      rgba(255, 255, 255, 0.12) 30%,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.08) 30%,
       transparent 52%
     ),
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.16) 0%,
       transparent 48%
     ),
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 56%),
-      rgba(255, 255, 255, 0.12) 70%,
-      rgba(255, 255, 255, 0.22) 100%
+      rgba(255, 255, 255, 0.08) 70%,
+      rgba(255, 255, 255, 0.16) 100%
     );
 }
 
@@ -114,20 +145,20 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.34) 0%,
-      rgba(255, 255, 255, 0.08) 24%,
+      rgba(255, 255, 255, 0.24) 0%,
+      rgba(255, 255, 255, 0.05) 24%,
       transparent 42%
     ),
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.12) 0%,
       transparent 46%
     ),
     linear-gradient(
       90deg,
       transparent var(--ambient-kabine-scrim-start, 54%),
-      rgba(255, 255, 255, 0.1) 68%,
-      rgba(255, 255, 255, 0.18) 100%
+      rgba(255, 255, 255, 0.06) 68%,
+      rgba(255, 255, 255, 0.12) 100%
     );
 }
 
@@ -135,13 +166,13 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.32) 0%,
-      rgba(255, 255, 255, 0.06) 22%,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.04) 22%,
       transparent 40%
     ),
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.1) 0%,
       transparent 55%
     );
 }

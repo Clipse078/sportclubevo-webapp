@@ -38,6 +38,11 @@ export function VenueActivityAmbientLayer({
       data-venue-ambient-kind={kind}
       aria-hidden="true"
     >
+      <div
+        className={styles.baseActivityAtmosphere}
+        data-venue-ambient-base-atmosphere="true"
+        aria-hidden="true"
+      />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className={styles.ambientImage}
