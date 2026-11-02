@@ -499,6 +499,7 @@
 /* ─── Event card ─────────────────────────────────────────────────────────── */
 
 .eventCard {
+  position: relative;
   display: grid;
   grid-template-columns: var(--ib-zone-time) var(--ib-zone-event) var(--ib-zone-room) var(--ib-zone-pitch);
   width: 100%;
@@ -679,6 +680,7 @@
 /* ─── CENTER ZONE: Event identity ───────────────────────────────────────── */
 
 .cardEventZone {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -690,6 +692,30 @@
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.cardEventZone .venueColumnComposition {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.trainingMatrixAmbientAnchor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--ib-zone-time);
+  width: var(--ib-zone-event);
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.eventCard[data-type="TRAINING"] .trainingMatrix {
+  position: relative;
+  z-index: 1;
 }
 
 .activityContextZone {

@@ -1,0 +1,168 @@
+.ambientLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambientScrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ambientImage {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  object-fit: none;
+  object-position: left top;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.activityMatch .ambientImage {
+  top: 0;
+}
+
+.activityTournament .ambientImage {
+  top: -8%;
+}
+
+.activityTraining .ambientImage {
+  top: 0;
+}
+
+.trainingMatrixActivity .ambientLayer {
+  inset: 0;
+}
+
+.activityMatch .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.38) 42%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
+}
+
+.activityTournament .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.74) 0%,
+    rgba(255, 255, 255, 0.4) 45%,
+    rgba(255, 255, 255, 0.16) 100%
+  );
+}
+
+.activityTraining .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.36) 40%,
+    rgba(255, 255, 255, 0.14) 100%
+  );
+}
+
+[data-shell-theme="dark"] .activityMatch .ambientScrim,
+[data-shell-theme="dark"] .activityTournament .ambientScrim,
+[data-shell-theme="dark"] .activityTraining .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 24, 40, 0.82) 0%,
+    rgba(10, 24, 40, 0.55) 45%,
+    rgba(10, 24, 40, 0.35) 100%
+  );
+}
+
+[data-shell-theme="dark"] .ambientImage {
+  opacity: 0.42;
+}
+
+[data-shell-theme="light"] .ambientImage {
+  opacity: 0.55;
+}
+
+.headerAmbientLayer .ambientImage {
+  top: 0;
+  opacity: 0.35;
+}
+
+[data-shell-theme="dark"] .headerAmbientLayer .ambientImage {
+  opacity: 0.28;
+}
+
+.headerAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.88) 100%
+  );
+}
+
+[data-shell-theme="dark"] .headerAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 24, 40, 0.94) 0%,
+    rgba(10, 24, 40, 0.9) 100%
+  );
+}
+
+.jumbotronAmbientLayer .ambientImage {
+  top: auto;
+  bottom: 0;
+  opacity: 0.45;
+}
+
+[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientImage {
+  opacity: 0.32;
+}
+
+.jumbotronAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+}
+
+[data-shell-theme="dark"] .jumbotronAmbientLayer .ambientScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 24, 40, 0.9) 0%,
+    rgba(10, 24, 40, 0.82) 100%
+  );
+}
+
+.tenantAccent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  pointer-events: none;
+  z-index: 2;
+  background: var(--venue-header-accent-gradient, var(--venue-header-accent-primary));
+  opacity: 0.85;
+}
+
+.headerContentLayer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.jumbotronContentLayer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: inherit;
+}

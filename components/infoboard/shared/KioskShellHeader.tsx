@@ -24,6 +24,15 @@
 import type { ReactElement, ReactNode } from "react";
 import { LiveKioskShellWeather } from "@/components/infoboard/shared/LiveKioskShellWeather";
 import { KioskShellWeatherDisplay } from "@/components/infoboard/shared/KioskShellWeatherDisplay";
+import {
+  VenueHeaderAmbientLayer,
+  VenueHeaderTenantAccent,
+} from "@/components/infoboard/venue-display/VenueAmbientLayer";
+import { INFOBOARD_AMBIENT_ASSET_PATHS } from "@/lib/infoboard/screen1-ambient-assets";
+import {
+  resolveVenueHeaderCssVars,
+  type VenueHeaderBrandingInput,
+} from "@/lib/infoboard/venue-header-presentation";
 
 import { LiveClockScreen1 } from "@/components/infoboard/screen1/LiveClockScreen1";
 import {
@@ -74,6 +83,10 @@ export type KioskShellHeaderProps = {
 
   /** Full-width subtitle band (legacy) vs compact inline welcome in the header row. */
   subtitlePlacement?: "band" | "header-inline";
+
+  /** Screen 1 tenant ambient header (decorative raster + accent). */
+  venueHeaderAmbient?: boolean;
+  venueHeaderBranding?: VenueHeaderBrandingInput | null;
 };
 
 const HEADER_THEME = {
@@ -149,8 +162,13 @@ export function KioskShellHeader({
   rightContent,
   shellTheme = "dark",
   subtitlePlacement = "band",
+  venueHeaderAmbient = false,
+  venueHeaderBranding = null,
 }: KioskShellHeaderProps): ReactElement {
   const palette = HEADER_THEME[shellTheme];
+  const venueHeaderCssVars = venueHeaderAmbient
+    ? resolveVenueHeaderCssVars(venueHeaderBranding)
+    : null;
   const showSubtitle =
     subtitleEnabled === true &&
     subtitle != null &&
@@ -172,7 +190,9 @@ export function KioskShellHeader({
       <header
         data-testid="kiosk-shell-header-bar"
         data-shell-theme={shellTheme}
+        data-venue-header-ambient={venueHeaderAmbient ? "true" : undefined}
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           width: "100%",
@@ -186,8 +206,27 @@ export function KioskShellHeader({
           height: KIOSK_SHELL_CSS_VARS["--kiosk-shell-header-height"],
           flexShrink: 0,
           overflow: "hidden",
+          ...(venueHeaderCssVars ?? {}),
         }}
       >
+        {venueHeaderAmbient ? (
+          <>
+            <VenueHeaderAmbientLayer src={INFOBOARD_AMBIENT_ASSET_PATHS.header} />
+            <VenueHeaderTenantAccent />
+          </>
+        ) : null}
+        <div
+          data-testid="kiosk-header-content"
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+            minWidth: 0,
+          }}
+        >
         {/* CLUB */}
         <div
           data-testid="kiosk-header-left"
@@ -435,6 +474,7 @@ export function KioskShellHeader({
               pointerEvents: "none",
             }}
           />
+        </div>
         </div>
       </header>
 

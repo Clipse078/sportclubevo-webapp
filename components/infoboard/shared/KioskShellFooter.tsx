@@ -26,6 +26,8 @@
 
 import type { ReactElement } from "react";
 import { AnnouncementTicker } from "@/components/infoboard/screen1/AnnouncementTicker";
+import { VenueJumbotronAmbientLayer } from "@/components/infoboard/venue-display/VenueAmbientLayer";
+import { INFOBOARD_AMBIENT_ASSET_PATHS } from "@/lib/infoboard/screen1-ambient-assets";
 import { KIOSK_SHELL_CSS_VARS } from "@/lib/infoboard/kiosk-shell-sizing";
 
 // â”€â”€ Props â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -41,6 +43,9 @@ export type KioskShellFooterProps = {
   productLogoSrc?: string | null;
   leftLabel?: string | null;
   announcement?: KioskShellFooterAnnouncement | null;
+  /** Screen 1 communication-strip ambient background. */
+  jumbotronAmbient?: boolean;
+  shellTheme?: "dark" | "light";
 };
 
 // â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -49,6 +54,8 @@ export function KioskShellFooter({
   productLogoSrc,
   leftLabel,
   announcement,
+  jumbotronAmbient = false,
+  shellTheme = "dark",
 }: KioskShellFooterProps): ReactElement {
   const announcementEnabled =
     announcement?.enabled === true &&
@@ -68,6 +75,7 @@ export function KioskShellFooter({
   const hasInlineStyle = Object.keys(footerInlineStyle).length > 0;
 
   const layoutStyle: React.CSSProperties = {
+    position: "relative",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -82,9 +90,27 @@ export function KioskShellFooter({
   return (
     <footer
       data-testid={announcementEnabled ? "announcement-bar" : "kiosk-shell-footer"}
+      data-shell-theme={shellTheme}
+      data-venue-jumbotron-ambient={jumbotronAmbient ? "true" : undefined}
       className="bg-[#0A1828]"
       style={hasInlineStyle ? { ...footerInlineStyle, ...layoutStyle } : layoutStyle}
     >
+      {jumbotronAmbient ? (
+        <VenueJumbotronAmbientLayer src={INFOBOARD_AMBIENT_ASSET_PATHS.jumbotron} />
+      ) : null}
+      <div
+        data-testid="kiosk-footer-content"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          minHeight: "inherit",
+          gap: KIOSK_SHELL_CSS_VARS["--kiosk-shell-footer-gap"],
+        }}
+      >
       {/* LEFT: announcement or board label */}
       <div
         data-testid="kiosk-footer-left"
@@ -168,6 +194,7 @@ export function KioskShellFooter({
             }}
           />
         </div>
+      </div>
     </footer>
   );
 }

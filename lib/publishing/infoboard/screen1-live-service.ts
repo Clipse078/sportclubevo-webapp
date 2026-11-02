@@ -90,6 +90,8 @@ const FC_ALLSCHWIL_TENANT_KEY = "fc-allschwil";
 export type Screen1TenantContext = InfoboardTenantRef & {
   /** Optional: tenant-configured club logo URL (Tenant.logoUrl). */
   readonly logoUrl?: string | null;
+  readonly primaryColor?: string | null;
+  readonly secondaryColor?: string | null;
   /**
    * Optional: raw persisted display-theme preference (Tenant.infoboardDisplayTheme).
    * Resolved via resolveInfoboardDisplayTheme() — presentation only, never
@@ -126,6 +128,8 @@ export type InfoboardBoardConfig = {
 export type InfoboardScreen1Branding = {
   readonly clubLogoSrc: string | null;
   readonly productLogoSrc: string | null;
+  readonly tenantPrimaryColor?: string | null;
+  readonly tenantSecondaryColor?: string | null;
 };
 
 /**
@@ -301,6 +305,8 @@ export async function buildScreen1LivePayload(params: {
   const branding: InfoboardScreen1Branding = {
     clubLogoSrc: resolveClubLogoSrc(tenant),
     productLogoSrc: PRODUCT_LOGO_SRC,
+    tenantPrimaryColor: tenant.primaryColor ?? null,
+    tenantSecondaryColor: tenant.secondaryColor ?? null,
   };
 
   // ── Display theme ────────────────────────────────────────────────────────

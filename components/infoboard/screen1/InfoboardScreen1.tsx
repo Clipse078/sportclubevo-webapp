@@ -175,6 +175,11 @@ import {
   TRAINING_ROW_COUNT_VAR,
   TRAINING_TEAM_NAME_SIZE_VAR,
 } from "@/lib/infoboard/training-participant-density";
+import { VenueActivityAmbientLayer } from "@/components/infoboard/venue-display/VenueAmbientLayer";
+import {
+  isInfoboardActivityAmbientKind,
+  resolveActivityAmbientSrc,
+} from "@/lib/infoboard/screen1-ambient-assets";
 import styles from "./InfoboardScreen1.module.css";
 
 export {
@@ -188,6 +193,8 @@ export type { VenuePresentationDensity } from "@/lib/infoboard/venue-presentatio
 export type InfoboardScreen1Branding = {
   clubLogoSrc?: string | null;
   productLogoSrc?: string | null;
+  tenantPrimaryColor?: string | null;
+  tenantSecondaryColor?: string | null;
 };
 
 export type InfoboardScreen1Props = {
@@ -1463,6 +1470,7 @@ function TrainingGroupCard({
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
   const participantDensity = resolveTrainingParticipantDensity(items.length);
+  const trainingAmbientSrc = resolveActivityAmbientSrc("TRAINING");
   const canonicalCrestClamp = scaleVenuePresentationClamp(
     TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
     venuePresentationDensity,
@@ -1544,6 +1552,16 @@ function TrainingGroupCard({
         </VenueTimeColumnContent>
       </VenueActivityTime>
 
+      {trainingAmbientSrc != null ? (
+        <div className={styles.trainingMatrixAmbientAnchor} aria-hidden="true">
+          <VenueActivityAmbientLayer
+            src={trainingAmbientSrc}
+            kind="TRAINING"
+            placement="training-matrix-activity"
+            testId="venue-training-matrix-ambient"
+          />
+        </div>
+      ) : null}
       <div className={styles.trainingMatrix} data-testid="training-group">
         <div
           className={styles.trainingMatrixHeaders}
@@ -1740,6 +1758,10 @@ function EventCard({
   const endTime = rawEndTime !== null && rawEndTime !== startTime ? rawEndTime : null;
   const isMatch = event.type === "MATCH";
   const isTournament = event.type === "TOURNAMENT";
+  const activityAmbientSrc = resolveActivityAmbientSrc(event.type);
+  const activityAmbientKind = isInfoboardActivityAmbientKind(event.type)
+    ? event.type
+    : null;
   const matchShowLogos =
     resolvedPresentation?.kind === "match" || resolvedPresentation?.kind === "other"
       ? resolvedPresentation.presentation.showLogos
@@ -1786,6 +1808,12 @@ function EventCard({
         <VenueActivityIdentity
           className={`${styles.cardEventZone} ${styles.venueColumnShell}`}
         >
+          {activityAmbientSrc != null && activityAmbientKind != null ? (
+            <VenueActivityAmbientLayer
+              src={activityAmbientSrc}
+              kind={activityAmbientKind}
+            />
+          ) : null}
           <div
           className={styles.venueColumnComposition}
           {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
@@ -2115,6 +2143,10 @@ export function InfoboardScreen1({
 
   const clubLogoSrc = branding?.clubLogoSrc ?? null;
   const productLogoSrc = branding?.productLogoSrc ?? null;
+  const venueHeaderBranding = {
+    tenantPrimaryColor: branding?.tenantPrimaryColor ?? null,
+    tenantSecondaryColor: branding?.tenantSecondaryColor ?? null,
+  };
 
   // Static date fallback used only when currentTimeIso is absent.
   const staticDateLine =
@@ -2265,6 +2297,8 @@ export function InfoboardScreen1({
         subtitlePlacement={venueDisplayLight ? "header-inline" : "band"}
         liveClock={liveClock}
         liveWeather={liveClock}
+        venueHeaderAmbient
+        venueHeaderBranding={venueHeaderBranding}
       />
 
       {/* ── Main: event list (demand-paginated, rotated when multi-page) ── */}
@@ -2311,6 +2345,8 @@ export function InfoboardScreen1({
       <KioskShellFooter
         productLogoSrc={productLogoSrc}
         announcement={announcement}
+        jumbotronAmbient
+        shellTheme={venueDisplayLight ? "light" : "dark"}
       />
     </div>
   );

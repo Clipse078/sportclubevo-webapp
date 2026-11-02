@@ -88,6 +88,8 @@ export default async function InfoboardScreen1Page() {
     timezone: tenantRow.timezone,
     logoUrl: tenantRow.logoUrl,
     infoboardDisplayTheme: tenantRow.infoboardDisplayTheme,
+    primaryColor: tenantRow.primaryColor,
+    secondaryColor: tenantRow.secondaryColor,
   };
 
   // ── Request time ───────────────────────────────────────────────────────────
