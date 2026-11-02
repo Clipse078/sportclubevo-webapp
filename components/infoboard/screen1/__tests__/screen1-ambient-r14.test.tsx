@@ -122,7 +122,7 @@ describe("R14 activity-specific raster opacity", () => {
       /\[data-theme="light"\]\s*\.activityTraining[\s\S]*--ambient-image-opacity:\s*0\.34/,
     );
     expect(AMBIENT_CSS).toMatch(
-      /\[data-theme="light"\]\s*\.activityMatch \.ambientImage[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,
+      /\[data-theme="light"\]\s*\.activityMatch \.ambientRasterOpacity[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,
     );
   });
 
@@ -156,9 +156,11 @@ describe("R14 full-height base atmosphere", () => {
     );
   });
 
-  it("keeps raster width-driven with height auto (no stretch regressions)", () => {
+  it("keeps activity raster on object-fit cover without fill stretch", () => {
     expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*width:\s*100%/);
-    expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*height:\s*auto/);
+    expect(AMBIENT_CSS).toMatch(
+      /\.activityTraining \.ambientIllustrationClip \.ambientImage[\s\S]*height:\s*100%/,
+    );
     expect(AMBIENT_CSS).not.toMatch(/background-size:\s*cover/);
     expect(AMBIENT_CSS).not.toMatch(/background-size:\s*100%\s*100%/);
     expect(AMBIENT_CSS).not.toMatch(/object-fit:\s*fill/);

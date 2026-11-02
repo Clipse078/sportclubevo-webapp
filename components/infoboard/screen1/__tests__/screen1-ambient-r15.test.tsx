@@ -150,8 +150,8 @@ describe("R15 full-card environment", () => {
     );
   });
 
-  it("prevents plain-white fallback and hard lower artwork cutoff", () => {
-    expect(AMBIENT_CSS).toMatch(/\.ambientIllustrationClip[\s\S]*mask-image:\s*linear-gradient/);
+  it("prevents plain-white fallback surfaces on operational columns", () => {
+    expect(AMBIENT_CSS).not.toMatch(/\.ambientIllustrationClip[\s\S]*mask-image:\s*linear-gradient/);
     expect(AMBIENT_CSS).not.toMatch(
       /\[data-theme="light"\]\s*\.activityMatch[\s\S]*background:\s*#FFFFFF/,
     );
@@ -162,11 +162,11 @@ describe("R15 full-card environment", () => {
 });
 
 describe("R15 illustration scaling", () => {
-  it("uses bounded aspect-preserving cover without fill stretch", () => {
+  it("uses aspect-preserving cover without fill stretch (superseded by R16 full-height cover)", () => {
     expect(AMBIENT_CSS).toMatch(
       /\.activityMatch \.ambientIllustrationClip \.ambientImage[\s\S]*object-fit:\s*cover/,
     );
-    expect(AMBIENT_CSS).toMatch(/--ambient-raster-max-height:/);
+    expect(AMBIENT_CSS).not.toMatch(/--ambient-raster-max-height:/);
     expect(AMBIENT_CSS).not.toMatch(/object-fit:\s*fill/);
     expect(AMBIENT_CSS).not.toMatch(/background-size:\s*100%\s*100%/);
     expect(AMBIENT_CSS).not.toMatch(/width:\s*100%[\s\S]*height:\s*100%[\s\S]*object-fit:\s*fill/);

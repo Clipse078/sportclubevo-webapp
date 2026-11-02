@@ -118,11 +118,12 @@ describe("R12C approved asset paths unchanged", () => {
 });
 
 describe("R12C width-driven scale invariants", () => {
-  it("does not stretch ambient rasters with height 100% or background-size cover", () => {
+  it("uses R16 full-surface object-fit cover for activity rasters", () => {
     expect(AMBIENT_CSS).not.toMatch(/background-size:\s*cover/);
     expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*width:\s*100%/);
-    expect(AMBIENT_CSS).toMatch(/\.ambientImage[\s\S]*height:\s*auto/);
-    expect(AMBIENT_CSS).not.toMatch(/(?<!min-)height:\s*100%/);
+    expect(AMBIENT_CSS).toMatch(
+      /\.activityMatch \.ambientIllustrationClip \.ambientImage[\s\S]*height:\s*100%/,
+    );
     expect(AMBIENT_CSS).toMatch(
       /\.activityMatch \.ambientIllustrationClip \.ambientImage[\s\S]*object-fit:\s*cover/,
     );
@@ -177,10 +178,10 @@ describe("R12C decorative flow contract", () => {
     expect(AMBIENT_CSS).toMatch(/\.ambientLayer[\s\S]*pointer-events:\s*none/);
   });
 
-  it("uses R15 per-activity raster opacity on light operational artwork", () => {
+  it("uses R16 per-activity raster opacity on light operational artwork shell", () => {
     expect(AMBIENT_CSS).toMatch(/--ambient-image-opacity:\s*0\.42/);
     expect(AMBIENT_CSS).toMatch(
-      /\[data-theme="light"\]\s*\.activityMatch \.ambientImage[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,
+      /\[data-theme="light"\]\s*\.activityMatch \.ambientRasterOpacity[\s\S]*opacity:\s*var\(--ambient-image-opacity\)/,
     );
     expect(AMBIENT_CSS).not.toMatch(
       /\[data-shell-theme="light"\]\s*\.ambientImage[\s\S]*opacity:\s*0\.55/,

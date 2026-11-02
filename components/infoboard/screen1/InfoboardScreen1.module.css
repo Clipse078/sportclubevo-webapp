@@ -190,6 +190,8 @@
   /* R13 — ambient presentation layer only (foreground grid stays 15/43/22/20) */
   --ib-zone-operational-ambient-left: var(--ib-zone-time);
   --ib-zone-operational-ambient-span: 85%;
+  /* R16 — operational environment stacking (background anchor vs foreground grid) */
+  --venue-ambient-z-foreground: 10;
   --ib-zone-separator:               #E4EAF2;
   --ib-zone-separator-operational-soft: rgba(11, 31, 58, 0.05);
 
@@ -716,11 +718,13 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .eventCard[data-venue-operational-ambient="true"] .cardTimeZone {
   position: relative;
-  z-index: 2;
+  z-index: var(--venue-ambient-z-foreground, 10);
+  opacity: 1;
 }
 
 .eventCard[data-venue-operational-ambient="true"] .cardEventZone,
@@ -728,7 +732,9 @@
 .eventCard[data-venue-operational-ambient="true"] .cardPitchZone,
 .eventCard[data-venue-operational-ambient="true"] .trainingMatrix {
   position: relative;
-  z-index: 1;
+  z-index: var(--venue-ambient-z-foreground, 10);
+  opacity: 1;
+  isolation: isolate;
 }
 
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="activity"].cardEventZone,
@@ -746,7 +752,7 @@
   border-left-color: var(--ib-zone-separator-operational-soft);
 }
 
-/* R15 — localized Kabine readability field (translucent, not an opaque sub-card). */
+/* R16 — localized Kabine readability veil lives in the background stack of each cell. */
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] [data-venue-column="kabine"].cardDressingRoomZone,
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) {
   isolation: isolate;
@@ -771,11 +777,19 @@
 .root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(2) > * {
   position: relative;
   z-index: 1;
+  opacity: 1;
+}
+
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(1) > *,
+.root[data-theme="light"] .eventCard[data-venue-operational-ambient="true"] .trainingMatrixCell:nth-child(3) > * {
+  position: relative;
+  z-index: 1;
+  opacity: 1;
 }
 
 .eventCard[data-type="TRAINING"] .trainingMatrix {
   position: relative;
-  z-index: 1;
+  z-index: var(--venue-ambient-z-foreground, 10);
 }
 
 .activityContextZone {

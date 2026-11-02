@@ -1,16 +1,20 @@
 .ambientLayer {
+  --venue-ambient-z-base: 0;
+  --venue-ambient-z-raster: 1;
+  --venue-ambient-z-scrims: 2;
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  isolation: isolate;
 }
 
 .ambientScrim {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--venue-ambient-z-scrims, 2);
 }
 
 .ambientIllustrationClip {
@@ -18,19 +22,14 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 1;
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    #000 0%,
-    #000 calc(100% - clamp(36px, 12%, 96px)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    #000 0%,
-    #000 calc(100% - clamp(36px, 12%, 96px)),
-    transparent 100%
-  );
+  z-index: var(--venue-ambient-z-raster, 1);
+}
+
+.ambientRasterOpacity {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
 }
 
 .ambientImage {
@@ -45,34 +44,31 @@
   user-select: none;
   -webkit-user-drag: none;
   opacity: 1;
-  z-index: 1;
 }
 
 /*
- * R15 — bounded cover: preserve aspect ratio, cap vertical enlargement on tall cards.
- * Full-card continuity is supplied by baseActivityAtmosphere + illustration fade.
+ * R16 — true full-surface cover: scale until both dimensions of the operational
+ * environment are covered (aspect ratio preserved; crop/zoom acceptable).
  */
 .activityMatch .ambientIllustrationClip .ambientImage,
 .activityTournament .ambientIllustrationClip .ambientImage,
 .activityTraining .ambientIllustrationClip .ambientImage {
   top: 0;
   width: 100%;
-  height: auto;
-  max-height: var(--ambient-raster-max-height, 128%);
+  height: 100%;
   object-fit: cover;
   object-position: var(--ambient-position-x, left) var(--ambient-position-y, top);
 }
 
-/* R14 — full-height operational tint (raster remains width-driven above). */
 .baseActivityAtmosphere {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: var(--venue-ambient-z-base, 0);
   background: var(--ambient-base-atmosphere, transparent);
 }
 
-/* ── Activity kinds: width-driven scale, semantic positioning ─────────── */
+/* ── Activity kinds: semantic cover positioning ─────────────────────────── */
 
 .activityMatch {
   --ambient-position-x: 0%;
@@ -96,24 +92,21 @@
 [data-theme="light"] .activityMatch {
   --ambient-image-opacity: 0.42;
   --ambient-base-atmosphere: #fff6f5;
-  --ambient-raster-max-height: 124%;
 }
 
 [data-theme="light"] .activityTournament {
   --ambient-image-opacity: 0.38;
   --ambient-base-atmosphere: #fff9f4;
-  --ambient-raster-max-height: 126%;
 }
 
 [data-theme="light"] .activityTraining {
   --ambient-image-opacity: 0.34;
   --ambient-base-atmosphere: #f5f8ff;
-  --ambient-raster-max-height: 128%;
 }
 
-[data-theme="light"] .activityMatch .ambientImage,
-[data-theme="light"] .activityTournament .ambientImage,
-[data-theme="light"] .activityTraining .ambientImage {
+[data-theme="light"] .activityMatch .ambientRasterOpacity,
+[data-theme="light"] .activityTournament .ambientRasterOpacity,
+[data-theme="light"] .activityTraining .ambientRasterOpacity {
   opacity: var(--ambient-image-opacity);
 }
 
@@ -220,9 +213,9 @@
     );
 }
 
-[data-theme="dark"] .activityMatch .ambientImage,
-[data-theme="dark"] .activityTournament .ambientImage,
-[data-theme="dark"] .activityTraining .ambientImage {
+[data-theme="dark"] .activityMatch .ambientRasterOpacity,
+[data-theme="dark"] .activityTournament .ambientRasterOpacity,
+[data-theme="dark"] .activityTraining .ambientRasterOpacity {
   opacity: 0.88;
 }
 

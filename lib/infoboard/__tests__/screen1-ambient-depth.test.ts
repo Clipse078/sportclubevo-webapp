@@ -5,6 +5,7 @@ import {
   AMBIENT_BASE_ATMOSPHERE_CSS_VAR,
   AMBIENT_IMAGE_OPACITY_CSS_VAR,
   VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT,
+  VENUE_OPERATIONAL_AMBIENT_STACK_Z_INDEX,
 } from "@/lib/infoboard/screen1-ambient-depth";
 
 const AMBIENT_CSS = readFileSync(
@@ -12,7 +13,11 @@ const AMBIENT_CSS = readFileSync(
   "utf8",
 );
 
-describe("R15 ambient depth tokens", () => {
+describe("R16 ambient depth tokens", () => {
+  it("exports operational background vs foreground z-index contract", () => {
+    expect(VENUE_OPERATIONAL_AMBIENT_STACK_Z_INDEX.foreground).toBe(10);
+    expect(VENUE_OPERATIONAL_AMBIENT_STACK_Z_INDEX.scrims).toBe(2);
+  });
   it("exports activity-specific light-theme raster opacity contract", () => {
     expect(VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT.MATCH).toBe(0.42);
     expect(VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT.TOURNAMENT).toBe(0.38);
