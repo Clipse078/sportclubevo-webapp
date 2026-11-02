@@ -34,7 +34,13 @@
  *   - No countdown text (IN X MIN.); temporal labels are JETZT or ALS NÄCHSTES.
  */
 
-import { useMemo, useEffect, type ReactElement, type CSSProperties } from "react";
+import {
+  useMemo,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
 import type {
   InfoboardScreen1Feed,
   InfoboardScreen1Event,
@@ -100,6 +106,12 @@ import {
 import { VenueSemanticLabel } from "@/components/infoboard/venue-display/VenueSemanticLabel";
 import { venueSemanticLabelKindForEventType } from "@/lib/infoboard/venue-semantic-label";
 import {
+  TIME_COLUMN_BODY_ATTR,
+  TIME_COLUMN_BODY_MARKER,
+  TIME_COLUMN_COMPOSITION_ATTR,
+  TIME_COLUMN_COMPOSITION_MARKER,
+  TIME_COLUMN_HEADER_ATTR,
+  TIME_COLUMN_HEADER_MARKER,
   VENUE_COLUMN_BODY_ATTR,
   VENUE_COLUMN_BODY_MARKER,
   VENUE_COLUMN_COMPOSITION_ATTR,
@@ -152,15 +164,16 @@ import {
 } from "@/lib/infoboard/training-identity-display";
 import {
   resolveTrainingParticipantDensity,
+  TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+  TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+  TRAINING_IDENTITY_CREST_SIZE_VAR,
   TRAINING_PARTICIPANT_CLUB_CLAMP,
   TRAINING_PARTICIPANT_DENSITY_ATTR,
-  TRAINING_PARTICIPANT_LOGO_CLAMP,
   TRAINING_PARTICIPANT_PITCH_CLAMP,
   TRAINING_PARTICIPANT_ROW_GAP,
-  TRAINING_PARTICIPANT_TEAM_CLAMP,
   TRAINING_ROW_COUNT_ATTR,
   TRAINING_ROW_COUNT_VAR,
-  TRAINING_SINGLE_TEAM_NAME_CLAMP,
+  TRAINING_TEAM_NAME_SIZE_VAR,
 } from "@/lib/infoboard/training-participant-density";
 import styles from "./InfoboardScreen1.module.css";
 
@@ -660,6 +673,52 @@ function statusLabel(temporal: TemporalBucket): string | null {
   if (temporal === "current") return "JETZT";
   if (temporal === "next") return "ALS NÄCHSTES";
   return null;
+}
+
+type VenueTimeColumnContentProps = {
+  temporal: TemporalBucket;
+  label: string | null;
+  children: ReactNode;
+};
+
+/** R11R3 — ALS NÄCHSTES / JETZT in header; start + end time centred in body. */
+function VenueTimeColumnContent({
+  temporal,
+  label,
+  children,
+}: VenueTimeColumnContentProps): ReactElement {
+  return (
+    <div
+      className={styles.venueColumnComposition}
+      {...{ [VENUE_COLUMN_COMPOSITION_ATTR]: VENUE_COLUMN_COMPOSITION_MARKER }}
+      {...{ [TIME_COLUMN_COMPOSITION_ATTR]: TIME_COLUMN_COMPOSITION_MARKER }}
+    >
+      <div
+        className={styles.venueColumnHeader}
+        {...{ [VENUE_COLUMN_HEADER_ATTR]: VENUE_COLUMN_HEADER_MARKER }}
+        {...{ [TIME_COLUMN_HEADER_ATTR]: TIME_COLUMN_HEADER_MARKER }}
+      >
+        {label !== null && (
+          <span
+            className={`${styles.statusLabel} ${styles.venueColumnContext}`}
+            data-testid={`status-label-${temporal}`}
+            data-status={temporal === "current" ? "current" : "next"}
+          >
+            {label}
+          </span>
+        )}
+      </div>
+      <div
+        className={styles.venueColumnBody}
+        {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
+        {...{ [TIME_COLUMN_BODY_ATTR]: TIME_COLUMN_BODY_MARKER }}
+      >
+        <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1404,10 +1463,14 @@ function TrainingGroupCard({
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
   const participantDensity = resolveTrainingParticipantDensity(items.length);
-  const isSingleTraining = items.length === 1;
-  const singleTrainingLogoClamp = isSingleTraining
-    ? "clamp(4.25rem, 5.5vw, 6.25rem)"
-    : TRAINING_PARTICIPANT_LOGO_CLAMP[participantDensity];
+  const canonicalCrestClamp = scaleVenuePresentationClamp(
+    TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+    venuePresentationDensity,
+  );
+  const canonicalTeamNameClamp = scaleVenuePresentationClamp(
+    TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+    venuePresentationDensity,
+  );
 
   return (
     <li
@@ -1439,20 +1502,14 @@ function TrainingGroupCard({
             venuePresentationDensity,
           ),
           [TRAINING_ROW_COUNT_VAR]: items.length,
-          "--ib-training-logo-size": scaleVenuePresentationClamp(
-            singleTrainingLogoClamp,
-            venuePresentationDensity,
-          ),
+          "--ib-training-logo-size": canonicalCrestClamp,
+          [TRAINING_IDENTITY_CREST_SIZE_VAR]: canonicalCrestClamp,
           "--ib-training-club-font-size": scaleVenuePresentationClamp(
             TRAINING_PARTICIPANT_CLUB_CLAMP[participantDensity],
             venuePresentationDensity,
           ),
-          "--ib-training-team-font-size": scaleVenuePresentationClamp(
-            isSingleTraining
-              ? TRAINING_SINGLE_TEAM_NAME_CLAMP
-              : TRAINING_PARTICIPANT_TEAM_CLAMP[participantDensity],
-            venuePresentationDensity,
-          ),
+          "--ib-training-team-font-size": canonicalTeamNameClamp,
+          [TRAINING_TEAM_NAME_SIZE_VAR]: canonicalTeamNameClamp,
           "--ib-training-participant-row-gap":
             TRAINING_PARTICIPANT_ROW_GAP[participantDensity],
           "--ib-training-group-pitch-font-size": scaleVenuePresentationClamp(
@@ -1463,20 +1520,10 @@ function TrainingGroupCard({
       }
     >
       <VenueActivityTime
-        className={`${styles.cardTimeZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
+        className={`${styles.cardTimeZone} ${styles.venueColumnShell}`}
         testId="training-group-time-zone"
       >
-        {label !== null && (
-          <span
-            className={`${styles.statusLabel} ${styles.venueColumnContext}`}
-            data-testid={`status-label-${temporal}`}
-            data-status={temporal === "current" ? "current" : "next"}
-          >
-            {label}
-          </span>
-        )}
-
-        <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+        <VenueTimeColumnContent temporal={temporal} label={label}>
           <time
             className={styles.eventTime}
             dateTime={startAt}
@@ -1494,7 +1541,7 @@ function TrainingGroupCard({
               bis {timePresentation.primaryEndTime}
             </span>
           )}
-        </div>
+        </VenueTimeColumnContent>
       </VenueActivityTime>
 
       <div className={styles.trainingMatrix} data-testid="training-group">
@@ -1721,18 +1768,9 @@ function EventCard({
       style={{ "--ib-card-demand": demand, ...cardStyle } as CSSProperties}
       time={
         <VenueActivityTime
-          className={`${styles.cardTimeZone} ${styles.venueColumnShell} ${styles.venueActivityContentTop}`}
+          className={`${styles.cardTimeZone} ${styles.venueColumnShell}`}
         >
-          {label !== null && (
-            <span
-              className={`${styles.statusLabel} ${styles.venueColumnContext}`}
-              data-testid={`status-label-${temporal}`}
-              data-status={temporal === "current" ? "current" : "next"}
-            >
-              {label}
-            </span>
-          )}
-          <div className={styles.venueColumnPrimary} data-venue-time-primary="true">
+          <VenueTimeColumnContent temporal={temporal} label={label}>
             <time className={styles.eventTime} dateTime={event.startAt}>
               {startTime}
             </time>
@@ -1741,7 +1779,7 @@ function EventCard({
                 bis {endTime}
               </span>
             )}
-          </div>
+          </VenueTimeColumnContent>
         </VenueActivityTime>
       }
       identity={

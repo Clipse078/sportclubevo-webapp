@@ -158,7 +158,7 @@ describe("R11R1 TRAINING_READABILITY", () => {
     expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense)).toBeGreaterThanOrEqual(
       TRAINING_TEAM_NAME_MIN_READABLE_REM,
     );
-    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.standard)).toBeGreaterThan(
+    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.standard)).toBe(
       parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense),
     );
   });

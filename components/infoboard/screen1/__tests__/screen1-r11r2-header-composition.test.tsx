@@ -125,8 +125,8 @@ describe("R11R2 HEADER_COMPOSITION contract", () => {
         theme="LIGHT"
       />,
     );
-    const card = screen.getByTestId("event-row");
-    const composition = card.querySelector(
+    const activity = screen.getByTestId("venue-activity-identity");
+    const composition = activity.querySelector(
       `[${VENUE_COLUMN_COMPOSITION_ATTR}="${VENUE_COLUMN_COMPOSITION_MARKER}"]`,
     );
     expect(composition?.getAttribute(VENUE_COLUMN_COMPOSITION_ATTR)).toBe(
@@ -234,18 +234,14 @@ describe("R11R2 TRAINING matrix headers", () => {
 });
 
 describe("R11R2 DENSE_TRAINING_READABILITY", () => {
-  const priorDenseTeamMin = 1.35;
   const priorDensePitchMin = 0.95;
 
   it("DENSE_TRAINING_TEAM_FONT_INCREASED", () => {
-    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense)).toBeGreaterThan(
-      priorDenseTeamMin,
-    );
     expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense)).toBeGreaterThanOrEqual(
       TRAINING_TEAM_NAME_MIN_READABLE_REM,
     );
-    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.compact)).toBeGreaterThan(
-      parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense),
+    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense)).toBe(
+      parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.compact),
     );
   });
 

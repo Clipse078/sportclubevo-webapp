@@ -31,3 +31,13 @@ export const VENUE_COLUMN_BODY_MARKER = "true" as const;
 
 /** R11R2 structural contract — semantic badges anchor to the column top. */
 export const SEMANTIC_HEADERS_TOP_ALIGNED = true as const;
+
+/** R11R3 — TIME column uses the same header/body split as operational columns. */
+export const TIME_COLUMN_COMPOSITION_ATTR = "data-time-column-composition" as const;
+export const TIME_COLUMN_COMPOSITION_MARKER = "true" as const;
+
+export const TIME_COLUMN_HEADER_ATTR = "data-time-column-header" as const;
+export const TIME_COLUMN_HEADER_MARKER = "true" as const;
+
+export const TIME_COLUMN_BODY_ATTR = "data-time-column-body" as const;
+export const TIME_COLUMN_BODY_MARKER = "true" as const;

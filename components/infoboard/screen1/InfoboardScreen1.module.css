@@ -535,7 +535,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 4px;
+  gap: 0;
   padding: var(--ib-card-pad-v) clamp(10px, 1.1vw, var(--ib-card-pad-h));
   border-right: 1px solid var(--ib-border);
   min-width: 0;
@@ -543,6 +543,17 @@
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* R11R3 — TIME header/body split mirrors ACTIVITY / KABINE / PLATZ. */
+.cardTimeZone.venueColumnShell .venueColumnComposition {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+}
+
+.cardTimeZone .venueColumnBody > .venueColumnPrimary {
+  width: 100%;
 }
 
 .statusLabel {
@@ -784,18 +795,8 @@
   gap: clamp(2px, 0.25vh, 4px);
 }
 
-.cardTimeZone.venueColumnShell .venueColumnPrimary {
-  flex: 0 1 auto;
-  justify-content: center;
-}
-
-.cardTimeZone.venueColumnPrimary,
 .cardPitchZone > .destPitchValue.venueColumnPrimary {
   align-items: flex-start;
-}
-
-.cardTimeZone .venueColumnPrimary {
-  justify-content: center;
 }
 
 .venueTeamDisplayName {
@@ -2132,9 +2133,9 @@
 }
 
 .trainingIdentityRow .matchCrestSlot {
-  width: var(--ib-training-logo-size);
-  height: var(--ib-training-logo-size);
-  flex: 0 0 var(--ib-training-logo-size);
+  width: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  height: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  flex: 0 0 var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
 }
 
 /* R11 — single training: horizontal crest + XL team, vertically centred in row */
@@ -2161,7 +2162,10 @@
 }
 
 .trainingIdentityRow .venueTeamDisplayName {
-  font-size: var(--ib-fs-training-team, var(--ib-training-team-font-size, var(--ib-training-font-size)));
+  font-size: var(
+    --ib-training-team-name-size,
+    var(--ib-fs-training-team, var(--ib-training-team-font-size, var(--ib-training-font-size)))
+  );
   font-weight: 800;
   line-height: 1.02;
   white-space: normal;
@@ -2203,9 +2207,9 @@
 }
 
 .trainingClubLogo {
-  width: var(--ib-training-logo-size);
-  height: var(--ib-training-logo-size);
-  flex: 0 0 var(--ib-training-logo-size);
+  width: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  height: var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
+  flex: 0 0 var(--ib-training-identity-crest-size, var(--ib-training-logo-size));
   object-fit: contain;
   align-self: center;
 }
@@ -2306,9 +2310,9 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] {
-  --ib-training-row-min: clamp(40px, 4.8vh, 64px);
-  --ib-training-row-gap: clamp(4px, 0.5vh, 8px);
-  --ib-training-cell-padding-y: clamp(3px, 0.35vh, 6px);
+  --ib-training-row-min: clamp(36px, 4.2vh, 58px);
+  --ib-training-row-gap: clamp(2px, 0.35vh, 5px);
+  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 4px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupPitchValue {
@@ -2324,9 +2328,9 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] {
-  --ib-training-row-min: clamp(36px, 4.2vh, 56px);
-  --ib-training-row-gap: clamp(3px, 0.4vh, 6px);
-  --ib-training-cell-padding-y: clamp(2px, 0.28vh, 5px);
+  --ib-training-row-min: clamp(32px, 3.6vh, 50px);
+  --ib-training-row-gap: clamp(1px, 0.22vh, 4px);
+  --ib-training-cell-padding-y: clamp(1px, 0.2vh, 3px);
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {

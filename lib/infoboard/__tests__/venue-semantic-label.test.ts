@@ -46,7 +46,7 @@ describe("R11R1 semantic label contract", () => {
     expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense)).toBeGreaterThanOrEqual(
       TRAINING_TEAM_NAME_MIN_READABLE_REM,
     );
-    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.spacious)).toBeGreaterThan(
+    expect(parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.spacious)).toBe(
       parseClampMinRem(TRAINING_PARTICIPANT_TEAM_CLAMP.dense),
     );
   });

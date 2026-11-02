@@ -1,8 +1,8 @@
 /**
- * SCE Infoboard V2 R10 — training participant row density (independent of page density).
+ * SCE Infoboard V2 R10 / R11R3 — training participant row density (independent of page density).
  *
- * Controls crest scale, identity typography, and row spacing for multi-team
- * training cohorts. Does not alter the global four-column venue grid.
+ * Density compresses whitespace (row gap, padding, secondary metadata).
+ * Training identity scale (crest + primary team name) is canonical — not density-driven.
  */
 
 export const TRAINING_PARTICIPANT_DENSITY_ATTR =
@@ -32,19 +32,35 @@ export function resolveTrainingParticipantDensity(
   return "dense";
 }
 
-/** Crest clamp per training participant density (before page-density scaling). */
+/** R11R3 — canonical training crest (matches approved single-training identity). */
+export const TRAINING_IDENTITY_CREST_SIZE_VAR = "--ib-training-identity-crest-size" as const;
+
+export const TRAINING_CANONICAL_IDENTITY_CREST_CLAMP =
+  "clamp(4.25rem, 5.5vw, 6.25rem)" as const;
+
+/** @deprecated R11R3 — all tiers resolve to the canonical crest clamp. */
 export const TRAINING_PARTICIPANT_LOGO_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(3.75rem, 4.85vw, 5.35rem)",
-  standard: "clamp(3.25rem, 4.05vw, 4.5rem)",
-  compact: "clamp(2.85rem, 3.55vw, 4rem)",
-  dense: "clamp(2.55rem, 3.15vw, 3.65rem)",
+  spacious: TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+  standard: TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+  compact: TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
+  dense: TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
 };
 
-/** Single-team training — XL team line (R11 / R11R1 distance readability). */
-export const TRAINING_SINGLE_TEAM_NAME_CLAMP = "clamp(2.35rem, 3.15vw, 3.75rem)" as const;
+/** R11R3 — canonical primary team name (density-invariant). */
+export const TRAINING_TEAM_NAME_SIZE_VAR = "--ib-training-team-name-size" as const;
+
+export const TRAINING_CANONICAL_TEAM_NAME_CLAMP =
+  "clamp(2.35rem, 3.15vw, 3.75rem)" as const;
+
+/** Single-team training alias — same canonical team line. */
+export const TRAINING_SINGLE_TEAM_NAME_CLAMP = TRAINING_CANONICAL_TEAM_NAME_CLAMP;
+
+export const TRAINING_DENSITY_CHANGES_IDENTITY_SCALE = false as const;
+
+export const TRAINING_DENSITY_MAY_COMPRESS_WHITESPACE = true as const;
 
 /**
  * R11R2 — minimum team-name scale on dense multi-training cards (~ pitch-badge parity).
@@ -70,15 +86,15 @@ export const TRAINING_PARTICIPANT_CLUB_CLAMP: Record<
   dense: "clamp(0.95rem, 1.12vw, 1.28rem)",
 };
 
-/** Team line typography per density — R11R2 signage scale (pitch-badge parity). */
+/** @deprecated R11R3 — all tiers resolve to the canonical team-name clamp. */
 export const TRAINING_PARTICIPANT_TEAM_CLAMP: Record<
   TrainingParticipantDensity,
   string
 > = {
-  spacious: "clamp(1.85rem, 2.35vw, 2.85rem)",
-  standard: "clamp(1.78rem, 2.22vw, 2.72rem)",
-  compact: "clamp(1.72rem, 2.05vw, 2.55rem)",
-  dense: "clamp(1.55rem, 1.88vw, 2.35rem)",
+  spacious: TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+  standard: TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+  compact: TRAINING_CANONICAL_TEAM_NAME_CLAMP,
+  dense: TRAINING_CANONICAL_TEAM_NAME_CLAMP,
 };
 
 /** Multi-training pitch badge text per participant density (badge geometry unchanged). */
@@ -97,7 +113,7 @@ export const TRAINING_PARTICIPANT_ROW_GAP: Record<
   string
 > = {
   spacious: "clamp(8px, 0.85vh, 14px)",
-  standard: "clamp(6px, 0.7vh, 11px)",
-  compact: "clamp(4px, 0.55vh, 8px)",
-  dense: "clamp(3px, 0.45vh, 6px)",
+  standard: "clamp(5px, 0.6vh, 9px)",
+  compact: "clamp(2px, 0.35vh, 5px)",
+  dense: "clamp(1px, 0.25vh, 4px)",
 };
