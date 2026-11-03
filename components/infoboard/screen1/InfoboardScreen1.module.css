@@ -134,6 +134,13 @@
   /* R13/R22 — unified operational ambient canvas (TIME excluded) */
   --ib-zone-operational-ambient-left: var(--ib-zone-time);
   --ib-zone-operational-ambient-span: 85%;
+
+  /* R22R1 — unified DARK operational card polish (LIGHT uses separate tokens) */
+  --ib-zone-separator-operational-unified: rgba(99, 135, 175, 0.06);
+  --ib-card-outline-operational: rgba(99, 135, 175, 0.24);
+  --ib-text-muted-operational: #92A8BE;
+  --ib-text-dim-operational: #7A93AB;
+  --ib-match-kabine-role-operational: #9DB4CA;
   --venue-ambient-z-foreground: 10;
 }
 
@@ -768,10 +775,114 @@
 .root:not([data-theme="light"])
   .eventCard[data-venue-operational-ambient="true"]
   [data-venue-operational-surface="unified-dark"] {
-  border: 1px solid rgba(99, 135, 175, 0.14);
-  border-left: none;
+  border: none;
   border-radius: 0 var(--ib-radius-sm) var(--ib-radius-sm) 0;
   box-sizing: border-box;
+}
+
+/* R22R1 — one restrained row outline; internal guides stay translucent (no double TIME border) */
+.root:not([data-theme="light"]) .eventCard[data-venue-operational-ambient="true"] {
+  border-color: var(--ib-card-outline-operational);
+  box-shadow:
+    0 0 0 1px rgba(99, 135, 175, 0.07),
+    0 0 18px rgba(59, 108, 160, 0.06);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-temporal="current"] {
+  border-color: rgba(99, 135, 175, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(99, 135, 175, 0.1),
+    0 0 20px rgba(59, 108, 160, 0.08);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="activity"].cardEventZone {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="kabine"].cardDressingRoomZone {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="platz"].cardPitchZone {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(1) {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(2) {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(3) {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(1) {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(2) {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(3) {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+/* R22R1 — secondary labels readable on unified backdrop without flattening hierarchy */
+.root:not([data-theme="light"]) .eventCard[data-venue-operational-ambient="true"] {
+  --ib-text-muted: var(--ib-text-muted-operational);
+  --ib-text-dim: var(--ib-text-dim-operational);
+  --ib-match-kabine-role-color: var(--ib-match-kabine-role-operational);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .venueSemanticLabel[data-semantic-label="KABINE"] {
+  color: #A8C4E8;
+  background: rgba(24, 73, 166, 0.2);
+  border-color: rgba(120, 160, 220, 0.26);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .venueSemanticLabel[data-semantic-label="PLATZ"] {
+  color: #9FD4B8;
+  background: rgba(23, 77, 56, 0.22);
+  border-color: rgba(80, 160, 120, 0.28);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .matchTeamSubName,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingGroupTeamSub,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .destLabel {
+  color: var(--ib-text-dim-operational);
 }
 
 .root:not([data-theme="light"])

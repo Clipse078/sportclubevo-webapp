@@ -44,5 +44,16 @@ export const VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_DARK = 0.65 as const;
 /** R22 — navy base under the unified DARK operational artwork. */
 export const VENUE_ACTIVITY_AMBIENT_DARK_BASE_ATMOSPHERE = "#0A1828" as const;
 
+/** R22R1 — translucent internal column guides on the unified DARK operational card. */
+export const VENUE_OPERATIONAL_UNIFIED_DIVIDER_DARK = "rgba(99, 135, 175, 0.06)" as const;
+
+/** R22R1 — restrained blue-toned row outline on DARK operational activity cards. */
+export const VENUE_OPERATIONAL_CARD_OUTLINE_DARK = "rgba(99, 135, 175, 0.24)" as const;
+
+/** R22R1 — secondary label contrast on unified DARK operational cards (not pure white). */
+export const VENUE_OPERATIONAL_TEXT_MUTED_DARK = "#92A8BE" as const;
+export const VENUE_OPERATIONAL_TEXT_DIM_DARK = "#7A93AB" as const;
+export const VENUE_OPERATIONAL_MATCH_ROLE_DARK = "#9DB4CA" as const;
+
 export type VenueActivityAmbientImageOpacityLight =
   (typeof VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT)[keyof typeof VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT];
