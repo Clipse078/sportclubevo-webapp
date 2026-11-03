@@ -24,10 +24,10 @@ const CSS = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "../InfoboardScreen1.module.css"),
   "utf8",
 );
-const KIOSK_HEADER_SOURCE = readFileSync(
+const KIOSK_SHELL_PRESENTATION_SOURCE = readFileSync(
   join(
     dirname(fileURLToPath(import.meta.url)),
-    "../../shared/KioskShellHeader.tsx",
+    "../../../../lib/infoboard/kiosk-shell-presentation.ts",
   ),
   "utf8",
 );
@@ -169,9 +169,10 @@ describe("R18 header identity", () => {
     const club = screen.getByTestId("kiosk-header-club-name");
     expect(club.getAttribute("data-venue-header-identity")).toBe("true");
     expect(club.textContent).toContain("FC Allschwil");
-    expect(KIOSK_HEADER_SOURCE).toMatch(/data-venue-header-identity/);
-    expect(KIOSK_HEADER_SOURCE).toMatch(/fontStyle:[\s\S]*italic/);
-    expect(KIOSK_HEADER_SOURCE).toMatch(/Barlow Condensed/);
+    expect(club.style.fontStyle).toBe("italic");
+    expect(club.style.fontWeight).toBe("800");
+    expect(KIOSK_SHELL_PRESENTATION_SOURCE).toMatch(/fontStyle:\s*"italic"/);
+    expect(KIOSK_SHELL_PRESENTATION_SOURCE).toMatch(/--font-display/);
   });
 });
 
