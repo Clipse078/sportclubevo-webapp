@@ -24,6 +24,20 @@ export const VENUE_ACTIVITY_TYPE_LABEL_CLASS = "eventTypeLabel" as const;
 
 export const VENUE_SEMANTIC_LABEL_FONT_VAR = "--ib-semantic-label-font-size" as const;
 
+/** Viewport-scaled size token — must not use cqw/cqi (PLATZ column is a nested size container). */
+export const VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE =
+  "clamp(0.82rem, 1.08vw, 1.32rem)" as const;
+
+/** Canonical heading typography shared by MATCH, TRAINING, TURNIER, KABINE and PLATZ badges. */
+export const VENUE_SEMANTIC_LABEL_TYPOGRAPHY = {
+  fontFamily: 'var(--font-display, "Barlow Condensed", sans-serif)',
+  fontSize: `var(${VENUE_SEMANTIC_LABEL_FONT_VAR})`,
+  fontWeight: 700,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  lineHeight: 1,
+} as const;
+
 export const VENUE_SEMANTIC_LABEL_GAP_VAR = "--ib-venue-label-primary-gap" as const;
 
 /** Semantic colours (LIGHT) — label badge only, not column surfaces. */

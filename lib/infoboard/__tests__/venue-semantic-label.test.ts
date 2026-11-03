@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   VENUE_SEMANTIC_LABEL_ATTR,
   VENUE_SEMANTIC_LABEL_COLORS,
+  VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE,
+  VENUE_SEMANTIC_LABEL_FONT_VAR,
+  VENUE_SEMANTIC_LABEL_TYPOGRAPHY,
   VENUE_SEMANTIC_LABELS,
   venueSemanticLabelKindForEventType,
 } from "@/lib/infoboard/venue-semantic-label";
@@ -36,6 +39,14 @@ describe("R11R1 semantic label contract", () => {
     expect(venueSemanticLabelKindForEventType("MATCH")).toBe("MATCH");
     expect(venueSemanticLabelKindForEventType("TRAINING")).toBe("TRAINING");
     expect(venueSemanticLabelKindForEventType("TOURNAMENT")).toBe("TURNIER");
+  });
+
+  it("R22R2 exposes viewport-based canonical heading typography", () => {
+    expect(VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE).toContain("vw");
+    expect(VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE).not.toMatch(/cqw|cqi/);
+    expect(VENUE_SEMANTIC_LABEL_TYPOGRAPHY.fontSize).toBe(
+      `var(${VENUE_SEMANTIC_LABEL_FONT_VAR})`,
+    );
   });
 
   it("VERTICAL_COMPOSITION exports composition class token", () => {
