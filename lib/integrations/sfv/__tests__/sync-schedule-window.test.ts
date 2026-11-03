@@ -11,6 +11,8 @@ import {
   validateWindow,
   toSfvDateParam,
   toIsoDateString,
+  parseBoundedScheduleWindow,
+  toSfvDateUntilInclusive,
 } from "../sync/schedule-window";
 import {
   SCHEDULE_WINDOW_PAST_DAYS,
@@ -96,6 +98,25 @@ describe("toSfvDateParam", () => {
 });
 
 // ── toIsoDateString ───────────────────────────────────────────────────────────
+
+describe("parseBoundedScheduleWindow", () => {
+  it("accepts the A4A11 historical window", () => {
+    const parsed = parseBoundedScheduleWindow("2026-08-01", "2026-11-03");
+    expect("error" in parsed).toBe(false);
+  });
+
+  it("rejects malformed dates", () => {
+    const parsed = parseBoundedScheduleWindow("2026-13-01", "2026-11-03");
+    expect(parsed).toHaveProperty("error");
+  });
+});
+
+describe("toSfvDateUntilInclusive", () => {
+  it("uses end-of-day UTC on the inclusive end date", () => {
+    const date = new Date("2026-11-03T00:00:00.000Z");
+    expect(toSfvDateUntilInclusive(date)).toBe("2026-11-03T23:59:59");
+  });
+});
 
 describe("toIsoDateString", () => {
   it("returns YYYY-MM-DD for a UTC date", () => {

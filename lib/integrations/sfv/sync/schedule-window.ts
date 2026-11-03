@@ -106,3 +106,68 @@ export function toIsoDateString(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
+
+const ISO_DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Parses a YYYY-MM-DD string as UTC midnight. Returns null when invalid.
+ */
+export function parseIsoDateOnlyUtc(value: string): Date | null {
+  const trimmed = value.trim();
+  if (!ISO_DATE_ONLY_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  const [yearStr, monthStr, dayStr] = trimmed.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return null;
+  }
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+/**
+ * Validates caller-supplied ISO date bounds for a bounded schedule refresh.
+ */
+export function parseBoundedScheduleWindow(
+  dateFromStr: string,
+  dateToStr: string,
+): { dateFrom: Date; dateTo: Date } | { error: string } {
+  const dateFrom = parseIsoDateOnlyUtc(dateFromStr);
+  const dateTo = parseIsoDateOnlyUtc(dateToStr);
+
+  if (!dateFrom) {
+    return { error: "dateFrom must be a valid ISO date (YYYY-MM-DD)." };
+  }
+
+  if (!dateTo) {
+    return { error: "dateTo must be a valid ISO date (YYYY-MM-DD)." };
+  }
+
+  const windowError = validateWindow(dateFrom, dateTo);
+  if (windowError) {
+    return { error: windowError };
+  }
+
+  return { dateFrom, dateTo };
+}
+
+/** SFV DateUntil for an inclusive calendar end date (UTC end-of-day). */
+export function toSfvDateUntilInclusive(dateToUtcMidnight: Date): string {
+  const end = new Date(dateToUtcMidnight.getTime());
+  end.setUTCHours(23, 59, 59, 0);
+  return toSfvDateParam(end);
+}

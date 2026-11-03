@@ -60,6 +60,7 @@ import {
   computeDefaultWindow,
   validateWindow,
   toSfvDateParam,
+  toSfvDateUntilInclusive,
   toIsoDateString,
 } from "./schedule-window";
 import {
@@ -104,14 +105,46 @@ const PROVIDER = "SFV";
  * @throws {SfvTenantConfigNotFoundError}  No TenantSfvConfig for this tenant.
  * @throws {SfvTenantConfigDisabledError}  Integration disabled for this tenant.
  */
+export type SfvScheduleSyncWindowInput = {
+  dateFrom: Date;
+  dateTo: Date;
+  /** When set, overrides TenantSfvConfig.defaultSeasonId for this run only. */
+  seasonId?: number;
+  /**
+   * When true, DateUntil is end-of-day UTC on dateTo (bounded historical refresh).
+   * Default rolling sync keeps midnight UTC on dateTo (existing cron behaviour).
+   */
+  inclusiveDateUntil?: boolean;
+};
+
 export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSyncResult> {
   const startedAt = new Date();
+  const { dateFrom, dateTo } = computeDefaultWindow(startedAt);
+  return syncSfvScheduleForWindow(tenantId, { dateFrom, dateTo }, startedAt);
+}
+
+/**
+ * Runs schedule sync for an explicit bounded date window (used by guarded
+ * operational refresh on STAGE). Reuses the same fetch → map → persist path
+ * as syncSfvSchedule().
+ */
+export async function syncSfvScheduleForWindow(
+  tenantId: string,
+  window: SfvScheduleSyncWindowInput,
+  referenceStartedAt?: Date,
+): Promise<SfvScheduleSyncResult> {
+  const startedAt = referenceStartedAt ?? new Date();
 
   // Resolve tenant config — throws if not configured or disabled
   const tenantConfig = await requireEnabledSfvConfigForTenant(tenantId);
 
-  // Compute date window
-  const { dateFrom: windowFrom, dateTo: windowTo } = computeDefaultWindow(startedAt);
+  const windowFrom = window.dateFrom;
+  const windowTo = window.dateTo;
+  const seasonId =
+    window.seasonId != null && Number.isInteger(window.seasonId) && window.seasonId > 0
+      ? window.seasonId
+      : tenantConfig.defaultSeasonId;
+
   const windowError = validateWindow(windowFrom, windowTo);
   if (windowError) {
     const finishedAt = new Date();
@@ -119,7 +152,7 @@ export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSync
       {
         tenantId,
         clubId: tenantConfig.clubId,
-        seasonId: tenantConfig.defaultSeasonId,
+        seasonId,
         organisationId: tenantConfig.organisationId,
         dateFrom: toIsoDateString(windowFrom),
         dateTo: toIsoDateString(windowTo),
@@ -147,7 +180,7 @@ export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSync
   const context: SfvScheduleSyncContext = {
     tenantId,
     clubId: tenantConfig.clubId,
-    seasonId: tenantConfig.defaultSeasonId,
+    seasonId,
     organisationId: tenantConfig.organisationId,
     dateFrom: toIsoDateString(windowFrom),
     dateTo: toIsoDateString(windowTo),
@@ -161,11 +194,15 @@ export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSync
   let providerEntries: Awaited<ReturnType<typeof fetchClubSchedule>>;
 
   try {
+    const dateUntilParam = window.inclusiveDateUntil
+      ? toSfvDateUntilInclusive(windowTo)
+      : toSfvDateParam(windowTo);
+
     providerEntries = await fetchClubSchedule({
       SeasonId: context.seasonId,
       ClubId: context.clubId,
       DateFrom: toSfvDateParam(windowFrom),
-      DateUntil: toSfvDateParam(windowTo),
+      DateUntil: dateUntilParam,
       ...(context.organisationId !== null
         ? { OrganisationId: context.organisationId }
         : {}),
@@ -200,7 +237,7 @@ export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSync
 
   // ── Load existing data ───────────────────────────────────────────────────
 
-  const [existingMappings, seasonId, tombstonedExternalMatchIds] = await Promise.all([
+  const [existingMappings, activeSeasonId, tombstonedExternalMatchIds] = await Promise.all([
     loadExistingMatchMappings(tenantId, PROVIDER, context.seasonId),
     resolveActiveSeason(tenantId),
     loadTombstonedExternalMatchIds(tenantId, PROVIDER),
@@ -418,7 +455,7 @@ export async function syncSfvSchedule(tenantId: string): Promise<SfvScheduleSync
     const { outcome, participantCounts } = await processScheduleEntry(
       entry,
       context,
-      seasonId,
+      activeSeasonId,
       existingMappings,
       teamMappings,
       clubOwnedSfvTeamIds,
