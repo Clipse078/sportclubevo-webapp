@@ -551,10 +551,12 @@
 .eventCard[data-stripe="blue"]   { border-left-color: var(--ib-training); }
 .eventCard[data-stripe="orange"] { border-left-color: var(--ib-tournament); }
 
-/* Current event: stronger surface + border */
+/* Current event: stronger surface + border (left stripe stays on data-stripe) */
 .eventCard[data-temporal="current"] {
   background: var(--ib-card-current);
-  border-color: var(--ib-border-current);
+  border-top-color: var(--ib-border-current);
+  border-right-color: var(--ib-border-current);
+  border-bottom-color: var(--ib-border-current);
 }
 
 /* ─── LEFT ZONE: Status + Time ──────────────────────────────────────────── */
@@ -783,7 +785,9 @@
 
 /* R22R1 — one restrained row outline; internal guides stay translucent (no double TIME border) */
 .root:not([data-theme="light"]) .eventCard[data-venue-operational-ambient="true"] {
-  border-color: var(--ib-card-outline-operational);
+  border-top-color: var(--ib-card-outline-operational);
+  border-right-color: var(--ib-card-outline-operational);
+  border-bottom-color: var(--ib-card-outline-operational);
   box-shadow:
     0 0 0 1px rgba(99, 135, 175, 0.07),
     0 0 18px rgba(59, 108, 160, 0.06);
@@ -791,10 +795,28 @@
 
 .root:not([data-theme="light"])
   .eventCard[data-venue-operational-ambient="true"][data-temporal="current"] {
-  border-color: rgba(99, 135, 175, 0.32);
+  border-top-color: rgba(99, 135, 175, 0.32);
+  border-right-color: rgba(99, 135, 175, 0.32);
+  border-bottom-color: rgba(99, 135, 175, 0.32);
   box-shadow:
     0 0 0 1px rgba(99, 135, 175, 0.1),
     0 0 20px rgba(59, 108, 160, 0.08);
+}
+
+/* R22R3 — TIME-column left accent (eventCard stripe); must follow R22R1 outline (no border-color shorthand) */
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="red"] {
+  border-left-color: var(--ib-match);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="blue"] {
+  border-left-color: var(--ib-training);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="orange"] {
+  border-left-color: var(--ib-tournament);
 }
 
 .root:not([data-theme="light"])

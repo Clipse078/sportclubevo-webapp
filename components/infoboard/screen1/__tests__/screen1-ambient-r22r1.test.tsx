@@ -49,7 +49,10 @@ describe("R22R1 DARK unified card visual polish", () => {
 
   it("defines one row-level outline on DARK operational cards", () => {
     expect(SCREEN1_CSS).toMatch(
-      /:not\(\[data-theme="light"\]\)\s*\.eventCard\[data-venue-operational-ambient="true"\][\s\S]*border-color:\s*var\(--ib-card-outline-operational\)/,
+      /:not\(\[data-theme="light"\]\)\s*\.eventCard\[data-venue-operational-ambient="true"\][\s\S]*border-top-color:\s*var\(--ib-card-outline-operational\)/,
+    );
+    expect(SCREEN1_CSS).not.toMatch(
+      /:not\(\[data-theme="light"\]\)\s*\.eventCard\[data-venue-operational-ambient="true"\]\s*\{[\s\S]*?border-color:\s*var\(--ib-card-outline-operational\)/,
     );
     expect(SCREEN1_CSS).toMatch(
       /\[data-venue-operational-surface="unified-dark"\][\s\S]*border:\s*none/,
