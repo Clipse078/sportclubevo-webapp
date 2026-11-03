@@ -30,6 +30,28 @@ function match(
   };
 }
 
+function standingsTable(played: number) {
+  return {
+    competition: { name: "L", divisionName: null, groupName: null },
+    rows: [
+      {
+        position: 1,
+        externalTeamId: 100,
+        teamName: "T",
+        shortName: null,
+        played,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        points: 0,
+        penaltyPoints: null,
+      },
+    ],
+  };
+}
+
 describe("evaluateStandingsScheduleEvidence — confidence", () => {
   const tuple = {
     providerLeagueId: 15208,
@@ -37,7 +59,7 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
     providerGroupId: null,
   };
 
-  it("CONF-1 — complete metadata aligned with standings is healthy", () => {
+  it("CONF-1 — heuristic dominant type with aligned counts stays PARTIAL and not stale", () => {
     const matches = Array.from({ length: 7 }, (_, index) =>
       match({
         providerDivisionId: 30,
@@ -50,30 +72,13 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
       now: NOW,
     });
 
-    expect(evaluation.confidence).toBe("COMPLETE");
+    expect(evaluation.confidence).toBe("PARTIAL");
+    expect(evaluation.nonAuthoritativeReason).toBe("HEURISTIC_DOMINANT_MATCH_TYPE");
     expect(evaluation.completedRelevantMatches).toBe(7);
 
     const stale = evaluateStandingsStaleVsSchedule({
       externalTeamId: 100,
-      standingsTable: {
-        competition: { name: "L", divisionName: null, groupName: null },
-        rows: [
-          {
-            position: 1,
-            externalTeamId: 100,
-            teamName: "T",
-            shortName: null,
-            played: 7,
-            won: 0,
-            drawn: 0,
-            lost: 0,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            points: 0,
-            penaltyPoints: null,
-          },
-        ],
-      },
+      standingsTable: standingsTable(7),
       completedRelevantMatches: evaluation.completedRelevantMatches,
       hasScheduleEvidence: true,
       evidenceConfidence: evaluation.confidence,
@@ -82,7 +87,7 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
     expect(stale.isStale).toBe(false);
   });
 
-  it("CONF-2 — complete metadata with authoritative excess declares stale", () => {
+  it("CONF-2 — PARTIAL heuristic excess does not declare authoritative stale", () => {
     const matches = Array.from({ length: 10 }, (_, index) =>
       match({
         providerDivisionId: 30,
@@ -95,33 +100,17 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
       now: NOW,
     });
 
+    expect(evaluation.confidence).toBe("PARTIAL");
+
     const stale = evaluateStandingsStaleVsSchedule({
       externalTeamId: 100,
-      standingsTable: {
-        competition: { name: "L", divisionName: null, groupName: null },
-        rows: [
-          {
-            position: 1,
-            externalTeamId: 100,
-            teamName: "T",
-            shortName: null,
-            played: 7,
-            won: 0,
-            drawn: 0,
-            lost: 0,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            points: 0,
-            penaltyPoints: null,
-          },
-        ],
-      },
+      standingsTable: standingsTable(7),
       completedRelevantMatches: evaluation.completedRelevantMatches,
       hasScheduleEvidence: true,
       evidenceConfidence: evaluation.confidence,
     });
 
-    expect(stale.isStale).toBe(true);
+    expect(stale.isStale).toBe(false);
   });
 
   it("CONF-3 — missing match type metadata is insufficient and not stale", () => {
@@ -142,28 +131,11 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
     });
 
     expect(evaluation.confidence).toBe("INSUFFICIENT");
+    expect(evaluation.nonAuthoritativeReason).toBe("MISSING_PROVIDER_MATCH_TYPE");
 
     const stale = evaluateStandingsStaleVsSchedule({
       externalTeamId: 100,
-      standingsTable: {
-        competition: { name: "L", divisionName: null, groupName: null },
-        rows: [
-          {
-            position: 1,
-            externalTeamId: 100,
-            teamName: "T",
-            shortName: null,
-            played: 1,
-            won: 0,
-            drawn: 0,
-            lost: 0,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            points: 0,
-            penaltyPoints: null,
-          },
-        ],
-      },
+      standingsTable: standingsTable(1),
       completedRelevantMatches: evaluation.completedRelevantMatches,
       hasScheduleEvidence: true,
       evidenceConfidence: evaluation.confidence,
@@ -172,7 +144,7 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
     expect(stale.isStale).toBe(false);
   });
 
-  it("CONF-5 — metadata fill moves evidence to complete", () => {
+  it("CONF-5 — metadata fill moves evidence to PARTIAL (not COMPLETE without proven semantics)", () => {
     const legacy = [
       match({
         providerDivisionId: 30,
@@ -193,6 +165,138 @@ describe("evaluateStandingsScheduleEvidence — confidence", () => {
     ];
     expect(
       evaluateStandingsScheduleEvidence(synced, tuple, { now: NOW }).confidence,
-    ).toBe("COMPLETE");
+    ).toBe("PARTIAL");
+  });
+});
+
+describe("evaluateStandingsScheduleEvidence — evidence authority (AUTH)", () => {
+  const tuple = {
+    providerLeagueId: 15208,
+    providerDivisionId: 30,
+    providerGroupId: null,
+  };
+
+  it("AUTH-1 — clear dominant matchType without proven provider semantic is PARTIAL", () => {
+    const matches = Array.from({ length: 5 }, (_, index) =>
+      match({
+        providerDivisionId: 30,
+        providerMatchType: 1,
+        startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+      }),
+    );
+
+    const evaluation = evaluateStandingsScheduleEvidence(matches, tuple, {
+      now: NOW,
+    });
+
+    expect(evaluation.confidence).toBe("PARTIAL");
+    expect(evaluation.confidence).not.toBe("COMPLETE");
+    expect(evaluation.nonAuthoritativeReason).toBe("HEURISTIC_DOMINANT_MATCH_TYPE");
+  });
+
+  it("AUTH-2 — PARTIAL candidate count above standings played is not stale", () => {
+    const matches = Array.from({ length: 10 }, (_, index) =>
+      match({
+        providerDivisionId: 30,
+        startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+      }),
+    );
+
+    const evaluation = evaluateStandingsScheduleEvidence(matches, tuple, {
+      now: NOW,
+    });
+
+    expect(evaluation.confidence).toBe("PARTIAL");
+    expect(evaluation.completedRelevantMatches).toBeGreaterThan(7);
+
+    const stale = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 100,
+      standingsTable: standingsTable(7),
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      hasScheduleEvidence: true,
+      evidenceConfidence: evaluation.confidence,
+    });
+
+    expect(stale.isStale).toBe(false);
+  });
+
+  it("AUTH-3 — matching counts do not promote heuristic evidence to COMPLETE", () => {
+    const matches = Array.from({ length: 7 }, (_, index) =>
+      match({
+        providerDivisionId: 30,
+        startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+      }),
+    );
+
+    const evaluation = evaluateStandingsScheduleEvidence(matches, tuple, {
+      now: NOW,
+    });
+
+    expect(evaluation.completedRelevantMatches).toBe(7);
+    expect(evaluation.confidence).toBe("PARTIAL");
+
+    const stale = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 100,
+      standingsTable: standingsTable(7),
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      hasScheduleEvidence: true,
+      evidenceConfidence: evaluation.confidence,
+    });
+
+    expect(stale.isStale).toBe(false);
+  });
+
+  it("AUTH-4 — missing providerMatchType is INSUFFICIENT and not stale", () => {
+    const evaluation = evaluateStandingsScheduleEvidence(
+      [
+        match({
+          providerDivisionId: 30,
+          providerMatchType: null,
+          startAt: new Date("2026-09-01T14:00:00.000Z"),
+        }),
+      ],
+      tuple,
+      { now: NOW },
+    );
+
+    expect(evaluation.confidence).toBe("INSUFFICIENT");
+
+    const stale = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 100,
+      standingsTable: standingsTable(1),
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      hasScheduleEvidence: true,
+      evidenceConfidence: evaluation.confidence,
+    });
+
+    expect(stale.isStale).toBe(false);
+  });
+
+  it("AUTH-5 — proven authoritative matchType list can reach COMPLETE", () => {
+    const matches = Array.from({ length: 10 }, (_, index) =>
+      match({
+        providerDivisionId: 30,
+        providerMatchType: 1,
+        startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+      }),
+    );
+
+    const evaluation = evaluateStandingsScheduleEvidence(matches, tuple, {
+      now: NOW,
+      provenAuthoritativeLeagueTableMatchTypes: [1],
+    });
+
+    expect(evaluation.confidence).toBe("COMPLETE");
+    expect(evaluation.nonAuthoritativeReason).toBeNull();
+
+    const stale = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 100,
+      standingsTable: standingsTable(7),
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      hasScheduleEvidence: true,
+      evidenceConfidence: evaluation.confidence,
+    });
+
+    expect(stale.isStale).toBe(true);
   });
 });

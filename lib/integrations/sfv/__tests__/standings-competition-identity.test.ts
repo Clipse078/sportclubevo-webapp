@@ -331,7 +331,10 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
     });
 
     expect(evaluation.completedRelevantMatches).toBe(11);
-    expect(evaluation.confidence).toBe("COMPLETE");
+    expect(evaluation.confidence).toBe("PARTIAL");
+    expect(evaluation.nonAuthoritativeReason).toBe(
+      "HEURISTIC_DOMINANT_MATCH_TYPE",
+    );
 
     const stale = evaluateStandingsStaleVsSchedule({
       externalTeamId: 31_925,
@@ -419,7 +422,7 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
     );
 
     expect(evaluation.completedRelevantMatches).toBe(7);
-    expect(evaluation.confidence).toBe("COMPLETE");
+    expect(evaluation.confidence).toBe("PARTIAL");
   });
 
   it("CASE I — B1 mapped league 15308 resists newer league 15303 activity", () => {

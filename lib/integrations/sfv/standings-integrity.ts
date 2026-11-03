@@ -44,8 +44,7 @@ export function evaluateStandingsStaleVsSchedule(
   );
 
   const authoritative =
-    input.hasScheduleEvidence &&
-    (input.evidenceConfidence ?? "COMPLETE") === "COMPLETE";
+    input.hasScheduleEvidence && input.evidenceConfidence === "COMPLETE";
 
   if (!authoritative || standingsPlayed == null) {
     return { isStale: false, standingsPlayed };

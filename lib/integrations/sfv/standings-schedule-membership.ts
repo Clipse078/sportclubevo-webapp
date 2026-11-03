@@ -10,17 +10,32 @@ import type {
 
 export type StandingsEvidenceConfidence = "COMPLETE" | "PARTIAL" | "INSUFFICIENT";
 
+/** Why schedule membership evidence is not authoritative enough for stale decisions. */
+export type StandingsEvidenceNonAuthoritativeReason =
+  | "MISSING_PROVIDER_MATCH_TYPE"
+  | "HEURISTIC_DOMINANT_MATCH_TYPE_TIED"
+  | "HEURISTIC_DOMINANT_MATCH_TYPE"
+  | "INCOMPLETE_GROUP_METADATA";
+
 export type StandingsScheduleEvidenceEvaluation = {
   completedRelevantMatches: number;
   confidence: StandingsEvidenceConfidence;
   dominantProviderMatchType: number | null;
   competitionIdentity: StandingsCompetitionTuple;
+  /** Set when confidence is not COMPLETE — explains why evidence is non-authoritative. */
+  nonAuthoritativeReason: StandingsEvidenceNonAuthoritativeReason | null;
 };
 
 export type EvaluateStandingsScheduleEvidenceOptions = {
   now?: Date;
   /** Group id from the resolved SFV ranking anchor when available. */
   authoritativeGroupId?: number | null;
+  /**
+   * Provider matchType values with contract-proven league-table semantics.
+   * Omit in production — SFV OpenAPI does not document matchType enums today.
+   * Tests (and future SFV semantics) may supply this to reach COMPLETE safely.
+   */
+  provenAuthoritativeLeagueTableMatchTypes?: readonly number[];
 };
 
 function isCupFixture(cupId: number | null | undefined): boolean {
@@ -106,6 +121,17 @@ function deriveDominantProviderMatchType(
   return { dominant, tied: false };
 }
 
+function isDominantMatchTypeAuthoritative(
+  dominant: number,
+  provenTypes: readonly number[] | undefined,
+): boolean {
+  return (
+    provenTypes != null &&
+    provenTypes.length > 0 &&
+    provenTypes.includes(dominant)
+  );
+}
+
 /**
  * Evaluates how many completed schedule fixtures belong to the resolved standings
  * competition, and whether the evidence is authoritative enough for stale detection.
@@ -142,6 +168,7 @@ export function evaluateStandingsScheduleEvidence(
       confidence: "INSUFFICIENT",
       dominantProviderMatchType: null,
       competitionIdentity: tuple,
+      nonAuthoritativeReason: "MISSING_PROVIDER_MATCH_TYPE",
     };
   }
 
@@ -166,6 +193,7 @@ export function evaluateStandingsScheduleEvidence(
       confidence: "PARTIAL",
       dominantProviderMatchType: null,
       competitionIdentity: tuple,
+      nonAuthoritativeReason: "HEURISTIC_DOMINANT_MATCH_TYPE_TIED",
     };
   }
 
@@ -186,11 +214,32 @@ export function evaluateStandingsScheduleEvidence(
         match.providerGroupId == null,
     );
 
+  const dominantIsProvenAuthoritative = isDominantMatchTypeAuthoritative(
+    dominant,
+    options?.provenAuthoritativeLeagueTableMatchTypes,
+  );
+
+  if (
+    !groupIncomplete &&
+    dominantIsProvenAuthoritative
+  ) {
+    return {
+      completedRelevantMatches: providerMatchIds.size,
+      confidence: "COMPLETE",
+      dominantProviderMatchType: dominant,
+      competitionIdentity: tuple,
+      nonAuthoritativeReason: null,
+    };
+  }
+
   return {
     completedRelevantMatches: providerMatchIds.size,
-    confidence: groupIncomplete ? "PARTIAL" : "COMPLETE",
+    confidence: "PARTIAL",
     dominantProviderMatchType: dominant,
     competitionIdentity: tuple,
+    nonAuthoritativeReason: groupIncomplete
+      ? "INCOMPLETE_GROUP_METADATA"
+      : "HEURISTIC_DOMINANT_MATCH_TYPE",
   };
 }
 

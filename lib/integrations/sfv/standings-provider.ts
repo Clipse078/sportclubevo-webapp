@@ -310,6 +310,7 @@ function logStandingsStaleVsSchedule(
       standingsPlayed: integrity.standingsPlayed,
       completedRelevantMatches: evaluation.completedRelevantMatches,
       evidenceConfidence: evaluation.confidence,
+      nonAuthoritativeReason: evaluation.nonAuthoritativeReason,
       snapshotPlayed,
     }),
   );
@@ -341,6 +342,7 @@ function logStandingsEvidenceIncomplete(
       standingsPlayed,
       completedRelevantMatches: evaluation.completedRelevantMatches,
       evidenceConfidence: evaluation.confidence,
+      nonAuthoritativeReason: evaluation.nonAuthoritativeReason,
     }),
   );
 }
@@ -440,6 +442,7 @@ async function resolveWithScheduleIntegrity(
         providerGroupId:
           resolved.sfvGroupId > 0 ? resolved.sfvGroupId : null,
       },
+      nonAuthoritativeReason: "MISSING_PROVIDER_MATCH_TYPE",
     } satisfies StandingsScheduleEvidenceEvaluation);
 
   const integrity = evaluateStandingsStaleVsSchedule({
@@ -592,6 +595,7 @@ export async function fetchTeamStandingsForMapping(
 
     if (
       outcome?.integrity.isStale &&
+      hasAuthoritativeStandingsScheduleEvidence(outcome.evaluation) &&
       scheduleEvidence.dominantTuple != null
     ) {
       const filteredEntries = await tryFilteredRankingRetry(
