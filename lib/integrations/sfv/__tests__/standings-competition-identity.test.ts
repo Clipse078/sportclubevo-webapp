@@ -4,6 +4,7 @@ import {
   countMatchEvidenceForCompetitionTuple,
   countStandingsCountingMatchesForCompetitionTuple,
   deriveCurrentCompetitionTupleFromMatchEvidence,
+  deriveProviderGroupIdFromMatchEvidence,
 } from "../standings-competition-identity";
 import type { StandingsScheduleMatchEvidence } from "../standings-competition-identity";
 import { evaluateStandingsStaleVsSchedule } from "../standings-integrity";
@@ -84,6 +85,45 @@ describe("deriveCurrentCompetitionTupleFromMatchEvidence", () => {
     });
 
     expect(tuple?.providerDivisionId).toBe(2);
+  });
+
+  it("A4A12 — derives dominant provider group from partial schedule metadata", () => {
+    const matches = [
+      ...Array.from({ length: 7 }, (_, index) =>
+        evidence({
+          providerDivisionId: 30,
+          providerGroupId: null,
+          startAt: new Date(`2026-08-${17 + index}T14:00:00.000Z`),
+          providerRoundNbr: index + 1,
+        }),
+      ),
+      ...([4406755, 4406756, 4406759] as const).map((externalMatchId, index) =>
+        evidence({
+          providerDivisionId: 30,
+          providerGroupId: 1,
+          externalMatchId,
+          startAt: new Date(`2026-10-${20 + index}T14:00:00.000Z`),
+          providerRoundNbr: 8 + index,
+        }),
+      ),
+    ];
+
+    const tuple = deriveCurrentCompetitionTupleFromMatchEvidence(matches, {
+      providerLeagueId: 15208,
+    });
+
+    expect(tuple).toEqual({
+      providerLeagueId: 15208,
+      providerDivisionId: 30,
+      providerGroupId: 1,
+    });
+
+    expect(
+      deriveProviderGroupIdFromMatchEvidence(matches, {
+        providerLeagueId: 15208,
+        providerDivisionId: 30,
+      }),
+    ).toBe(1);
   });
 
   it("CASE C — Junioren A: division 30 current over older division 0", () => {
