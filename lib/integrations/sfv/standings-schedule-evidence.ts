@@ -7,7 +7,7 @@ import { getMatchcenterLifecycleStage } from "@/lib/matchcenter/match-lifecycle"
 import { SFV_PROVIDER } from "./season-bridge";
 import {
   countMatchEvidenceForCompetitionTuple,
-  deriveDominantCompetitionTupleFromMatchEvidence,
+  deriveCurrentCompetitionTupleFromMatchEvidence,
   type StandingsCompetitionTuple,
   type StandingsScheduleMatchEvidence,
 } from "./standings-competition-identity";
@@ -21,14 +21,14 @@ export type LoadStandingsScheduleEvidenceInput = {
 };
 
 export type StandingsScheduleEvidence = {
-  /** Completed league matches used as evidence (already filtered). */
+  /** League matches used as schedule evidence (completed + upcoming). */
   relevantMatches: StandingsScheduleMatchEvidence[];
   dominantTuple: StandingsCompetitionTuple | null;
   completedRelevantMatches: number;
   hasScheduleEvidence: boolean;
 };
 
-function isCompletedLeagueMatch(
+function classifyMatchLifecycle(
   event: {
     status: string;
     startAt: Date;
@@ -37,7 +37,7 @@ function isCompletedLeagueMatch(
     providerMatchStateName: string | null;
   },
   now: Date,
-): boolean {
+): "COMPLETED" | "UPCOMING" | "OTHER" {
   const stage = getMatchcenterLifecycleStage(
     {
       status: event.status,
@@ -48,7 +48,13 @@ function isCompletedLeagueMatch(
     },
     now,
   );
-  return stage === "COMPLETED";
+  if (stage === "COMPLETED") {
+    return "COMPLETED";
+  }
+  if (stage === "UPCOMING") {
+    return "UPCOMING";
+  }
+  return "OTHER";
 }
 
 export async function loadStandingsScheduleEvidence(
@@ -72,6 +78,7 @@ export async function loadStandingsScheduleEvidence(
     select: {
       providerLeagueId: true,
       providerDivisionId: true,
+      providerRoundNbr: true,
       providerMatchStateName: true,
       event: {
         select: {
@@ -85,7 +92,8 @@ export async function loadStandingsScheduleEvidence(
   const relevantMatches: StandingsScheduleMatchEvidence[] = [];
 
   for (const row of rows) {
-    if (!isCompletedLeagueMatch(row.event, row, now)) {
+    const lifecycle = classifyMatchLifecycle(row.event, row, now);
+    if (lifecycle === "OTHER") {
       continue;
     }
 
@@ -101,10 +109,14 @@ export async function loadStandingsScheduleEvidence(
     relevantMatches.push({
       providerLeagueId: row.providerLeagueId,
       providerDivisionId: row.providerDivisionId,
+      providerRoundNbr: row.providerRoundNbr,
+      startAt: row.event.startAt,
+      isCompleted: lifecycle === "COMPLETED",
+      isUpcoming: lifecycle === "UPCOMING",
     });
   }
 
-  const dominantTuple = deriveDominantCompetitionTupleFromMatchEvidence(
+  const dominantTuple = deriveCurrentCompetitionTupleFromMatchEvidence(
     relevantMatches,
     { providerLeagueId: input.providerLeagueId },
   );
@@ -115,6 +127,7 @@ export async function loadStandingsScheduleEvidence(
           relevantMatches,
           dominantTuple,
           true,
+          { now },
         )
       : 0;
 
