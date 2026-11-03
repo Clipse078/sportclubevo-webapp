@@ -937,7 +937,14 @@
 }
 
 .cardPitchZone > .destPitchValue.venueColumnPrimary {
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+}
+
+.cardPitchZone .venueColumnBody > .destPitchValue.venueColumnPrimary,
+.cardPitchZone .venueColumnBody > .pitchMissing.venueColumnPrimary {
+  align-self: stretch;
 }
 
 .venueTeamDisplayName {
@@ -1360,6 +1367,8 @@
   border-left: 1px solid var(--ib-border);
   min-width: 0;
   box-sizing: border-box;
+  container-type: inline-size;
+  container-name: ib-platz-slot;
 }
 
 .cardDressingRoomZone,
@@ -1374,17 +1383,17 @@
 }
 
 .cardPitchZone .destPitchValue {
-  font-size: var(--ib-match-platz-font-size, var(--ib-tournament-platz-font-size, clamp(1.8rem, 3vw, var(--ib-fs-dest-pitch))));
+  font-size: min(
+    var(--ib-match-platz-font-size, var(--ib-tournament-platz-font-size, clamp(1.8rem, 3vw, var(--ib-fs-dest-pitch)))),
+    clamp(0.875rem, 11.5cqi, 2.75rem)
+  );
   line-height: 0.95;
-  white-space: normal;
-  /* Break only at word boundaries (spaces) — never split mid-word.
-   * KUNSTRASEN 1 wraps as "KUNSTRASEN" / "1" at the space, never as
-   * "KUNSTRASE" / "N 1". overflow-wrap: break-word is intentionally
-   * avoided here to prevent character-level fragmentation. */
+  white-space: nowrap;
   overflow-wrap: normal;
   word-break: normal;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .cardDressingRoomZone .matchAllocation,
@@ -1453,11 +1462,12 @@
   text-transform: uppercase;
   color: inherit;
   line-height: 1;
-  /* Wrap at word boundaries; never split mid-word (e.g., KUNSTRASEN stays intact). */
-  white-space: normal;
+  white-space: nowrap;
   overflow-wrap: normal;
   word-break: normal;
   max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* ─── Destination value badges — semantic color, value only (no icons) ─────── */
@@ -1492,15 +1502,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: flex-start;
+  align-self: stretch;
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   min-height: clamp(34px, 3.8vh, 52px);
-  padding: clamp(6px, 0.65vh, 12px) clamp(14px, 1.35vw, 22px);
+  min-width: 0;
+  padding: clamp(6px, 0.65vh, 12px) clamp(8px, 0.9vw, 16px);
   border-radius: var(--ib-radius-sm);
   background: rgba(26, 122, 74, 0.22);
   border: 1px solid rgba(26, 122, 74, 0.48);
   color: #F0F6FC;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .root[data-theme="light"] .matchAllocRoom,
@@ -2140,6 +2155,8 @@
 .trainingMatrixCell:nth-child(3) {
   padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
   border-left: 1px solid var(--ib-border);
+  container-type: inline-size;
+  container-name: ib-platz-slot;
 }
 
 /* Legacy aliases — retained for regression selectors during migration. */
@@ -2384,27 +2401,24 @@
 
 .trainingGroupPitchValue {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  /*
-   * Pitch label wrapping: wrap at word boundaries (spaces) only.
-   * Never split mid-word (e.g., KUNSTRASEN must not become KUNSTRASE/N).
-   * overflow-wrap: normal ensures breaks happen at spaces first; the label
-   * only fragments within a word when there is absolutely no other option.
-   * For standard pitch designations (STADION, KR 1, KUNSTRASEN 2) this
-   * produces legible two-line wrapping when the column is narrow.
-   */
-  font-size: var(
-    --ib-training-group-pitch-font-size,
-    var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)))
+  font-size: min(
+    var(
+      --ib-training-group-pitch-font-size,
+      var(--ib-training-platz-font-size, clamp(1.1rem, 1.6vw, var(--ib-fs-dest-pitch)))
+    ),
+    clamp(0.875rem, 11.5cqi, 2.75rem)
   );
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: inherit;
   line-height: 1.05;
-  white-space: normal;
+  white-space: nowrap;
   overflow-wrap: normal;
   word-break: normal;
   max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .trainingGroupRoomValue {
@@ -2456,9 +2470,12 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupPitchValue {
-  font-size: var(
-    --ib-training-group-pitch-font-size,
-    clamp(1.12rem, 1.48vw, 1.82rem)
+  font-size: min(
+    var(
+      --ib-training-group-pitch-font-size,
+      clamp(1.12rem, 1.48vw, 1.82rem)
+    ),
+    clamp(0.875rem, 11.5cqi, 2.75rem)
   );
   line-height: 1.05;
 }
@@ -2474,9 +2491,12 @@
 }
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {
-  font-size: var(
-    --ib-training-group-pitch-font-size,
-    clamp(1.12rem, 1.38vw, 1.72rem)
+  font-size: min(
+    var(
+      --ib-training-group-pitch-font-size,
+      clamp(1.12rem, 1.38vw, 1.72rem)
+    ),
+    clamp(0.875rem, 11.5cqi, 2.75rem)
   );
   line-height: 1.05;
 }
