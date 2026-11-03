@@ -10,6 +10,9 @@ export const AMBIENT_IMAGE_OPACITY_CSS_VAR = "--ambient-image-opacity" as const;
 
 export const AMBIENT_BASE_ATMOSPHERE_CSS_VAR = "--ambient-base-atmosphere" as const;
 
+export const AMBIENT_DARK_UNIFIED_POSITION_X = "50%" as const;
+export const AMBIENT_DARK_UNIFIED_POSITION_Y = "50%" as const;
+
 /** R16 — explicit background vs foreground stacking inside the operational environment. */
 export const VENUE_OPERATIONAL_AMBIENT_STACK_Z_INDEX = {
   baseAtmosphere: 0,
@@ -34,6 +37,12 @@ export const VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT = {
   TOURNAMENT: 0.38,
   TRAINING: 0.34,
 } as const;
+
+/** R22 — unified DARK operational backdrop raster opacity (decorative shell only). */
+export const VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_DARK = 0.65 as const;
+
+/** R22 — navy base under the unified DARK operational artwork. */
+export const VENUE_ACTIVITY_AMBIENT_DARK_BASE_ATMOSPHERE = "#0A1828" as const;
 
 export type VenueActivityAmbientImageOpacityLight =
   (typeof VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT)[keyof typeof VENUE_ACTIVITY_AMBIENT_IMAGE_OPACITY_LIGHT];

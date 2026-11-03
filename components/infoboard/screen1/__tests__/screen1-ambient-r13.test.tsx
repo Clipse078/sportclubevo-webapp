@@ -182,14 +182,18 @@ describe("R13 activity ambient mapping", () => {
     expect(screen.getByTestId("venue-activity-ambient").getAttribute("data-venue-ambient-kind")).toBe(
       "TOURNAMENT",
     );
-    expect(resolveActivityAmbientSrc("TOURNAMENT")).toContain("infoboard-tournament-ambient.png");
+    expect(resolveActivityAmbientSrc("TOURNAMENT", "LIGHT")).toContain(
+      "infoboard-tournament-ambient.png",
+    );
 
     cleanup();
     renderSingle(baseEvent({ id: "tr-1", type: "TRAINING", displayTitle: "Training" }));
     expect(screen.getByTestId("venue-training-matrix-ambient").getAttribute("data-venue-ambient-kind")).toBe(
       "TRAINING",
     );
-    expect(resolveActivityAmbientSrc("TRAINING")).toContain("infoboard-training-ambient.png");
+    expect(resolveActivityAmbientSrc("TRAINING", "LIGHT")).toContain(
+      "infoboard-training-ambient.png",
+    );
   });
 });
 

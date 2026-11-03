@@ -130,6 +130,11 @@
   --ib-card-gap:        clamp(4px, 0.5vh, 8px);
   --ib-card-pad-v:      clamp(8px, 1.1vh, 14px);
   --ib-card-pad-h:      clamp(14px, 1.6vw, 24px);
+
+  /* R13/R22 — unified operational ambient canvas (TIME excluded) */
+  --ib-zone-operational-ambient-left: var(--ib-zone-time);
+  --ib-zone-operational-ambient-span: 85%;
+  --venue-ambient-z-foreground: 10;
 }
 
 /* ─── Light theme palette (INFOBOARD-INTEGRATION-01B) ───────────────────────
@@ -757,6 +762,31 @@
   z-index: 0;
   overflow: hidden;
   isolation: isolate;
+}
+
+/* R22 — one shared DARK operational surface (ACTIVITY + KABINE + PLATZ) */
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-operational-surface="unified-dark"] {
+  border: 1px solid rgba(99, 135, 175, 0.14);
+  border-left: none;
+  border-radius: 0 var(--ib-radius-sm) var(--ib-radius-sm) 0;
+  box-sizing: border-box;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="activity"].cardEventZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="kabine"].cardDressingRoomZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="platz"].cardPitchZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrix {
+  background: transparent;
 }
 
 .eventCard[data-venue-operational-ambient="true"] .cardTimeZone {
