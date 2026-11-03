@@ -21,7 +21,9 @@
  *   - Same (league, division) as the resolved current-phase tuple
  *   - Completed lifecycle, kickoff not after `now`
  *   - providerRoundNbr > 0 (round 0 = non-table preparation fixtures)
- *   - Count distinct providerRoundNbr (reschedule duplicates share a round)
+ *   - Count distinct externalMatchId (provider round numbers may be reused for
+ *     separate legitimate completed fixtures — round is not match identity)
+ *   MatchExternalMapping enforces one row per (tenantId, provider, externalMatchId).
  *   MatchType and group are not on MatchExternalMapping.
  */
 
@@ -33,6 +35,8 @@ export type StandingsCompetitionTuple = {
 };
 
 export type StandingsScheduleMatchEvidence = {
+  /** SFV matchId — canonical provider match identity (unique per tenant + provider). */
+  externalMatchId: number;
   providerLeagueId: number | null;
   providerDivisionId: number | null;
   providerRoundNbr: number | null;
@@ -236,7 +240,7 @@ export function countStandingsCountingMatchesForCompetitionTuple(
   options?: { now?: Date },
 ): number {
   const now = options?.now ?? new Date();
-  const roundNumbers = new Set<number>();
+  const providerMatchIds = new Set<number>();
 
   for (const match of matches) {
     if (!match.isCompleted) {
@@ -255,10 +259,16 @@ export function countStandingsCountingMatchesForCompetitionTuple(
     if (round == null || !Number.isInteger(round) || round <= 0) {
       continue;
     }
-    roundNumbers.add(round);
+    if (
+      !Number.isInteger(match.externalMatchId) ||
+      match.externalMatchId <= 0
+    ) {
+      continue;
+    }
+    providerMatchIds.add(match.externalMatchId);
   }
 
-  return roundNumbers.size;
+  return providerMatchIds.size;
 }
 
 export function countMatchEvidenceForCompetitionTuple(

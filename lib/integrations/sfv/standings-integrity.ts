@@ -28,9 +28,9 @@ export function findOwnStandingsRowPlayed(
 }
 
 /**
- * Stale when schedule evidence shows more standings-counting completed rounds
- * than the resolved SFV row reports as played. Requires reliable schedule
- * evidence — without it, standings are not declared stale.
+ * Stale when schedule evidence shows more standings-counting completed provider
+ * match identities than the resolved SFV row reports as played. Requires
+ * reliable schedule evidence — without it, standings are not declared stale.
  */
 export function evaluateStandingsStaleVsSchedule(
   input: StandingsStaleVsScheduleInput,
