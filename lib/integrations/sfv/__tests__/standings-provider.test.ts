@@ -953,6 +953,85 @@ describe("fetchTeamStandingsForMapping", () => {
       expect(mocks.persistStandingsSnapshot).toHaveBeenCalledTimes(1);
     });
 
+    it("A4A12 — Junioren A resolves group 1 table from schedule group hint without filtered retry", async () => {
+      const teamId = 31928;
+      const relevantMatches = [
+        ...Array.from({ length: 7 }, (_, index) =>
+          scheduleEvidenceMatch(index, {
+            providerLeagueId: 15208,
+            providerDivisionId: 30,
+            providerGroupId: null,
+            providerMatchType: null,
+          }),
+        ),
+        ...([0, 1, 2] as const).map((offset) =>
+          scheduleEvidenceMatch(7 + offset, {
+            providerLeagueId: 15208,
+            providerDivisionId: 30,
+            providerGroupId: 1,
+            providerMatchType: 1,
+            externalMatchId: 4_406_755 + offset,
+          }),
+        ),
+      ];
+
+      mocks.loadStandingsScheduleEvidence.mockResolvedValue({
+        relevantMatches,
+        dominantTuple: {
+          providerLeagueId: 15208,
+          providerDivisionId: 30,
+          providerGroupId: 1,
+        },
+        hasScheduleEvidence: true,
+      });
+
+      mocks.fetchClubRanking.mockResolvedValue([
+        createEntry({
+          teamId,
+          position: 3,
+          leagueId: 15208,
+          divisionId: 30,
+          groupId: 0,
+          matches: 7,
+          points: 18,
+        }),
+        createEntry({
+          teamId,
+          position: 2,
+          leagueId: 15208,
+          divisionId: 30,
+          groupId: 1,
+          groupName: "Gruppe 1",
+          matches: 10,
+          points: 22,
+        }),
+        createEntry({
+          teamId: 200,
+          position: 1,
+          leagueId: 15208,
+          divisionId: 30,
+          groupId: 1,
+          matches: 10,
+        }),
+      ]);
+
+      const result = await fetchTeamStandingsForMapping({
+        tenantId: "tenant-a",
+        externalTeamId: teamId,
+        externalSeasonId: 2027,
+        providerLeagueId: 15208,
+      });
+
+      expect(mocks.fetchClubRanking).toHaveBeenCalledTimes(1);
+      expect(result?.rows.find((row) => row.externalTeamId === teamId)).toMatchObject({
+        played: 10,
+        points: 22,
+      });
+      expect(mocks.persistStandingsSnapshot).toHaveBeenCalledWith(
+        expect.objectContaining({ sfvGroupId: 1 }),
+      );
+    });
+
     it("CASE M — filtered retry still stale does not loop or persist regressive snapshot", async () => {
       const evaluateSpy = vi
         .spyOn(standingsScheduleMembership, "evaluateStandingsScheduleEvidence")

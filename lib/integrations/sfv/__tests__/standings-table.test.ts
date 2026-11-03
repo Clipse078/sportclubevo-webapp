@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ClubRankingEntry } from "../client";
-import { resolveStandingsTable } from "../standings-table";
+import {
+  resolveStandingsTable,
+  resolveStandingsTableWithIdentity,
+} from "../standings-table";
 
 function createEntry(
   overrides: Partial<ClubRankingEntry> & Pick<ClubRankingEntry, "teamId" | "position">,
@@ -214,6 +217,126 @@ describe("resolveStandingsTable", () => {
 
     expect(table?.competition.name).toBe("League A");
     expect(table?.rows.map((row) => row.externalTeamId)).toEqual([200, 100]);
+  });
+
+  it("A4A12 — prefers schedule-hinted group 1 over generic group 0 in same league/division", () => {
+    const teamId = 31928;
+    const entries = [
+      createEntry({
+        teamId,
+        position: 3,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 0,
+        groupName: null,
+        matches: 7,
+        points: 18,
+      }),
+      createEntry({
+        teamId,
+        position: 2,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 1,
+        groupName: "Gruppe 1",
+        matches: 10,
+        points: 22,
+      }),
+      createEntry({
+        teamId: 200,
+        position: 1,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 1,
+        matches: 10,
+      }),
+    ];
+
+    const resolved = resolveStandingsTableWithIdentity({
+      entries,
+      externalTeamId: teamId,
+      providerLeagueId: 15208,
+      competitionHint: { providerDivisionId: 30, providerGroupId: 1 },
+    });
+
+    expect(resolved?.sfvGroupId).toBe(1);
+    expect(
+      resolved?.standings.rows.find((row) => row.externalTeamId === teamId)?.played,
+    ).toBe(10);
+  });
+
+  it("A4A12 — generic group 0 must not beat specific group 1 without schedule hint", () => {
+    const teamId = 31928;
+    const entries = [
+      createEntry({
+        teamId,
+        position: 3,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 0,
+        matches: 7,
+        points: 18,
+      }),
+      createEntry({
+        teamId,
+        position: 2,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 1,
+        groupName: "Gruppe 1",
+        matches: 10,
+        points: 22,
+      }),
+      createEntry({
+        teamId: 200,
+        position: 1,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 1,
+        matches: 10,
+      }),
+    ];
+
+    const resolved = resolveStandingsTableWithIdentity({
+      entries,
+      externalTeamId: teamId,
+      providerLeagueId: 15208,
+    });
+
+    expect(resolved?.sfvGroupId).toBe(1);
+    expect(
+      resolved?.standings.rows.find((row) => row.externalTeamId === teamId)?.played,
+    ).toBe(10);
+  });
+
+  it("A4A12 — keeps group 0 when it is the only anchor candidate", () => {
+    const teamId = 31928;
+    const entries = [
+      createEntry({
+        teamId,
+        position: 1,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 0,
+        matches: 7,
+      }),
+      createEntry({
+        teamId: 200,
+        position: 2,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 0,
+        matches: 7,
+      }),
+    ];
+
+    const resolved = resolveStandingsTableWithIdentity({
+      entries,
+      externalTeamId: teamId,
+      providerLeagueId: 15208,
+    });
+
+    expect(resolved?.sfvGroupId).toBe(0);
   });
 
   it("maps provider stats fields", () => {

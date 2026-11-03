@@ -55,6 +55,31 @@ function compareTableTuples(left: TableTuple, right: TableTuple): number {
   return left.groupId - right.groupId;
 }
 
+/**
+ * When SFV returns multiple anchor tables in the same league/division, group id 0
+ * is a generic aggregate — prefer a specific provider group when still ambiguous.
+ */
+function compareAnchorEntries(
+  left: ClubRankingEntry,
+  right: ClubRankingEntry,
+): number {
+  const leftTuple = tableTuple(left);
+  const rightTuple = tableTuple(right);
+
+  if (
+    leftTuple.leagueId === rightTuple.leagueId &&
+    leftTuple.divisionId === rightTuple.divisionId
+  ) {
+    const leftGeneric = leftTuple.groupId === 0;
+    const rightGeneric = rightTuple.groupId === 0;
+    if (leftGeneric !== rightGeneric) {
+      return leftGeneric ? 1 : -1;
+    }
+  }
+
+  return compareTableTuples(leftTuple, rightTuple);
+}
+
 function filterAnchorsByCompetitionHint(
   anchors: ClubRankingEntry[],
   hint: StandingsTableCompetitionHint | null | undefined,
@@ -114,9 +139,7 @@ function selectAnchorEntry(
     return candidates[0]!;
   }
 
-  return [...candidates].sort((left, right) =>
-    compareTableTuples(tableTuple(left), tableTuple(right)),
-  )[0]!;
+  return [...candidates].sort(compareAnchorEntries)[0]!;
 }
 
 function meaningfulName(value: string | null | undefined): string | null {

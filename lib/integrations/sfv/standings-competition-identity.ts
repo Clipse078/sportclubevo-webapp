@@ -6,9 +6,10 @@ import { evaluateStandingsScheduleEvidence } from "./standings-schedule-membersh
  * Current-phase tuple rule (documented for tests):
  *   1. Consider completed and upcoming league-match evidence for the mapped
  *      external team, season, and (when known) providerLeagueId.
- *   2. Group evidence by (providerLeagueId, providerDivisionId). Group id is
- *      not persisted on MatchExternalMapping — schedule evidence never sets
- *      providerGroupId; ranking resolution supplies group when needed.
+ *   2. Group evidence by (providerLeagueId, providerDivisionId). When schedule
+ *      rows carry providerGroupId, derive a non-tied dominant group for the
+ *      winning tuple; otherwise providerGroupId stays null and ranking
+ *      resolution supplies group when needed.
  *   3. For each tuple, latestActivityAt = max(
  *        latest completed kickoff,
  *        earliest upcoming kickoff when any upcoming fixtures exist,
@@ -211,6 +212,58 @@ function selectCurrentTuple(activities: TupleActivity[]): TupleActivity | null {
 }
 
 /**
+ * Dominant provider group id from schedule rows that already carry group metadata.
+ * Returns null when no positive group ids exist or counts tie (no guess).
+ */
+export function deriveProviderGroupIdFromMatchEvidence(
+  matches: readonly StandingsScheduleMatchEvidence[],
+  tuple: Pick<StandingsCompetitionTuple, "providerLeagueId" | "providerDivisionId">,
+): number | null {
+  const counts = new Map<number, number>();
+
+  for (const match of matches) {
+    if (match.providerLeagueId !== tuple.providerLeagueId) {
+      continue;
+    }
+    if (match.providerDivisionId !== tuple.providerDivisionId) {
+      continue;
+    }
+    if (
+      match.providerGroupId == null ||
+      !Number.isInteger(match.providerGroupId) ||
+      match.providerGroupId <= 0
+    ) {
+      continue;
+    }
+
+    counts.set(
+      match.providerGroupId,
+      (counts.get(match.providerGroupId) ?? 0) + 1,
+    );
+  }
+
+  if (counts.size === 0) {
+    return null;
+  }
+
+  let dominantGroupId: number | null = null;
+  let dominantCount = 0;
+  let tied = false;
+
+  for (const [groupId, count] of counts.entries()) {
+    if (count > dominantCount) {
+      dominantGroupId = groupId;
+      dominantCount = count;
+      tied = false;
+    } else if (count === dominantCount) {
+      tied = true;
+    }
+  }
+
+  return tied ? null : dominantGroupId;
+}
+
+/**
  * Derives the current (league, division) competition phase from schedule evidence.
  */
 export function deriveCurrentCompetitionTupleFromMatchEvidence(
@@ -223,10 +276,15 @@ export function deriveCurrentCompetitionTupleFromMatchEvidence(
     return null;
   }
 
+  const providerGroupId = deriveProviderGroupIdFromMatchEvidence(matches, {
+    providerLeagueId: winner.leagueId,
+    providerDivisionId: winner.divisionId,
+  });
+
   return {
     providerLeagueId: winner.leagueId,
     providerDivisionId: winner.divisionId,
-    providerGroupId: null,
+    providerGroupId,
   };
 }
 
