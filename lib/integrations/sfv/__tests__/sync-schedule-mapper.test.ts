@@ -337,6 +337,31 @@ describe("buildMappingFields", () => {
     expect(fields.scoreHome).toBe(3);
     expect(fields.scoreAway).toBe(1);
   });
+
+  it("persists provider competition metadata from ClubScheduleEntry", () => {
+    const fields = buildMappingFields(
+      makeEntry({
+        groupId: 12,
+        groupName: "Gruppe A",
+        matchType: 2,
+        matchTypeName: "Pokal",
+        cupId: 55,
+        playDay: 4,
+        playDayName: "4. Spieltag",
+      }),
+      makeContext(),
+      null,
+      null,
+    );
+
+    expect(fields.providerGroupId).toBe(12);
+    expect(fields.providerGroupName).toBe("Gruppe A");
+    expect(fields.providerMatchType).toBe(2);
+    expect(fields.providerMatchTypeName).toBe("Pokal");
+    expect(fields.providerCupId).toBe(55);
+    expect(fields.providerPlayDay).toBe(4);
+    expect(fields.providerPlayDayName).toBe("4. Spieltag");
+  });
 });
 
 // ── detectChanges ─────────────────────────────────────────────────────────────
@@ -353,6 +378,13 @@ describe("detectChanges", () => {
       providerDivisionId: 999,
       providerDivisionName: "Gruppe 1",
       providerRoundNbr: 3,
+      providerGroupId: null,
+      providerGroupName: null,
+      providerMatchType: 1,
+      providerMatchTypeName: "Meisterschaft",
+      providerCupId: null,
+      providerPlayDay: 3,
+      providerPlayDayName: "3. Spieltag",
       providerVenueName: "Testzentrum",
       providerHomeTeamName: "FC Local A",
       providerAwayTeamName: "FC Opponent B",

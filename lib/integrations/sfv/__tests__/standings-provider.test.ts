@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClubRankingEntry } from "../client";
 import { SfvAuthError, SfvNetworkError } from "../errors";
 import { resetStandingsCacheForTests } from "../standings-cache";
+import * as standingsScheduleMembership from "../standings-schedule-membership";
 import {
   fetchTeamStandingsForMapping,
   resetStandingsInflightForTests,
@@ -79,6 +80,25 @@ const defaultEntries = [
   createEntry({ teamId: 200, position: 2 }),
 ];
 
+function scheduleEvidenceMatch(
+  index: number,
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    externalMatchId: 910_000 + index,
+    providerLeagueId: 10,
+    providerDivisionId: 20,
+    providerRoundNbr: index + 1,
+    providerGroupId: 30,
+    providerMatchType: 1,
+    providerCupId: null,
+    startAt: new Date(`2026-09-${String((index % 28) + 1).padStart(2, "0")}T14:00:00.000Z`),
+    isCompleted: true,
+    isUpcoming: false,
+    ...overrides,
+  };
+}
+
 function createSnapshotTable() {
   return {
     competition: {
@@ -147,7 +167,6 @@ describe("fetchTeamStandingsForMapping", () => {
     mocks.loadStandingsScheduleEvidence.mockResolvedValue({
       relevantMatches: [],
       dominantTuple: null,
-      completedRelevantMatches: 0,
       hasScheduleEvidence: false,
     });
   });
@@ -696,18 +715,16 @@ describe("fetchTeamStandingsForMapping", () => {
   });
 
   describe("stale-vs-schedule guard", () => {
-    it("CASE C — logs stale integrity and skips snapshot persist", async () => {
+    it("CASE C — PARTIAL heuristic mismatch logs incomplete evidence and persists snapshot", async () => {
       mocks.loadStandingsScheduleEvidence.mockResolvedValue({
-        relevantMatches: Array.from({ length: 10 }, () => ({
-          providerLeagueId: 10,
-          providerDivisionId: 20,
-        })),
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
         dominantTuple: {
           providerLeagueId: 10,
           providerDivisionId: 20,
           providerGroupId: null,
         },
-        completedRelevantMatches: 10,
         hasScheduleEvidence: true,
       });
       mocks.fetchClubRanking.mockResolvedValue([
@@ -724,30 +741,96 @@ describe("fetchTeamStandingsForMapping", () => {
       const result = await fetchTeamStandingsForMapping(mappingInput);
 
       expect(result?.rows[0]?.played).toBe(7);
+      expect(mocks.persistStandingsSnapshot).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalled();
+      expect(JSON.parse(String(vi.mocked(console.warn).mock.calls[0]?.[0]))).toMatchObject({
+        event: "SFV_STANDINGS_EVIDENCE_INCOMPLETE",
+        standingsPlayed: 7,
+        completedRelevantMatches: 10,
+        evidenceConfidence: "PARTIAL",
+        nonAuthoritativeReason: "HEURISTIC_DOMINANT_MATCH_TYPE",
+      });
+    });
+
+    it("CASE AUTH-COMPLETE — authoritative stale logs stale integrity and skips snapshot persist", async () => {
+      const evaluateSpy = vi
+        .spyOn(standingsScheduleMembership, "evaluateStandingsScheduleEvidence")
+        .mockReturnValue({
+          completedRelevantMatches: 10,
+          confidence: "COMPLETE",
+          dominantProviderMatchType: 1,
+          competitionIdentity: {
+            providerLeagueId: 10,
+            providerDivisionId: 20,
+            providerGroupId: null,
+          },
+          nonAuthoritativeReason: null,
+        });
+
+      mocks.loadStandingsScheduleEvidence.mockResolvedValue({
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
+        dominantTuple: {
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+          providerGroupId: null,
+        },
+        hasScheduleEvidence: true,
+      });
+      mocks.fetchClubRanking.mockResolvedValue([
+        createEntry({
+          teamId: 100,
+          position: 1,
+          matches: 7,
+          leagueId: 10,
+          divisionId: 20,
+        }),
+        createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+      ]);
+
+      const result = await fetchTeamStandingsForMapping(mappingInput);
+
+      evaluateSpy.mockRestore();
+
+      expect(result?.rows[0]?.played).toBe(7);
       expect(mocks.persistStandingsSnapshot).not.toHaveBeenCalled();
       expect(console.warn).toHaveBeenCalled();
       expect(JSON.parse(String(vi.mocked(console.warn).mock.calls[0]?.[0]))).toMatchObject({
         event: "SFV_STANDINGS_STALE_VS_SCHEDULE",
         standingsPlayed: 7,
         completedRelevantMatches: 10,
+        evidenceConfidence: "COMPLETE",
       });
     });
 
     it("CASE E — serves better existing snapshot instead of regressive stale incoming", async () => {
+      const evaluateSpy = vi
+        .spyOn(standingsScheduleMembership, "evaluateStandingsScheduleEvidence")
+        .mockReturnValue({
+          completedRelevantMatches: 10,
+          confidence: "COMPLETE",
+          dominantProviderMatchType: 1,
+          competitionIdentity: {
+            providerLeagueId: 10,
+            providerDivisionId: 20,
+            providerGroupId: null,
+          },
+          nonAuthoritativeReason: null,
+        });
+
       const snapshotTable = createSnapshotTable();
       snapshotTable.rows[0]!.played = 9;
 
       mocks.loadStandingsScheduleEvidence.mockResolvedValue({
-        relevantMatches: Array.from({ length: 10 }, () => ({
-          providerLeagueId: 10,
-          providerDivisionId: 20,
-        })),
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
         dominantTuple: {
           providerLeagueId: 10,
           providerDivisionId: 20,
           providerGroupId: null,
         },
-        completedRelevantMatches: 10,
         hasScheduleEvidence: true,
       });
       mocks.loadStandingsSnapshot.mockResolvedValue({
@@ -770,22 +853,65 @@ describe("fetchTeamStandingsForMapping", () => {
 
       const result = await fetchTeamStandingsForMapping(mappingInput);
 
+      evaluateSpy.mockRestore();
+
       expect(result?.rows[0]?.played).toBe(9);
       expect(mocks.persistStandingsSnapshot).not.toHaveBeenCalled();
     });
 
-    it("performs one filtered retry when bulk ranking is stale", async () => {
+    it("PARTIAL heuristic mismatch performs zero filtered retries", async () => {
       mocks.loadStandingsScheduleEvidence.mockResolvedValue({
-        relevantMatches: Array.from({ length: 10 }, () => ({
-          providerLeagueId: 10,
-          providerDivisionId: 20,
-        })),
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
         dominantTuple: {
           providerLeagueId: 10,
           providerDivisionId: 20,
           providerGroupId: null,
         },
-        completedRelevantMatches: 10,
+        hasScheduleEvidence: true,
+      });
+
+      mocks.fetchClubRanking.mockResolvedValue([
+        createEntry({
+          teamId: 100,
+          position: 1,
+          matches: 7,
+          leagueId: 10,
+          divisionId: 20,
+        }),
+        createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+      ]);
+
+      await fetchTeamStandingsForMapping(mappingInput);
+
+      expect(mocks.fetchClubRanking).toHaveBeenCalledTimes(1);
+    });
+
+    it("performs one filtered retry when bulk ranking is stale", async () => {
+      const evaluateSpy = vi
+        .spyOn(standingsScheduleMembership, "evaluateStandingsScheduleEvidence")
+        .mockReturnValue({
+          completedRelevantMatches: 10,
+          confidence: "COMPLETE",
+          dominantProviderMatchType: 1,
+          competitionIdentity: {
+            providerLeagueId: 10,
+            providerDivisionId: 20,
+            providerGroupId: null,
+          },
+          nonAuthoritativeReason: null,
+        });
+
+      mocks.loadStandingsScheduleEvidence.mockResolvedValue({
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
+        dominantTuple: {
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+          providerGroupId: null,
+        },
         hasScheduleEvidence: true,
       });
 
@@ -813,6 +939,8 @@ describe("fetchTeamStandingsForMapping", () => {
 
       const result = await fetchTeamStandingsForMapping(mappingInput);
 
+      evaluateSpy.mockRestore();
+
       expect(mocks.fetchClubRanking).toHaveBeenCalledTimes(2);
       expect(mocks.fetchClubRanking).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -823,6 +951,64 @@ describe("fetchTeamStandingsForMapping", () => {
       );
       expect(result?.rows[0]?.played).toBe(10);
       expect(mocks.persistStandingsSnapshot).toHaveBeenCalledTimes(1);
+    });
+
+    it("CASE M — filtered retry still stale does not loop or persist regressive snapshot", async () => {
+      const evaluateSpy = vi
+        .spyOn(standingsScheduleMembership, "evaluateStandingsScheduleEvidence")
+        .mockReturnValue({
+          completedRelevantMatches: 10,
+          confidence: "COMPLETE",
+          dominantProviderMatchType: 1,
+          competitionIdentity: {
+            providerLeagueId: 10,
+            providerDivisionId: 20,
+            providerGroupId: null,
+          },
+          nonAuthoritativeReason: null,
+        });
+
+      mocks.loadStandingsScheduleEvidence.mockResolvedValue({
+        relevantMatches: Array.from({ length: 10 }, (_, index) =>
+          scheduleEvidenceMatch(index),
+        ),
+        dominantTuple: {
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+          providerGroupId: null,
+        },
+        hasScheduleEvidence: true,
+      });
+
+      mocks.fetchClubRanking
+        .mockResolvedValueOnce([
+          createEntry({
+            teamId: 100,
+            position: 1,
+            matches: 7,
+            leagueId: 10,
+            divisionId: 20,
+          }),
+          createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+        ])
+        .mockResolvedValueOnce([
+          createEntry({
+            teamId: 100,
+            position: 1,
+            matches: 7,
+            leagueId: 10,
+            divisionId: 20,
+          }),
+          createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+        ]);
+
+      const result = await fetchTeamStandingsForMapping(mappingInput);
+
+      evaluateSpy.mockRestore();
+
+      expect(mocks.fetchClubRanking).toHaveBeenCalledTimes(2);
+      expect(result?.rows[0]?.played).toBe(7);
+      expect(mocks.persistStandingsSnapshot).not.toHaveBeenCalled();
     });
   });
 

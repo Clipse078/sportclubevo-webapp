@@ -49,7 +49,6 @@ vi.mock("../standings-schedule-evidence", () => ({
   loadStandingsScheduleEvidence: vi.fn().mockResolvedValue({
     relevantMatches: [],
     dominantTuple: null,
-    completedRelevantMatches: 0,
     hasScheduleEvidence: false,
   }),
 }));

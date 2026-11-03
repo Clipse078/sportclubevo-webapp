@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   countMatchEvidenceForCompetitionTuple,
@@ -6,8 +6,16 @@ import {
   deriveCurrentCompetitionTupleFromMatchEvidence,
 } from "../standings-competition-identity";
 import type { StandingsScheduleMatchEvidence } from "../standings-competition-identity";
+import { evaluateStandingsStaleVsSchedule } from "../standings-integrity";
+import { evaluateStandingsScheduleEvidence } from "../standings-schedule-membership";
 
 const NOW = new Date("2026-11-03T12:00:00.000Z");
+
+let evidenceSeq = 0;
+
+beforeEach(() => {
+  evidenceSeq = 0;
+});
 
 function evidence(
   partial: Partial<StandingsScheduleMatchEvidence> & {
@@ -15,10 +23,15 @@ function evidence(
     startAt: Date;
   },
 ): StandingsScheduleMatchEvidence {
+  evidenceSeq += 1;
   return {
-    providerLeagueId: 15208,
+    externalMatchId: partial.externalMatchId ?? 100_000 + evidenceSeq,
+    providerLeagueId: partial.providerLeagueId ?? 15208,
     providerDivisionId: partial.providerDivisionId,
     providerRoundNbr: partial.providerRoundNbr ?? 1,
+    providerGroupId: partial.providerGroupId ?? null,
+    providerMatchType: partial.providerMatchType ?? 1,
+    providerCupId: partial.providerCupId ?? null,
     startAt: partial.startAt,
     isCompleted: partial.isCompleted ?? true,
     isUpcoming: partial.isUpcoming ?? false,
@@ -217,7 +230,63 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
     providerGroupId: null,
   };
 
-  it("CASE F — reproduces 31925 schedule vs standings using round semantics", () => {
+  it("CASE ID-1 — same round, different externalMatchId counts twice", () => {
+    const divisionTuple = {
+      providerLeagueId: 15208,
+      providerDivisionId: 30,
+      providerGroupId: null,
+    };
+    const matches = [
+      evidence({
+        providerDivisionId: 30,
+        providerRoundNbr: 1,
+        externalMatchId: 9001,
+        startAt: new Date("2026-09-01T14:00:00.000Z"),
+      }),
+      evidence({
+        providerDivisionId: 30,
+        providerRoundNbr: 1,
+        externalMatchId: 9002,
+        startAt: new Date("2026-09-08T14:00:00.000Z"),
+      }),
+    ];
+
+    expect(
+      countStandingsCountingMatchesForCompetitionTuple(matches, divisionTuple, {
+        now: NOW,
+      }),
+    ).toBe(2);
+  });
+
+  it("CASE ID-2 — same externalMatchId counts once", () => {
+    const divisionTuple = {
+      providerLeagueId: 15208,
+      providerDivisionId: 30,
+      providerGroupId: null,
+    };
+    const matches = [
+      evidence({
+        providerDivisionId: 30,
+        providerRoundNbr: 1,
+        externalMatchId: 7001,
+        startAt: new Date("2026-09-01T14:00:00.000Z"),
+      }),
+      evidence({
+        providerDivisionId: 30,
+        providerRoundNbr: 2,
+        externalMatchId: 7001,
+        startAt: new Date("2026-09-08T14:00:00.000Z"),
+      }),
+    ];
+
+    expect(
+      countStandingsCountingMatchesForCompetitionTuple(matches, divisionTuple, {
+        now: NOW,
+      }),
+    ).toBe(1);
+  });
+
+  it("CASE F — 2. Mannschaft: eleven table matches with membership metadata", () => {
     const officialKickoffs = [
       { round: 1, startAt: "2026-08-21T14:00:00.000Z" },
       { round: 2, startAt: "2026-08-15T14:00:00.000Z" },
@@ -241,6 +310,7 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
           providerLeagueId: 13029,
           providerDivisionId: 0,
           providerRoundNbr: round,
+          providerMatchType: 2,
           startAt: new Date(`2026-07-${24 + index * 2}T14:00:00.000Z`),
         }),
       ),
@@ -249,18 +319,50 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
           providerLeagueId: 13029,
           providerDivisionId: 0,
           providerRoundNbr: round,
+          providerMatchType:
+            startAt === "2026-08-15T14:00:00.000Z" ? 2 : 1,
           startAt: new Date(startAt),
         }),
       ),
     ];
 
-    const counted = countStandingsCountingMatchesForCompetitionTuple(
-      matches,
-      tuple,
-      { now: NOW },
+    const evaluation = evaluateStandingsScheduleEvidence(matches, tuple, {
+      now: NOW,
+    });
+
+    expect(evaluation.completedRelevantMatches).toBe(11);
+    expect(evaluation.confidence).toBe("PARTIAL");
+    expect(evaluation.nonAuthoritativeReason).toBe(
+      "HEURISTIC_DOMINANT_MATCH_TYPE",
     );
 
-    expect(counted).toBe(11);
+    const stale = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 31_925,
+      standingsTable: {
+        competition: { name: "League", divisionName: null, groupName: null },
+        rows: [
+          {
+            position: 9,
+            externalTeamId: 31_925,
+            teamName: "FC Allschwil 2",
+            shortName: null,
+            played: 11,
+            won: 4,
+            drawn: 2,
+            lost: 5,
+            goalsFor: 26,
+            goalsAgainst: 27,
+            points: 14,
+            penaltyPoints: null,
+          },
+        ],
+      },
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      hasScheduleEvidence: true,
+      evidenceConfidence: evaluation.confidence,
+    });
+
+    expect(stale.isStale).toBe(false);
   });
 
   it("CASE G — detects stale when standings-counting rounds exceed played", () => {
@@ -282,47 +384,124 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
     ).toBe(10);
   });
 
-  it("CASE H — equals played when rescheduled duplicates share rounds", () => {
+  it("CASE H — Junioren A reused rounds with membership classification", () => {
+    const divisionTuple = {
+      providerLeagueId: 15208,
+      providerDivisionId: 30,
+      providerGroupId: 2,
+    };
     const matches = [
       ...Array.from({ length: 7 }, (_, index) =>
         evidence({
           providerLeagueId: 15208,
           providerDivisionId: 30,
+          providerGroupId: 2,
           providerRoundNbr: index + 1,
           startAt: new Date(`2026-08-${17 + index}T14:00:00.000Z`),
         }),
       ),
+      ...([1, 2, 3] as const).flatMap((round) =>
+        [0, 1].map((dup) =>
+          evidence({
+            providerLeagueId: 15208,
+            providerDivisionId: 30,
+            providerGroupId: 2,
+            providerRoundNbr: round,
+            externalMatchId: 4_358_261 + round * 100 + dup,
+            providerMatchType: 2,
+            startAt: new Date(`2026-10-${10 + round + dup}T14:00:00.000Z`),
+          }),
+        ),
+      ),
+    ];
+
+    const evaluation = evaluateStandingsScheduleEvidence(
+      matches,
+      divisionTuple,
+      { now: NOW, authoritativeGroupId: 2 },
+    );
+
+    expect(evaluation.completedRelevantMatches).toBe(7);
+    expect(evaluation.confidence).toBe("PARTIAL");
+  });
+
+  it("CASE I — B1 mapped league 15308 resists newer league 15303 activity", () => {
+    const matches = [
+      ...Array.from({ length: 11 }, (_, index) =>
+        evidence({
+          providerLeagueId: 15308,
+          providerDivisionId: 30,
+          providerRoundNbr: index + 1,
+          startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+        }),
+      ),
       evidence({
-        providerLeagueId: 15208,
-        providerDivisionId: 30,
-        providerRoundNbr: 3,
-        startAt: new Date("2026-10-18T14:00:00.000Z"),
+        providerLeagueId: 15303,
+        providerDivisionId: 0,
+        providerRoundNbr: 1,
+        startAt: new Date("2026-11-01T14:00:00.000Z"),
       }),
       evidence({
-        providerLeagueId: 15208,
-        providerDivisionId: 30,
-        providerRoundNbr: 5,
-        startAt: new Date("2026-10-28T14:00:00.000Z"),
-      }),
-      evidence({
-        providerLeagueId: 15208,
-        providerDivisionId: 30,
-        providerRoundNbr: 7,
+        providerLeagueId: 15303,
+        providerDivisionId: 0,
+        providerRoundNbr: 2,
         startAt: new Date("2026-11-02T14:00:00.000Z"),
       }),
     ];
 
-    expect(
-      countStandingsCountingMatchesForCompetitionTuple(
-        matches,
-        {
-          providerLeagueId: 15208,
-          providerDivisionId: 30,
-          providerGroupId: null,
-        },
-        { now: NOW },
+    const tuple = deriveCurrentCompetitionTupleFromMatchEvidence(matches, {
+      providerLeagueId: 15308,
+    });
+
+    expect(tuple?.providerLeagueId).toBe(15308);
+
+    const evaluation = evaluateStandingsScheduleEvidence(
+      matches,
+      {
+        providerLeagueId: 15308,
+        providerDivisionId: 30,
+        providerGroupId: null,
+      },
+      { now: NOW },
+    );
+
+    expect(evaluation.completedRelevantMatches).toBe(11);
+  });
+
+  it("CASE J — Frauen non-table fixture excluded via provider match type", () => {
+    const divisionTuple = {
+      providerLeagueId: 10,
+      providerDivisionId: 20,
+      providerGroupId: 30,
+    };
+    const matches = [
+      ...Array.from({ length: 11 }, (_, index) =>
+        evidence({
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+          providerGroupId: 30,
+          providerRoundNbr: index + 1,
+          startAt: new Date(`2026-09-${String(index + 1).padStart(2, "0")}T14:00:00.000Z`),
+        }),
       ),
-    ).toBe(7);
+      evidence({
+        providerLeagueId: 10,
+        providerDivisionId: 20,
+        providerGroupId: 30,
+        providerRoundNbr: 106,
+        providerMatchType: 3,
+        externalMatchId: 4403401,
+        startAt: new Date("2026-10-15T14:00:00.000Z"),
+      }),
+    ];
+
+    const evaluation = evaluateStandingsScheduleEvidence(
+      matches,
+      divisionTuple,
+      { now: NOW, authoritativeGroupId: 30 },
+    );
+
+    expect(evaluation.completedRelevantMatches).toBe(11);
   });
 
   it("ignores future completed kickoffs when counting", () => {
@@ -342,7 +521,7 @@ describe("countStandingsCountingMatchesForCompetitionTuple", () => {
     ).toBe(0);
   });
 
-  it("counts distinct rounds for legacy countMatchEvidenceForCompetitionTuple API", () => {
+  it("counts distinct provider match identities for countMatchEvidenceForCompetitionTuple", () => {
     const matches = Array.from({ length: 10 }, (_, index) =>
       evidence({
         providerLeagueId: 15208,

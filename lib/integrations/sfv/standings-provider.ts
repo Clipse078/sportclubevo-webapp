@@ -26,6 +26,11 @@ import {
   type StandingsScheduleEvidence,
 } from "./standings-schedule-evidence";
 import {
+  evaluateStandingsScheduleEvidence,
+  hasAuthoritativeStandingsScheduleEvidence,
+  type StandingsScheduleEvidenceEvaluation,
+} from "./standings-schedule-membership";
+import {
   loadStandingsSnapshot,
   persistStandingsSnapshot,
   type LoadedStandingsSnapshot,
@@ -286,10 +291,11 @@ function competitionHintFromScheduleEvidence(
 function logStandingsStaleVsSchedule(
   input: FetchTeamStandingsInput,
   evidence: StandingsScheduleEvidence,
+  evaluation: StandingsScheduleEvidenceEvaluation,
   integrity: { standingsPlayed: number | null },
   snapshotPlayed: number | null,
 ): void {
-  const tuple = evidence.dominantTuple;
+  const tuple = evaluation.competitionIdentity;
 
   console.warn(
     JSON.stringify({
@@ -299,12 +305,78 @@ function logStandingsStaleVsSchedule(
       externalTeamId: input.externalTeamId,
       externalSeasonId: input.externalSeasonId,
       providerLeagueId: input.providerLeagueId ?? null,
-      providerDivisionId: tuple?.providerDivisionId ?? null,
-      providerGroupId: tuple?.providerGroupId ?? null,
+      providerDivisionId: tuple.providerDivisionId,
+      providerGroupId: tuple.providerGroupId,
       standingsPlayed: integrity.standingsPlayed,
-      completedRelevantMatches: evidence.completedRelevantMatches,
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      evidenceConfidence: evaluation.confidence,
+      nonAuthoritativeReason: evaluation.nonAuthoritativeReason,
       snapshotPlayed,
     }),
+  );
+}
+
+function logStandingsEvidenceIncomplete(
+  input: FetchTeamStandingsInput,
+  evaluation: StandingsScheduleEvidenceEvaluation,
+  standingsPlayed: number | null,
+): void {
+  if (
+    evaluation.confidence === "COMPLETE" ||
+    standingsPlayed == null ||
+    evaluation.completedRelevantMatches <= standingsPlayed
+  ) {
+    return;
+  }
+
+  console.warn(
+    JSON.stringify({
+      event: "SFV_STANDINGS_EVIDENCE_INCOMPLETE",
+      tenantId: input.tenantId,
+      teamSeasonId: input.teamSeasonId ?? null,
+      externalTeamId: input.externalTeamId,
+      externalSeasonId: input.externalSeasonId,
+      providerLeagueId: input.providerLeagueId ?? null,
+      providerDivisionId: evaluation.competitionIdentity.providerDivisionId,
+      providerGroupId: evaluation.competitionIdentity.providerGroupId,
+      standingsPlayed,
+      completedRelevantMatches: evaluation.completedRelevantMatches,
+      evidenceConfidence: evaluation.confidence,
+      nonAuthoritativeReason: evaluation.nonAuthoritativeReason,
+    }),
+  );
+}
+
+function enrichDominantTupleWithResolvedGroup(
+  evidence: StandingsScheduleEvidence,
+  sfvGroupId: number,
+): StandingsScheduleEvidence {
+  if (!evidence.dominantTuple) {
+    return evidence;
+  }
+
+  return {
+    ...evidence,
+    dominantTuple: {
+      ...evidence.dominantTuple,
+      providerGroupId:
+        sfvGroupId > 0 ? sfvGroupId : evidence.dominantTuple.providerGroupId,
+    },
+  };
+}
+
+function buildScheduleEvidenceEvaluation(
+  evidence: StandingsScheduleEvidence,
+  authoritativeGroupId: number | null | undefined,
+): StandingsScheduleEvidenceEvaluation | null {
+  if (!evidence.dominantTuple) {
+    return null;
+  }
+
+  return evaluateStandingsScheduleEvidence(
+    evidence.relevantMatches,
+    evidence.dominantTuple,
+    { authoritativeGroupId },
   );
 }
 
@@ -339,6 +411,7 @@ type RankingsResolutionOutcome = {
   entries: ClubRankingEntry[];
   integrity: ReturnType<typeof evaluateStandingsStaleVsSchedule>;
   evidence: StandingsScheduleEvidence;
+  evaluation: StandingsScheduleEvidenceEvaluation;
 };
 
 async function resolveWithScheduleIntegrity(
@@ -352,14 +425,47 @@ async function resolveWithScheduleIntegrity(
     return null;
   }
 
+  const enrichedEvidence = enrichDominantTupleWithResolvedGroup(
+    evidence,
+    resolved.sfvGroupId,
+  );
+
+  const evaluation =
+    buildScheduleEvidenceEvaluation(enrichedEvidence, resolved.sfvGroupId) ??
+    ({
+      completedRelevantMatches: 0,
+      confidence: "INSUFFICIENT",
+      dominantProviderMatchType: null,
+      competitionIdentity: enrichedEvidence.dominantTuple ?? {
+        providerLeagueId: resolved.sfvLeagueId,
+        providerDivisionId: resolved.sfvDivisionId,
+        providerGroupId:
+          resolved.sfvGroupId > 0 ? resolved.sfvGroupId : null,
+      },
+      nonAuthoritativeReason: "MISSING_PROVIDER_MATCH_TYPE",
+    } satisfies StandingsScheduleEvidenceEvaluation);
+
   const integrity = evaluateStandingsStaleVsSchedule({
     externalTeamId: input.externalTeamId,
     standingsTable: resolved.standings,
-    completedRelevantMatches: evidence.completedRelevantMatches,
-    hasScheduleEvidence: evidence.hasScheduleEvidence,
+    completedRelevantMatches: evaluation.completedRelevantMatches,
+    hasScheduleEvidence: enrichedEvidence.hasScheduleEvidence,
+    evidenceConfidence: evaluation.confidence,
   });
 
-  return { resolved, entries, integrity, evidence };
+  logStandingsEvidenceIncomplete(
+    input,
+    evaluation,
+    integrity.standingsPlayed,
+  );
+
+  return {
+    resolved,
+    entries,
+    integrity,
+    evidence: enrichedEvidence,
+    evaluation,
+  };
 }
 
 async function tryFilteredRankingRetry(
@@ -396,6 +502,7 @@ async function finalizeStandingsResult(
     logStandingsStaleVsSchedule(
       input,
       outcome.evidence,
+      outcome.evaluation,
       outcome.integrity,
       snapshotPlayed,
     );
@@ -406,7 +513,9 @@ async function finalizeStandingsResult(
     incomingPlayed,
     existingSnapshotPlayed: snapshotPlayed,
     isStale: outcome.integrity.isStale,
-    hasScheduleEvidence: outcome.evidence.hasScheduleEvidence,
+    hasScheduleEvidence: hasAuthoritativeStandingsScheduleEvidence(
+      outcome.evaluation,
+    ),
   });
 
   if (shouldPersist) {
@@ -486,6 +595,7 @@ export async function fetchTeamStandingsForMapping(
 
     if (
       outcome?.integrity.isStale &&
+      hasAuthoritativeStandingsScheduleEvidence(outcome.evaluation) &&
       scheduleEvidence.dominantTuple != null
     ) {
       const filteredEntries = await tryFilteredRankingRetry(

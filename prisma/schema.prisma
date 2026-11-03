@@ -6942,6 +6942,20 @@ model MatchExternalMapping {
   providerDivisionName   String?
   /// Provider round number.
   providerRoundNbr       Int?
+  /// Provider group identifier (SFV groupId on ClubScheduleEntry).
+  providerGroupId        Int?
+  /// Provider group display name.
+  providerGroupName      String?
+  /// Provider match type enum (SFV matchType).
+  providerMatchType      Int?
+  /// Provider match type display name.
+  providerMatchTypeName  String?
+  /// Provider cup identifier when the fixture belongs to a cup competition.
+  providerCupId          Int?
+  /// Provider play day index (SFV playDay).
+  providerPlayDay        Int?
+  /// Provider play day display name.
+  providerPlayDayName    String?
   /// Provider organisation identifier.
   providerOrganisationId Int?
   /// Provider playground/venue identifier.
