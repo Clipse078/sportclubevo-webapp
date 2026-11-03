@@ -124,6 +124,8 @@ export default async function InfoboardScreen2Page() {
     name: tenantRow.name,
     timezone: tenantRow.timezone,
     logoUrl: tenantRow.logoUrl,
+    primaryColor: tenantRow.primaryColor,
+    secondaryColor: tenantRow.secondaryColor,
     infoboardDisplayTheme: tenantRow.infoboardDisplayTheme,
   };
 

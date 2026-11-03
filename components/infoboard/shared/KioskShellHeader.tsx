@@ -33,6 +33,7 @@ import {
   resolveVenueHeaderCssVars,
   type VenueHeaderBrandingInput,
 } from "@/lib/infoboard/venue-header-presentation";
+import { KIOSK_SHELL_TENANT_NAME_TYPOGRAPHY } from "@/lib/infoboard/kiosk-shell-presentation";
 
 import { LiveClockScreen1 } from "@/components/infoboard/screen1/LiveClockScreen1";
 import {
@@ -282,20 +283,13 @@ export function KioskShellHeader({
           >
             <span
               data-testid="kiosk-header-club-name"
-              data-venue-header-identity={
-                venueHeaderAmbient && shellTheme === "light" ? "true" : undefined
-              }
+              data-venue-header-identity={venueHeaderAmbient ? "true" : undefined}
               style={{
                 fontSize: KIOSK_SHELL_CSS_VARS["--kiosk-shell-club-name-font"],
-                fontWeight: 800,
-                letterSpacing:
-                  venueHeaderAmbient && shellTheme === "light" ? "0.02em" : "0.06em",
-                fontFamily:
-                  venueHeaderAmbient && shellTheme === "light"
-                    ? 'var(--font-display, "Barlow Condensed", sans-serif)'
-                    : undefined,
-                fontStyle:
-                  venueHeaderAmbient && shellTheme === "light" ? "italic" : undefined,
+                fontWeight: KIOSK_SHELL_TENANT_NAME_TYPOGRAPHY.fontWeight,
+                letterSpacing: shellTheme === "light" ? "0.02em" : "0.06em",
+                fontFamily: KIOSK_SHELL_TENANT_NAME_TYPOGRAPHY.fontFamily,
+                fontStyle: KIOSK_SHELL_TENANT_NAME_TYPOGRAPHY.fontStyle,
                 color: palette.clubName,
                 lineHeight: 1,
                 textTransform: "uppercase",

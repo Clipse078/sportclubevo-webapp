@@ -62,6 +62,13 @@ import {
 } from "@/lib/publishing/infoboard/display-theme";
 import { KioskShellHeader } from "@/components/infoboard/shared/KioskShellHeader";
 import { KioskShellFooter } from "@/components/infoboard/shared/KioskShellFooter";
+import {
+  KIOSK_SHELL_FOOTER_AMBIENT,
+  KIOSK_SHELL_HEADER_AMBIENT,
+  resolveKioskHeaderWelcomeSubtitle,
+  resolveKioskShellThemePresentation,
+  resolveVenueHeaderBrandingInput,
+} from "@/lib/infoboard/kiosk-shell-presentation";
 import { InfoboardCompactMatchIdentity } from "@/components/infoboard/shared/InfoboardCompactMatchIdentity";
 import styles from "./InfoboardScreen2.module.css";
 
@@ -70,6 +77,8 @@ import styles from "./InfoboardScreen2.module.css";
 export type InfoboardScreen2Branding = {
   clubLogoSrc?: string | null;
   productLogoSrc?: string | null;
+  tenantPrimaryColor?: string | null;
+  tenantSecondaryColor?: string | null;
 };
 
 export type InfoboardScreen2Props = {
@@ -443,6 +452,13 @@ export function InfoboardScreen2({
 
   const staticDateFallback = formatDisplayDate(feed.displayDate);
 
+  const { shellTheme, subtitlePlacement } = resolveKioskShellThemePresentation(theme);
+  const headerWelcomeSubtitle =
+    subtitleEnabled && subtitleText != null
+      ? resolveKioskHeaderWelcomeSubtitle(subtitleText, theme)
+      : null;
+  const venueHeaderBranding = resolveVenueHeaderBrandingInput(branding);
+
   const hasPitches = pitches.length > 0;
 
   return (
@@ -460,11 +476,15 @@ export function InfoboardScreen2({
         showTime={showTime}
         showDate={showDate}
         staticDateFallback={staticDateFallback}
-        subtitle={subtitleText ?? null}
+        subtitle={headerWelcomeSubtitle}
         subtitleEnabled={subtitleEnabled}
+        shellTheme={shellTheme}
+        subtitlePlacement={subtitlePlacement}
         liveClock={liveClock}
         liveWeather={liveClock}
         weather={showWeather ? weather : null}
+        {...KIOSK_SHELL_HEADER_AMBIENT}
+        venueHeaderBranding={venueHeaderBranding}
       />
 
       {/* ── Main content: facility overview (full width) ───────────────────
@@ -515,6 +535,8 @@ export function InfoboardScreen2({
       <KioskShellFooter
         productLogoSrc={productLogoSrc}
         announcement={announcement ?? undefined}
+        shellTheme={shellTheme}
+        {...KIOSK_SHELL_FOOTER_AMBIENT}
       />
     </div>
   );

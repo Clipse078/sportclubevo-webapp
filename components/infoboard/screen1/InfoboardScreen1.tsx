@@ -120,7 +120,6 @@ import {
   VENUE_COLUMN_HEADER_MARKER,
 } from "@/lib/infoboard/venue-column-composition";
 import {
-  isVenueDisplayLightTheme,
   VENUE_ACTIVITY_ZONE_ATTR,
   VENUE_ACTIVITY_ZONE_CONTEXT,
   VENUE_ACTIVITY_ZONE_PRIMARY,
@@ -134,7 +133,13 @@ import {
   VENUE_ACTIVITY_COLUMN_MARKERS,
 } from "@/lib/infoboard/venue-display-grid";
 import { resolveTournamentParticipantIdentity } from "@/lib/infoboard/tournament-participant-identity";
-import { resolveLightInlineWelcome } from "@/lib/infoboard/light-header-welcome";
+import {
+  KIOSK_SHELL_FOOTER_AMBIENT,
+  KIOSK_SHELL_HEADER_AMBIENT,
+  resolveKioskHeaderWelcomeSubtitle,
+  resolveKioskShellThemePresentation,
+  resolveVenueHeaderBrandingInput,
+} from "@/lib/infoboard/kiosk-shell-presentation";
 import { resolveScreen1EventMatchPresentation } from "@/lib/infoboard/screen1-match-presentation-resolver";
 import {
   resolveVenueDistanceEventListCssVars,
@@ -2053,12 +2058,11 @@ export function InfoboardScreen1({
   const subtitleEnabled = headerConfig?.subtitleEnabled !== false;
   const subtitleText = headerConfig?.subtitleText?.trim() ?? null;
   const pageHeadingText = headerConfig?.pageHeadingText?.trim() ?? null;
-  const venueDisplayLight = isVenueDisplayLightTheme(theme);
+  const { shellTheme, venueDisplayLight, subtitlePlacement } =
+    resolveKioskShellThemePresentation(theme);
   const headerWelcomeSubtitle =
-    subtitleText != null
-      ? venueDisplayLight
-        ? resolveLightInlineWelcome(subtitleText)
-        : subtitleText.toUpperCase()
+    subtitleEnabled && subtitleText != null
+      ? resolveKioskHeaderWelcomeSubtitle(subtitleText, theme)
       : null;
 
   // Club name for prefix stripping (presentation-only)
@@ -2143,10 +2147,7 @@ export function InfoboardScreen1({
 
   const clubLogoSrc = branding?.clubLogoSrc ?? null;
   const productLogoSrc = branding?.productLogoSrc ?? null;
-  const venueHeaderBranding = {
-    tenantPrimaryColor: branding?.tenantPrimaryColor ?? null,
-    tenantSecondaryColor: branding?.tenantSecondaryColor ?? null,
-  };
+  const venueHeaderBranding = resolveVenueHeaderBrandingInput(branding);
 
   // Static date fallback used only when currentTimeIso is absent.
   const staticDateLine =
@@ -2293,11 +2294,11 @@ export function InfoboardScreen1({
         staticDateFallback={staticDateLine}
         subtitle={headerWelcomeSubtitle}
         subtitleEnabled={subtitleEnabled}
-        shellTheme={venueDisplayLight ? "light" : "dark"}
-        subtitlePlacement={venueDisplayLight ? "header-inline" : "band"}
+        shellTheme={shellTheme}
+        subtitlePlacement={subtitlePlacement}
         liveClock={liveClock}
         liveWeather={liveClock}
-        venueHeaderAmbient
+        {...KIOSK_SHELL_HEADER_AMBIENT}
         venueHeaderBranding={venueHeaderBranding}
       />
 
@@ -2345,8 +2346,8 @@ export function InfoboardScreen1({
       <KioskShellFooter
         productLogoSrc={productLogoSrc}
         announcement={announcement}
-        jumbotronAmbient
-        shellTheme={venueDisplayLight ? "light" : "dark"}
+        {...KIOSK_SHELL_FOOTER_AMBIENT}
+        shellTheme={shellTheme}
       />
     </div>
   );

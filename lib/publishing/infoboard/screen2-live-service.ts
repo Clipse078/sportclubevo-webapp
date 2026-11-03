@@ -102,6 +102,8 @@ export type Screen2SourceDatabase = CanonicalInfoboardPolicyDatabase & {
 
 export type Screen2TenantContext = InfoboardTenantRef & {
   readonly logoUrl?: string | null;
+  readonly primaryColor?: string | null;
+  readonly secondaryColor?: string | null;
   /**
    * Optional: raw persisted display-theme preference (Tenant.infoboardDisplayTheme).
    * Resolved via resolveInfoboardDisplayTheme() — presentation only, never
@@ -114,6 +116,8 @@ export type Screen2TenantContext = InfoboardTenantRef & {
 export type InfoboardScreen2Branding = {
   readonly clubLogoSrc: string | null;
   readonly productLogoSrc: string | null;
+  readonly tenantPrimaryColor: string | null;
+  readonly tenantSecondaryColor: string | null;
 };
 
 export type InfoboardScreen2LivePayload = {
@@ -258,6 +262,8 @@ export async function buildScreen2LivePayload(params: {
   const branding: InfoboardScreen2Branding = {
     clubLogoSrc: resolveClubLogoSrc(tenant),
     productLogoSrc: PRODUCT_LOGO_SRC,
+    tenantPrimaryColor: tenant.primaryColor ?? null,
+    tenantSecondaryColor: tenant.secondaryColor ?? null,
   };
 
   // ── Display theme ────────────────────────────────────────────────────────
