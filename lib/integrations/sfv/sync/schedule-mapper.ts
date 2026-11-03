@@ -284,6 +284,13 @@ export function buildMappingFields(
   providerDivisionId: number | null;
   providerDivisionName: string | null;
   providerRoundNbr: number | null;
+  providerGroupId: number | null;
+  providerGroupName: string | null;
+  providerMatchType: number | null;
+  providerMatchTypeName: string | null;
+  providerCupId: number | null;
+  providerPlayDay: number | null;
+  providerPlayDayName: string | null;
   providerOrganisationId: number | null;
   providerPlaygroundId: number | null;
   providerVenueName: string | null;
@@ -313,6 +320,13 @@ export function buildMappingFields(
     providerDivisionId: entry.divisionId,
     providerDivisionName: entry.divisionName,
     providerRoundNbr: entry.roundNbr,
+    providerGroupId: entry.groupId,
+    providerGroupName: entry.groupName,
+    providerMatchType: entry.matchType,
+    providerMatchTypeName: entry.matchTypeName,
+    providerCupId: entry.cupId,
+    providerPlayDay: entry.playDay,
+    providerPlayDayName: entry.playDayName,
     providerOrganisationId: entry.organisationId,
     providerPlaygroundId: entry.playgroundId,
     providerVenueName: entry.stadiumPlaygroundName,
@@ -333,6 +347,13 @@ type ExistingMappingSnapshot = {
   providerDivisionId: number | null;
   providerDivisionName: string | null;
   providerRoundNbr: number | null;
+  providerGroupId?: number | null;
+  providerGroupName?: string | null;
+  providerMatchType?: number | null;
+  providerMatchTypeName?: string | null;
+  providerCupId?: number | null;
+  providerPlayDay?: number | null;
+  providerPlayDayName?: string | null;
   providerVenueName: string | null;
   providerHomeTeamName: string | null;
   providerAwayTeamName: string | null;
@@ -399,6 +420,14 @@ export function detectChanges(
     existingMapping.providerDivisionId !== incomingMapping.providerDivisionId ||
     existingMapping.providerDivisionName !== incomingMapping.providerDivisionName ||
     existingMapping.providerRoundNbr !== incomingMapping.providerRoundNbr ||
+    (existingMapping.providerGroupId ?? null) !== incomingMapping.providerGroupId ||
+    (existingMapping.providerGroupName ?? null) !== incomingMapping.providerGroupName ||
+    (existingMapping.providerMatchType ?? null) !== incomingMapping.providerMatchType ||
+    (existingMapping.providerMatchTypeName ?? null) !==
+      incomingMapping.providerMatchTypeName ||
+    (existingMapping.providerCupId ?? null) !== incomingMapping.providerCupId ||
+    (existingMapping.providerPlayDay ?? null) !== incomingMapping.providerPlayDay ||
+    (existingMapping.providerPlayDayName ?? null) !== incomingMapping.providerPlayDayName ||
     existingMapping.providerVenueName !== incomingMapping.providerVenueName ||
     existingMapping.providerHomeTeamName !== incomingMapping.providerHomeTeamName ||
     existingMapping.providerAwayTeamName !== incomingMapping.providerAwayTeamName ||

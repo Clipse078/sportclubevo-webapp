@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db/prisma";
 import { getMatchcenterLifecycleStage } from "@/lib/matchcenter/match-lifecycle";
 import { SFV_PROVIDER } from "./season-bridge";
 import {
-  countMatchEvidenceForCompetitionTuple,
   deriveCurrentCompetitionTupleFromMatchEvidence,
   type StandingsCompetitionTuple,
   type StandingsScheduleMatchEvidence,
@@ -24,7 +23,7 @@ export type StandingsScheduleEvidence = {
   /** League matches used as schedule evidence (completed + upcoming). */
   relevantMatches: StandingsScheduleMatchEvidence[];
   dominantTuple: StandingsCompetitionTuple | null;
-  completedRelevantMatches: number;
+  /** True when schedule rows exist and a current-phase tuple could be derived. */
   hasScheduleEvidence: boolean;
 };
 
@@ -76,9 +75,13 @@ export async function loadStandingsScheduleEvidence(
       },
     },
     select: {
+      externalMatchId: true,
       providerLeagueId: true,
       providerDivisionId: true,
       providerRoundNbr: true,
+      providerGroupId: true,
+      providerMatchType: true,
+      providerCupId: true,
       providerMatchStateName: true,
       event: {
         select: {
@@ -107,9 +110,13 @@ export async function loadStandingsScheduleEvidence(
     }
 
     relevantMatches.push({
+      externalMatchId: row.externalMatchId,
       providerLeagueId: row.providerLeagueId,
       providerDivisionId: row.providerDivisionId,
       providerRoundNbr: row.providerRoundNbr,
+      providerGroupId: row.providerGroupId,
+      providerMatchType: row.providerMatchType,
+      providerCupId: row.providerCupId,
       startAt: row.event.startAt,
       isCompleted: lifecycle === "COMPLETED",
       isUpcoming: lifecycle === "UPCOMING",
@@ -121,20 +128,10 @@ export async function loadStandingsScheduleEvidence(
     { providerLeagueId: input.providerLeagueId },
   );
 
-  const completedRelevantMatches =
-    dominantTuple != null
-      ? countMatchEvidenceForCompetitionTuple(
-          relevantMatches,
-          dominantTuple,
-          true,
-          { now },
-        )
-      : 0;
-
   return {
     relevantMatches,
     dominantTuple,
-    completedRelevantMatches,
-    hasScheduleEvidence: dominantTuple != null && completedRelevantMatches > 0,
+    hasScheduleEvidence:
+      dominantTuple != null && relevantMatches.length > 0,
   };
 }

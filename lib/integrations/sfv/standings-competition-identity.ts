@@ -1,3 +1,5 @@
+import { evaluateStandingsScheduleEvidence } from "./standings-schedule-membership";
+
 /**
  * Schedule-derived SFV competition tuple identity for standings resolution.
  *
@@ -18,11 +20,11 @@
  *      the single-match kickoff is not strictly after every challenger kickoff.
  *
  * Standings-counting matches (integrity evidence):
- *   - Same (league, division) as the resolved current-phase tuple
+ *   - Same (league, division[, group]) as the resolved standings competition
  *   - Completed lifecycle, kickoff not after `now`
- *   - providerRoundNbr > 0 (round 0 = non-table preparation fixtures)
- *   - Count distinct providerRoundNbr (reschedule duplicates share a round)
- *   MatchType and group are not on MatchExternalMapping.
+ *   - Count distinct externalMatchId (provider round numbers may be reused)
+ *   - Membership uses persisted provider competition metadata (matchType, cupId,
+ *     groupId) — see standings-schedule-membership.ts
  */
 
 export type StandingsCompetitionTuple = {
@@ -33,9 +35,14 @@ export type StandingsCompetitionTuple = {
 };
 
 export type StandingsScheduleMatchEvidence = {
+  /** SFV matchId — canonical provider match identity. */
+  externalMatchId: number;
   providerLeagueId: number | null;
   providerDivisionId: number | null;
   providerRoundNbr: number | null;
+  providerGroupId: number | null;
+  providerMatchType: number | null;
+  providerCupId: number | null;
   startAt: Date;
   isCompleted: boolean;
   isUpcoming: boolean;
@@ -233,32 +240,13 @@ export const deriveDominantCompetitionTupleFromMatchEvidence =
 export function countStandingsCountingMatchesForCompetitionTuple(
   matches: readonly StandingsScheduleMatchEvidence[],
   tuple: StandingsCompetitionTuple,
-  options?: { now?: Date },
+  options?: {
+    now?: Date;
+    authoritativeGroupId?: number | null;
+  },
 ): number {
-  const now = options?.now ?? new Date();
-  const roundNumbers = new Set<number>();
-
-  for (const match of matches) {
-    if (!match.isCompleted) {
-      continue;
-    }
-    if (match.startAt.getTime() > now.getTime()) {
-      continue;
-    }
-    if (match.providerLeagueId !== tuple.providerLeagueId) {
-      continue;
-    }
-    if (match.providerDivisionId !== tuple.providerDivisionId) {
-      continue;
-    }
-    const round = match.providerRoundNbr;
-    if (round == null || !Number.isInteger(round) || round <= 0) {
-      continue;
-    }
-    roundNumbers.add(round);
-  }
-
-  return roundNumbers.size;
+  return evaluateStandingsScheduleEvidence(matches, tuple, options)
+    .completedRelevantMatches;
 }
 
 export function countMatchEvidenceForCompetitionTuple(

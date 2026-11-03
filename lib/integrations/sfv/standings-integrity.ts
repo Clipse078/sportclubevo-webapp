@@ -4,12 +4,14 @@
 
 import type { SportingStandingsTable } from "@/lib/sporting-data/standings-types";
 import type { StandingsCompetitionTuple } from "./standings-competition-identity";
+import type { StandingsEvidenceConfidence } from "./standings-schedule-membership";
 
 export type StandingsStaleVsScheduleInput = {
   externalTeamId: number;
   standingsTable: SportingStandingsTable;
   completedRelevantMatches: number;
   hasScheduleEvidence: boolean;
+  evidenceConfidence?: StandingsEvidenceConfidence;
 };
 
 export type StandingsStaleVsScheduleResult = {
@@ -28,9 +30,10 @@ export function findOwnStandingsRowPlayed(
 }
 
 /**
- * Stale when schedule evidence shows more standings-counting completed rounds
- * than the resolved SFV row reports as played. Requires reliable schedule
- * evidence — without it, standings are not declared stale.
+ * Stale when schedule evidence shows more standings-counting completed provider
+ * match identities than the resolved SFV row reports as played. Requires
+ * authoritative (COMPLETE) schedule evidence — partial or insufficient evidence
+ * must not declare stale.
  */
 export function evaluateStandingsStaleVsSchedule(
   input: StandingsStaleVsScheduleInput,
@@ -40,7 +43,11 @@ export function evaluateStandingsStaleVsSchedule(
     input.externalTeamId,
   );
 
-  if (!input.hasScheduleEvidence || standingsPlayed == null) {
+  const authoritative =
+    input.hasScheduleEvidence &&
+    (input.evidenceConfidence ?? "COMPLETE") === "COMPLETE";
+
+  if (!authoritative || standingsPlayed == null) {
     return { isStale: false, standingsPlayed };
   }
 

@@ -34,9 +34,22 @@ describe("evaluateStandingsStaleVsSchedule", () => {
       standingsTable: table(7),
       completedRelevantMatches: 10,
       hasScheduleEvidence: true,
+      evidenceConfidence: "COMPLETE",
     });
 
     expect(result).toEqual({ isStale: true, standingsPlayed: 7 });
+  });
+
+  it("CASE CONF-4 — insufficient evidence does not declare stale", () => {
+    const result = evaluateStandingsStaleVsSchedule({
+      externalTeamId: 100,
+      standingsTable: table(7),
+      completedRelevantMatches: 10,
+      hasScheduleEvidence: true,
+      evidenceConfidence: "INSUFFICIENT",
+    });
+
+    expect(result.isStale).toBe(false);
   });
 
   it("CASE G — does not declare stale without schedule evidence", () => {
