@@ -20,6 +20,41 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.slide[data-theme="light"] {
+  color: #241c12;
+  background:
+    radial-gradient(circle at top right, rgba(30, 91, 198, 0.06), transparent 42%),
+    linear-gradient(180deg, #fbf8f2 0%, #f4efe6 100%);
+  border-color: rgba(36, 28, 18, 0.12);
+}
+
+.slide[data-theme="light"] .eyebrow,
+.slide[data-theme="light"] .directionHeading {
+  color: rgba(24, 73, 166, 0.92);
+}
+
+.slide[data-theme="light"] .category,
+.slide[data-theme="light"] .absoluteTime,
+.slide[data-theme="light"] .minutesLong {
+  color: rgba(36, 28, 18, 0.62);
+}
+
+.slide[data-theme="light"] .row {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(36, 28, 18, 0.08);
+}
+
+.staleNotice {
+  font-size: clamp(14px, 0.95vw, 17px);
+  font-weight: 600;
+  color: rgba(251, 191, 36, 0.92);
+  letter-spacing: 0.04em;
+}
+
+.slide[data-theme="light"] .staleNotice {
+  color: rgba(180, 120, 20, 0.95);
+}
+
 .header {
   display: flex;
   flex-direction: column;

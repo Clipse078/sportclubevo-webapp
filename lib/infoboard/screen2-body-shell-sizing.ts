@@ -1,11 +1,10 @@
 /**
  * lib/infoboard/screen2-body-shell-sizing.ts
  *
- * INFOBOARD-TRANSPORT-01B — deterministic three-column Screen 2 body geometry
- * for the 1920×1080 logical kiosk canvas.
+ * SCE-INFOBOARD-V2-01-R21 — full-width Screen 2 body geometry for the 1920×1080
+ * logical kiosk canvas.
  *
- * Layout: LEFT SPONSOR | CENTER CONTENT | RIGHT SPONSOR
- * Target rail share: ~19% each, center ~62%, with fixed column gaps.
+ * Layout: full-width center content between shared header and footer.
  */
 
 import {
@@ -25,34 +24,26 @@ export const SCREEN2_BODY_PADDING_X_PX = 16;
 /** Vertical padding inside the Screen 2 body shell. */
 export const SCREEN2_BODY_PADDING_Y_PX = 8;
 
-/** Gap between sponsor rails and the center column. */
-export const SCREEN2_BODY_COLUMN_GAP_PX = 12;
+/** @deprecated Sponsor rails removed from Screen 2 presentation (R21). */
+export const SCREEN2_BODY_COLUMN_GAP_PX = 0;
 
-/** Target left/right rail width share of the column area (each). */
-export const SCREEN2_SPONSOR_RAIL_SHARE = 0.19;
+/** @deprecated Sponsor rails removed from Screen 2 presentation (R21). */
+export const SCREEN2_SPONSOR_RAIL_SHARE = 0;
 
-/** Target center column width share of the column area. */
-export const SCREEN2_CENTER_SHARE = 0.62;
+/** @deprecated Sponsor rails removed from Screen 2 presentation (R21). */
+export const SCREEN2_CENTER_SHARE = 1;
 
 const SCREEN2_BODY_INNER_WIDTH_PX =
   KIOSK_LOGICAL_WIDTH - SCREEN2_BODY_PADDING_X_PX * 2;
 
-const SCREEN2_BODY_COLUMNS_AREA_PX =
-  SCREEN2_BODY_INNER_WIDTH_PX - SCREEN2_BODY_COLUMN_GAP_PX * 2;
+/** @deprecated Sponsor rails removed from Screen 2 presentation (R21). */
+export const SCREEN2_SPONSOR_RAIL_WIDTH_PX = 0;
 
-/** Fixed left sponsor rail width at the logical canvas. */
-export const SCREEN2_SPONSOR_RAIL_WIDTH_PX = Math.round(
-  SCREEN2_BODY_COLUMNS_AREA_PX * SCREEN2_SPONSOR_RAIL_SHARE,
-);
+/** @deprecated Sponsor rails removed from Screen 2 presentation (R21). */
+export const SCREEN2_RIGHT_SPONSOR_RAIL_WIDTH_PX = 0;
 
-/** Fixed right sponsor rail width at the logical canvas. */
-export const SCREEN2_RIGHT_SPONSOR_RAIL_WIDTH_PX = SCREEN2_SPONSOR_RAIL_WIDTH_PX;
-
-/** Fixed center column width at the logical canvas. */
-export const SCREEN2_CENTER_WIDTH_PX =
-  SCREEN2_BODY_COLUMNS_AREA_PX -
-  SCREEN2_SPONSOR_RAIL_WIDTH_PX -
-  SCREEN2_RIGHT_SPONSOR_RAIL_WIDTH_PX;
+/** Full-width center column at the logical canvas. */
+export const SCREEN2_CENTER_WIDTH_PX = SCREEN2_BODY_INNER_WIDTH_PX;
 
 /** Header stack height when the subtitle strip is visible. */
 export const SCREEN2_HEADER_STACK_WITH_SUBTITLE_PX =
@@ -70,7 +61,7 @@ export const SCREEN2_BODY_HEIGHT_PX =
 export const SCREEN2_BODY_INNER_HEIGHT_PX =
   SCREEN2_BODY_HEIGHT_PX - SCREEN2_BODY_PADDING_Y_PX * 2;
 
-/** Center zone available height for the Anlageplan map container. */
+/** Center zone available height for rotating presentations. */
 export const SCREEN2_CENTER_HEIGHT_PX = SCREEN2_BODY_INNER_HEIGHT_PX;
 
 /** Canonical Anlageplan map aspect ratio (16:9). */
@@ -107,11 +98,14 @@ export const SCREEN2_ANLAGEPLAN_MAP_DIMENSIONS = computeAnlageplanMapDimensions(
   SCREEN2_CENTER_HEIGHT_PX,
 );
 
-/** Remaining center height below the Anlageplan map at the logical canvas. */
-export const SCREEN2_TRANSPORT_PANEL_HEIGHT_PX =
-  SCREEN2_CENTER_HEIGHT_PX - SCREEN2_ANLAGEPLAN_MAP_DIMENSIONS.heightPx;
+/**
+ * @deprecated Compact ÖV strip removed in R21; retained for legacy compact slide tests.
+ */
+export const SCREEN2_TRANSPORT_PANEL_HEIGHT_PX = Math.round(
+  SCREEN2_CENTER_HEIGHT_PX * 0.28,
+);
 
-/** @deprecated Use SCREEN2_TRANSPORT_PANEL_HEIGHT_PX */
+/** @deprecated Compact ÖV strip removed in R21. */
 export const SCREEN2_LOWER_SPONSOR_ZONE_HEIGHT_PX = SCREEN2_TRANSPORT_PANEL_HEIGHT_PX;
 
 /** Fixed departure row height in the compact ÖV panel (1920×1080 contract). */

@@ -1,8 +1,26 @@
 /**
  * components/infoboard/anlageplan/InfoboardAnlageplan.module.css
  *
- * INFOBOARD-TRANSPORT-02-UX3 — Anlageplan slide with map canvas only.
+ * SCE-INFOBOARD-V2-01-R21 — rotating Anlageplan kiosk shell surfaces.
  */
+
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #060b12;
+  color: #ffffff;
+  font-family: var(--font-inter, Inter, system-ui, -apple-system, sans-serif);
+}
+
+.root[data-theme="light"] {
+  background: #f4efe6;
+  color: #241c12;
+}
 
 .mainRegion {
   flex: 1;
@@ -21,9 +39,8 @@
 }
 
 .mapRow {
-  flex: 0 0 auto;
+  flex: 1;
   width: 100%;
-  aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,4 +62,12 @@
 
 .mapCanvasNoBackground {
   background: #0d1520;
+}
+
+.root[data-theme="light"] .mapCanvas {
+  border-color: rgba(36, 28, 18, 0.12);
+}
+
+.root[data-theme="light"] .mapCanvasNoBackground {
+  background: #fbf8f2;
 }

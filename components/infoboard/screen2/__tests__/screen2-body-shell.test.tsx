@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell focused tests.
+ * SCE-INFOBOARD-V2-01-R21 — Screen 2 full-width body shell tests.
  */
 
 import { readFileSync } from "node:fs";
@@ -52,7 +52,12 @@ function makeAnlageplanPayload(): AnlageplanLivePayload {
         dressingRooms: [],
         unallocated: [],
       },
-      branding: { clubLogoSrc: null, productLogoSrc: null },
+      branding: {
+        clubLogoSrc: null,
+        productLogoSrc: null,
+        tenantPrimaryColor: null,
+        tenantSecondaryColor: null,
+      },
       currentTimeIso: "2026-09-01T10:00:00.000Z",
       theme: "DARK",
     },
@@ -77,8 +82,8 @@ const AVAILABLE_WEATHER: WeatherResult = {
   observedAt: "2026-09-01T10:00:00.000Z",
 };
 
-describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
-  it("A. body shell exposes left sponsor, center, and right sponsor zones", () => {
+describe("SCE-INFOBOARD-V2-01-R21 — Screen 2 body shell", () => {
+  it("A. body shell exposes full-width center content only", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -87,34 +92,12 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     );
 
     expect(screen.getByTestId("screen2-body-shell")).toBeTruthy();
-    expect(screen.getByTestId("screen2-sponsor-rail-left")).toBeTruthy();
     expect(screen.getByTestId("screen2-center-content")).toBeTruthy();
-    expect(screen.getByTestId("screen2-sponsor-rail-right")).toBeTruthy();
+    expect(screen.queryByTestId("screen2-sponsor-rail-left")).toBeNull();
+    expect(screen.queryByTestId("screen2-sponsor-rail-right")).toBeNull();
   });
 
-  it("B. sponsor rails remain outside the center content", () => {
-    render(
-      <InfoboardAnlageplan
-        payload={makeAnlageplanPayload()}
-        branding={{ clubName: "FC Allschwil" }}
-      />,
-    );
-
-    const shell = screen.getByTestId("screen2-body-shell");
-    const center = screen.getByTestId("screen2-center-content");
-    const left = screen.getByTestId("screen2-sponsor-rail-left");
-    const right = screen.getByTestId("screen2-sponsor-rail-right");
-
-    expect(shell.contains(left)).toBe(true);
-    expect(shell.contains(right)).toBe(true);
-    expect(shell.contains(center)).toBe(true);
-    expect(center.contains(left)).toBe(false);
-    expect(center.contains(right)).toBe(false);
-    expect(left.compareDocumentPosition(center) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(center.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it("C. Anlageplan map canvas remains inside the center zone", () => {
+  it("B. Anlageplan map canvas remains inside the center zone", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -128,11 +111,9 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
 
     expect(center.contains(canvas)).toBe(true);
     expect(canvas.contains(scene)).toBe(true);
-    expect(screen.getByTestId("screen2-sponsor-rail-left").contains(canvas)).toBe(false);
-    expect(screen.getByTestId("screen2-sponsor-rail-right").contains(canvas)).toBe(false);
   });
 
-  it("D. header remains outside the body shell", () => {
+  it("C. header remains outside the body shell", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -150,7 +131,7 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     expect(body.contains(header)).toBe(false);
   });
 
-  it("E. footer remains outside the body shell", () => {
+  it("D. footer remains outside the body shell", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -167,7 +148,7 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     expect(body.contains(footer)).toBe(false);
   });
 
-  it("F. logical 1920×1080 contract remains intact", () => {
+  it("E. logical 1920×1080 contract uses full center width", () => {
     expect(SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT.canvasWidth).toBe(KIOSK_LOGICAL_WIDTH);
     expect(SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT.canvasHeight).toBe(KIOSK_LOGICAL_HEIGHT);
     expect(SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT.bodyHeightPx).toBe(SCREEN2_BODY_HEIGHT_PX);
@@ -179,6 +160,7 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     );
     expect(SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT.centerWidthPx).toBe(SCREEN2_CENTER_WIDTH_PX);
     expect(SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT.centerHeightPx).toBe(SCREEN2_CENTER_HEIGHT_PX);
+    expect(SCREEN2_SPONSOR_RAIL_WIDTH_PX).toBe(0);
 
     const mapDimensions = computeAnlageplanMapDimensions(
       SCREEN2_CENTER_WIDTH_PX,
@@ -195,12 +177,11 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
 
     const sizing = readRepoFile("lib/infoboard/screen2-body-shell-sizing.ts");
     expect(sizing).toContain("SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT");
-    expect(sizing).toContain("SCREEN2_SPONSOR_RAIL_SHARE = 0.19");
-    expect(sizing).toContain("SCREEN2_CENTER_SHARE = 0.62");
+    expect(sizing).toContain("SCREEN2_SPONSOR_RAIL_WIDTH_PX = 0");
     expect(sizing).toContain("--screen2-body-height");
   });
 
-  it("G. Screen 1 is unaffected by the Screen 2 body shell", () => {
+  it("F. Screen 1 is unaffected by the Screen 2 body shell", () => {
     const screen1 = readRepoFile("components/infoboard/screen1/InfoboardScreen1.tsx");
     expect(screen1).not.toContain("Screen2BodyShell");
     expect(screen1).not.toContain("Screen2SponsorRail");
@@ -211,7 +192,7 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     expect(screen.getByTestId("infoboard-screen1-root")).toBeTruthy();
   });
 
-  it("H. weather wiring in InfoboardAnlageplan is unchanged", () => {
+  it("G. weather wiring in InfoboardAnlageplan is unchanged", () => {
     const anlageplan = readRepoFile("components/infoboard/anlageplan/InfoboardAnlageplan.tsx");
     expect(anlageplan).toContain("weather={showWeather ? weather : null}");
     expect(anlageplan).not.toMatch(/getCanonicalKioskWeather/);
@@ -227,10 +208,9 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
 
     const header = screen.getByTestId("kiosk-shell-header");
     expect(within(header).getByTestId("header-weather")).toBeTruthy();
-    expect(screen.getByTestId("screen2-sponsor-rail-left").textContent).not.toContain("Sonnig");
   });
 
-  it("I. preview and kiosk both render InfoboardAnlageplan with Screen2BodyShell", () => {
+  it("H. preview and kiosk both render InfoboardAnlageplan with Screen2BodyShell", () => {
     const previewFrame = readRepoFile("components/infoboard/preview/PreviewFrame.tsx");
     const screen2Page = readRepoFile("app/infoboard/screen-2/page.tsx");
     const slugPage = readRepoFile("app/infoboard/[slug]/page.tsx");
@@ -244,30 +224,22 @@ describe("INFOBOARD-TRANSPORT-01B — Screen 2 sponsor shell", () => {
     expect(anlageplan).toContain("Screen2BodyShell");
   });
 
-  it("sponsor placeholder rails are symmetrical and premium/minimal", () => {
+  it("I. Screen2BodyShell does not render sponsor placeholder copy", () => {
     render(
-      <Screen2BodyShell
-        center={<div data-testid="center-slot">CENTER</div>}
-      />,
+      <Screen2BodyShell center={<div data-testid="center-slot">CENTER</div>} />,
     );
 
-    const left = screen.getByTestId("screen2-sponsor-rail-left");
-    const right = screen.getByTestId("screen2-sponsor-rail-right");
-
-    expect(left.textContent).toContain("IHRE WERBUNG");
-    expect(left.textContent).toContain("HIER");
-    expect(left.textContent).toContain("SPONSOR");
-    expect(right.textContent).toBe(left.textContent);
+    expect(screen.getByTestId("center-slot")).toBeTruthy();
+    expect(screen.queryByText("IHRE WERBUNG")).toBeNull();
+    expect(screen.queryByText("SPONSOR")).toBeNull();
   });
 
-  it("J. body shell fills available body height and sponsor rails stretch vertically", () => {
+  it("J. body shell fills available body height", () => {
     const shellCss = readRepoFile("components/infoboard/screen2/Screen2BodyShell.module.css");
     const anlageplanCss = readRepoFile("components/infoboard/anlageplan/InfoboardAnlageplan.module.css");
 
     expect(shellCss).toContain("height: 100%");
-    expect(shellCss).toContain("grid-template-rows: minmax(0, 1fr)");
     expect(shellCss).toContain("container-type: size");
-    expect(shellCss).toMatch(/\.rail[\s\S]*height: 100%/);
     expect(anlageplanCss).toContain(".mainRegion");
     expect(anlageplanCss).toContain("display: flex");
     expect(anlageplanCss).toContain("flex-direction: column");

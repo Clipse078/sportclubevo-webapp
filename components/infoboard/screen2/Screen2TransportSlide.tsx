@@ -24,6 +24,8 @@ export type Screen2TransportSlideProps = {
   nowIso?: string;
   /** Compact embedded panel below the Sportanlage map. */
   compact?: boolean;
+  /** Venue display theme — full-screen rotation uses LIGHT/DARK parity. */
+  theme?: "dark" | "light";
 };
 
 function formatMinutesUntil(
@@ -223,6 +225,7 @@ export function Screen2TransportSlide({
   timezone,
   nowIso,
   compact = false,
+  theme = "dark",
 }: Screen2TransportSlideProps): ReactElement {
   const nowMs = Date.parse(nowIso ?? new Date().toISOString());
   const resolved = resolveDepartures(transport);
@@ -232,12 +235,18 @@ export function Screen2TransportSlide({
     <div
       className={`${styles.slide}${compact ? ` ${styles.compact}` : ""}`}
       data-testid="screen2-transport-slide"
+      data-theme={theme}
       data-compact={compact ? "true" : "false"}
       data-stale={resolved.isStale ? "true" : "false"}
     >
       <div className={styles.header}>
         <div className={styles.eyebrow}>ÖV-ABFAHRTEN</div>
         <div className={styles.station}>{resolved.stationDisplayName || "—"}</div>
+        {!compact && resolved.isStale ? (
+          <div className={styles.staleNotice} data-testid="screen2-transport-stale">
+            Stand kann veraltet sein
+          </div>
+        ) : null}
       </div>
 
       {resolved.unavailable ? (

@@ -623,7 +623,8 @@ describe("Screen2TransportSlide UX4 sizing contract", () => {
     expect(SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION).toBe(3);
 
     const centerStackCss = readRepoFile("components/infoboard/screen2/Screen2CenterStack.module.css");
-    expect(centerStackCss).toContain("var(--screen2-transport-panel-height)");
+    expect(centerStackCss).toContain("presentationRegion");
+    expect(centerStackCss).not.toContain("var(--screen2-transport-panel-height)");
   });
 });
 
