@@ -166,6 +166,40 @@ describe("resolveStandingsTable", () => {
     expect(table).toBeNull();
   });
 
+  it("selects schedule-hinted division over lowest-tuple fallback within the same league", () => {
+    const entries = [
+      createEntry({
+        teamId: 100,
+        position: 1,
+        leagueId: 15208,
+        divisionId: 0,
+        groupId: 1,
+        matches: 1,
+      }),
+      createEntry({ teamId: 200, position: 1, leagueId: 15208, divisionId: 0, groupId: 1 }),
+      createEntry({
+        teamId: 100,
+        position: 2,
+        leagueId: 15208,
+        divisionId: 30,
+        groupId: 2,
+        leagueName: "Junioren",
+        matches: 7,
+      }),
+      createEntry({ teamId: 300, position: 1, leagueId: 15208, divisionId: 30, groupId: 2, leagueName: "Junioren" }),
+    ];
+
+    const table = resolveStandingsTable({
+      entries,
+      externalTeamId: 100,
+      providerLeagueId: 15208,
+      competitionHint: { providerDivisionId: 30, providerGroupId: null },
+    });
+
+    expect(table?.rows.find((row) => row.externalTeamId === 100)?.played).toBe(7);
+    expect(table?.competition.divisionName).toBe("Division A");
+  });
+
   it("I. handles duplicate anchors deterministically by tuple", () => {
     const entries = [
       createEntry({ teamId: 100, position: 1, leagueId: 30, divisionId: 1, groupId: 1 }),

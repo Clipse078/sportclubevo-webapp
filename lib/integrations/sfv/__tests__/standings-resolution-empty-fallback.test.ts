@@ -45,6 +45,15 @@ vi.mock("../standings-snapshot-repository", () => ({
   persistStandingsSnapshot: mocks.persistStandingsSnapshot,
 }));
 
+vi.mock("../standings-schedule-evidence", () => ({
+  loadStandingsScheduleEvidence: vi.fn().mockResolvedValue({
+    relevantMatches: [],
+    dominantTuple: null,
+    completedRelevantMatches: 0,
+    hasScheduleEvidence: false,
+  }),
+}));
+
 vi.mock("@/lib/teams/team-standings-mapping", () => ({
   loadEffectiveTeamStandingsMapping: mocks.loadEffectiveTeamStandingsMapping,
 }));
