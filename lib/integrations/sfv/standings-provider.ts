@@ -5,22 +5,35 @@
  * and durable last-known-good snapshot fallback.
  */
 
-import type { ClubRankingEntry } from "./client";
+import type { ClubRankingEntry, ClubRankingParams } from "./client";
 import type { SportingStandingsTable } from "@/lib/sporting-data/standings-types";
 import { fetchClubRanking } from "./client";
 import { SfvError } from "./errors";
+import type { StandingsTableCompetitionHint } from "./standings-competition-identity";
 import {
   buildStandingsCacheKey,
   getCachedStandingsEntries,
   setCachedStandingsEntries,
 } from "./standings-cache";
 import {
+  evaluateStandingsStaleVsSchedule,
+  findOwnStandingsRowPlayed,
+  shouldPersistStandingsSnapshot,
+  buildFilteredRankingParams,
+} from "./standings-integrity";
+import {
+  loadStandingsScheduleEvidence,
+  type StandingsScheduleEvidence,
+} from "./standings-schedule-evidence";
+import {
   loadStandingsSnapshot,
   persistStandingsSnapshot,
+  type LoadedStandingsSnapshot,
   type StandingsSnapshotIdentity,
 } from "./standings-snapshot-repository";
 import {
   resolveStandingsTableWithIdentity,
+  type ResolvedStandingsTable,
 } from "./standings-table";
 import {
   isSfvEnabledForTenant,
@@ -211,6 +224,7 @@ async function fetchRankingEntriesWithInflightDedup(
 async function tryLoadSnapshotFallback(
   input: FetchTeamStandingsInput,
   reason: SnapshotFallbackReason,
+  preloadedSnapshot?: LoadedStandingsSnapshot | null,
 ): Promise<SportingStandingsTable | null> {
   const identity = buildSnapshotIdentity(input);
   if (!identity) {
@@ -224,7 +238,10 @@ async function tryLoadSnapshotFallback(
     return null;
   }
 
-  const snapshot = await loadStandingsSnapshot(identity);
+  const snapshot =
+    preloadedSnapshot !== undefined
+      ? preloadedSnapshot
+      : await loadStandingsSnapshot(identity);
   if (!snapshot) {
     return null;
   }
@@ -235,12 +252,7 @@ async function tryLoadSnapshotFallback(
 
 async function persistSuccessfulStandingsSnapshot(
   input: FetchTeamStandingsInput,
-  resolved: {
-    standings: SportingStandingsTable;
-    sfvLeagueId: number;
-    sfvDivisionId: number;
-    sfvGroupId: number;
-  },
+  resolved: ResolvedStandingsTable,
   fetchedAt: Date,
 ): Promise<void> {
   const identity = buildSnapshotIdentity(input);
@@ -256,6 +268,166 @@ async function persistSuccessfulStandingsSnapshot(
     sfvGroupId: resolved.sfvGroupId,
     fetchedAt,
   });
+}
+
+function competitionHintFromScheduleEvidence(
+  evidence: StandingsScheduleEvidence,
+): StandingsTableCompetitionHint | null {
+  if (!evidence.dominantTuple) {
+    return null;
+  }
+
+  return {
+    providerDivisionId: evidence.dominantTuple.providerDivisionId,
+    providerGroupId: evidence.dominantTuple.providerGroupId,
+  };
+}
+
+function logStandingsStaleVsSchedule(
+  input: FetchTeamStandingsInput,
+  evidence: StandingsScheduleEvidence,
+  integrity: { standingsPlayed: number | null },
+  snapshotPlayed: number | null,
+): void {
+  const tuple = evidence.dominantTuple;
+
+  console.warn(
+    JSON.stringify({
+      event: "SFV_STANDINGS_STALE_VS_SCHEDULE",
+      tenantId: input.tenantId,
+      teamSeasonId: input.teamSeasonId ?? null,
+      externalTeamId: input.externalTeamId,
+      externalSeasonId: input.externalSeasonId,
+      providerLeagueId: input.providerLeagueId ?? null,
+      providerDivisionId: tuple?.providerDivisionId ?? null,
+      providerGroupId: tuple?.providerGroupId ?? null,
+      standingsPlayed: integrity.standingsPlayed,
+      completedRelevantMatches: evidence.completedRelevantMatches,
+      snapshotPlayed,
+    }),
+  );
+}
+
+function buildRankingBaseParams(
+  input: FetchTeamStandingsInput,
+  config: Awaited<ReturnType<typeof requireEnabledSfvConfigForTenant>>,
+): ClubRankingParams {
+  return {
+    SeasonId: input.externalSeasonId,
+    ClubId: config.clubId,
+    ...(config.organisationId !== null
+      ? { OrganisationId: config.organisationId }
+      : {}),
+  };
+}
+
+async function resolveRankingTable(
+  input: FetchTeamStandingsInput,
+  entries: readonly ClubRankingEntry[],
+  competitionHint: StandingsTableCompetitionHint | null,
+): Promise<ResolvedStandingsTable | null> {
+  return resolveStandingsTableWithIdentity({
+    entries,
+    externalTeamId: input.externalTeamId,
+    providerLeagueId: input.providerLeagueId,
+    competitionHint,
+  });
+}
+
+type RankingsResolutionOutcome = {
+  resolved: ResolvedStandingsTable;
+  entries: ClubRankingEntry[];
+  integrity: ReturnType<typeof evaluateStandingsStaleVsSchedule>;
+  evidence: StandingsScheduleEvidence;
+};
+
+async function resolveWithScheduleIntegrity(
+  input: FetchTeamStandingsInput,
+  entries: ClubRankingEntry[],
+  evidence: StandingsScheduleEvidence,
+  competitionHint: StandingsTableCompetitionHint | null,
+): Promise<RankingsResolutionOutcome | null> {
+  const resolved = await resolveRankingTable(input, entries, competitionHint);
+  if (!resolved) {
+    return null;
+  }
+
+  const integrity = evaluateStandingsStaleVsSchedule({
+    externalTeamId: input.externalTeamId,
+    standingsTable: resolved.standings,
+    completedRelevantMatches: evidence.completedRelevantMatches,
+    hasScheduleEvidence: evidence.hasScheduleEvidence,
+  });
+
+  return { resolved, entries, integrity, evidence };
+}
+
+async function tryFilteredRankingRetry(
+  input: FetchTeamStandingsInput,
+  config: Awaited<ReturnType<typeof requireEnabledSfvConfigForTenant>>,
+  evidence: StandingsScheduleEvidence,
+): Promise<ClubRankingEntry[] | null> {
+  if (!evidence.dominantTuple) {
+    return null;
+  }
+
+  const params = buildFilteredRankingParams(
+    buildRankingBaseParams(input, config),
+    evidence.dominantTuple,
+    input.externalTeamId,
+  );
+
+  return fetchClubRanking(params);
+}
+
+async function finalizeStandingsResult(
+  input: FetchTeamStandingsInput,
+  outcome: RankingsResolutionOutcome,
+  existingSnapshot: LoadedStandingsSnapshot | null,
+): Promise<SportingStandingsTable> {
+  const snapshotPlayed = existingSnapshot
+    ? findOwnStandingsRowPlayed(
+        existingSnapshot.standingsTable,
+        input.externalTeamId,
+      )
+    : null;
+
+  if (outcome.integrity.isStale) {
+    logStandingsStaleVsSchedule(
+      input,
+      outcome.evidence,
+      outcome.integrity,
+      snapshotPlayed,
+    );
+  }
+
+  const incomingPlayed = outcome.integrity.standingsPlayed;
+  const shouldPersist = shouldPersistStandingsSnapshot({
+    incomingPlayed,
+    existingSnapshotPlayed: snapshotPlayed,
+    isStale: outcome.integrity.isStale,
+    hasScheduleEvidence: outcome.evidence.hasScheduleEvidence,
+  });
+
+  if (shouldPersist) {
+    await persistSuccessfulStandingsSnapshot(
+      input,
+      outcome.resolved,
+      new Date(),
+    );
+    return outcome.resolved.standings;
+  }
+
+  if (
+    existingSnapshot &&
+    snapshotPlayed != null &&
+    incomingPlayed != null &&
+    snapshotPlayed > incomingPlayed
+  ) {
+    return existingSnapshot.standingsTable;
+  }
+
+  return outcome.resolved.standings;
 }
 
 /**
@@ -282,27 +454,57 @@ export async function fetchTeamStandingsForMapping(
     return null;
   }
 
+  const snapshotIdentity = buildSnapshotIdentity(input);
+  const existingSnapshot = snapshotIdentity
+    ? await loadStandingsSnapshot(snapshotIdentity)
+    : null;
+
   try {
     const config = await requireEnabledSfvConfigForTenant(input.tenantId);
-    const cacheKey = buildStandingsCacheKey(input.tenantId, input.externalSeasonId);
 
-    const entries = await fetchRankingEntriesWithInflightDedup(cacheKey, () =>
-      fetchClubRanking({
-        SeasonId: input.externalSeasonId,
-        ClubId: config.clubId,
-        ...(config.organisationId !== null
-          ? { OrganisationId: config.organisationId }
-          : {}),
-      }),
-    );
-
-    const resolved = resolveStandingsTableWithIdentity({
-      entries,
+    const scheduleEvidence = await loadStandingsScheduleEvidence({
+      tenantId: input.tenantId,
       externalTeamId: input.externalTeamId,
+      externalSeasonId: input.externalSeasonId,
       providerLeagueId: input.providerLeagueId,
     });
 
-    if (!resolved) {
+    const competitionHint = competitionHintFromScheduleEvidence(scheduleEvidence);
+
+    const cacheKey = buildStandingsCacheKey(input.tenantId, input.externalSeasonId);
+
+    let entries = await fetchRankingEntriesWithInflightDedup(cacheKey, () =>
+      fetchClubRanking(buildRankingBaseParams(input, config)),
+    );
+
+    let outcome = await resolveWithScheduleIntegrity(
+      input,
+      entries,
+      scheduleEvidence,
+      competitionHint,
+    );
+
+    if (
+      outcome?.integrity.isStale &&
+      scheduleEvidence.dominantTuple != null
+    ) {
+      const filteredEntries = await tryFilteredRankingRetry(
+        input,
+        config,
+        scheduleEvidence,
+      );
+      if (filteredEntries && filteredEntries.length > 0) {
+        entries = filteredEntries;
+        outcome = await resolveWithScheduleIntegrity(
+          input,
+          entries,
+          scheduleEvidence,
+          competitionHint,
+        );
+      }
+    }
+
+    if (!outcome) {
       console.warn(
         JSON.stringify({
           event: "SFV_STANDINGS_RESOLUTION_EMPTY",
@@ -317,20 +519,40 @@ export async function fetchTeamStandingsForMapping(
           ),
         }),
       );
-      return await tryLoadSnapshotFallback(input, {
-        kind: "empty_or_unusable",
-      });
+      if (existingSnapshot) {
+        logStandingsSnapshotFallback(input, existingSnapshot, {
+          kind: "empty_or_unusable",
+        });
+        return existingSnapshot.standingsTable;
+      }
+
+      return await tryLoadSnapshotFallback(
+        input,
+        {
+          kind: "empty_or_unusable",
+        },
+        existingSnapshot,
+      );
     }
 
-    const fetchedAt = new Date();
-    await persistSuccessfulStandingsSnapshot(input, resolved, fetchedAt);
-
-    return resolved.standings;
+    return finalizeStandingsResult(input, outcome, existingSnapshot);
   } catch (error) {
     logStandingsProviderFailure(input, error);
-    return await tryLoadSnapshotFallback(input, {
-      kind: "provider_failure",
-      error,
-    });
+    if (existingSnapshot) {
+      logStandingsSnapshotFallback(input, existingSnapshot, {
+        kind: "provider_failure",
+        error,
+      });
+      return existingSnapshot.standingsTable;
+    }
+
+    return await tryLoadSnapshotFallback(
+      input,
+      {
+        kind: "provider_failure",
+        error,
+      },
+      existingSnapshot,
+    );
   }
 }

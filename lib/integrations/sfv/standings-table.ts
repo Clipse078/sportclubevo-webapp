@@ -11,11 +11,14 @@ import type {
   SportingStandingRow,
   SportingStandingsTable,
 } from "@/lib/sporting-data/standings-types";
+import type { StandingsTableCompetitionHint } from "./standings-competition-identity";
 
 export type StandingsTableResolutionInput = {
   entries: readonly ClubRankingEntry[];
   externalTeamId: number;
   providerLeagueId?: number | null;
+  /** Schedule-derived or snapshot-refined division/group when available. */
+  competitionHint?: StandingsTableCompetitionHint | null;
 };
 
 type TableTuple = {
@@ -50,6 +53,70 @@ function compareTableTuples(left: TableTuple, right: TableTuple): number {
   }
 
   return left.groupId - right.groupId;
+}
+
+function filterAnchorsByCompetitionHint(
+  anchors: ClubRankingEntry[],
+  hint: StandingsTableCompetitionHint | null | undefined,
+): ClubRankingEntry[] {
+  if (!hint) {
+    return anchors;
+  }
+
+  let filtered = anchors;
+
+  if (
+    hint.providerDivisionId != null &&
+    Number.isInteger(hint.providerDivisionId)
+  ) {
+    filtered = filtered.filter(
+      (entry) => entry.divisionId === hint.providerDivisionId,
+    );
+  }
+
+  if (
+    hint.providerGroupId != null &&
+    Number.isInteger(hint.providerGroupId) &&
+    hint.providerGroupId > 0
+  ) {
+    filtered = filtered.filter((entry) => entry.groupId === hint.providerGroupId);
+  }
+
+  return filtered;
+}
+
+function selectAnchorEntry(
+  anchors: ClubRankingEntry[],
+  providerLeagueId: number | null | undefined,
+  competitionHint: StandingsTableCompetitionHint | null | undefined,
+): ClubRankingEntry | null {
+  if (anchors.length === 0) {
+    return null;
+  }
+
+  let candidates = anchors;
+
+  if (providerLeagueId != null) {
+    const leagueMatches = candidates.filter(
+      (entry) => entry.leagueId === providerLeagueId,
+    );
+    if (leagueMatches.length > 0) {
+      candidates = leagueMatches;
+    }
+  }
+
+  const hinted = filterAnchorsByCompetitionHint(candidates, competitionHint);
+  if (hinted.length > 0) {
+    candidates = hinted;
+  }
+
+  if (candidates.length === 1) {
+    return candidates[0]!;
+  }
+
+  return [...candidates].sort((left, right) =>
+    compareTableTuples(tableTuple(left), tableTuple(right)),
+  )[0]!;
 }
 
 function meaningfulName(value: string | null | undefined): string | null {
@@ -113,28 +180,13 @@ export function resolveStandingsTableWithIdentity(
     return null;
   }
 
-  let selectedAnchor = anchors[0]!;
-
-  if (anchors.length > 1 && input.providerLeagueId != null) {
-    const leagueMatches = anchors.filter(
-      (entry) => entry.leagueId === input.providerLeagueId,
-    );
-
-    if (leagueMatches.length === 1) {
-      selectedAnchor = leagueMatches[0]!;
-    } else if (leagueMatches.length > 1) {
-      selectedAnchor = [...leagueMatches].sort((left, right) =>
-        compareTableTuples(tableTuple(left), tableTuple(right)),
-      )[0]!;
-    } else {
-      selectedAnchor = [...anchors].sort((left, right) =>
-        compareTableTuples(tableTuple(left), tableTuple(right)),
-      )[0]!;
-    }
-  } else if (anchors.length > 1) {
-    selectedAnchor = [...anchors].sort((left, right) =>
-      compareTableTuples(tableTuple(left), tableTuple(right)),
-    )[0]!;
+  const selectedAnchor = selectAnchorEntry(
+    anchors,
+    input.providerLeagueId,
+    input.competitionHint,
+  );
+  if (!selectedAnchor) {
+    return null;
   }
 
   const anchorTuple = tableTuple(selectedAnchor);
@@ -163,28 +215,13 @@ export function resolveStandingsTable(
     return null;
   }
 
-  let selectedAnchor = anchors[0]!;
-
-  if (anchors.length > 1 && input.providerLeagueId != null) {
-    const leagueMatches = anchors.filter(
-      (entry) => entry.leagueId === input.providerLeagueId,
-    );
-
-    if (leagueMatches.length === 1) {
-      selectedAnchor = leagueMatches[0]!;
-    } else if (leagueMatches.length > 1) {
-      selectedAnchor = [...leagueMatches].sort((left, right) =>
-        compareTableTuples(tableTuple(left), tableTuple(right)),
-      )[0]!;
-    } else {
-      selectedAnchor = [...anchors].sort((left, right) =>
-        compareTableTuples(tableTuple(left), tableTuple(right)),
-      )[0]!;
-    }
-  } else if (anchors.length > 1) {
-    selectedAnchor = [...anchors].sort((left, right) =>
-      compareTableTuples(tableTuple(left), tableTuple(right)),
-    )[0]!;
+  const selectedAnchor = selectAnchorEntry(
+    anchors,
+    input.providerLeagueId,
+    input.competitionHint,
+  );
+  if (!selectedAnchor) {
+    return null;
   }
 
   const anchorTuple = tableTuple(selectedAnchor);
