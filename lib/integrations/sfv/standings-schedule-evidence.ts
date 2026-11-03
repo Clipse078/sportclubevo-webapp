@@ -76,6 +76,7 @@ export async function loadStandingsScheduleEvidence(
       },
     },
     select: {
+      externalMatchId: true,
       providerLeagueId: true,
       providerDivisionId: true,
       providerRoundNbr: true,
@@ -107,6 +108,7 @@ export async function loadStandingsScheduleEvidence(
     }
 
     relevantMatches.push({
+      externalMatchId: row.externalMatchId,
       providerLeagueId: row.providerLeagueId,
       providerDivisionId: row.providerDivisionId,
       providerRoundNbr: row.providerRoundNbr,

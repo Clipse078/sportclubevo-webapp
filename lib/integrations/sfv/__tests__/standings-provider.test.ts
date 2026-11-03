@@ -824,6 +824,50 @@ describe("fetchTeamStandingsForMapping", () => {
       expect(result?.rows[0]?.played).toBe(10);
       expect(mocks.persistStandingsSnapshot).toHaveBeenCalledTimes(1);
     });
+
+    it("CASE M — filtered retry still stale does not loop or persist regressive snapshot", async () => {
+      mocks.loadStandingsScheduleEvidence.mockResolvedValue({
+        relevantMatches: Array.from({ length: 10 }, () => ({
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+        })),
+        dominantTuple: {
+          providerLeagueId: 10,
+          providerDivisionId: 20,
+          providerGroupId: null,
+        },
+        completedRelevantMatches: 10,
+        hasScheduleEvidence: true,
+      });
+
+      mocks.fetchClubRanking
+        .mockResolvedValueOnce([
+          createEntry({
+            teamId: 100,
+            position: 1,
+            matches: 7,
+            leagueId: 10,
+            divisionId: 20,
+          }),
+          createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+        ])
+        .mockResolvedValueOnce([
+          createEntry({
+            teamId: 100,
+            position: 1,
+            matches: 7,
+            leagueId: 10,
+            divisionId: 20,
+          }),
+          createEntry({ teamId: 200, position: 2, leagueId: 10, divisionId: 20 }),
+        ]);
+
+      const result = await fetchTeamStandingsForMapping(mappingInput);
+
+      expect(mocks.fetchClubRanking).toHaveBeenCalledTimes(2);
+      expect(result?.rows[0]?.played).toBe(7);
+      expect(mocks.persistStandingsSnapshot).not.toHaveBeenCalled();
+    });
   });
 
   describe("presentation and mapping", () => {
