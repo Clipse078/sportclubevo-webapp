@@ -1,7 +1,7 @@
 /**
  * components/infoboard/screen2/Screen2TransportSlide.module.css
  *
- * SCE-INFOBOARD-R23R1 — world-class TV-distance ÖV departures.
+ * SCE-INFOBOARD-R23R2 — full-height premium TV-distance ÖV departures.
  */
 
 .slide {
@@ -10,23 +10,17 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: clamp(14px, 1.8vh, 22px) clamp(20px, 2.4vw, 32px);
+  padding: clamp(12px, 1.5vh, 18px) clamp(20px, 2.4vw, 32px);
   box-sizing: border-box;
   color: #f8fafc;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(30, 91, 198, 0.14), transparent 42%),
-    radial-gradient(circle at 82% 8%, rgba(56, 189, 248, 0.08), transparent 38%),
-    linear-gradient(180deg, rgba(8, 16, 28, 0.98) 0%, rgba(5, 10, 18, 0.99) 100%);
+  background: linear-gradient(180deg, rgba(6, 11, 20, 0.98) 0%, rgba(4, 8, 14, 0.99) 100%);
   border-radius: clamp(6px, 0.8vh, 14px);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.1);
 }
 
 .slide[data-theme="light"] {
   color: #241c12;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(30, 91, 198, 0.06), transparent 42%),
-    radial-gradient(circle at 82% 8%, rgba(30, 91, 198, 0.05), transparent 38%),
-    linear-gradient(180deg, #fbf8f2 0%, #f0ebe3 100%);
+  background: linear-gradient(180deg, #fbf8f2 0%, #ebe4da 100%);
   border-color: rgba(36, 28, 18, 0.12);
 }
 
@@ -50,20 +44,23 @@
 }
 
 .slide[data-theme="light"] .directionColumn {
-  background: rgba(255, 255, 255, 0.78);
-  border-color: rgba(36, 28, 18, 0.1);
-  box-shadow: 0 8px 28px rgba(11, 31, 58, 0.06);
+  border-color: rgba(24, 73, 166, 0.16);
+  box-shadow: 0 10px 32px rgba(11, 31, 58, 0.08);
+}
+
+.slide[data-theme="light"] .directionColumn::before {
+  opacity: 0.08;
 }
 
 .slide[data-theme="light"] .row {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.72);
   border-color: rgba(36, 28, 18, 0.08);
 }
 
 .slide[data-theme="light"] .directionEmpty {
   color: rgba(36, 28, 18, 0.55);
   border-color: rgba(36, 28, 18, 0.12);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .staleNotice {
@@ -80,8 +77,8 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 0.65vh, 10px);
-  margin-bottom: clamp(10px, 1.2vh, 16px);
+  gap: clamp(4px, 0.5vh, 8px);
+  margin-bottom: clamp(8px, 0.95vh, 12px);
   flex-shrink: 0;
 }
 
@@ -145,19 +142,54 @@
   gap: clamp(12px, 1.4vw, 18px);
   flex: 1;
   min-height: 0;
+  align-items: stretch;
 }
 
 .directionColumn {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  gap: clamp(8px, 0.9vh, 12px);
-  padding: clamp(10px, 1.1vh, 14px) clamp(12px, 1.2vw, 16px);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.42);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  flex: 1;
+  gap: clamp(8px, 0.85vh, 12px);
+  padding: clamp(12px, 1.2vh, 16px) clamp(12px, 1.2vw, 16px);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background:
+    radial-gradient(ellipse 130% 90% at 8% 100%, rgba(30, 91, 198, 0.2), transparent 55%),
+    radial-gradient(ellipse 100% 70% at 92% 0%, rgba(56, 189, 248, 0.14), transparent 50%),
+    linear-gradient(155deg, rgba(10, 22, 42, 0.96) 0%, rgba(6, 14, 28, 0.98) 48%, rgba(4, 10, 22, 0.99) 100%);
+}
+
+.slide[data-theme="light"] .directionColumn {
+  background:
+    radial-gradient(ellipse 120% 85% at 10% 100%, rgba(30, 91, 198, 0.08), transparent 55%),
+    radial-gradient(ellipse 95% 65% at 90% 0%, rgba(30, 91, 198, 0.06), transparent 48%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 240, 232, 0.96) 100%);
+}
+
+.directionColumn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.14;
+  background: repeating-linear-gradient(
+    -22deg,
+    transparent,
+    transparent 52px,
+    rgba(148, 163, 184, 0.07) 52px,
+    rgba(148, 163, 184, 0.07) 53px
+  );
+}
+
+.directionColumn > * {
+  position: relative;
+  z-index: 1;
 }
 
 .directionHeading {
@@ -181,10 +213,10 @@
 }
 
 .directionLabel {
-  font-size: clamp(15px, 1.05vw, 20px);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1.15;
+  font-size: clamp(18px, 1.25vw, 26px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.12;
   color: rgba(191, 219, 254, 0.95);
   min-width: 0;
   overflow: hidden;
@@ -193,12 +225,20 @@
 }
 
 .directionRows {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(5px, 0.65vh, 8px);
+  display: grid;
   flex: 1;
   min-height: 0;
-  justify-content: flex-start;
+  gap: var(--screen2-transport-full-row-gap, clamp(8px, 1vh, 12px));
+  grid-template-rows: repeat(var(--screen2-transport-direction-row-count, 5), minmax(0, 1fr));
+  align-content: stretch;
+}
+
+.directionRows[data-sparse="true"] {
+  align-content: center;
+  grid-template-rows: repeat(
+    var(--screen2-transport-direction-row-count),
+    minmax(clamp(72px, 9vh, 96px), var(--screen2-transport-sparse-row-max, 156px))
+  );
 }
 
 .directionEmpty {
@@ -206,37 +246,36 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-height: clamp(80px, 10vh, 120px);
+  min-height: 0;
   padding: clamp(12px, 1.4vh, 18px);
   border-radius: 10px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
   text-align: center;
-  font-size: clamp(15px, 1.05vw, 19px);
+  font-size: clamp(16px, 1.1vw, 21px);
   color: rgba(255, 255, 255, 0.58);
 }
 
 .rows {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1vh, 12px);
+  display: grid;
+  grid-template-rows: repeat(auto-fill, minmax(clamp(72px, 9vh, 96px), 1fr));
+  gap: var(--screen2-transport-full-row-gap, clamp(8px, 1vh, 12px));
   flex: 1;
   min-height: 0;
 }
 
 .row {
   display: grid;
-  grid-template-columns: minmax(72px, 14%) minmax(0, 1fr) minmax(96px, 22%);
+  grid-template-columns: minmax(80px, 14%) minmax(0, 1fr) minmax(108px, 22%);
   align-items: center;
-  gap: clamp(10px, 1.1vw, 16px);
-  padding: clamp(8px, 0.85vh, 12px) clamp(10px, 1vw, 14px);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: clamp(12px, 1.15vw, 18px);
+  padding: clamp(10px, 1vh, 14px) clamp(12px, 1.1vw, 16px);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-sizing: border-box;
-  flex: 0 0 auto;
-  min-height: clamp(52px, 6vh, 68px);
-  max-height: clamp(52px, 6vh, 68px);
+  min-height: clamp(72px, 9vh, 96px);
+  min-width: 0;
 }
 
 .lineColumn {
@@ -251,28 +290,15 @@
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(2px, 0.25vh, 4px);
+  gap: clamp(3px, 0.35vh, 6px);
   min-width: 0;
-  position: relative;
-}
-
-.imminentIndicator {
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 6px);
-  transform: translateY(-50%);
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(74, 222, 128, 0.9);
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
 }
 
 .detailColumn {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(3px, 0.35vh, 5px);
+  gap: clamp(4px, 0.45vh, 7px);
   min-width: 0;
 }
 
@@ -286,7 +312,7 @@
 
 .category,
 .platform {
-  font-size: clamp(11px, 0.78vw, 14px);
+  font-size: clamp(12px, 0.85vw, 16px);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: rgba(148, 163, 184, 0.95);
@@ -297,11 +323,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(44px, 3vw, 56px);
-  height: clamp(36px, 2.5vw, 46px);
-  padding: 0 clamp(8px, 0.55vw, 10px);
-  border-radius: 8px;
-  font-size: clamp(22px, 1.55vw, 30px);
+  min-width: clamp(52px, 3.5vw, 68px);
+  height: clamp(44px, 3vw, 58px);
+  padding: 0 clamp(8px, 0.55vw, 12px);
+  border-radius: 10px;
+  font-size: clamp(26px, 1.85vw, 36px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.01em;
@@ -310,7 +336,7 @@
 }
 
 .destination {
-  font-size: clamp(20px, 1.45vw, 28px);
+  font-size: clamp(24px, 1.65vw, 34px);
   font-weight: 700;
   line-height: 1.12;
   min-width: 0;
@@ -320,7 +346,7 @@
 }
 
 .minutes {
-  font-size: clamp(26px, 1.9vw, 38px);
+  font-size: clamp(32px, 2.35vw, 48px);
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -345,7 +371,7 @@
 }
 
 .absoluteTime {
-  font-size: clamp(14px, 0.92vw, 17px);
+  font-size: clamp(16px, 1.05vw, 20px);
   line-height: 1;
   color: rgba(255, 255, 255, 0.62);
   white-space: nowrap;
@@ -441,6 +467,11 @@
   gap: 3px;
   min-height: 0;
   padding: 4px 6px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.compact .directionColumn::before {
+  display: none;
 }
 
 .compact .directionHeading {
@@ -467,6 +498,15 @@
   gap: var(--screen2-transport-row-gap, 3px);
   flex: 0 0 auto;
   min-height: 0;
+  align-content: stretch;
+}
+
+.compact .directionRows[data-sparse="true"] {
+  grid-template-rows: repeat(
+    var(--screen2-transport-direction-row-count),
+    var(--screen2-transport-row-height, 36px)
+  );
+  align-content: stretch;
 }
 
 .compact .directionEmpty {
@@ -534,10 +574,6 @@
 
 .compact .delayInline {
   font-size: 10px;
-}
-
-.compact .imminentIndicator {
-  display: none;
 }
 
 .compact .emptyState,

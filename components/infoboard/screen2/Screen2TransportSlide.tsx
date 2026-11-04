@@ -1,10 +1,10 @@
 /**
  * components/infoboard/screen2/Screen2TransportSlide.tsx
  *
- * SCE-INFOBOARD-R23R1 — world-class ÖV departure board for 55-inch signage.
+ * SCE-INFOBOARD-R23R2 — full-height premium ÖV departure board for 55-inch signage.
  */
 
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import { ArrowLeft, ArrowRight, BusFront } from "lucide-react";
 import { resolveTransportLineColor } from "@/lib/transport/transport-line-colors";
 import type {
@@ -176,9 +176,6 @@ function TransportDepartureRow({
       </div>
 
       <div className={styles.countdownColumn}>
-        {isImminent ? (
-          <span className={styles.imminentIndicator} aria-hidden data-testid="screen2-transport-imminent-indicator" />
-        ) : null}
         <span
           className={minutesClassName}
           data-testid="screen2-transport-wait-time"
@@ -249,6 +246,9 @@ function TransportDirectionColumn({
   timezone: string;
   compact: boolean;
 }): ReactElement {
+  const rowCount = group.departures.length;
+  const sparseRows = rowCount > 0 && rowCount <= 3;
+
   return (
     <section
       className={styles.directionColumn}
@@ -256,12 +256,22 @@ function TransportDirectionColumn({
       data-orientation={group.orientation}
     >
       <DirectionHeading group={group} />
-      {group.departures.length === 0 ? (
+      {rowCount === 0 ? (
         <div className={styles.directionEmpty} data-testid="screen2-transport-direction-empty">
           Keine nächsten Verbindungen
         </div>
       ) : (
-        <div className={styles.directionRows}>
+        <div
+          className={styles.directionRows}
+          data-testid="screen2-transport-direction-rows"
+          data-row-count={String(rowCount)}
+          data-sparse={sparseRows ? "true" : "false"}
+          style={
+            {
+              "--screen2-transport-direction-row-count": String(rowCount),
+            } as CSSProperties
+          }
+        >
           {group.departures.map((departure, index) => (
             <TransportDepartureRow
               key={`${group.id}-${departure.line}-${departure.destination}-${departure.plannedDeparture}-${index}`}

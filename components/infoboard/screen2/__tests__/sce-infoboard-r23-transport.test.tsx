@@ -84,7 +84,7 @@ describe("SCE-INFOBOARD-R23 Screen 2 ÖV", () => {
     const ts = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.tsx");
 
     expect(css).toContain(".directionColumn");
-    expect(css).toMatch(/\.directionRows[\s\S]*flex-direction: column/);
+    expect(css).toMatch(/\.directionRows[\s\S]*grid-template-rows/);
     expect(SCREEN2_TRANSPORT_FULL_ROWS_PER_DIRECTION).toBe(5);
     expect(ts).not.toMatch(/pagination|rotateSubset|innerTimer/i);
   });

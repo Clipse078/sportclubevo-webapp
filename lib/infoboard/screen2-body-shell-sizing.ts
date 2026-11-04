@@ -117,6 +117,29 @@ export const SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION = 5;
 /** Full-screen ÖV slide — departures per direction panel. */
 export const SCREEN2_TRANSPORT_FULL_ROWS_PER_DIRECTION = 5;
 
+/** R23R2 — gap between full-screen departure rows in each direction panel. */
+export const SCREEN2_TRANSPORT_FULL_ROW_GAP_PX = 10;
+
+/**
+ * R23R2 — minimum full-screen row height (above the R23R1 52–68px band).
+ */
+export const SCREEN2_TRANSPORT_FULL_ROW_MIN_HEIGHT_PX = 72;
+
+/**
+ * R23R2 — upper bound for a single row when a direction has only one to three departures.
+ */
+export const SCREEN2_TRANSPORT_FULL_SPARSE_ROW_MAX_HEIGHT_PX = 156;
+
+/** CSS custom property set on direction row stacks for equal vertical distribution. */
+export const SCREEN2_TRANSPORT_DIRECTION_ROW_COUNT_VAR =
+  "--screen2-transport-direction-row-count";
+
+/** CSS custom property — sparse-row max height cap (1–3 departures). */
+export const SCREEN2_TRANSPORT_SPARSE_ROW_MAX_VAR = "--screen2-transport-sparse-row-max";
+
+/** CSS custom property — full-screen row gap. */
+export const SCREEN2_TRANSPORT_FULL_ROW_GAP_VAR = "--screen2-transport-full-row-gap";
+
 const SCREEN2_TRANSPORT_COMPACT_PANEL_CHROME_PX = 42;
 
 /** Fixed departure row height in the compact ÖV panel (1920×1080 contract). */
@@ -140,6 +163,8 @@ export const SCREEN2_BODY_SHELL_CSS_VARS = {
   "--screen2-transport-panel-height": `${SCREEN2_TRANSPORT_PANEL_HEIGHT_PX}px`,
   "--screen2-transport-row-height": `${SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX}px`,
   "--screen2-transport-row-gap": `${SCREEN2_TRANSPORT_COMPACT_ROW_GAP_PX}px`,
+  [SCREEN2_TRANSPORT_SPARSE_ROW_MAX_VAR]: `${SCREEN2_TRANSPORT_FULL_SPARSE_ROW_MAX_HEIGHT_PX}px`,
+  [SCREEN2_TRANSPORT_FULL_ROW_GAP_VAR]: `${SCREEN2_TRANSPORT_FULL_ROW_GAP_PX}px`,
 } as const satisfies Record<string, string>;
 
 export type Screen2BodyShellMeasurementContract = {

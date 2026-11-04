@@ -98,7 +98,7 @@ describe("SCE-INFOBOARD-R23R1 Screen 2 ÖV", () => {
 
   it("uses line-left / countdown-right row hierarchy without full-row green borders", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
-    expect(css).toMatch(/grid-template-columns:[\s\S]*minmax\(72px/);
+    expect(css).toMatch(/grid-template-columns:[\s\S]*minmax\(80px/);
     expect(css).toMatch(/\.countdownColumn[\s\S]*align-items: flex-end/);
     expect(css).not.toMatch(/rowImminent/);
 
@@ -116,11 +116,11 @@ describe("SCE-INFOBOARD-R23R1 Screen 2 ÖV", () => {
     expect(badge.compareDocumentPosition(waitTime) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("uses fixed row height slots instead of expanding sparse direction lists", () => {
+  it("delegates full-height row distribution to the R23R2 layout contract", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
-    expect(css).toMatch(/\.directionRows[\s\S]*flex-direction: column/);
-    expect(css).toMatch(/\.row[\s\S]*min-height: clamp\(52px/);
-    expect(css).not.toContain("--screen2-transport-direction-row-count");
+    expect(css).toContain("--screen2-transport-direction-row-count");
+    expect(css).toMatch(/\.directionRows[\s\S]*grid-template-rows/);
+    expect(css).not.toMatch(/\.row[\s\S]*max-height: clamp\(52px/);
   });
 
   it("supports LIGHT and DARK theme tokens on the slide root", () => {
