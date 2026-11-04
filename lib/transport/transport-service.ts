@@ -22,10 +22,29 @@ function cacheKeyForConfig(config: TransportStopConfig): string {
   return `${config.provider}:${config.stopId}`;
 }
 
+function readCachedEntry(config: TransportStopConfig): TransportCacheEntry | undefined {
+  return inMemoryTransportCache.get(cacheKeyForConfig(config));
+}
+
+function readCachedCandidatePool(
+  config: TransportStopConfig,
+): TransportDeparture[] | undefined {
+  const cached = readCachedEntry(config);
+  if (!cached) {
+    return undefined;
+  }
+
+  if (cached.result.isAvailable) {
+    return cached.result.candidateDepartures ?? cached.result.departures;
+  }
+
+  return cached.result.cachedDepartures;
+}
+
 function readCachedDepartures(
   config: TransportStopConfig,
 ): TransportDeparture[] | undefined {
-  const cached = inMemoryTransportCache.get(cacheKeyForConfig(config));
+  const cached = readCachedEntry(config);
   if (!cached) {
     return undefined;
   }
@@ -71,17 +90,17 @@ function enrichWithDirectionGroups(
 
 function availableResult(
   config: TransportStopConfig,
-  departures: TransportDeparture[],
+  candidateDepartures: TransportDeparture[],
   stationId: string,
   fetchedAt: string,
   isStale: boolean,
   hasRealtimeData: boolean,
 ): TransportResult {
-  const directionGroups = enrichWithDirectionGroups(config, departures);
+  const directionGroups = enrichWithDirectionGroups(config, candidateDepartures);
   const displayedDepartures =
     directionGroups.length > 0
       ? flattenDirectionGroupDepartures(directionGroups)
-      : departures.slice(0, config.departureCount);
+      : candidateDepartures.slice(0, config.departureCount);
 
   return {
     isAvailable: true,
@@ -89,6 +108,7 @@ function availableResult(
     stationId,
     departures: displayedDepartures,
     directionGroups,
+    candidateDepartures,
     fetchedAt,
     isStale,
     hasRealtimeData,
@@ -113,15 +133,15 @@ export async function fetchTransportForConfig(
   const providerResult = await fetchOpendataChStationboard(config, fetchFn, now);
 
   if (!providerResult.ok) {
-    const cachedDepartures = readCachedDepartures(config);
-    if (cachedDepartures && cachedDepartures.length > 0) {
+    const cachedCandidates = readCachedCandidatePool(config);
+    if (cachedCandidates && cachedCandidates.length > 0) {
       const staleResult = availableResult(
         config,
-        cachedDepartures,
+        cachedCandidates,
         config.stopId,
         fetchedAt,
         true,
-        cachedDepartures.some((departure) => departure.hasRealtime),
+        cachedCandidates.some((departure) => departure.hasRealtime),
       );
       storeCache(config, staleResult);
       return staleResult;
@@ -131,7 +151,7 @@ export async function fetchTransportForConfig(
       config,
       providerResult.errorCode,
       fetchedAt,
-      cachedDepartures,
+      readCachedDepartures(config),
     );
     storeCache(config, unavailable);
     return unavailable;

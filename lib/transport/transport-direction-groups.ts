@@ -8,21 +8,19 @@
  */
 
 import type { TransportDirectionGroupConfig } from "./transport-config";
+import {
+  compareEffectiveDepartures,
+  resolveEffectiveDepartureMs,
+} from "./transport-effective-departure";
 import type { TransportDeparture, TransportDirectionGroup } from "./transport-types";
 
-function effectiveDepartureMs(departure: TransportDeparture): number {
-  const value = departure.realtimeDeparture ?? departure.plannedDeparture;
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
-}
-
 function sortChronologically(departures: TransportDeparture[]): TransportDeparture[] {
-  return [...departures].sort((a, b) => effectiveDepartureMs(a) - effectiveDepartureMs(b));
+  return [...departures].sort(compareEffectiveDepartures);
 }
 
 function departureServiceKey(departure: TransportDeparture): string {
-  const effective = departure.realtimeDeparture ?? departure.plannedDeparture;
-  return `${departure.line}|${departure.destination}|${effective}`;
+  const effectiveMs = resolveEffectiveDepartureMs(departure);
+  return `${departure.line}|${departure.destination}|${effectiveMs}`;
 }
 
 /** Removes genuine duplicate services (same line, destination, and departure time). */

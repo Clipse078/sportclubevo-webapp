@@ -90,11 +90,17 @@ describe("R23 transport departure policy", () => {
       plannedDeparture: "2026-09-02T18:49:00+0200",
     });
 
-    const deduped = deduplicateTransportDepartures([duplicate, { ...duplicate, delayMinutes: 2 }]);
+    const deduped = deduplicateTransportDepartures([duplicate, { ...duplicate }]);
     expect(deduped).toHaveLength(1);
 
+    const distinctEffective = deduplicateTransportDepartures([
+      duplicate,
+      { ...duplicate, delayMinutes: 2, hasRealtime: true, realtimeDeparture: duplicate.plannedDeparture },
+    ]);
+    expect(distinctEffective).toHaveLength(2);
+
     const groups = classifyDeparturesIntoDirectionGroups(
-      [duplicate, { ...duplicate, delayMinutes: 2 }],
+      [duplicate, { ...duplicate }],
       FC_ALLSCHWIL_DIRECTION_GROUPS,
       5,
     );

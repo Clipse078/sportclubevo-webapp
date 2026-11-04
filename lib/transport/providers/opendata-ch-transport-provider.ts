@@ -9,6 +9,10 @@
  */
 
 import {
+  isDepartureActive,
+  resolveEffectiveDepartureMs,
+} from "../transport-effective-departure";
+import {
   resolveProviderCandidateLimit,
   type TransportStopConfig,
 } from "../transport-config";
@@ -190,12 +194,6 @@ function normalizeDeparture(
   };
 }
 
-function effectiveDepartureMs(departure: TransportDeparture): number {
-  const value = departure.realtimeDeparture ?? departure.plannedDeparture;
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
-}
-
 function matchesFilters(
   departure: TransportDeparture,
   config: TransportStopConfig,
@@ -248,8 +246,8 @@ export function normalizeOpendataStationboard(
     .map((entry) => normalizeDeparture(entry, stationId))
     .filter((departure): departure is TransportDeparture => departure !== null)
     .filter((departure) => matchesFilters(departure, config))
-    .filter((departure) => effectiveDepartureMs(departure) >= now.getTime() - 60_000)
-    .sort((a, b) => effectiveDepartureMs(a) - effectiveDepartureMs(b))
+    .filter((departure) => isDepartureActive(departure, now.getTime()))
+    .sort((a, b) => resolveEffectiveDepartureMs(a) - resolveEffectiveDepartureMs(b))
     .slice(0, candidateLimit);
 
   const hasRealtimeData = departures.some((departure) => departure.hasRealtime);

@@ -192,8 +192,8 @@ describe("SCE-INFOBOARD-R23R3 Screen 2 ÖV typography", () => {
     render(
       <Screen2TransportSlide
         transport={makeTransport({
-          plannedDeparture: "2026-09-02T16:41:00+0200",
-          realtimeDeparture: "2026-09-02T16:41:00+0200",
+          plannedDeparture: "2026-09-02T18:41:00+0200",
+          realtimeDeparture: "2026-09-02T18:41:00+0200",
         })}
         timezone="Europe/Zurich"
         nowIso="2026-09-02T16:40:00.000Z"

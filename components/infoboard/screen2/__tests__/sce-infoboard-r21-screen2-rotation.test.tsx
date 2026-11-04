@@ -388,7 +388,7 @@ describe("SCE-INFOBOARD-V2-01-R21 — shell and layout", () => {
 
 describe("SCE-INFOBOARD-V2-01-R21 — ÖV presentation", () => {
   it("renders multiple grouped departures with associations in full-screen mode", async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ now: Date.parse("2026-09-02T16:40:00.000Z") });
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}

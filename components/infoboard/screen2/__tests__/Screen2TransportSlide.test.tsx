@@ -530,7 +530,7 @@ describe("Screen2TransportSlide UX5 premium color hierarchy", () => {
   it("applies semantic wait-time tones without coloring destination or absolute time", () => {
     const cases = [
       { plannedDeparture: "2026-09-02T18:40:00+0200", tone: "soon", label: "Jetzt" },
-      { plannedDeparture: "2026-09-02T18:41:00+0200", tone: "soon", label: "1 min" },
+      { plannedDeparture: "2026-09-02T18:41:01+0200", tone: "soon", label: "1 min" },
       { plannedDeparture: "2026-09-02T18:45:00+0200", tone: "soon", label: "5 min" },
       { plannedDeparture: "2026-09-02T18:46:00+0200", tone: "medium", label: "6 min" },
       { plannedDeparture: "2026-09-02T18:55:00+0200", tone: "medium", label: "15 min" },

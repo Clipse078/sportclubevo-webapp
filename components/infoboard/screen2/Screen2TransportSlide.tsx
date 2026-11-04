@@ -7,14 +7,17 @@
 import type { CSSProperties, ReactElement } from "react";
 import { ArrowLeft, ArrowRight, BusFront } from "lucide-react";
 import { resolveTransportLineColor } from "@/lib/transport/transport-line-colors";
+import { resolveTenantTransportConfig } from "@/lib/transport/transport-config";
 import type {
   TransportDeparture,
   TransportDirectionGroup,
   TransportResult,
 } from "@/lib/transport/transport-types";
+import { applyTransportDepartureLifecycle } from "@/lib/transport/transport-presentation";
+import { resolveEffectiveDepartureMs } from "@/lib/transport/transport-effective-departure";
 import {
-  computeMinutesUntil,
-  formatRelativeWaitLabel,
+  formatRelativeWaitDisplay,
+  resolveRelativeWaitDisplay,
   resolveWaitTimeTone,
 } from "@/lib/transport/transport-wait-time";
 import styles from "./Screen2TransportSlide.module.css";
@@ -23,6 +26,8 @@ export type Screen2TransportSlideProps = {
   transport: TransportResult | null | undefined;
   timezone: string;
   nowIso?: string;
+  /** When set, re-applies expiry filtering and direction replenishment on each render. */
+  lifecycleTenantKey?: string | null;
   /** Compact embedded panel below the Sportanlage map. */
   compact?: boolean;
   /** Venue display theme — full-screen rotation uses LIGHT/DARK parity. */
@@ -39,17 +44,18 @@ function formatMinutesUntil(
   absoluteTime: string;
   delayLabel: string | null;
 } {
-  const effectiveIso = departure.realtimeDeparture ?? departure.plannedDeparture;
-  const effectiveMs = Date.parse(effectiveIso);
-  const diffMinutes = computeMinutesUntil(effectiveMs, nowMs);
-  const minutesLabel = formatRelativeWaitLabel(diffMinutes);
-  const waitTimeTone = resolveWaitTimeTone(diffMinutes);
+  const effectiveMs = resolveEffectiveDepartureMs(departure);
+  const waitDisplay = resolveRelativeWaitDisplay(effectiveMs, nowMs);
+  const minutesLabel = formatRelativeWaitDisplay(waitDisplay) ?? "";
+  const toneMinutes =
+    waitDisplay.kind === "minutes" ? waitDisplay.minutesUntil : waitDisplay.kind === "jetzt" ? 0 : -1;
+  const waitTimeTone = resolveWaitTimeTone(Math.max(0, toneMinutes));
 
   const absoluteTime = new Intl.DateTimeFormat("de-CH", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: timezone,
-  }).format(new Date(effectiveIso));
+  }).format(new Date(effectiveMs));
 
   const delayLabel =
     departure.delayMinutes && departure.delayMinutes > 0
@@ -291,11 +297,19 @@ export function Screen2TransportSlide({
   transport,
   timezone,
   nowIso,
+  lifecycleTenantKey = null,
   compact = false,
   theme = "dark",
 }: Screen2TransportSlideProps): ReactElement {
   const nowMs = Date.parse(nowIso ?? new Date().toISOString());
-  const resolved = resolveDepartures(transport);
+  const shouldApplyLifecycle = nowIso !== undefined || Boolean(lifecycleTenantKey);
+  const lifecycleConfig = lifecycleTenantKey
+    ? resolveTenantTransportConfig(lifecycleTenantKey)
+    : null;
+  const lifecycleTransport = shouldApplyLifecycle
+    ? applyTransportDepartureLifecycle(transport, new Date(nowMs), lifecycleConfig)
+    : transport;
+  const resolved = resolveDepartures(lifecycleTransport);
   const hasDirectionGroups = resolved.directionGroups.length > 0;
 
   return (
