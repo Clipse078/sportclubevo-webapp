@@ -78,10 +78,12 @@ describe("SCE-INFOBOARD-R23R5 direction landmarks", () => {
     const leftLandmark = screen.getByTestId("screen2-transport-direction-landmark-allschwil-zentrum");
     const rightLandmark = screen.getByTestId("screen2-transport-direction-landmark-bachgraben-basel");
 
-    expect(leftLandmark.getAttribute("src")).toBe(
+    expect(leftLandmark.getAttribute("data-asset-src")).toBe(
       INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.allschwilDorf,
     );
-    expect(rightLandmark.getAttribute("src")).toBe(INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.basel);
+    expect(rightLandmark.getAttribute("data-asset-src")).toBe(
+      INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.basel,
+    );
   });
 
   it("orders left heading as arrow, landmark, label and right as label, landmark, arrow", () => {
@@ -135,10 +137,11 @@ describe("SCE-INFOBOARD-R23R5 direction landmarks", () => {
     expect(css).toMatch(/\.directionRows[\s\S]*grid-template-rows:[\s\S]*--screen2-transport-direction-row-count/);
   });
 
-  it("uses object-fit contain and no landmark background fill in CSS", () => {
+  it("uses mask-size contain and no landmark background fill on geometry class", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
+    const tintedBlock = css.match(/\.tintedRasterIcon\s*\{[^}]+\}/)?.[0] ?? "";
     const landmarkBlock = css.match(/\.directionLandmark\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(landmarkBlock).toContain("object-fit: contain");
+    expect(tintedBlock).toContain("mask-size: contain");
     expect(landmarkBlock).not.toContain("background");
   });
 

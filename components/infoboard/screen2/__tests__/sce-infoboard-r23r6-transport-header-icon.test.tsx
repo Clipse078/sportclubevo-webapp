@@ -77,8 +77,8 @@ describe("SCE-INFOBOARD-R23R6 transport header bus icon", () => {
     );
 
     const icon = screen.getByTestId("screen2-transport-bus-icon");
-    expect(icon.tagName).toBe("IMG");
-    expect(icon.getAttribute("src")).toBe(INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH);
+    expect(icon.tagName).toBe("SPAN");
+    expect(icon.getAttribute("data-asset-src")).toBe(INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH);
     expect(existsSync(join(process.cwd(), "public", INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH))).toBe(
       true,
     );
@@ -97,7 +97,6 @@ describe("SCE-INFOBOARD-R23R6 transport header bus icon", () => {
       />,
     );
 
-    expect(screen.getByTestId("screen2-transport-bus-icon").getAttribute("alt")).toBe("");
     expect(screen.getByTestId("screen2-transport-bus-icon").getAttribute("aria-hidden")).toBe(
       "true",
     );
@@ -105,9 +104,9 @@ describe("SCE-INFOBOARD-R23R6 transport header bus icon", () => {
 
   it("defines LIGHT and DARK presentation rules for the header bus raster", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
-    const imageBlock = css.match(/\.titleIconImage\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(imageBlock).toContain("object-fit: contain");
-    expect(css).toMatch(/\.slide\[data-theme="light"\]\s*\.titleIconImage[\s\S]*filter:/);
+    const tintedBlock = css.match(/\.tintedRasterIcon\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(tintedBlock).toContain("mask-size: contain");
+    expect(css).toMatch(/\.slide\[data-theme="light"\][\s\S]*--screen2-transport-bus-icon-tint:/);
 
     const { rerender } = render(
       <Screen2TransportSlide
@@ -144,12 +143,16 @@ describe("SCE-INFOBOARD-R23R6 transport header bus icon", () => {
 
     expect(screen.getByTestId("screen2-transport-direction-arrow-left")).toBeTruthy();
     expect(screen.getByTestId("screen2-transport-direction-arrow-right")).toBeTruthy();
-    expect(screen.getByTestId("screen2-transport-direction-landmark-allschwil-zentrum").getAttribute("src")).toBe(
-      INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.allschwilDorf,
-    );
-    expect(screen.getByTestId("screen2-transport-direction-landmark-bachgraben-basel").getAttribute("src")).toBe(
-      INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.basel,
-    );
+    expect(
+      screen.getByTestId("screen2-transport-direction-landmark-allschwil-zentrum").getAttribute(
+        "data-asset-src",
+      ),
+    ).toBe(INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.allschwilDorf);
+    expect(
+      screen.getByTestId("screen2-transport-direction-landmark-bachgraben-basel").getAttribute(
+        "data-asset-src",
+      ),
+    ).toBe(INFOBOARD_DIRECTION_LANDMARK_ASSET_PATHS.basel);
 
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
     expect(css).toMatch(/\.directionArrow[\s\S]*clamp\(48px,\s*3\.6vw,\s*64px\)/);

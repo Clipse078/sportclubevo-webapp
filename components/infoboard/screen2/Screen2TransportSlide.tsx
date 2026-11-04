@@ -24,6 +24,32 @@ import {
 import { resolveScreen2DirectionLandmarkSrc } from "@/lib/infoboard/screen2-direction-landmarks";
 import styles from "./Screen2TransportSlide.module.css";
 
+function Screen2TintedRasterIcon({
+  assetSrc,
+  geometryClassName,
+  tintClassName,
+  testId,
+}: {
+  assetSrc: string;
+  geometryClassName: string;
+  tintClassName: string;
+  testId: string;
+}): ReactElement {
+  return (
+    <span
+      className={`${styles.tintedRasterIcon} ${geometryClassName} ${tintClassName}`}
+      data-testid={testId}
+      data-asset-src={assetSrc}
+      aria-hidden
+      style={
+        {
+          "--screen2-icon-mask": `url("${assetSrc}")`,
+        } as CSSProperties
+      }
+    />
+  );
+}
+
 export type Screen2TransportSlideProps = {
   transport: TransportResult | null | undefined;
   timezone: string;
@@ -227,14 +253,11 @@ function DirectionLandmark({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- approved static kiosk raster; same pattern as VenueAmbientLayer
-    <img
-      src={src}
-      alt=""
-      aria-hidden
-      className={styles.directionLandmark}
-      data-testid={`screen2-transport-direction-landmark-${group.id}`}
-      decoding="async"
+    <Screen2TintedRasterIcon
+      assetSrc={src}
+      geometryClassName={styles.directionLandmark}
+      tintClassName={styles.directionLandmarkTint}
+      testId={`screen2-transport-direction-landmark-${group.id}`}
     />
   );
 }
@@ -363,14 +386,11 @@ export function Screen2TransportSlide({
       <div className={styles.header}>
         <div className={styles.titleBand}>
           <div className={styles.titleIcon}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- approved static kiosk raster; same pattern as DirectionLandmark */}
-            <img
-              src={INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH}
-              alt=""
-              aria-hidden
-              className={styles.titleIconImage}
-              data-testid="screen2-transport-bus-icon"
-              decoding="async"
+            <Screen2TintedRasterIcon
+              assetSrc={INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH}
+              geometryClassName={styles.titleIconImage}
+              tintClassName={styles.transportBusIconTint}
+              testId="screen2-transport-bus-icon"
             />
           </div>
           <div className={styles.titleCopy}>

@@ -17,12 +17,16 @@
   background: linear-gradient(180deg, rgba(6, 11, 20, 0.98) 0%, rgba(4, 8, 14, 0.99) 100%);
   border-radius: clamp(6px, 0.8vh, 14px);
   border: 1px solid rgba(148, 163, 184, 0.1);
+  --screen2-transport-bus-icon-tint: #67d5f5;
+  --screen2-transport-landmark-icon-tint: #a9c8ff;
 }
 
 .slide[data-theme="light"] {
   color: #241c12;
   background: linear-gradient(180deg, #fbf8f2 0%, #ebe4da 100%);
   border-color: rgba(36, 28, 18, 0.12);
+  --screen2-transport-bus-icon-tint: #0876a6;
+  --screen2-transport-landmark-icon-tint: #2459a6;
 }
 
 .slide[data-theme="light"] .eyebrow {
@@ -97,17 +101,31 @@
   flex-shrink: 0;
 }
 
-.titleIconImage {
+.tintedRasterIcon {
   display: block;
-  width: clamp(44px, 3.2vw, 52px);
-  height: clamp(44px, 3.2vw, 52px);
-  object-fit: contain;
-  object-position: center;
+  flex-shrink: 0;
+  background-color: var(--screen2-icon-tint);
+  -webkit-mask-image: var(--screen2-icon-mask);
+  mask-image: var(--screen2-icon-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
-.slide[data-theme="light"] .titleIconImage {
-  filter: brightness(0) saturate(100%) invert(17%) sepia(62%) saturate(3200%) hue-rotate(207deg)
-    brightness(92%) contrast(92%);
+.transportBusIconTint {
+  --screen2-icon-tint: var(--screen2-transport-bus-icon-tint);
+}
+
+.directionLandmarkTint {
+  --screen2-icon-tint: var(--screen2-transport-landmark-icon-tint);
+}
+
+.titleIconImage {
+  width: clamp(44px, 3.2vw, 52px);
+  height: clamp(44px, 3.2vw, 52px);
 }
 
 .titleCopy {
@@ -215,12 +233,8 @@
 }
 
 .directionLandmark {
-  display: block;
-  flex-shrink: 0;
   width: clamp(56px, 4.2vw, 76px);
   height: clamp(56px, 4.2vw, 76px);
-  object-fit: contain;
-  object-position: center;
 }
 
 .directionLabel {
