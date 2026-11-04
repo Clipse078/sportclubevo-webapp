@@ -5,6 +5,8 @@
  * Stable enum model — no arbitrary sizing exposed to administrators.
  */
 
+import { scalePlatzValueTypographyClamp } from "@/lib/infoboard/venue-platz-value-typography";
+
 export const INFOBOARD_LOGO_SIZES = ["SMALL", "MEDIUM", "LARGE", "XLARGE"] as const;
 
 export type InfoboardLogoSize = (typeof INFOBOARD_LOGO_SIZES)[number];
@@ -98,12 +100,19 @@ export const TRAINING_KABINE_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = 
   XLARGE: "clamp(1.55rem, 2.05vw, 2.75rem)",
 };
 
-/** Training PLATZ column clamps — independent from team-name typography. */
-export const TRAINING_PLATZ_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
+const TRAINING_PLATZ_FONT_SIZE_CSS_BASE: Record<InfoboardFontSize, string> = {
   SMALL: "clamp(1.15rem, 1.5vw, 2rem)",
   MEDIUM: "clamp(1.35rem, 1.8vw, 2.45rem)",
   LARGE: "clamp(1.55rem, 2.15vw, 2.95rem)",
   XLARGE: "clamp(1.75rem, 2.4vw, 3.35rem)",
+};
+
+/** Training PLATZ column clamps — independent from team-name typography (R23 scale). */
+export const TRAINING_PLATZ_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
+  SMALL: scalePlatzValueTypographyClamp(TRAINING_PLATZ_FONT_SIZE_CSS_BASE.SMALL),
+  MEDIUM: scalePlatzValueTypographyClamp(TRAINING_PLATZ_FONT_SIZE_CSS_BASE.MEDIUM),
+  LARGE: scalePlatzValueTypographyClamp(TRAINING_PLATZ_FONT_SIZE_CSS_BASE.LARGE),
+  XLARGE: scalePlatzValueTypographyClamp(TRAINING_PLATZ_FONT_SIZE_CSS_BASE.XLARGE),
 };
 
 /** Match KABINE column clamps — independent from team-name typography. */

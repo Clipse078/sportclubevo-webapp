@@ -108,14 +108,27 @@ export const SCREEN2_TRANSPORT_PANEL_HEIGHT_PX = Math.round(
 /** @deprecated Compact ÖV strip removed in R21. */
 export const SCREEN2_LOWER_SPONSOR_ZONE_HEIGHT_PX = SCREEN2_TRANSPORT_PANEL_HEIGHT_PX;
 
-/** Fixed departure row height in the compact ÖV panel (1920×1080 contract). */
-export const SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX = 36;
-
 /** Gap between compact departure rows. */
 export const SCREEN2_TRANSPORT_COMPACT_ROW_GAP_PX = 3;
 
-/** Departures rendered per physical direction column. */
-export const SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION = 3;
+/** Departures rendered per physical direction column (R23 five-departure policy). */
+export const SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION = 5;
+
+/** Full-screen ÖV slide — departures per direction panel. */
+export const SCREEN2_TRANSPORT_FULL_ROWS_PER_DIRECTION = 5;
+
+const SCREEN2_TRANSPORT_COMPACT_PANEL_CHROME_PX = 42;
+
+/** Fixed departure row height in the compact ÖV panel (1920×1080 contract). */
+export const SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX = Math.max(
+  28,
+  Math.floor(
+    (SCREEN2_TRANSPORT_PANEL_HEIGHT_PX -
+      SCREEN2_TRANSPORT_COMPACT_PANEL_CHROME_PX -
+      SCREEN2_TRANSPORT_COMPACT_ROW_GAP_PX * (SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION - 1)) /
+      SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION,
+  ),
+);
 
 export const SCREEN2_BODY_SHELL_CSS_VARS = {
   "--screen2-body-padding-x": `${SCREEN2_BODY_PADDING_X_PX}px`,

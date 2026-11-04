@@ -23,6 +23,12 @@ export type TransportDirectionGroupConfig = {
   destinationMatchers?: string[];
 };
 
+/** Maximum departures rendered per configured direction (R23 policy). */
+export const TRANSPORT_MAX_DEPARTURES_PER_DIRECTION = 5;
+
+/** Maximum departures rendered across all directions (R23 policy). */
+export const TRANSPORT_MAX_DEPARTURES_TOTAL = 10;
+
 export type TransportStopConfig = {
   enabled: boolean;
   provider: TransportProviderId;
@@ -81,8 +87,8 @@ const FC_ALLSCHWIL_TRANSPORT: TransportStopConfig = {
     longitude: 7.547436,
   },
   allowedCategories: ["bus", "tram", "train"],
-  departureCount: 8,
-  departuresPerDirectionGroup: 3,
+  departureCount: 10,
+  departuresPerDirectionGroup: 5,
   directionGroups: FC_ALLSCHWIL_DIRECTION_GROUPS,
   refreshIntervalSeconds: 45,
 };

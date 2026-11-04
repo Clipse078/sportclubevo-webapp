@@ -6,6 +6,7 @@
  * geometry, pagination, ordering, or feed semantics.
  */
 
+import { scalePlatzValueTypographyClamp } from "@/lib/infoboard/venue-platz-value-typography";
 import { VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE } from "@/lib/infoboard/venue-semantic-label";
 
 export const VENUE_PRESENTATION_DENSITY_ATTR = "data-venue-density";
@@ -87,7 +88,7 @@ export function resolveVenueDensityEventListCssVars(
       density,
     ),
     "--ib-fs-dest-pitch": scaleVenuePresentationClamp(
-      VENUE_DENSITY_LIST_TOKEN_BASE.destPitch,
+      scalePlatzValueTypographyClamp(VENUE_DENSITY_LIST_TOKEN_BASE.destPitch),
       density,
     ),
     "--ib-fs-status-label": scaleVenuePresentationClamp(

@@ -20,6 +20,30 @@ function sortChronologically(departures: TransportDeparture[]): TransportDepartu
   return [...departures].sort((a, b) => effectiveDepartureMs(a) - effectiveDepartureMs(b));
 }
 
+function departureServiceKey(departure: TransportDeparture): string {
+  const effective = departure.realtimeDeparture ?? departure.plannedDeparture;
+  return `${departure.line}|${departure.destination}|${effective}`;
+}
+
+/** Removes genuine duplicate services (same line, destination, and departure time). */
+export function deduplicateTransportDepartures(
+  departures: TransportDeparture[],
+): TransportDeparture[] {
+  const seen = new Set<string>();
+  const unique: TransportDeparture[] = [];
+
+  for (const departure of departures) {
+    const key = departureServiceKey(departure);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(departure);
+  }
+
+  return unique;
+}
+
 function normalizeMatchValue(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
@@ -88,11 +112,13 @@ export function classifyDeparturesIntoDirectionGroups(
     return [];
   }
 
+  const deduped = deduplicateTransportDepartures(departures);
+
   const grouped = new Map<string, TransportDeparture[]>(
     groups.map((group) => [group.id, []]),
   );
 
-  for (const departure of departures) {
+  for (const departure of deduped) {
     const groupId = resolveDepartureDirectionGroupId(departure, groups);
     if (!groupId) {
       continue;

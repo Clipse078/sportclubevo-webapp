@@ -284,7 +284,7 @@ export async function fetchOpendataChStationboard(
 ): Promise<OpendataChFetchResult> {
   const params = new URLSearchParams({
     id: config.stopId,
-    limit: String(Math.max(config.departureCount, 8)),
+    limit: String(config.departureCount),
   });
 
   if (config.allowedCategories && config.allowedCategories.length > 0) {
