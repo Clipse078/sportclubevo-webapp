@@ -20,12 +20,15 @@ import {
   resolveRelativeWaitDisplay,
   resolveWaitTimeTone,
 } from "@/lib/transport/transport-wait-time";
+import { resolveScreen2DirectionLandmarkSrc } from "@/lib/infoboard/screen2-direction-landmarks";
 import styles from "./Screen2TransportSlide.module.css";
 
 export type Screen2TransportSlideProps = {
   transport: TransportResult | null | undefined;
   timezone: string;
   nowIso?: string;
+  /** Tenant key for direction landmark presentation mapping (arrow-only when unset). */
+  tenantKey?: string | null;
   /** When set, re-applies expiry filtering and direction replenishment on each render. */
   lifecycleTenantKey?: string | null;
   /** Compact embedded panel below the Sportanlage map. */
@@ -210,7 +213,38 @@ function TransportDepartureRow({
   );
 }
 
-function DirectionHeading({ group }: { group: TransportDirectionGroup }): ReactElement {
+function DirectionLandmark({
+  group,
+  tenantKey,
+}: {
+  group: TransportDirectionGroup;
+  tenantKey: string | null | undefined;
+}): ReactElement | null {
+  const src = resolveScreen2DirectionLandmarkSrc(tenantKey, group.id);
+  if (!src) {
+    return null;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- approved static kiosk raster; same pattern as VenueAmbientLayer
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className={styles.directionLandmark}
+      data-testid={`screen2-transport-direction-landmark-${group.id}`}
+      decoding="async"
+    />
+  );
+}
+
+function DirectionHeading({
+  group,
+  tenantKey,
+}: {
+  group: TransportDirectionGroup;
+  tenantKey: string | null | undefined;
+}): ReactElement {
   const isLeft = group.orientation === "left";
   const Arrow = isLeft ? ArrowLeft : ArrowRight;
 
@@ -228,7 +262,9 @@ function DirectionHeading({ group }: { group: TransportDirectionGroup }): ReactE
           data-testid="screen2-transport-direction-arrow-left"
         />
       ) : null}
+      {isLeft ? <DirectionLandmark group={group} tenantKey={tenantKey} /> : null}
       <span className={styles.directionLabel}>{group.displayName}</span>
+      {!isLeft ? <DirectionLandmark group={group} tenantKey={tenantKey} /> : null}
       {!isLeft ? (
         <Arrow
           className={styles.directionArrow}
@@ -246,11 +282,13 @@ function TransportDirectionColumn({
   nowMs,
   timezone,
   compact,
+  tenantKey,
 }: {
   group: TransportDirectionGroup;
   nowMs: number;
   timezone: string;
   compact: boolean;
+  tenantKey: string | null | undefined;
 }): ReactElement {
   const rowCount = group.departures.length;
   const sparseRows = rowCount > 0 && rowCount <= 3;
@@ -261,7 +299,7 @@ function TransportDirectionColumn({
       data-testid={`screen2-transport-direction-${group.id}`}
       data-orientation={group.orientation}
     >
-      <DirectionHeading group={group} />
+      <DirectionHeading group={group} tenantKey={tenantKey} />
       {rowCount === 0 ? (
         <div className={styles.directionEmpty} data-testid="screen2-transport-direction-empty">
           Keine nächsten Verbindungen
@@ -297,6 +335,7 @@ export function Screen2TransportSlide({
   transport,
   timezone,
   nowIso,
+  tenantKey = null,
   lifecycleTenantKey = null,
   compact = false,
   theme = "dark",
@@ -359,6 +398,7 @@ export function Screen2TransportSlide({
               nowMs={nowMs}
               timezone={timezone}
               compact={compact}
+              tenantKey={tenantKey}
             />
           ))}
         </div>

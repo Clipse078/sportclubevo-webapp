@@ -218,6 +218,15 @@
   color: rgba(96, 165, 250, 0.95);
 }
 
+.directionLandmark {
+  display: block;
+  flex-shrink: 0;
+  width: clamp(56px, 4.2vw, 76px);
+  height: clamp(56px, 4.2vw, 76px);
+  object-fit: contain;
+  object-position: center;
+}
+
 .directionLabel {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: clamp(23px, 1.6vw, 33px);
@@ -506,6 +515,11 @@
 .compact .directionArrow {
   width: 18px;
   height: 18px;
+}
+
+.compact .directionLandmark {
+  width: 20px;
+  height: 20px;
 }
 
 .compact .directionLabel {

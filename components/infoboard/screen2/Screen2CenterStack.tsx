@@ -60,6 +60,7 @@ export function Screen2CenterStack({
             <Screen2TransportSlide
               transport={transport}
               timezone={timezone}
+              tenantKey={tenantKey}
               theme={theme.toLowerCase() as "dark" | "light"}
             />
           </div>
