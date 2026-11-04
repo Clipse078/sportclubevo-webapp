@@ -5,7 +5,8 @@
  */
 
 import type { CSSProperties, ReactElement } from "react";
-import { ArrowLeft, ArrowRight, BusFront } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH } from "@/lib/infoboard/screen2-transport-header-icon";
 import { resolveTransportLineColor } from "@/lib/transport/transport-line-colors";
 import { resolveTenantTransportConfig } from "@/lib/transport/transport-config";
 import type {
@@ -361,12 +362,15 @@ export function Screen2TransportSlide({
     >
       <div className={styles.header}>
         <div className={styles.titleBand}>
-          <div className={styles.titleIcon} aria-label="Öffentlicher Verkehr">
-            <BusFront
-              className={styles.titleIconSvg}
-              strokeWidth={2}
+          <div className={styles.titleIcon}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- approved static kiosk raster; same pattern as DirectionLandmark */}
+            <img
+              src={INFOBOARD_TRANSPORT_HEADER_BUS_ICON_PATH}
+              alt=""
               aria-hidden
+              className={styles.titleIconImage}
               data-testid="screen2-transport-bus-icon"
+              decoding="async"
             />
           </div>
           <div className={styles.titleCopy}>

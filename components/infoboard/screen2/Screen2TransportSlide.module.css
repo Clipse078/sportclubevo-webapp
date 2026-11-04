@@ -95,23 +95,19 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: clamp(44px, 3.2vw, 56px);
-  height: clamp(44px, 3.2vw, 56px);
-  border-radius: 12px;
-  color: rgba(125, 211, 252, 0.95);
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(125, 211, 252, 0.2);
 }
 
-.slide[data-theme="light"] .titleIcon {
-  color: rgba(24, 73, 166, 0.92);
-  background: rgba(30, 91, 198, 0.1);
-  border-color: rgba(24, 73, 166, 0.18);
+.titleIconImage {
+  display: block;
+  width: clamp(44px, 3.2vw, 52px);
+  height: clamp(44px, 3.2vw, 52px);
+  object-fit: contain;
+  object-position: center;
 }
 
-.titleIconSvg {
-  width: clamp(40px, 2.8vw, 48px);
-  height: clamp(40px, 2.8vw, 48px);
+.slide[data-theme="light"] .titleIconImage {
+  filter: brightness(0) saturate(100%) invert(17%) sepia(62%) saturate(3200%) hue-rotate(207deg)
+    brightness(92%) contrast(92%);
 }
 
 .titleCopy {
@@ -469,15 +465,9 @@
   gap: 8px;
 }
 
-.compact .titleIcon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-}
-
-.compact .titleIconSvg {
-  width: 20px;
-  height: 20px;
+.compact .titleIconImage {
+  width: 22px;
+  height: 22px;
 }
 
 .compact .eyebrow {

@@ -63,7 +63,7 @@ function makeTransport(overrides: Partial<Extract<TransportResult, { isAvailable
 }
 
 describe("SCE-INFOBOARD-R23R1 Screen 2 ÖV", () => {
-  it("renders BusFront heading icon and tenant-configured direction labels", () => {
+  it("renders premium bus heading icon and tenant-configured direction labels", () => {
     render(
       <Screen2TransportSlide
         transport={makeTransport()}

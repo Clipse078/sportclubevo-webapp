@@ -169,7 +169,7 @@ describe("SCE-INFOBOARD-R23R2 Screen 2 ÖV", () => {
     expect(css).toMatch(/\.compact \.destination[\s\S]*font-size: 13\.5px/);
   });
 
-  it("preserves BusFront icon and outward direction arrows", () => {
+  it("preserves premium bus header icon and outward direction arrows", () => {
     render(
       <Screen2TransportSlide
         transport={makeTransport(1, 1)}
