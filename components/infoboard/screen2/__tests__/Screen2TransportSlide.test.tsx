@@ -94,8 +94,8 @@ describe("Screen2TransportSlide", () => {
     expect(screen.getByTestId("screen2-transport-direction-columns")).toBeTruthy();
     expect(screen.getByTestId("screen2-transport-direction-allschwil-zentrum")).toBeTruthy();
     expect(screen.getByTestId("screen2-transport-direction-bachgraben-basel")).toBeTruthy();
-    expect(screen.getByText("← RICHTUNG ALLSCHWIL ZENTRUM")).toBeTruthy();
-    expect(screen.getByText("RICHTUNG BACHGRABEN / BASEL →")).toBeTruthy();
+    expect(screen.getByText("Richtung Allschwil Zentrum")).toBeTruthy();
+    expect(screen.getByText("Richtung Bachgraben / Basel")).toBeTruthy();
     expect(screen.getByTestId("screen2-transport-line-badge").textContent?.trim()).toBe("48");
     expect(screen.getByText("Basel, Bachgraben")).toBeTruthy();
     expect(screen.getByTestId("screen2-transport-delay").textContent?.trim()).toBe("+3");
@@ -229,7 +229,7 @@ describe("Screen2TransportSlide", () => {
     expect(css).toContain("text-overflow: ellipsis");
   });
 
-  it("renders max three departures per direction column without cross-column spill", () => {
+  it("renders max five departures per direction column without cross-column spill", () => {
     const leftDepartures = [
       makeDeparture({
         line: "38",
@@ -245,6 +245,16 @@ describe("Screen2TransportSlide", () => {
         line: "48",
         destination: "Basel, Bahnhof SBB",
         plannedDeparture: "2026-09-02T19:01:00+0200",
+      }),
+      makeDeparture({
+        line: "10",
+        destination: "Extra Left Four",
+        plannedDeparture: "2026-09-02T19:05:00+0200",
+      }),
+      makeDeparture({
+        line: "12",
+        destination: "Extra Left Five",
+        plannedDeparture: "2026-09-02T19:08:00+0200",
       }),
       makeDeparture({
         line: "11",
@@ -272,6 +282,20 @@ describe("Screen2TransportSlide", () => {
         line: "11",
         destination: "Basel, Aeschenplatz",
         plannedDeparture: "2026-09-02T19:02:00+0200",
+        nextStopName: "Allschwil, Kreuzstrasse",
+        nextStopId: "8578171",
+      }),
+      makeDeparture({
+        line: "10",
+        destination: "Extra Right Four",
+        plannedDeparture: "2026-09-02T19:08:00+0200",
+        nextStopName: "Allschwil, Kreuzstrasse",
+        nextStopId: "8578171",
+      }),
+      makeDeparture({
+        line: "12",
+        destination: "Extra Right Five",
+        plannedDeparture: "2026-09-02T19:12:00+0200",
         nextStopName: "Allschwil, Kreuzstrasse",
         nextStopId: "8578171",
       }),
@@ -315,8 +339,8 @@ describe("Screen2TransportSlide", () => {
       "screen2-transport-row",
     );
 
-    expect(leftRows).toHaveLength(3);
-    expect(rightRows).toHaveLength(3);
+    expect(leftRows).toHaveLength(5);
+    expect(rightRows).toHaveLength(5);
     expect(screen.queryByText("Should Not Render")).toBeNull();
     expect(screen.queryByText("Should Not Render Right")).toBeNull();
   });
@@ -506,7 +530,7 @@ describe("Screen2TransportSlide UX5 premium color hierarchy", () => {
   it("applies semantic wait-time tones without coloring destination or absolute time", () => {
     const cases = [
       { plannedDeparture: "2026-09-02T18:40:00+0200", tone: "soon", label: "Jetzt" },
-      { plannedDeparture: "2026-09-02T18:41:00+0200", tone: "soon", label: "1 min" },
+      { plannedDeparture: "2026-09-02T18:41:01+0200", tone: "soon", label: "1 min" },
       { plannedDeparture: "2026-09-02T18:45:00+0200", tone: "soon", label: "5 min" },
       { plannedDeparture: "2026-09-02T18:46:00+0200", tone: "medium", label: "6 min" },
       { plannedDeparture: "2026-09-02T18:55:00+0200", tone: "medium", label: "15 min" },
@@ -592,11 +616,12 @@ describe("Screen2TransportSlide UX5 premium color hierarchy", () => {
     expect(screen.getByTestId("screen2-transport-wait-time").className).toContain("minutesLong");
   });
 
-  it("keeps badge styling inside the frozen 36px row contract", () => {
+  it("keeps badge styling inside the compact row height contract", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
     expect(css).toContain(".lineBadge");
     expect(css).toMatch(/\.compact \.row[\s\S]*max-height: var\(--screen2-transport-row-height/);
     expect(css).toMatch(/\.compact \.lineBadge[\s\S]*height: 18px/);
+    expect(SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX).toBeGreaterThanOrEqual(28);
   });
 });
 
@@ -618,12 +643,13 @@ describe("Screen2TransportSlide INFOBOARD-TRANSPORT-03 destination legibility", 
 describe("Screen2TransportSlide UX4 sizing contract", () => {
   it("defines deterministic compact panel and row geometry for 1920x1080", () => {
     expect(SCREEN2_TRANSPORT_PANEL_HEIGHT_PX).toBeGreaterThan(0);
-    expect(SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX).toBe(36);
+    expect(SCREEN2_TRANSPORT_COMPACT_ROW_HEIGHT_PX).toBeGreaterThanOrEqual(28);
     expect(SCREEN2_TRANSPORT_COMPACT_ROW_GAP_PX).toBe(3);
-    expect(SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION).toBe(3);
+    expect(SCREEN2_TRANSPORT_COMPACT_ROWS_PER_DIRECTION).toBe(5);
 
     const centerStackCss = readRepoFile("components/infoboard/screen2/Screen2CenterStack.module.css");
-    expect(centerStackCss).toContain("var(--screen2-transport-panel-height)");
+    expect(centerStackCss).toContain("presentationRegion");
+    expect(centerStackCss).not.toContain("var(--screen2-transport-panel-height)");
   });
 });
 

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * INFOBOARD-TRANSPORT-02-UX3 — static center layout focused tests.
+ * SCE-INFOBOARD-V2-01-R21 — rotating center layout focused tests.
  */
 
 import { readFileSync } from "node:fs";
@@ -18,9 +18,9 @@ import {
   SCREEN2_BODY_SHELL_MEASUREMENT_CONTRACT,
   SCREEN2_CENTER_HEIGHT_PX,
   SCREEN2_CENTER_WIDTH_PX,
-  SCREEN2_TRANSPORT_PANEL_HEIGHT_PX,
   computeAnlageplanMapDimensions,
 } from "@/lib/infoboard/screen2-body-shell-sizing";
+import { SCREEN2_PRESENTATION_ANLAGEPLAN_MS } from "@/lib/infoboard/screen2-presentation-rotation";
 import type { TransportResult } from "@/lib/transport/transport-types";
 
 const REPO_ROOT = process.cwd();
@@ -47,7 +47,12 @@ function makeAnlageplanPayload(): AnlageplanLivePayload {
         dressingRooms: [],
         unallocated: [],
       },
-      branding: { clubLogoSrc: null, productLogoSrc: null },
+      branding: {
+        clubLogoSrc: null,
+        productLogoSrc: null,
+        tenantPrimaryColor: null,
+        tenantSecondaryColor: null,
+      },
       currentTimeIso: "2026-09-01T10:00:00.000Z",
       theme: "DARK",
     },
@@ -122,7 +127,7 @@ vi.mock("@/components/infoboard/kiosk-transport", () => ({
   useKioskTransport: (initial: TransportResult | null) => initial,
 }));
 
-describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
+describe("SCE-INFOBOARD-V2-01-R21 — rotating center layout", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -131,7 +136,7 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     vi.useRealTimers();
   });
 
-  it("renders Sportanlage and ÖV panel permanently when transport is configured", () => {
+  it("renders rotator with Anlageplan initially when transport is configured", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -144,11 +149,13 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     expect(screen.getByTestId("anlageplan-slide")).toBeTruthy();
     expect(screen.getByTestId("anlageplan-map-canvas")).toBeTruthy();
     expect(screen.getByTestId("screen2-center-stack")).toBeTruthy();
-    expect(screen.getByTestId("screen2-transport-panel")).toBeTruthy();
-    expect(screen.getByTestId("screen2-transport-slide")).toBeTruthy();
+    expect(screen.getByTestId("screen2-center-rotator")).toBeTruthy();
+    expect(screen.getByTestId("screen2-center-rotator").getAttribute("data-active-presentation")).toBe(
+      "anlageplan",
+    );
   });
 
-  it("does not render lower center sponsor placeholder", () => {
+  it("does not render sponsor placeholder rails", () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
@@ -158,21 +165,8 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
       />,
     );
 
-    expect(screen.queryByTestId("screen2-lower-sponsor-zone")).toBeNull();
-  });
-
-  it("keeps left and right sponsor rails present", () => {
-    render(
-      <InfoboardAnlageplan
-        payload={makeAnlageplanPayload()}
-        branding={{ clubName: "FC Allschwil" }}
-        tenantKey="fc-allschwil"
-        transport={TRANSPORT}
-      />,
-    );
-
-    expect(screen.getByTestId("screen2-sponsor-rail-left")).toBeTruthy();
-    expect(screen.getByTestId("screen2-sponsor-rail-right")).toBeTruthy();
+    expect(screen.queryByTestId("screen2-sponsor-rail-left")).toBeNull();
+    expect(screen.queryByTestId("screen2-sponsor-rail-right")).toBeNull();
   });
 
   it("keeps header and footer present", () => {
@@ -189,53 +183,32 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     expect(screen.getByTestId("kiosk-shell-footer")).toBeTruthy();
   });
 
-  it("does not rotate center content after 60 seconds", () => {
+  it("rotates center content after configured durations", async () => {
     render(
       <InfoboardAnlageplan
         payload={makeAnlageplanPayload()}
         branding={{ clubName: "FC Allschwil" }}
         tenantKey="fc-allschwil"
         transport={TRANSPORT}
-        liveClock={false}
+        liveClock={true}
       />,
     );
 
-    expect(screen.getByTestId("anlageplan-map-canvas")).toBeTruthy();
-    expect(screen.getByTestId("screen2-transport-slide")).toBeTruthy();
+    expect(screen.getByTestId("screen2-center-rotator").getAttribute("data-active-presentation")).toBe(
+      "anlageplan",
+    );
 
-    act(() => {
-      vi.advanceTimersByTime(60_000);
+    await act(async () => {
+      vi.advanceTimersByTime(SCREEN2_PRESENTATION_ANLAGEPLAN_MS);
     });
 
-    expect(screen.getByTestId("anlageplan-map-canvas")).toBeTruthy();
-    expect(screen.getByTestId("screen2-transport-slide")).toBeTruthy();
-    expect(screen.queryByTestId("screen2-center-rotator")).toBeNull();
-  });
-
-  it("places ÖV panel below the map inside center content", () => {
-    render(
-      <InfoboardAnlageplan
-        payload={makeAnlageplanPayload()}
-        branding={{ clubName: "FC Allschwil" }}
-        tenantKey="fc-allschwil"
-        transport={TRANSPORT}
-      />,
+    expect(screen.getByTestId("screen2-center-rotator").getAttribute("data-active-presentation")).toBe(
+      "ov",
     );
-
-    const center = screen.getByTestId("screen2-center-content");
-    const stack = screen.getByTestId("screen2-center-stack");
-    const slide = screen.getByTestId("anlageplan-slide");
-    const canvas = screen.getByTestId("anlageplan-map-canvas");
-    const transportPanel = screen.getByTestId("screen2-transport-panel");
-
-    expect(center.contains(stack)).toBe(true);
-    expect(stack.contains(slide)).toBe(true);
-    expect(stack.contains(transportPanel)).toBe(true);
-    expect(slide.contains(canvas)).toBe(true);
-    expect(canvas.compareDocumentPosition(transportPanel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("screen2-transport-slide")).toBeTruthy();
   });
 
-  it("Anlageplan dimensions/fit contract unchanged", () => {
+  it("Anlageplan dimensions/fit contract uses full center width", () => {
     const mapDimensions = computeAnlageplanMapDimensions(
       SCREEN2_CENTER_WIDTH_PX,
       SCREEN2_CENTER_HEIGHT_PX,
@@ -249,9 +222,7 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     );
     expect(SCREEN2_ANLAGEPLAN_MAP_DIMENSIONS.widthPx).toBe(mapDimensions.widthPx);
     expect(SCREEN2_ANLAGEPLAN_MAP_DIMENSIONS.heightPx).toBe(mapDimensions.heightPx);
-    expect(SCREEN2_TRANSPORT_PANEL_HEIGHT_PX).toBe(
-      SCREEN2_CENTER_HEIGHT_PX - mapDimensions.heightPx,
-    );
+    expect(mapDimensions.widthPx).toBeGreaterThan(1100);
 
     const anlageplanCss = readRepoFile(
       "components/infoboard/anlageplan/InfoboardAnlageplan.module.css",
@@ -261,17 +232,14 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     expect(anlageplanCss).toContain("height: min(100cqh, calc(100cqw * 9 / 16))");
   });
 
-  it("Screen2BodyShell geometry unchanged", () => {
+  it("Screen2BodyShell is full-width single column", () => {
     const shellCss = readRepoFile("components/infoboard/screen2/Screen2BodyShell.module.css");
     const shellTs = readRepoFile("components/infoboard/screen2/Screen2BodyShell.tsx");
     const sizing = readRepoFile("lib/infoboard/screen2-body-shell-sizing.ts");
 
-    expect(shellCss).toContain("grid-template-columns:");
-    expect(shellCss).toContain("var(--screen2-sponsor-rail-width)");
-    expect(shellCss).toContain("var(--screen2-center-width)");
-    expect(shellTs).not.toContain("Screen2LowerSponsorZone");
-    expect(sizing).toContain("SCREEN2_SPONSOR_RAIL_SHARE = 0.19");
-    expect(sizing).toContain("SCREEN2_CENTER_SHARE = 0.62");
+    expect(shellCss).not.toContain("grid-template-columns:");
+    expect(shellTs).not.toContain("Screen2SponsorRail");
+    expect(sizing).toContain("SCREEN2_SPONSOR_RAIL_WIDTH_PX = 0");
   });
 
   it("Screen 1 unaffected", () => {
@@ -285,7 +253,7 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     expect(screen.getByTestId("infoboard-screen1-root")).toBeTruthy();
   });
 
-  it("Screen2CenterStack keeps map and transport mounted together", () => {
+  it("Screen2CenterStack keeps map and transport mounted in rotator panels", () => {
     render(
       <Screen2CenterStack
         tenantKey="fc-allschwil"
@@ -301,13 +269,14 @@ describe("INFOBOARD-TRANSPORT-02-UX3 — static center layout", () => {
     const stack = screen.getByTestId("screen2-center-stack");
     expect(stack.contains(screen.getByTestId("anlageplan-child"))).toBe(true);
     expect(stack.contains(screen.getByTestId("screen2-transport-slide"))).toBe(true);
-    expect(screen.getByTestId("screen2-transport-slide").getAttribute("data-compact")).toBe("true");
+    expect(screen.getByTestId("screen2-transport-slide").getAttribute("data-compact")).toBe("false");
   });
 
-  it("does not retain center rotator implementation", () => {
-    expect(() => readRepoFile("components/infoboard/screen2/Screen2CenterRotator.tsx")).toThrow();
+  it("uses Screen2PresentationRotator in the center stack", () => {
     const anlageplan = readRepoFile("components/infoboard/anlageplan/InfoboardAnlageplan.tsx");
-    expect(anlageplan).not.toContain("Screen2CenterRotator");
     expect(anlageplan).toContain("Screen2CenterStack");
+    expect(readRepoFile("components/infoboard/screen2/Screen2CenterStack.tsx")).toContain(
+      "Screen2PresentationRotator",
+    );
   });
 });

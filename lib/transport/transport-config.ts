@@ -23,6 +23,18 @@ export type TransportDirectionGroupConfig = {
   destinationMatchers?: string[];
 };
 
+/** Maximum departures rendered per configured direction (R23 policy). */
+export const TRANSPORT_MAX_DEPARTURES_PER_DIRECTION = 5;
+
+/** Maximum departures rendered across all directions (R23 policy). */
+export const TRANSPORT_MAX_DEPARTURES_TOTAL = 10;
+
+/**
+ * Multiplier applied when deriving provider candidate limits from per-direction caps.
+ * Ensures uneven stationboard ordering can still fill five rows per direction.
+ */
+export const TRANSPORT_PROVIDER_CANDIDATE_POOL_MULTIPLIER = 5;
+
 export type TransportStopConfig = {
   enabled: boolean;
   provider: TransportProviderId;
@@ -39,7 +51,13 @@ export type TransportStopConfig = {
   allowedCategories?: TransportCategory[];
   lineFilters?: string[];
   destinationFilters?: string[];
+  /** Max departures shown on flat fallback lists (equals total display cap when grouped). */
   departureCount: number;
+  /**
+   * Provider stationboard fetch limit — may exceed {@link departureCount} so grouping
+   * can select five per direction from a skewed candidate pool.
+   */
+  providerCandidateLimit?: number;
   /** Max departures shown per configured direction group. */
   departuresPerDirectionGroup?: number;
   directionGroups?: TransportDirectionGroupConfig[];
@@ -81,8 +99,9 @@ const FC_ALLSCHWIL_TRANSPORT: TransportStopConfig = {
     longitude: 7.547436,
   },
   allowedCategories: ["bus", "tram", "train"],
-  departureCount: 8,
-  departuresPerDirectionGroup: 3,
+  departureCount: TRANSPORT_MAX_DEPARTURES_TOTAL,
+  providerCandidateLimit: 50,
+  departuresPerDirectionGroup: TRANSPORT_MAX_DEPARTURES_PER_DIRECTION,
   directionGroups: FC_ALLSCHWIL_DIRECTION_GROUPS,
   refreshIntervalSeconds: 45,
 };
@@ -103,4 +122,25 @@ export function resolveTenantTransportConfig(
     return null;
   }
   return config;
+}
+
+/**
+ * Resolves how many raw departures to request from the provider before direction grouping.
+ */
+export function resolveProviderCandidateLimit(config: TransportStopConfig): number {
+  if (
+    typeof config.providerCandidateLimit === "number" &&
+    config.providerCandidateLimit > 0
+  ) {
+    return config.providerCandidateLimit;
+  }
+
+  const perDirection =
+    config.departuresPerDirectionGroup ?? TRANSPORT_MAX_DEPARTURES_PER_DIRECTION;
+  const directionCount = Math.max(config.directionGroups?.length ?? 2, 2);
+
+  return Math.max(
+    config.departureCount,
+    perDirection * directionCount * TRANSPORT_PROVIDER_CANDIDATE_POOL_MULTIPLIER,
+  );
 }

@@ -35,9 +35,8 @@ describe("resolveWaitTimeTone", () => {
 });
 
 describe("formatRelativeWaitLabel", () => {
-  it("formats Jetzt for zero or negative waits", () => {
+  it("formats Jetzt only for zero-minute waits", () => {
     expect(formatRelativeWaitLabel(0)).toBe("Jetzt");
-    expect(formatRelativeWaitLabel(-2)).toBe("Jetzt");
   });
 
   it("formats positive waits as N min", () => {
@@ -47,11 +46,12 @@ describe("formatRelativeWaitLabel", () => {
 });
 
 describe("computeMinutesUntil", () => {
-  it("rounds to whole minutes and never returns negative values", () => {
+  it("rounds to whole minutes and returns -1 when expired", () => {
     const nowMs = Date.parse("2026-09-02T16:40:00.000Z");
     const departureMs = Date.parse("2026-09-02T16:42:30.000Z");
 
     expect(computeMinutesUntil(departureMs, nowMs)).toBe(3);
     expect(computeMinutesUntil(nowMs, nowMs)).toBe(0);
+    expect(computeMinutesUntil(nowMs - 120_000, nowMs)).toBe(-1);
   });
 });

@@ -216,7 +216,9 @@ describe("R14 dense training operational environment", () => {
     const ambient = within(trainingCard as HTMLElement).getByTestId("venue-training-matrix-ambient");
     expect(ambient.getAttribute("data-venue-ambient-kind")).toBe("TRAINING");
     expect(ambient.querySelector('[data-venue-ambient-base-atmosphere="true"]')).toBeTruthy();
-    expect(resolveActivityAmbientSrc("TRAINING")).toBe(INFOBOARD_AMBIENT_ASSET_PATHS.training);
+    expect(resolveActivityAmbientSrc("TRAINING", "LIGHT")).toBe(
+      INFOBOARD_AMBIENT_ASSET_PATHS.training,
+    );
   });
 });
 
@@ -236,6 +238,7 @@ describe("R14 asset integrity", () => {
     expect(INFOBOARD_AMBIENT_ASSET_PATHS).toEqual({
       header: "/Infoboard/ambient/infoboard-header-ambient.png",
       jumbotron: "/Infoboard/ambient/infoboard-jumbotron-ambient.png",
+      darkOperational: "/Infoboard/ambient/infoboard-dark-background.png",
       match: "/Infoboard/ambient/infoboard-match-ambient.png",
       tournament: "/Infoboard/ambient/infoboard-tournament-ambient.png",
       training: "/Infoboard/ambient/infoboard-training-ambient.png",

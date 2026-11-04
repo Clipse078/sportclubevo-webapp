@@ -196,27 +196,35 @@
     );
 }
 
+[data-theme="dark"] .activityMatch,
+[data-theme="dark"] .activityTournament,
+[data-theme="dark"] .activityTraining {
+  --ambient-position-x: 50%;
+  --ambient-position-y: 50%;
+  --ambient-base-atmosphere: #0a1828;
+}
+
 [data-theme="dark"] .activityMatch .ambientScrim,
 [data-theme="dark"] .activityTournament .ambientScrim,
 [data-theme="dark"] .activityTraining .ambientScrim {
   background:
     linear-gradient(
       180deg,
-      rgba(10, 24, 40, 0.62) 0%,
-      rgba(10, 24, 40, 0.28) 35%,
-      transparent 55%
+      rgba(10, 24, 40, 0.38) 0%,
+      rgba(10, 24, 40, 0.14) 38%,
+      transparent 58%
     ),
     linear-gradient(
       90deg,
-      rgba(10, 24, 40, 0.4) 0%,
-      transparent 70%
+      rgba(10, 24, 40, 0.24) 0%,
+      transparent 62%
     );
 }
 
 [data-theme="dark"] .activityMatch .ambientRasterOpacity,
 [data-theme="dark"] .activityTournament .ambientRasterOpacity,
 [data-theme="dark"] .activityTraining .ambientRasterOpacity {
-  opacity: 0.88;
+  opacity: 0.65;
 }
 
 /* ── Header: light surface, one tier more visible ambience ─────────────── */

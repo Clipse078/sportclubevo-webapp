@@ -1,7 +1,7 @@
 /**
  * components/infoboard/screen2/Screen2CenterStack.module.css
  *
- * INFOBOARD-TRANSPORT-02-UX3 — static map + ÖV panel center stack.
+ * SCE-INFOBOARD-V2-01-R21 — rotating full-area center presentations.
  */
 
 .stack {
@@ -12,17 +12,12 @@
   min-height: 0;
 }
 
-.mapRegion {
-  flex: 0 0 auto;
+.presentationRegion {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
   min-height: 0;
-}
-
-.transportRegion {
-  flex: 0 0 var(--screen2-transport-panel-height);
-  width: 100%;
-  height: var(--screen2-transport-panel-height);
-  max-height: var(--screen2-transport-panel-height);
-  min-height: 0;
-  overflow: hidden;
+  min-width: 0;
 }

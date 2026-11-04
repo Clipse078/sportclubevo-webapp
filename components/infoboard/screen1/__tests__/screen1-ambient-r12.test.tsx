@@ -107,11 +107,11 @@ afterEach(() => {
 
 describe("R12 ambient asset mapping", () => {
   it("maps MATCH, TURNIER, TRAINING to approved filenames", () => {
-    expect(resolveActivityAmbientSrc("MATCH")).toContain("infoboard-match-ambient.png");
-    expect(resolveActivityAmbientSrc("TOURNAMENT")).toContain(
+    expect(resolveActivityAmbientSrc("MATCH", "LIGHT")).toContain("infoboard-match-ambient.png");
+    expect(resolveActivityAmbientSrc("TOURNAMENT", "LIGHT")).toContain(
       "infoboard-tournament-ambient.png",
     );
-    expect(resolveActivityAmbientSrc("TRAINING")).toContain(
+    expect(resolveActivityAmbientSrc("TRAINING", "LIGHT")).toContain(
       "infoboard-training-ambient.png",
     );
   });

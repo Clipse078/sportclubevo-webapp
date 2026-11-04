@@ -1428,6 +1428,7 @@ function TournamentDestination({
 type TrainingGroupCardProps = {
   items: FlatEvent[];
   timeZone: string;
+  theme: InfoboardDisplayTheme;
   /** Content-demand value driving flex-grow on this card. */
   demand: number;
   /** Club name for prefix stripping from team display names. */
@@ -1459,6 +1460,7 @@ type TrainingGroupCardProps = {
 function TrainingGroupCard({
   items,
   timeZone,
+  theme,
   demand,
   clubName,
   clubLogoSrc,
@@ -1475,7 +1477,7 @@ function TrainingGroupCard({
   const groupDensity = trainingGroupDensityTier(items.length);
   const timePresentation = resolveTrainingCohortTimePresentation(items, timeZone);
   const participantDensity = resolveTrainingParticipantDensity(items.length);
-  const trainingAmbientSrc = resolveActivityAmbientSrc("TRAINING");
+  const trainingAmbientSrc = resolveActivityAmbientSrc("TRAINING", theme);
   const canonicalCrestClamp = scaleVenuePresentationClamp(
     TRAINING_CANONICAL_IDENTITY_CREST_CLAMP,
     venuePresentationDensity,
@@ -1562,6 +1564,9 @@ function TrainingGroupCard({
         <div
           className={styles.operationalAmbientAnchor}
           data-venue-operational-ambient-anchor="true"
+          data-venue-operational-surface={
+            theme === "DARK" ? "unified-dark" : undefined
+          }
           aria-hidden="true"
         >
           <VenueActivityAmbientLayer
@@ -1736,6 +1741,7 @@ function resolveEventCardStyle(
 type EventCardProps = {
   item: FlatEvent;
   timeZone: string;
+  theme: InfoboardDisplayTheme;
   participantAllocations: readonly InfoboardTeamAllocationPresentation[] | undefined;
   /** Content-demand value driving flex-grow on this card. */
   demand: number;
@@ -1750,6 +1756,7 @@ type EventCardProps = {
 function EventCard({
   item,
   timeZone,
+  theme,
   participantAllocations,
   demand,
   presentation = DEFAULT_SCREEN1_PRESENTATION,
@@ -1768,7 +1775,7 @@ function EventCard({
   const endTime = rawEndTime !== null && rawEndTime !== startTime ? rawEndTime : null;
   const isMatch = event.type === "MATCH";
   const isTournament = event.type === "TOURNAMENT";
-  const activityAmbientSrc = resolveActivityAmbientSrc(event.type);
+  const activityAmbientSrc = resolveActivityAmbientSrc(event.type, theme);
   const activityAmbientKind = isInfoboardActivityAmbientKind(event.type)
     ? event.type
     : null;
@@ -1795,6 +1802,9 @@ function EventCard({
       <div
         className={styles.operationalAmbientAnchor}
         data-venue-operational-ambient-anchor="true"
+        data-venue-operational-surface={
+          theme === "DARK" ? "unified-dark" : undefined
+        }
         aria-hidden="true"
       >
         <VenueActivityAmbientLayer src={activityAmbientSrc} kind={activityAmbientKind} />
@@ -2199,6 +2209,7 @@ export function InfoboardScreen1({
                 key={displayItem.items.map((it) => it.event.id).join(":")}
                 items={displayItem.items}
                 timeZone={timeZone}
+                theme={theme}
                 demand={demand}
                 clubName={clubNameUpper}
                 clubLogoSrc={clubLogoSrc}
@@ -2240,6 +2251,7 @@ export function InfoboardScreen1({
               key={item.event.id}
               item={item}
               timeZone={timeZone}
+              theme={theme}
               participantAllocations={participantAllocations}
               demand={demand}
               presentation={presentation}

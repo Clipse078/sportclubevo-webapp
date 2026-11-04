@@ -1,18 +1,13 @@
 /**
  * components/infoboard/screen2/Screen2BodyShell.module.css
  *
- * INFOBOARD-TRANSPORT-01B — three-column Screen 2 body shell.
+ * SCE-INFOBOARD-V2-01-R21 — full-width center body shell.
  */
 
 .shell {
   flex: 1;
-  display: grid;
-  grid-template-columns:
-    var(--screen2-sponsor-rail-width)
-    var(--screen2-center-width)
-    var(--screen2-sponsor-rail-width);
-  grid-template-rows: minmax(0, 1fr);
-  gap: var(--screen2-body-column-gap);
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   min-height: 0;
   height: 100%;

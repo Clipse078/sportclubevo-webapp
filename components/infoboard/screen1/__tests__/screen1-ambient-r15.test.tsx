@@ -229,7 +229,9 @@ describe("R15 MATCH known asset issue", () => {
     expect(KNOWN_ASSET_ISSUE_MATCH_PITCH_GEOMETRY).toBe("YES");
     expect(AMBIENT_CSS).not.toMatch(/filter:\s*blur/);
     expect(AMBIENT_CSS).not.toMatch(/transform:\s*scaleX/);
-    expect(resolveActivityAmbientSrc("MATCH")).toBe(INFOBOARD_AMBIENT_ASSET_PATHS.match);
+    expect(resolveActivityAmbientSrc("MATCH", "LIGHT")).toBe(
+      INFOBOARD_AMBIENT_ASSET_PATHS.match,
+    );
   });
 });
 
@@ -256,6 +258,7 @@ describe("R15 asset integrity", () => {
     expect(INFOBOARD_AMBIENT_ASSET_PATHS).toEqual({
       header: "/Infoboard/ambient/infoboard-header-ambient.png",
       jumbotron: "/Infoboard/ambient/infoboard-jumbotron-ambient.png",
+      darkOperational: "/Infoboard/ambient/infoboard-dark-background.png",
       match: "/Infoboard/ambient/infoboard-match-ambient.png",
       tournament: "/Infoboard/ambient/infoboard-tournament-ambient.png",
       training: "/Infoboard/ambient/infoboard-training-ambient.png",

@@ -4,17 +4,59 @@
  * Semantic wait-time hierarchy for Infoboard transport departures.
  */
 
+import {
+  DEPARTURE_EXPIRY_GRACE_MS,
+  DEPARTURE_IMMINENT_WINDOW_MS,
+} from "./transport-effective-departure";
+
 export const WAIT_TIME_SOON_MAX_MINUTES = 5;
 export const WAIT_TIME_MEDIUM_MAX_MINUTES = 15;
 
 export type WaitTimeTone = "soon" | "medium" | "long";
 
-export function computeMinutesUntil(effectiveMs: number, nowMs: number): number {
+export type RelativeWaitDisplay =
+  | { kind: "minutes"; minutesUntil: number }
+  | { kind: "jetzt" }
+  | { kind: "expired" };
+
+/**
+ * Maps effective departure time to a display state.
+ * Negative offsets beyond {@link DEPARTURE_EXPIRY_GRACE_MS} are expired — not "Jetzt".
+ */
+export function resolveRelativeWaitDisplay(
+  effectiveMs: number,
+  nowMs: number,
+): RelativeWaitDisplay {
   if (!Number.isFinite(effectiveMs) || !Number.isFinite(nowMs)) {
-    return Number.POSITIVE_INFINITY;
+    return { kind: "expired" };
   }
 
-  return Math.max(0, Math.round((effectiveMs - nowMs) / 60_000));
+  const remainingMs = effectiveMs - nowMs;
+
+  if (remainingMs < -DEPARTURE_EXPIRY_GRACE_MS) {
+    return { kind: "expired" };
+  }
+
+  if (remainingMs <= DEPARTURE_IMMINENT_WINDOW_MS) {
+    return { kind: "jetzt" };
+  }
+
+  return {
+    kind: "minutes",
+    minutesUntil: Math.round(remainingMs / 60_000),
+  };
+}
+
+/** @deprecated Prefer {@link resolveRelativeWaitDisplay} for expiry-aware UI. */
+export function computeMinutesUntil(effectiveMs: number, nowMs: number): number {
+  const display = resolveRelativeWaitDisplay(effectiveMs, nowMs);
+  if (display.kind === "expired") {
+    return -1;
+  }
+  if (display.kind === "jetzt") {
+    return 0;
+  }
+  return display.minutesUntil;
 }
 
 /**
@@ -38,4 +80,14 @@ export function resolveWaitTimeTone(minutesUntil: number): WaitTimeTone {
 
 export function formatRelativeWaitLabel(minutesUntil: number): string {
   return minutesUntil <= 0 ? "Jetzt" : `${minutesUntil} min`;
+}
+
+export function formatRelativeWaitDisplay(display: RelativeWaitDisplay): string | null {
+  if (display.kind === "expired") {
+    return null;
+  }
+  if (display.kind === "jetzt") {
+    return "Jetzt";
+  }
+  return formatRelativeWaitLabel(display.minutesUntil);
 }

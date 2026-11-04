@@ -6,6 +6,9 @@
  * geometry, pagination, ordering, or feed semantics.
  */
 
+import { scalePlatzValueTypographyClamp } from "@/lib/infoboard/venue-platz-value-typography";
+import { VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE } from "@/lib/infoboard/venue-semantic-label";
+
 export const VENUE_PRESENTATION_DENSITY_ATTR = "data-venue-density";
 
 export const VENUE_PRESENTATION_DENSITIES = ["spacious", "standard"] as const;
@@ -52,6 +55,7 @@ export function scaleVenuePresentationClamp(
 
 /** Event-list scoped tokens (not overridden per card). */
 const VENUE_DENSITY_LIST_TOKEN_BASE = {
+  semanticLabel: VENUE_SEMANTIC_LABEL_FONT_SIZE_BASE,
   activityType: "clamp(0.82rem, 1.08cqw, 1.32rem)",
   matchSecondary: "clamp(0.78rem, 1cqw, 1.15rem)",
   tournamentParticipant: "clamp(0.78rem, 1.02cqw, 1.18rem)",
@@ -64,11 +68,13 @@ const VENUE_DENSITY_LIST_TOKEN_BASE = {
 export function resolveVenueDensityEventListCssVars(
   density: VenuePresentationDensity,
 ): Record<string, string> {
+  const semanticLabelFontSize = scaleVenuePresentationClamp(
+    VENUE_DENSITY_LIST_TOKEN_BASE.semanticLabel,
+    density,
+  );
   return {
-    "--ib-fs-activity-type": scaleVenuePresentationClamp(
-      VENUE_DENSITY_LIST_TOKEN_BASE.activityType,
-      density,
-    ),
+    "--ib-semantic-label-font-size": semanticLabelFontSize,
+    "--ib-fs-activity-type": semanticLabelFontSize,
     "--ib-match-secondary-font-size": scaleVenuePresentationClamp(
       VENUE_DENSITY_LIST_TOKEN_BASE.matchSecondary,
       density,
@@ -82,7 +88,7 @@ export function resolveVenueDensityEventListCssVars(
       density,
     ),
     "--ib-fs-dest-pitch": scaleVenuePresentationClamp(
-      VENUE_DENSITY_LIST_TOKEN_BASE.destPitch,
+      scalePlatzValueTypographyClamp(VENUE_DENSITY_LIST_TOKEN_BASE.destPitch),
       density,
     ),
     "--ib-fs-status-label": scaleVenuePresentationClamp(

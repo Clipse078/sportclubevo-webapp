@@ -34,6 +34,13 @@ import { groupFacilityPitches } from "@/lib/publishing/infoboard/facility-group"
 import { resolveBackgroundTransform } from "@/lib/infoboard/anlageplan-types";
 import { KioskShellHeader } from "@/components/infoboard/shared/KioskShellHeader";
 import { KIOSK_SHELL_CSS_VARS } from "@/lib/infoboard/kiosk-shell-sizing";
+import {
+  KIOSK_SHELL_FOOTER_AMBIENT,
+  KIOSK_SHELL_HEADER_AMBIENT,
+  resolveKioskHeaderWelcomeSubtitle,
+  resolveKioskShellThemePresentation,
+  resolveVenueHeaderBrandingInput,
+} from "@/lib/infoboard/kiosk-shell-presentation";
 import type { WeatherResult } from "@/lib/weather/weather-types";
 import { KioskShellFooter } from "@/components/infoboard/shared/KioskShellFooter";
 import { Screen2BodyShell } from "@/components/infoboard/screen2/Screen2BodyShell";
@@ -68,6 +75,8 @@ export type InfoboardAnlageplanProps = {
     productLogoSrc?: string | null;
     clubName?: string | null;
     facilityName?: string | null;
+    tenantPrimaryColor?: string | null;
+    tenantSecondaryColor?: string | null;
   };
   shellConfig?: InfoboardAnlageplanShellConfig | null;
   /** Preview-only: keep the supplied simulated moment fixed. */
@@ -101,6 +110,24 @@ export function InfoboardAnlageplan({
   const subtitleEnabled = shellConfig?.subtitleEnabled !== false;
   const subtitleText = shellConfig?.subtitleText?.trim() ?? null;
   const announcement = shellConfig?.announcement ?? null;
+  const theme = screen2.theme;
+  const { shellTheme, subtitlePlacement } = resolveKioskShellThemePresentation(theme);
+  const headerWelcomeSubtitle =
+    subtitleEnabled && subtitleText != null
+      ? resolveKioskHeaderWelcomeSubtitle(subtitleText, theme)
+      : null;
+  const venueHeaderBranding = resolveVenueHeaderBrandingInput({
+    tenantPrimaryColor:
+      branding.tenantPrimaryColor ?? screen2.branding.tenantPrimaryColor,
+    tenantSecondaryColor:
+      branding.tenantSecondaryColor ?? screen2.branding.tenantSecondaryColor,
+  });
+  const staticDateFallback = new Intl.DateTimeFormat("de-CH", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(screen2.feed.displayDate + "T12:00:00.000Z"));
 
   // ── Apply canonical facility hierarchy (groupFacilityPitches) ────────────
   // This is the SINGLE canonical call — do not apply hierarchy again in the
@@ -138,38 +165,32 @@ export function InfoboardAnlageplan({
 
   return (
     <div
+      className={styles.root}
       data-testid="infoboard-anlageplan-root"
-      data-theme="dark"
-      style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        minHeight: 0,
-        overflow: "hidden",
-        background: "#060B12",
-        color: "#ffffff",
-        fontFamily: "var(--font-inter, Inter, system-ui, -apple-system, sans-serif)",
-        ...KIOSK_SHELL_CSS_VARS,
-      } as CSSProperties}
+      data-theme={shellTheme}
+      style={KIOSK_SHELL_CSS_VARS as CSSProperties}
     >
       {/* ── SHARED HEADER ─────────────────────────────────────────────── */}
       <KioskShellHeader
         clubLogoSrc={branding.clubLogoSrc}
-        clubName={branding.clubName ?? "FC ALLSCHWIL"}
-        subtitle={subtitleText}
+        clubName={branding.clubName ?? screen2.feed.tenant.name}
+        subtitle={headerWelcomeSubtitle}
         subtitleEnabled={subtitleEnabled}
         initialTimeIso={currentTimeIso}
         timezone={tz}
         weather={showWeather ? weather : null}
         showTime={showTime}
         showDate={showDate}
+        staticDateFallback={staticDateFallback}
+        shellTheme={shellTheme}
+        subtitlePlacement={subtitlePlacement}
         liveClock={liveClock}
         liveWeather={liveClock}
+        {...KIOSK_SHELL_HEADER_AMBIENT}
+        venueHeaderBranding={venueHeaderBranding}
       />
 
-      {/* ── BODY: sponsor rails + centered Anlageplan canvas ───────────── */}
+      {/* ── BODY: full-width rotating Anlageplan / ÖV presentations ───── */}
       <div data-testid="anlageplan-main-region" className={styles.mainRegion}>
         <Screen2BodyShell
           center={
@@ -180,6 +201,7 @@ export function InfoboardAnlageplan({
                 initialTransport={transport}
                 refreshIntervalSeconds={transportConfig.refreshIntervalSeconds}
                 live={liveClock}
+                theme={theme}
               >
                 {anlageplanCenter}
               </Screen2CenterStack>
@@ -194,6 +216,7 @@ export function InfoboardAnlageplan({
       <KioskShellFooter
         productLogoSrc={branding.productLogoSrc}
         announcement={announcement ?? undefined}
+        {...KIOSK_SHELL_FOOTER_AMBIENT}
       />
     </div>
   );

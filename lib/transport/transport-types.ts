@@ -57,6 +57,11 @@ export type TransportAvailableResult = {
   departures: TransportDeparture[];
   /** Pre-classified direction groups when configured for the tenant. */
   directionGroups: TransportDirectionGroup[];
+  /**
+   * Normalized provider candidate pool from the last fetch (pre display cap).
+   * Used to replenish direction columns as departures expire between refreshes.
+   */
+  candidateDepartures?: TransportDeparture[];
   fetchedAt: string;
   /** True when the payload is served from a previous successful fetch. */
   isStale: boolean;

@@ -7,18 +7,27 @@ import {
 } from "@/lib/infoboard/screen1-ambient-assets";
 
 describe("Screen 1 ambient asset mapping (R12)", () => {
-  it("maps activity types to canonical ambient rasters", () => {
-    expect(resolveActivityAmbientSrc("MATCH")).toBe(
+  it("maps activity types to canonical LIGHT ambient rasters", () => {
+    expect(resolveActivityAmbientSrc("MATCH", "LIGHT")).toBe(
       INFOBOARD_AMBIENT_ASSET_PATHS.match,
     );
-    expect(resolveActivityAmbientSrc("TOURNAMENT")).toBe(
+    expect(resolveActivityAmbientSrc("TOURNAMENT", "LIGHT")).toBe(
       INFOBOARD_AMBIENT_ASSET_PATHS.tournament,
     );
-    expect(resolveActivityAmbientSrc("TRAINING")).toBe(
+    expect(resolveActivityAmbientSrc("TRAINING", "LIGHT")).toBe(
       INFOBOARD_AMBIENT_ASSET_PATHS.training,
     );
-    expect(resolveActivityAmbientSrc("OTHER")).toBeNull();
-    expect(resolveActivityAmbientSrc("VACATION_PERIOD")).toBeNull();
+    expect(resolveActivityAmbientSrc("OTHER", "LIGHT")).toBeNull();
+    expect(resolveActivityAmbientSrc("VACATION_PERIOD", "LIGHT")).toBeNull();
+  });
+
+  it("maps DARK activity types to the unified operational backdrop (R22)", () => {
+    for (const eventType of ["MATCH", "TOURNAMENT", "TRAINING"] as const) {
+      expect(resolveActivityAmbientSrc(eventType, "DARK")).toBe(
+        INFOBOARD_AMBIENT_ASSET_PATHS.darkOperational,
+      );
+    }
+    expect(resolveActivityAmbientSrc("OTHER", "DARK")).toBeNull();
   });
 
   it("exposes header and jumbotron ambient paths", () => {

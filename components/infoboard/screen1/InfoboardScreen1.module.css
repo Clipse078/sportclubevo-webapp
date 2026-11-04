@@ -103,12 +103,13 @@
   --ib-kabine-font-size-fallback: clamp(1.2rem, 1.6vw, 1.9rem);
   --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
   --ib-fs-dest-label:       clamp(0.68rem, 0.88vw, 1.05rem);
-  --ib-fs-activity-type:    clamp(0.82rem, 1.08vw, 1.32rem);
+  --ib-semantic-label-font-size: clamp(0.82rem, 1.08vw, 1.32rem);
+  --ib-fs-activity-type:    var(--ib-semantic-label-font-size);
   --ib-match-secondary-font-size: clamp(1.125rem, 1.35vw, 1.375rem);
   --ib-tournament-participant-font-size: clamp(1.125rem, 1.35vw, 1.3125rem);
   --ib-tournament-participant-logo-size: var(--ib-tournament-logo-size);
   --ib-tournament-participant-name-size: var(--ib-tournament-participant-font-size);
-  --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
+  --ib-fs-dest-pitch:       clamp(1.8rem, 2.52vw, 3.36rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
   --ib-fs-dest-team:        clamp(0.92rem, 1.15vw, 1.35rem);
   --ib-fs-participant:      clamp(0.8rem, 1vw, 1.25rem);
@@ -130,6 +131,18 @@
   --ib-card-gap:        clamp(4px, 0.5vh, 8px);
   --ib-card-pad-v:      clamp(8px, 1.1vh, 14px);
   --ib-card-pad-h:      clamp(14px, 1.6vw, 24px);
+
+  /* R13/R22 — unified operational ambient canvas (TIME excluded) */
+  --ib-zone-operational-ambient-left: var(--ib-zone-time);
+  --ib-zone-operational-ambient-span: 85%;
+
+  /* R22R1 — unified DARK operational card polish (LIGHT uses separate tokens) */
+  --ib-zone-separator-operational-unified: rgba(99, 135, 175, 0.06);
+  --ib-card-outline-operational: rgba(99, 135, 175, 0.24);
+  --ib-text-muted-operational: #92A8BE;
+  --ib-text-dim-operational: #7A93AB;
+  --ib-match-kabine-role-operational: #9DB4CA;
+  --venue-ambient-z-foreground: 10;
 }
 
 /* ─── Light theme palette (INFOBOARD-INTEGRATION-01B) ───────────────────────
@@ -212,7 +225,7 @@
   --ib-fs-event-time:       clamp(2.85rem, 3.75vw, 4rem);
   --ib-fs-event-end-time:   clamp(1.2rem, 1.45vw, 1.55rem);
   --ib-fs-dest-label:       clamp(1rem, 1.12vw, 1.125rem);
-  --ib-fs-dest-pitch:       clamp(1.5rem, 1.75vw, 1.75rem);
+  --ib-fs-dest-pitch:       clamp(1.8rem, 2.1vw, 2.1rem);
   --ib-fs-dest-room:        clamp(1.5625rem, 1.85vw, 1.875rem);
   --ib-fs-match-role:       clamp(1.3rem, 1.48vw, 1.55rem);
   --ib-fs-board-title:      clamp(1.5rem, 1.75vw, 1.75rem);
@@ -279,9 +292,9 @@
     --ib-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
     --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
-    --ib-semantic-label-font-size: clamp(0.72rem, 0.95cqw, 1.12rem);
+    --ib-semantic-label-font-size: clamp(0.72rem, 0.95vw, 1.12rem);
     --ib-venue-label-primary-gap: clamp(4px, 0.5cqh, 8px);
-    --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
+    --ib-fs-dest-pitch: clamp(1.8rem, 2.52cqw, 3.36rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
     --ib-fs-dest-team: clamp(0.92rem, 1.15cqw, 1.35rem);
     --ib-fs-participant: clamp(0.8rem, 1cqw, 1.25rem);
@@ -538,10 +551,12 @@
 .eventCard[data-stripe="blue"]   { border-left-color: var(--ib-training); }
 .eventCard[data-stripe="orange"] { border-left-color: var(--ib-tournament); }
 
-/* Current event: stronger surface + border */
+/* Current event: stronger surface + border (left stripe stays on data-stripe) */
 .eventCard[data-temporal="current"] {
   background: var(--ib-card-current);
-  border-color: var(--ib-border-current);
+  border-top-color: var(--ib-border-current);
+  border-right-color: var(--ib-border-current);
+  border-bottom-color: var(--ib-border-current);
 }
 
 /* ─── LEFT ZONE: Status + Time ──────────────────────────────────────────── */
@@ -757,6 +772,155 @@
   z-index: 0;
   overflow: hidden;
   isolation: isolate;
+}
+
+/* R22 — one shared DARK operational surface (ACTIVITY + KABINE + PLATZ) */
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-operational-surface="unified-dark"] {
+  border: none;
+  border-radius: 0 var(--ib-radius-sm) var(--ib-radius-sm) 0;
+  box-sizing: border-box;
+}
+
+/* R22R1 — one restrained row outline; internal guides stay translucent (no double TIME border) */
+.root:not([data-theme="light"]) .eventCard[data-venue-operational-ambient="true"] {
+  border-top-color: var(--ib-card-outline-operational);
+  border-right-color: var(--ib-card-outline-operational);
+  border-bottom-color: var(--ib-card-outline-operational);
+  box-shadow:
+    0 0 0 1px rgba(99, 135, 175, 0.07),
+    0 0 18px rgba(59, 108, 160, 0.06);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-temporal="current"] {
+  border-top-color: rgba(99, 135, 175, 0.32);
+  border-right-color: rgba(99, 135, 175, 0.32);
+  border-bottom-color: rgba(99, 135, 175, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(99, 135, 175, 0.1),
+    0 0 20px rgba(59, 108, 160, 0.08);
+}
+
+/* R22R3 — TIME-column left accent (eventCard stripe); must follow R22R1 outline (no border-color shorthand) */
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="red"] {
+  border-left-color: var(--ib-match);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="blue"] {
+  border-left-color: var(--ib-training);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"][data-stripe="orange"] {
+  border-left-color: var(--ib-tournament);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="activity"].cardEventZone {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="kabine"].cardDressingRoomZone {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="platz"].cardPitchZone {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(1) {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(2) {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixHeaders > :nth-child(3) {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(1) {
+  border-right-color: var(--ib-zone-separator-operational-unified);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(2) {
+  border-left-color: transparent;
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrixCell:nth-child(3) {
+  border-left-color: var(--ib-zone-separator-operational-unified);
+}
+
+/* R22R1 — secondary labels readable on unified backdrop without flattening hierarchy */
+.root:not([data-theme="light"]) .eventCard[data-venue-operational-ambient="true"] {
+  --ib-text-muted: var(--ib-text-muted-operational);
+  --ib-text-dim: var(--ib-text-dim-operational);
+  --ib-match-kabine-role-color: var(--ib-match-kabine-role-operational);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .venueSemanticLabel[data-semantic-label="KABINE"] {
+  color: #A8C4E8;
+  background: rgba(24, 73, 166, 0.2);
+  border-color: rgba(120, 160, 220, 0.26);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .venueSemanticLabel[data-semantic-label="PLATZ"] {
+  color: #9FD4B8;
+  background: rgba(23, 77, 56, 0.22);
+  border-color: rgba(80, 160, 120, 0.28);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .matchTeamSubName,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingGroupTeamSub,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .destLabel {
+  color: var(--ib-text-dim-operational);
+}
+
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="activity"].cardEventZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="kabine"].cardDressingRoomZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  [data-venue-column="platz"].cardPitchZone,
+.root:not([data-theme="light"])
+  .eventCard[data-venue-operational-ambient="true"]
+  .trainingMatrix {
+  background: transparent;
 }
 
 .eventCard[data-venue-operational-ambient="true"] .cardTimeZone {
@@ -979,7 +1143,7 @@
   align-items: center;
   align-self: flex-start;
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-fs-activity-type, var(--ib-semantic-label-font-size));
+  font-size: var(--ib-semantic-label-font-size);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -990,6 +1154,14 @@
   border: 1px solid transparent;
   min-height: clamp(22px, 2.4vh, 30px);
   box-sizing: border-box;
+}
+
+/* R22R2 — PLATZ headings live in ib-platz-slot; keep canonical vw-based label size (not cqi/cqw pitch scaling). */
+.cardPitchZone .venueColumnHeader .venueSemanticLabel,
+.cardPitchZone .venueColumnHeader .eventTypeLabel {
+  max-width: 100%;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .eventTypeLabel[data-event-type="MATCH"],
@@ -1384,8 +1556,8 @@
 
 .cardPitchZone .destPitchValue {
   font-size: min(
-    var(--ib-match-platz-font-size, var(--ib-tournament-platz-font-size, clamp(1.8rem, 3vw, var(--ib-fs-dest-pitch)))),
-    clamp(0.875rem, 11.5cqi, 2.75rem)
+    var(--ib-match-platz-font-size, var(--ib-tournament-platz-font-size, clamp(2.16rem, 3.6vw, var(--ib-fs-dest-pitch)))),
+    clamp(1.05rem, 13.8cqi, 3.3rem)
   );
   line-height: 0.95;
   white-space: nowrap;
@@ -1826,7 +1998,7 @@
   --ib-card-pad-v:  clamp(24px, 4vh, 48px);
   --ib-card-pad-h:  clamp(24px, 2.8vw, 40px);
   --ib-fs-event-team:  clamp(2rem, 3vw, 4rem);
-  --ib-fs-dest-pitch:  clamp(2.2rem, 3.2vw, 4.2rem);
+  --ib-fs-dest-pitch:  clamp(2.64rem, 3.84vw, 5.04rem);
   --ib-fs-dest-room:   clamp(1.5rem, 2.2vw, 3rem);
   --ib-tournament-logo-size: var(--ib-tournament-logo-size-large);
 }
@@ -1948,7 +2120,7 @@
   --ib-card-pad-v:  clamp(20px, 3.5vh, 40px);
   --ib-card-pad-h:  clamp(22px, 2.4vw, 36px);
   --ib-fs-event-team:  clamp(1.8rem, 2.5vw, 3.4rem);
-  --ib-fs-dest-pitch:  clamp(2rem, 2.8vw, 3.6rem);
+  --ib-fs-dest-pitch:  clamp(2.4rem, 3.36vw, 4.32rem);
   --ib-fs-dest-room:   clamp(1.3rem, 1.8vw, 2.4rem);
 }
 
@@ -1957,7 +2129,7 @@
   --ib-card-pad-v:  clamp(14px, 2.4vh, 28px);
   --ib-card-pad-h:  clamp(18px, 2vw, 30px);
   --ib-fs-event-team:  clamp(1.6rem, 2.1vw, 2.8rem);
-  --ib-fs-dest-pitch:  clamp(1.8rem, 2.4vw, 3.2rem);
+  --ib-fs-dest-pitch:  clamp(2.16rem, 2.88vw, 3.84rem);
   --ib-fs-dest-room:   clamp(1.2rem, 1.6vw, 2.1rem);
 }
 
@@ -1966,7 +2138,7 @@
   --ib-card-pad-v:  clamp(10px, 1.6vh, 20px);
   --ib-card-pad-h:  clamp(16px, 1.8vw, 26px);
   --ib-fs-event-team:  clamp(1.3rem, 1.7vw, 2.3rem);
-  --ib-fs-dest-pitch:  clamp(1.5rem, 2vw, 2.7rem);
+  --ib-fs-dest-pitch:  clamp(1.8rem, 2.4vw, 3.24rem);
   --ib-fs-dest-room:   clamp(1rem, 1.35vw, 1.8rem);
 }
 
@@ -1975,7 +2147,7 @@
   --ib-card-pad-v:  clamp(8px, 1.1vh, 14px);
   --ib-card-pad-h:  clamp(14px, 1.6vw, 22px);
   --ib-fs-event-team:  clamp(1.2rem, 1.55vw, 2.1rem);
-  --ib-fs-dest-pitch:  clamp(1.4rem, 1.8vw, 2.4rem);
+  --ib-fs-dest-pitch:  clamp(1.68rem, 2.16vw, 2.88rem);
   --ib-fs-dest-room:   clamp(0.9rem, 1.2vw, 1.6rem);
 }
 
@@ -1985,7 +2157,7 @@
   --ib-card-pad-h:  clamp(12px, 1.4vw, 20px);
   --ib-card-gap:    clamp(3px, 0.4vh, 6px);
   --ib-fs-event-team:  clamp(1.1rem, 1.4vw, 1.9rem);
-  --ib-fs-dest-pitch:  clamp(1.3rem, 1.6vw, 2.1rem);
+  --ib-fs-dest-pitch:  clamp(1.56rem, 1.92vw, 2.52rem);
   --ib-fs-dest-room:   clamp(0.85rem, 1.1vw, 1.45rem);
 }
 
@@ -2009,7 +2181,7 @@
     --ib-card-pad-h: 10px;
     --ib-fs-event-time:  clamp(1.6rem, 2vw, 2.6rem);
     --ib-fs-event-team:  clamp(1rem, 1.3vw, 1.7rem);
-    --ib-fs-dest-pitch:  clamp(1.2rem, 1.5vw, 2rem);
+    --ib-fs-dest-pitch:  clamp(1.44rem, 1.8vw, 2.4rem);
     --ib-fs-dest-room:   clamp(0.8rem, 1vw, 1.3rem);
   }
 
@@ -2019,7 +2191,7 @@
     --ib-card-gap:   2px;
     --ib-fs-event-time:  clamp(1.4rem, 1.7vw, 2.2rem);
     --ib-fs-event-team:  clamp(0.9rem, 1.15vw, 1.5rem);
-    --ib-fs-dest-pitch:  clamp(1.1rem, 1.35vw, 1.8rem);
+    --ib-fs-dest-pitch:  clamp(1.32rem, 1.62vw, 2.16rem);
     --ib-fs-dest-room:   clamp(0.75rem, 0.95vw, 1.25rem);
   }
 }
