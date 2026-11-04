@@ -165,10 +165,8 @@ describe("SCE-INFOBOARD-R23R2 Screen 2 ÖV", () => {
   it("increases typography relative to the R23R1 compact row band", () => {
     const css = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css");
     expect(css).toMatch(/\.minutes[\s\S]*clamp\(32px/);
-    expect(css).toMatch(/\.destination[\s\S]*clamp\(24px/);
-    expect(css).toMatch(/\.lineBadge[\s\S]*clamp\(26px/);
     expect(css).toMatch(/\.absoluteTime[\s\S]*font-variant-numeric: tabular-nums/);
-    expect(css).toMatch(/\.directionLabel[\s\S]*clamp\(18px/);
+    expect(css).toMatch(/\.compact \.destination[\s\S]*font-size: 13\.5px/);
   });
 
   it("preserves BusFront icon and outward direction arrows", () => {

@@ -2,6 +2,7 @@
  * components/infoboard/screen2/Screen2TransportSlide.module.css
  *
  * SCE-INFOBOARD-R23R2 — full-height premium TV-distance ÖV departures.
+ * SCE-INFOBOARD-R23R3 — Barlow Condensed typography harmonized with Screen 1.
  */
 
 .slide {
@@ -121,15 +122,20 @@
 }
 
 .eyebrow {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: clamp(18px, 1.35vw, 24px);
   font-weight: 800;
-  letter-spacing: 0.14em;
+  font-style: normal;
+  letter-spacing: 0.12em;
   color: rgba(125, 211, 252, 0.92);
 }
 
 .station {
+  font-family: var(--font-body);
   font-size: clamp(24px, 1.85vw, 34px);
   font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.01em;
   line-height: 1.08;
   white-space: nowrap;
   overflow: hidden;
@@ -213,8 +219,10 @@
 }
 
 .directionLabel {
-  font-size: clamp(18px, 1.25vw, 26px);
-  font-weight: 800;
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: clamp(23px, 1.6vw, 33px);
+  font-weight: 700;
+  font-style: normal;
   letter-spacing: 0.04em;
   line-height: 1.12;
   color: rgba(191, 219, 254, 0.95);
@@ -312,8 +320,10 @@
 
 .category,
 .platform {
+  font-family: var(--font-body);
   font-size: clamp(12px, 0.85vw, 16px);
   font-weight: 700;
+  font-style: normal;
   letter-spacing: 0.08em;
   color: rgba(148, 163, 184, 0.95);
   flex-shrink: 0;
@@ -323,12 +333,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(52px, 3.5vw, 68px);
-  height: clamp(44px, 3vw, 58px);
+  min-width: clamp(57px, 3.85vw, 75px);
+  height: clamp(48px, 3.3vw, 64px);
   padding: 0 clamp(8px, 0.55vw, 12px);
   border-radius: 10px;
-  font-size: clamp(26px, 1.85vw, 36px);
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: clamp(29px, 2.04vw, 40px);
   font-weight: 800;
+  font-style: normal;
   line-height: 1;
   letter-spacing: 0.01em;
   flex-shrink: 0;
@@ -336,18 +348,28 @@
 }
 
 .destination {
-  font-size: clamp(24px, 1.65vw, 34px);
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
+  font-size: clamp(27px, 1.86vw, 38px);
   font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.02em;
   line-height: 1.12;
+  color: #f8fafc;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.slide[data-theme="light"] .destination {
+  color: #241c12;
+}
+
 .minutes {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: clamp(32px, 2.35vw, 48px);
   font-weight: 800;
+  font-style: normal;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -371,7 +393,10 @@
 }
 
 .absoluteTime {
+  font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: clamp(16px, 1.05vw, 20px);
+  font-weight: 700;
+  font-style: normal;
   line-height: 1;
   color: rgba(255, 255, 255, 0.62);
   white-space: nowrap;
