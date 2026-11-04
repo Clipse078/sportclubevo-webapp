@@ -5,7 +5,10 @@
  */
 
 import { resolveTenantTransportConfig, type TransportStopConfig } from "./transport-config";
-import { classifyDeparturesIntoDirectionGroups } from "./transport-direction-groups";
+import {
+  classifyDeparturesIntoDirectionGroups,
+  flattenDirectionGroupDepartures,
+} from "./transport-direction-groups";
 import { fetchOpendataChStationboard } from "./providers/opendata-ch-transport-provider";
 import type { TransportDeparture, TransportResult, TransportUnavailableResult } from "./transport-types";
 
@@ -74,12 +77,18 @@ function availableResult(
   isStale: boolean,
   hasRealtimeData: boolean,
 ): TransportResult {
+  const directionGroups = enrichWithDirectionGroups(config, departures);
+  const displayedDepartures =
+    directionGroups.length > 0
+      ? flattenDirectionGroupDepartures(directionGroups)
+      : departures.slice(0, config.departureCount);
+
   return {
     isAvailable: true,
     stationDisplayName: config.stationDisplayName,
     stationId,
-    departures,
-    directionGroups: enrichWithDirectionGroups(config, departures),
+    departures: displayedDepartures,
+    directionGroups,
     fetchedAt,
     isStale,
     hasRealtimeData,

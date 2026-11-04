@@ -136,3 +136,10 @@ export function classifyDeparturesIntoDirectionGroups(
     departures: sortChronologically(grouped.get(group.id) ?? []).slice(0, limit),
   }));
 }
+
+/** Flattens displayed departures from direction groups in stable group order. */
+export function flattenDirectionGroupDepartures(
+  groups: TransportDirectionGroup[],
+): TransportDeparture[] {
+  return groups.flatMap((group) => group.departures);
+}

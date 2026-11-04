@@ -1,7 +1,7 @@
 /**
  * components/infoboard/screen2/Screen2TransportSlide.module.css
  *
- * INFOBOARD-TRANSPORT-02 / SCE-INFOBOARD-R23 — premium TV-distance ÖV departures.
+ * SCE-INFOBOARD-R23R1 — world-class TV-distance ÖV departures.
  */
 
 .slide {
@@ -14,8 +14,9 @@
   box-sizing: border-box;
   color: #f8fafc;
   background:
-    radial-gradient(circle at 82% 8%, rgba(56, 189, 248, 0.1), transparent 38%),
-    linear-gradient(180deg, rgba(8, 16, 28, 0.97) 0%, rgba(5, 10, 18, 0.99) 100%);
+    radial-gradient(circle at 18% 12%, rgba(30, 91, 198, 0.14), transparent 42%),
+    radial-gradient(circle at 82% 8%, rgba(56, 189, 248, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(8, 16, 28, 0.98) 0%, rgba(5, 10, 18, 0.99) 100%);
   border-radius: clamp(6px, 0.8vh, 14px);
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
@@ -23,17 +24,26 @@
 .slide[data-theme="light"] {
   color: #241c12;
   background:
-    radial-gradient(circle at 82% 8%, rgba(30, 91, 198, 0.07), transparent 38%),
+    radial-gradient(circle at 18% 12%, rgba(30, 91, 198, 0.06), transparent 42%),
+    radial-gradient(circle at 82% 8%, rgba(30, 91, 198, 0.05), transparent 38%),
     linear-gradient(180deg, #fbf8f2 0%, #f0ebe3 100%);
   border-color: rgba(36, 28, 18, 0.12);
 }
 
-.slide[data-theme="light"] .eyebrow,
-.slide[data-theme="light"] .directionHeading {
+.slide[data-theme="light"] .eyebrow {
   color: rgba(24, 73, 166, 0.92);
 }
 
+.slide[data-theme="light"] .directionLabel {
+  color: rgba(24, 73, 166, 0.92);
+}
+
+.slide[data-theme="light"] .directionArrow {
+  color: rgba(24, 73, 166, 0.88);
+}
+
 .slide[data-theme="light"] .category,
+.slide[data-theme="light"] .platform,
 .slide[data-theme="light"] .absoluteTime,
 .slide[data-theme="light"] .minutesLong {
   color: rgba(36, 28, 18, 0.62);
@@ -91,8 +101,8 @@
   height: clamp(44px, 3.2vw, 56px);
   border-radius: 12px;
   color: rgba(125, 211, 252, 0.95);
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(125, 211, 252, 0.2);
 }
 
 .slide[data-theme="light"] .titleIcon {
@@ -102,8 +112,8 @@
 }
 
 .titleIconSvg {
-  width: 68%;
-  height: 68%;
+  width: clamp(40px, 2.8vw, 48px);
+  height: clamp(40px, 2.8vw, 48px);
 }
 
 .titleCopy {
@@ -114,14 +124,14 @@
 }
 
 .eyebrow {
-  font-size: clamp(17px, 1.25vw, 22px);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-size: clamp(18px, 1.35vw, 24px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
   color: rgba(125, 211, 252, 0.92);
 }
 
 .station {
-  font-size: clamp(26px, 2vw, 36px);
+  font-size: clamp(24px, 1.85vw, 34px);
   font-weight: 700;
   line-height: 1.08;
   white-space: nowrap;
@@ -151,24 +161,44 @@
 }
 
 .directionHeading {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 12px);
   margin: 0;
-  font-size: clamp(14px, 0.98vw, 18px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  color: rgba(125, 211, 252, 0.9);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
   flex-shrink: 0;
 }
 
+.directionHeading[data-orientation="right"] {
+  justify-content: flex-end;
+}
+
+.directionArrow {
+  width: clamp(48px, 3.6vw, 64px);
+  height: clamp(48px, 3.6vw, 64px);
+  flex-shrink: 0;
+  color: rgba(96, 165, 250, 0.95);
+}
+
+.directionLabel {
+  font-size: clamp(15px, 1.05vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.15;
+  color: rgba(191, 219, 254, 0.95);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .directionRows {
-  display: grid;
-  grid-template-rows: repeat(var(--screen2-transport-direction-row-count, 5), minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: clamp(5px, 0.65vh, 8px);
   flex: 1;
   min-height: 0;
+  justify-content: flex-start;
 }
 
 .directionEmpty {
@@ -196,7 +226,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: minmax(88px, 18%) minmax(0, 1fr);
+  grid-template-columns: minmax(72px, 14%) minmax(0, 1fr) minmax(96px, 22%);
   align-items: center;
   gap: clamp(10px, 1.1vw, 16px);
   padding: clamp(8px, 0.85vh, 12px) clamp(10px, 1vw, 14px);
@@ -204,21 +234,38 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-sizing: border-box;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: clamp(52px, 6vh, 68px);
+  max-height: clamp(52px, 6vh, 68px);
 }
 
-.rowImminent {
-  border-color: rgba(74, 222, 128, 0.35);
-  box-shadow: inset 3px 0 0 rgba(74, 222, 128, 0.85);
+.lineColumn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .countdownColumn {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
-  gap: 2px;
+  gap: clamp(2px, 0.25vh, 4px);
   min-width: 0;
+  position: relative;
+}
+
+.imminentIndicator {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 6px);
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.9);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
 }
 
 .detailColumn {
@@ -237,8 +284,9 @@
   min-width: 0;
 }
 
-.category {
-  font-size: clamp(12px, 0.82vw, 15px);
+.category,
+.platform {
+  font-size: clamp(11px, 0.78vw, 14px);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: rgba(148, 163, 184, 0.95);
@@ -249,19 +297,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(30px, 2.1vw, 38px);
-  height: clamp(24px, 1.65vw, 30px);
-  padding: 0 clamp(6px, 0.45vw, 8px);
-  border-radius: 6px;
-  font-size: clamp(17px, 1.25vw, 22px);
+  min-width: clamp(44px, 3vw, 56px);
+  height: clamp(36px, 2.5vw, 46px);
+  padding: 0 clamp(8px, 0.55vw, 10px);
+  border-radius: 8px;
+  font-size: clamp(22px, 1.55vw, 30px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.01em;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .destination {
-  font-size: clamp(19px, 1.35vw, 26px);
+  font-size: clamp(20px, 1.45vw, 28px);
   font-weight: 700;
   line-height: 1.12;
   min-width: 0;
@@ -271,10 +320,11 @@
 }
 
 .minutes {
-  font-size: clamp(24px, 1.75vw, 34px);
+  font-size: clamp(26px, 1.9vw, 38px);
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .minutesSoon {
@@ -294,21 +344,13 @@
   color: #4ade80;
 }
 
-.imminentHint {
-  font-size: clamp(11px, 0.72vw, 13px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(74, 222, 128, 0.82);
-}
-
 .absoluteTime {
   font-size: clamp(14px, 0.92vw, 17px);
   line-height: 1;
   color: rgba(255, 255, 255, 0.62);
   white-space: nowrap;
-  margin-left: auto;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .delayInline {
@@ -373,6 +415,11 @@
   border-radius: 6px;
 }
 
+.compact .titleIconSvg {
+  width: 20px;
+  height: 20px;
+}
+
 .compact .eyebrow {
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -397,10 +444,18 @@
 }
 
 .compact .directionHeading {
+  gap: 4px;
+}
+
+.compact .directionArrow {
+  width: 18px;
+  height: 18px;
+}
+
+.compact .directionLabel {
   font-size: 10px;
   letter-spacing: 0.06em;
   line-height: 1.1;
-  flex-shrink: 0;
 }
 
 .compact .directionRows {
@@ -428,7 +483,7 @@
 }
 
 .compact .row {
-  grid-template-columns: minmax(52px, 22%) minmax(0, 1fr);
+  grid-template-columns: minmax(36px, 18%) minmax(0, 1fr) minmax(52px, 24%);
   gap: 6px;
   padding: 0 6px;
   border-radius: 5px;
@@ -437,7 +492,8 @@
   max-height: var(--screen2-transport-row-height, 36px);
 }
 
-.compact .category {
+.compact .category,
+.compact .platform {
   font-size: 9px;
 }
 
@@ -480,7 +536,7 @@
   font-size: 10px;
 }
 
-.compact .imminentHint {
+.compact .imminentIndicator {
   display: none;
 }
 

@@ -76,7 +76,7 @@ describe("SCE-INFOBOARD-R23 Screen 2 ÖV", () => {
 
     expect(screen.getByText("ÖV-ABFAHRTEN")).toBeTruthy();
     expect(screen.getByText("Allschwil, Im Brüel")).toBeTruthy();
-    expect(screen.getByLabelText("Öffentlicher Verkehr")).toBeTruthy();
+    expect(screen.getByTestId("screen2-transport-bus-icon")).toBeTruthy();
   });
 
   it("declares full-height dual direction panels without inner pagination hooks", () => {
@@ -84,7 +84,7 @@ describe("SCE-INFOBOARD-R23 Screen 2 ÖV", () => {
     const ts = readRepoFile("components/infoboard/screen2/Screen2TransportSlide.tsx");
 
     expect(css).toContain(".directionColumn");
-    expect(css).toContain("grid-template-rows: repeat(var(--screen2-transport-direction-row-count");
+    expect(css).toMatch(/\.directionRows[\s\S]*flex-direction: column/);
     expect(SCREEN2_TRANSPORT_FULL_ROWS_PER_DIRECTION).toBe(5);
     expect(ts).not.toMatch(/pagination|rotateSubset|innerTimer/i);
   });
@@ -101,7 +101,7 @@ describe("SCE-INFOBOARD-R23 Screen 2 ÖV", () => {
     const waitTime = screen.getByTestId("screen2-transport-wait-time");
     expect(waitTime.className).toMatch(/minutes/);
     expect(readRepoFile("components/infoboard/screen2/Screen2TransportSlide.module.css")).toMatch(
-      /\.countdownColumn[\s\S]*\.minutes/,
+      /\.countdownColumn[\s\S]*align-items: flex-end/,
     );
   });
 

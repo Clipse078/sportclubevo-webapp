@@ -8,7 +8,10 @@
  * - Stationboard: GET /v1/stationboard?id={stopId}
  */
 
-import type { TransportStopConfig } from "../transport-config";
+import {
+  resolveProviderCandidateLimit,
+  type TransportStopConfig,
+} from "../transport-config";
 import type {
   TransportCategory,
   TransportDeparture,
@@ -239,13 +242,15 @@ export function normalizeOpendataStationboard(
   const entries = Array.isArray(response.stationboard) ? response.stationboard : [];
   const stationId = response.station?.id?.trim() || config.stopId;
 
+  const candidateLimit = resolveProviderCandidateLimit(config);
+
   const departures = entries
     .map((entry) => normalizeDeparture(entry, stationId))
     .filter((departure): departure is TransportDeparture => departure !== null)
     .filter((departure) => matchesFilters(departure, config))
     .filter((departure) => effectiveDepartureMs(departure) >= now.getTime() - 60_000)
     .sort((a, b) => effectiveDepartureMs(a) - effectiveDepartureMs(b))
-    .slice(0, config.departureCount);
+    .slice(0, candidateLimit);
 
   const hasRealtimeData = departures.some((departure) => departure.hasRealtime);
 
@@ -282,9 +287,11 @@ export async function fetchOpendataChStationboard(
   fetchFn: typeof fetch = fetch,
   now: Date = new Date(),
 ): Promise<OpendataChFetchResult> {
+  const candidateLimit = resolveProviderCandidateLimit(config);
+
   const params = new URLSearchParams({
     id: config.stopId,
-    limit: String(config.departureCount),
+    limit: String(candidateLimit),
   });
 
   if (config.allowedCategories && config.allowedCategories.length > 0) {

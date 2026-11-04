@@ -40,6 +40,7 @@ describe("R23 transport departure policy", () => {
     expect(config).not.toBeNull();
     expect(config?.departureCount).toBe(TRANSPORT_MAX_DEPARTURES_TOTAL);
     expect(config?.departuresPerDirectionGroup).toBe(TRANSPORT_MAX_DEPARTURES_PER_DIRECTION);
+    expect(config?.providerCandidateLimit).toBeGreaterThan(TRANSPORT_MAX_DEPARTURES_TOTAL);
     expect(TRANSPORT_MAX_DEPARTURES_PER_DIRECTION).toBe(5);
     expect(TRANSPORT_MAX_DEPARTURES_TOTAL).toBe(10);
   });
