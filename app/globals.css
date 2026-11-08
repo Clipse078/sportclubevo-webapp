@@ -580,6 +580,10 @@
   opacity: 0.92;
 }
 
+[data-sce-theme="white"] .sce-activity-card-shell[data-sce-activity-category]::before {
+  opacity: 0;
+}
+
 .sce-activity-card-shell[data-sce-activity-category="MATCH"]::before {
   background: var(--sce-activity-match);
 }

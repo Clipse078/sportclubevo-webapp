@@ -25,7 +25,7 @@ export const SCE_ACTIVITY_CARD_SHELL_ROOT_CLASS = "sce-activity-card-shell";
  */
 export const SCE_ACTIVITY_CARD_SHELL_CLASS = cn(
   SCE_ACTIVITY_CARD_SHELL_ROOT_CLASS,
-  "rounded-xl border border-[var(--sce-color-border-standard)]",
+  "rounded-2xl border border-[var(--sce-color-border-standard)]",
   "bg-[var(--sce-match-card-surface)]",
   "shadow-[var(--sce-activity-card-shadow)]",
 );

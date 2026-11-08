@@ -90,4 +90,15 @@ describe("SCE-DS2-04 activity card contract", () => {
     expect(source).toContain("SceActivityCardShell");
     expect(source).toContain("data-sce-activity-card-region");
   });
+
+  it("documents FC Allschwil reference layout contract (DS2-04R1)", () => {
+    const layout = readRepo(
+      "lib/sporting-activity-presentation/canonical/activity-card-reference-layout.ts",
+    );
+    expect(layout).toContain("sce-match-score-box");
+    expect(layout).toContain("sce-match-kickoff-box");
+    const fixtureLayout = readRepo("components/sporting-activity/SceMatchFixtureReferenceLayout.tsx");
+    expect(fixtureLayout).toContain("data-sce-match-reference-layout");
+    expect(fixtureLayout).toContain("reference-split");
+  });
 });

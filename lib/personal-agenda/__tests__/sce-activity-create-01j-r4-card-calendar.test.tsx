@@ -80,7 +80,7 @@ describe("SCE-ACTIVITY-CREATE-01J R4A — three-row programme card contract", ()
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Im Brüel/i);
   });
 
-  it("MATCH programme-fixture: home left, away right, crests, row2 team, kickoff-only row3", () => {
+  it("MATCH programme-fixture: reference split with meta column, crests, team context, kickoff box", () => {
     const model = resolveSceMatchCardFixture({
       homeAway: "HOME",
       endAt: new Date("2026-10-13T20:15:00.000Z"),

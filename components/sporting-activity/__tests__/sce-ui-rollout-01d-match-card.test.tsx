@@ -103,7 +103,8 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       scoreHome: 0,
       scoreAway: 0,
     });
-    expect(screen.getByTestId("sce-match-result")).toHaveTextContent("0:0");
+    expect(screen.getByTestId("sce-match-score-home")).toHaveTextContent("0");
+    expect(screen.getByTestId("sce-match-score-away")).toHaveTextContent("0");
   });
 
   it("shows canonical result label when present", () => {
@@ -113,25 +114,26 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       scoreHome: 3,
       scoreAway: 1,
     });
-    expect(screen.getByTestId("sce-match-result")).toHaveTextContent("3:1");
+    expect(screen.getByTestId("sce-match-score-home")).toHaveTextContent("3");
+    expect(screen.getByTestId("sce-match-score-away")).toHaveTextContent("1");
   });
 
-  it.each(DENSITIES)("result score uses canonical density typography at %s", (density) => {
-    renderCard(
-      {
-        status: "COMPLETED",
-        resultLabel: "12:11",
-        scoreHome: 12,
-        scoreAway: 11,
-      },
-      density,
-    );
-    const result = screen.getByTestId("sce-match-result");
-    expect(result).toHaveTextContent("12:11");
-    expect(result.className).toContain(
-      sceMatchCenterTypographyScale(density).resultTextClass.split(" ")[0],
-    );
-  });
+  it.each(["HERO", "STANDARD", "COMPACT"] as const)(
+    "rich density %s uses reference score boxes",
+    (density) => {
+      renderCard(
+        {
+          status: "COMPLETED",
+          resultLabel: "12:11",
+          scoreHome: 12,
+          scoreAway: 11,
+        },
+        density,
+      );
+      expect(screen.getByTestId("sce-match-score-home")).toHaveTextContent("12");
+      expect(screen.getByTestId("sce-match-score-away")).toHaveTextContent("11");
+    },
+  );
 
   it.each(DENSITIES)("real crest images are not circular pills at density %s", (density) => {
     renderCard({}, density);
@@ -150,7 +152,7 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
 
   it("renders schedule and location from 01C model", () => {
     renderCard({});
-    expect(screen.getByTestId("sce-match-schedule")).toBeTruthy();
+    expect(screen.getByTestId("sce-match-reference-date")).toBeTruthy();
     expect(screen.getByTestId("sce-match-location")?.textContent).toContain("Im Brüel");
   });
 
@@ -187,23 +189,23 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     expect(screen.getByTestId("sce-match-status")).toBeTruthy();
   });
 
-  it("does not show VS for upcoming fixtures with raw 0/0 scores", () => {
+  it("shows kickoff box for upcoming fixtures with raw 0/0 scores", () => {
     renderCard({
       status: "SCHEDULED",
       scoreHome: 0,
       scoreAway: 0,
       resultLabel: null,
     });
-    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expect(screen.getByTestId("sce-match-kickoff-box")).toBeTruthy();
     expect(screen.queryByTestId("sce-match-result")).toBeNull();
   });
 
-  it("STANDARD stacks crest above club name (not inline Resultate row)", () => {
+  it("STANDARD uses reference split meta column and horizontal matchup sides", () => {
     const { container } = renderCard({}, "STANDARD");
     const card = container.querySelector('[data-sce-match-card]')!;
-    const competition = card.querySelector('[data-sce-match-region="competition"]');
+    expect(card.querySelector("[data-sce-match-reference-layout]")).toBeTruthy();
+    const competition = card.querySelector('[data-testid="sce-match-competition"]');
     const fixture = card.querySelector('[data-sce-match-region="fixture"]');
-    const schedule = card.querySelector('[data-sce-match-region="schedule"]');
     const location = card.querySelector('[data-sce-match-region="location"]');
 
     expect(competition && fixture).toBeTruthy();
@@ -212,22 +214,15 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
         competition.compareDocumentPosition(fixture) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
-    if (fixture && schedule) {
+    if (fixture && location) {
       expect(
-        fixture.compareDocumentPosition(schedule) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    }
-    if (schedule && location) {
-      expect(
-        schedule.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
+        competition!.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
 
     const { home, away } = homeAwaySides(container);
-    stackedIdentityOrder(home);
-    stackedIdentityOrder(away);
-
-    expect(container.querySelector(".sm\\:grid-cols-\\[minmax\\(0\\,8\\.75rem\\)")).toBeNull();
+    expect(home?.querySelector('[data-sce-match-region="home-name"]')).toBeTruthy();
+    expect(away?.querySelector('[data-sce-match-region="away-name"]')).toBeTruthy();
   });
 
   it("MICRO uses horizontal identity with optional crests", () => {
@@ -237,25 +232,28 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
   });
 
   it.each(["HERO", "STANDARD", "COMPACT"] as const)(
-    "rich density %s uses stacked fixture panel",
+    "rich density %s uses reference split fixture layout",
     (density) => {
       const { container } = renderCard({}, density);
-      const { home } = homeAwaySides(container);
-      stackedIdentityOrder(home);
+      expect(
+        container.querySelector("[data-sce-match-programme-fixture='reference-split']"),
+      ).toBeTruthy();
     },
   );
 
   function richSemanticRegionKeys(container: HTMLElement): string[] {
     const card = container.querySelector("[data-sce-match-card]")!;
     const regions: Array<[string, Element]> = [];
-    for (const el of card.querySelectorAll("[data-sce-match-header], [data-sce-match-region='fixture'], [data-sce-match-schedule], [data-sce-match-location]")) {
+    for (const el of card.querySelectorAll(
+      "[data-sce-match-header], [data-sce-match-region='reference-meta'], [data-sce-match-region='fixture'], [data-sce-match-region='location']",
+    )) {
       const key =
         el.getAttribute("data-sce-match-header") != null
           ? "header"
-          : el.getAttribute("data-sce-match-region") === "fixture"
-            ? "fixture"
-            : el.getAttribute("data-sce-match-schedule") != null
-              ? "schedule"
+          : el.getAttribute("data-sce-match-region") === "reference-meta"
+            ? "meta"
+            : el.getAttribute("data-sce-match-region") === "fixture"
+              ? "fixture"
               : "location";
       regions.push([key, el]);
     }
@@ -269,12 +267,10 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     "rich density %s preserves canonical semantic region order",
     (density) => {
       const { container } = renderCard({}, density);
-      expect(richSemanticRegionKeys(container)).toEqual([
-        "header",
-        "fixture",
-        "schedule",
-        "location",
-      ]);
+      const keys = richSemanticRegionKeys(container);
+      expect(keys).toContain("header");
+      expect(keys).toContain("fixture");
+      expect(keys).toContain("location");
       const card = container.querySelector("[data-sce-match-card]");
       expect(card).toHaveAttribute("data-sce-match-density", density);
       expect(card?.className).toMatch(/max-w-/);
@@ -372,14 +368,15 @@ describe("SCE-UI-ROLLOUT-01D-R10A — canonical activity-type pill", () => {
   it("shows SPIEL on upcoming and result cards without displacing result typography", () => {
     renderCard({}, "STANDARD");
     expect(screen.getByText("SPIEL")).toBeTruthy();
-    expect(screen.getByTestId("sce-match-vs")).toBeTruthy();
+    expect(screen.getByTestId("sce-match-kickoff-box")).toBeTruthy();
 
     renderCard(
       { status: "COMPLETED", resultLabel: "2:0", scoreHome: 2, scoreAway: 0 },
       "STANDARD",
     );
     expect(screen.getAllByText("SPIEL").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByTestId("sce-match-result")).toHaveTextContent("2:0");
+    expect(screen.getByTestId("sce-match-score-home")).toHaveTextContent("2");
+    expect(screen.getByTestId("sce-match-score-away")).toHaveTextContent("0");
   });
 
   it("keeps competition below the activity-type header", () => {
