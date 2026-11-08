@@ -92,6 +92,7 @@
 | **Automated coverage** | Existing sporting-activity + DS-10-r2 temporal tests |
 | **Complexity** | XL |
 | **Exclusions** | Infoboard cards |
+| **Delivery notes** | [12-ds2-04-activity-cards-delivery.md](./12-ds2-04-activity-cards-delivery.md) |
 
 ---
 

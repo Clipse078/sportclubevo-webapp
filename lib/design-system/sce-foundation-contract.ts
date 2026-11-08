@@ -23,6 +23,7 @@ export const SCE_DS2_TYPOGRAPHY_FOUNDATION = {
   body: 'var(--font-inter), "Inter", system-ui, -apple-system, sans-serif',
   teamNameContract: "uppercase italic (SCE-DS2-03)",
   navigationContract: "uppercase icon-free labels (SCE-DS2-02)",
+  activityCardShell: "semantic white-first surfaces (SCE-DS2-04)",
 } as const;
 
 /** CSS custom property names — semantic colour (surfaces). */

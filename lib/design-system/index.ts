@@ -10,6 +10,8 @@ export * from "./sce-navigation-typography-contract";
 export * from "./sce-typography-roles-contract";
 export * from "./sce-team-name-typography";
 export * from "./sce-ds2-03-meta";
+export * from "./sce-ds2-04-meta";
+export * from "./sce-activity-card-layout-contract";
 export * from "./sce-design-system-02-meta";
 export * from "./sce-design-system-03-meta";
 export * from "./sce-context-tabs-foundation";

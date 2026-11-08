@@ -31,6 +31,7 @@ export function SceProgrammeActivityCardShell({
       className={cn(sceProgrammeActivityCardShellClass(density), className)}
       data-testid={testId}
       data-sce-programme-activity-card-shell
+      data-sce-activity-card
       data-sce-programme-shell-density={density}
     >
       {children}

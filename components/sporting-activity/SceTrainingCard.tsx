@@ -9,6 +9,8 @@ import {
   formatSceActivityLocationHierarchy,
   isSceActivityDimensionVisible,
 } from "@/lib/sporting-activity-presentation/canonical";
+import { sceActivityCardRegionClass } from "@/lib/design-system/sce-activity-card-layout-contract";
+import { SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-shell-contract";
 import {
   SCE_TRAINING_CARD_SHELL_CLASS,
   isSceTrainingRichCardDensity,
@@ -141,7 +143,7 @@ function SceTrainingTypeHeader({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-start justify-between gap-2",
+        sceActivityCardRegionClass("header"),
         listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
       )}
       data-sce-training-region="meta"
@@ -730,6 +732,8 @@ export function SceTrainingCard({
         data-testid={testId}
         data-density={density}
         data-sce-training-card
+        data-sce-activity-card
+        data-sce-activity-category="TRAINING"
         data-sce-training-density={density}
         data-surface={surface}
         aria-label={accessibleLabel}
@@ -741,10 +745,12 @@ export function SceTrainingCard({
 
   return (
     <article
-      className={cn(shellClass, !embed && "transition-colors hover:border-[var(--border-strong)]")}
+      className={cn(shellClass, !embed && SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS)}
       data-testid={testId}
       data-density={density}
       data-sce-training-card
+      data-sce-activity-card
+      data-sce-activity-category="TRAINING"
       data-sce-training-density={density}
       data-surface={surface}
     >

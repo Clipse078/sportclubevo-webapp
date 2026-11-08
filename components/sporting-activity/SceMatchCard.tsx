@@ -26,6 +26,8 @@ import {
   SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import { sceActivityCardRegionClass } from "@/lib/design-system/sce-activity-card-layout-contract";
+import { SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-shell-contract";
 import {
   isSceMatchRichCardDensity,
   SCE_MATCH_CARD_SHELL_CLASS,
@@ -344,7 +346,7 @@ function SceMatchScheduleIconRow({
 
   return (
     <div
-      className="flex min-w-0 items-center justify-between gap-3"
+      className={cn(sceActivityCardRegionClass("schedule"), "flex min-w-0 items-center justify-between gap-3")}
       data-testid="sce-match-schedule"
       data-sce-match-region="schedule"
       data-sce-match-schedule
@@ -378,7 +380,11 @@ function SceMatchLocationRow({
 
   return (
     <div
-      className={cn("flex min-w-0 items-start gap-1.5", richScale(density).locationTextClass)}
+      className={cn(
+        sceActivityCardRegionClass("location"),
+        "flex min-w-0 items-start gap-1.5",
+        richScale(density).locationTextClass,
+      )}
       data-testid="sce-match-location"
       data-sce-match-region="location"
       data-sce-match-location
@@ -414,7 +420,7 @@ function SceMatchTypeHeader({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-start justify-between gap-2",
+        sceActivityCardRegionClass("header"),
         listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
       )}
       data-sce-match-region="meta"
@@ -811,6 +817,8 @@ export function SceMatchCard({
         data-testid={testId}
         data-density={density}
         data-sce-match-card
+        data-sce-activity-card
+        data-sce-activity-category="MATCH"
         data-sce-match-density={density}
         data-surface={surface}
         aria-label={buildFixtureAccessibleLabel(model)}
@@ -822,10 +830,12 @@ export function SceMatchCard({
 
   return (
     <article
-      className={cn(shellClass, !embed && "transition-colors hover:border-[var(--border-strong)]")}
+      className={cn(shellClass, !embed && SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS)}
       data-testid={testId}
       data-density={density}
       data-sce-match-card
+      data-sce-activity-card
+      data-sce-activity-category="MATCH"
       data-sce-match-density={density}
       data-surface={surface}
     >

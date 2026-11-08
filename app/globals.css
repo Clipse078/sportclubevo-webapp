@@ -83,6 +83,11 @@
   --sce-surface-elevated:       rgb(20 28 48 / 98%);
   /* Match identity cards — opaque on pitch (no backdrop blur; see SCE_MATCH_CARD_SHELL_CLASS) */
   --sce-match-card-surface:     rgb(14 20 36 / 99.2%);
+  /* SCE-DS2-04 — shared activity card elevation + foreground roles */
+  --sce-activity-card-shadow: var(--sce-surface-shadow-elevated);
+  --sce-activity-card-shadow-hover: var(--shadow-md);
+  --sce-activity-card-team-context-foreground: color-mix(in srgb, var(--sce-info) 88%, var(--foreground) 12%);
+  --sce-activity-card-location-foreground: color-mix(in srgb, var(--sce-info) 55%, var(--text-2) 45%);
   /* Warm ivory — canonical completed/live score foreground (invariant win/loss/draw) */
   --sce-match-result-foreground: rgb(248 242 228);
 
@@ -498,6 +503,11 @@
   --sce-surface-elevated: #ffffff;
   --sce-match-card-surface: #ffffff;
 
+  --sce-activity-card-shadow: var(--shadow-sm);
+  --sce-activity-card-shadow-hover: var(--shadow-md);
+  --sce-activity-card-team-context-foreground: var(--sce-color-text-secondary);
+  --sce-activity-card-location-foreground: var(--sce-color-text-muted);
+
   --sce-surface-border-subtle:  #f1f5f9;
   --sce-surface-border:         var(--border);
   --sce-surface-border-elevated: var(--border-strong);
@@ -546,8 +556,73 @@
   --sce-icon-accent:    var(--orange);
   --sce-icon-muted:     #64748b;
 
-  /* Match numerals — interim readable on white until DS2-04 card refresh */
   --sce-match-result-foreground: #0f172a;
+}
+
+/* SCE-DS2-04 — premium activity card surfaces */
+.sce-activity-card-shell {
+  position: relative;
+  min-width: 0;
+  backdrop-filter: none;
+}
+
+.sce-activity-card-shell[data-sce-activity-category="MATCH"]::before,
+.sce-activity-card-shell[data-sce-activity-category="TRAINING"]::before,
+.sce-activity-card-shell[data-sce-activity-category="TOURNAMENT"]::before,
+.sce-activity-card-shell[data-sce-activity-category="CLUB_EVENT"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.sce-activity-card-shell[data-sce-activity-category="MATCH"]::before {
+  background: var(--sce-activity-match);
+}
+
+.sce-activity-card-shell[data-sce-activity-category="TRAINING"]::before {
+  background: var(--sce-activity-training);
+}
+
+.sce-activity-card-shell[data-sce-activity-category="TOURNAMENT"]::before {
+  background: var(--sce-activity-tournament);
+}
+
+.sce-activity-card-shell[data-sce-activity-category="CLUB_EVENT"]::before {
+  background: var(--sce-activity-club-event);
+}
+
+.sce-activity-card__header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sce-activity-card__body {
+  min-width: 0;
+}
+
+.sce-activity-card__footer {
+  min-width: 0;
+}
+
+.sce-activity-card__meta {
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+}
+
+.sce-activity-card__schedule {
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.sce-activity-card__location {
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
 }
 
 [data-sce-theme="white"] .sce-app-explorer-scroll,

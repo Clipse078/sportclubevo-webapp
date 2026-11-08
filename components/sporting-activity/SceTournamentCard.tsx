@@ -11,6 +11,8 @@ import {
   isSceActivityDimensionVisible,
 } from "@/lib/sporting-activity-presentation/canonical";
 import { resolveSceTournamentHauptteamDisplayName } from "@/lib/sporting-activity-presentation/canonical/tournament-hauptteam-display";
+import { sceActivityCardRegionClass } from "@/lib/design-system/sce-activity-card-layout-contract";
+import { SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-shell-contract";
 import {
   SCE_TOURNAMENT_CARD_SHELL_CLASS,
   isSceTournamentRichCardDensity,
@@ -160,7 +162,7 @@ function SceTournamentTypeHeader({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-start justify-between gap-2",
+        sceActivityCardRegionClass("header"),
         listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
       )}
       data-sce-tournament-region="meta"
@@ -834,6 +836,8 @@ export function SceTournamentCard({
         data-testid={testId}
         data-density={density}
         data-sce-tournament-card
+        data-sce-activity-card
+        data-sce-activity-category="TOURNAMENT"
         data-sce-tournament-density={density}
         data-surface={surface}
         aria-label={accessibleLabel}
@@ -845,10 +849,12 @@ export function SceTournamentCard({
 
   return (
     <article
-      className={cn(shellClass, !embed && "transition-colors hover:border-[var(--border-strong)]")}
+      className={cn(shellClass, !embed && SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS)}
       data-testid={testId}
       data-density={density}
       data-sce-tournament-card
+      data-sce-activity-card
+      data-sce-activity-category="TOURNAMENT"
       data-sce-tournament-density={density}
       data-surface={surface}
     >

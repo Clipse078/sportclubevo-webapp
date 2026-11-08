@@ -1,7 +1,10 @@
 import { cn } from "@/lib/cn";
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
 import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
-import { SCE_SURFACE_TOKEN_MATCH_CARD } from "@/lib/shell/sce-surface-system";
+import {
+  SCE_ACTIVITY_CARD_SHELL_CLASS,
+  SCE_ACTIVITY_CARD_SURFACE_VAR,
+} from "./activity-card-shell-contract";
 import {
   SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
   SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
@@ -38,14 +41,13 @@ export type SceMatchRichDensityScale = {
   completedMissingResultClass: string;
 };
 
-/** Canonical bounded match card surface — pitch-opaque identity layer (no backdrop blur). */
-export const SCE_MATCH_CARD_SHELL_CLASS = cn(
-  "rounded-xl border border-[var(--sce-surface-border-elevated)]",
-  "bg-[var(--sce-match-card-surface)] shadow-[var(--sce-surface-shadow-elevated)]",
-);
+/** Canonical bounded match card surface — DS2-04 semantic shell (no backdrop blur). */
+export const SCE_MATCH_CARD_SHELL_CLASS = SCE_ACTIVITY_CARD_SHELL_CLASS;
 
 /** Resolved CSS variable name for guardrails and design-system docs. */
-export const SCE_MATCH_CARD_SURFACE_VAR = SCE_SURFACE_TOKEN_MATCH_CARD;
+export const SCE_MATCH_CARD_SURFACE_VAR = SCE_ACTIVITY_CARD_SURFACE_VAR;
+
+export { SCE_ACTIVITY_CARD_SHELL_CLASS } from "./activity-card-shell-contract";
 
 function buildMatchRichScale(
   density: SceMatchRichCardDensity,
