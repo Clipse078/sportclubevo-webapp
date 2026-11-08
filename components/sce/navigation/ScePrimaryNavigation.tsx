@@ -1,8 +1,6 @@
 "use client";
 
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
-import { SceIcon } from "@/components/design-system/icons/SceIcon";
-import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import { SceNavigationItem } from "@/components/sce/navigation/SceNavigationItem";
 import { SceNavigationOverflow } from "@/components/sce/navigation/SceNavigationOverflow";
 import {
@@ -69,9 +67,6 @@ function PrimaryDomainTrigger({
       data-testid={`primary-domain-panel-trigger-${domain.id}`}
       onClick={(event) => onToggle(event.currentTarget)}
     >
-      <span className="sce-global-primary-nav-domain-icon" aria-hidden>
-        <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={20} />
-      </span>
       <span className="sce-global-primary-nav-domain-label">{label}</span>
     </button>
   );
@@ -145,11 +140,6 @@ export function ScePrimaryNavigation({
               isActive={visualState === "strong"}
               activeVisualClass={visualStateClass}
               data-nav-domain={domain.id}
-              icon={
-                <span className="sce-global-primary-nav-domain-icon">
-                  <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={20} />
-                </span>
-              }
             />
           );
         })}

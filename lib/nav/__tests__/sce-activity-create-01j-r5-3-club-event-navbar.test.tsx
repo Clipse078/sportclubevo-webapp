@@ -104,14 +104,12 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3 — Navbar quick-action guard", () => {
 });
 
 describe("SCE-ACTIVITY-CREATE-01J-R5.3 — Navbar active L1 orange token", () => {
-  it("active desktop L1 label uses canonical SCE primary alongside icon", () => {
+  it("active desktop L1 label uses canonical SCE primary token (DS2-02 icon-free)", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
       /\.sce-global-primary-nav-item--active\s*\{[\s\S]*color:\s*var\(--sce-primary\)/,
     );
-    expect(css).toMatch(
-      /\.sce-global-primary-nav-item--active\s+\.sce-global-primary-nav-domain-icon[\s\S]*color:\s*var\(--sce-primary\)/,
-    );
+    expect(css).not.toContain(".sce-global-primary-nav-domain-icon");
   });
 });
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { ChevronLeft, Search } from "lucide-react";
-import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import type { AppNavigationModel, ActiveAppNavigation } from "@/lib/nav/app-navigation-model";
 import {
   isModuleLocalChildPrimaryActive,
@@ -16,7 +15,6 @@ import {
   formatExplorerSearchHitContext,
   resolveExplorerGroupsForDomain,
   resolveExplorerModulesForDomain,
-  resolveExplorerSearchHitNavKey,
   type ExplorerModuleEntry,
 } from "@/lib/nav/app-navigation-explorer";
 import { cn } from "@/lib/cn";
@@ -118,13 +116,7 @@ function ExplorerModuleCard({
             aria-current={moduleActive && !hasChildren ? "page" : undefined}
             onClick={onNavigate}
           >
-            <NavDestinationSceIcon
-              navItemKey={module.key}
-              size={20}
-              active={moduleActive}
-              fallbackGenericModuleGlyph
-            />
-            <span className="truncate">{module.label}</span>
+            <span className="truncate sce-header-nav-label">{module.label}</span>
           </Link>
           {hasChildren ? (
             <button
@@ -288,7 +280,7 @@ function GlobalNavExplorerPanel({
             aria-selected={isSelected}
             data-testid={`global-nav-explorer-domain-${domain.id}`}
             className={cn(
-              "rounded-md px-2.5 py-2 text-left text-[0.8125rem] font-semibold text-[var(--text-2)] motion-safe:transition-colors",
+              "sce-header-nav-label rounded-md px-2.5 py-2 text-left text-[0.8125rem] font-semibold text-[var(--text-2)] motion-safe:transition-colors",
               "hover:bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)] hover:text-[var(--foreground)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
               isSelected &&
@@ -328,12 +320,6 @@ function GlobalNavExplorerPanel({
                   )}
                   onClick={handleNavigate}
                 >
-                  <NavDestinationSceIcon
-                    navItemKey={resolveExplorerSearchHitNavKey(hit) ?? ""}
-                    size={20}
-                    fallbackGenericModuleGlyph
-                    className="mt-0.5"
-                  />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-[var(--foreground)]">
                       {hit.label}

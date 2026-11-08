@@ -1794,6 +1794,23 @@ html[data-sidebar-collapsed="1"] {
   width: 0;
 }
 
+.sce-nav-label {
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.sce-nav-label--collapsed {
+  font-size: 0.625rem;
+  line-height: 1.1;
+  max-width: 100%;
+}
+
+.sce-nav-item--collapsed-rail {
+  gap: 0;
+}
+
 .sce-nav-item {
   position: relative;
   display: flex;

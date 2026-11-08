@@ -50,7 +50,7 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 describe("AppShellNavigation SCE-ICONS-02", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("renders approved SCE icons for planning secondary nav destinations", async () => {
+  it("renders icon-free planning secondary nav destinations after DS2-02", async () => {
     const user = userEvent.setup();
     render(
       <AppShellNavigation
@@ -67,20 +67,16 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     const panel = screen.getByTestId("sce-domain-nav-panel");
 
     const weekLink = within(panel).getByRole("link", { name: /Wochenplaner/i });
-    expect(weekLink.querySelector('[data-sce-nav-destination-icon="week-planner"]')).toBeTruthy();
+    expect(weekLink.querySelector('[data-sce-nav-destination-icon]')).toBeNull();
 
     const programmeLink = within(panel).getByRole("link", { name: /Vereinsprogramm/i });
-    const programmeIcon = programmeLink.querySelector('[data-sce-nav-destination-icon="calendar"]');
-    expect(programmeIcon).toBeTruthy();
-    expect(programmeIcon?.querySelector("svg")).toHaveClass("text-current");
-    expect(programmeIcon?.innerHTML).not.toContain("--sce-icon-accent");
+    expect(programmeLink.querySelector('[data-sce-nav-destination-icon]')).toBeNull();
 
     const eventsLink = within(panel).getByRole("link", { name: /Veranstaltungen/i });
-    expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
+    expect(eventsLink.querySelector('[data-sce-nav-destination-icon]')).toBeNull();
 
     const spieleLink = within(panel).getByRole("link", { name: /Spiele/i });
-    expect(spieleLink.querySelector('[data-sce-nav-destination-icon="match"]')).toBeTruthy();
-    expect(spieleLink.querySelector("circle")).toBeTruthy();
+    expect(spieleLink.querySelector('[data-sce-nav-destination-icon]')).toBeNull();
   });
 
   it("shows SCE module icons in explorer module pane and search results", async () => {
@@ -100,14 +96,12 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     expect(
       screen
         .getByTestId("global-nav-drawer-tree")
-        .querySelector('[data-sce-nav-destination-icon="week-planner"]'),
-    ).toBeTruthy();
+        .querySelector('[data-sce-nav-destination-icon]'),
+    ).toBeNull();
 
     const search = screen.getByTestId("global-nav-explorer-search");
     await user.type(search, "Spiele");
     const results = screen.getByTestId("global-nav-explorer-search-results");
-    expect(
-      results.querySelector('[data-sce-nav-destination-icon="match"]'),
-    ).toBeTruthy();
+    expect(results.querySelector('[data-sce-nav-destination-icon]')).toBeNull();
   });
 });
