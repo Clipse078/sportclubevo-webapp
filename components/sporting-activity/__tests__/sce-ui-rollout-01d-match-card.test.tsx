@@ -341,7 +341,9 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     const { container } = renderCard({}, "STANDARD");
     const card = container.querySelector("[data-sce-match-card]")!;
     expect(card.className).toContain("--sce-match-card-surface");
-    expect(card.className).toContain("--sce-surface-border-elevated");
+    expect(card.className).toContain("--sce-color-border-standard");
+    expect(card.className).toContain("sce-activity-card-shell");
+    expect(card).toHaveAttribute("data-sce-activity-category", "MATCH");
     expect(card.className).not.toContain("backdrop-blur");
     expect(card.className).not.toContain("--surface-1");
   });

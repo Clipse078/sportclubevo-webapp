@@ -13,6 +13,8 @@ import {
   formatSceClubEventDateLine,
   formatSceClubEventTimeLabel,
 } from "@/lib/sporting-activity-presentation/canonical/club-event-schedule-presentation";
+import { sceActivityCardRegionClass } from "@/lib/design-system/sce-activity-card-layout-contract";
+import { SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-shell-contract";
 import {
   SCE_CLUB_EVENT_CARD_SHELL_CLASS,
   isSceClubEventRichCardDensity,
@@ -148,7 +150,7 @@ function SceClubEventTypeHeader({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-start justify-between gap-2",
+        sceActivityCardRegionClass("header"),
         listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
       )}
       data-sce-club-event-region="meta"
@@ -677,7 +679,9 @@ export function SceClubEventCard({
     "relative min-w-0 text-[var(--foreground)]",
     richBounded,
     !embed && density !== "MICRO" && SCE_CLUB_EVENT_CARD_SHELL_CLASS,
-    !embed && density === "MICRO" && "rounded-md border border-[var(--border)]/80 bg-[var(--surface)]",
+    !embed &&
+      density === "MICRO" &&
+      "rounded-md border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)]",
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
     listRow && "shadow-none",
     richPadding,
@@ -746,6 +750,8 @@ export function SceClubEventCard({
         data-testid={testId}
         data-density={density}
         data-sce-club-event-card
+        data-sce-activity-card
+        data-sce-activity-category="CLUB_EVENT"
         data-sce-club-event-density={density}
         data-surface={surface}
         aria-label={accessibleLabel}
@@ -757,10 +763,12 @@ export function SceClubEventCard({
 
   return (
     <article
-      className={cn(shellClass, !embed && "transition-colors hover:border-[var(--border-strong)]")}
+      className={cn(shellClass, !embed && SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS)}
       data-testid={testId}
       data-density={density}
       data-sce-club-event-card
+      data-sce-activity-card
+      data-sce-activity-category="CLUB_EVENT"
       data-sce-club-event-density={density}
       data-surface={surface}
     >

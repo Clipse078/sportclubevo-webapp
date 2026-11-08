@@ -41,7 +41,11 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(scale).toContain("SCE_MATCH_RICH_DENSITY_SCALE");
     expect(scale).toContain("maxWidthClass");
     expect(scale).toContain("SCE_MATCH_CARD_SHELL_CLASS");
-    expect(scale).toContain("--sce-match-card-surface");
+    const shellContract = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/activity-card-shell-contract.ts"),
+      "utf8",
+    );
+    expect(shellContract).toContain("bg-[var(--sce-match-card-surface)]");
     expect(scale).not.toContain("backdrop-blur");
   });
 

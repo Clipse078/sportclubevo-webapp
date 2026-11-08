@@ -23,12 +23,10 @@ export const SCE_DS2_01_EXCLUSIONS = [
   "CMS public website builder",
   "Transactional email HTML",
   "Sporting typography roles + SceTeamName (DS2-03)",
-  "Activity card white refresh (DS2-04)",
 ] as const;
 
 export const SCE_DS2_01_LEGACY_STYLE_DEPENDENCIES = [
   "Dark-tuned scrollbar thumbs (.sce-app-explorer-scroll) — neutral overrides under white theme only",
   "SCE_WORKSPACE_SURFACE_CLASS backdrop-blur — retained until DS2-05 tunes workspace chrome",
   "fca-* marketing typography classes — admin migration deferred to DS2-06",
-  "Match result ivory foreground — DS2-04 contrast pass on white cards",
 ] as const;

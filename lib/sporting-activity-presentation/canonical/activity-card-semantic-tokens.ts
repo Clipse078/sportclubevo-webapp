@@ -6,21 +6,24 @@ import { cn } from "@/lib/cn";
  */
 
 /** Primary club/title names — applied via density `*NameClass` / `titleClass` tokens. */
-export const SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS = "text-[var(--foreground)]";
+export const SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS =
+  "text-[var(--sce-color-text-primary)]";
 
 /** Competition (match), organiser (tournament), quiet list context. */
-export const SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS = "text-[var(--text-2)]";
+export const SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS =
+  "text-[var(--sce-color-text-secondary)]";
 
 /** Calendar/clock schedule lines — date and time share this hierarchy. */
-export const SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS = "text-[var(--text-2)]";
+export const SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS =
+  "text-[var(--sce-color-text-secondary)]";
 
 /** Team/participant context (Hauptteam, training team emphasis). */
 export const SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS =
-  "text-[color-mix(in_srgb,var(--sce-info)_88%,var(--foreground)_12%)]";
+  "text-[var(--sce-activity-card-team-context-foreground)]";
 
 /** Venue/resource location — icon + text. */
 export const SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS =
-  "text-[color-mix(in_srgb,var(--sce-info)_55%,var(--text-2)_45%)]";
+  "text-[var(--sce-activity-card-location-foreground)]";
 
 /** Intentionally subordinate fixture separator (VS). */
 export const SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS = "text-[var(--muted)]";

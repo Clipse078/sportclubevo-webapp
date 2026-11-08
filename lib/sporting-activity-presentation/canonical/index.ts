@@ -67,6 +67,15 @@ export { resolveSceTrainingPresentationFromSessionManagementRow } from "./adapte
 export { resolveSceTrainingManagementStatus } from "./training-management-status";
 export { resolveSceTrainingSessionDisplayStatus } from "./training-session-display-status";
 export {
+  SCE_ACTIVITY_CARD_CATEGORIES,
+  SCE_ACTIVITY_CARD_SHELL_CLASS,
+  SCE_ACTIVITY_CARD_SHELL_INTERACTIVE_CLASS,
+  SCE_ACTIVITY_CARD_SHELL_ROOT_CLASS,
+  SCE_ACTIVITY_CARD_SURFACE_VAR,
+  sceActivityCardShellClass,
+  type SceActivityCardCategory,
+} from "./activity-card-shell-contract";
+export {
   SCE_TRAINING_CARD_SHELL_CLASS,
   SCE_TRAINING_RICH_DENSITY_SCALE,
   isSceTrainingRichCardDensity,
