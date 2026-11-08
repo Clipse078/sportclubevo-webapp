@@ -12,7 +12,7 @@ const SCE_CONTEXT_TAB_FOCUS =
 
 export function sceContextTabClassName(isActive: boolean): string {
   return cn(
-    "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4",
+    "sce-ds2-secondary-nav-label -mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm transition-colors sm:px-4",
     SCE_CONTEXT_TAB_FOCUS,
     isActive
       ? "border-[var(--sce-color-accent-primary)] text-[var(--sce-color-accent-primary)]"
@@ -22,7 +22,7 @@ export function sceContextTabClassName(isActive: boolean): string {
 
 export function sceContextTabOverflowSummaryClassName(overflowActive: boolean): string {
   return cn(
-    "flex cursor-pointer list-none items-center gap-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors marker:content-none [&::-webkit-details-marker]:hidden",
+    "sce-ds2-secondary-nav-label flex cursor-pointer list-none items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors marker:content-none [&::-webkit-details-marker]:hidden",
     SCE_CONTEXT_TAB_FOCUS,
     overflowActive
       ? "text-[var(--sce-color-accent-primary)]"

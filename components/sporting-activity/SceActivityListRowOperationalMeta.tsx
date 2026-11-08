@@ -5,6 +5,7 @@ import { Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import { SCE_ACTIVITY_LIST_ROW_SCALE } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { SceTeamName } from "@/components/design-system/typography";
 
 type OperationalMetaRowProps = {
   className?: string;
@@ -37,14 +38,16 @@ export function SceActivityListRowOrganizationalContext({
   testId?: string;
 }) {
   return (
-    <p
+    <SceTeamName
+      as="p"
       className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
       data-testid={testId}
       data-sce-activity-region="organizational-context"
-      title={label}
+      density="MICRO"
+      lineClamp={1}
     >
       {label}
-    </p>
+    </SceTeamName>
   );
 }
 

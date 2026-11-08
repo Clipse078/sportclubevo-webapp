@@ -26,8 +26,9 @@
 | `SCE_WORKSPACE_SURFACE_CLASS` backdrop-blur on white | DS2-05 |
 | `fca-*` classes in admin modules | DS2-06 |
 | Match card pitch / result typography on white | DS2-04 |
-| `SceTeamName` + team line uppercase italic | DS2-02 |
-| Sidebar uppercase icon-free nav | DS2-03 |
+| `SceTeamName` + team line uppercase italic | DS2-03 |
+| Header L1 uppercase icon-free nav | DS2-02 |
+| Sidebar / tab secondary nav uppercase | DS2-03 |
 
 ## Rollback
 

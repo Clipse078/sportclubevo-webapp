@@ -1,6 +1,7 @@
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
 import { cn } from "@/lib/cn";
 import { SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
 import type { SceTournamentFixturePresentationDensity } from "@/components/sce/tournament/SceTournamentFixturePresentation";
 
@@ -60,7 +61,8 @@ export function clubNameClassForFixturePresentation(
 ): string | null {
   if (density !== "grid") return null;
   return cn(
-    "line-clamp-2 text-[0.6875rem] font-semibold leading-[1.25]",
+    sceTeamNameClassName({ density: "MICRO", lineClamp: 2, truncate: true }),
+    "text-[0.6875rem] leading-[1.25]",
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   );
 }

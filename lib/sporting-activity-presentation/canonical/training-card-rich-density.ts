@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import {
   SCE_MATCH_CARD_SHELL_CLASS,
   SCE_MATCH_RICH_DENSITY_SCALE,
@@ -8,6 +9,7 @@ import {
   type SceMatchRichDensityScale,
 } from "./match-card-rich-density";
 import {
+  SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
   sceActivityLocationIconClass,
   sceActivityLocationTextClass,
 } from "./activity-card-semantic-tokens";
@@ -48,7 +50,10 @@ function mapRichScale(density: SceTrainingRichCardDensity): SceTrainingRichDensi
     scheduleIconClass: match.scheduleIconClass,
     typeLabelClass: match.competitionTextClass,
     titleClass: match.clubNameClass,
-    teamClass: match.scheduleTextClass,
+    teamClass: cn(
+      sceTeamNameClassName({ density, lineClamp: 1, truncate: true }),
+      SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+    ),
     contextLineClass: match.scheduleTextClass,
     locationTextClass: sceActivityLocationTextClass(match.scheduleTextClass),
     locationIconClass: sceActivityLocationIconClass(match.scheduleIconClass),

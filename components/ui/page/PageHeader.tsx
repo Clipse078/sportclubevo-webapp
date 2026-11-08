@@ -21,18 +21,8 @@ type PageHeaderProps = {
  *
  * Authoritative internal WebApp page header.
  *
- * Internal WebApp headers must use the Premium SaaS typography standard.
- * Do not use tenant branding, football typography, or legacy fca-heading styles here.
- *
- * Standard:
- *   - Font: Geist (system body font, var(--font-body))
- *   - Title color: neutral foreground (var(--foreground))
- *   - Title size: text-2xl / text-3xl
- *   - Title weight: font-semibold
- *   - Tracking: tracking-tight only
- *   - No uppercase on main title
- *   - No blue title color
- *   - Eyebrow: small, muted, optional — must not visually dominate
+ * DS2-03 sporting page titles use Barlow Condensed display italic (`.sce-type-page-title`).
+ * Body copy and descriptions stay on Inter.
  *
  * Usage:
  *   <PageHeader
@@ -57,7 +47,7 @@ export function PageHeader({
       )}
 
       <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-        <h1 className="min-w-0 break-words text-2xl font-semibold leading-tight tracking-tight text-[var(--foreground)] [overflow-wrap:anywhere]">
+        <h1 className="sce-type-page-title min-w-0 break-words [overflow-wrap:anywhere]">
           {title}
         </h1>
         {badge}

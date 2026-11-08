@@ -30,6 +30,7 @@ import {
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
+import { SceTeamName } from "@/components/design-system/typography";
 import {
   SceActivityListRowDressingRoomMeta,
   SceActivityListRowLocationMeta,
@@ -188,9 +189,15 @@ function SceTrainingIdentityBlock({
         {model.trainingTitle}
       </p>
       {model.team?.name && !includeTeamInSubtitle ? (
-        <p className={cn("min-w-0 truncate", scale.teamClass)} data-testid="sce-training-team">
+        <SceTeamName
+          as="p"
+          className={cn("min-w-0", scale.teamClass)}
+          density={density}
+          lineClamp={1}
+          data-testid="sce-training-team"
+        >
           {model.team.name}
-        </p>
+        </SceTeamName>
       ) : null}
       {subtitleParts.length > 0 ? (
         <p
@@ -461,12 +468,15 @@ function SceTrainingListRowIdentityContent({
           {title}
         </p>
         {showTeamLine ? (
-          <p
-            className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+          <SceTeamName
+            as="p"
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
             data-testid="sce-training-team"
+            density="MICRO"
+            lineClamp={1}
           >
             {teamName}
-          </p>
+          </SceTeamName>
         ) : null}
       </div>
     </div>

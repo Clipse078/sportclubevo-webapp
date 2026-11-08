@@ -1,5 +1,6 @@
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
 import { cn } from "@/lib/cn";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import {
   SCE_MATCH_RICH_DENSITY_SCALE,
   isSceMatchRichCardDensity,
@@ -48,9 +49,18 @@ function mapTournamentRichScale(density: SceTournamentRichCardDensity): SceTourn
   };
 
   const hauptteamByDensity: Record<SceTournamentRichCardDensity, string> = {
-    HERO: cn("truncate text-sm font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
-    STANDARD: cn("truncate text-xs font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
-    COMPACT: cn("truncate text-[0.6875rem] font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
+    HERO: cn(
+      sceTeamNameClassName({ density: "STANDARD", lineClamp: 1, truncate: true }),
+      SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+    ),
+    STANDARD: cn(
+      sceTeamNameClassName({ density: "COMPACT", lineClamp: 1, truncate: true }),
+      SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+    ),
+    COMPACT: cn(
+      sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true }),
+      SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+    ),
   };
 
   return {

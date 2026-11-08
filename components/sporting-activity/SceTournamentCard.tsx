@@ -36,6 +36,8 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { formatSceTournamentOwnTeamsCompactLabel } from "@/lib/sporting-activity-presentation/canonical/tournament-own-teams-display";
 import { ActivityTypePill } from "./ActivityTypePill";
+import { SceTeamName } from "@/components/design-system/typography";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import { SceTournamentCardStatus } from "./SceTournamentCardStatus";
 import {
   SceActivityListRowLocationMeta,
@@ -271,7 +273,11 @@ function SceTournamentHauptteamLine({
 
   const microTeamClass =
     density === "MICRO"
-      ? cn("truncate text-[0.6875rem] font-semibold leading-tight", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS)
+      ? cn(
+          sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true }),
+          "text-[0.6875rem] leading-tight",
+          SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+        )
       : scale.hauptteamNameClass;
   const microIconClass =
     density === "MICRO" ? "h-3 w-3 shrink-0 opacity-80 text-[var(--text-2)]" : scale.hauptteamIconClass;
@@ -283,9 +289,9 @@ function SceTournamentHauptteamLine({
       data-sce-tournament-region="hauptteam"
     >
       <Users className={microIconClass} aria-hidden />
-      <p className={cn("min-w-0", microTeamClass)} title={teamLabel}>
+      <SceTeamName as="p" className={cn("min-w-0", microTeamClass)} density={density} lineClamp={1}>
         {teamLabel}
-      </p>
+      </SceTeamName>
     </div>
   );
 }

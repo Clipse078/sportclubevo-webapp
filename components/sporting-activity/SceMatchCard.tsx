@@ -46,6 +46,8 @@ import {
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 import { SceMatchStackedFixtureIdentity } from "./SceMatchStackedFixtureIdentity";
+import { SceTeamName } from "@/components/design-system/typography";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
 export type SceMatchListRowPresentation = "default" | "programme-fixture" | "dashboard-opponent";
@@ -82,7 +84,7 @@ function richScale(density: SceActivityPresentationDensity) {
 
 function clubNameClassForDensity(density: SceActivityPresentationDensity): string {
   if (density === "MICRO") {
-    return "truncate text-[0.8125rem] font-medium";
+    return sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true });
   }
   return richScale(density).clubNameClass;
 }
@@ -248,7 +250,8 @@ function SceMatchInlineIdentitySide({
 }) {
   const nameClass = programmeFixture
     ? cn(
-        "min-w-0 line-clamp-2 text-[0.8125rem] font-semibold leading-snug",
+        sceTeamNameClassName({ density: "MICRO", lineClamp: 2, truncate: true }),
+        "leading-snug",
         SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
       )
     : listRow
@@ -274,9 +277,17 @@ function SceMatchInlineIdentitySide({
   ) : null;
 
   const nameNode = (
-    <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
+    <SceTeamName
+      as="span"
+      className={nameClass}
+      title={identity.displayName}
+      truncate
+      lineClamp={programmeFixture ? 2 : 1}
+      density="MICRO"
+      data-sce-match-region={`${side}-name`}
+    >
       {identity.displayName}
-    </span>
+    </SceTeamName>
   );
 
   return (

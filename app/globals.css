@@ -353,17 +353,17 @@
   --sce-lh-display:     1.1;
   --sce-ls-display:     -0.02em;
 
-  /* Page Title — Page-level heading in the app shell */
-  --sce-fs-page-title:  1.25rem;
-  --sce-fw-page-title:  700;
-  --sce-lh-page-title:  1.2;
-  --sce-ls-page-title:  -0.01em;
+  /* Page Title — Page-level heading in the app shell (DS2-03 display italic) */
+  --sce-fs-page-title:  clamp(1.375rem, 1.1rem + 0.6vw, 1.75rem);
+  --sce-fw-page-title:  800;
+  --sce-lh-page-title:  1.15;
+  --sce-ls-page-title:  0.03em;
 
-  /* Section Title — Named sections within a page */
+  /* Section Title — Named sections within a page (DS2-03 display upright) */
   --sce-fs-section-title:  1rem;
-  --sce-fw-section-title:  600;
-  --sce-lh-section-title:  1.3;
-  --sce-ls-section-title:  -0.005em;
+  --sce-fw-section-title:  700;
+  --sce-lh-section-title:  1.25;
+  --sce-ls-section-title:  0.04em;
 
   /* Card Title — Heading inside a card or panel */
   --sce-fs-card-title:  0.9375rem;
@@ -655,27 +655,41 @@ button {
 
 .sce-page-title {
   color: var(--foreground);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: var(--sce-fs-page-title);
+  font-weight: var(--sce-fw-page-title);
+  font-style: italic;
+  letter-spacing: var(--sce-ls-page-title);
+  line-height: var(--sce-lh-page-title);
+  text-transform: uppercase;
 }
 
 /* DS-02 — semantic typography utilities (dark-surface hierarchy) */
+/* SCE-DS2-03 — sporting display roles on Barlow Condensed + Inter body */
 .sce-type-page-title {
   color: var(--sce-color-text-primary);
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: var(--sce-fs-page-title);
   font-weight: var(--sce-fw-page-title);
+  font-style: italic;
   letter-spacing: var(--sce-ls-page-title);
   line-height: var(--sce-lh-page-title);
+  text-transform: uppercase;
 }
 
 .sce-type-section-title {
   color: var(--sce-color-text-primary);
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: var(--sce-fs-section-title);
   font-weight: var(--sce-fw-section-title);
   letter-spacing: var(--sce-ls-section-title);
   line-height: var(--sce-lh-section-title);
+  text-transform: uppercase;
+}
+
+.sce-type-section-title--display {
+  font-style: italic;
+  font-weight: 800;
 }
 
 .sce-type-card-title {
@@ -683,6 +697,44 @@ button {
   font-size: var(--sce-fs-card-title);
   font-weight: var(--sce-fw-card-title);
   line-height: var(--sce-lh-card-title);
+}
+
+/* SCE-DS2-03 — mandatory team name presentation */
+.sce-team-name {
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.sce-team-name--hero {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+
+.sce-team-name--standard {
+  font-size: 0.875rem;
+}
+
+.sce-team-name--compact {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.sce-team-name--micro {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Secondary navigation — tabs, sidebar children, domain panels */
+.sce-ds2-secondary-nav-label {
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .sce-type-body {
@@ -1889,8 +1941,11 @@ html[data-sidebar-collapsed="1"] {
   padding: 0 10px 0 12px;
   border-radius: var(--radius-md);
   color: var(--muted);
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: 0.8125rem;
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
   transition:
     background-color var(--transition-fast),
