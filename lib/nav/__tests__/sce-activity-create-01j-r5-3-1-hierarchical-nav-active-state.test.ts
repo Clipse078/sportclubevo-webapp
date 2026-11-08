@@ -57,19 +57,21 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — canonical selected-state CSS contra
     );
   });
 
-  it("active L2 icons in the domain panel inherit canonical SCE primary", () => {
+  it("active L2 labels in the domain panel inherit canonical SCE primary (DS2-02 icon-free)", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
+    const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-control--active[\s\S]*\[data-sce-nav-destination-icon\][\s\S]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-control--active[\s\S]*color:\s*var\(--sce-primary\)/,
     );
+    expect(panel).not.toContain("NavDestinationSceIcon");
   });
 
   it("panel L2 browse selection without route active does not reuse --active modifier", () => {
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(panel).toContain('active && "sce-domain-nav-panel-l2-control--active"');
     expect(panel).not.toMatch(/\(active \|\| selected\) && "sce-domain-nav-panel-l2-control--active"/);
-    expect(panel).toContain('active={active}');
     expect(panel).not.toContain("active={active || selected}");
+    expect(panel).not.toContain("NavDestinationSceIcon");
   });
 });
 

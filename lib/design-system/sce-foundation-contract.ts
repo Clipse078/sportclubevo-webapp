@@ -22,7 +22,8 @@ export const SCE_DS2_TYPOGRAPHY_FOUNDATION = {
   display: 'var(--font-display), "Barlow Condensed", Arial, sans-serif',
   body: 'var(--font-inter), "Inter", system-ui, -apple-system, sans-serif',
   teamNameFutureContract: "uppercase italic (SCE-DS2-02)",
-  navigationFutureContract: "uppercase icon-free labels (SCE-DS2-03)",
+  navigationContract: "uppercase icon-free labels (SCE-DS2-02)",
+  navigationFutureContract: "uppercase icon-free labels (SCE-DS2-02)",
 } as const;
 
 /** CSS custom property names — semantic colour (surfaces). */

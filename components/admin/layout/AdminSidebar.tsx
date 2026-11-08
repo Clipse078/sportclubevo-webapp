@@ -7,7 +7,6 @@ import { applyShellLayoutVarsToDocument } from "@/lib/shell/shell-layout-vars";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarBrandHeader from "@/components/admin/branding/SidebarBrandHeader";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
-import { AnimatedNavIcon } from "@/components/ui/motion/AnimatedNavIcon";
 import { useSidebarResize } from "@/hooks/useSidebarResize";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import type { NavCapabilityContext, NavItem, NavSection } from "@/lib/nav/nav-config";
@@ -193,14 +192,13 @@ export default function AdminSidebar({
             title={item.label}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "sce-nav-item justify-center px-2",
+              "sce-nav-item sce-nav-item--collapsed-rail justify-center px-1",
               isActive && "active",
             )}
           >
-            <span className="sce-nav-icon-wrap" aria-hidden={false}>
-              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
+            <span className="sce-nav-label sce-nav-label--collapsed truncate text-center">
+              {item.label}
             </span>
-            <span className="sr-only">{item.label}</span>
           </Link>
         </li>
       );
@@ -214,10 +212,7 @@ export default function AdminSidebar({
             aria-current={isActive ? "page" : undefined}
             className={cn("sce-nav-item", isActive && "active")}
           >
-            <span className="sce-nav-icon-wrap" aria-hidden={false}>
-              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
-            </span>
-            <span>{item.label}</span>
+            <span className="sce-nav-label">{item.label}</span>
           </Link>
         </li>
       );
@@ -239,10 +234,7 @@ export default function AdminSidebar({
               isActive && "active",
             )}
           >
-            <span className="sce-nav-icon-wrap" aria-hidden={false}>
-              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
-            </span>
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            <span className="sce-nav-label min-w-0 flex-1 truncate">{item.label}</span>
           </Link>
 
           <button

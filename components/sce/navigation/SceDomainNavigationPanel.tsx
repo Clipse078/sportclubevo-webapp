@@ -13,8 +13,6 @@ import {
   resolveSecondaryNavItemModuleLocalChildren,
 } from "@/lib/nav/app-navigation-model";
 import type { NavItemChild } from "@/lib/nav/nav-config";
-import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
-import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 import { cn } from "@/lib/cn";
 
 export type SceDomainNavigationPanelProps = {
@@ -166,8 +164,6 @@ export function SceDomainNavigationPanel({
               const hasL3 = l3Children.length > 0;
               const active = isL2Active(item);
               const selected = hierarchical && hasL3 && selectedL2Key === item.key;
-              const sceIcon = getNavDestinationSceIconName(item.key);
-
               if (hierarchical && hasL3) {
                 return (
                   <li key={item.key}>
@@ -181,12 +177,7 @@ export function SceDomainNavigationPanel({
                       data-nav-destination={item.key}
                       onClick={() => setSelectedL2Key(item.key)}
                     >
-                      <span className="sce-domain-nav-panel-l2-label">
-                        {sceIcon ? (
-                          <NavDestinationSceIcon navItemKey={item.key} size={16} active={active} />
-                        ) : null}
-                        {item.label}
-                      </span>
+                      <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
                       <ChevronRight
                         className="sce-domain-nav-panel-l2-chevron h-3.5 w-3.5"
                         aria-hidden="true"
@@ -215,12 +206,7 @@ export function SceDomainNavigationPanel({
                       onClose();
                     }}
                   >
-                    <span className="sce-domain-nav-panel-l2-label">
-                      {sceIcon ? (
-                        <NavDestinationSceIcon navItemKey={item.key} size={16} active={active} />
-                      ) : null}
-                      {item.label}
-                    </span>
+                    <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
                   </Link>
                 </li>
               );

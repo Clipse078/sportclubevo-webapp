@@ -177,7 +177,7 @@ describe("AdminSidebar", () => {
     ).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("renders collapsed icon rail labels for assistive technology", () => {
+  it("renders collapsed rail labels for assistive technology", () => {
     render(
       <AdminSidebar
         permissionKeys={CLUB_ADMIN_PERMISSIONS}
@@ -190,7 +190,7 @@ describe("AdminSidebar", () => {
 
     const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
     expect(dashboardLink).toHaveAttribute("title", "Dashboard");
-    expect(within(dashboardLink).getByText("Dashboard", { selector: ".sr-only" })).toBeInTheDocument();
+    expect(within(dashboardLink).getByText("Dashboard", { selector: ".sce-nav-label" })).toBeInTheDocument();
   });
 
   it("keeps expand chevrons inside the module row without wrapping", () => {
