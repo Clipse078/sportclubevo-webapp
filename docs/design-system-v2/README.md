@@ -19,6 +19,14 @@
 7. [06 — Tenant branding architecture](./06-tenant-branding-architecture.md)
 8. [07 — Migration roadmap](./07-migration-roadmap.md)
 9. [08 — Risk and regression matrix](./08-risk-and-regression-matrix.md)
+10. [09 — DS2-01 foundation delivery](./09-ds2-01-foundation-delivery.md)
+
+## DS 2.0 implementation packages
+
+| Package | Status |
+| --- | --- |
+| `SCE-DS2-00` | Audit merged |
+| `SCE-DS2-01` | White foundation tokens (`SCE_WHITE_EDITION` flag) |
 
 ## Related canonical governance (unchanged by this package)
 

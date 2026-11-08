@@ -52,6 +52,8 @@ describe("SCE-DESIGN-SYSTEM-02 foundations guardrails", () => {
     expect(css).toContain("--sce-density-comfortable-control-height");
     expect(css).toContain("--sce-focus-ring-color");
     expect(css).toContain(".sce-type-page-title");
+    expect(css).toContain('[data-sce-theme="white"]');
+    expect(css).toContain("SCE-DS2-01");
   });
 
   it("does not introduce a competing parallel token CSS file", () => {

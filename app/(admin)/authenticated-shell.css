@@ -11,6 +11,12 @@
   background-attachment: scroll;
 }
 
+/* SCE-DS2-01 — white canvas: solid background only (no PNG under chrome) */
+[data-sce-theme="white"][data-sce-modal-background].sce-authenticated-app-shell {
+  background-size: auto;
+  background-attachment: scroll;
+}
+
 /* L1 — stable chrome; content uses semantic L3–L6 tokens from globals.css */
 [data-sce-modal-background].sce-authenticated-app-shell .sce-sidebar {
   background: var(--sidebar-bg);
