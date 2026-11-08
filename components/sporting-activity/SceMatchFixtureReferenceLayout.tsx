@@ -46,8 +46,8 @@ function ReferenceFixtureSide({
   showCrests: boolean;
 }) {
   const nameClass = cn(
-    sceTeamNameClassName({ density: "STANDARD", lineClamp: 2, truncate: true }),
-    "min-w-0 leading-snug",
+    sceTeamNameClassName({ density: "STANDARD", lineClamp: 2, truncate: false }),
+    "min-w-0 break-words leading-snug",
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   );
 
@@ -67,7 +67,7 @@ function ReferenceFixtureSide({
       as="span"
       className={nameClass}
       title={identity.displayName}
-      truncate
+      truncate={false}
       lineClamp={2}
       density="STANDARD"
       data-sce-match-region={`${side}-name`}
@@ -137,6 +137,7 @@ export function SceMatchFixtureReferenceLayout({
       className={SCE_ACTIVITY_REFERENCE_LAYOUT.rootClass}
       data-sce-match-reference-layout
       data-sce-programme-card-contract="reference-split"
+      data-sce-activity-card-layout="horizontal-full-width"
     >
       <aside
         className={SCE_ACTIVITY_REFERENCE_LAYOUT.metaColumnClass}

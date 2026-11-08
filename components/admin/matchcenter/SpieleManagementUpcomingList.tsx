@@ -11,6 +11,7 @@ import {
 } from "@/lib/matchcenter/management-view";
 import SpieleManagementMatchRow from "./SpieleManagementMatchRow";
 import { cn } from "@/lib/cn";
+import { sceActivityCardListContainerProps } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 
 type Props = {
   dayGroups: SpieleDayGroup<MatchcenterRowViewModel>[];
@@ -188,7 +189,7 @@ export default function SpieleManagementUpcomingList({
                 </p>
               </div>
               <div
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                {...sceActivityCardListContainerProps()}
                 data-testid={`spiele-day-grid-${group.dayKey}`}
               >
                 {group.rows.map((row) => (

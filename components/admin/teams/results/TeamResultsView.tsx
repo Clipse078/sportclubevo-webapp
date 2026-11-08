@@ -1,5 +1,9 @@
 import type { TeamCockpitResult } from "@/lib/teams/team-cockpit-sporting-data";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  SCE_ACTIVITY_CARD_LIST_ITEM_CLASS,
+  sceActivityCardListOlProps,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 import TeamResultRow from "./TeamResultRow";
 
 type Props = {
@@ -36,12 +40,9 @@ export default function TeamResultsView({
           </p>
         </div>
       ) : (
-        <ol
-          className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-          data-testid="team-results-list"
-        >
+        <ol {...sceActivityCardListOlProps()} data-testid="team-results-list">
           {results.map((result) => (
-            <li key={result.eventId} className="min-w-0">
+            <li key={result.eventId} className={SCE_ACTIVITY_CARD_LIST_ITEM_CLASS}>
               <TeamResultRow result={result} formatConfig={formatConfig} />
             </li>
           ))}

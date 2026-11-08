@@ -24,7 +24,8 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
     SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
   ),
   fixtureClubNameClass: cn(
-    sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true }),
+    sceTeamNameClassName({ density: "STANDARD", lineClamp: 2, truncate: false }),
+    "break-words",
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   ),
   fixtureVsClass: cn(
@@ -42,9 +43,10 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
   /** Programme Match Row 1 — compact centred fixture (inside crests adjacent to VS). */
   programmeFixtureBandClass:
     "flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:gap-x-2",
-  programmeFixtureSideHomeClass: "flex min-w-0 max-w-[min(100%,14rem)] items-center justify-end gap-1.5",
+  programmeFixtureSideHomeClass:
+    "flex min-w-0 flex-1 items-center justify-end gap-1.5 text-right",
   programmeFixtureSideAwayClass:
-    "flex min-w-0 max-w-[min(100%,14rem)] items-center justify-start gap-1.5 text-left",
+    "flex min-w-0 flex-1 items-center justify-start gap-1.5 text-left",
   programmeFixtureKickoffClass:
     "font-mono text-sm font-bold tabular-nums leading-none text-[var(--foreground)]",
   programmeFixtureVsClass: cn(

@@ -12,8 +12,12 @@ export const SCE_DS2_04_DOC_MARKERS = [
   "sce-activity-card-shell",
   "SCE_ACTIVITY_CARD_SHELL_CLASS",
   "activity-card-shell-contract",
+  "activity-card-full-width-list-contract",
   "docs/design-system-v2/12-ds2-04-activity-cards-delivery.md",
+  "docs/design-system-v2/14-ds2-04r2-full-width-horizontal-cards.md",
 ] as const;
+
+export const SCE_DS2_04R2_PACKAGE_KEY = "SCE-DS2-04R2" as const;
 
 export const SCE_DS2_04_CARD_FAMILIES = [
   "SceMatchCard",

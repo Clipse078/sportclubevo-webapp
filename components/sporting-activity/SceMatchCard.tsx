@@ -484,7 +484,11 @@ function SceMatchListRowIdentityContent({
         : tenantSide?.label;
   const programmeFixture = listRowPresentation === "programme-fixture";
   const lifecycle = model.matchLifecycle ?? model.status;
-  const showCancelledStatus = lifecycle?.semantic === "cancelled";
+  const showCancelledStatus =
+    lifecycle?.semantic === "cancelled" ||
+    lifecycle?.semantic === "warning" ||
+    lifecycle?.domain === "postponed" ||
+    lifecycle?.domain === "cancelled";
   const teamContextLabel = programmeFixture
     ? buildProgrammeMatchOrganizationalContextLabel(model)
     : undefined;

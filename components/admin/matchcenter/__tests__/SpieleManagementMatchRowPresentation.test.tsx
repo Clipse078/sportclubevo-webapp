@@ -136,9 +136,11 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
     expect(fixture.querySelector('[data-sce-match-side="away"]')?.textContent).toContain(
       "FC Allschwil E1",
     );
-    expect(within(card).getByTestId("sce-match-context-auswaerts")).toHaveTextContent("Auswärts");
+    expect(within(card).getByText("Auswärtsspiel", { selector: ".sr-only" })).toBeInTheDocument();
     expect(within(card).getByTestId("sce-match-location")).toHaveTextContent("Schützenmatte");
-    expect(within(card).getByTestId("sce-match-competition")).toHaveTextContent("Meisterschaft");
+    expect(within(card).getByTestId("sce-match-list-row-team-context")).toHaveTextContent(
+      "Meisterschaft",
+    );
   });
 
   it("MATCH HOME — Heim context and canonical fixture", () => {
@@ -156,7 +158,7 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
     );
 
     const card = screen.getByTestId("matchcenter-sce-match-match-home-1");
-    expect(within(card).getByTestId("sce-match-context-heim")).toHaveTextContent("Heim");
+    expect(within(card).getByText("Heimspiel", { selector: ".sr-only" })).toBeInTheDocument();
     expect(within(card).getByTestId("sce-match-fixture").textContent).toContain("FC Binningen");
   });
 
@@ -207,11 +209,15 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
     expect(screen.queryByTestId("sce-match-context-auswaerts")).not.toBeInTheDocument();
   });
 
-  it("composes bounded canonical card with operational panel in one unit", () => {
+  it("composes full-width programme shell with operational panel in one unit", () => {
     renderRow(createMatch({ id: "match-home-1", homeAway: "HOME" }));
     const row = screen.getByTestId("matchcenter-spielplanung-row-match-home-1");
     expect(row).toHaveAttribute("data-sce-matchcenter-composition", "stacked-card-operations-below");
-    expect(within(row).getByTestId("matchcenter-sce-match-match-home-1")).toBeInTheDocument();
+    expect(row).toHaveAttribute("data-sce-programme-activity-card-shell");
+    expect(within(row).getByTestId("matchcenter-sce-match-match-home-1")).toHaveAttribute(
+      "data-surface",
+      "list-row",
+    );
     expect(within(row).getByTestId("matchcenter-action-match-home-1")).toBeInTheDocument();
   });
 

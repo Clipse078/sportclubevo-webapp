@@ -11,12 +11,12 @@ import {
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
 import { cn } from "@/lib/cn";
-import {
-  SCE_SURFACE_DENSE_PANEL,
-  SCE_SURFACE_STANDARD_PANEL,
-} from "@/lib/shell/sce-surface-system";
+import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
+
+const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 
 type Props = {
   match: MatchcenterMatchSummary;
@@ -188,14 +188,15 @@ export default function SpieleManagementMatchRow({
   const cardDensity = compact ? "COMPACT" : "STANDARD";
 
   return (
-    <article
+    <SceProgrammeActivityCardShell
+      density="STANDARD"
+      testId={`matchcenter-spielplanung-row-${match.id}`}
       className={cn(
-        "relative flex min-w-0 flex-col gap-2 p-2.5 sm:p-3",
-        SCE_SURFACE_STANDARD_PANEL,
+        "relative min-w-0 w-full",
         isSelecting && isSelected && "ring-2 ring-emerald-500/40",
       )}
-      data-testid={`matchcenter-spielplanung-row-${match.id}`}
       data-sce-matchcenter-composition="stacked-card-operations-below"
+      data-sce-activity-card-layout="horizontal-full-width"
     >
       {isSelecting ? (
         <label className="relative z-[2] flex items-center gap-2">
@@ -228,7 +229,10 @@ export default function SpieleManagementMatchRow({
             density={cardDensity}
             fmtCfg={fmtCfg}
             linkToDetail
-            className="w-full max-w-none"
+            surface="list-row"
+            listRowPresentation="programme-fixture"
+            scopeTeamId={match.teamId}
+            className={LIST_ROW_CARD_CLASS}
             testId={`matchcenter-sce-match-${match.id}`}
           />
         </div>
@@ -249,6 +253,6 @@ export default function SpieleManagementMatchRow({
           />
         </div>
       </div>
-    </article>
+    </SceProgrammeActivityCardShell>
   );
 }

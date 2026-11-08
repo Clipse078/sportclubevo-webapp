@@ -44,6 +44,7 @@ import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
 import {
@@ -436,17 +437,89 @@ function SceClubEventListRowIdentityContent({
   );
 
   const operational = listRowPresentation === "operational";
+  const audienceLabel = model.audience?.primaryLabel?.trim()
+    ? formatSceClubEventAudienceCompactLabel(model.audience)
+    : undefined;
+
+  if (operational && fmtCfg) {
+    const dateLabel = formatSceClubEventDateLine(model, fmtCfg);
+
+    return (
+      <div
+        className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
+        data-sce-club-event-density={density}
+        data-sce-club-event-list-row-identity
+        data-sce-club-event-list-row-presentation="operational"
+        data-sce-programme-card-contract="reference-row"
+        data-sce-activity-card-layout="horizontal-full-width"
+      >
+        <span className="sr-only">{model.typeLabel}</span>
+        {showExceptionalStatus && status?.label ? (
+          <div className="sm:col-span-full" data-sce-club-event-region="status">
+            <SceClubEventCardStatus status={status} />
+          </div>
+        ) : null}
+        <p
+          className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
+          data-testid="sce-club-event-list-row-date"
+        >
+          {dateLabel}
+        </p>
+        {timeLabel ? (
+          <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-club-event-list-row-time">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+            <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTimeClass}>{timeLabel}</span>
+          </div>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+        <div
+          className="flex min-w-0 items-center gap-2"
+          data-testid="sce-club-event-list-row-primary-identity"
+        >
+          <SceClubEventPrimaryVisualCrest model={model} density={density} listRow />
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
+            data-testid="sce-club-event-title"
+            title={model.eventTitle}
+          >
+            {model.eventTitle}
+          </p>
+        </div>
+        {audienceLabel ? (
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass}
+            data-testid="sce-club-event-audience"
+          >
+            {audienceLabel}
+          </p>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+        {locationLine ? (
+          <p
+            className={cn(
+              "flex min-w-0 items-center gap-1.5",
+              SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass,
+            )}
+            data-testid="sce-club-event-list-row-location"
+          >
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+            <span className="min-w-0 break-words">{locationLine}</span>
+          </p>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
-      className={cn(
-        "min-w-0 w-full max-w-full",
-        operational ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
-      )}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-club-event-density={density}
       data-sce-club-event-list-row-identity
       data-sce-club-event-list-row-presentation={listRowPresentation}
-      data-sce-programme-card-contract={operational ? "three-row" : undefined}
     >
       <SceClubEventTypeHeader
         model={model}
@@ -454,43 +527,16 @@ function SceClubEventListRowIdentityContent({
         density={density}
         listRow
       />
-      {operational ? (
-        <>
-          <SceActivityListRowPrimaryIdentityRow
-            title={model.eventTitle}
-            titleTestId="sce-club-event-title"
-            testId="sce-club-event-list-row-primary-identity"
-            crest={
-              <SceClubEventPrimaryVisualCrest model={model} density={density} listRow />
-            }
-          />
-          <SceClubEventAudienceLine model={model} density={density} listRow />
-        </>
-      ) : (
-        <div className="min-w-0 space-y-0.5" data-sce-club-event-region="identity">
-          <p
-            className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
-            data-testid="sce-club-event-title"
-            title={model.eventTitle}
-          >
-            {model.eventTitle}
-          </p>
-          <SceClubEventAudienceLine model={model} density={density} listRow />
-        </div>
-      )}
-      {operational && (timeLabel || locationLine) ? (
-        <SceActivityListRowOperationalMetaRow testId="sce-club-event-list-row-operational-meta">
-          {timeLabel ? (
-            <SceActivityListRowTimeMeta label={timeLabel} testId="sce-club-event-list-row-time" />
-          ) : null}
-          {locationLine ? (
-            <SceActivityListRowLocationMeta
-              label={locationLine}
-              testId="sce-club-event-list-row-location"
-            />
-          ) : null}
-        </SceActivityListRowOperationalMetaRow>
-      ) : null}
+      <div className="min-w-0 space-y-0.5" data-sce-club-event-region="identity">
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+          data-testid="sce-club-event-title"
+          title={model.eventTitle}
+        >
+          {model.eventTitle}
+        </p>
+        <SceClubEventAudienceLine model={model} density={density} listRow />
+      </div>
     </div>
   );
 }

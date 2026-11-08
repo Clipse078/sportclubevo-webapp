@@ -380,6 +380,8 @@ function SceTrainingListRowOperationalContent({
         status.domain === "cancelled"),
   );
 
+  const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+
   return (
     <div
       className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
@@ -388,6 +390,7 @@ function SceTrainingListRowOperationalContent({
       data-sce-training-list-row-presentation="operational"
       data-sce-programme-card-contract="reference-row"
       data-sce-training-reference-row="operational"
+      data-sce-activity-card-layout="horizontal-full-width"
     >
       <span className="sr-only">{model.typeLabel}</span>
       {showExceptionalStatus && status?.label ? (
@@ -395,6 +398,9 @@ function SceTrainingListRowOperationalContent({
           <SceTrainingCardStatus status={status} />
         </div>
       ) : null}
+      <p className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceDateClass} data-testid="sce-training-list-row-date">
+        {dateLabel}
+      </p>
       {timeLabel ? (
         <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-training-list-row-time">
           <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
@@ -424,7 +430,7 @@ function SceTrainingListRowOperationalContent({
           data-testid="sce-training-list-row-location"
         >
           <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
-          <span className="min-w-0 truncate">{locationLine}</span>
+          <span className="min-w-0 break-words">{locationLine}</span>
         </p>
       ) : (
         <span className="hidden sm:block" aria-hidden />
@@ -443,7 +449,7 @@ function SceTrainingListRowOperationalContent({
             semanticColors={false}
             className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]"
           />
-          <span className="min-w-0 truncate">{dressingRoomLabel}</span>
+          <span className="min-w-0 break-words">{dressingRoomLabel}</span>
         </p>
       ) : (
         <span className="hidden sm:block" aria-hidden />

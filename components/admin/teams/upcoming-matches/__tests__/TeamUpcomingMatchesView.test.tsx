@@ -11,7 +11,7 @@ import { createTeamCockpitMatchFixture } from "@/lib/teams/team-cockpit-match-fi
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
 describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard)", () => {
-  it("renders upcoming fixtures in a responsive card grid (not full-width rows)", () => {
+  it("renders upcoming fixtures as full-width horizontal list rows (DS2-04R2)", () => {
     render(
       <TeamUpcomingMatchesView
         matches={[createTeamCockpitMatchFixture()]}
@@ -21,9 +21,9 @@ describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard
     );
 
     const list = screen.getByTestId("team-upcoming-matches-list");
-    expect(list.className).toMatch(/grid/);
-    expect(list.className).toMatch(/xl:grid-cols-3/);
-    expect(list.className).not.toMatch(/divide-y/);
+    expect(list).toHaveAttribute("data-sce-activity-card-layout", "horizontal-full-width");
+    expect(list.className).not.toMatch(/xl:grid-cols-3/);
+    expect(list.className).toMatch(/flex-col/);
   });
 
   it("renders multiple upcoming fixtures in ascending order", () => {
@@ -69,11 +69,13 @@ describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard
     const card = screen.getByTestId("team-upcoming-sce-match-event-1");
     expect(card).toHaveAttribute("data-sce-match-card");
     expect(card).toHaveAttribute("data-density", "STANDARD");
+    expect(card).toHaveAttribute("data-surface", "list-row");
+    expect(screen.getByTestId("team-upcoming-match-shell-event-1")).toHaveAttribute(
+      "data-sce-programme-activity-card-shell",
+    );
 
-    const home = within(card).getByText(/1\. Mannschaft|FC Allschwil/i);
-    const away = within(card).getByText(/FC Example/i);
-    expect(home.closest("[data-sce-match-side='home']")).toBeTruthy();
-    expect(away.closest("[data-sce-match-side='away']")).toBeTruthy();
+    expect(within(card).getByText("1. Mannschaft").closest("[data-sce-match-side='home']")).toBeTruthy();
+    expect(within(card).getByText("FC Example").closest("[data-sce-match-side='away']")).toBeTruthy();
     expect(within(card).getByTestId("sce-match-card-link")).toHaveAttribute(
       "href",
       "/dashboard/activity/event/event-1",
@@ -159,7 +161,7 @@ describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard
     );
 
     const card = screen.getByTestId("team-upcoming-sce-match-event-1");
-    expect(within(card).getByTestId("sce-match-schedule")).toBeInTheDocument();
+    expect(within(card).getByTestId("sce-match-reference-date")).toBeInTheDocument();
     expect(within(card).getByTestId("sce-match-location")).toHaveTextContent("Im Brüel");
   });
 
@@ -173,7 +175,9 @@ describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard
     );
 
     const card = screen.getByTestId("team-upcoming-sce-match-event-1");
-    expect(within(card).getByText("Junioren A Promotion")).toBeInTheDocument();
+    expect(within(card).getByTestId("sce-match-list-row-team-context")).toHaveTextContent(
+      "Junioren A Promotion",
+    );
   });
 
   it("renders empty state when no upcoming fixtures", () => {
