@@ -455,6 +455,117 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   SCE-DS2-01 — White Edition foundation (gated by SCE_WHITE_EDITION)
+   Scoped to authenticated shell / preview roots via data-sce-theme="white".
+   Legacy :root remains v1.0 dark navy when the flag is off.
+───────────────────────────────────────────────────────────────────────── */
+.sce-theme-white,
+[data-sce-theme="white"] {
+  /* Legacy aliases — flip together with semantic tokens (R-T1) */
+  --background:        #ffffff;
+  --surface:           #ffffff;
+  --surface-2:         #f8fafc;
+  --surface-3:         #f1f5f9;
+  --foreground:        #0f172a;
+  --text-2:            #475569;
+  --muted:             #64748b;
+  --border:            #e2e8f0;
+  --border-strong:     #cbd5e1;
+  --card:              #ffffff;
+  --card-hover:        #f8fafc;
+  --shell-bg:          #ffffff;
+  --sidebar-bg:        #fafafa;
+
+  /* Restrained light elevation */
+  --shadow-xs:  0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-sm:  0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md:  0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg:  0 8px 24px rgba(15, 23, 42, 0.1), 0 4px 8px rgba(15, 23, 42, 0.05);
+  --shadow-xl:  0 16px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
+
+  --sce-modal-backdrop: rgb(15 23 42 / 28%);
+
+  /* Authenticated canvas — no decorative PNG when white edition is active */
+  --sce-app-background-image: none;
+  --sce-app-background:       #ffffff;
+  --sce-app-surface:          #ffffff;
+  --sce-app-surface-elevated: #f8fafc;
+  --sce-app-chrome:           #fafafa;
+
+  --sce-surface-subtle:   #f8fafc;
+  --sce-surface-standard: #ffffff;
+  --sce-surface-dense:    #f1f5f9;
+  --sce-surface-elevated: #ffffff;
+  --sce-match-card-surface: #ffffff;
+
+  --sce-surface-border-subtle:  #f1f5f9;
+  --sce-surface-border:         var(--border);
+  --sce-surface-border-elevated: var(--border-strong);
+
+  --sce-surface-blur-subtle: 0px;
+  --sce-surface-blur:        0px;
+
+  /* Tenant accent on light canvas (R-T4) — mix against section wash, not white-on-white */
+  --tenant-accent: color-mix(in srgb, var(--tenant-primary) 14%, #f1f5f9);
+
+  /* DS-02 semantic colour foundation — white edition mapping */
+  --sce-color-app-background: var(--sce-app-background);
+  --sce-color-chrome: var(--sce-app-chrome);
+  --sce-color-workspace: var(--sce-app-surface);
+  --sce-color-page-surface: var(--sce-app-surface-elevated);
+  --sce-color-surface-standard: var(--sce-surface-standard);
+  --sce-color-surface-elevated: var(--sce-surface-elevated);
+  --sce-color-surface-interactive: var(--sce-surface-subtle);
+  --sce-color-surface-selected: color-mix(in srgb, var(--sce-primary) 10%, #f1f5f9);
+  --sce-color-surface-hover: #f8fafc;
+
+  --sce-color-border-subtle: var(--sce-surface-border-subtle);
+  --sce-color-border-standard: var(--sce-surface-border);
+  --sce-color-border-strong: var(--sce-surface-border-elevated);
+
+  --sce-color-text-primary: var(--foreground);
+  --sce-color-text-secondary: var(--text-2);
+  --sce-color-text-muted: var(--muted);
+  --sce-color-text-disabled: color-mix(in srgb, var(--muted) 72%, transparent);
+  --sce-color-disabled: color-mix(in srgb, var(--muted) 55%, var(--surface));
+
+  --sce-bg:            var(--background);
+  --sce-surface:       var(--surface);
+  --sce-surface-2:     var(--surface-2);
+  --sce-surface-3:     var(--surface-3);
+  --sce-foreground:    var(--foreground);
+  --sce-text-2:        var(--text-2);
+  --sce-muted:         var(--muted);
+  --sce-border:        var(--border);
+  --sce-border-strong: var(--border-strong);
+  --sce-card:          var(--card);
+  --sce-card-hover:    var(--card-hover);
+
+  --sce-icon-primary:   #0f172a;
+  --sce-icon-secondary: var(--blue);
+  --sce-icon-accent:    var(--orange);
+  --sce-icon-muted:     #64748b;
+
+  /* Match numerals — interim readable on white until DS2-04 card refresh */
+  --sce-match-result-foreground: #0f172a;
+}
+
+[data-sce-theme="white"] .sce-app-explorer-scroll,
+[data-sce-theme="white"] .sce-activity-nav-tablist {
+  scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+}
+
+[data-sce-theme="white"] .sce-app-explorer-scroll::-webkit-scrollbar-thumb,
+[data-sce-theme="white"] .sce-activity-nav-tablist::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.16);
+}
+
+[data-sce-theme="white"] .sce-app-explorer-scroll::-webkit-scrollbar-thumb:hover,
+[data-sce-theme="white"] .sce-activity-nav-tablist::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.28);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    BASE STYLES
 ───────────────────────────────────────────────────────────────────────── */
 html {

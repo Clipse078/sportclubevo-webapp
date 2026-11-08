@@ -1,5 +1,6 @@
 /**
  * SCE Design System v1.0 — Foundations & Tokens (DS-02)
+ * DS 2.0 White Edition semantic names extend the same contract (SCE-DS2-01).
  *
  * TypeScript access to semantic foundation tokens. Runtime styling owns values in
  * `app/globals.css` only — this module names and documents consumption; it does
@@ -7,6 +8,22 @@
  */
 
 export const SCE_FOUNDATION_SOURCE_OF_TRUTH = "app/globals.css" as const;
+
+/** DS 2.0 White Edition runtime hook — values live under this attribute in globals.css. */
+export const SCE_DS2_WHITE_EDITION = {
+  themeDataAttribute: "data-sce-theme",
+  themeValue: "white",
+  featureFlagEnv: "SCE_WHITE_EDITION",
+  architectureDoc: "docs/design-system-v2/03-white-first-visual-language.md",
+} as const;
+
+/** Display + body font roles (Next.js font variables wired in app/layout.tsx). */
+export const SCE_DS2_TYPOGRAPHY_FOUNDATION = {
+  display: 'var(--font-display), "Barlow Condensed", Arial, sans-serif',
+  body: 'var(--font-inter), "Inter", system-ui, -apple-system, sans-serif',
+  teamNameFutureContract: "uppercase italic (SCE-DS2-02)",
+  navigationFutureContract: "uppercase icon-free labels (SCE-DS2-03)",
+} as const;
 
 /** CSS custom property names — semantic colour (surfaces). */
 export const SCE_FOUNDATION_COLOR_SURFACE = {

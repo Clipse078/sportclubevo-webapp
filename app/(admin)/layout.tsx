@@ -25,6 +25,7 @@ import {
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { SportingActivityDetailProvider } from "@/components/sporting-activity/detail/SportingActivityDetailProvider";
+import { sceWhiteEditionThemeDataAttributes } from "@/lib/design-system/sce-white-edition-flag";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -102,11 +103,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   });
   const shellImageUrl = linkedPersonProfile?.imageUrl ?? null;
 
+  const whiteEditionTheme = sceWhiteEditionThemeDataAttributes();
+
   return (
     <div
       className={`flex min-h-screen flex-col ${SCE_AUTHENTICATED_APP_SHELL_CLASS} ${SCE_APP_SHELL_GLOBAL_NAV_CLASS}`}
       style={tenantCssVars as React.CSSProperties}
       data-sce-modal-background
+      {...whiteEditionTheme}
     >
       <div className="sce-authenticated-sticky-shell-chrome">
         <div className="sce-authenticated-safety-chrome-stack">
