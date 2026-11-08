@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -162,8 +163,8 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
     expect(within(card).getByTestId("sce-match-fixture").textContent).toContain("FC Binningen");
   });
 
-  it("HOME row retains preparation checklist operational metadata", () => {
-    const html = renderRowHtml(
+  it("HOME row collapses preparation checklist by default but keeps compact readiness", () => {
+    renderRow(
       createMatch({
         id: "match-home-1",
         homeAway: "HOME",
@@ -188,14 +189,47 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
       }),
     );
 
-    expect(html).toContain("Bereit");
-    expect(html).toContain("Spielfeld");
-    expect(html).toContain("Heimkabine");
-    expect(html).toContain("Gastkabine");
-    expect(html).toContain("Infoboard");
-    expect(html).toContain("KR2");
-    expect(html).toContain("O4");
-    expect(html).toContain("E1");
+    const row = screen.getByTestId("matchcenter-spielplanung-row-match-home-1");
+    expect(row).toHaveAttribute("data-sce-matchcenter-composition", "collapsible-card-operations-below");
+    expect(screen.getByText("Bereit")).toBeInTheDocument();
+    expect(screen.queryByText("Spielfeld")).not.toBeInTheDocument();
+    expect(screen.getByTestId("matchcenter-collapsible-match-home-1-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("HOME row expands preparation checklist on chevron activation", async () => {
+    const user = userEvent.setup();
+    renderRow(
+      createMatch({
+        id: "match-home-1",
+        homeAway: "HOME",
+        home: side({ isOwnTeam: true }),
+        away: side({
+          isOwnTeam: false,
+          displayName: "FC Basel E1",
+        }),
+        operational: {
+          pitchCode: "KR2",
+          homeDressingRoomCode: "O4",
+          awayDressingRoomCode: "E1",
+          meetingTime: null,
+          remarks: null,
+        },
+        visibility: {
+          websiteVisible: true,
+          infoboardVisible: true,
+          homepageVisible: false,
+          wochenplanVisible: false,
+        },
+      }),
+    );
+
+    await user.click(screen.getByTestId("matchcenter-collapsible-match-home-1-toggle"));
+    expect(screen.getByText("Spielfeld")).toBeInTheDocument();
+    expect(screen.getByText("KR2")).toBeInTheDocument();
+    expect(screen.getByTestId("matchcenter-open-points-panel")).toBeInTheDocument();
   });
 
   it("AWAY row does not render home preparation checklist", () => {
@@ -209,16 +243,22 @@ describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => 
     expect(screen.queryByTestId("sce-match-context-auswaerts")).not.toBeInTheDocument();
   });
 
-  it("composes full-width programme shell with operational panel in one unit", () => {
+  it("composes full-width programme shell with collapsible operational region", () => {
     renderRow(createMatch({ id: "match-home-1", homeAway: "HOME" }));
     const row = screen.getByTestId("matchcenter-spielplanung-row-match-home-1");
-    expect(row).toHaveAttribute("data-sce-matchcenter-composition", "stacked-card-operations-below");
+    expect(row).toHaveAttribute("data-sce-matchcenter-composition", "collapsible-card-operations-below");
     expect(row).toHaveAttribute("data-sce-programme-activity-card-shell");
     expect(within(row).getByTestId("matchcenter-sce-match-match-home-1")).toHaveAttribute(
       "data-surface",
       "list-row",
     );
-    expect(within(row).getByTestId("matchcenter-action-match-home-1")).toBeInTheDocument();
+    expect(within(row).getByTestId("matchcenter-collapsible-match-home-1")).toBeInTheDocument();
+  });
+
+  it("keeps three-dot context menu separate from collapsible toggle", () => {
+    renderRow(createMatch({ id: "match-home-1", homeAway: "HOME" }));
+    expect(screen.getByTestId("spiele-row-menu-match-home-1")).toBeInTheDocument();
+    expect(screen.getByTestId("matchcenter-collapsible-match-home-1-toggle")).toBeInTheDocument();
   });
 
   it("row source does not add client data fetching", () => {

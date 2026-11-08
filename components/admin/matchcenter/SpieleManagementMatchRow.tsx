@@ -8,9 +8,16 @@ import {
   buildHomeReadinessChecklist,
   resolveSpieleStatusPresentation,
 } from "@/lib/matchcenter/management-view";
-import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
+import {
+  resolveSceMatchPresentation,
+  sceMatchCardOperationalDetailsPanelId,
+} from "@/lib/sporting-activity-presentation/canonical";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
+import {
+  SceMatchCardCollapsibleOperationalDetails,
+  SceMatchCardReadinessToggle,
+} from "@/components/sporting-activity/SceMatchCardCollapsibleOperationalDetails";
 import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
 import { cn } from "@/lib/cn";
@@ -186,6 +193,23 @@ export default function SpieleManagementMatchRow({
   });
 
   const cardDensity = compact ? "COMPACT" : "STANDARD";
+  const operationalPanelId = sceMatchCardOperationalDetailsPanelId(match.id);
+  const hasCollapsiblePreparation = homeAway === "HOME";
+  const openPointsLabel = status.label.includes("offen") ? status.label : null;
+
+  const fixtureCard = (
+    <SceMatchCard
+      model={scePresentation}
+      density={cardDensity}
+      fmtCfg={fmtCfg}
+      linkToDetail
+      surface="list-row"
+      listRowPresentation="programme-fixture"
+      scopeTeamId={match.teamId}
+      className={LIST_ROW_CARD_CLASS}
+      testId={`matchcenter-sce-match-${match.id}`}
+    />
+  );
 
   return (
     <SceProgrammeActivityCardShell
@@ -195,7 +219,11 @@ export default function SpieleManagementMatchRow({
         "relative min-w-0 w-full",
         isSelecting && isSelected && "ring-2 ring-emerald-500/40",
       )}
-      data-sce-matchcenter-composition="stacked-card-operations-below"
+      data-sce-matchcenter-composition={
+        hasCollapsiblePreparation
+          ? "collapsible-card-operations-below"
+          : "stacked-card-operations-below"
+      }
       data-sce-activity-card-layout="horizontal-full-width"
     >
       {isSelecting ? (
@@ -222,36 +250,50 @@ export default function SpieleManagementMatchRow({
         </div>
       ) : null}
 
-      <div className="min-w-0 flex flex-col gap-2.5" data-testid={`matchcenter-team-matchup-${match.id}`}>
-        <div className="min-w-0 w-full max-md:pr-8">
-          <SceMatchCard
-            model={scePresentation}
-            density={cardDensity}
-            fmtCfg={fmtCfg}
-            linkToDetail
-            surface="list-row"
-            listRowPresentation="programme-fixture"
-            scopeTeamId={match.teamId}
-            className={LIST_ROW_CARD_CLASS}
-            testId={`matchcenter-sce-match-${match.id}`}
-          />
-        </div>
-
-        <div
-          className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/45 pt-2.5"
-          data-testid={`matchcenter-action-${match.id}`}
-        >
-          {showReadiness ? (
-            <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
-          ) : null}
-          <PreparationPanel
-            match={match}
-            assessment={assessment}
-            openPointsLabel={
-              status.label.includes("offen") ? status.label : null
+      <div className="min-w-0" data-testid={`matchcenter-team-matchup-${match.id}`}>
+        {hasCollapsiblePreparation ? (
+          <SceMatchCardCollapsibleOperationalDetails
+            matchId={match.id}
+            panelId={operationalPanelId}
+            testId={`matchcenter-collapsible-${match.id}`}
+            summary={fixtureCard}
+            summaryControl={
+              showReadiness
+                ? ({ expanded, toggle, panelId }) => (
+                    <SceMatchCardReadinessToggle
+                      panelId={panelId}
+                      expanded={expanded}
+                      onToggle={toggle}
+                      testId={`matchcenter-readiness-toggle-${match.id}`}
+                    >
+                      <ReadinessPill
+                        label={status.label}
+                        tone={live ? "ready" : readinessTone}
+                      />
+                    </SceMatchCardReadinessToggle>
+                  )
+                : undefined
+            }
+            details={
+              <div data-testid={`matchcenter-action-${match.id}`}>
+                <PreparationPanel
+                  match={match}
+                  assessment={assessment}
+                  openPointsLabel={openPointsLabel}
+                />
+              </div>
             }
           />
-        </div>
+        ) : (
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <div className="min-w-0 w-full max-md:pr-8">{fixtureCard}</div>
+            {showReadiness ? (
+              <div data-testid={`matchcenter-action-${match.id}`}>
+                <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </SceProgrammeActivityCardShell>
   );

@@ -132,3 +132,10 @@ export {
   resolveSceActivityPresentation,
   type SceActivityPresentationSource,
 } from "./resolve";
+
+export {
+  sceMatchCardOperationalDetailsPanelId,
+  useSceMatchCardCollapsibleDetails,
+  type UseSceMatchCardCollapsibleDetailsOptions,
+  type UseSceMatchCardCollapsibleDetailsResult,
+} from "./match-card-collapsible-details";

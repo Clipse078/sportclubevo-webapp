@@ -123,7 +123,8 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(row).not.toContain("ClubLogo");
     expect(row).not.toMatch(/grid-cols-\[minmax\(0,1\.85fr\)/);
     expect(row).not.toMatch(/md:grid-cols-\[minmax\(0,auto\)_minmax\(0,1fr\)\]/);
-    expect(row).toContain("stacked-card-operations-below");
+    expect(row).toContain("collapsible-card-operations-below");
+    expect(row).toContain("SceMatchCardCollapsibleOperationalDetails");
     expect(row).toContain("matchcenter-open-points-panel");
   });
 
