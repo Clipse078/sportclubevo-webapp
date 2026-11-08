@@ -4,6 +4,7 @@ import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, SquareCheck, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { MatchcenterRowViewModel } from "@/lib/matchcenter/view-model";
 import {
   formatSpieleDayGroupHeadingLong,
@@ -20,6 +21,9 @@ type Props = {
   tenantLogoUrl?: string | null;
   tenantClubName?: string | null;
   canManage: boolean;
+  canManageOperationalAllocations?: boolean;
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
   compact?: boolean;
 };
 
@@ -30,6 +34,9 @@ export default function SpieleManagementUpcomingList({
   tenantLogoUrl = null,
   tenantClubName = null,
   canManage,
+  canManageOperationalAllocations = false,
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
   compact = false,
 }: Props) {
   const router = useRouter();
@@ -202,6 +209,9 @@ export default function SpieleManagementUpcomingList({
                     tenantLogoUrl={tenantLogoUrl}
                     tenantClubName={tenantClubName}
                     canManage={canManage}
+                    canManageOperationalAllocations={canManageOperationalAllocations}
+                    pitchHallFacilityGroups={pitchHallFacilityGroups}
+                    dressingRoomFacilityGroups={dressingRoomFacilityGroups}
                     compact={compact}
                     isSelecting={isSelecting}
                     isSelected={selectedIds.has(row.match.id)}

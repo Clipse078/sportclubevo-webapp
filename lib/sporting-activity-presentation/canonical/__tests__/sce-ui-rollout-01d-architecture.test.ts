@@ -125,7 +125,7 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(row).not.toMatch(/md:grid-cols-\[minmax\(0,auto\)_minmax\(0,1fr\)\]/);
     expect(row).toContain("collapsible-card-operations-below");
     expect(row).toContain("SceMatchCardCollapsibleOperationalDetails");
-    expect(row).toContain("matchcenter-open-points-panel");
+    expect(row).toContain("SpieleManagementMatchPreparationPanel");
   });
 
   it("logo resolution uses tenant club crest for internal Team participants", () => {

@@ -40,8 +40,10 @@ describe("SPIELE-UX-01C — responsive composition contract", () => {
 
   it("home matchvorbereitung remains in row output", () => {
     const row = readSource("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
-    expect(row).toContain("Matchvorbereitung");
-    expect(row).toContain("buildHomeReadinessChecklist");
+    const prep = readSource("components/admin/matchcenter/SpieleManagementMatchPreparationPanel.tsx");
+    expect(row).toContain("SpieleManagementMatchPreparationPanel");
+    expect(prep).toContain("Spielvorbereitung");
+    expect(prep).toContain("buildHomeReadinessChecklist");
   });
 
   it("right rail components remain mounted in workspace", () => {

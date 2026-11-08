@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type {
   MatchcenterActionFilter,
@@ -55,6 +56,9 @@ type Props = {
   timezone?: string;
   locale?: string;
   canManage?: boolean;
+  canManageOperationalAllocations?: boolean;
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
   currentMonthParam?: string;
   tenantLogoUrl?: string | null;
   tenantClubName?: string | null;
@@ -128,6 +132,9 @@ export default function SpieleManagementWorkspace({
   timezone = "Europe/Zurich",
   locale = "de-CH",
   canManage = false,
+  canManageOperationalAllocations = false,
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
   currentMonthParam,
   tenantLogoUrl = null,
   tenantClubName = null,
@@ -490,6 +497,9 @@ export default function SpieleManagementWorkspace({
                 tenantLogoUrl={tenantLogoUrl}
                 tenantClubName={tenantClubName}
                 canManage={canManage}
+                canManageOperationalAllocations={canManageOperationalAllocations}
+                pitchHallFacilityGroups={pitchHallFacilityGroups}
+                dressingRoomFacilityGroups={dressingRoomFacilityGroups}
                 compact={listView === "KOMPAKT"}
               />
             )
