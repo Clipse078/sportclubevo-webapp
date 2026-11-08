@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SceTeamName } from "@/components/design-system/typography";
 
 export type TeamSeasonPickerOption = {
   id: string;
@@ -184,7 +185,9 @@ export default function TeamSeasonSearchablePicker({
           data-testid={`${testId}-selected`}
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--foreground)]">{selected.teamName}</p>
+            <SceTeamName as="p" className="text-sm text-[var(--foreground)]" density="STANDARD" lineClamp={1}>
+              {selected.teamName}
+            </SceTeamName>
             <p className="text-xs text-[var(--text-2)]" data-testid={`${testId}-selected-meta`}>
               {formatOptionMeta(selected)}
             </p>
@@ -292,7 +295,13 @@ export default function TeamSeasonSearchablePicker({
                     data-testid={`${testId}-option-${option.id}`}
                   >
                     <span className="min-w-0">
-                      <span className="block truncate font-medium text-[var(--foreground)]">{option.teamName}</span>
+                      <SceTeamName
+                        className="block text-[var(--foreground)]"
+                        density="STANDARD"
+                        lineClamp={1}
+                      >
+                        {option.teamName}
+                      </SceTeamName>
                       <span className="block truncate text-xs text-[var(--text-2)]">{formatOptionMeta(option)}</span>
                     </span>
                     {isSelected ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}

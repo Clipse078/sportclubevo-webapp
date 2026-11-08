@@ -52,31 +52,32 @@
 
 ---
 
-### P1 — `SCE-DS2-02` Typography roles + `SceTeamName`
+### P1 — `SCE-DS2-02` Premium header navigation *(shipped — runtime numbering)*
 
 | Field | Value |
 | --- | --- |
-| **Objective** | Display/body role tuning; ship `SceTeamName` primitive |
-| **Scope** | `components/design-system/typography/`, sporting-activity identity lines, team admin high-traffic views |
-| **Dependencies** | `SCE-DS2-01` (or parallel if flag isolates) |
-| **Acceptance** | Team name matrix in doc 02 contexts ≥80% on canonical paths |
-| **Automated coverage** | New primitive tests + rollout tests updated |
-| **Complexity** | L |
-| **Exclusions** | Stored data transforms |
+| **Objective** | Nav labels uppercase; remove decorative L1 nav icons |
+| **Scope** | `ScePrimaryNavigation`, `global-app-navigation.css`, `sce-navigation-typography-contract.ts` |
+| **Dependencies** | `SCE-DS2-01` |
+| **Acceptance** | DS2-02 navigation contract tests |
+| **Automated coverage** | `sce-ds2-02-header-navigation.test.ts`, `AppShellNavigation.ds2-02-header-navigation.test.tsx` |
+| **Complexity** | M |
+| **Delivery notes** | Originally listed as DS2-03 in this audit doc — see [10-ds2-02-navigation-delivery.md](./10-ds2-02-navigation-delivery.md) |
 
 ---
 
-### P1 — `SCE-DS2-03` Uppercase icon-free navigation
+### P1 — `SCE-DS2-03` Typography roles + `SceTeamName` *(runtime numbering)*
 
 | Field | Value |
 | --- | --- |
-| **Objective** | Nav labels uppercase; remove decorative nav icons |
-| **Scope** | `AdminSidebar.tsx`, `globals.css` `.sce-nav-*`, motion CSS optional deprecation |
-| **Dependencies** | `SCE-DS2-01` |
-| **Acceptance** | Sidebar tests; keyboard focus unchanged; utilities icons remain |
-| **Automated coverage** | `AdminSidebar.test.tsx`, `AppShellNavigation.sce-icons-02.test.tsx` (update) |
-| **Complexity** | M |
-| **Exclusions** | `SceIcon` registry deletion (still used operationally) |
+| **Objective** | Display/body role tuning; ship `SceTeamName` primitive; secondary nav uppercase |
+| **Scope** | `components/design-system/typography/`, `app/globals.css` type roles, sporting-activity identity lines, team admin high-traffic views |
+| **Dependencies** | `SCE-DS2-01`, `SCE-DS2-02` |
+| **Acceptance** | Team name matrix in doc 04 on canonical paths; page title + tab contracts |
+| **Automated coverage** | `sce-ds2-03-typography.test.ts`, `SceTeamName.test.tsx` |
+| **Complexity** | L |
+| **Exclusions** | Stored data transforms |
+| **Delivery notes** | Originally listed as DS2-02 in this audit doc — see [11-ds2-03-typography-delivery.md](./11-ds2-03-typography-delivery.md) |
 
 ---
 
@@ -153,7 +154,7 @@
 ```text
 SCE-DS2-00 (audit)
   → SCE-DS2-01 (foundation + flag)
-  → SCE-DS2-02 ∥ SCE-DS2-03 (typography + nav)
+  → SCE-DS2-02 (nav) → SCE-DS2-03 (typography + team names)
   → SCE-DS2-04 (activity cards)
   → SCE-DS2-05 → SCE-DS2-06 → SCE-DS2-07
   → SCE-DS2-TENANT-STUDIO (LATER)

@@ -20,6 +20,8 @@
 8. [07 — Migration roadmap](./07-migration-roadmap.md)
 9. [08 — Risk and regression matrix](./08-risk-and-regression-matrix.md)
 10. [09 — DS2-01 foundation delivery](./09-ds2-01-foundation-delivery.md)
+11. [10 — DS2-02 navigation delivery](./10-ds2-02-navigation-delivery.md)
+12. [11 — DS2-03 typography delivery](./11-ds2-03-typography-delivery.md)
 
 ## DS 2.0 implementation packages
 
@@ -27,6 +29,8 @@
 | --- | --- |
 | `SCE-DS2-00` | Audit merged |
 | `SCE-DS2-01` | White foundation tokens (`SCE_WHITE_EDITION` flag) |
+| `SCE-DS2-02` | Premium header navigation — see doc 10 (audit roadmap used alternate IDs) |
+| `SCE-DS2-03` | Sporting typography + `SceTeamName` — see doc 11 |
 
 ## Related canonical governance (unchanged by this package)
 

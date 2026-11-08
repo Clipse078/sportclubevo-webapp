@@ -22,8 +22,7 @@ export const SCE_DS2_01_EXCLUSIONS = [
   "Infoboard kiosk shells",
   "CMS public website builder",
   "Transactional email HTML",
-  "Full navigation uppercase migration (DS2-03)",
-  "SceTeamName primitive (DS2-02)",
+  "Sporting typography roles + SceTeamName (DS2-03)",
   "Activity card white refresh (DS2-04)",
 ] as const;
 

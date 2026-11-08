@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import { SCE_SURFACE_TOKEN_MATCH_CARD } from "@/lib/shell/sce-surface-system";
 import {
   SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
@@ -86,7 +87,7 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     identityStackGapClass: "gap-2",
     crestVisualSize: "detail",
     clubNameClass: cn(
-      "line-clamp-2 text-[1.0625rem] font-semibold leading-snug",
+      sceTeamNameClassName({ density: "HERO", lineClamp: 2 }),
       SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
     ),
     competitionTextClass: cn(
@@ -112,7 +113,7 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     identityStackGapClass: "gap-1.5",
     crestVisualSize: "planner",
     clubNameClass: cn(
-      "line-clamp-2 text-sm font-semibold leading-snug",
+      sceTeamNameClassName({ density: "STANDARD", lineClamp: 2 }),
       SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
     ),
     competitionTextClass: cn(
@@ -138,7 +139,7 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     identityStackGapClass: "gap-1.5",
     crestVisualSize: "management",
     clubNameClass: cn(
-      "line-clamp-2 text-[0.8125rem] font-semibold leading-snug",
+      sceTeamNameClassName({ density: "COMPACT", lineClamp: 2 }),
       SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
     ),
     competitionTextClass: cn(

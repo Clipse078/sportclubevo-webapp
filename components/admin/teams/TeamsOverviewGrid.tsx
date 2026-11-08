@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { ChevronRight, Link2, Link2Off, PenLine } from "lucide-react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
+import { SceTeamName } from "@/components/design-system/typography";
 
 type TeamItem = {
   id: string;
@@ -288,9 +289,13 @@ export default function TeamsOverviewGrid({
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="truncate text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+                        <SceTeamName
+                          className="text-[0.9375rem] text-[var(--foreground)]"
+                          density="STANDARD"
+                          lineClamp={1}
+                        >
                           {displayName}
-                        </span>
+                        </SceTeamName>
                         {compactName && compactName !== displayName ? (
                           <span
                             className="rounded-md border border-[var(--border)] bg-[var(--surface-2)]/80 px-1.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-2)]"

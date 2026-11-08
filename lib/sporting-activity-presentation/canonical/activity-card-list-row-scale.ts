@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 import {
   SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
   SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
@@ -19,11 +20,11 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
     SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
   ),
   teamContextClass: cn(
-    "min-w-0 truncate text-[0.8125rem] font-medium leading-snug",
+    sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true }),
     SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
   ),
   fixtureClubNameClass: cn(
-    "min-w-0 truncate text-[0.8125rem] font-semibold leading-snug",
+    sceTeamNameClassName({ density: "MICRO", lineClamp: 1, truncate: true }),
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   ),
   fixtureVsClass: cn(

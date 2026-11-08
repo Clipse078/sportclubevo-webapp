@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ClubCrest, type ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
+import { SceTeamName } from "@/components/design-system/typography";
 import { cn } from "@/lib/cn";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { isSceActivityDimensionVisible } from "@/lib/sporting-activity-presentation/canonical/match-card-policy";
@@ -92,16 +93,18 @@ function SceMatchStackedIdentityColumn({
           <ClubCrest identity={sideModel.identity} density={crestVisualSize} decorative />
         </div>
       ) : null}
-      <span
+      <SceTeamName
+        as="span"
         className={cn(
           "min-w-0 text-[var(--foreground)]",
           clubNameClassOverride ?? clubNameClassForDensity(density),
         )}
         title={label}
+        truncate={false}
         data-sce-match-region={`${side}-name`}
       >
         {label}
-      </span>
+      </SceTeamName>
     </div>
   );
 }
