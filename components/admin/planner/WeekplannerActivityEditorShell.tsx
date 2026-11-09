@@ -249,6 +249,7 @@ export function WeekplannerActivityEditorSheet({
       title={WOCHENPLANNER_EDITOR_SHEET_TITLE}
       description={description}
       footer={footer}
+      contextualPanel
     >
       {children}
     </Sheet>

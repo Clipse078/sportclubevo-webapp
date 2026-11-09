@@ -1,6 +1,8 @@
 ﻿import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import ClubDashboardView from "@/components/admin/dashboard/ClubDashboardView";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 import {
   initSceHotfixLogin01DashboardTrace,
@@ -28,9 +30,22 @@ export default async function DashboardPage({
     : await searchParams;
 
   return (
-    <ClubDashboardView
-      authenticatedSession={session}
-      calendarMonthParam={params.monat ?? null}
-    />
+    <PageShell fullWidth widthMode="dashboard">
+      <SceWorkspaceChrome
+        breadcrumbs={[{ label: "Dashboard" }]}
+        header={{
+          eyebrow: "Übersicht",
+          title: "Dashboard",
+          description:
+            "Programm, Aufgaben und Hinweise für deinen Verein — personalisiert nach deiner Rolle.",
+        }}
+        density="dense"
+      >
+        <ClubDashboardView
+          authenticatedSession={session}
+          calendarMonthParam={params.monat ?? null}
+        />
+      </SceWorkspaceChrome>
+    </PageShell>
   );
 }

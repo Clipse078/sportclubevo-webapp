@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 
 type Props = {
   breadcrumbLeaf: string;
@@ -6,8 +7,10 @@ type Props = {
   subtitle: string;
   subtitleTestId?: string;
   actions?: ReactNode;
-  /** When false, skip Planung › leaf breadcrumb (global shell already shows context nav). */
+  /** When true, skip Planung › leaf breadcrumb (global shell already shows context nav). */
   showDomainBreadcrumb?: boolean;
+  /** Optional context tabs (perspective switcher) rendered below the header. */
+  contextTabs?: ReactNode;
 };
 
 export default function PlanningManagementPageHeader({
@@ -17,30 +20,31 @@ export default function PlanningManagementPageHeader({
   subtitleTestId,
   actions,
   showDomainBreadcrumb = false,
+  contextTabs,
 }: Props) {
+  const breadcrumbs = showDomainBreadcrumb
+    ? [
+        { label: "Planung" },
+        { label: breadcrumbLeaf },
+      ]
+    : [
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Planung" },
+        { label: breadcrumbLeaf },
+      ];
+
   return (
-    <header className="space-y-3 border-b border-[var(--border)] pb-4">
-      {showDomainBreadcrumb ? (
-        <p className="text-xs text-[var(--muted)]" data-testid="planning-domain-breadcrumb">
-          <span>Planung</span>
-          <span className="mx-1.5 text-[var(--border-strong)]">›</span>
-          <span className="text-[var(--text-2)]">{breadcrumbLeaf}</span>
-        </p>
-      ) : null}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-[1.875rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-            {title}
-          </h1>
-          <p
-            className="text-sm leading-relaxed text-[var(--text-2)]"
-            data-testid={subtitleTestId}
-          >
-            {subtitle}
-          </p>
-        </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-      </div>
-    </header>
+    <SceWorkspaceChrome
+      breadcrumbs={breadcrumbs}
+      contextTabs={contextTabs}
+      header={{
+        eyebrow: "Planung",
+        title,
+        description: subtitle,
+        descriptionTestId: subtitleTestId,
+        primaryAction: actions,
+      }}
+      density="dense"
+    />
   );
 }

@@ -14,6 +14,8 @@ type PageHeaderProps = {
    */
   badge?: ReactNode;
   className?: string;
+  /** Optional test id on the description paragraph. */
+  descriptionTestId?: string;
 };
 
 /**
@@ -37,6 +39,7 @@ export function PageHeader({
   description,
   badge,
   className,
+  descriptionTestId,
 }: PageHeaderProps) {
   return (
     <div className={cn("mb-6 flex flex-col gap-1", className)}>
@@ -54,7 +57,10 @@ export function PageHeader({
       </div>
 
       {description && (
-        <p className="mt-1 max-w-2xl break-words text-sm leading-relaxed text-[var(--text-2)] [overflow-wrap:anywhere]">
+        <p
+          className="mt-1 max-w-2xl break-words text-sm leading-relaxed text-[var(--text-2)] [overflow-wrap:anywhere]"
+          data-testid={descriptionTestId}
+        >
           {description}
         </p>
       )}

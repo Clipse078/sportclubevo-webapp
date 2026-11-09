@@ -116,7 +116,7 @@ export default function OrgUnitNodeCard({
         "group relative flex h-full w-full flex-col justify-center rounded-xl border px-3 py-2.5 text-left shadow-sm transition",
         "bg-[var(--surface-2)]/95 backdrop-blur-[2px]",
         "border-[var(--border)] hover:border-[var(--border-strong)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1220]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-surface-muted)]",
         selected && "border-[var(--sce-accent)] ring-1 ring-[var(--sce-accent)]/45",
         isDragging && "cursor-grabbing opacity-90 shadow-md ring-2 ring-[var(--sce-accent)]/35",
         isReparentSource && "opacity-75",

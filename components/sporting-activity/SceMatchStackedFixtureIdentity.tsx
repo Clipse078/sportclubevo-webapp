@@ -96,7 +96,7 @@ function SceMatchStackedIdentityColumn({
       <SceTeamName
         as="span"
         className={cn(
-          "min-w-0 text-[var(--foreground)]",
+          "min-w-0 break-words text-balance text-[var(--foreground)] [overflow-wrap:anywhere]",
           clubNameClassOverride ?? clubNameClassForDensity(density),
         )}
         title={label}

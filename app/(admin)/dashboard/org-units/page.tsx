@@ -50,6 +50,10 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
         eyebrow="Organisation"
         title="Organisation Builder"
         description="Visuelles Organigramm — Hierarchie, Mitglieder und Berechtigungen auf autoritativen OrgUnit-Daten."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Organisation" },
+        ]}
       >
         <OrgUnitBuilderWorkspace
           tenantId={tenant.id}
