@@ -30,9 +30,9 @@ describe("SCE-DS2-05B-R5 delivery", () => {
 
   it("uses viewport-aware max height and a single scrollport for L2/L3 lists", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
-    expect(css).toContain("--sce-domain-nav-panel-max-height");
+    expect(css).toContain("--sce-domain-nav-overlay-max-height");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-cham-body[\s\S]*max-height:\s*var\(--sce-domain-nav-panel-max-height\)/,
+      /\.sce-domain-nav-panel-cham-body[\s\S]*max-height:\s*var\(--sce-domain-nav-overlay-max-height\)/,
     );
     expect(css).toMatch(/\.sce-domain-nav-panel-cham-body[\s\S]*overflow-y:\s*auto/);
     expect(css).toMatch(/\.sce-domain-nav-panel-cham-body[\s\S]*min-height:\s*0/);
@@ -59,10 +59,8 @@ describe("SCE-DS2-05B-R5 delivery", () => {
     );
   });
 
-  it("syncs panel offset from the live global header when open", () => {
+  it("keeps compact Cham accessibility hooks after the overlay repair", () => {
     const panel = readRepo("components/sce/navigation/SceDomainNavigationPanel.tsx");
-    expect(panel).toContain("SCE-DS2-05B-R5");
-    expect(panel).toContain("--sce-domain-nav-panel-top");
     expect(panel).toMatch(/headerRef\.current/);
     expect(panel).toContain('role="navigation"');
     expect(panel).toContain("aria-expanded={selected}");

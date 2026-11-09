@@ -79,7 +79,7 @@ describe("SCE-DS2-05B-R4 delivery", () => {
     expect(panel).toContain("sce-domain-nav-panel-section-title");
     expect(panel).toContain("sce-domain-nav-panel-cham-body");
     expect(panel).toContain('data-testid="sce-domain-nav-panel-title"');
-    expect(panel).not.toContain("position: fixed");
+    expect(panel).toContain("sce-domain-nav-panel--overlay");
     expect(panel).not.toContain("computePanelGeometry");
 
     const css = readRepo("app/(admin)/global-app-navigation.css");

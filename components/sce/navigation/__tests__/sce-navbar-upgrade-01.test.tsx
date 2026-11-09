@@ -102,8 +102,9 @@ describe("AppShellNavigation landmarks", () => {
     const user = userEvent.setup();
     await user.click(planningTrigger);
     expect(planningTrigger).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByTestId("sce-domain-nav-panel")).toBeInTheDocument();
-    const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
+    const panel = screen.getByTestId("sce-domain-nav-panel");
+    expect(panel).toBeInTheDocument();
+    const wochenplaner = within(panel).getByRole("link", { name: "Wochenplaner" });
     expect(wochenplaner).toHaveAttribute("aria-current", "page");
 
     await user.click(screen.getByTestId("global-nav-mobile-menu"));

@@ -1,6 +1,6 @@
 "use client";
 
-/** SCE-DS2-05B-R5 — tenant-first header, compact Cham-style domain panel, utilities without season. */
+/** SCE-DS2-05B-R7 — tenant-first header, portalled Cham domain overlay, utilities without season. */
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -258,6 +258,8 @@ function AppShellNavigationInner({
   }, [active, openDomainPanel, openDomainPanelItems]);
 
   useEffect(() => {
+    // Route changes must dismiss the overlay; this is existing shell/session sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- close overlay on navigation
     closeDomainPanel();
   }, [pathname, closeDomainPanel]);
 
@@ -267,7 +269,7 @@ function AppShellNavigationInner({
     const onPointerDown = (event: Event) => {
       const target = event.target as Node | null;
       if (!target) return;
-      const panel = document.querySelector('[data-testid="sce-domain-nav-panel"]');
+      const panel = document.querySelector("[data-sce-domain-nav-overlay]");
       if (panel?.contains(target)) return;
       if (target instanceof Element && target.closest("button[data-nav-domain]")) {
         return;
@@ -287,10 +289,10 @@ function AppShellNavigationInner({
       restore?.focus();
     };
 
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [openDomainPanelId, closeDomainPanel]);
@@ -376,10 +378,16 @@ function AppShellNavigationInner({
           }
         />
 
+        <div
+          className="sce-domain-nav-overlay-anchor"
+          data-sce-domain-nav-overlay-anchor=""
+          data-testid="sce-domain-nav-overlay-anchor"
+          aria-hidden
+        />
+
         {active.activeDomain &&
         active.activeDomainId !== "dashboard" &&
-        active.domainSecondaryItems.length > 0 &&
-        !openDomainPanelId ? (
+        active.domainSecondaryItems.length > 0 ? (
           <SceHierarchicalDesktopNavigation
             moduleNavAria={t("moduleNavAria")}
             contextNavAria={t("contextNavAria")}
@@ -400,39 +408,39 @@ function AppShellNavigationInner({
             onNavigateSibling={navigateToModuleLocalSibling}
           />
         ) : null}
-
-        {openDomainPanel && openDomainPanelItems.length > 0 ? (
-          <SceDomainNavigationPanel
-            key={openDomainPanel.id}
-            panelId={domainPanelControlsId(openDomainPanel.id)}
-            open={openDomainPanelId === openDomainPanel.id}
-            headerRef={headerRef}
-            domain={openDomainPanel}
-            domainHeading={domainLabel(openDomainPanel)}
-            items={openDomainPanelItems}
-            initialL2Key={openDomainPanelInitialL2Key}
-            resolveHref={resolveHref}
-            isL2Active={(item) => isDomainSecondaryItemActive(openDomainPanel, item)}
-            isL3Active={(child) => {
-              if (child.key.endsWith("__domain-panel-overview")) {
-                const parentKey = child.key.replace("__domain-panel-overview", "");
-                const parent = openDomainPanelItems.find((entry) => entry.key === parentKey);
-                if (!parent) return false;
-                if (active.activeChildKey != null) return false;
-                return isDomainSecondaryItemActive(openDomainPanel, parent);
-              }
-              return isModuleLocalChildPrimaryActive(
-                pathname,
-                child,
-                active.moduleLocalChildren,
-                active.activeChildKey,
-              );
-            }}
-            onNavigateSibling={navigateToModuleLocalSibling}
-            onClose={closeDomainPanel}
-          />
-        ) : null}
       </header>
+
+      {openDomainPanel && openDomainPanelItems.length > 0 ? (
+        <SceDomainNavigationPanel
+          key={openDomainPanel.id}
+          panelId={domainPanelControlsId(openDomainPanel.id)}
+          open={openDomainPanelId === openDomainPanel.id}
+          headerRef={headerRef}
+          domain={openDomainPanel}
+          domainHeading={domainLabel(openDomainPanel)}
+          items={openDomainPanelItems}
+          initialL2Key={openDomainPanelInitialL2Key}
+          resolveHref={resolveHref}
+          isL2Active={(item) => isDomainSecondaryItemActive(openDomainPanel, item)}
+          isL3Active={(child) => {
+            if (child.key.endsWith("__domain-panel-overview")) {
+              const parentKey = child.key.replace("__domain-panel-overview", "");
+              const parent = openDomainPanelItems.find((entry) => entry.key === parentKey);
+              if (!parent) return false;
+              if (active.activeChildKey != null) return false;
+              return isDomainSecondaryItemActive(openDomainPanel, parent);
+            }
+            return isModuleLocalChildPrimaryActive(
+              pathname,
+              child,
+              active.moduleLocalChildren,
+              active.activeChildKey,
+            );
+          }}
+          onNavigateSibling={navigateToModuleLocalSibling}
+          onClose={closeDomainPanel}
+        />
+      ) : null}
 
       <nav
         aria-label={t("mobilePrimaryNavAria")}
