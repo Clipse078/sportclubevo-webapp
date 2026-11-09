@@ -16,7 +16,7 @@ Finance establishes the canonical page hierarchy (breadcrumb → eyebrow → tit
 | Component | Role |
 | --- | --- |
 | `ScePageHeader` | Workspace title block (Barlow Condensed + Inter) |
-| `ScePageTabs` | Horizontal `SceContextTabs` |
+| `SceContextTabs` | Finance-aligned workspace context tabs (`components/sce/context-tabs`) |
 | `ScePageContent` | Width-mode content shell |
 | `SceSectionHeader` | In-page section label |
 | `SceContentPanel` | Functional white panel |

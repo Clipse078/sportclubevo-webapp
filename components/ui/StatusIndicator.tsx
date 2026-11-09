@@ -8,11 +8,11 @@ const dotVariants = cva(
     variants: {
       variant: {
         default:  "bg-[var(--muted)]",
-        success:  "bg-[var(--sce-success)]",
-        warning:  "bg-[var(--sce-warning)]",
-        danger:   "bg-[var(--sce-danger)]",
-        info:     "bg-[var(--sce-info)]",
-        neutral:  "bg-[var(--border-strong)]",
+        success:  "bg-[var(--sce-color-status-success)]",
+        warning:  "bg-[var(--sce-color-status-warning)]",
+        danger:   "bg-[var(--sce-color-status-error)]",
+        info:     "bg-[var(--sce-color-status-info)]",
+        neutral:  "bg-[var(--sce-color-status-neutral)]",
       },
       size: {
         sm:      "h-1.5 w-1.5",
@@ -32,11 +32,11 @@ const labelVariants = cva(
     variants: {
       variant: {
         default:  "text-[var(--text-2)]",
-        success:  "text-[var(--sce-success)]",
-        warning:  "text-[var(--sce-warning)]",
-        danger:   "text-[var(--sce-danger)]",
-        info:     "text-[var(--sce-info)]",
-        neutral:  "text-[var(--muted)]",
+        success:  "text-[var(--sce-color-status-success)]",
+        warning:  "text-[var(--sce-color-status-warning)]",
+        danger:   "text-[var(--sce-color-status-error)]",
+        info:     "text-[var(--sce-color-status-info)]",
+        neutral:  "text-[var(--sce-color-status-neutral)]",
       },
       size: {
         sm:      "text-xs",
