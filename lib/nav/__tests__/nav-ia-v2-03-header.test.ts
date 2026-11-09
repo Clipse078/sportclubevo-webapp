@@ -193,6 +193,6 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     expect(css).toContain("sce-domain-nav-panel");
     expect(css).toContain("sce-global-module-nav-item--active");
     expect(css).toContain("sce-context-nav-panel-link--active");
-    expect(css).toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
+    expect(css).not.toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
   });
 });
