@@ -231,6 +231,22 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     expect(screen.getAllByTestId("club-crest-image").length).toBeGreaterThanOrEqual(1);
   });
 
+  it("detail-embed stacked fixture uses container-responsive layout (no overflow-wrap anywhere)", () => {
+    const model = resolveSceMatchCardFixture();
+    const { container } = render(
+      <SceMatchCard
+        model={model}
+        density="COMPACT"
+        fmtCfg={FMT}
+        surface="detail-embed"
+        linkToDetail={false}
+      />,
+    );
+    const fixture = container.querySelector('[data-sce-match-fixture-layout="container-responsive"]');
+    expect(fixture).toBeTruthy();
+    expect(container.innerHTML).not.toContain("overflow-wrap:anywhere");
+  });
+
   it.each(["HERO", "STANDARD", "COMPACT"] as const)(
     "rich density %s uses reference split fixture layout",
     (density) => {

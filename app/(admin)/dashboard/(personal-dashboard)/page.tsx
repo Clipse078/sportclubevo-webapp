@@ -31,16 +31,7 @@ export default async function DashboardPage({
 
   return (
     <PageShell fullWidth widthMode="dashboard">
-      <SceWorkspaceChrome
-        breadcrumbs={[{ label: "Dashboard" }]}
-        header={{
-          eyebrow: "Übersicht",
-          title: "Dashboard",
-          description:
-            "Programm, Aufgaben und Hinweise für deinen Verein — personalisiert nach deiner Rolle.",
-        }}
-        density="dense"
-      >
+      <SceWorkspaceChrome breadcrumbs={[{ label: "Dashboard" }]} density="dense">
         <ClubDashboardView
           authenticatedSession={session}
           calendarMonthParam={params.monat ?? null}

@@ -1847,6 +1847,11 @@ html[data-sidebar-collapsed="1"] {
   backdrop-filter: blur(2px);
 }
 
+.sce-contextual-side-panel-viewport {
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
 .sce-modal-overlay-panel-host {
   display: flex;
   width: 100%;

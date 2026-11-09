@@ -13,6 +13,7 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
 import type { SceTournamentFixtureStackedLayoutScale } from "@/lib/sce/tournament/sce-tournament-fixture-presentation-density";
+import styles from "./SceMatchStackedFixtureIdentity.module.css";
 
 export type SceMatchStackedFixtureSide = {
   identity: ClubIdentity;
@@ -53,6 +54,15 @@ function clubNameClassForDensity(density: SceActivityPresentationDensity): strin
   return richScale(density).clubNameClass;
 }
 
+function teamNameClampForDensity(
+  density: SceActivityPresentationDensity,
+): { truncate: boolean; lineClamp: 1 | 2 } {
+  if (density === "MICRO") {
+    return { truncate: true, lineClamp: 1 };
+  }
+  return { truncate: false, lineClamp: 2 };
+}
+
 function crestSizeForDensity(
   density: SceActivityPresentationDensity,
   override?: ClubCrestVisualSize,
@@ -78,29 +88,30 @@ function SceMatchStackedIdentityColumn({
   identityStackGapClass: string;
 }) {
   const label = sideModel.displayName?.trim() || sideModel.identity.displayName;
+  const nameClamp = teamNameClampForDensity(density);
 
   return (
     <div
       data-sce-match-side={side}
       data-sce-match-region={`${side}-identity`}
-      className={cn(
-        "flex min-w-0 flex-col items-center text-center",
-        identityStackGapClass,
-      )}
+      className={cn(styles.identityColumn, identityStackGapClass)}
     >
       {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`}>
+        <div data-sce-match-region={`${side}-crest`} className="shrink-0">
           <ClubCrest identity={sideModel.identity} density={crestVisualSize} decorative />
         </div>
       ) : null}
       <SceTeamName
         as="span"
         className={cn(
-          "min-w-0 break-words text-balance text-[var(--foreground)] [overflow-wrap:anywhere]",
+          styles.identityName,
+          "text-[var(--foreground)]",
           clubNameClassOverride ?? clubNameClassForDensity(density),
         )}
         title={label}
-        truncate={false}
+        density={density === "MICRO" ? "MICRO" : density}
+        truncate={nameClamp.truncate}
+        lineClamp={nameClamp.lineClamp}
         data-sce-match-region={`${side}-name`}
       >
         {label}
@@ -136,41 +147,41 @@ export function SceMatchStackedFixtureIdentity({
 
   return (
     <div
-      className={cn(
-        "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-1",
-        fixtureGridGapXClass,
-        fixtureGapYClass,
-        className,
-      )}
+      className={cn(styles.root, "py-1", className)}
       data-testid={testId}
       data-sce-match-region="fixture"
+      data-sce-match-fixture-layout="container-responsive"
       aria-label={ariaLabel}
     >
-      <SceMatchStackedIdentityColumn
-        side="home"
-        sideModel={home}
-        density={density}
-        showCrests={showCrests}
-        crestVisualSize={crestVisualSize}
-        clubNameClassOverride={clubNameClassOverride}
-        identityStackGapClass={identityStackGapClass}
-      />
       <div
-        className="flex items-center justify-center px-1"
-        data-sce-match-region="center"
-        data-sce-match-center
+        className={cn(styles.fixtureGrid, fixtureGridGapXClass, fixtureGapYClass)}
       >
-        {center}
+        <SceMatchStackedIdentityColumn
+          side="home"
+          sideModel={home}
+          density={density}
+          showCrests={showCrests}
+          crestVisualSize={crestVisualSize}
+          clubNameClassOverride={clubNameClassOverride}
+          identityStackGapClass={identityStackGapClass}
+        />
+        <div
+          className={styles.centerSlot}
+          data-sce-match-region="center"
+          data-sce-match-center
+        >
+          {center}
+        </div>
+        <SceMatchStackedIdentityColumn
+          side="away"
+          sideModel={away}
+          density={density}
+          showCrests={showCrests}
+          crestVisualSize={crestVisualSize}
+          clubNameClassOverride={clubNameClassOverride}
+          identityStackGapClass={identityStackGapClass}
+        />
       </div>
-      <SceMatchStackedIdentityColumn
-        side="away"
-        sideModel={away}
-        density={density}
-        showCrests={showCrests}
-        crestVisualSize={crestVisualSize}
-        clubNameClassOverride={clubNameClassOverride}
-        identityStackGapClass={identityStackGapClass}
-      />
     </div>
   );
 }

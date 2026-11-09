@@ -81,10 +81,27 @@ describe("SCE-DS2-06 unified page architecture", () => {
     expect(canvas).toContain("--sce-color-surface-muted");
   });
 
-  it("prevents stacked match team names from breaking letter-by-letter", () => {
+  it("uses container-aware stacked match fixture layout without overflow-wrap: anywhere", () => {
     const stacked = readRepo("components/sporting-activity/SceMatchStackedFixtureIdentity.tsx");
-    expect(stacked).toContain("break-words");
-    expect(stacked).toContain("[overflow-wrap:anywhere]");
+    const layoutCss = readRepo("components/sporting-activity/SceMatchStackedFixtureIdentity.module.css");
+    const contract = readRepo(
+      "lib/sporting-activity-presentation/canonical/match-stacked-fixture-layout-contract.ts",
+    );
+
+    expect(stacked).not.toContain("overflow-wrap:anywhere");
+    expect(stacked).toContain("data-sce-match-fixture-layout");
+    expect(layoutCss).toContain("container-type: inline-size");
+    expect(layoutCss).toContain("container-name: sce-match-stacked-fixture");
+    expect(layoutCss).toContain("overflow-wrap: break-word");
+    expect(contract).toContain("SCE_MATCH_STACKED_FIXTURE_CONTAINER_NAME");
+  });
+
+  it("keeps dashboard greeting without duplicating workspace page title", () => {
+    const page = readRepo("app/(admin)/dashboard/(personal-dashboard)/page.tsx");
+    const dashboard = readRepo("components/admin/dashboard/ClubDashboardView.tsx");
+    expect(page).not.toMatch(/title:\s*["']Dashboard["']/);
+    expect(page).not.toContain('eyebrow: "Übersicht"');
+    expect(dashboard).toContain("PersonalDashboardCockpitGreeting");
   });
 
   it("migrates Wochenplaner planning editor to contextual side panel", () => {
@@ -98,5 +115,30 @@ describe("SCE-DS2-06 unified page architecture", () => {
     expect(SCE_DS2_06_MODAL_MIGRATION_INVENTORY.length).toBeGreaterThanOrEqual(5);
     const wochen = SCE_DS2_06_MODAL_MIGRATION_INVENTORY.find((e) => e.id === "wochenplaner-canonical-edit");
     expect(wochen?.classification).toBe("contextual-side-panel");
+  });
+
+  it("passes DS2-06 contextual panel and workspace contrast pairs", async () => {
+    const { SCE_DS2_06_CONTRAST_PAIRS } = await import("@/lib/design-system/sce-ds2-06-contrast-pairs");
+    const { contrastRatio } = await import("@/lib/design-system/sce-white-edition-contrast");
+    const failures: string[] = [];
+    for (const pair of SCE_DS2_06_CONTRAST_PAIRS) {
+      const ratio = contrastRatio(pair.foreground, pair.background);
+      if (ratio < pair.minimumRatio) {
+        failures.push(`${pair.id}: ${ratio.toFixed(2)} < ${pair.minimumRatio}`);
+      }
+    }
+    expect(failures, failures.join("\n")).toEqual([]);
+  });
+
+  it("contextual side panel sheet uses semantic surface tokens (no same-color status traps)", () => {
+    const sheet = readRepo("components/ui/Sheet.tsx");
+    expect(sheet).toContain("data-sce-contextual-side-panel");
+    expect(sheet).toMatch(
+      /contextualPanel[\s\S]*bg-\[var\(--sce-color-surface-standard\)\]/,
+    );
+    expect(sheet).toContain("text-[var(--foreground)]");
+    expect(sheet).toContain("text-[var(--text-2)]");
+    const globals = readRepo("app/globals.css");
+    expect(globals).toContain("sce-contextual-side-panel-viewport");
   });
 });
