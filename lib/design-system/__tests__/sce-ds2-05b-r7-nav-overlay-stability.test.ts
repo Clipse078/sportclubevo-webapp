@@ -52,13 +52,19 @@ describe("SCE-DS2-05B-R7 navigation overlay stability", () => {
     expect(css).not.toContain("--sce-domain-nav-panel-top:");
   });
 
-  it("keeps persistent L2/L3 mounted while the overlay is open", () => {
+  it("keeps the overlay portalled without a persistent L2/L3 row in the header", () => {
     const shell = readRepo("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceHierarchicalDesktopNavigation");
-    expect(shell).not.toMatch(
-      /domainSecondaryItems\.length > 0 &&\s*!openDomainPanelId/,
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceTenantContextRow");
+    expect(shell).toContain("SceDomainNavigationPanel");
+    expect(readRepo("components/sce/navigation/SceDomainNavigationPanel.tsx")).toContain(
+      "createPortal",
     );
     expect(shell).toContain("sce-domain-nav-overlay-anchor");
+    const css = readRepo("app/(admin)/global-app-navigation.css");
+    expect(css).not.toContain(".sce-global-module-nav {");
+    expect(css).not.toContain(".sce-global-context-nav {");
+    expect(css).not.toContain("--sce-nav-context-row-height");
   });
 
   it("preserves Cham typography, columns, and white-first surfaces", () => {

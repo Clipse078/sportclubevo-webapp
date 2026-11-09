@@ -23,13 +23,12 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(css).toMatch(/\.sce-global-primary-nav \{\s*\n\s*justify-content: flex-start;/);
   });
 
-  it("composes one spine primitive across L1 and L2 (L3 is on-demand overlay)", () => {
+  it("composes the spine primitive on L1 while L2/L3 stay in the overlay", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
 
     expect(shell).toContain("SceNavigationSpineRow");
-    expect(tenantRow).toContain("SceNavigationSpineRow");
+    expect(shell).not.toContain("SceTenantContextRow");
     expect(shell).toContain("SceDomainNavigationPanel");
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');
     expect(spine).toContain("data-sce-nav-workspace");
@@ -42,9 +41,8 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(shell).not.toContain("workspaceEyebrow");
     expect(shell).not.toContain("moduleWorkspaceEyebrow");
 
-    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(tenantRow).not.toContain("workspaceEyebrow");
-    expect(tenantRow).not.toContain("sce-global-module-nav-workspace-eyebrow");
+    expect(shell).not.toContain("sce-global-module-nav-workspace-eyebrow");
+    expect(shell).not.toContain("SceTenantContextRow");
   });
 
   it("preserves brand rail occupancy on L1/L2 without a permanent L3 row", () => {
@@ -53,8 +51,10 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(spine).toContain("sce-nav-spine-row--sub");
     expect(spine).toMatch(/data-sce-nav-spine-row=\{variant\}/);
 
-    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(tenantRow).toContain("brand={brand}");
+    const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
+    expect(shell).toContain('variant="primary"');
+    expect(shell).not.toContain('variant="module"');
+    expect(shell).not.toContain('variant="context"');
   });
 
   it("bounds brand rail width for wide desktop without centering primary nav", () => {

@@ -59,14 +59,14 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     );
   });
 
-  it("renders hierarchical Row 2/3 only when a non-dashboard domain has secondary navigation", () => {
+  it("does not render persistent Row 2/3 navigation on any domain", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceModuleNavigation");
     expect(shell).not.toContain("SceRow2SeasonContext");
-
-    const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(row).toContain("sce-row2-context-workspace-empty");
+    expect(shell).not.toContain("sce-row2-context-workspace-empty");
+    expect(shell).toContain("SceDomainNavigationPanel");
   });
 
   it("uses deterministic season label variants without truncate ellipsis", () => {

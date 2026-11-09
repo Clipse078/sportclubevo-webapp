@@ -22,7 +22,6 @@
   --sce-page-max-width-readable: 75rem;
   --topnav-height: 3.375rem;
   --sce-nav-module-row-height: 2.5rem;
-  --sce-nav-context-row-height: 2.25rem;
   --sce-context-nav-panel-z: 45;
   --sce-domain-nav-panel-z: var(--sce-z-floating-app);
 }
@@ -52,6 +51,14 @@
   background: var(--sce-app-chrome);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+/* SCE-DS2-05B-R9 — header height is the primary row. The overlay anchor is not a band. */
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  .sce-global-app-header
+  .sce-domain-nav-overlay-anchor {
+  height: 0;
+  min-height: 0;
 }
 
 /* ── Shared navigation spine (brand rail | workspace | utilities) ─────────── */
@@ -400,137 +407,8 @@
   flex-shrink: 0;
 }
 
-/* ── Module navigation (L2 workspace) ────────────────────────────────────── */
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-global-module-nav {
-  border-top: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
-  min-height: var(--sce-nav-module-row-height);
-  background: color-mix(in srgb, var(--surface-1) 32%, var(--sce-app-chrome));
-}
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-global-module-nav-track {
-  min-height: var(--sce-nav-module-row-height);
-  align-items: center;
-  padding: 0;
-  gap: 0.125rem;
-}
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-tenant-context-workspace-empty {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 28%, transparent);
-}
-
-.sce-global-module-nav-item {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.875rem;
-  padding: 0 0.4375rem;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted) 95%, transparent);
-  white-space: nowrap;
-  text-decoration: none;
-  border-bottom: none;
-  box-shadow: inset 0 -1px 0 transparent;
-  transition:
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.sce-global-module-nav-item--r3 {
-  padding-inline: 0.5rem;
-}
-
-.sce-global-domain-section-heading {
-  font-size: 1.25rem;
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: 0.02em;
-  color: var(--foreground);
-  white-space: nowrap;
-}
-
-.sce-global-nav-level-separator {
-  width: 1px;
-  align-self: stretch;
-  min-height: 1.25rem;
-  margin-inline: 0.25rem;
-  background: color-mix(in srgb, var(--border) 70%, transparent);
-}
-
-.sce-global-module-nav-track,
-.sce-global-context-nav-track {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
-}
-
-.sce-global-module-nav-track:focus-within,
-.sce-global-context-nav-track:focus-within {
-  outline: none;
-}
-
-.sce-global-module-nav-item:hover {
-  color: var(--text-2);
-}
-
-.sce-global-module-nav-item--active {
-  color: var(--sce-primary);
-  font-weight: 700;
-  background: transparent;
-  box-shadow: none;
-}
-
-.sce-global-module-nav-item--active:hover {
-  color: var(--sce-primary-hover);
-  background: transparent;
-  box-shadow: none;
-}
-
-.sce-global-module-nav-item--active [data-sce-nav-destination-icon] {
-  color: var(--sce-primary);
-}
-
-.sce-global-module-nav-entry--parent .sce-global-module-nav-item {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.sce-global-module-nav-disclosure {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.875rem;
-  min-width: 1.625rem;
-  margin-left: -0.125rem;
-  padding: 0 0.25rem;
-  border: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: color-mix(in srgb, var(--muted) 90%, transparent);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.sce-global-module-nav-entry--open .sce-global-module-nav-disclosure,
-.sce-global-module-nav-disclosure:hover {
-  color: var(--text-2);
-  background: color-mix(in srgb, var(--surface-2) 35%, transparent);
-}
-
-.sce-global-module-nav-disclosure:focus-visible,
-.sce-global-module-nav-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--sce-primary) 55%, transparent);
-  outline-offset: 2px;
-}
+/* SCE-DS2-05B-R9 — persistent horizontal L2/L3 rows are removed.
+   L2/L3 live only in the portalled mega menu. Do not reserve header bands. */
 
 .sce-global-platform-home-link {
   opacity: 0.92;
@@ -538,67 +416,6 @@
 
 .sce-global-platform-home-link:hover {
   opacity: 1;
-}
-
-/* ── Persistent L3 destination strip (SCE-DS2-05B-R3) ─────────────────────── */
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-global-context-nav {
-  border-top: 1px solid color-mix(in srgb, var(--border) 32%, transparent);
-  min-height: var(--sce-nav-context-row-height);
-  background: color-mix(in srgb, var(--surface-1) 18%, var(--sce-app-chrome));
-}
-
-.sce-global-context-nav-track {
-  min-height: var(--sce-nav-context-row-height);
-  align-items: center;
-  padding-block: 0.125rem;
-  gap: 0.0625rem;
-}
-
-.sce-global-context-nav-item {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  padding: 0 0.5rem;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
-  font-size: 0.875rem;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--text-2) 92%, transparent);
-  white-space: nowrap;
-  text-decoration: none;
-  border-bottom: none;
-  box-shadow: inset 0 -1px 0 transparent;
-  transition:
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.sce-global-context-nav-item:hover {
-  color: var(--foreground);
-  background: color-mix(in srgb, var(--surface-2) 35%, transparent);
-}
-
-.sce-global-context-nav-item--active {
-  color: var(--sce-primary);
-  font-weight: 750;
-  background: transparent;
-  box-shadow: none;
-}
-
-.sce-global-context-nav-item--active:hover {
-  color: var(--sce-primary-hover);
-  background: color-mix(in srgb, var(--surface-2) 35%, transparent);
-  box-shadow: none;
-}
-
-.sce-global-context-nav-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--sce-primary) 55%, transparent);
-  outline-offset: 2px;
 }
 
 /* ── On-demand L3 contextual panel (drawer / disclosure fallback) ─────────── */

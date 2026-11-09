@@ -94,7 +94,6 @@ describe("SCE-DS2-05B-R7 domain nav overlay", () => {
     mockAnchorRect(88);
 
     const header = screen.getByTestId("sce-global-navigation");
-    const moduleNav = screen.getByTestId("domain-secondary-nav");
     const trigger = screen.getByTestId("primary-domain-panel-trigger-club");
 
     await user.click(trigger);
@@ -103,8 +102,10 @@ describe("SCE-DS2-05B-R7 domain nav overlay", () => {
     expect(panel).toHaveAttribute("data-sce-domain-nav-overlay");
     expect(panel.className).toContain("sce-domain-nav-panel--overlay");
     expect(header.contains(panel)).toBe(false);
-    expect(moduleNav).toBeInTheDocument();
-    expect(screen.getByTestId("sce-domain-section-heading")).toBeInTheDocument();
+    expect(screen.queryByTestId("domain-secondary-nav")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("domain-contextual-nav")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-domain-section-heading")).not.toBeInTheDocument();
+    expect(within(panel).getByTestId("sce-domain-nav-panel-title")).toBeInTheDocument();
     expect(panel.style.top).toBe("88px");
   });
 

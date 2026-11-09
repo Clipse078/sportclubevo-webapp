@@ -161,7 +161,7 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     expect(shellNav).toContain(SCE_GLOBAL_APP_HEADER_CLASS);
     expect(shellNav).toContain('useTranslations("AppShell")');
     expect(shellNav).toContain('t("primaryNavAria")');
-    expect(shellNav).toContain('t("moduleNavAria")');
+    expect(shellNav).not.toContain('t("moduleNavAria")');
     expect(shellNav).toContain("SceDomainNavigationPanel");
     expect(shellNav).toContain('t("mobilePrimaryNavAria")');
   });

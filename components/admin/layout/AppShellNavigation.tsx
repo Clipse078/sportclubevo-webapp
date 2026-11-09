@@ -1,6 +1,6 @@
 "use client";
 
-/** SCE-DS2-05B-R7 — tenant-first header, portalled Cham domain overlay, utilities without season. */
+/** SCE-DS2-05B-R9 — primary header plus portalled mega menu. No persistent L2/L3 rows. */
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -50,7 +50,6 @@ import {
   ScePrimaryNavigation,
   SceTenantContextRail,
   SceTenantIdentityBar,
-  SceHierarchicalDesktopNavigation,
 } from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
@@ -384,30 +383,6 @@ function AppShellNavigationInner({
           data-testid="sce-domain-nav-overlay-anchor"
           aria-hidden
         />
-
-        {active.activeDomain &&
-        active.activeDomainId !== "dashboard" &&
-        active.domainSecondaryItems.length > 0 ? (
-          <SceHierarchicalDesktopNavigation
-            moduleNavAria={t("moduleNavAria")}
-            contextNavAria={t("contextNavAria")}
-            domain={active.activeDomain}
-            domainHeading={domainLabel(active.activeDomain)}
-            items={active.domainSecondaryItems}
-            active={active}
-            resolveHref={resolveHref}
-            isL2Active={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
-            isL3Active={(child) =>
-              isModuleLocalChildPrimaryActive(
-                pathname,
-                child,
-                active.moduleLocalChildren,
-                active.activeChildKey,
-              )
-            }
-            onNavigateSibling={navigateToModuleLocalSibling}
-          />
-        ) : null}
       </header>
 
       {openDomainPanel && openDomainPanelItems.length > 0 ? (

@@ -41,7 +41,6 @@ function expectTextOnlyActive(css: string, selector: string) {
 
 const L1_ACTIVE = ".sce-global-primary-nav-item--active";
 const L2_ACTIVE = [
-  ".sce-global-module-nav-item--active",
   ".sce-domain-nav-panel-l2-link--active",
   ".sce-domain-nav-panel-l2-control--active",
   ".sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active)",
@@ -50,7 +49,6 @@ const L2_ACTIVE = [
   ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active)",
 ];
 const L3_ACTIVE = [
-  ".sce-global-context-nav-item--active",
   ".sce-context-nav-panel-link--active",
   ".sce-domain-nav-panel-l3-link--active",
   ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l3-link--active",
@@ -85,7 +83,9 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
     expect(rows).toMatch(/border-bottom:\s*1px solid/);
     expect(rows).toMatch(/padding:\s*0\.3125rem 0/);
     expect(rows).toMatch(/text-transform:\s*uppercase/);
-    expect(css).toContain(".sce-global-nav-level-separator");
+    expect(css).not.toContain(".sce-global-nav-level-separator");
+    expect(css).not.toContain(".sce-global-module-nav");
+    expect(css).not.toContain(".sce-global-context-nav");
     for (const selector of L2_ACTIVE) {
       expect(declarationBlocks(css, selector).join("\n")).not.toMatch(/padding-left/);
     }
@@ -95,8 +95,6 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
     const css = readRepo(NAV_CSS);
     const focusSelectors = [
       ".sce-global-primary-nav-item:focus-visible",
-      ".sce-global-module-nav-item:focus-visible",
-      ".sce-global-context-nav-item:focus-visible",
       ".sce-domain-nav-panel-l2-link:focus-visible",
       ".sce-domain-nav-panel-l3-link:focus-visible",
       ".sce-context-nav-panel-link:focus-visible",
@@ -110,8 +108,6 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
     const hoverSelectors = [
       ".sce-global-primary-nav-item:hover",
       ".sce-global-primary-nav-item--active:hover",
-      ".sce-global-module-nav-item--active:hover",
-      ".sce-global-context-nav-item--active:hover",
       ".sce-domain-nav-panel-l2-link:hover",
       ".sce-domain-nav-panel-l3-link--active:hover",
       ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-link:hover",
@@ -127,9 +123,9 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
 
   it("applies the contract through shared navigation primitives, not a single domain", () => {
     const item = readRepo("components/sce/navigation/SceNavigationItem.tsx");
-    expect(item).toContain('primary: "sce-global-primary-nav-item--active"');
-    expect(item).toContain('module: "sce-global-module-nav-item--active"');
-    expect(item).toContain('context: "sce-global-context-nav-item--active"');
+    expect(item).toContain("sce-global-primary-nav-item--active");
+    expect(item).not.toContain("sce-global-module-nav");
+    expect(item).not.toContain("sce-global-context-nav");
 
     const panel = readRepo("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(panel).toContain("sce-domain-nav-panel-l2-control--active");

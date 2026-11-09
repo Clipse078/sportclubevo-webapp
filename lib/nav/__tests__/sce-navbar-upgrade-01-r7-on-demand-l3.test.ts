@@ -54,7 +54,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(active.moduleLocalChildren).toEqual([]);
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
     expect(shell).toContain('if (active.activeDomainId === "dashboard") return false');
   });
@@ -69,15 +69,17 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(l3.some((child) => child.key === "org-units")).toBe(true);
   });
 
-  it("combines hierarchical domain panel with DS2-05B-R3 persistent context strip", () => {
+  it("keeps L3 inside the hierarchical domain panel and not a persistent context strip", () => {
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(panel).toContain("sce-domain-nav-panel");
     expect(panel).toContain("resolveDomainPanelRightColumnEntries");
+    expect(panel).toContain("sce-domain-nav-panel-l3");
 
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain("sce-domain-nav-panel");
-    expect(css).toContain("--sce-nav-context-row-height");
-    expect(css).toContain(".sce-global-context-nav");
+    expect(css).not.toContain("--sce-nav-context-row-height");
+    expect(css).not.toContain(".sce-global-context-nav");
+    expect(css).toMatch(/\.sce-domain-nav-panel[\s\S]*position:\s*fixed/);
   });
 
   it("keeps header utilities compact without season selector (R4)", () => {

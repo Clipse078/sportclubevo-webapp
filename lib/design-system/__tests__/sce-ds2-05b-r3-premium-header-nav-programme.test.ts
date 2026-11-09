@@ -30,7 +30,7 @@ describe("SCE-DS2-05B-R3 delivery", () => {
   it("documents package markers across header, navigation, and programme surfaces", () => {
     const sources = [
       readRepo("components/admin/layout/AppShellNavigation.tsx"),
-      readRepo("components/sce/navigation/SceHierarchicalDesktopNavigation.tsx"),
+      readRepo("components/sce/navigation/SceDomainNavigationPanel.tsx"),
       readRepo("components/sce/navigation/SceGlobalUtilities.tsx"),
       readRepo("app/(admin)/global-app-navigation.css"),
       readRepo("app/globals.css"),
@@ -62,14 +62,17 @@ describe("SCE-DS2-05B-R3 delivery", () => {
     expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
   });
 
-  it("shows persistent L2/L3 desktop hierarchy from canonical navigation", () => {
+  it("keeps canonical L2/L3 in the mega menu and omits persistent desktop rows", () => {
     const shell = readRepo("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).toContain("SceDomainNavigationPanel");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceRow2SeasonContext");
 
-    const hierarchical = readRepo("components/sce/navigation/SceHierarchicalDesktopNavigation.tsx");
-    expect(hierarchical).toContain("sce-global-domain-section-heading");
-    expect(hierarchical).toContain('level="context"');
+    const panel = readRepo("components/sce/navigation/SceDomainNavigationPanel.tsx");
+    expect(panel).toContain("sce-domain-nav-panel-l2");
+    expect(panel).toContain("sce-domain-nav-panel-l3");
+    expect(panel).toContain("createPortal");
 
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const club = model.domains.find((d) => d.id === "club")!;
@@ -98,10 +101,11 @@ describe("SCE-DS2-05B-R3 delivery", () => {
     expect(trainingPill).toContain("rounded-full");
   });
 
-  it("omits empty Row 2 season-only shell on dashboard home", () => {
+  it("does not reserve a persistent navigation row on dashboard or other domains", () => {
     const shell = readRepo("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toMatch(
-      /active\.activeDomainId !== "dashboard"[\s\S]*SceHierarchicalDesktopNavigation/,
-    );
+    expect(shell).not.toContain("domain-secondary-nav");
+    expect(shell).not.toContain("domain-contextual-nav");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).toContain("sce-domain-nav-overlay-anchor");
   });
 });

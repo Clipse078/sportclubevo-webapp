@@ -29,7 +29,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(drawer).toContain("PoweredByBadge");
   });
 
-  it("does not duplicate tenant identity in row 2 brand rail on desktop", () => {
+  it("does not duplicate tenant identity in a second navigation row on desktop", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const primaryBrandBlock = shell.match(
       /variant="primary"[\s\S]*?utilities=\{/,
@@ -38,16 +38,13 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(primaryBrandBlock).toContain("tenantContextRail");
     expect(primaryBrandBlock).not.toContain("ScePlatformBrandRail");
     expect(primaryBrandBlock).toContain("md:hidden");
-
-    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(tenantRow).toContain("brand?: ReactNode");
-    expect(tenantRow).toContain("brand={brand}");
+    expect(shell).not.toContain("SceTenantContextRow");
   });
 
-  it("uses persistent L3 strip plus on-demand hierarchical domain panel", () => {
+  it("uses the on-demand hierarchical domain panel without a persistent L3 strip", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("<SceContextNavigation");
-    expect(shell).toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
 
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");

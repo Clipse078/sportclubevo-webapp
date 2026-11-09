@@ -33,12 +33,12 @@ describe("SCE-DS2-05B-R2 delivery", () => {
     expect(SCE_DS2_05B_R2_PACKAGE_KEY).toBe("SCE-DS2-05B-R2");
   });
 
-  it("keeps tenant crest on Row 1 and removes permanent Row 2 SportClubEvo rail", () => {
+  it("keeps tenant crest on Row 1 and does not mount a persistent Row 2 rail", () => {
     const shell = readRepo("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).not.toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
-    const hierarchical = readRepo("components/sce/navigation/SceHierarchicalDesktopNavigation.tsx");
-    expect(hierarchical).toMatch(/SceTenantContextRow[\s\S]*brand=\{null\}/);
+    expect(shell).not.toContain("SceTenantContextRow");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
   });
 
   it("relocates platform attribution to the global navigation drawer footer", () => {

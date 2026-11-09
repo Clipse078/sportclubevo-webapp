@@ -115,7 +115,8 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("domainSecondaryItems");
     expect(shellNav).toContain("moduleLocalChildren");
-    expect(shellNav).toContain("SceTenantContextRow");
+    expect(shellNav).not.toContain("SceTenantContextRow");
+    expect(shellNav).not.toContain("SceHierarchicalDesktopNavigation");
     expect(shellNav).toContain("SceDomainNavigationPanel");
     expect(shellNav).toContain("resolveDomainSecondaryNavItems");
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
