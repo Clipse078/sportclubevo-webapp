@@ -63,7 +63,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceModuleNavigation");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
+    expect(shell).toMatch(/SceTenantContextRow[\s\S]*SceRow2SeasonContext/);
 
     const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
     expect(row).toContain("sce-row2-context-workspace-empty");

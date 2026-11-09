@@ -75,7 +75,8 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("attentionSlot=");
     expect(clubDashboardDeferredSource).toContain("tasksSlot=");
     expect(workspaceSource).toContain("PersonalProgrammeFeed");
-    expect(workspaceSource).toContain("PersonalProgrammeMonthCalendar");
+    expect(workspaceSource).not.toContain("PersonalProgrammeMonthCalendar");
+    expect(workspaceSource).toContain("md:col-span-2");
     expect(workspaceSource).toContain("attentionSlot");
     expect(workspaceSource).toContain("tasksSlot");
   });
@@ -98,7 +99,7 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("programmeItems");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("onSelectedDayChange");
-    expect(workspaceSource).toContain("showSelectedDayPanel={false}");
+    expect(workspaceSource).toContain("personal-programme-open-calendar");
   });
 
   it("preserves attention and tasks data sources", () => {

@@ -12,15 +12,18 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R10 tenant-first navigation shell", () => {
-  it("places tenant identity on Row 1 and SportClubEvo on Row 2 (desktop)", () => {
+  it("places tenant identity on Row 1 and removes permanent Row 2 platform wordmark (DS2-05B-R2)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const primaryBlock = shell.match(/variant="primary"[\s\S]*?utilities=\{/)?.[0];
     expect(primaryBlock).toBeTruthy();
     expect(primaryBlock).toContain("tenantContextRail");
     expect(primaryBlock).not.toContain("ScePlatformBrandRail");
-    expect(shell).toMatch(
+    expect(shell).not.toMatch(
       /SceTenantContextRow[\s\S]*ScePlatformBrandRail[\s\S]*sce-global-platform-brand-rail--row2/,
     );
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("global-nav-drawer-platform-footer");
   });
 
   it("moves season from Row 1 utilities to Row 2 right context", () => {

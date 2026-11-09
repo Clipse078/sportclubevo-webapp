@@ -15,7 +15,7 @@ vi.mock("@/components/admin/branding/TenantLogo", () => ({
 }));
 
 describe("SceTenantIdentityBar brand hierarchy", () => {
-  it("stacks tenant above secondary product wordmark for mobile row-1 without horizontal separator", () => {
+  it("keeps tenant-first mobile stack without secondary platform wordmark for club workspaces", () => {
     render(
       <SceTenantIdentityBar
         displayClubName="FC Allschwil"
@@ -28,13 +28,17 @@ describe("SceTenantIdentityBar brand hierarchy", () => {
     expect(stack).toHaveAttribute("data-tenant-primary", "true");
     expect(stack).toHaveClass("sce-global-brand-tenant-stack");
     expect(screen.queryByTestId("sce-product-tenant-separator")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-platform-brand-rail")).not.toBeInTheDocument();
+    expect(screen.getAllByText("FC Allschwil").length).toBeGreaterThan(0);
+  });
 
-    const wordmark = screen.getAllByTestId("sce-product-wordmark")[0]!;
-    const tenantRow = screen.getAllByText("FC Allschwil")[0]!;
-    expect(stack.contains(wordmark)).toBe(true);
-    expect(stack.contains(tenantRow)).toBe(true);
-    expect(
-      tenantRow.compareDocumentPosition(wordmark) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+  it("still shows platform wordmark for platform workspace mobile stack", () => {
+    render(
+      <SceTenantIdentityBar
+        displayClubName="Platform"
+        platformWorkspace
+      />,
+    );
+    expect(screen.getByTestId("sce-platform-brand-rail")).toBeTruthy();
   });
 });

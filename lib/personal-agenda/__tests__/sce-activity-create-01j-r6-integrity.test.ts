@@ -27,9 +27,10 @@ describe("SCE-ACTIVITY-CREATE-01J-R6 integrity", () => {
       expect(workspace).not.toMatch(/w-\[\d{3,}px\]/);
     });
 
-    it("freezes cockpit calendar without selected-day sporting agenda duplicate", () => {
+    it("removes embedded dashboard calendar widget while keeping programme preview", () => {
       const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-      expect(workspace).toContain("showSelectedDayPanel={false}");
+      expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");
+      expect(workspace).toContain("personal-programme-open-calendar");
     });
   });
 

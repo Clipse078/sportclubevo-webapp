@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 type SceTenantContextRowProps = {
   ariaLabel: string;
-  brand: ReactNode;
+  brand?: ReactNode;
   workspace?: ReactNode;
   utilities?: ReactNode;
   className?: string;

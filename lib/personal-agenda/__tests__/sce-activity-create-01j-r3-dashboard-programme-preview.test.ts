@@ -80,7 +80,7 @@ describe("SCE-ACTIVITY-CREATE-01J R3 — Dashboard Mein Programm preview", () =>
     const feed = readRelative("components/ui/dashboard/PersonalProgrammeFeed.tsx");
     expect(feed).toContain("PersonalProgrammePreviewRow");
     expect(previewRow).toContain("PersonalProgrammeCanonicalAgendaRow");
-    expect(previewRow).toContain('density="COMPACT"');
+    expect(previewRow).toContain('density="STANDARD"');
     expect(previewRow).not.toMatch(/Dashboard(Match|Training|Tournament|ClubEvent|Activity)Card/);
     const canonical = readRelative("components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow.tsx");
     expect(canonical).toContain("SceTrainingCard");
@@ -96,16 +96,11 @@ describe("SCE-ACTIVITY-CREATE-01J R3 — Dashboard Mein Programm preview", () =>
     expect(previewRow).toContain("PersonalProgrammeAgendaRow");
   });
 
-  it("links full programme CTA to canonical Mein Programm route", () => {
+  it("links dashboard programme CTA to canonical calendar on Mein Programm (DS2-05B-R2)", () => {
     const workspace = readRelative("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    expect(workspace).toContain("MEIN_PROGRAMM_BASE_PATH");
-    expect(workspace).toContain("personal-programme-view-all");
-  });
-
-  it("removes duplicate selected-day sporting agenda under cockpit calendar", () => {
-    const workspace = readRelative("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    expect(workspace).toContain("showSelectedDayPanel={false}");
-    expect(workspace).not.toContain("showSelectedDayPanel\n");
+    expect(workspace).toContain("buildMeinProgrammKalenderOpenHref");
+    expect(workspace).toContain("personal-programme-open-calendar");
+    expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");
   });
 
   it("does not wire legacy today/agenda widgets on dashboard shell", () => {

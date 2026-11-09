@@ -15,17 +15,18 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
-  it("places tenant context on row 1 and SportClubEvo on row 2 (desktop)", () => {
+  it("places tenant context on row 1 with season on row 2 (desktop); platform wordmark in drawer", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("ScePlatformBrandRail");
-    expect(shell).toContain("sce-global-platform-brand-rail--row2");
+    expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
+    expect(shell).toMatch(/SceTenantContextRow[\s\S]*SceRow2SeasonContext/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");
-    expect(tenantBar).toContain('data-testid="sce-platform-brand-rail"');
-    expect(tenantBar).toContain('layout={compact ? "under-product-compact" : "tenant-row-rail"}');
+    expect(tenantBar).not.toContain("sce-global-platform-brand-rail--mobile-secondary");
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("PoweredByBadge");
   });
 
   it("does not duplicate tenant identity in row 2 brand rail on desktop", () => {
@@ -39,7 +40,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(primaryBrandBlock).toContain("md:hidden");
 
     const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(tenantRow).toContain("brand: ReactNode");
+    expect(tenantRow).toContain("brand?: ReactNode");
     expect(tenantRow).toContain("brand={brand}");
   });
 

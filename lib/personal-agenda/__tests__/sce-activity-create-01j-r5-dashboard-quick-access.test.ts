@@ -103,12 +103,13 @@ describe("SCE-ACTIVITY-CREATE-01J R5 — R2/R4/Navbar regression sentinels", () 
     expect(meinProgramm).toContain("parseMeinProgrammUrlState");
   });
 
-  it("preserves R4 three-row card and calendar preview contracts", () => {
+  it("preserves R4 fixture rows and DS2-05B-R2 full-width programme cockpit", () => {
     const r4 = read("lib/personal-agenda/__tests__/sce-activity-create-01j-r4-card-calendar.test.tsx");
-    expect(r4).toContain("listRowPresentation");
-    expect(r4).toContain("showSelectedDayPanel={false}");
+    expect(r4).toContain("sce-match-fixture");
+    expect(r4).toContain("personal-programme-open-calendar");
     const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
     expect(workspace).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
+    expect(workspace).toContain("md:col-span-2");
   });
 
   it("preserves navbar shell markers on dashboard page", () => {

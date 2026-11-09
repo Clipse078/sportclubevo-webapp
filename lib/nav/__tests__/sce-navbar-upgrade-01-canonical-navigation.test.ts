@@ -100,11 +100,13 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(inlineIds).toContain("club");
   });
 
-  it("separates tenant row-1 identity from platform row-2 context on desktop", () => {
+  it("separates tenant row-1 identity from drawer-level platform attribution (DS2-05B-R2)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("ScePlatformBrandRail");
+    expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toContain("sce-global-platform-brand-rail--row2");
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("global-nav-drawer-platform-footer");
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("tenant-row-rail");

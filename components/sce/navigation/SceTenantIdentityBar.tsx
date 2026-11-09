@@ -141,10 +141,6 @@ export function SceTenantIdentityBar({
             className="min-[480px]:hidden flex"
             homeHref={homeHref}
           />
-          <ScePlatformBrandRail
-            className="sce-global-platform-brand-rail--mobile-secondary"
-            homeHref={homeHref}
-          />
         </>
       )}
     </div>

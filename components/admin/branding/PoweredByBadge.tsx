@@ -1,15 +1,18 @@
 /**
- * PoweredByBadge — DASHBOARD-SHELL-UX-01
- *
- * Subtle "Powered by SportClubEvo" platform attribution for the sidebar
- * footer. Deliberately small and muted — the tenant (see
- * SidebarBrandHeader) is the dominant identity, SportClubEvo is secondary.
+ * PoweredByBadge — discreet SportClubEvo platform attribution (drawer / legacy sidebar).
+ * Uses theme-aware wordmarks (SCE-DS2-05B-R1).
  */
 
 import Image from "next/image";
 import { cn } from "@/lib/cn";
+import {
+  SPORTCLUBEVO_WORDMARK_ON_DARK_SURFACE_ASPECT,
+  SPORTCLUBEVO_WORDMARK_ON_DARK_SURFACE_SRC,
+  SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_ASPECT,
+  SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC,
+} from "@/lib/branding/sportclubevo-platform-wordmark";
 
-const PLATFORM_LOGO_SRC = "/images/branding/sportclubevo_logo.png";
+const WORDMARK_HEIGHT_PX = 14;
 
 type PoweredByBadgeProps = {
   collapsed?: boolean;
@@ -20,22 +23,36 @@ export default function PoweredByBadge({
   collapsed = false,
   className,
 }: PoweredByBadgeProps) {
+  const onLightWidth = Math.round(WORDMARK_HEIGHT_PX * SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_ASPECT);
+  const onDarkWidth = Math.round(WORDMARK_HEIGHT_PX * SPORTCLUBEVO_WORDMARK_ON_DARK_SURFACE_ASPECT);
+
   return (
     <div
       className={cn(
-        "flex items-center justify-center gap-1.5 px-2 py-1 text-[0.65rem] font-medium text-[var(--muted)]",
+        "sce-platform-attribution flex items-center justify-center gap-1.5 px-2 py-1 text-[0.625rem] font-medium text-[var(--text-2)]",
         className,
       )}
       title="Powered by SportClubEvo"
+      data-testid="sce-powered-by-badge"
     >
-      {!collapsed && <span>Powered by</span>}
-      <Image
-        src={PLATFORM_LOGO_SRC}
-        alt="SportClubEvo"
-        width={72}
-        height={18}
-        className="h-[13px] w-auto object-contain opacity-85"
-      />
+      {!collapsed && <span className="whitespace-nowrap">Powered by</span>}
+      <span className="relative inline-flex h-[14px] items-center">
+        <Image
+          src={SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}
+          alt=""
+          aria-hidden
+          width={onLightWidth}
+          height={WORDMARK_HEIGHT_PX}
+          className="sce-platform-wordmark sce-platform-wordmark--on-light-surface h-[14px] w-auto max-w-[5.5rem] object-contain opacity-90"
+        />
+        <Image
+          src={SPORTCLUBEVO_WORDMARK_ON_DARK_SURFACE_SRC}
+          alt="SportClubEvo"
+          width={onDarkWidth}
+          height={WORDMARK_HEIGHT_PX}
+          className="sce-platform-wordmark sce-platform-wordmark--on-dark-surface h-[14px] w-auto max-w-[5.5rem] object-contain opacity-90"
+        />
+      </span>
     </div>
   );
 }

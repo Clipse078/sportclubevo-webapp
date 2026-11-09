@@ -46,7 +46,6 @@ import {
   SceGlobalUtilities,
   SceNavigationSpineRow,
   ScePrimaryNavigation,
-  ScePlatformBrandRail,
   SceTenantContextRail,
   SceTenantIdentityBar,
   SceTenantContextRow,
@@ -379,12 +378,7 @@ function AppShellNavigationInner({
 
         <SceTenantContextRow
           ariaLabel={t("moduleNavAria")}
-          brand={
-            <ScePlatformBrandRail
-              className="hidden md:flex sce-global-platform-brand-rail--row2"
-              homeHref={homeHref}
-            />
-          }
+          brand={null}
           utilities={
             <SceRow2SeasonContext
               platformWorkspace={isPlatformWorkspace}

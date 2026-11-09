@@ -17,6 +17,7 @@ import {
   resolveExplorerModulesForDomain,
   type ExplorerModuleEntry,
 } from "@/lib/nav/app-navigation-explorer";
+import PoweredByBadge from "@/components/admin/branding/PoweredByBadge";
 import { cn } from "@/lib/cn";
 
 type GlobalNavDrawerProps = {
@@ -522,6 +523,12 @@ export default function GlobalNavDrawer({
           mobileBackLabel={mobileBackLabel}
           initialDomainId={initialDomainId}
         />
+        <footer
+          className="sce-global-nav-drawer-platform-footer shrink-0 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-4 py-2.5"
+          data-testid="global-nav-drawer-platform-footer"
+        >
+          <PoweredByBadge />
+        </footer>
       </div>
     </div>
   );

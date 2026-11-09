@@ -40,7 +40,7 @@ export function PersonalProgrammePreviewRow({
     <PersonalProgrammeCanonicalAgendaRow
       item={item}
       highlighted={highlighted}
-      density="COMPACT"
+      density="STANDARD"
       className={className}
     />
   );

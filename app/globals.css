@@ -268,15 +268,29 @@
   --sce-color-status-info: var(--sce-info);
   --sce-color-status-neutral: var(--sce-text-2);
 
+  /* Activity type pills — premium pastel palette (DS2-05B-R2) */
+  --sce-activity-pill-training-bg: #e8f2ff;
+  --sce-activity-pill-training-text: #18549d;
+  --sce-activity-pill-training-border: #c8dfff;
+  --sce-activity-pill-match-bg: #fff0ee;
+  --sce-activity-pill-match-text: #a72d27;
+  --sce-activity-pill-match-border: #f7c9c3;
+  --sce-activity-pill-tournament-bg: #fff4df;
+  --sce-activity-pill-tournament-text: #91520d;
+  --sce-activity-pill-tournament-border: #f5d8a4;
+  --sce-activity-pill-club-event-bg: #f2eaff;
+  --sce-activity-pill-club-event-text: #6835a6;
+  --sce-activity-pill-club-event-border: #deccfa;
+
   /* Activity semantics — pills / restrained accents (SPIEL · TRAINING · TURNIER · VERANSTALTUNG) */
-  --sce-activity-match: var(--sce-secondary);
-  --sce-activity-match-subtle: var(--sce-secondary-light);
-  --sce-activity-training: var(--sce-info);
-  --sce-activity-training-subtle: var(--sce-info-light);
-  --sce-activity-tournament: var(--sce-primary);
-  --sce-activity-tournament-subtle: var(--sce-primary-light);
-  --sce-activity-club-event: var(--sce-club-event);
-  --sce-activity-club-event-subtle: var(--sce-club-event-light);
+  --sce-activity-match: var(--sce-activity-pill-match-text);
+  --sce-activity-match-subtle: var(--sce-activity-pill-match-bg);
+  --sce-activity-training: var(--sce-activity-pill-training-text);
+  --sce-activity-training-subtle: var(--sce-activity-pill-training-bg);
+  --sce-activity-tournament: var(--sce-activity-pill-tournament-text);
+  --sce-activity-tournament-subtle: var(--sce-activity-pill-tournament-bg);
+  --sce-activity-club-event: var(--sce-activity-pill-club-event-text);
+  --sce-activity-club-event-subtle: var(--sce-activity-pill-club-event-bg);
 
   /* Semantic radii — controls stay tighter than panels/dialogs */
   --sce-radius-control: var(--radius-lg);
