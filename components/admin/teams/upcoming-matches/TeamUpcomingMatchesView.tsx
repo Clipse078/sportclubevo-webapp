@@ -1,5 +1,9 @@
 import type { TeamCockpitMatch } from "@/lib/teams/team-cockpit-sporting-data";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  SCE_ACTIVITY_CARD_LIST_ITEM_CLASS,
+  sceActivityCardListOlProps,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 import TeamUpcomingMatchRow from "./TeamUpcomingMatchRow";
 
 type Props = {
@@ -36,12 +40,9 @@ export default function TeamUpcomingMatchesView({
           </p>
         </div>
       ) : (
-        <ol
-          className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-          data-testid="team-upcoming-matches-list"
-        >
+        <ol {...sceActivityCardListOlProps()} data-testid="team-upcoming-matches-list">
           {matches.map((match) => (
-            <li key={match.eventId} className="min-w-0">
+            <li key={match.eventId} className={SCE_ACTIVITY_CARD_LIST_ITEM_CLASS}>
               <TeamUpcomingMatchRow match={match} formatConfig={formatConfig} />
             </li>
           ))}

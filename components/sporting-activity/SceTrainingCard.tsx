@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Calendar, Clock, MapPin } from "lucide-react";
+import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import { cn } from "@/lib/cn";
 import { formatFixtureDateLine, formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
 import {
@@ -29,6 +30,7 @@ import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
@@ -378,55 +380,124 @@ function SceTrainingListRowOperationalContent({
         status.domain === "cancelled"),
   );
 
+  const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+
   return (
     <div
-      className={cn("min-w-0 w-full max-w-full space-y-1", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
       data-sce-training-density={density}
       data-sce-training-list-row-identity
       data-sce-training-list-row-presentation="operational"
-      data-sce-programme-card-contract="three-row"
+      data-sce-programme-card-contract="reference-row"
+      data-sce-training-reference-row="operational"
+      data-sce-activity-card-layout="horizontal-full-width"
     >
-      <SceTrainingTypeHeader
-        model={model}
-        density={density}
-        showStatus={showExceptionalStatus}
-        listRow
+      <span className="sr-only">{model.typeLabel}</span>
+      {showExceptionalStatus && status?.label ? (
+        <div className="sm:col-span-full" data-sce-training-region="status">
+          <SceTrainingCardStatus status={status} />
+        </div>
+      ) : null}
+      <p className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceDateClass} data-testid="sce-training-list-row-date">
+        {dateLabel}
+      </p>
+      {timeLabel ? (
+        <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-training-list-row-time">
+          <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+          <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTimeClass}>{timeLabel}</span>
+        </div>
+      ) : (
+        <span className="hidden sm:block" aria-hidden />
+      )}
+      <MotionPreservingTeamSlot
+        teamName={teamName}
+        showTeamLine={showTeamLine}
+        crestIdentity={crestIdentity}
       />
-      <SceActivityListRowPrimaryIdentityRow
+      <p
+        className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
+        data-testid="sce-training-title"
         title={title}
-        titleTestId="sce-training-title"
-        testId="sce-training-list-row-primary-identity"
-        crest={
-          crestIdentity ? (
-            <ClubCrest identity={crestIdentity} density="compact" decorative className="shrink-0" />
-          ) : null
-        }
-      />
-      {showTeamLine ? (
-        <SceActivityListRowOrganizationalContext
-          label={teamName!}
-          testId="sce-training-team"
+      >
+        {title}
+      </p>
+      {locationLine ? (
+        <p
+          className={cn(
+            "flex min-w-0 items-center gap-1.5",
+            SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceMetaClass,
+          )}
+          data-testid="sce-training-list-row-location"
+        >
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+          <span className="min-w-0 break-words">{locationLine}</span>
+        </p>
+      ) : (
+        <span className="hidden sm:block" aria-hidden />
+      )}
+      {dressingRoomLabel ? (
+        <p
+          className={cn(
+            "flex min-w-0 items-center gap-1.5",
+            SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceMetaClass,
+          )}
+          data-testid="sce-training-list-row-dressing-room"
+        >
+          <PlanningResourceAssignmentKindIcon
+            kind="dressing_room"
+            compact
+            semanticColors={false}
+            className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]"
+          />
+          <span className="min-w-0 break-words">{dressingRoomLabel}</span>
+        </p>
+      ) : (
+        <span className="hidden sm:block" aria-hidden />
+      )}
+    </div>
+  );
+}
+
+function MotionPreservingTeamSlot({
+  teamName,
+  showTeamLine,
+  crestIdentity,
+}: {
+  teamName?: string;
+  showTeamLine: boolean;
+  crestIdentity: SceTrainingPresentationModel["tenantClub"];
+}) {
+  const label = showTeamLine && teamName ? teamName : teamName ?? "";
+  if (!label && !crestIdentity) {
+    return <span className="hidden sm:block" aria-hidden />;
+  }
+
+  return (
+    <div
+      className="flex min-w-0 items-center gap-2"
+      data-testid="sce-training-list-row-primary-identity"
+    >
+      {crestIdentity ? (
+        <ClubCrest
+          identity={crestIdentity}
+          density="compact"
+          decorative
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
         />
       ) : null}
-      {timeLabel || locationLine || dressingRoomLabel ? (
-        <SceActivityListRowOperationalMetaRow testId="sce-training-list-row-operational-meta">
-          {timeLabel ? (
-            <SceActivityListRowTimeMeta label={timeLabel} testId="sce-training-list-row-time" />
-          ) : null}
-          {locationLine ? (
-            <SceActivityListRowLocationMeta
-              label={locationLine}
-              testId="sce-training-list-row-location"
-            />
-          ) : null}
-          {dressingRoomLabel ? (
-            <SceActivityListRowDressingRoomMeta
-              label={dressingRoomLabel}
-              testId="sce-training-list-row-dressing-room"
-            />
-          ) : null}
-        </SceActivityListRowOperationalMetaRow>
-      ) : null}
+      {showTeamLine && teamName ? (
+        <SceTeamName
+          as="span"
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
+          data-testid="sce-training-team"
+          density="MICRO"
+          lineClamp={1}
+        >
+          {teamName}
+        </SceTeamName>
+      ) : (
+        <span className="min-w-0 truncate text-[0.8125rem] text-[var(--text-2)]">{label}</span>
+      )}
     </div>
   );
 }

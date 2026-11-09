@@ -41,6 +41,8 @@ import { normalizeSpieleSearchQuery } from "@/lib/matchcenter/management-view";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
 import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
+import { canManageOperationalResourceAssignments } from "@/lib/planning/planning-operational-allocation-authorization";
+import { loadSpieleInlinePreparationFacilityGroups } from "@/lib/matchcenter/load-spiele-inline-preparation-facilities.server";
 
 type MatchcenterPageProps = {
   searchParams?: Promise<{
@@ -88,6 +90,7 @@ export default async function MatchcenterPage({
   const actionFilter = normalizeMatchcenterActionFilter(params.filter);
   const wochenplanFilter = normalizeMatchcenterWochenplanFilter(params.wochenplan);
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageOperationalAllocations = canManageOperationalResourceAssignments(session);
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const resolvedMonth = resolveMatchcenterMonthWindow({
     monthParam: params.month,
@@ -115,7 +118,11 @@ export default async function MatchcenterPage({
   // the full season — only the selected month's window is fetched, for
   // both Spielplanung and Resultate (they share one month filter).
   const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
-  const [matches, tenantTeams, tenantClubCrestUrl] = await Promise.all([
+  const inlinePreparationFacilitiesPromise = canManageOperationalAllocations
+    ? loadSpieleInlinePreparationFacilityGroups(tenantId)
+  : null;
+
+  const [matches, tenantTeams, tenantClubCrestUrl, inlinePreparationFacilities] = await Promise.all([
     listMatchcenterMatches(matchcenterDatabase, {
       tenantId,
       from: resolvedMonth.from,
@@ -124,6 +131,7 @@ export default async function MatchcenterPage({
     }),
     getTeamsListDataCached(tenantId),
     getTenantClubCrestUrlCached(tenantId),
+    inlinePreparationFacilitiesPromise ?? Promise.resolve(null),
   ]);
   perfTimer?.mark("match-loader-teams");
   const activeTeams = tenantTeams.filter((team) => team.isActive);
@@ -185,6 +193,9 @@ export default async function MatchcenterPage({
           timezone={timezone}
           locale={locale}
           canManage={canManage}
+          canManageOperationalAllocations={canManageOperationalAllocations}
+          pitchHallFacilityGroups={inlinePreparationFacilities?.pitchHallFacilityGroups ?? []}
+          dressingRoomFacilityGroups={inlinePreparationFacilities?.dressingRoomFacilityGroups ?? []}
           currentMonthParam={currentMonthParam}
           tenantLogoUrl={tenantClubCrestUrl}
           tenantClubName={tenantContext.name}

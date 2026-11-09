@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type {
   MatchcenterActionFilter,
@@ -29,6 +30,7 @@ import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
 import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
 import SpieleManagementFilterRail from "./SpieleManagementFilterRail";
 import { cn } from "@/lib/cn";
+import { sceActivityCardListContainerProps } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 import {
   SPIELE_WORKSPACE_MAIN_RAIL_GRID,
   SPIELE_WORKSPACE_RAIL_ASIDE,
@@ -54,6 +56,9 @@ type Props = {
   timezone?: string;
   locale?: string;
   canManage?: boolean;
+  canManageOperationalAllocations?: boolean;
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
   currentMonthParam?: string;
   tenantLogoUrl?: string | null;
   tenantClubName?: string | null;
@@ -127,6 +132,9 @@ export default function SpieleManagementWorkspace({
   timezone = "Europe/Zurich",
   locale = "de-CH",
   canManage = false,
+  canManageOperationalAllocations = false,
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
   currentMonthParam,
   tenantLogoUrl = null,
   tenantClubName = null,
@@ -489,6 +497,9 @@ export default function SpieleManagementWorkspace({
                 tenantLogoUrl={tenantLogoUrl}
                 tenantClubName={tenantClubName}
                 canManage={canManage}
+                canManageOperationalAllocations={canManageOperationalAllocations}
+                pitchHallFacilityGroups={pitchHallFacilityGroups}
+                dressingRoomFacilityGroups={dressingRoomFacilityGroups}
                 compact={listView === "KOMPAKT"}
               />
             )
@@ -508,7 +519,10 @@ export default function SpieleManagementWorkspace({
                   <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                     {group.label}
                   </h2>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <div
+                    {...sceActivityCardListContainerProps()}
+                    data-testid={`matchcenter-resultate-day-${group.dayKey}`}
+                  >
                     {group.rows.map((match) => (
                       <SpieleManagementResultRow
                         key={match.id}

@@ -5,8 +5,10 @@ import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
-import { cn } from "@/lib/cn";
+
+const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 
 type Props = {
   match: MatchcenterMatchSummary;
@@ -42,9 +44,11 @@ export default function SpieleManagementResultRow({
   });
 
   return (
-    <article
-      className="relative flex min-w-0 flex-col gap-2"
+    <SceProgrammeActivityCardShell
+      density="STANDARD"
+      className="relative min-w-0 w-full"
       data-testid={`matchcenter-result-row-${match.id}`}
+      data-sce-activity-card-layout="horizontal-full-width"
     >
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -53,6 +57,10 @@ export default function SpieleManagementResultRow({
             density="STANDARD"
             fmtCfg={fmtCfg}
             linkToDetail
+            surface="list-row"
+            listRowPresentation="programme-fixture"
+            scopeTeamId={match.teamId}
+            className={LIST_ROW_CARD_CLASS}
             testId={`matchcenter-result-sce-match-${match.id}`}
           />
         </div>
@@ -66,6 +74,6 @@ export default function SpieleManagementResultRow({
           />
         </div>
       </div>
-    </article>
+    </SceProgrammeActivityCardShell>
   );
 }

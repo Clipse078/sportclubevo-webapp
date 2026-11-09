@@ -32,6 +32,7 @@ import {
   SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS,
   SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
@@ -460,60 +461,102 @@ function SceTournamentListRowIdentityContent({
 
   const operational = listRowPresentation === "operational";
 
-  return (
-    <div
-      className={cn(
-        "min-w-0 w-full max-w-full",
-        operational ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
-      )}
-      data-sce-tournament-density={density}
-      data-sce-tournament-list-row-identity
-      data-sce-programme-card-contract={operational ? "three-row" : undefined}
-    >
-      <SceTournamentTypeHeader model={model} showStatus={false} listRow />
-      {operational ? (
-        <>
-          <SceActivityListRowPrimaryIdentityRow
-            title={model.tournamentTitle}
-            titleTestId="sce-tournament-title"
-            testId="sce-tournament-list-row-primary-identity"
-            crest={
-              showOrganiserCrest ? (
-                <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
-                  <ClubCrest
-                    identity={model.organiser}
-                    density="compact"
-                    decorative
-                    emphasized
-                    className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
-                  />
-                </span>
-              ) : null
-            }
-          />
-          {organiser ? (
-            hideOrganiserText || showOrganiserCrest ? (
-              <span className="sr-only">{organiser}</span>
-            ) : (
-              <p
-                className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
-                data-testid="sce-tournament-organiser"
-                data-sce-tournament-region="organiser"
-                title={organiser}
-              >
-                {organiser}
-              </p>
-            )
-          ) : null}
-          {ownTeamsLabel ? (
-            <SceActivityListRowOrganizationalContext
-              label={ownTeamsLabel}
-              testId="sce-tournament-hauptteam"
+  if (operational && fmtCfg) {
+    const timeLabel = formatSessionTimeOnly(model, fmtCfg);
+    const locationLine = resolveTournamentLocationLine(model, density);
+    const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+    const status = model.status;
+    const showExceptionalStatus =
+      showStatus &&
+      status?.label &&
+      (status.semantic === "cancelled" || status.semantic === "warning");
+
+    return (
+      <div
+        className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
+        data-sce-tournament-density={density}
+        data-sce-tournament-list-row-identity
+        data-sce-tournament-list-row-presentation="operational"
+        data-sce-programme-card-contract="reference-row"
+        data-sce-activity-card-layout="horizontal-full-width"
+      >
+        <span className="sr-only">{model.typeLabel}</span>
+        {showExceptionalStatus ? (
+          <div className="sm:col-span-full" data-sce-tournament-region="status">
+            <SceTournamentCardStatus status={status} />
+          </div>
+        ) : null}
+        <p
+          className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
+          data-testid="sce-tournament-list-row-date"
+        >
+          {dateLabel}
+        </p>
+        {timeLabel ? (
+          <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-tournament-list-row-time">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+            <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTimeClass}>{timeLabel}</span>
+          </div>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+        <div
+          className="flex min-w-0 items-center gap-2"
+          data-testid="sce-tournament-list-row-primary-identity"
+        >
+          {showOrganiserCrest ? (
+            <ClubCrest
+              identity={model.organiser}
+              density="compact"
+              decorative
+              emphasized
+              className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
             />
           ) : null}
-        </>
-      ) : (
-        <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
+            data-testid="sce-tournament-title"
+            title={model.tournamentTitle}
+          >
+            {model.tournamentTitle}
+          </p>
+        </div>
+        {ownTeamsLabel || organiser ? (
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass}
+            data-testid="sce-tournament-hauptteam"
+          >
+            {ownTeamsLabel ?? organiser}
+          </p>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+        {locationLine ? (
+          <p
+            className={cn(
+              "flex min-w-0 items-center gap-1.5",
+              SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass,
+            )}
+            data-testid="sce-tournament-list-row-location"
+          >
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
+            <span className="min-w-0 break-words">{locationLine}</span>
+          </p>
+        ) : (
+          <span className="hidden sm:block" aria-hidden />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-tournament-density={density}
+      data-sce-tournament-list-row-identity
+    >
+      <SceTournamentTypeHeader model={model} showStatus={false} listRow />
+      <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
           <p
             className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
             data-testid="sce-tournament-title"
@@ -565,44 +608,7 @@ function SceTournamentListRowIdentityContent({
               {ownTeamsLabel}
             </p>
           ) : null}
-        </div>
-      )}
-      {operational && fmtCfg ? (
-        (() => {
-          const timeLabel = formatSessionTimeOnly(model, fmtCfg);
-          const locationLine = resolveTournamentLocationLine(model, density);
-          const status = model.status;
-          const showExceptionalStatus =
-            showStatus &&
-            status?.label &&
-            (status.semantic === "cancelled" || status.semantic === "warning");
-          return (
-            <>
-              {showExceptionalStatus ? (
-                <div className="pt-0.5" data-sce-tournament-region="status">
-                  <SceTournamentCardStatus status={status} />
-                </div>
-              ) : null}
-              {timeLabel || locationLine ? (
-                <SceActivityListRowOperationalMetaRow testId="sce-tournament-list-row-operational-meta">
-                  {timeLabel ? (
-                    <SceActivityListRowTimeMeta
-                      label={timeLabel}
-                      testId="sce-tournament-list-row-time"
-                    />
-                  ) : null}
-                  {locationLine ? (
-                    <SceActivityListRowLocationMeta
-                      label={locationLine}
-                      testId="sce-tournament-list-row-location"
-                    />
-                  ) : null}
-                </SceActivityListRowOperationalMetaRow>
-              ) : null}
-            </>
-          );
-        })()
-      ) : null}
+      </div>
     </div>
   );
 }

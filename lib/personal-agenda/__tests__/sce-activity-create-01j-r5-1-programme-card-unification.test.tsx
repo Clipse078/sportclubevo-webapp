@@ -56,8 +56,8 @@ describe("SCE-ACTIVITY-CREATE-01J R5.1 — programme card visual family", () => 
   });
 });
 
-describe("SCE-ACTIVITY-CREATE-01J R5.1 — match inside-crest programme fixture", () => {
-  it("Row 1 order: HOME NAME → HOME CREST → VS → AWAY CREST → AWAY NAME", () => {
+describe("SCE-ACTIVITY-CREATE-01J R5.1 — match reference-split programme fixture", () => {
+  it("Row 1 order: HOME NAME → HOME CREST → kickoff box → AWAY CREST → AWAY NAME", () => {
     const model = resolveSceMatchCardFixture({
       home: {
         ...resolveSceMatchCardFixture().fixture.home,
@@ -82,11 +82,11 @@ describe("SCE-ACTIVITY-CREATE-01J R5.1 — match inside-crest programme fixture"
     );
 
     const fixture = screen.getByTestId("sce-match-fixture");
-    expect(fixture).toHaveAttribute("data-sce-match-programme-fixture", "inside-crests");
+    expect(fixture).toHaveAttribute("data-sce-match-programme-fixture", "reference-split");
 
     const home = fixture.querySelector('[data-sce-match-side="home"]')!;
     const away = fixture.querySelector('[data-sce-match-side="away"]')!;
-    const vs = screen.getByTestId("sce-match-vs");
+    const center = screen.getByTestId("sce-match-kickoff-box");
 
     const homeOrder = fixtureIdentityOrder(home);
     expect(
@@ -98,14 +98,14 @@ describe("SCE-ACTIVITY-CREATE-01J R5.1 — match inside-crest programme fixture"
       awayOrder.crest.compareDocumentPosition(awayOrder.name) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
-    expect(home.compareDocumentPosition(vs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(vs.compareDocumentPosition(away) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(home.compareDocumentPosition(center) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(center.compareDocumentPosition(away) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     expect(home.textContent).toContain("FC Black Stars");
     expect(away.textContent).toContain("FC Allschwil");
   });
 
-  it("merges own team and competition into programme Row 2 without repeating club names", () => {
+  it("merges own team and competition into programme meta context without duplicate competition row", () => {
     const model = resolveSceMatchCardFixture({ competitionLabel: "Meister" });
     render(
       <SceMatchCard

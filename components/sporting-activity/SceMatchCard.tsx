@@ -20,7 +20,8 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
-import { SceMatchCardResult } from "./SceMatchCardResult";
+import { SceMatchScorePresentation } from "./SceMatchScorePresentation";
+import { SceMatchFixtureReferenceLayout } from "./SceMatchFixtureReferenceLayout";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
 import {
   SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
@@ -110,10 +111,11 @@ function SceMatchFixtureSeparator({
 
   if (model.result) {
     return (
-      <SceMatchCardResult
+      <SceMatchScorePresentation
         model={model}
         density={density}
         className={centerScale.resultTextClass}
+        presentation="legacy-inline"
       />
     );
   }
@@ -482,115 +484,83 @@ function SceMatchListRowIdentityContent({
         : tenantSide?.label;
   const programmeFixture = listRowPresentation === "programme-fixture";
   const lifecycle = model.matchLifecycle ?? model.status;
-  const showCancelledStatus = lifecycle?.semantic === "cancelled";
-  const startAt = new Date(model.schedule.startAt);
-  const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
-  const operationalTimeLabel =
-    programmeFixture && !model.schedule.allDay ? kickoffLabel : undefined;
-  const locationLine =
-    programmeFixture && model.location
-      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
-      : undefined;
+  const showCancelledStatus =
+    lifecycle?.semantic === "cancelled" ||
+    lifecycle?.semantic === "warning" ||
+    lifecycle?.domain === "postponed" ||
+    lifecycle?.domain === "cancelled";
   const teamContextLabel = programmeFixture
     ? buildProgrammeMatchOrganizationalContextLabel(model)
     : undefined;
 
+  if (programmeFixture) {
+    return (
+      <div
+        className="min-w-0 w-full max-w-full space-y-1"
+        data-sce-match-density={density}
+        data-sce-match-list-row-identity
+        data-sce-match-list-row-presentation={listRowPresentation}
+      >
+        <span className="sr-only">{model.typeLabel}</span>
+        {tenantSideAccessibleLabel ? (
+          <span className="sr-only">{tenantSideAccessibleLabel}</span>
+        ) : null}
+        <SceMatchFixtureReferenceLayout
+          model={model}
+          density={density}
+          fmtCfg={fmtCfg}
+          fixtureLabel={buildFixtureAccessibleLabel(model)}
+          showStatus={showCancelledStatus}
+          teamContextLabel={teamContextLabel}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={cn(
-        "min-w-0 w-full max-w-full",
-        programmeFixture ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
-      )}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-match-density={density}
       data-sce-match-list-row-identity
       data-sce-match-list-row-presentation={listRowPresentation}
-      data-sce-programme-card-contract={programmeFixture ? "three-row" : undefined}
     >
-      <SceMatchTypeHeader
-        model={model}
-        showStatus={showCancelledStatus}
-        listRow
-      />
+      <SceMatchTypeHeader model={model} showStatus={showCancelledStatus} listRow />
       {tenantSideAccessibleLabel ? (
         <span className="sr-only">{tenantSideAccessibleLabel}</span>
       ) : null}
       <div
-        className={
-          programmeFixture
-            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureBandClass
-            : SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass
-        }
+        className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass}
         data-testid="sce-match-fixture"
         data-sce-match-region="fixture"
-        data-sce-match-programme-fixture={programmeFixture ? "inside-crests" : undefined}
         aria-label={buildFixtureAccessibleLabel(model)}
       >
         <SceMatchInlineIdentitySide
           side="home"
           identity={model.fixture.home}
           showCrests={showCrests}
-          listRow={!programmeFixture}
-          programmeFixture={programmeFixture}
+          listRow
         />
         <div
           className="flex min-w-[2.75rem] flex-col items-center justify-center px-0.5 text-center"
           data-sce-match-center
           data-sce-match-region="center"
         >
-          {programmeFixture ? (
-            model.result ? (
-              <SceMatchFixtureSeparator model={model} density={density} />
-            ) : (
-              <span
-                className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureVsClass}
-                aria-hidden
-                data-testid="sce-match-vs"
-                data-sce-match-region="separator"
-              >
-                VS
-              </span>
-            )
-          ) : (
-            <span
-              className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
-              aria-hidden
-              data-testid="sce-match-vs"
-              data-sce-match-region="separator"
-            >
-              VS
-            </span>
-          )}
+          <span
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
+            aria-hidden
+            data-testid="sce-match-vs"
+            data-sce-match-region="separator"
+          >
+            VS
+          </span>
         </div>
         <SceMatchInlineIdentitySide
           side="away"
           identity={model.fixture.away}
           showCrests={showCrests}
-          listRow={!programmeFixture}
-          programmeFixture={programmeFixture}
+          listRow
         />
       </div>
-      {programmeFixture && teamContextLabel ? (
-        <SceActivityListRowOrganizationalContext
-          label={teamContextLabel}
-          testId="sce-match-list-row-team-context"
-        />
-      ) : null}
-      {programmeFixture && (operationalTimeLabel || locationLine) ? (
-        <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
-          {operationalTimeLabel ? (
-            <SceActivityListRowTimeMeta
-              label={operationalTimeLabel}
-              testId="sce-match-list-row-time"
-            />
-          ) : null}
-          {locationLine ? (
-            <SceActivityListRowLocationMeta
-              label={locationLine}
-              testId="sce-match-list-row-location"
-            />
-          ) : null}
-        </SceActivityListRowOperationalMetaRow>
-      ) : null}
     </div>
   );
 }
@@ -612,35 +582,36 @@ function SceMatchRichCardContent({
   showSchedule: boolean;
   showStatus: boolean;
 }) {
-  const locationLine =
-    showLocation && model.location
-      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
-      : undefined;
-  const scale = richScale(density);
+  const startAt = new Date(model.schedule.startAt);
+  const kickoffLabel = model.schedule.allDay ? undefined : formatFixtureTime(startAt, fmtCfg);
+  const teamContextLabel = buildProgrammeMatchOrganizationalContextLabel(model);
+  const status = model.matchLifecycle ?? model.status;
+  const contextBadges = model.contextBadges ?? [];
 
   return (
-    <div className={cn("min-w-0", scale.contentSpaceYClass)}>
-      <SceMatchTypeHeader model={model} showStatus={showStatus} />
-
-      {showCompetition && model.competition?.label ? (
-        <p
-          className={cn("min-w-0", scale.competitionTextClass)}
-          data-testid="sce-match-competition"
-          data-sce-match-region="competition"
-        >
-          {model.competition.label}
-        </p>
-      ) : null}
-
-      <SceMatchStackedFixturePanel model={model} density={density} />
-
-      {showSchedule ? (
-        <SceMatchScheduleIconRow model={model} fmtCfg={fmtCfg} density={density} />
-      ) : null}
-
-      {locationLine ? (
-        <SceMatchLocationRow locationLine={locationLine} density={density} />
-      ) : null}
+    <div className="min-w-0">
+      <SceMatchFixtureReferenceLayout
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        fixtureLabel={buildFixtureAccessibleLabel(model)}
+        showTypePill
+        forceCompetitionLine={showCompetition}
+        showStatus={showStatus && Boolean(status?.label)}
+        teamContextLabel={
+          showCompetition || teamContextLabel ? teamContextLabel : undefined
+        }
+        trailingMeta={
+          contextBadges.length > 0 ? <SceMatchContextBadges badges={contextBadges} /> : undefined
+        }
+        center={
+          <SceMatchScorePresentation
+            model={model}
+            density={density}
+            kickoffLabel={kickoffLabel}
+          />
+        }
+      />
     </div>
   );
 }
@@ -842,7 +813,7 @@ export function SceMatchCard({
       <Link
         href={href}
         className={cn(
-          "absolute inset-0 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]",
+          "absolute inset-0 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]",
         )}
         aria-label={`${buildFixtureAccessibleLabel(model)} — Details öffnen`}
         data-testid="sce-match-card-link"

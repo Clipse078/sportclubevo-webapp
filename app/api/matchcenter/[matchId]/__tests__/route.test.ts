@@ -25,10 +25,15 @@ import {
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   canEditPlanningRecord: vi.fn(),
+  canManageOperationalAllocations: vi.fn(),
   eventFindFirst: vi.fn(),
   teamFindFirst: vi.fn(),
+  tenantFindUnique: vi.fn(),
   eventUpdate: vi.fn(),
   revalidatePath: vi.fn(),
+  loadMatchActivitySnapshot: vi.fn(),
+  resolveTenantKeyForCollaboration: vi.fn(),
+  buildMatchMutationCollaborationImpact: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
@@ -39,6 +44,7 @@ vi.mock("@/auth", () => ({
 vi.mock("@/lib/planning/planning-authorization-policy", () => ({
   createPlanningAuthorizationPolicy: () => ({
     canEditPlanningRecord: mocks.canEditPlanningRecord,
+    canManageOperationalAllocations: mocks.canManageOperationalAllocations,
   }),
 }));
 
@@ -51,11 +57,26 @@ vi.mock("@/lib/db/prisma", () => ({
     team: {
       findFirst: mocks.teamFindFirst,
     },
+    tenant: {
+      findUnique: mocks.tenantFindUnique,
+    },
   },
 }));
 
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
+}));
+
+vi.mock("@/lib/collaboration/match/match-activity-snapshot", () => ({
+  loadMatchActivitySnapshot: mocks.loadMatchActivitySnapshot,
+}));
+
+vi.mock("@/lib/collaboration/resolve-tenant-key", () => ({
+  resolveTenantKeyForCollaboration: mocks.resolveTenantKeyForCollaboration,
+}));
+
+vi.mock("@/lib/collaboration/match/match-mutation-collaboration", () => ({
+  buildMatchMutationCollaborationImpact: mocks.buildMatchMutationCollaborationImpact,
 }));
 
 import { PATCH } from "../route";
@@ -114,9 +135,14 @@ describe("PATCH /api/matchcenter/[matchId]", () => {
     // ORG-ACCESS-03: auth() replaces requireApiAnyPermission for this route.
     mocks.auth.mockResolvedValue(VALID_AUTH_SESSION);
     mocks.canEditPlanningRecord.mockResolvedValue(true);
+    mocks.canManageOperationalAllocations.mockResolvedValue(true);
     mocks.eventFindFirst.mockResolvedValue(VALID_EVENT);
     mocks.teamFindFirst.mockResolvedValue(VALID_TEAM);
+    mocks.tenantFindUnique.mockResolvedValue({ timezone: "Europe/Zurich" });
     mocks.eventUpdate.mockResolvedValue(VALID_UPDATED_EVENT);
+    mocks.loadMatchActivitySnapshot.mockResolvedValue({});
+    mocks.resolveTenantKeyForCollaboration.mockResolvedValue("fca");
+    mocks.buildMatchMutationCollaborationImpact.mockResolvedValue({ requiresConfirmation: false });
   });
 
   // ── Authentication ────────────────────────────────────────────────────────
@@ -136,11 +162,38 @@ describe("PATCH /api/matchcenter/[matchId]", () => {
     mocks.canEditPlanningRecord.mockResolvedValue(false);
 
     const res = await PATCH(
+      makeRequest({ teamId: "team-fca" }),
+      makeContext(),
+    );
+
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 403 when operational allocation policy denies pitch-only patch", async () => {
+    mocks.canManageOperationalAllocations.mockResolvedValue(false);
+
+    const res = await PATCH(
       makeRequest({ pitchCode: "STADION" }),
       makeContext(),
     );
 
     expect(res.status).toBe(403);
+    expect(mocks.canManageOperationalAllocations).toHaveBeenCalled();
+    expect(mocks.canEditPlanningRecord).not.toHaveBeenCalled();
+  });
+
+  it("checks operational allocation permission for dressing-room-only patches", async () => {
+    await PATCH(makeRequest({ homeDressingRoomCode: "E1" }), makeContext());
+
+    expect(mocks.canManageOperationalAllocations).toHaveBeenCalled();
+    expect(mocks.canEditPlanningRecord).not.toHaveBeenCalled();
+  });
+
+  it("checks planning edit permission for infoboard visibility", async () => {
+    await PATCH(makeRequest({ infoboardVisible: true }), makeContext());
+
+    expect(mocks.canEditPlanningRecord).toHaveBeenCalled();
+    expect(mocks.canManageOperationalAllocations).not.toHaveBeenCalled();
   });
 
   it("returns 403 when tenantId is missing from session", async () => {

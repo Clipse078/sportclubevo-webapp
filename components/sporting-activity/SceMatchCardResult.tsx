@@ -3,21 +3,7 @@ import type {
   SceActivityPresentationDensity,
   SceMatchPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
-
-function resolveResultText(model: SceMatchPresentationModel): string | null {
-  const result = model.result;
-  if (!result) return null;
-
-  if (result.displayLabel?.trim()) {
-    return result.displayLabel.trim();
-  }
-
-  if (result.scoreHome != null && result.scoreAway != null) {
-    return `${result.scoreHome}:${result.scoreAway}`;
-  }
-
-  return null;
-}
+import { SceMatchScorePresentation } from "./SceMatchScorePresentation";
 
 export type SceMatchCardResultProps = {
   model: SceMatchPresentationModel;
@@ -26,17 +12,12 @@ export type SceMatchCardResultProps = {
 };
 
 export function SceMatchCardResult({ model, density, className }: SceMatchCardResultProps) {
-  const text = resolveResultText(model);
-  if (!text) return null;
-
   return (
-    <span
-      className={cn("shrink-0 tabular-nums", className)}
-      data-testid="sce-match-result"
-      data-sce-match-center
-      aria-label={`Ergebnis ${text}`}
-    >
-      {text}
-    </span>
+    <SceMatchScorePresentation
+      model={model}
+      density={density}
+      className={cn(className)}
+      presentation="legacy-inline"
+    />
   );
 }
