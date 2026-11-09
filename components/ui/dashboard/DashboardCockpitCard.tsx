@@ -14,7 +14,7 @@ const ICON_ACCENTS: Record<
   info: { bg: "var(--sce-info-light)", color: "var(--sce-info)" },
   success: { bg: "var(--sce-success-light)", color: "var(--sce-success)" },
   warning: { bg: "var(--sce-warning-light)", color: "var(--sce-warning)" },
-  violet: { bg: "rgba(129, 140, 248, 0.16)", color: "#a5b4fc" },
+  violet: { bg: "rgba(99, 102, 241, 0.12)", color: "#4f46e5" },
   danger: { bg: "var(--sce-danger-light)", color: "var(--sce-danger)" },
   default: { bg: "var(--surface-2)", color: "var(--muted)" },
 };

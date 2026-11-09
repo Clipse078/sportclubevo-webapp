@@ -27,6 +27,7 @@
 15. [14 — DS2-04R2 full-width horizontal cards](./14-ds2-04r2-full-width-horizontal-cards.md)
 16. [15 — DS2-04R6 merge closure record](./15-ds2-04r6-merge-closure.md)
 17. [16 — DS2-05A white canvas & shell delivery](./16-ds2-05a-white-canvas-shell-delivery.md)
+18. [17 — DS2-05B white surface & contrast delivery](./17-ds2-05b-white-surface-contrast-delivery.md)
 
 ## DS 2.0 implementation packages
 
@@ -38,7 +39,7 @@
 | `SCE-DS2-03` | Sporting typography + `SceTeamName` — see doc 11 |
 | `SCE-DS2-04` | Premium activity cards — **merged STAGE** (PR #941) — see doc 12 |
 | `SCE-DS2-05A` | Global white canvas + authenticated shell — see doc 16 |
-| `SCE-DS2-05B` | Dense forms/tables/dialog primitives on white (planned) |
+| `SCE-DS2-05B` | White surface & contrast hardening — see doc 17 |
 
 ## Related canonical governance (unchanged by this package)
 

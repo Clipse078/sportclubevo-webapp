@@ -45,8 +45,8 @@ const SECTION_ICON_ACCENTS: Record<
     color: "var(--sce-warning)",
   },
   violet: {
-    bg: "rgba(129, 140, 248, 0.16)",
-    color: "#a5b4fc",
+    bg: "rgba(99, 102, 241, 0.12)",
+    color: "#4f46e5",
   },
   danger: {
     bg: "var(--sce-danger-light)",

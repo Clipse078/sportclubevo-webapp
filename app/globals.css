@@ -680,6 +680,125 @@
   backdrop-filter: none;
 }
 
+/* SCE-DS2-05B — dashboard cockpit: white cards replace dark glass */
+.sce-dashboard-cockpit-card {
+  border: 1px solid color-mix(in srgb, rgba(148, 163, 184, 0.38) 45%, var(--border));
+  background: color-mix(in srgb, rgba(15, 23, 42, 0.78) 92%, transparent);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .sce-dashboard-cockpit-card {
+    background: color-mix(in srgb, rgba(15, 23, 42, 0.65) 88%, transparent);
+  }
+}
+
+.sce-dashboard-cockpit-card:hover {
+  border-color: color-mix(in srgb, rgba(148, 163, 184, 0.55) 55%, var(--border));
+  box-shadow:
+    0 12px 44px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-sce-theme="white"] .sce-dashboard-cockpit-card {
+  border: 1px solid var(--border);
+  background: var(--sce-color-surface-standard);
+  box-shadow: var(--shadow-xs);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+[data-sce-theme="white"] .sce-dashboard-cockpit-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+/* SCE-DS2-05B — functional surfaces, forms, dense UI on white */
+[data-sce-theme="white"] .fca-card::before,
+[data-sce-theme="white"] .fca-section-card::before {
+  opacity: 0;
+}
+
+[data-sce-theme="white"] .sce-integrated-list {
+  background: var(--sce-color-surface-standard);
+}
+
+[data-sce-theme="white"] .sce-surface-standard,
+[data-sce-theme="white"] .sce-section-card-v3,
+[data-sce-theme="white"] .sce-quick-action-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--sce-color-surface-standard);
+  box-shadow: var(--shadow-xs);
+}
+
+[data-sce-theme="white"] .sce-surface-elevated {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--sce-color-surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-sce-theme="white"] .sce-functional-inner-row,
+[data-sce-theme="white"] .sce-functional-chip,
+[data-sce-theme="white"] .sce-functional-badge {
+  background: var(--sce-color-surface-standard);
+}
+
+[data-sce-theme="white"] .sce-functional-inner-row:hover,
+[data-sce-theme="white"] .sce-functional-chip:hover {
+  background: var(--sce-color-surface-hover);
+}
+
+[data-sce-theme="white"] .fca-input,
+[data-sce-theme="white"] .fca-select,
+[data-sce-theme="white"] .fca-textarea {
+  background: var(--sce-color-surface-standard);
+  border-color: var(--sce-color-border-standard);
+  color: var(--sce-color-text-primary);
+}
+
+[data-sce-theme="white"] .fca-input::placeholder,
+[data-sce-theme="white"] .fca-textarea::placeholder,
+[data-sce-theme="white"] .sce-page-search input::placeholder {
+  color: var(--sce-color-text-muted);
+  opacity: 1;
+}
+
+[data-sce-theme="white"] .fca-input:disabled,
+[data-sce-theme="white"] .fca-select:disabled,
+[data-sce-theme="white"] .fca-textarea:disabled {
+  background: var(--sce-surface-subtle);
+  color: var(--sce-color-text-disabled);
+}
+
+[data-sce-theme="white"] .sce-toolbar-select {
+  background-color: var(--sce-color-surface-standard);
+  color: var(--sce-color-text-primary);
+}
+
+[data-sce-theme="white"] [data-sce-data-table-shell="true"] {
+  background: var(--sce-color-surface-standard);
+  box-shadow: none;
+}
+
+[data-sce-theme="white"] .sce-dialog-variant-compact,
+[data-sce-theme="white"] .sce-dialog-variant-standard,
+[data-sce-theme="white"] .sce-dialog-variant-form,
+[data-sce-theme="white"] .sce-dialog-variant-workspace {
+  background: var(--sce-color-surface-elevated);
+  color: var(--sce-color-text-primary);
+}
+
+[data-sce-theme="white"] .sce-date-chip {
+  background: var(--sce-color-surface-standard);
+  color: var(--sce-color-text-secondary);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    BASE STYLES
 ───────────────────────────────────────────────────────────────────────── */

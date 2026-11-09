@@ -48,6 +48,24 @@ export const SCE_WHITE_EDITION_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#ffffff",
     minimumRatio: 4.5,
   },
+  {
+    id: "placeholder-on-input",
+    foreground: "#64748b",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "violet-accent-on-canvas",
+    foreground: "#4f46e5",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "disabled-on-subtle",
+    foreground: "#64748b",
+    background: "#f8fafc",
+    minimumRatio: 4.5,
+  },
 ];
 
 function hexChannel(value: string): number {
