@@ -73,9 +73,23 @@ async function launchBrowser() {
     if (!message.includes("Executable doesn't exist")) {
       throw error;
     }
-    const withDeps = process.platform === "linux" ? "--with-deps " : "";
-    execSync(`npx playwright install ${withDeps}chromium`, { stdio: "inherit" });
-    return chromium.launch();
+    const attempts =
+      process.platform === "linux"
+        ? [
+            "npx playwright install --with-deps chromium",
+            "npx playwright install chromium",
+          ]
+        : ["npx playwright install chromium"];
+    let lastError;
+    for (const cmd of attempts) {
+      try {
+        execSync(cmd, { stdio: "inherit" });
+        return chromium.launch();
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
   }
 }
 
