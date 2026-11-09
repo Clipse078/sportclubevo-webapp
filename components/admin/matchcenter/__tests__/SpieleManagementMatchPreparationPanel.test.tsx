@@ -141,6 +141,15 @@ const DRESSING_GROUPS: FacilityGroup[] = [
         facilityName: "Kabinen",
         facilityType: "DRESSING_BLOCK",
       },
+      {
+        id: "res-e1",
+        code: "E1",
+        name: "Kabine E1",
+        type: "DRESSING_ROOM",
+        facilityId: "f2",
+        facilityName: "Kabinen",
+        facilityType: "DRESSING_BLOCK",
+      },
     ],
   },
 ];
@@ -270,6 +279,155 @@ describe("SCE-DS2-04R4 — SpieleManagementMatchPreparationPanel", () => {
           body: JSON.stringify({ infoboardVisible: true }),
         }),
       );
+    });
+  });
+
+  it("persists home dressing-room assignment via PATCH", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    const match = createMatch({
+      operational: {
+        pitchCode: "KR2",
+        homeDressingRoomCode: null,
+        awayDressingRoomCode: "E1",
+        meetingTime: null,
+        remarks: null,
+      },
+    });
+    const assessment = assessMatchOperationalState(match);
+    render(
+      <SpieleManagementMatchPreparationPanel
+        match={match}
+        assessment={assessment}
+        pitchHallFacilityGroups={PITCH_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_GROUPS}
+        canManageOperationalAllocations
+        canManagePublication
+      />,
+    );
+
+    await user.click(screen.getByTestId("matchcenter-inline-dressing-match-home-1-subject-home-action"));
+    await waitFor(() =>
+      expect(screen.getByTestId("matchcenter-inline-dressing-match-home-1-picker-home-panel")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("matchcenter-inline-dressing-match-home-1-picker-home-option-O4"));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/matchcenter/match-home-1",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ homeDressingRoomCode: "O4" }),
+        }),
+      );
+    });
+  });
+
+  it("persists away dressing-room assignment via PATCH", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    const match = createMatch({
+      operational: {
+        pitchCode: "KR2",
+        homeDressingRoomCode: "O4",
+        awayDressingRoomCode: null,
+        meetingTime: null,
+        remarks: null,
+      },
+    });
+    const assessment = assessMatchOperationalState(match);
+    render(
+      <SpieleManagementMatchPreparationPanel
+        match={match}
+        assessment={assessment}
+        pitchHallFacilityGroups={PITCH_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_GROUPS}
+        canManageOperationalAllocations
+        canManagePublication
+      />,
+    );
+
+    await user.click(screen.getByTestId("matchcenter-inline-dressing-match-home-1-subject-away-action"));
+    await waitFor(() =>
+      expect(screen.getByTestId("matchcenter-inline-dressing-match-home-1-picker-away-panel")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("matchcenter-inline-dressing-match-home-1-picker-away-option-E1"));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/matchcenter/match-home-1",
+        expect.objectContaining({
+          body: JSON.stringify({ awayDressingRoomCode: "E1" }),
+        }),
+      );
+    });
+  });
+
+  it("shows allocation warning when Infoboard is on but assignments incomplete", () => {
+    const match = createMatch({
+      visibility: { websiteVisible: true, infoboardVisible: true, homepageVisible: false, wochenplanVisible: false },
+      operational: {
+        pitchCode: null,
+        homeDressingRoomCode: null,
+        awayDressingRoomCode: null,
+        meetingTime: null,
+        remarks: null,
+      },
+    });
+    const assessment = assessMatchOperationalState(match);
+    render(
+      <SpieleManagementMatchPreparationPanel
+        match={match}
+        assessment={assessment}
+        pitchHallFacilityGroups={PITCH_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_GROUPS}
+        canManageOperationalAllocations
+        canManagePublication
+      />,
+    );
+
+    expect(screen.getByTestId("matchcenter-inline-allocation-warning-match-home-1")).toBeInTheDocument();
+    expect(screen.getByText(/Platz, Heimkabine und Gästekabine/)).toBeInTheDocument();
+  });
+
+  it("notifies parent with live match draft for readiness recalculation", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const onLiveMatchChange = vi.fn();
+
+    const match = createMatch({
+      operational: {
+        pitchCode: null,
+        homeDressingRoomCode: null,
+        awayDressingRoomCode: null,
+        meetingTime: null,
+        remarks: null,
+      },
+    });
+    const assessment = assessMatchOperationalState(match);
+    render(
+      <SpieleManagementMatchPreparationPanel
+        match={match}
+        assessment={assessment}
+        pitchHallFacilityGroups={PITCH_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_GROUPS}
+        canManageOperationalAllocations
+        canManagePublication
+        onLiveMatchChange={onLiveMatchChange}
+      />,
+    );
+
+    await user.click(screen.getByTestId("matchcenter-inline-pitch-match-home-1-action"));
+    await waitFor(() =>
+      expect(screen.getByTestId("matchcenter-inline-pitch-match-home-1-picker-panel")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByTestId("matchcenter-inline-pitch-match-home-1-picker-option-KR2"));
+
+    await waitFor(() => {
+      const last = onLiveMatchChange.mock.calls.at(-1)?.[0];
+      expect(last?.operational.pitchCode).toBe("KR2");
     });
   });
 
