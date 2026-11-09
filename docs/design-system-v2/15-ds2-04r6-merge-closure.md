@@ -33,6 +33,6 @@ STAGE Vercel deployment for the merge commit is tracked on GitHub commit status 
 
 ## Next package
 
-**`SCE-DS2-05`** — shared UI primitives on white (tables, dialogs, forms, dense workspace chrome). See [07-migration-roadmap.md](./07-migration-roadmap.md) § P2 and [13-ds2-04r1-white-edition-follow-up.md](./13-ds2-04r1-white-edition-follow-up.md).
+**`SCE-DS2-05A`** — global white canvas + authenticated shell. See [16-ds2-05a-white-canvas-shell-delivery.md](./16-ds2-05a-white-canvas-shell-delivery.md), [07-migration-roadmap.md](./07-migration-roadmap.md) § P2, and [13-ds2-04r1-white-edition-follow-up.md](./13-ds2-04r1-white-edition-follow-up.md).
 
-**Out of scope for DS2-05 start in this closure:** DS2-06 module sweeps, production deploy, STAGE → `main` merge.
+**Out of scope for DS2-05A start in this closure:** DS2-05B dense UI, DS2-06 module sweeps, production deploy, STAGE → `main` merge.

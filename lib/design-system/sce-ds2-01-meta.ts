@@ -27,6 +27,6 @@ export const SCE_DS2_01_EXCLUSIONS = [
 
 export const SCE_DS2_01_LEGACY_STYLE_DEPENDENCIES = [
   "Dark-tuned scrollbar thumbs (.sce-app-explorer-scroll) — neutral overrides under white theme only",
-  "SCE_WORKSPACE_SURFACE_CLASS backdrop-blur — retained until DS2-05 tunes workspace chrome",
+  "SCE_WORKSPACE_SURFACE_CLASS backdrop-blur — neutralized under white theme (DS2-05A); dark default unchanged",
   "fca-* marketing typography classes — admin migration deferred to DS2-06",
 ] as const;

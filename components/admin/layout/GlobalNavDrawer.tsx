@@ -488,7 +488,7 @@ export default function GlobalNavDrawer({
 
   return (
     <div
-      className="sce-global-nav-drawer-backdrop fixed inset-0 z-[80] bg-black/35 backdrop-blur-[2px]"
+      className="sce-global-nav-drawer-backdrop fixed inset-0 z-[80]"
       role="presentation"
       data-testid="global-nav-drawer-backdrop"
       onClick={onClose}
@@ -496,10 +496,7 @@ export default function GlobalNavDrawer({
       <div
         id={panelId}
         className={cn(
-          "sce-global-nav-drawer sce-app-explorer-panel absolute left-0 top-0 flex h-full flex-col",
-          "w-[min(100%,680px)] border-r border-[color-mix(in_srgb,var(--border)_75%,transparent)]",
-          "bg-[color-mix(in_srgb,rgba(15,23,42,0.88)_92%,transparent)] shadow-2xl backdrop-blur-xl",
-          "supports-[backdrop-filter]:bg-[color-mix(in_srgb,rgba(15,23,42,0.78)_88%,transparent)]",
+          "sce-global-nav-drawer sce-global-nav-drawer-panel sce-app-explorer-panel absolute left-0 top-0 flex h-full w-[min(100%,680px)] flex-col",
         )}
         style={{ width: "clamp(320px, 92vw, 680px)" }}
         role="dialog"

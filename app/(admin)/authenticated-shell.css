@@ -11,10 +11,24 @@
   background-attachment: scroll;
 }
 
-/* SCE-DS2-01 — white canvas: solid background only (no PNG under chrome) */
+/* SCE-DS2-01 / SCE-DS2-05A — white canvas: solid #ffffff, no tactical PNG */
 [data-sce-theme="white"][data-sce-modal-background].sce-authenticated-app-shell {
+  background-image: none;
+  background-color: var(--sce-color-app-background);
   background-size: auto;
   background-attachment: scroll;
+}
+
+[data-sce-theme="white"][data-sce-modal-background].sce-authenticated-app-shell
+  .sce-app-main-with-mobile-nav {
+  background: var(--sce-color-app-background);
+  color: var(--sce-color-text-primary);
+}
+
+[data-sce-theme="white"][data-sce-modal-background].sce-authenticated-app-shell
+  .sce-authenticated-sticky-shell-chrome {
+  border-bottom: 1px solid var(--sce-color-border-subtle);
+  box-shadow: var(--shadow-xs);
 }
 
 /* L1 — stable chrome; content uses semantic L3–L6 tokens from globals.css */
