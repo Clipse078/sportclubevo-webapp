@@ -21,8 +21,11 @@
 
 "use client";
 
+import { useState } from "react";
 import { Trophy } from "lucide-react";
+import { headerCrestBox } from "@/lib/branding/sce-header-crest-layout";
 import { isValidLogoUrl } from "@/lib/tenant-runtime/branding-validation";
+import { cn } from "@/lib/cn";
 
 type TenantLogoProps = {
   /** Raw logoUrl from tenant config. Null/invalid → fallback icon. */
@@ -64,9 +67,57 @@ export default function TenantLogo({
   displayName,
 }: TenantLogoProps) {
   const hasLogo = isValidLogoUrl(logoUrl);
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
   const iconSize = Math.round(size * 0.44); // scale inner icon proportionally
+  const imageFailed = hasLogo && brokenUrl === logoUrl;
 
-  if (hasLogo) {
+  if (variant === "header-crest") {
+    const showImage = hasLogo && !imageFailed;
+    const initials = headerCrestInitials(displayName ?? alt);
+    return (
+      <span
+        className={cn("sce-tenant-header-crest", className)}
+        data-testid="tenant-header-crest"
+        style={{
+          ...headerCrestBox(size),
+          ...(showImage
+            ? null
+            : {
+                border:
+                  "1px solid color-mix(in srgb, var(--border) 85%, transparent)",
+                borderRadius: 4,
+              }),
+        }}
+      >
+        {showImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl!}
+            alt={alt}
+            width={size}
+            height={size}
+            data-testid="tenant-logo-image"
+            onError={() => setBrokenUrl(logoUrl ?? null)}
+          />
+        ) : (
+          <span
+            data-testid="tenant-logo-header-initials"
+            aria-hidden="true"
+            style={{
+              fontSize: Math.max(10, Math.round(size * 0.34)),
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              color: "var(--text-2)",
+            }}
+          >
+            {initials}
+          </span>
+        )}
+      </span>
+    );
+  }
+
+  if (hasLogo && !imageFailed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -80,44 +131,12 @@ export default function TenantLogo({
           width: size,
           height: size,
           objectFit: "contain",
-          borderRadius: variant === "header-crest" ? 0 : 6,
+          borderRadius: 6,
           display: "block",
           background: "transparent",
         }}
-        onError={(e) => {
-          // On load failure, hide the broken image — parent can render fallback.
-          // We swap to a data URI transparent pixel rather than removing the element.
-          (e.currentTarget as HTMLImageElement).style.display = "none";
-        }}
+        onError={() => setBrokenUrl(logoUrl ?? null)}
       />
-    );
-  }
-
-  if (variant === "header-crest") {
-    const initials = headerCrestInitials(displayName ?? alt);
-    return (
-      <span
-        className={className}
-        data-testid="tenant-logo-header-initials"
-        aria-hidden="true"
-        style={{
-          width: size,
-          height: size,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          fontSize: Math.max(10, Math.round(size * 0.34)),
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          color: "var(--text-2)",
-          border: "1px solid color-mix(in srgb, var(--border) 85%, transparent)",
-          borderRadius: 4,
-          background: "transparent",
-        }}
-      >
-        {initials}
-      </span>
     );
   }
 

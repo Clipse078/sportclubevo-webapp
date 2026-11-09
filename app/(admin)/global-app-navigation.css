@@ -110,6 +110,7 @@
   min-width: 0;
   max-width: var(--sce-nav-brand-rail-width);
   padding-right: var(--sce-nav-workspace-gutter);
+  overflow: visible;
   border-right: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
 }
 
@@ -209,6 +210,8 @@
 
 /* SCE-DS2-05B-R3 — dominant tenant identity (Barlow Condensed 800 uppercase italic) */
 .sce-tenant-header-identity-name {
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: clamp(1.125rem, 0.35vw + 1.05rem, 1.4375rem);
   font-weight: 800;
@@ -218,7 +221,31 @@
   line-height: 1.05;
 }
 
+/*
+ * SCE-DS2-05B-R10 — the crest is the flex item. A raw img in this rail is
+ * shrinkable under preflight `max-width: 100%`, so the club name consumes the
+ * fixed brand column and the crest box collapses. The wrapper keeps the crest.
+ */
+.sce-tenant-header-crest {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  max-width: none;
+  line-height: 1;
+}
+
+.sce-tenant-header-crest img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+
 .sce-global-tenant-row-rail[data-tenant-layout="tenant-header-primary"] {
+  align-items: center;
   gap: 0.5rem;
   min-height: 2.5rem;
 }
@@ -508,6 +535,16 @@
   box-shadow: none;
   overflow: hidden;
   pointer-events: auto;
+  /* SCE-DS2-05B-R10 — shared Cham frame. Measured by computeDomainNavMenuLayout. */
+  --sce-domain-nav-content-max: 80rem;
+  --sce-domain-nav-frame-pad-inline: clamp(2.25rem, 5vw, 4rem);
+  --sce-domain-nav-frame-pad-block-start: 1.5rem;
+  --sce-domain-nav-frame-pad-block-end: 1.625rem;
+  --sce-domain-nav-column-gap: clamp(2.25rem, 3vw, 3.25rem);
+  --sce-domain-nav-col-title: 32;
+  --sce-domain-nav-col-categories: 33;
+  --sce-domain-nav-col-destinations: 35;
+  --sce-domain-nav-row-min-height: 2.75rem;
 }
 
 .sce-domain-nav-panel--overlay {
@@ -589,13 +626,10 @@
   box-shadow: 0 -1px 0 var(--sce-color-border-subtle);
 }
 
+/* SCE-DS2-05B-R10 — one scrollport. The centered frame does not scroll on its own. */
 .sce-domain-nav-panel-cham-body {
-  display: grid;
-  grid-template-columns: minmax(8.5rem, 5fr) minmax(9.5rem, 7fr);
-  gap: 0.875rem 1.75rem;
-  align-items: start;
   max-height: var(--sce-domain-nav-overlay-max-height);
-  padding: 0.75rem var(--sce-page-gutter, 1.25rem) 0.875rem;
+  padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -605,20 +639,28 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.sce-domain-nav-panel--three-column .sce-domain-nav-panel-cham-body {
-  grid-template-columns: minmax(8.5rem, 5fr) minmax(9.5rem, 7fr) minmax(9.5rem, 8fr);
-  gap: 0.875rem 2rem;
+.sce-domain-nav-panel-cham-frame {
+  display: grid;
+  box-sizing: border-box;
+  width: min(100%, var(--sce-domain-nav-content-max));
+  margin-inline: auto;
+  align-items: start;
+  column-gap: var(--sce-domain-nav-column-gap);
+  padding-block: var(--sce-domain-nav-frame-pad-block-start) var(--sce-domain-nav-frame-pad-block-end);
+  padding-inline: var(--sce-domain-nav-frame-pad-inline);
+  grid-template-columns: minmax(0, 32fr) minmax(0, 68fr);
+  overflow: visible;
 }
 
-.sce-domain-nav-panel-cham-body--two-column {
-  grid-template-columns: minmax(8.5rem, 5fr) minmax(9.5rem, 12fr);
+.sce-domain-nav-panel--three-column .sce-domain-nav-panel-cham-frame {
+  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
+}
+
+.sce-domain-nav-panel-cham-frame--two-column {
+  grid-template-columns: minmax(0, 32fr) minmax(0, 68fr);
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  .sce-domain-nav-panel-cham-body {
-    gap: 0.75rem 1.25rem;
-  }
-
   .sce-domain-nav-panel-section-title {
     font-size: clamp(2rem, 4.2vw, 2.75rem);
   }
@@ -629,7 +671,7 @@
   top: 0;
   z-index: 1;
   margin: 0;
-  padding: 0 0 0.25rem;
+  padding: 0.3125rem 0 0;
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: clamp(2.25rem, 3.2vw, 3.35rem);
   font-weight: 800;
@@ -684,7 +726,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
-  min-height: 2.75rem;
+  min-height: var(--sce-domain-nav-row-min-height);
   padding: 0.3125rem 0;
   border: none;
   border-radius: 0;

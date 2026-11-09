@@ -34,7 +34,10 @@ export type SceDomainNavigationPanelProps = {
   resolveHref: (href: string) => string;
   isL2Active: (item: DomainSecondaryNavItem) => boolean;
   isL3Active: (child: NavItemChild) => boolean;
-  onNavigateSibling: (event: MouseEvent<HTMLAnchorElement>, child: NavItemChild) => void;
+  onNavigateSibling: (
+    event: MouseEvent<HTMLAnchorElement>,
+    child: NavItemChild,
+  ) => void;
   onClose: () => void;
 };
 
@@ -81,6 +84,7 @@ function useStableDomainNavOverlay(
 
 /**
  * SCE-DS2-05B-R7 — portalled Cham-style domain navigation overlay.
+ * SCE-DS2-05B-R10 — title, categories, and destinations share one centered frame.
  * Anchored below the primary header row; out of document flow.
  */
 export function SceDomainNavigationPanel({
@@ -148,101 +152,122 @@ export function SceDomainNavigationPanel({
       )}
     >
       <div
-        className={cn(
-          "sce-domain-nav-panel-cham-body",
-          !showRightColumn && "sce-domain-nav-panel-cham-body--two-column",
-        )}
+        className="sce-domain-nav-panel-cham-body"
+        data-testid="sce-domain-nav-panel-scroll"
       >
-        <h2 className="sce-domain-nav-panel-section-title" data-testid="sce-domain-nav-panel-title">
-          {domainHeading}
-        </h2>
+        <div
+          className={cn(
+            "sce-domain-nav-panel-cham-frame",
+            !showRightColumn && "sce-domain-nav-panel-cham-frame--two-column",
+          )}
+          data-testid="sce-domain-nav-panel-frame"
+        >
+          <h2
+            className="sce-domain-nav-panel-section-title"
+            data-testid="sce-domain-nav-panel-title"
+          >
+            {domainHeading}
+          </h2>
 
-        <div className="sce-domain-nav-panel-l2">
-          <ul className="sce-domain-nav-panel-list">
-            {items.map((item) => {
-              const l3Children = resolveSecondaryNavItemModuleLocalChildren(domain, item);
-              const hasL3 = l3Children.length > 0;
-              const active = isL2Active(item);
-              const selected = hierarchical && hasL3 && selectedL2Key === item.key;
-              if (hierarchical && hasL3) {
+          <div className="sce-domain-nav-panel-l2">
+            <ul className="sce-domain-nav-panel-list">
+              {items.map((item) => {
+                const l3Children = resolveSecondaryNavItemModuleLocalChildren(
+                  domain,
+                  item,
+                );
+                const hasL3 = l3Children.length > 0;
+                const active = isL2Active(item);
+                const selected =
+                  hierarchical && hasL3 && selectedL2Key === item.key;
+                if (hierarchical && hasL3) {
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        className={cn(
+                          "sce-domain-nav-panel-l2-control",
+                          active && "sce-domain-nav-panel-l2-control--active",
+                          selected &&
+                            "sce-domain-nav-panel-l2-control--selected",
+                        )}
+                        data-nav-destination={item.key}
+                        aria-expanded={selected}
+                        onClick={() => setUserL2Key(item.key)}
+                      >
+                        <span className="sce-domain-nav-panel-l2-label">
+                          {item.label}
+                        </span>
+                        <ChevronRight
+                          className="sce-domain-nav-panel-l2-chevron h-4 w-4"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </li>
+                  );
+                }
+
                 return (
                   <li key={item.key}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "sce-domain-nav-panel-l2-control",
-                        active && "sce-domain-nav-panel-l2-control--active",
-                        selected && "sce-domain-nav-panel-l2-control--selected",
-                      )}
-                      data-nav-destination={item.key}
-                      aria-expanded={selected}
-                      onClick={() => setUserL2Key(item.key)}
-                    >
-                      <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
-                      <ChevronRight
-                        className="sce-domain-nav-panel-l2-chevron h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </li>
-                );
-              }
-
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={resolveHref(item.href)}
-                    className={cn(
-                      "sce-domain-nav-panel-l2-link",
-                      active && "sce-domain-nav-panel-l2-link--active",
-                    )}
-                    aria-current={active ? "page" : undefined}
-                    data-nav-destination={item.key}
-                    onClick={(event) => {
-                      onNavigateSibling(event, {
-                        key: item.key,
-                        label: item.label,
-                        href: item.href,
-                      });
-                      onClose();
-                    }}
-                  >
-                    <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        {showRightColumn && selectedItem ? (
-          <div className="sce-domain-nav-panel-l3" aria-label={selectedItem.label}>
-            <ul className="sce-domain-nav-panel-list">
-              {rightColumnEntries.map((child) => {
-                const active = isL3Active(child);
-                return (
-                  <li key={child.key}>
                     <Link
-                      href={resolveHref(child.href)}
+                      href={resolveHref(item.href)}
                       className={cn(
-                        "sce-domain-nav-panel-l3-link",
-                        active && "sce-domain-nav-panel-l3-link--active",
+                        "sce-domain-nav-panel-l2-link",
+                        active && "sce-domain-nav-panel-l2-link--active",
                       )}
                       aria-current={active ? "page" : undefined}
-                      data-nav-context-destination={child.key}
+                      data-nav-destination={item.key}
                       onClick={(event) => {
-                        onNavigateSibling(event, child);
+                        onNavigateSibling(event, {
+                          key: item.key,
+                          label: item.label,
+                          href: item.href,
+                        });
                         onClose();
                       }}
                     >
-                      {child.label}
+                      <span className="sce-domain-nav-panel-l2-label">
+                        {item.label}
+                      </span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
           </div>
-        ) : null}
+
+          {showRightColumn && selectedItem ? (
+            <div
+              className="sce-domain-nav-panel-l3"
+              aria-label={selectedItem.label}
+            >
+              <ul className="sce-domain-nav-panel-list">
+                {rightColumnEntries.map((child) => {
+                  const active = isL3Active(child);
+                  return (
+                    <li key={child.key}>
+                      <Link
+                        href={resolveHref(child.href)}
+                        className={cn(
+                          "sce-domain-nav-panel-l3-link",
+                          active && "sce-domain-nav-panel-l3-link--active",
+                        )}
+                        aria-current={active ? "page" : undefined}
+                        data-nav-context-destination={child.key}
+                        onClick={(event) => {
+                          onNavigateSibling(event, child);
+                          onClose();
+                        }}
+                      >
+                        {child.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -71,7 +71,7 @@ describe("SCE-DS2-05B-R7 navigation overlay stability", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(/\.sce-domain-nav-panel-section-title[\s\S]*font-style:\s*italic/);
     expect(css).toMatch(
-      /\.sce-domain-nav-panel--three-column[\s\S]*grid-template-columns:[\s\S]*5fr[\s\S]*7fr[\s\S]*8fr/,
+      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
     );
     expect(css).toMatch(/\.sce-domain-nav-panel-l2-link[\s\S]*text-transform:\s*uppercase/);
     expect(css).toContain('.sce-domain-nav-panel[data-sce-theme="white"]');

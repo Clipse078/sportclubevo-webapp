@@ -43,8 +43,9 @@ describe("SCE-DS2-05B-R5 delivery", () => {
 
   it("tightens L2/L3 row density while preserving Barlow Condensed uppercase labels", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
+    expect(css).toMatch(/--sce-domain-nav-row-min-height:\s*2\.75rem/);
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-link[\s\S]*min-height:\s*2\.75rem/,
+      /\.sce-domain-nav-panel-l2-link[\s\S]*min-height:\s*var\(--sce-domain-nav-row-min-height\)/,
     );
     expect(css).toMatch(
       /\.sce-domain-nav-panel-l2-link[\s\S]*font-size:\s*1rem/,
@@ -52,10 +53,10 @@ describe("SCE-DS2-05B-R5 delivery", () => {
     expect(css).toMatch(/font-weight:\s*700/);
   });
 
-  it("balances three-column proportions near 25% / 35% / 40%", () => {
+  it("balances three-column proportions on the centered Cham frame", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel--three-column[\s\S]*grid-template-columns:[\s\S]*5fr[\s\S]*7fr[\s\S]*8fr/,
+      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
     );
   });
 
