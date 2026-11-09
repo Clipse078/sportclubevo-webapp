@@ -47,6 +47,30 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     minimumRatio: 4.5,
   },
   {
+    id: "status-error-on-danger-light",
+    foreground: "#b91c1c",
+    background: "#f5dedf",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "status-info-on-info-light",
+    foreground: "#1d4ed8",
+    background: "#dfe6fa",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "badge-success-semantic-on-light",
+    foreground: "#166534",
+    background: "#e8f2ec",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "status-indicator-neutral-on-canvas",
+    foreground: "#475569",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
     id: "team-meta-inactive-on-surface-2",
     foreground: "#475569",
     background: "#f8fafc",

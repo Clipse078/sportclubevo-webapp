@@ -16,7 +16,7 @@ const CANONICAL_MARKERS = [
   "SceContextTabs",
 ];
 const HEADER_MARKERS = ["ScePageHeader", "SceWorkspaceChrome", "ListPagePattern", "DetailPagePattern"];
-const TAB_MARKERS = ["ScePageTabs", "SceContextTabs", "FinanceWorkspaceTabs"];
+const TAB_MARKERS = ["SceContextTabs", "FinanceWorkspaceTabs"];
 
 function walkPageFiles(dir, acc = []) {
   for (const entry of readdirSync(dir)) {

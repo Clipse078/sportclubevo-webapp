@@ -48,6 +48,7 @@ describe("SCE-DS2-06 unified page architecture", () => {
       readRepo("components/sce/page/index.ts"),
       readRepo("lib/design-system/sce-ds2-06-meta.ts"),
       readRepo("components/ui/patterns/ListPagePattern.tsx"),
+      readRepo("components/sce/context-tabs/SceContextTabs.tsx"),
     ].join("\n");
     for (const marker of SCE_DS2_06_DOC_MARKERS) {
       if (marker.startsWith("docs/")) continue;
@@ -150,6 +151,9 @@ describe("SCE-DS2-06 unified page architecture", () => {
     const globals = readRepo("app/globals.css");
     expect(globals).toMatch(
       /\[data-sce-theme="white"\][\s\S]*--sce-color-status-success:\s*#166534/,
+    );
+    expect(globals).toMatch(
+      /\[data-sce-theme="white"\][\s\S]*--sce-color-status-error:\s*#b91c1c/,
     );
   });
 

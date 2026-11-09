@@ -17,16 +17,16 @@ const html = `<!DOCTYPE html>
 <meta charset="utf-8" />
 <style>
 ${globalsCss}
-html, body { margin: 0; background: #ffffff; padding: 24px; font-family: Inter, sans-serif; color: var(--foreground, #0f172a); }
+html, body { margin: 0; background: var(--background, #ffffff); padding: 24px; font-family: Inter, sans-serif; color: var(--foreground); }
 .panel { max-width: 960px; margin: 0 auto; }
 .archetype-tabs { display: flex; border-bottom: 1px solid var(--sce-color-border-standard); margin-top: 16px; }
 .archetype-tablist { display: flex; gap: 4px; min-height: 2.75rem; align-items: flex-end; width: 100%; }
-.archetype-tab { display: inline-block; padding: 10px 12px; border-bottom: 2px solid transparent; color: var(--sce-color-text-secondary); text-decoration: none; font-size: 0.875rem; background: #ffffff; }
-.archetype-tab--active { border-bottom-color: #0b4aa2; color: #0b4aa2; }
+.archetype-tab { display: inline-block; padding: 10px 12px; border-bottom: 2px solid transparent; color: var(--sce-color-text-secondary); text-decoration: none; font-size: 0.875rem; background: var(--background); }
+.archetype-tab--active { border-bottom-color: var(--blue); color: var(--blue); }
 .archetype-chips { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
 .archetype-chip { display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid var(--border); padding: 2px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
 .archetype-chip--neutral { background: var(--surface-2); color: var(--text-2); }
-.archetype-chip--success { border: 1px solid #a7d4b8; background: #e8f2ec; color: #166534; }
+.archetype-chip--success { border: 1px solid var(--sce-success-border); background: var(--sce-success-light); color: var(--sce-color-status-success); }
 </style>
 </head>
 <body>
@@ -113,11 +113,21 @@ for (const vp of viewports) {
 const metrics = await page.evaluate(() => {
   function rgbToHex(rgb) {
     const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!m) return null;
-    const h = (n) => Number(n).toString(16).padStart(2, "0");
-    return `#${h(m[1])}${h(m[2])}${h(m[3])}`;
+    if (m) {
+      const h = (n) => Number(n).toString(16).padStart(2, "0");
+      return `#${h(m[1])}${h(m[2])}${h(m[3])}`;
+    }
+    const srgb = rgb.match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/);
+    if (srgb) {
+      const h = (n) => Math.round(Number(n) * 255)
+        .toString(16)
+        .padStart(2, "0");
+      return `#${h(srgb[1])}${h(srgb[2])}${h(srgb[3])}`;
+    }
+    return null;
   }
-  const canvasBg = "#ffffff";
+  const canvasBg =
+    getComputedStyle(document.documentElement).getPropertyValue("--background").trim() || "#ffffff";
 
   const read = (id) => {
     const el = document.getElementById(id);

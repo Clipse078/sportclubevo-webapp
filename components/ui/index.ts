@@ -45,9 +45,6 @@ export type { SheetProps } from "./Sheet";
 export { Toast } from "./Toast";
 export type { ToastItem, ToastVariant } from "./Toast";
 
-export { MotionIcon } from "./MotionIcon";
-export type { MotionIconProps } from "./MotionIcon";
-
 export { AnimatedNavIcon } from "./motion/AnimatedNavIcon";
 export type { AnimatedNavIconProps } from "./motion/AnimatedNavIcon";
 

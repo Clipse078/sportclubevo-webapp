@@ -15,7 +15,7 @@ export const SCE_DS2_06_DOC_MARKERS = [
   "data-sce-contextual-side-panel",
   "components/sce/page",
   "ScePageHeader",
-  "ScePageTabs",
+  "SceContextTabs",
   "SceInlineEditor",
   "docs/design-system-v2/18-ds2-06-unified-page-architecture-delivery.md",
 ] as const;
@@ -34,7 +34,7 @@ export const SCE_DS2_06_MANDATORY_ROUTES = [
 
 export const SCE_DS2_06_PAGE_PRIMITIVES = [
   "ScePageHeader",
-  "ScePageTabs",
+  "SceContextTabs",
   "ScePageContent",
   "SceSectionHeader",
   "SceContentPanel",

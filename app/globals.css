@@ -587,6 +587,18 @@
   --sce-warning-light: color-mix(in srgb, var(--sce-warning) 16%, #ffffff);
   --sce-warning-border: color-mix(in srgb, var(--sce-warning) 32%, var(--border));
   --sce-color-status-warning: #92400e;
+
+  --sce-danger: #b91c1c;
+  --sce-danger-hover: #991b1b;
+  --sce-danger-light: color-mix(in srgb, var(--sce-danger) 14%, #ffffff);
+  --sce-danger-border: color-mix(in srgb, var(--sce-danger) 30%, var(--border));
+  --sce-color-status-error: #b91c1c;
+
+  --sce-info: #1d4ed8;
+  --sce-info-hover: #1e40af;
+  --sce-info-light: color-mix(in srgb, var(--sce-info) 14%, #ffffff);
+  --sce-info-border: color-mix(in srgb, var(--sce-info) 30%, var(--border));
+  --sce-color-status-info: #1d4ed8;
 }
 
 /* SCE-DS2-04 — premium activity card surfaces */
