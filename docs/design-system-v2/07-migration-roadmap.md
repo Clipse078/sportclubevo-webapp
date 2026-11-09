@@ -81,18 +81,19 @@
 
 ---
 
-### P1 — `SCE-DS2-04` Activity card white refresh
+### P1 — `SCE-DS2-04` Activity card white refresh *(shipped — PR #941, STAGE 2026-11-09)*
 
 | Field | Value |
 | --- | --- |
 | **Objective** | White shells + benchmark hierarchy for four `Sce*Card` variants |
 | **Scope** | `components/sporting-activity/*`, semantic tokens, preview pages |
-| **Dependencies** | `SCE-DS2-01`, `SCE-DS2-02` |
+| **Dependencies** | `SCE-DS2-01`, `SCE-DS2-02`, `SCE-DS2-03` |
 | **Acceptance** | sce-ui-rollout-01d–g pass; preview routes visually signed PO |
-| **Automated coverage** | Existing sporting-activity + DS-10-r2 temporal tests |
+| **Automated coverage** | `sce-ds2-04-activity-cards.test.ts`, sporting-activity + DS-10-r2 temporal tests |
 | **Complexity** | XL |
 | **Exclusions** | Infoboard cards |
 | **Delivery notes** | [12-ds2-04-activity-cards-delivery.md](./12-ds2-04-activity-cards-delivery.md) |
+| **Next** | `SCE-DS2-05` shared UI primitives on white |
 
 ---
 

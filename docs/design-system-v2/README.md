@@ -23,16 +23,20 @@
 11. [10 — DS2-02 navigation delivery](./10-ds2-02-navigation-delivery.md)
 12. [11 — DS2-03 typography delivery](./11-ds2-03-typography-delivery.md)
 13. [12 — DS2-04 activity cards delivery](./12-ds2-04-activity-cards-delivery.md)
+14. [13 — DS2-04R1 white edition follow-up (→ DS2-05)](./13-ds2-04r1-white-edition-follow-up.md)
+15. [14 — DS2-04R2 full-width horizontal cards](./14-ds2-04r2-full-width-horizontal-cards.md)
+16. [15 — DS2-04R6 merge closure record](./15-ds2-04r6-merge-closure.md)
 
 ## DS 2.0 implementation packages
 
 | Package | Status |
 | --- | --- |
 | `SCE-DS2-00` | Audit merged |
-| `SCE-DS2-01` | White foundation tokens (`SCE_WHITE_EDITION` flag) |
+| `SCE-DS2-01` | White foundation tokens (`SCE_WHITE_EDITION` flag) — on STAGE |
 | `SCE-DS2-02` | Premium header navigation — see doc 10 (audit roadmap used alternate IDs) |
 | `SCE-DS2-03` | Sporting typography + `SceTeamName` — see doc 11 |
-| `SCE-DS2-04` | Premium activity cards — see doc 12 |
+| `SCE-DS2-04` | Premium activity cards — **merged STAGE** (PR #941) — see doc 12 |
+| `SCE-DS2-05` | **Next** — shared workspace / dense UI primitives on white — see doc 07 § P2 |
 
 ## Related canonical governance (unchanged by this package)
 
