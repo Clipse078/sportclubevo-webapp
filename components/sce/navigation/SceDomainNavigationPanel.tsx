@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { MouseEvent, RefObject } from "react";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { DomainSecondaryNavItem } from "@/lib/nav/app-navigation-model";
@@ -31,11 +31,12 @@ export type SceDomainNavigationPanelProps = {
 };
 
 /**
- * SCE-DS2-05B-R4 — integrated three-column domain navigation (SC Cham reference).
+ * SCE-DS2-05B-R5 — integrated three-column domain navigation (density + scroll clamp).
  */
 export function SceDomainNavigationPanel({
   panelId,
   open,
+  headerRef,
   domain,
   domainHeading,
   items,
@@ -69,6 +70,37 @@ export function SceDomainNavigationPanel({
     if (!hierarchical || !selectedItem) return [];
     return resolveDomainPanelRightColumnEntries(domain, selectedItem);
   }, [domain, hierarchical, selectedItem]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const shell = headerRef.current?.closest(".sce-authenticated-app-shell");
+    if (!(shell instanceof HTMLElement)) return;
+
+    const syncPanelTop = () => {
+      const header = headerRef.current;
+      if (!header) return;
+      const bottom = Math.ceil(header.getBoundingClientRect().bottom);
+      shell.style.setProperty("--sce-domain-nav-panel-top", `${bottom}px`);
+    };
+
+    syncPanelTop();
+    const header = headerRef.current;
+    const resizeObserver =
+      header && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(syncPanelTop)
+        : null;
+    if (header && resizeObserver) {
+      resizeObserver.observe(header);
+    }
+
+    window.addEventListener("resize", syncPanelTop);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", syncPanelTop);
+      shell.style.removeProperty("--sce-domain-nav-panel-top");
+    };
+  }, [headerRef, open, domain.id, items.length, rightColumnEntries.length, selectedL2Key]);
 
   if (!open || items.length === 0) {
     return null;

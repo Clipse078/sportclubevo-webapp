@@ -1,6 +1,6 @@
 "use client";
 
-/** SCE-DS2-05B-R4 — tenant-first header, Cham-style domain panel, utilities without season. */
+/** SCE-DS2-05B-R5 — tenant-first header, compact Cham-style domain panel, utilities without season. */
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
