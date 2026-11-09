@@ -40,6 +40,7 @@ describe("SCE-DS2-05B white surface & contrast hardening", () => {
     );
     const sources = [
       readRepo("app/globals.css"),
+      readRepo("app/(admin)/global-app-navigation.css"),
       readRepo("lib/design-system/sce-functional-surface-styles.ts"),
       readRepo("lib/dashboard/dashboard-cockpit-surface.ts"),
     ].join("\n");
@@ -97,6 +98,14 @@ describe("SCE-DS2-05B white surface & contrast hardening", () => {
     expect(ids).toContain("violet-accent-on-canvas");
     const result = sceWhiteEditionContrastMatrixPass();
     expect(result.pass, JSON.stringify(result.failures)).toBe(true);
+  });
+
+  it("exposes theme-aware SportClubEvo platform wordmarks in global navigation CSS", () => {
+    const navCss = readRepo("app/(admin)/global-app-navigation.css");
+    expect(navCss).toContain("sce-platform-wordmark--on-light-surface");
+    expect(navCss).toMatch(
+      /\[data-sce-theme="white"\]\s*\.sce-platform-wordmark--on-dark-surface[\s\S]*display:\s*none/,
+    );
   });
 
   it("preserves white edition flag off by default and theme attribute gating", () => {

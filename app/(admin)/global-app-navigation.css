@@ -134,6 +134,23 @@
   padding: 0.125rem 0;
 }
 
+/* SCE-DS2-05B-R1 — theme-aware SportClubEvo wordmark (see sportclubevo-platform-wordmark.ts) */
+.sce-platform-wordmark--on-light-surface {
+  display: none;
+}
+
+.sce-platform-wordmark--on-dark-surface {
+  display: block;
+}
+
+[data-sce-theme="white"] .sce-platform-wordmark--on-light-surface {
+  display: block;
+}
+
+[data-sce-theme="white"] .sce-platform-wordmark--on-dark-surface {
+  display: none;
+}
+
 .sce-global-platform-brand-rail--row2 {
   min-height: var(--sce-nav-module-row-height);
   opacity: 0.94;

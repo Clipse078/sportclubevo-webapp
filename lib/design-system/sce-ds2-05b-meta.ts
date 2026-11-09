@@ -14,6 +14,7 @@ export const SCE_DS2_05B_DOC_MARKERS = [
   "sce-dashboard-cockpit-card",
   "sce-functional-inner-row",
   "SCE_FUNCTIONAL_PANEL_CLASS",
+  "sce-platform-wordmark--on-light-surface",
   "docs/design-system-v2/17-ds2-05b-white-surface-contrast-delivery.md",
 ] as const;
 

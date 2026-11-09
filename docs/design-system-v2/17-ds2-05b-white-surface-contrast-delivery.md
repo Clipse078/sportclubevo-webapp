@@ -18,7 +18,8 @@ Complete the White Edition iteration across authenticated dense UI: pure white p
 2. **Functional surfaces** — `sce-functional-surface-styles.ts` white-first inner rows/chips; theme-scoped CSS for badges and hovers.
 3. **Global primitives** — white overrides for integrated lists, surface utilities, form placeholders/disabled states, data-table shells, dialog variants, decorative card accent bars hidden.
 4. **Contrast** — extended `SCE_WHITE_EDITION_CONTRAST_PAIRS`; violet dashboard icon accent darkened for AA on white.
-5. **Automation** — `sce-ds2-05b-white-surface-contrast.test.ts` + contrast matrix; governance suites unchanged for dark default.
+5. **Platform wordmark (05B-R1)** — `SidebarPlatformBrand` selects `/images/branding/sportclubevo_logo.png` (dark lettering) under `[data-sce-theme="white"]` and `/images/branding/sportclubevo_logo_alt.png` (light lettering) on default dark chrome.
+6. **Automation** — `sce-ds2-05b-white-surface-contrast.test.ts` + contrast matrix; governance suites unchanged for dark default.
 
 ## Acceptance
 
