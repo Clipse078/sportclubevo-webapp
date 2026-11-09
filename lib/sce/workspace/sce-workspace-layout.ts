@@ -4,13 +4,13 @@
  * @see docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md
  */
 
-/** Bounded activity tab workspace — background remains visible in gutters. */
+/** Bounded activity tab workspace — background remains visible in gutters (dark: subtle blur). */
 export const SCE_WORKSPACE_SURFACE_CLASS =
-  "overflow-hidden rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)]/90 shadow-[var(--sce-elevation-panel)] backdrop-blur-[2px] supports-[backdrop-filter]:bg-[var(--sce-color-surface-standard)]/82";
+  "sce-workspace-surface overflow-hidden rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)]/90 shadow-[var(--sce-elevation-panel)] backdrop-blur-[2px] supports-[backdrop-filter]:bg-[var(--sce-color-surface-standard)]/82";
 
 /** Card-style functional section inside a tab (Communication hub card pattern). */
 export const SCE_WORKSPACE_FEATURE_CARD_CLASS =
-  "rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)] p-4 md:p-5";
+  "sce-workspace-feature-card rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)] p-4 md:p-5 shadow-[var(--sce-elevation-panel)]";
 
 /** Responsive grid for Mehr / multi-card tabs. */
 export const SCE_WORKSPACE_CARD_GRID_CLASS =

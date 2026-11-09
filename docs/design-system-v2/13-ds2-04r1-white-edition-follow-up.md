@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | `SCE-DS2-05` (proposed) |
+| **Package** | `SCE-DS2-05A` (in delivery — see doc 16) |
 | **Baseline** | STAGE after DS2-04R1 visual correction merge |
 | **Scope** | Authenticated shell and workspace chrome only — not activity card internals |
 

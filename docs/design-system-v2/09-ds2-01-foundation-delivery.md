@@ -23,7 +23,7 @@
 
 | Item | Owner package |
 | --- | --- |
-| `SCE_WORKSPACE_SURFACE_CLASS` backdrop-blur on white | DS2-05 |
+| `SCE_WORKSPACE_SURFACE_CLASS` backdrop-blur on white | DS2-05A |
 | `fca-*` classes in admin modules | DS2-06 |
 | Match card pitch / result typography on white | DS2-04 |
 | `SceTeamName` + team line uppercase italic | DS2-03 |

@@ -557,6 +557,9 @@
   --sce-icon-muted:     #64748b;
 
   --sce-match-result-foreground: #0f172a;
+
+  --sce-surface-shadow: var(--shadow-sm);
+  --sce-surface-shadow-elevated: var(--shadow-md);
 }
 
 /* SCE-DS2-04 — premium activity card surfaces */
@@ -642,6 +645,39 @@
 [data-sce-theme="white"] .sce-app-explorer-scroll::-webkit-scrollbar-thumb:hover,
 [data-sce-theme="white"] .sce-activity-nav-tablist::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 23, 42, 0.28);
+}
+
+/* SCE-DS2-05A — shared workspace surfaces (white canvas primitives) */
+[data-sce-theme="white"] .sce-workspace-surface {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--sce-color-surface-standard);
+  box-shadow: var(--sce-elevation-panel);
+}
+
+[data-sce-theme="white"] .sce-workspace-feature-card {
+  background: var(--sce-color-surface-standard);
+  box-shadow: var(--shadow-xs);
+}
+
+[data-sce-theme="white"] .sce-sidebar-nav {
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+
+[data-sce-theme="white"] .sce-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.14);
+}
+
+[data-sce-theme="white"] .sce-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.26);
+}
+
+[data-sce-theme="white"] .fca-card,
+[data-sce-theme="white"] .fca-section-card,
+[data-sce-theme="white"] .sce-card,
+[data-sce-theme="white"] .sce-kpi-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

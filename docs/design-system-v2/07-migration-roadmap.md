@@ -97,13 +97,27 @@
 
 ---
 
-### P2 — `SCE-DS2-05` Shared UI primitives on white
+### P2 — `SCE-DS2-05A` Global white canvas & authenticated shell
+
+| Field | Value |
+| --- | --- |
+| **Objective** | White application canvas, header/shell chrome, workspace surface primitives |
+| **Scope** | `authenticated-shell.css`, `global-app-navigation.css`, `sce-workspace-layout.ts`, explorer drawer |
+| **Dependencies** | `SCE-DS2-01`, `SCE-DS2-02`, `SCE-DS2-04R6` |
+| **Acceptance** | Flag on → white shell; flag off → dark v1.0; STAGE pilot documented |
+| **Automated coverage** | `sce-ds2-05a-white-canvas-shell.test.ts`, DS2-01/02 suites |
+| **Complexity** | L |
+| **Delivery notes** | [16-ds2-05a-white-canvas-shell-delivery.md](./16-ds2-05a-white-canvas-shell-delivery.md) |
+
+---
+
+### P2 — `SCE-DS2-05B` Shared UI primitives on white (dense UI)
 
 | Field | Value |
 | --- | --- |
 | **Objective** | Tables, dialogs, forms, dense UI on white surfaces |
-| **Scope** | `lib/design-system/sce-functional-surface-styles.ts`, `SceWorkspaceChrome` |
-| **Dependencies** | `SCE-DS2-01` |
+| **Scope** | `lib/design-system/sce-functional-surface-styles.ts`, form/table contracts |
+| **Dependencies** | `SCE-DS2-05A` |
 | **Acceptance** | DS-08 dense tests pass; no horizontal overflow |
 | **Automated coverage** | `sce-design-system-08-dense-ui.test.ts` |
 | **Complexity** | L |
@@ -116,7 +130,7 @@
 | --- | --- |
 | **Objective** | Planning Hub, Matchcenter rows, dashboard, finance, members |
 | **Scope** | Parallel cards migrated per inventory doc 02 |
-| **Dependencies** | `SCE-DS2-04`, `SCE-DS2-05` |
+| **Dependencies** | `SCE-DS2-04`, `SCE-DS2-05B` |
 | **Acceptance** | Module PO sign-off per domain |
 | **Automated coverage** | Domain test suites (planning-hub, matchcenter, etc.) |
 | **Complexity** | XL |
@@ -158,7 +172,7 @@ SCE-DS2-00 (audit)
   → SCE-DS2-01 (foundation + flag)
   → SCE-DS2-02 (nav) → SCE-DS2-03 (typography + team names)
   → SCE-DS2-04 (activity cards)
-  → SCE-DS2-05 → SCE-DS2-06 → SCE-DS2-07
+  → SCE-DS2-05A → SCE-DS2-05B → SCE-DS2-06 → SCE-DS2-07
   → SCE-DS2-TENANT-STUDIO (LATER)
 ```
 
