@@ -378,7 +378,8 @@ function AppShellNavigationInner({
 
         {active.activeDomain &&
         active.activeDomainId !== "dashboard" &&
-        active.domainSecondaryItems.length > 0 ? (
+        active.domainSecondaryItems.length > 0 &&
+        !openDomainPanelId ? (
           <SceHierarchicalDesktopNavigation
             moduleNavAria={t("moduleNavAria")}
             contextNavAria={t("contextNavAria")}
