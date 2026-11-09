@@ -116,8 +116,8 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("resolvePersonalQuickAccess");
   });
 
-  it("keeps dashboard customization entry as compact action", () => {
-    expect(greetingSource).toContain("PersonalDashboardCustomizeDialog");
+  it("omits dashboard customize trigger from greeting (DS2-05B-R4)", () => {
+    expect(greetingSource).not.toContain("PersonalDashboardCustomizeDialog");
     expect(customizeSource).toContain('data-testid="personal-dashboard-customize-trigger"');
   });
 

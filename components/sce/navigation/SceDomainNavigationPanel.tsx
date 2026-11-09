@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { MouseEvent, RefObject } from "react";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { DomainSecondaryNavItem } from "@/lib/nav/app-navigation-model";
@@ -30,53 +30,12 @@ export type SceDomainNavigationPanelProps = {
   onClose: () => void;
 };
 
-type PanelGeometry = {
-  top: number;
-  left: number;
-  width: number;
-};
-
-function computePanelGeometry(
-  header: HTMLElement,
-  hierarchical: boolean,
-): PanelGeometry {
-  const viewportPadding = 12;
-  const maxWidth = hierarchical ? 760 : 360;
-  const minWidth = hierarchical ? 600 : 280;
-  const width = Math.min(
-    maxWidth,
-    Math.max(minWidth, window.innerWidth - viewportPadding * 2),
-  );
-
-  const primaryRow = header.querySelector('[data-sce-nav-spine-row="primary"]');
-  const moduleRow = header.querySelector('[data-sce-nav-spine-row="module"]');
-  const contextRow = header.querySelector('[data-sce-nav-spine-row="context"]');
-  const workspace =
-    primaryRow?.querySelector("[data-sce-nav-workspace]") ??
-    header.querySelector("[data-sce-nav-workspace]");
-  const anchorRect =
-    workspace?.getBoundingClientRect() ??
-    primaryRow?.getBoundingClientRect() ??
-    header.getBoundingClientRect();
-  const shellBottom =
-    contextRow?.getBoundingClientRect().bottom ??
-    moduleRow?.getBoundingClientRect().bottom ??
-    header.getBoundingClientRect().bottom;
-  const top = shellBottom + 4;
-
-  let left = anchorRect.left;
-  if (left + width > window.innerWidth - viewportPadding) {
-    left = Math.max(viewportPadding, window.innerWidth - viewportPadding - width);
-  }
-  left = Math.max(viewportPadding, left);
-
-  return { top, left, width };
-}
-
+/**
+ * SCE-DS2-05B-R4 — integrated three-column domain navigation (SC Cham reference).
+ */
 export function SceDomainNavigationPanel({
   panelId,
   open,
-  headerRef,
   domain,
   domainHeading,
   items,
@@ -88,40 +47,18 @@ export function SceDomainNavigationPanel({
   onClose,
 }: SceDomainNavigationPanelProps) {
   const hierarchical = resolveDomainNavigationPanelUsesHierarchy(domain, items);
-  const [selectedL2Key, setSelectedL2Key] = useState<string | null>(initialL2Key);
-  const [geometry, setGeometry] = useState<PanelGeometry | null>(null);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setGeometry(null);
-      return;
-    }
-    setSelectedL2Key(
+  const autoL2Key = useMemo(
+    () =>
       initialL2Key ??
-        resolveDomainNavigationPanelInitialL2Key(domain, items, {
-          activeDomainId: domain.id,
-          activeDestinationKey: null,
-          activeChildKey: null,
-        }),
-    );
-  }, [open, initialL2Key, domain, items]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    const header = headerRef.current;
-    if (!header) return;
-
-    const update = () => {
-      setGeometry(computePanelGeometry(header, hierarchical));
-    };
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, headerRef, hierarchical, items.length, selectedL2Key]);
+      resolveDomainNavigationPanelInitialL2Key(domain, items, {
+        activeDomainId: domain.id,
+        activeDestinationKey: null,
+        activeChildKey: null,
+      }),
+    [domain, initialL2Key, items],
+  );
+  const [userL2Key, setUserL2Key] = useState<string | null>(null);
+  const selectedL2Key = userL2Key ?? autoL2Key;
 
   const selectedItem = useMemo(
     () => items.find((item) => item.key === selectedL2Key) ?? null,
@@ -133,7 +70,7 @@ export function SceDomainNavigationPanel({
     return resolveDomainPanelRightColumnEntries(domain, selectedItem);
   }, [domain, hierarchical, selectedItem]);
 
-  if (!open || items.length === 0 || !geometry) {
+  if (!open || items.length === 0) {
     return null;
   }
 
@@ -148,17 +85,21 @@ export function SceDomainNavigationPanel({
       data-sce-domain-nav-panel-mode={hierarchical ? "hierarchical" : "simple"}
       className={cn(
         "sce-domain-nav-panel",
+        "sce-domain-nav-panel--integrated",
         hierarchical && "sce-domain-nav-panel--hierarchical",
-        showRightColumn && "sce-domain-nav-panel--two-column",
+        showRightColumn && "sce-domain-nav-panel--three-column",
       )}
-      style={{
-        top: geometry.top,
-        left: geometry.left,
-        width: geometry.width,
-      }}
     >
-      <p className="sce-domain-nav-panel-domain-heading">{domainHeading}</p>
-      <div className="sce-domain-nav-panel-body">
+      <div
+        className={cn(
+          "sce-domain-nav-panel-cham-body",
+          !showRightColumn && "sce-domain-nav-panel-cham-body--two-column",
+        )}
+      >
+        <h2 className="sce-domain-nav-panel-section-title" data-testid="sce-domain-nav-panel-title">
+          {domainHeading}
+        </h2>
+
         <div className="sce-domain-nav-panel-l2">
           <ul className="sce-domain-nav-panel-list">
             {items.map((item) => {
@@ -177,11 +118,12 @@ export function SceDomainNavigationPanel({
                         selected && "sce-domain-nav-panel-l2-control--selected",
                       )}
                       data-nav-destination={item.key}
-                      onClick={() => setSelectedL2Key(item.key)}
+                      aria-expanded={selected}
+                      onClick={() => setUserL2Key(item.key)}
                     >
                       <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
                       <ChevronRight
-                        className="sce-domain-nav-panel-l2-chevron h-3.5 w-3.5"
+                        className="sce-domain-nav-panel-l2-chevron h-4 w-4"
                         aria-hidden="true"
                       />
                     </button>
@@ -218,7 +160,6 @@ export function SceDomainNavigationPanel({
 
         {showRightColumn && selectedItem ? (
           <div className="sce-domain-nav-panel-l3" aria-label={selectedItem.label}>
-            <p className="sce-domain-nav-panel-l3-heading">{selectedItem.label}</p>
             <ul className="sce-domain-nav-panel-list">
               {rightColumnEntries.map((child) => {
                 const active = isL3Active(child);

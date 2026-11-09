@@ -52,8 +52,8 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
     expect(clubDashboardSource).not.toContain("DashboardQuickActionStrip");
   });
 
-  it("routes hero customization through compact dashboard customize dialog", () => {
-    expect(greetingSource).toContain("PersonalDashboardCustomizeDialog");
+  it("keeps customize dialog module without mounting on dashboard greeting (R4)", () => {
+    expect(greetingSource).not.toContain("PersonalDashboardCustomizeDialog");
     expect(greetingSource).toContain("initialBackgroundImageUrl");
   });
 });

@@ -731,7 +731,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* SCE-DS2-05B-R3 — dashboard programme single-line row at desktop */
+/* SCE-DS2-05B-R3 / R4 — dashboard programme single-line row at desktop */
 @media (min-width: 768px) {
   .sce-activity-dashboard-programme-row {
     align-items: center;
@@ -739,6 +739,18 @@
 
   .sce-activity-dashboard-programme-row > * {
     min-width: 0;
+  }
+
+  .sce-activity-dashboard-programme-row [data-testid="sce-training-list-row-date"] {
+    grid-column: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sce-activity-dashboard-programme-row [data-testid="sce-training-list-row-time"] {
+    grid-column: 2;
+    justify-self: start;
+    max-width: 100%;
   }
 }
 

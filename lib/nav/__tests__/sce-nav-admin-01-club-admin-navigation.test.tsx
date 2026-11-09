@@ -32,7 +32,7 @@ vi.mock("next-intl", () => ({
       "domains.dashboard": "Dashboard",
       "domains.planning": "Planung",
       "domains.communication": "Kommunikation",
-      "domains.club": "Club",
+      "domains.club": "Verein",
       "domains.publishing": "Publizieren",
       "domains.admin": "Admin",
       primaryNavAria: "Hauptnavigation",
@@ -130,9 +130,9 @@ describe("SCE-NAV-ADMIN-01 Club Admin navigation", () => {
     const labels = Array.from(nav.querySelectorAll(".sce-global-primary-nav-domain-label")).map(
       (el) => el.textContent,
     );
-    expect(labels).toEqual(["Club", "Planung", "Publizieren", "Kommunikation", "Admin"]);
+    expect(labels).toEqual(["Verein", "Planung", "Publizieren", "Kommunikation", "Admin"]);
     expect(labels.at(-1)).toBe("Admin");
-    expect(labels[0]).toBe("Club");
+    expect(labels[0]).toBe("Verein");
     expect(screen.getByRole("button", { name: /^Admin$/ })).toBeInTheDocument();
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     expect(model.domains.find((d) => d.id === "admin")?.defaultDestination.href).toBe(

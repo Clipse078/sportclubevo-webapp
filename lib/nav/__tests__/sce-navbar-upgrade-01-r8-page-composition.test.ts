@@ -81,10 +81,8 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     expect(switcher).toContain("sce-global-season-switcher--icon-only");
 
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain('displayMode="wide"');
-    expect(utilities).toContain('displayMode="medium"');
-    expect(utilities).not.toContain('displayMode="icon"');
-    expect(utilities).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
+    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).toContain("NotificationBell");
   });
 
   it("structures Wochenplaner chrome with hierarchical toolbars on page grid", () => {

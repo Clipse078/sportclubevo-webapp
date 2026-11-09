@@ -59,7 +59,7 @@ describe("SCE-DS2-05B-R3 delivery", () => {
     expect(utilities).toContain("ScePlatformBrandRail");
     expect(utilities).toContain("NotificationBell");
     expect(utilities).toMatch(/ScePlatformBrandRail[\s\S]*NotificationBell/);
-    expect(utilities).toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
   });
 
   it("shows persistent L2/L3 desktop hierarchy from canonical navigation", () => {

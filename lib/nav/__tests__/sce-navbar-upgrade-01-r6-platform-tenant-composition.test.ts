@@ -15,11 +15,11 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
-  it("places tenant context on row 1 with season in utilities (DS2-05B-R3); drawer attribution remains", () => {
+  it("places tenant context on row 1; season switching via /dashboard/seasons (DS2-05B-R4)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toMatch(/SceGlobalUtilities[\s\S]*activeSeasonLabel/);
+    expect(shell).not.toMatch(/SceGlobalUtilities[\s\S]*activeSeasonLabel/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");

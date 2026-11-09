@@ -26,20 +26,19 @@ describe("SCE-NAVBAR-UPGRADE-01-R10 tenant-first navigation shell", () => {
     expect(drawer).toContain("global-nav-drawer-platform-footer");
   });
 
-  it("keeps season in Row 1 utilities after DS2-05B-R3 header compaction", () => {
+  it("removes Row 1 season selector while layout keeps season context props (R4)", () => {
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain("SceGlobalSeasonSwitcher");
-    expect(utilities).toContain('displayMode="wide"');
+    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("SceRow2SeasonContext");
-    expect(shell).toContain("activeSeasonLabel={activeSeasonLabel}");
+    expect(shell).toContain("activeSeasonLabel");
   });
 
-  it("anchors domain panel below the complete two-row shell", () => {
+  it("integrates domain panel beneath the header (R4 Cham layout)", () => {
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
-    expect(panel).toContain('data-sce-nav-spine-row="module"');
-    expect(panel).toMatch(/moduleRow[\s\S]*shellBottom/);
+    expect(panel).toContain("sce-domain-nav-panel--integrated");
+    expect(panel).not.toContain("computePanelGeometry");
   });
 
   it("maps Vereinsprogramm to a canonical monochrome planning icon", () => {

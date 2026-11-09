@@ -50,7 +50,7 @@ export const SCE_ACTIVITY_REFERENCE_LAYOUT = {
     "sce-match-kickoff-box inline-flex items-center gap-1.5 rounded-lg border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)] px-2.5 py-1.5 font-mono text-sm font-bold tabular-nums leading-none text-[var(--sce-color-text-primary)] shadow-sm",
   kickoffIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--sce-color-text-secondary)]",
   trainingReferenceRowClass:
-    "sce-activity-horizontal-operational-row sce-activity-dashboard-programme-row flex min-w-0 w-full flex-col gap-2 md:grid md:grid-cols-[minmax(0,7.25rem)_minmax(0,6rem)_minmax(0,1.05fr)_minmax(0,1.35fr)_minmax(0,1fr)] md:items-center md:gap-x-2.5 lg:gap-x-3",
+    "sce-activity-horizontal-operational-row sce-activity-dashboard-programme-row flex min-w-0 w-full flex-col gap-2 md:grid md:grid-cols-[minmax(5.5rem,8.5rem)_minmax(5.5rem,7.75rem)_minmax(0,1.05fr)_minmax(0,1.35fr)_minmax(0,1fr)] md:items-center md:gap-x-3 lg:gap-x-4",
   trainingReferenceTimeClass:
     "font-mono text-sm font-semibold tabular-nums whitespace-nowrap text-[var(--sce-color-text-primary)]",
   trainingReferenceActivityCellClass:

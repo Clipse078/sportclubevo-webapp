@@ -80,17 +80,18 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(css).toContain(".sce-global-context-nav");
   });
 
-  it("keeps Row 1 season context responsive without overlap architecture", () => {
+  it("keeps header utilities compact without season selector (R4)", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain("sce-global-season-switcher--icon-only");
     expect(css).toMatch(/@media \(max-width: 1279px\)[\s\S]*sce-global-primary-nav-item/);
 
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain('displayMode="wide"');
-    expect(utilities).toContain('displayMode="medium"');
     expect(utilities).toContain('data-sce-utilities-tier="compact"');
-    expect(utilities).toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
     expect(utilities).not.toContain("global-nav-hamburger");
+
+    const switcher = readRelative("components/sce/navigation/SceGlobalSeasonSwitcher.tsx");
+    expect(switcher).toContain("/dashboard/seasons");
   });
 
   it("fits functional L1 domains after dashboard removal at laptop tier", () => {

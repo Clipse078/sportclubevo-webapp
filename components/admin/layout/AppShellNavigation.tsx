@@ -1,6 +1,6 @@
 "use client";
 
-/** SCE-DS2-05B-R3 — tenant-first header, hierarchical L2/L3, utilities season + SCE wordmark. */
+/** SCE-DS2-05B-R4 — tenant-first header, Cham-style domain panel, utilities without season. */
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -59,6 +59,7 @@ type AppShellNavigationProps = {
   clubName?: string;
   logoUrl?: string | null;
   navCapabilities?: NavCapabilityContext;
+  /** Passed from layout for URL season context; switching UI lives at /dashboard/seasons (R4). */
   activeSeasonLabel?: string | null;
   activeSeasonKey?: string | null;
   firstName: string;
@@ -86,8 +87,6 @@ function AppShellNavigationInner({
   clubName,
   logoUrl,
   navCapabilities,
-  activeSeasonLabel,
-  activeSeasonKey,
   firstName,
   lastName,
   email,
@@ -369,10 +368,6 @@ function AppShellNavigationInner({
           utilities={
             <SceGlobalUtilities
               platformWorkspace={isPlatformWorkspace}
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeason}
-              seasonSwitchLabel={t("seasonSwitchAria")}
               firstName={firstName}
               lastName={lastName}
               email={email}
@@ -407,6 +402,7 @@ function AppShellNavigationInner({
 
         {openDomainPanel && openDomainPanelItems.length > 0 ? (
           <SceDomainNavigationPanel
+            key={openDomainPanel.id}
             panelId={domainPanelControlsId(openDomainPanel.id)}
             open={openDomainPanelId === openDomainPanel.id}
             headerRef={headerRef}

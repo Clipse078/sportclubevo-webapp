@@ -3,16 +3,11 @@
 import type { ReactNode } from "react";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
-import { SceGlobalSeasonSwitcher } from "@/components/sce/navigation/SceGlobalSeasonSwitcher";
 import { ScePlatformBrandRail } from "@/components/sce/navigation/SceTenantIdentityBar";
 import { cn } from "@/lib/cn";
 
 type SceGlobalUtilitiesProps = {
   platformWorkspace: boolean;
-  activeSeasonLabel?: string | null;
-  activeSeasonKey?: string | null;
-  selectedSeasonKey?: string | null;
-  seasonSwitchLabel?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -20,12 +15,9 @@ type SceGlobalUtilitiesProps = {
   trailingSlot?: ReactNode;
 };
 
+/** SCE-DS2-05B-R4 — SCE wordmark, notifications, account (no season selector). */
 export function SceGlobalUtilities({
   platformWorkspace,
-  activeSeasonLabel,
-  activeSeasonKey,
-  selectedSeasonKey,
-  seasonSwitchLabel,
   firstName,
   lastName,
   email,
@@ -42,34 +34,14 @@ export function SceGlobalUtilities({
       {trailingSlot}
 
       {!platformWorkspace ? (
-        <>
-          <div className="hidden md:flex lg:hidden">
-            <SceGlobalSeasonSwitcher
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeasonKey}
-              switchLabel={seasonSwitchLabel}
-              displayMode="medium"
-            />
-          </div>
-          <div className="hidden lg:flex">
-            <SceGlobalSeasonSwitcher
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeasonKey}
-              switchLabel={seasonSwitchLabel}
-              displayMode="wide"
-            />
-          </div>
-          <div
-            className={cn(
-              "sce-global-header-platform-brand hidden shrink-0 md:flex",
-            )}
-            data-testid="sce-header-platform-brand"
-          >
-            <ScePlatformBrandRail className="sce-global-sce-brand--header-utilities" />
-          </div>
-        </>
+        <div
+          className={cn(
+            "sce-global-header-platform-brand hidden shrink-0 md:flex",
+          )}
+          data-testid="sce-header-platform-brand"
+        >
+          <ScePlatformBrandRail className="sce-global-sce-brand--header-utilities" />
+        </div>
       ) : null}
 
       <NotificationBell />
