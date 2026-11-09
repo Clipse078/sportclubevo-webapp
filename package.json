@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "test": "vitest run",
-    "pretest:design-system": "node scripts/ensure-playwright-chromium-ci.mjs",
     "test:design-system": "tsx scripts/run-design-system-governance.ts && vitest run lib/design-system components/admin/org/__tests__",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
