@@ -76,13 +76,6 @@ export const SCE_DESIGN_SYSTEM_EXCEPTION_REGISTRY: SceDesignSystemGovernanceExce
     reason: "Wochenplaner planner entry — operational planning surface, not generic modal-first CRUD.",
   },
   {
-    id: "SCE-DS-EX-ARCH-001",
-    category: "EXPLICIT_ARCHITECTURE_EXCEPTION",
-    scope: "components/admin/teams/TeamCockpitNav.tsx",
-    reason:
-      "Route-segment team cockpit IA — mode switcher, not product-wide SceContextTabs duplication.",
-  },
-  {
     id: "SCE-DS-EX-ARCH-002",
     category: "EXPLICIT_ARCHITECTURE_EXCEPTION",
     scope: "components/admin/layout/GlobalNavDrawer.tsx",

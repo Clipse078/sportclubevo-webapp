@@ -12,8 +12,12 @@ import TeamCockpitNav, {
 const TEAM_ID = "team-1";
 const BASE_PATH = buildTeamBasePath(TEAM_ID);
 
+const push = vi.fn();
+
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+  useRouter: vi.fn(() => ({ push })),
 }));
 
 import { usePathname } from "next/navigation";

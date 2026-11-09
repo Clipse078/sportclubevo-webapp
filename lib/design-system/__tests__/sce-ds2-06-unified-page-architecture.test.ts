@@ -2,6 +2,7 @@
  * SCE-DS2-06 — unified page architecture (Finance reference)
  */
 
+import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -128,6 +129,35 @@ describe("SCE-DS2-06 unified page architecture", () => {
       }
     }
     expect(failures, failures.join("\n")).toEqual([]);
+  });
+
+  it("team cockpit navigation uses canonical SceContextTabs", () => {
+    const nav = readRepo("components/admin/teams/TeamCockpitNav.tsx");
+    expect(nav).toContain("SceContextTabs");
+    expect(nav).toContain("buildTeamCockpitTabNavigationConfig");
+    expect(readRepo("lib/teams/team-cockpit-tab-config.ts")).toContain("resolveActiveTabFromPathname");
+  });
+
+  it("teams directory meta chips use semantic success tokens (not pale-on-pale green)", () => {
+    const grid = readRepo("components/admin/teams/TeamsOverviewGrid.tsx");
+    expect(grid).toContain("TEAM_DIRECTORY_META_CHIP_ACTIVE");
+    expect(grid).toContain("--sce-color-status-success");
+    expect(grid).not.toContain("text-emerald-200");
+    expect(grid).not.toContain("bg-emerald-500/10");
+  });
+
+  it("white edition status tokens keep AA contrast on tinted fills", () => {
+    const globals = readRepo("app/globals.css");
+    expect(globals).toMatch(
+      /\[data-sce-theme="white"\][\s\S]*--sce-color-status-success:\s*#166534/,
+    );
+  });
+
+  it("passes representative visual archetype contrast smoke", () => {
+    execSync("node scripts/sce-ds2-06-visual-archetypes-browser-check.mjs", {
+      cwd: ROOT,
+      stdio: "pipe",
+    });
   });
 
   it("contextual side panel sheet uses semantic surface tokens (no same-color status traps)", () => {

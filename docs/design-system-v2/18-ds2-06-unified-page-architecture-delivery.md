@@ -32,9 +32,17 @@ Finance establishes the canonical page hierarchy (breadcrumb → eyebrow → tit
 - **E** — Modal migration inventory (`sce-ds2-06-modal-migration-inventory.ts`)
 - **F** — Authenticated routes inheriting patterns (ongoing sweep into DS2-07)
 
+## DS2-06R2 (route inventory + contrast)
+
+- Full authenticated inventory: `lib/design-system/sce-ds2-06-route-inventory.ts` (regenerate via `node scripts/sce-ds2-06-route-inventory-scan.mjs`)
+- Teams directory contrast: semantic `--sce-color-status-success` meta chips on `/dashboard/teams`
+- Team cockpit tabs: `SceContextTabs` + `lib/teams/team-cockpit-tab-config.ts` on `/dashboard/teams/[teamId]/*`
+- Visual archetype smoke: `node scripts/sce-ds2-06-visual-archetypes-browser-check.mjs`
+
 ## Automated verification
 
 - `lib/design-system/__tests__/sce-ds2-06-unified-page-architecture.test.ts`
+- `lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts`
 - `npm run test:design-system`
 - `npm run lint`
 - `npm run build`

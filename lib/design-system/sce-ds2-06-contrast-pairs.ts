@@ -34,4 +34,34 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#ffffff",
     minimumRatio: 4.5,
   },
+  {
+    id: "status-success-on-success-light",
+    foreground: "#166534",
+    background: "#e8f2ec",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "status-warning-on-warning-light",
+    foreground: "#92400e",
+    background: "#f7efe8",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "team-meta-inactive-on-surface-2",
+    foreground: "#475569",
+    background: "#f8fafc",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "context-tab-inactive-on-canvas",
+    foreground: "#475569",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "context-tab-active-accent-on-canvas",
+    foreground: "#0b4aa2",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
 ];
