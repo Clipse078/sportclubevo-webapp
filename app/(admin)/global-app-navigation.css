@@ -639,6 +639,8 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* SCE-DS2-05B-R11 — every domain uses this frame. L2 stays in column 2.
+   Column 3 is reserved for L3 and stays empty when a domain has none. */
 .sce-domain-nav-panel-cham-frame {
   display: grid;
   box-sizing: border-box;
@@ -648,16 +650,12 @@
   column-gap: var(--sce-domain-nav-column-gap);
   padding-block: var(--sce-domain-nav-frame-pad-block-start) var(--sce-domain-nav-frame-pad-block-end);
   padding-inline: var(--sce-domain-nav-frame-pad-inline);
-  grid-template-columns: minmax(0, 32fr) minmax(0, 68fr);
+  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
   overflow: visible;
 }
 
 .sce-domain-nav-panel--three-column .sce-domain-nav-panel-cham-frame {
   grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
-}
-
-.sce-domain-nav-panel-cham-frame--two-column {
-  grid-template-columns: minmax(0, 32fr) minmax(0, 68fr);
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -667,6 +665,8 @@
 }
 
 .sce-domain-nav-panel-section-title {
+  grid-column: 1;
+  grid-row: 1;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -694,9 +694,17 @@
   min-width: 0;
   min-height: 0;
   overflow: visible;
+  grid-row: 1;
+  align-self: start;
+  justify-self: stretch;
+}
+
+.sce-domain-nav-panel-l2 {
+  grid-column: 2;
 }
 
 .sce-domain-nav-panel-l3 {
+  grid-column: 3;
   border: none;
   padding: 0;
 }

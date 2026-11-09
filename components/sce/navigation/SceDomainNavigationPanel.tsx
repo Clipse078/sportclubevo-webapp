@@ -85,6 +85,7 @@ function useStableDomainNavOverlay(
 /**
  * SCE-DS2-05B-R7 — portalled Cham-style domain navigation overlay.
  * SCE-DS2-05B-R10 — title, categories, and destinations share one centered frame.
+ * SCE-DS2-05B-R11 — that frame is always three columns. Direct L2 domains leave column 3 empty.
  * Anchored below the primary header row; out of document flow.
  */
 export function SceDomainNavigationPanel({
@@ -147,8 +148,8 @@ export function SceDomainNavigationPanel({
         "sce-domain-nav-panel--integrated",
         "sce-domain-nav-panel--overlay",
         SCE_FLOATING_LAYER_APP_CLASS,
+        "sce-domain-nav-panel--three-column",
         hierarchical && "sce-domain-nav-panel--hierarchical",
-        showRightColumn && "sce-domain-nav-panel--three-column",
       )}
     >
       <div
@@ -156,11 +157,10 @@ export function SceDomainNavigationPanel({
         data-testid="sce-domain-nav-panel-scroll"
       >
         <div
-          className={cn(
-            "sce-domain-nav-panel-cham-frame",
-            !showRightColumn && "sce-domain-nav-panel-cham-frame--two-column",
-          )}
+          className="sce-domain-nav-panel-cham-frame"
           data-testid="sce-domain-nav-panel-frame"
+          data-sce-domain-nav-grid="title-l2-l3"
+          data-sce-domain-nav-l3={showRightColumn ? "populated" : "empty"}
         >
           <h2
             className="sce-domain-nav-panel-section-title"
@@ -169,7 +169,7 @@ export function SceDomainNavigationPanel({
             {domainHeading}
           </h2>
 
-          <div className="sce-domain-nav-panel-l2">
+          <div className="sce-domain-nav-panel-l2" data-sce-domain-nav-column="2">
             <ul className="sce-domain-nav-panel-list">
               {items.map((item) => {
                 const l3Children = resolveSecondaryNavItemModuleLocalChildren(
@@ -239,6 +239,7 @@ export function SceDomainNavigationPanel({
           {showRightColumn && selectedItem ? (
             <div
               className="sce-domain-nav-panel-l3"
+              data-sce-domain-nav-column="3"
               aria-label={selectedItem.label}
             >
               <ul className="sce-domain-nav-panel-list">

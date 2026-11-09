@@ -1,9 +1,12 @@
 /**
  * SCE-DS2-05B-R10 — Cham mega-menu frame geometry.
+ * SCE-DS2-05B-R11 — the same three tracks for every domain. L2 uses the
+ * category track only. The destination track stays reserved when L3 is absent.
  *
  * The overlay stays full-bleed and fixed. Its contents share one centered
  * max-width frame. Column tracks are fractions of that frame, not independent
  * viewport offsets. Overlay top still comes from the primary-row anchor.
+ * Row count changes menu height only; it is not an input to column geometry.
  */
 
 import { computeDomainNavOverlayGeometry } from "@/lib/nav/sce-domain-nav-overlay-geometry";
@@ -30,6 +33,23 @@ export type DomainNavMenuTokens = {
   colCategories: number;
   colDestinations: number;
   rowMinHeightPx: number;
+};
+
+export type DomainNavColumnBox = {
+  left: number;
+  width: number;
+  right: number;
+};
+
+export type DomainNavMenuColumns = {
+  title: DomainNavColumnBox;
+  categories: DomainNavColumnBox;
+  destinations: DomainNavColumnBox;
+  /** Clickable L2 track. Matches categories and stops before the L3 track. */
+  l2: DomainNavColumnBox;
+  l3Reserved: DomainNavColumnBox;
+  l2ConfinedToCategories: boolean;
+  clipsHorizontally: boolean;
 };
 
 export type DomainNavMenuLayout = {
@@ -174,4 +194,61 @@ export function computeDomainNavMenuLayout(
     scrollportMaxHeight: overlay.maxHeight,
     bottomGap: viewportHeight - overlay.top - overlay.maxHeight,
   };
+}
+
+function columnBox(left: number, width: number): DomainNavColumnBox {
+  return { left, width, right: left + width };
+}
+
+/** Pixel tracks inside the centered frame. L2 never includes the destination track. */
+export function measureDomainNavMenuColumns(
+  layout: DomainNavMenuLayout,
+): DomainNavMenuColumns {
+  const title = columnBox(layout.outerInset, layout.columns.title);
+  const categories = columnBox(
+    title.right + layout.columnGap,
+    layout.columns.categories,
+  );
+  const destinations = columnBox(
+    categories.right + layout.columnGap,
+    layout.columns.destinations,
+  );
+  const l2 = categories;
+  const contentRight = layout.outerInset + layout.contentWidth;
+  return {
+    title,
+    categories,
+    destinations,
+    l2,
+    l3Reserved: destinations,
+    l2ConfinedToCategories:
+      l2.left === categories.left &&
+      l2.width === categories.width &&
+      l2.right <= destinations.left - layout.columnGap + 0.001,
+    clipsHorizontally:
+      layout.horizontalOverflow ||
+      title.left < layout.outerInset - 0.5 ||
+      destinations.right > contentRight + 0.5 ||
+      destinations.right > layout.viewportWidth + 0.5,
+  };
+}
+
+/** Width L2 would take if a flat domain stretched across columns 2 and 3. */
+export function domainNavStretchedL2Width(layout: DomainNavMenuLayout): number {
+  return (
+    layout.columns.categories + layout.columnGap + layout.columns.destinations
+  );
+}
+
+/** Content height of the frame for a row count. The overlay cap is separate. */
+export function domainNavMenuContentHeight(
+  layout: DomainNavMenuLayout,
+  rowCount: number,
+  rowMinHeightPx: number,
+): number {
+  return (
+    layout.paddingBlockStart +
+    layout.paddingBlockEnd +
+    rowMinHeightPx * rowCount
+  );
 }
