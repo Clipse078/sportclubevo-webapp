@@ -88,7 +88,7 @@ export function SceTenantContextRail({
       tenantName={displayClubName}
       logoUrl={logoUrl}
       platformWorkspace={false}
-      layout={compact ? "under-product-compact" : "tenant-row-rail"}
+      layout={compact ? "under-product-compact" : "tenant-header-primary"}
       className={cn("sce-global-tenant-context-row sce-global-tenant-row-rail", className)}
       homeHref={homeHref}
       homeTitle={homeTitle}
@@ -139,10 +139,6 @@ export function SceTenantIdentityBar({
             platformWorkspace={false}
             compact
             className="min-[480px]:hidden flex"
-            homeHref={homeHref}
-          />
-          <ScePlatformBrandRail
-            className="sce-global-platform-brand-rail--mobile-secondary"
             homeHref={homeHref}
           />
         </>

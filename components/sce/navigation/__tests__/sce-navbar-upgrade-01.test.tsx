@@ -66,7 +66,7 @@ describe("SceGlobalSeasonSwitcher", () => {
 describe("AppShellNavigation landmarks", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("exposes primary nav and tenant row with on-demand domain panel disclosures", async () => {
+  it("exposes primary nav and on-demand domain panel disclosures without a module row", async () => {
     render(
       <AppShellNavigation
         permissionKeys={adminKeys}
@@ -85,22 +85,21 @@ describe("AppShellNavigation landmarks", () => {
       "aria-label",
       "primaryNavAria",
     );
-
-    const moduleNav = screen.getByTestId("domain-secondary-nav");
-    expect(moduleNav).toHaveAttribute("aria-label", "moduleNavAria");
+    expect(screen.queryByTestId("domain-secondary-nav")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("domain-contextual-nav")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Wochenplaner" })).not.toBeInTheDocument();
 
     const planningTrigger = screen.getByTestId("primary-domain-panel-trigger-planning");
     expect(planningTrigger).toHaveAttribute("aria-expanded", "false");
     expect(planningTrigger).toHaveClass("sce-global-primary-nav-item--active");
-
-    expect(screen.queryByRole("link", { name: "Wochenplaner" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("sce-domain-nav-panel")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.click(planningTrigger);
     expect(planningTrigger).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByTestId("sce-domain-nav-panel")).toBeInTheDocument();
-    const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
+    const panel = screen.getByTestId("sce-domain-nav-panel");
+    expect(panel).toBeInTheDocument();
+    const wochenplaner = within(panel).getByRole("link", { name: "Wochenplaner" });
     expect(wochenplaner).toHaveAttribute("aria-current", "page");
 
     await user.click(screen.getByTestId("global-nav-mobile-menu"));
@@ -127,17 +126,14 @@ describe("AppShellNavigation landmarks", () => {
     expect(primarySpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
     expect(primarySpine?.querySelector("[data-sce-nav-utilities]")).toBeTruthy();
 
-    const moduleSpine = document.querySelector('[data-sce-nav-spine-row="module"]');
-    expect(moduleSpine).toBeTruthy();
-    expect(moduleSpine?.querySelector('[data-sce-nav-brand-rail="occupied"]')).toBeTruthy();
-    expect(moduleSpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
-    expect(moduleSpine?.querySelector("[data-sce-nav-utilities]")).toBeTruthy();
+    expect(document.querySelector('[data-sce-nav-spine-row="module"]')).toBeNull();
+    expect(document.querySelector('[data-sce-nav-spine-row="context"]')).toBeNull();
     expect(screen.getAllByTestId("tenant-identity").length).toBeGreaterThan(0);
     const primaryUtilities = primarySpine?.querySelector("[data-sce-nav-utilities]");
     expect(primaryUtilities).toBeTruthy();
     expect(
       within(primaryUtilities as HTMLElement).queryByTestId("global-season-switcher"),
     ).not.toBeInTheDocument();
-    expect(screen.getByTestId("sce-row2-season-context")).toBeInTheDocument();
+    expect(screen.queryByTestId("sce-row2-season-context")).not.toBeInTheDocument();
   });
 });

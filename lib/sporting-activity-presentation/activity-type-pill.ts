@@ -35,32 +35,36 @@ export function sportingActivityTypePillClassName(
   variant: SportingActivityTypePillVariantKey,
 ): string {
   const base =
-    "inline-block rounded px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em]";
+    "inline-flex items-center rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em]";
 
   switch (variant) {
     case "training-blue":
       return cn(
         base,
-        "bg-[var(--sce-activity-training-subtle)]",
-        "text-[color-mix(in_srgb,var(--sce-activity-training)_90%,var(--foreground)_10%)]",
+        "border-[var(--sce-activity-pill-training-border)]",
+        "bg-[var(--sce-activity-pill-training-bg)]",
+        "text-[var(--sce-activity-pill-training-text)]",
       );
     case "match-red":
       return cn(
         base,
-        "bg-[var(--sce-activity-match-subtle)]",
-        "text-[color-mix(in_srgb,var(--sce-activity-match)_88%,var(--foreground)_12%)]",
+        "border-[var(--sce-activity-pill-match-border)]",
+        "bg-[var(--sce-activity-pill-match-bg)]",
+        "text-[var(--sce-activity-pill-match-text)]",
       );
     case "tournament-orange":
       return cn(
         base,
-        "bg-[var(--sce-activity-tournament-subtle)]",
-        "text-[color-mix(in_srgb,var(--sce-activity-tournament)_92%,var(--foreground)_8%)]",
+        "border-[var(--sce-activity-pill-tournament-border)]",
+        "bg-[var(--sce-activity-pill-tournament-bg)]",
+        "text-[var(--sce-activity-pill-tournament-text)]",
       );
     case "club-event-violet":
       return cn(
         base,
-        "bg-[var(--sce-activity-club-event-subtle)]",
-        "text-[color-mix(in_srgb,var(--sce-activity-club-event)_92%,var(--foreground)_8%)]",
+        "border-[var(--sce-activity-pill-club-event-border)]",
+        "bg-[var(--sce-activity-pill-club-event-bg)]",
+        "text-[var(--sce-activity-pill-club-event-text)]",
       );
   }
 }

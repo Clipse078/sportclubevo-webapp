@@ -59,14 +59,14 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     );
   });
 
-  it("always renders desktop Row 2 including dashboard with empty contextual workspace", () => {
+  it("does not render persistent Row 2/3 navigation on any domain", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceTenantContextRow");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceModuleNavigation");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
-
-    const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(row).toContain("sce-row2-context-workspace-empty");
+    expect(shell).not.toContain("SceRow2SeasonContext");
+    expect(shell).not.toContain("sce-row2-context-workspace-empty");
+    expect(shell).toContain("SceDomainNavigationPanel");
   });
 
   it("uses deterministic season label variants without truncate ellipsis", () => {
@@ -80,11 +80,9 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     expect(switcher).toContain("displayMode");
     expect(switcher).toContain("sce-global-season-switcher--icon-only");
 
-    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
-    expect(row2Season).toContain('displayMode="wide"');
-    expect(row2Season).toContain('displayMode="medium"');
-    expect(row2Season).not.toContain('displayMode="icon"');
-    expect(row2Season).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
+    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
+    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).toContain("NotificationBell");
   });
 
   it("structures Wochenplaner chrome with hierarchical toolbars on page grid", () => {

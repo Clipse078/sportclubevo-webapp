@@ -45,7 +45,7 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 }));
 
 describe("AppShellNavigation dashboard home", () => {
-  it("shows Row 2 platform context with empty workspace, omits dashboard from L1, and exposes platform home link", () => {
+  it("shows the primary header without a persistent module row and omits dashboard from L1", () => {
     render(
       <AppShellNavigation
         permissionKeys={Object.values(PERMISSIONS)}
@@ -57,16 +57,16 @@ describe("AppShellNavigation dashboard home", () => {
       />,
     );
 
-    expect(screen.getByTestId("domain-secondary-nav")).toBeInTheDocument();
-    expect(screen.getByTestId("sce-row2-context-workspace-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-global-navigation")).toBeInTheDocument();
+    expect(screen.queryByTestId("domain-secondary-nav")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("domain-contextual-nav")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-row2-context-workspace-empty")).not.toBeInTheDocument();
     const primaryNav = screen.getByTestId("sce-primary-navigation");
     expect(
       within(primaryNav).queryByRole("link", { name: /domains.dashboard/i }),
     ).not.toBeInTheDocument();
-    const moduleNav = screen.getByTestId("domain-secondary-nav");
-    expect(
-      within(moduleNav).getByTestId("sce-platform-home-link"),
-    ).toHaveAttribute("href", "/dashboard");
+    expect(screen.getAllByTestId("tenant-identity").length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId("tenant-identity")[0]).toHaveTextContent("FC Allschwil");
 
     const planningLinks = screen
       .getAllByRole("link")

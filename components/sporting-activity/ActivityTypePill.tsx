@@ -16,7 +16,7 @@ export function ActivityTypePill({ activityKind, label, className }: ActivityTyp
   const variant = resolveSportingActivityColorToken(activityKind);
   const colorClass =
     sportingActivityColorClassName(activityKind) ??
-    "inline-block rounded px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]";
+    "inline-flex items-center rounded-full border border-[var(--border)] px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]";
 
   return (
     <span

@@ -11,4 +11,3 @@ export {
   SceTenantContextRail,
   SceTenantIdentityBar,
 } from "./SceTenantIdentityBar";
-export { SceTenantContextRow } from "./SceTenantContextRow";

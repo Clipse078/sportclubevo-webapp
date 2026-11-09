@@ -24,7 +24,8 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(shell).toContain("ScePrimaryNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
     expect(shell).not.toContain("<SceContextNavigation");
-    expect(shell).not.toContain("SceModuleNavigation");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
+    expect(shell).not.toContain("SceTenantContextRow");
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(panel).toContain("sce-domain-nav-panel");
     expect(shell).toContain("SceGlobalUtilities");
@@ -38,7 +39,10 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
   it("uses distinct L1/L2/L3 style contracts in global navigation CSS", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain("sce-global-primary-nav-item--active");
-    expect(css).toContain("sce-global-module-nav-item--active");
+    expect(css).toContain("sce-domain-nav-panel-l2-link--active");
+    expect(css).toContain("sce-domain-nav-panel-l3-link--active");
+    expect(css).not.toContain("sce-global-module-nav-item--active");
+    expect(css).not.toContain(".sce-global-context-nav");
     expect(css).toContain("sce-context-nav-panel-link--active");
     expect(css).toContain("--sce-nav-brand-rail-width");
     expect(css).toContain("--sce-nav-start-x");
@@ -49,7 +53,9 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
 
   it("maps module vs context nav landmarks to the correct aria labels", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain('ariaLabel={t("moduleNavAria")}');
+    expect(shell).toContain('ariaLabel={t("primaryNavAria")}');
+    expect(shell).not.toContain('t("moduleNavAria")');
+    expect(shell).not.toContain('t("contextNavAria")');
     expect(shell).toContain("resolveDesktopPrimaryNavigationDomains");
   });
 
@@ -100,11 +106,13 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(inlineIds).toContain("club");
   });
 
-  it("separates tenant row-1 identity from platform row-2 context on desktop", () => {
+  it("separates tenant row-1 identity from drawer-level platform attribution (DS2-05B-R2)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("ScePlatformBrandRail");
+    expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toContain("sce-global-platform-brand-rail--row2");
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("global-nav-drawer-platform-footer");
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("tenant-row-rail");

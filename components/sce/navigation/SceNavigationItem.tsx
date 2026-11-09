@@ -4,19 +4,8 @@ import Link from "next/link";
 import type { MouseEvent, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export type SceNavigationLevel = "primary" | "module" | "context";
-
-const LEVEL_CLASS: Record<SceNavigationLevel, string> = {
-  primary: "sce-global-primary-nav-item",
-  module: "sce-global-module-nav-item",
-  context: "sce-global-context-nav-item",
-};
-
-const LEVEL_ACTIVE_CLASS: Record<SceNavigationLevel, string> = {
-  primary: "sce-global-primary-nav-item--active",
-  module: "sce-global-module-nav-item--active",
-  context: "sce-global-context-nav-item--active",
-};
+/** L1 primary header links. L2/L3 live in the portalled domain panel, not this primitive. */
+export type SceNavigationLevel = "primary";
 
 export type SceNavigationItemProps = {
   level: SceNavigationLevel;
@@ -55,18 +44,16 @@ export function SceNavigationItem({
       data-nav-destination={dataNavDestination}
       onClick={onClick}
       className={cn(
-        LEVEL_CLASS[level],
-        level === "primary" && "sce-global-primary-nav-domain shrink-0 inline-flex items-center",
-        level !== "primary" && icon && "inline-flex items-center gap-1.5",
-        isActive && LEVEL_ACTIVE_CLASS[level],
+        level === "primary" &&
+          "sce-global-primary-nav-item sce-global-primary-nav-domain shrink-0 inline-flex items-center",
+        icon && "gap-1.5",
+        isActive && "sce-global-primary-nav-item--active",
         !isActive && activeVisualClass,
         className,
       )}
     >
       {icon ? <span aria-hidden>{icon}</span> : null}
-      <span className={level === "primary" ? "sce-global-primary-nav-domain-label" : undefined}>
-        {label}
-      </span>
+      <span className="sce-global-primary-nav-domain-label">{label}</span>
     </Link>
   );
 }

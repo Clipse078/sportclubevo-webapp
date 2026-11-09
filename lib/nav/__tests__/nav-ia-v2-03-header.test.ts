@@ -187,12 +187,14 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     expect(report.orphanedDestinations).toEqual([]);
   });
 
-  it("uses compact shared shell styles for Row 1 and Row 2 density targets", () => {
+  it("styles the primary header without a persistent L2/L3 density band", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
-    expect(css).toContain("--topnav-height: 3.25rem");
+    expect(css).toContain("--topnav-height: 3.375rem");
     expect(css).toContain("sce-domain-nav-panel");
-    expect(css).toContain("sce-global-module-nav-item--active");
+    expect(css).toContain("sce-domain-nav-panel-l2-link--active");
+    expect(css).not.toContain("sce-global-module-nav-item--active");
+    expect(css).not.toContain("--sce-nav-context-row-height");
     expect(css).toContain("sce-context-nav-panel-link--active");
-    expect(css).toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
+    expect(css).not.toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
   });
 });

@@ -212,7 +212,7 @@ export function resolveSecondaryNavItemModuleLocalChildren(
   return [];
 }
 
-/** Whether the domain desktop panel should use the two-column L2/L3 layout. */
+/** Whether the domain panel has L3 destinations. The desktop frame stays three columns either way. */
 export function resolveDomainNavigationPanelUsesHierarchy(
   domain: NavigationDomain,
   items: readonly DomainSecondaryNavItem[],

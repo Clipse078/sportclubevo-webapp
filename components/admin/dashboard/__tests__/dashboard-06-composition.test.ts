@@ -57,7 +57,7 @@ describe("DASHBOARD-06 — personal command center composition", () => {
 
   it("coordinates calendar selection with programme feed without duplicating day agenda", () => {
     expect(workspaceSource).toContain("onSelectedDayChange");
-    expect(workspaceSource).toContain("showSelectedDayPanel={false}");
+    expect(workspaceSource).toContain("personal-programme-open-calendar");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("highlightedDayKey={selectedDayKey}");
   });

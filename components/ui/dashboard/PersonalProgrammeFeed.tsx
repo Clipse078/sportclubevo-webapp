@@ -51,7 +51,7 @@ export function PersonalProgrammeFeed({
           variant="compact"
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {groups.map((group) => {
             const label =
               group.labelKind === "today"
@@ -77,7 +77,7 @@ export function PersonalProgrammeFeed({
                 >
                   {label}
                 </p>
-                <ol className="space-y-2">
+                <ol className="space-y-2.5 md:space-y-3">
                   {group.items.map((item) => (
                     <li
                       key={item.id}

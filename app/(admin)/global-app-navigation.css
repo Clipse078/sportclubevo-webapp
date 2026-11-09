@@ -20,10 +20,10 @@
   --sce-page-gutter: 1rem;
   --sce-page-max-width-dashboard: 87.5rem;
   --sce-page-max-width-readable: 75rem;
-  --topnav-height: 3.25rem;
-  --sce-nav-module-row-height: 2.375rem;
+  --topnav-height: 3.375rem;
+  --sce-nav-module-row-height: 2.5rem;
   --sce-context-nav-panel-z: 45;
-  --sce-domain-nav-panel-z: 46;
+  --sce-domain-nav-panel-z: var(--sce-z-floating-app);
 }
 
 @media (min-width: 768px) {
@@ -51,6 +51,14 @@
   background: var(--sce-app-chrome);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+/* SCE-DS2-05B-R9 — header height is the primary row. The overlay anchor is not a band. */
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  .sce-global-app-header
+  .sce-domain-nav-overlay-anchor {
+  height: 0;
+  min-height: 0;
 }
 
 /* ── Shared navigation spine (brand rail | workspace | utilities) ─────────── */
@@ -88,6 +96,11 @@
   [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
     --sce-nav-brand-rail-width: 15.5rem;
   }
+
+  .sce-global-primary-nav-item {
+    font-size: 1.125rem;
+    letter-spacing: 0.04em;
+  }
 }
 
 .sce-nav-spine-brand-cell {
@@ -97,6 +110,7 @@
   min-width: 0;
   max-width: var(--sce-nav-brand-rail-width);
   padding-right: var(--sce-nav-workspace-gutter);
+  overflow: visible;
   border-right: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
 }
 
@@ -132,6 +146,23 @@
   align-items: center;
   min-height: 2rem;
   padding: 0.125rem 0;
+}
+
+/* SCE-DS2-05B-R1 — theme-aware SportClubEvo wordmark (see sportclubevo-platform-wordmark.ts) */
+.sce-platform-wordmark--on-light-surface {
+  display: none;
+}
+
+.sce-platform-wordmark--on-dark-surface {
+  display: block;
+}
+
+[data-sce-theme="white"] .sce-platform-wordmark--on-light-surface {
+  display: block;
+}
+
+[data-sce-theme="white"] .sce-platform-wordmark--on-dark-surface {
+  display: none;
 }
 
 .sce-global-platform-brand-rail--row2 {
@@ -175,6 +206,70 @@
 
 .sce-global-tenant-row-rail[data-tenant-layout="tenant-row-rail"] {
   gap: 0.4375rem;
+}
+
+/* SCE-DS2-05B-R3 — dominant tenant identity (Barlow Condensed 800 uppercase italic) */
+.sce-tenant-header-identity-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: clamp(1.125rem, 0.35vw + 1.05rem, 1.4375rem);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+}
+
+/*
+ * SCE-DS2-05B-R10 — the crest is the flex item. A raw img in this rail is
+ * shrinkable under preflight `max-width: 100%`, so the club name consumes the
+ * fixed brand column and the crest box collapses. The wrapper keeps the crest.
+ */
+.sce-tenant-header-crest {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  max-width: none;
+  line-height: 1;
+}
+
+.sce-tenant-header-crest img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+
+.sce-global-tenant-row-rail[data-tenant-layout="tenant-header-primary"] {
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.sce-global-header-platform-brand .sce-global-platform-brand-rail {
+  min-height: 0;
+  padding: 0;
+}
+
+.sce-global-sce-brand--header-utilities .sce-global-sce-brand--wordmark img {
+  height: 1.25rem !important;
+  max-width: 7.75rem !important;
+}
+
+.sce-global-sce-brand--header-utilities .sce-global-sce-brand--compact img {
+  height: 1.125rem !important;
+  width: 1.125rem !important;
+}
+
+@media (min-width: 1024px) {
+  .sce-global-sce-brand--header-utilities .sce-global-sce-brand--wordmark img {
+    height: 1.3125rem !important;
+    max-width: 8.25rem !important;
+  }
 }
 
 /* Mobile-only stacked product + tenant in row 1 */
@@ -244,12 +339,12 @@
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  padding: 0 0.625rem;
+  padding: 0 0.875rem;
   border-radius: var(--radius-sm);
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
-  font-size: 0.875rem;
+  font-size: 1.0625rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
   color: var(--text-2);
   white-space: nowrap;
@@ -272,11 +367,18 @@
   outline-offset: 2px;
 }
 
+/* SCE-DS2-05B-R8 — active navigation is semantic orange text only. */
 .sce-global-primary-nav-item--active {
   color: var(--sce-primary);
   font-weight: 800;
-  background: color-mix(in srgb, var(--surface-2) 28%, transparent);
-  box-shadow: inset 0 -2px 0 var(--sce-primary);
+  background: transparent;
+  box-shadow: none;
+}
+
+.sce-global-primary-nav-item--active:hover {
+  color: var(--sce-primary);
+  background: color-mix(in srgb, var(--surface-2) 40%, transparent);
+  box-shadow: none;
 }
 
 .sce-global-primary-nav-item--route-context {
@@ -289,7 +391,7 @@
 .sce-global-primary-nav-track {
   min-width: 0;
   max-width: 100%;
-  gap: 0.125rem;
+  gap: 0.375rem;
   justify-content: flex-start;
   overflow-x: auto;
   scrollbar-width: none;
@@ -301,8 +403,8 @@
 
 @media (max-width: 1279px) {
   .sce-global-primary-nav-item {
-    padding-inline: 0.5625rem;
-    font-size: 0.8125rem;
+    padding-inline: 0.6875rem;
+    font-size: 1rem;
   }
 
   .sce-nav-spine-utilities-cell {
@@ -332,96 +434,8 @@
   flex-shrink: 0;
 }
 
-/* ── Module navigation (L2 workspace) ────────────────────────────────────── */
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-global-module-nav {
-  border-top: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
-  min-height: var(--sce-nav-module-row-height);
-  background: color-mix(in srgb, var(--surface-1) 32%, var(--sce-app-chrome));
-}
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-global-module-nav-track {
-  min-height: var(--sce-nav-module-row-height);
-  align-items: center;
-  padding: 0;
-  gap: 0.125rem;
-}
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-tenant-context-workspace-empty {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 28%, transparent);
-}
-
-.sce-global-module-nav-item {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.875rem;
-  padding: 0 0.4375rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--muted) 95%, transparent);
-  white-space: nowrap;
-  text-decoration: none;
-  border-bottom: none;
-  box-shadow: inset 0 -1px 0 transparent;
-  transition:
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.sce-global-module-nav-item:hover {
-  color: var(--text-2);
-}
-
-.sce-global-module-nav-item--active {
-  color: var(--sce-primary);
-  font-weight: 700;
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--sce-primary) 70%, transparent);
-  background: transparent;
-}
-
-.sce-global-module-nav-item--active [data-sce-nav-destination-icon] {
-  color: var(--sce-primary);
-}
-
-.sce-global-module-nav-entry--parent .sce-global-module-nav-item {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.sce-global-module-nav-disclosure {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.875rem;
-  min-width: 1.625rem;
-  margin-left: -0.125rem;
-  padding: 0 0.25rem;
-  border: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: color-mix(in srgb, var(--muted) 90%, transparent);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.sce-global-module-nav-entry--open .sce-global-module-nav-disclosure,
-.sce-global-module-nav-disclosure:hover {
-  color: var(--text-2);
-  background: color-mix(in srgb, var(--surface-2) 35%, transparent);
-}
-
-.sce-global-module-nav-disclosure:focus-visible,
-.sce-global-module-nav-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--sce-primary) 55%, transparent);
-  outline-offset: 2px;
-}
+/* SCE-DS2-05B-R9 — persistent horizontal L2/L3 rows are removed.
+   L2/L3 live only in the portalled mega menu. Do not reserve header bands. */
 
 .sce-global-platform-home-link {
   opacity: 0.92;
@@ -431,7 +445,7 @@
   opacity: 1;
 }
 
-/* ── On-demand L3 contextual panel (no permanent Row 3) ─────────────────── */
+/* ── On-demand L3 contextual panel (drawer / disclosure fallback) ─────────── */
 
 .sce-context-nav-panel {
   position: fixed;
@@ -488,29 +502,75 @@
 .sce-context-nav-panel-link--active {
   color: var(--sce-primary);
   font-weight: 650;
-  background: color-mix(in srgb, var(--sce-primary) 14%, transparent);
-  box-shadow: inset 2px 0 0 var(--sce-primary);
+  background: transparent;
+  box-shadow: none;
 }
 
-/* ── On-demand hierarchical domain panel (R9 — L2/L3, no horizontal Row 2) ─ */
+.sce-context-nav-panel-link--active:hover {
+  color: var(--sce-primary-hover);
+  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
+  box-shadow: none;
+}
+
+/* SCE-DS2-05B-R7 — portalled Cham-style domain navigation overlay */
+
+.sce-domain-nav-overlay-anchor {
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
 
 .sce-domain-nav-panel {
   position: fixed;
-  z-index: var(--sce-domain-nav-panel-z);
-  max-width: calc(100vw - 1.5rem);
-  padding: 0.75rem 0.625rem 0.625rem;
-  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
-  border-radius: var(--radius-md);
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   background: color-mix(in srgb, #0b1220 88%, var(--sce-app-chrome) 12%);
-  box-shadow:
-    0 14px 36px color-mix(in srgb, #000 34%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--sce-primary) 10%, transparent);
+  box-shadow: none;
+  overflow: hidden;
+  pointer-events: auto;
+  /* SCE-DS2-05B-R10 — shared Cham frame. Measured by computeDomainNavMenuLayout. */
+  --sce-domain-nav-content-max: 80rem;
+  --sce-domain-nav-frame-pad-inline: clamp(2.25rem, 5vw, 4rem);
+  --sce-domain-nav-frame-pad-block-start: 1.5rem;
+  --sce-domain-nav-frame-pad-block-end: 1.625rem;
+  --sce-domain-nav-column-gap: clamp(2.25rem, 3vw, 3.25rem);
+  --sce-domain-nav-col-title: 32;
+  --sce-domain-nav-col-categories: 33;
+  --sce-domain-nav-col-destinations: 35;
+  --sce-domain-nav-row-min-height: 2.75rem;
 }
 
-[data-sce-theme="white"] .sce-domain-nav-panel {
+.sce-domain-nav-panel--overlay {
+  top: var(--topnav-height);
+  z-index: var(--sce-z-floating-app);
+  --sce-domain-nav-overlay-max-height: min(
+    26rem,
+    calc(100dvh - var(--topnav-height) - 0.75rem)
+  );
+}
+
+@media (max-width: 767px) {
+  .sce-domain-nav-panel--overlay {
+    display: none;
+  }
+}
+
+.sce-domain-nav-panel--integrated {
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+[data-sce-theme="white"] .sce-domain-nav-panel,
+.sce-domain-nav-panel[data-sce-theme="white"] {
   background: var(--sce-color-surface-standard);
-  border-color: var(--sce-color-border-standard);
-  box-shadow: var(--shadow-lg);
+  border-top-color: var(--sce-color-border-subtle);
+  box-shadow: none;
 }
 
 [data-sce-theme="white"] .sce-context-nav-panel {
@@ -566,42 +626,87 @@
   box-shadow: 0 -1px 0 var(--sce-color-border-subtle);
 }
 
-.sce-domain-nav-panel-domain-heading {
-  margin: 0 0 0.5rem;
-  padding: 0 0.375rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted) 82%, transparent);
-}
-
-.sce-domain-nav-panel-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
+/* SCE-DS2-05B-R10 — one scrollport. The centered frame does not scroll on its own. */
+.sce-domain-nav-panel-cham-body {
+  max-height: var(--sce-domain-nav-overlay-max-height);
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  min-height: 0;
   min-width: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
-.sce-domain-nav-panel--two-column .sce-domain-nav-panel-body {
-  grid-template-columns: minmax(11.5rem, 1fr) minmax(11.5rem, 1fr);
-  gap: 0.625rem;
+/* SCE-DS2-05B-R11 — every domain uses this frame. L2 stays in column 2.
+   Column 3 is reserved for L3 and stays empty when a domain has none. */
+.sce-domain-nav-panel-cham-frame {
+  display: grid;
+  box-sizing: border-box;
+  width: min(100%, var(--sce-domain-nav-content-max));
+  margin-inline: auto;
+  align-items: start;
+  column-gap: var(--sce-domain-nav-column-gap);
+  padding-block: var(--sce-domain-nav-frame-pad-block-start) var(--sce-domain-nav-frame-pad-block-end);
+  padding-inline: var(--sce-domain-nav-frame-pad-inline);
+  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
+  overflow: visible;
+}
+
+.sce-domain-nav-panel--three-column .sce-domain-nav-panel-cham-frame {
+  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sce-domain-nav-panel-section-title {
+    font-size: clamp(2rem, 4.2vw, 2.75rem);
+  }
+}
+
+.sce-domain-nav-panel-section-title {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0.3125rem 0 0;
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: clamp(2.25rem, 3.2vw, 3.35rem);
+  font-weight: 800;
+  font-style: italic;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  align-self: start;
+  background: color-mix(in srgb, #0b1220 88%, var(--sce-app-chrome) 12%);
+}
+
+[data-sce-theme="white"] .sce-domain-nav-panel-section-title,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-section-title {
+  background: var(--sce-color-surface-standard);
+}
+
+.sce-domain-nav-panel-l2,
+.sce-domain-nav-panel-l3 {
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+  grid-row: 1;
+  align-self: start;
+  justify-self: stretch;
+}
+
+.sce-domain-nav-panel-l2 {
+  grid-column: 2;
 }
 
 .sce-domain-nav-panel-l3 {
-  border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  padding-left: 0.625rem;
-  min-width: 0;
-}
-
-.sce-domain-nav-panel-l3-heading {
-  margin: 0 0 0.375rem;
-  padding: 0 0.375rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted) 78%, transparent);
+  grid-column: 3;
+  border: none;
+  padding: 0;
 }
 
 .sce-domain-nav-panel-list {
@@ -620,34 +725,48 @@
   letter-spacing: 0.03em;
 }
 
+/* SCE-DS2-05B-R5 density retained: compact uppercase L2/L3 rows */
 .sce-domain-nav-panel-l2-link,
 .sce-domain-nav-panel-l2-control,
 .sce-domain-nav-panel-l3-link {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.375rem;
+  gap: 0.5rem;
   width: 100%;
-  min-height: 2.125rem;
-  padding: 0.4375rem 0.5rem;
+  min-height: var(--sce-domain-nav-row-min-height);
+  padding: 0.3125rem 0;
   border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.8125rem;
-  font-weight: 550;
-  color: color-mix(in srgb, var(--text-2) 96%, transparent);
+  border-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  color: color-mix(in srgb, var(--text-2) 98%, transparent);
   text-decoration: none;
   background: transparent;
   cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
+  transition: color var(--transition-fast);
+}
+
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-link,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control,
+[data-sce-theme="white"] .sce-domain-nav-panel-l3-link,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link {
+  color: var(--sce-color-text-primary);
+  border-bottom-color: var(--sce-color-border-subtle);
 }
 
 .sce-domain-nav-panel-l2-link:hover,
 .sce-domain-nav-panel-l2-control:hover,
 .sce-domain-nav-panel-l3-link:hover {
   color: var(--foreground);
-  background: color-mix(in srgb, var(--surface-2) 38%, transparent);
+  background: transparent;
 }
 
 .sce-domain-nav-panel-l2-link:focus-visible,
@@ -661,8 +780,9 @@
 .sce-domain-nav-panel-l2-control--active,
 .sce-domain-nav-panel-l3-link--active {
   color: var(--sce-primary);
-  font-weight: 650;
-  background: color-mix(in srgb, var(--sce-primary) 12%, transparent);
+  font-weight: 800;
+  background: transparent;
+  box-shadow: none;
 }
 
 .sce-domain-nav-panel-l2-chevron {
@@ -678,12 +798,49 @@
 }
 
 .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active) {
-  color: color-mix(in srgb, var(--text-2) 96%, transparent);
-  background: color-mix(in srgb, var(--surface-2) 28%, transparent);
+  color: var(--sce-primary);
+  background: transparent;
+  box-shadow: none;
 }
 
-.sce-domain-nav-panel-l2-control--selected {
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--sce-primary) 75%, transparent);
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active,
+[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active),
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active) {
+  color: var(--sce-primary);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-link:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l3-link:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link:hover {
+  color: var(--foreground);
+  background: transparent;
+}
+
+.sce-domain-nav-panel-l2-link--active:hover,
+.sce-domain-nav-panel-l2-control--active:hover,
+.sce-domain-nav-panel-l2-control--selected:hover,
+.sce-domain-nav-panel-l3-link--active:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active:hover {
+  color: var(--sce-primary-hover);
+  background: transparent;
+  box-shadow: none;
 }
 
 .sce-global-season-switcher--compact {

@@ -119,8 +119,9 @@
 | **Scope** | `lib/design-system/sce-functional-surface-styles.ts`, form/table contracts |
 | **Dependencies** | `SCE-DS2-05A` |
 | **Acceptance** | DS-08 dense tests pass; no horizontal overflow |
-| **Automated coverage** | `sce-design-system-08-dense-ui.test.ts` |
+| **Automated coverage** | `sce-ds2-05b-white-surface-contrast.test.ts`, `sce-design-system-08-dense-ui.test.ts`, DS2-01 contrast matrix |
 | **Complexity** | L |
+| **Delivery notes** | [17-ds2-05b-white-surface-contrast-delivery.md](./17-ds2-05b-white-surface-contrast-delivery.md) |
 
 ---
 

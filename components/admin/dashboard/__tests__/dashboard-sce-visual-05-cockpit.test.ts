@@ -75,7 +75,8 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("attentionSlot=");
     expect(clubDashboardDeferredSource).toContain("tasksSlot=");
     expect(workspaceSource).toContain("PersonalProgrammeFeed");
-    expect(workspaceSource).toContain("PersonalProgrammeMonthCalendar");
+    expect(workspaceSource).not.toContain("PersonalProgrammeMonthCalendar");
+    expect(workspaceSource).toContain("md:col-span-2");
     expect(workspaceSource).toContain("attentionSlot");
     expect(workspaceSource).toContain("tasksSlot");
   });
@@ -98,7 +99,7 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("programmeItems");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("onSelectedDayChange");
-    expect(workspaceSource).toContain("showSelectedDayPanel={false}");
+    expect(workspaceSource).toContain("personal-programme-open-calendar");
   });
 
   it("preserves attention and tasks data sources", () => {
@@ -115,8 +116,8 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("resolvePersonalQuickAccess");
   });
 
-  it("keeps dashboard customization entry as compact action", () => {
-    expect(greetingSource).toContain("PersonalDashboardCustomizeDialog");
+  it("omits dashboard customize trigger from greeting (DS2-05B-R4)", () => {
+    expect(greetingSource).not.toContain("PersonalDashboardCustomizeDialog");
     expect(customizeSource).toContain('data-testid="personal-dashboard-customize-trigger"');
   });
 

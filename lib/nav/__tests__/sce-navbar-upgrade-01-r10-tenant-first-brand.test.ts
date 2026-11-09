@@ -12,34 +12,33 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R10 tenant-first navigation shell", () => {
-  it("places tenant identity on Row 1 and SportClubEvo on Row 2 (desktop)", () => {
+  it("places tenant identity on Row 1 and removes permanent Row 2 platform wordmark (DS2-05B-R2)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const primaryBlock = shell.match(/variant="primary"[\s\S]*?utilities=\{/)?.[0];
     expect(primaryBlock).toBeTruthy();
     expect(primaryBlock).toContain("tenantContextRail");
     expect(primaryBlock).not.toContain("ScePlatformBrandRail");
-    expect(shell).toMatch(
+    expect(shell).not.toMatch(
       /SceTenantContextRow[\s\S]*ScePlatformBrandRail[\s\S]*sce-global-platform-brand-rail--row2/,
     );
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("global-nav-drawer-platform-footer");
   });
 
-  it("moves season from Row 1 utilities to Row 2 right context", () => {
+  it("removes Row 1 season selector while layout keeps season context props (R4)", () => {
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
     expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceRow2SeasonContext");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*utilities=\{/);
-
-    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
-    expect(row2Season).toContain('data-testid="sce-row2-season-context"');
-    expect(row2Season).toContain('displayMode="wide"');
+    expect(shell).not.toContain("SceRow2SeasonContext");
+    expect(shell).toContain("activeSeasonLabel");
   });
 
-  it("anchors domain panel below the complete two-row shell", () => {
+  it("integrates domain panel beneath the header (R4 Cham layout)", () => {
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
-    expect(panel).toContain('data-sce-nav-spine-row="module"');
-    expect(panel).toMatch(/moduleRow[\s\S]*shellBottom/);
+    expect(panel).toContain("sce-domain-nav-panel--integrated");
+    expect(panel).not.toContain("computePanelGeometry");
   });
 
   it("maps Vereinsprogramm to a canonical monochrome planning icon", () => {

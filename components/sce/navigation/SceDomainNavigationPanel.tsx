@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import type { MouseEvent, RefObject } from "react";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { DomainSecondaryNavItem } from "@/lib/nav/app-navigation-model";
@@ -13,6 +14,13 @@ import {
   resolveSecondaryNavItemModuleLocalChildren,
 } from "@/lib/nav/app-navigation-model";
 import type { NavItemChild } from "@/lib/nav/nav-config";
+import {
+  computeDomainNavOverlayGeometry,
+  domainNavOverlayStyle,
+  resolveDomainNavOverlayAnchorBottom,
+  resolveDomainNavOverlayTheme,
+} from "@/lib/nav/sce-domain-nav-overlay-geometry";
+import { SCE_FLOATING_LAYER_APP_CLASS } from "@/lib/ui/sce-overlay-layering";
 import { cn } from "@/lib/cn";
 
 export type SceDomainNavigationPanelProps = {
@@ -26,51 +34,60 @@ export type SceDomainNavigationPanelProps = {
   resolveHref: (href: string) => string;
   isL2Active: (item: DomainSecondaryNavItem) => boolean;
   isL3Active: (child: NavItemChild) => boolean;
-  onNavigateSibling: (event: MouseEvent<HTMLAnchorElement>, child: NavItemChild) => void;
+  onNavigateSibling: (
+    event: MouseEvent<HTMLAnchorElement>,
+    child: NavItemChild,
+  ) => void;
   onClose: () => void;
 };
 
-type PanelGeometry = {
-  top: number;
-  left: number;
-  width: number;
-};
+function useStableDomainNavOverlay(
+  open: boolean,
+  headerRef: RefObject<HTMLElement | null>,
+  panelRef: RefObject<HTMLDivElement | null>,
+) {
+  useLayoutEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    if (!panel) return;
 
-function computePanelGeometry(
-  header: HTMLElement,
-  hierarchical: boolean,
-): PanelGeometry {
-  const viewportPadding = 12;
-  const maxWidth = hierarchical ? 760 : 360;
-  const minWidth = hierarchical ? 600 : 280;
-  const width = Math.min(
-    maxWidth,
-    Math.max(minWidth, window.innerWidth - viewportPadding * 2),
-  );
+    const applyGeometry = () => {
+      const header = headerRef.current;
+      const theme = resolveDomainNavOverlayTheme(header);
+      if (theme) {
+        panel.setAttribute("data-sce-theme", theme);
+      } else {
+        panel.removeAttribute("data-sce-theme");
+      }
+      const geometry = computeDomainNavOverlayGeometry(
+        resolveDomainNavOverlayAnchorBottom(header),
+        window.innerHeight,
+      );
+      const style = domainNavOverlayStyle(geometry);
+      panel.style.top = style.top;
+      panel.style.setProperty(
+        "--sce-domain-nav-overlay-max-height",
+        style["--sce-domain-nav-overlay-max-height"],
+      );
+    };
 
-  const primaryRow = header.querySelector('[data-sce-nav-spine-row="primary"]');
-  const moduleRow = header.querySelector('[data-sce-nav-spine-row="module"]');
-  const workspace =
-    primaryRow?.querySelector("[data-sce-nav-workspace]") ??
-    header.querySelector("[data-sce-nav-workspace]");
-  const anchorRect =
-    workspace?.getBoundingClientRect() ??
-    primaryRow?.getBoundingClientRect() ??
-    header.getBoundingClientRect();
-  const shellBottom =
-    moduleRow?.getBoundingClientRect().bottom ??
-    header.getBoundingClientRect().bottom;
-  const top = shellBottom + 4;
-
-  let left = anchorRect.left;
-  if (left + width > window.innerWidth - viewportPadding) {
-    left = Math.max(viewportPadding, window.innerWidth - viewportPadding - width);
-  }
-  left = Math.max(viewportPadding, left);
-
-  return { top, left, width };
+    applyGeometry();
+    window.addEventListener("resize", applyGeometry);
+    const visualViewport = window.visualViewport;
+    visualViewport?.addEventListener("resize", applyGeometry);
+    return () => {
+      window.removeEventListener("resize", applyGeometry);
+      visualViewport?.removeEventListener("resize", applyGeometry);
+    };
+  }, [headerRef, open, panelRef]);
 }
 
+/**
+ * SCE-DS2-05B-R7 — portalled Cham-style domain navigation overlay.
+ * SCE-DS2-05B-R10 — title, categories, and destinations share one centered frame.
+ * SCE-DS2-05B-R11 — that frame is always three columns. Direct L2 domains leave column 3 empty.
+ * Anchored below the primary header row; out of document flow.
+ */
 export function SceDomainNavigationPanel({
   panelId,
   open,
@@ -86,40 +103,20 @@ export function SceDomainNavigationPanel({
   onClose,
 }: SceDomainNavigationPanelProps) {
   const hierarchical = resolveDomainNavigationPanelUsesHierarchy(domain, items);
-  const [selectedL2Key, setSelectedL2Key] = useState<string | null>(initialL2Key);
-  const [geometry, setGeometry] = useState<PanelGeometry | null>(null);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setGeometry(null);
-      return;
-    }
-    setSelectedL2Key(
+  const autoL2Key = useMemo(
+    () =>
       initialL2Key ??
-        resolveDomainNavigationPanelInitialL2Key(domain, items, {
-          activeDomainId: domain.id,
-          activeDestinationKey: null,
-          activeChildKey: null,
-        }),
-    );
-  }, [open, initialL2Key, domain, items]);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    const header = headerRef.current;
-    if (!header) return;
-
-    const update = () => {
-      setGeometry(computePanelGeometry(header, hierarchical));
-    };
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, headerRef, hierarchical, items.length, selectedL2Key]);
+      resolveDomainNavigationPanelInitialL2Key(domain, items, {
+        activeDomainId: domain.id,
+        activeDestinationKey: null,
+        activeChildKey: null,
+      }),
+    [domain, initialL2Key, items],
+  );
+  const [userL2Key, setUserL2Key] = useState<string | null>(null);
+  const selectedL2Key = userL2Key ?? autoL2Key;
+  const panelRef = useRef<HTMLDivElement>(null);
+  useStableDomainNavOverlay(open, headerRef, panelRef);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.key === selectedL2Key) ?? null,
@@ -131,119 +128,150 @@ export function SceDomainNavigationPanel({
     return resolveDomainPanelRightColumnEntries(domain, selectedItem);
   }, [domain, hierarchical, selectedItem]);
 
-  if (!open || items.length === 0 || !geometry) {
+  if (!open || items.length === 0 || typeof document === "undefined") {
     return null;
   }
 
   const showRightColumn = hierarchical && rightColumnEntries.length > 0;
 
-  return (
+  const panel = (
     <div
+      ref={panelRef}
       id={panelId}
       role="navigation"
       aria-label={domainHeading}
       data-testid="sce-domain-nav-panel"
       data-sce-domain-nav-panel-mode={hierarchical ? "hierarchical" : "simple"}
+      data-sce-domain-nav-overlay=""
       className={cn(
         "sce-domain-nav-panel",
+        "sce-domain-nav-panel--integrated",
+        "sce-domain-nav-panel--overlay",
+        SCE_FLOATING_LAYER_APP_CLASS,
+        "sce-domain-nav-panel--three-column",
         hierarchical && "sce-domain-nav-panel--hierarchical",
-        showRightColumn && "sce-domain-nav-panel--two-column",
       )}
-      style={{
-        top: geometry.top,
-        left: geometry.left,
-        width: geometry.width,
-      }}
     >
-      <p className="sce-domain-nav-panel-domain-heading">{domainHeading}</p>
-      <div className="sce-domain-nav-panel-body">
-        <div className="sce-domain-nav-panel-l2">
-          <ul className="sce-domain-nav-panel-list">
-            {items.map((item) => {
-              const l3Children = resolveSecondaryNavItemModuleLocalChildren(domain, item);
-              const hasL3 = l3Children.length > 0;
-              const active = isL2Active(item);
-              const selected = hierarchical && hasL3 && selectedL2Key === item.key;
-              if (hierarchical && hasL3) {
+      <div
+        className="sce-domain-nav-panel-cham-body"
+        data-testid="sce-domain-nav-panel-scroll"
+      >
+        <div
+          className="sce-domain-nav-panel-cham-frame"
+          data-testid="sce-domain-nav-panel-frame"
+          data-sce-domain-nav-grid="title-l2-l3"
+          data-sce-domain-nav-l3={showRightColumn ? "populated" : "empty"}
+        >
+          <h2
+            className="sce-domain-nav-panel-section-title"
+            data-testid="sce-domain-nav-panel-title"
+          >
+            {domainHeading}
+          </h2>
+
+          <div className="sce-domain-nav-panel-l2" data-sce-domain-nav-column="2">
+            <ul className="sce-domain-nav-panel-list">
+              {items.map((item) => {
+                const l3Children = resolveSecondaryNavItemModuleLocalChildren(
+                  domain,
+                  item,
+                );
+                const hasL3 = l3Children.length > 0;
+                const active = isL2Active(item);
+                const selected =
+                  hierarchical && hasL3 && selectedL2Key === item.key;
+                if (hierarchical && hasL3) {
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        className={cn(
+                          "sce-domain-nav-panel-l2-control",
+                          active && "sce-domain-nav-panel-l2-control--active",
+                          selected &&
+                            "sce-domain-nav-panel-l2-control--selected",
+                        )}
+                        data-nav-destination={item.key}
+                        aria-expanded={selected}
+                        onClick={() => setUserL2Key(item.key)}
+                      >
+                        <span className="sce-domain-nav-panel-l2-label">
+                          {item.label}
+                        </span>
+                        <ChevronRight
+                          className="sce-domain-nav-panel-l2-chevron h-4 w-4"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </li>
+                  );
+                }
+
                 return (
                   <li key={item.key}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "sce-domain-nav-panel-l2-control",
-                        active && "sce-domain-nav-panel-l2-control--active",
-                        selected && "sce-domain-nav-panel-l2-control--selected",
-                      )}
-                      data-nav-destination={item.key}
-                      onClick={() => setSelectedL2Key(item.key)}
-                    >
-                      <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
-                      <ChevronRight
-                        className="sce-domain-nav-panel-l2-chevron h-3.5 w-3.5"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </li>
-                );
-              }
-
-              return (
-                <li key={item.key}>
-                  <Link
-                    href={resolveHref(item.href)}
-                    className={cn(
-                      "sce-domain-nav-panel-l2-link",
-                      active && "sce-domain-nav-panel-l2-link--active",
-                    )}
-                    aria-current={active ? "page" : undefined}
-                    data-nav-destination={item.key}
-                    onClick={(event) => {
-                      onNavigateSibling(event, {
-                        key: item.key,
-                        label: item.label,
-                        href: item.href,
-                      });
-                      onClose();
-                    }}
-                  >
-                    <span className="sce-domain-nav-panel-l2-label">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        {showRightColumn && selectedItem ? (
-          <div className="sce-domain-nav-panel-l3" aria-label={selectedItem.label}>
-            <p className="sce-domain-nav-panel-l3-heading">{selectedItem.label}</p>
-            <ul className="sce-domain-nav-panel-list">
-              {rightColumnEntries.map((child) => {
-                const active = isL3Active(child);
-                return (
-                  <li key={child.key}>
                     <Link
-                      href={resolveHref(child.href)}
+                      href={resolveHref(item.href)}
                       className={cn(
-                        "sce-domain-nav-panel-l3-link",
-                        active && "sce-domain-nav-panel-l3-link--active",
+                        "sce-domain-nav-panel-l2-link",
+                        active && "sce-domain-nav-panel-l2-link--active",
                       )}
                       aria-current={active ? "page" : undefined}
-                      data-nav-context-destination={child.key}
+                      data-nav-destination={item.key}
                       onClick={(event) => {
-                        onNavigateSibling(event, child);
+                        onNavigateSibling(event, {
+                          key: item.key,
+                          label: item.label,
+                          href: item.href,
+                        });
                         onClose();
                       }}
                     >
-                      {child.label}
+                      <span className="sce-domain-nav-panel-l2-label">
+                        {item.label}
+                      </span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
           </div>
-        ) : null}
+
+          {showRightColumn && selectedItem ? (
+            <div
+              className="sce-domain-nav-panel-l3"
+              data-sce-domain-nav-column="3"
+              aria-label={selectedItem.label}
+            >
+              <ul className="sce-domain-nav-panel-list">
+                {rightColumnEntries.map((child) => {
+                  const active = isL3Active(child);
+                  return (
+                    <li key={child.key}>
+                      <Link
+                        href={resolveHref(child.href)}
+                        className={cn(
+                          "sce-domain-nav-panel-l3-link",
+                          active && "sce-domain-nav-panel-l3-link--active",
+                        )}
+                        aria-current={active ? "page" : undefined}
+                        data-nav-context-destination={child.key}
+                        onClick={(event) => {
+                          onNavigateSibling(event, child);
+                          onClose();
+                        }}
+                      >
+                        {child.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
+
+  return createPortal(panel, document.body);
 }

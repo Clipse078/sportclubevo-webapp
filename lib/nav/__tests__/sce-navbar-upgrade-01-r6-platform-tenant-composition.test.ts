@@ -15,20 +15,21 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
-  it("places tenant context on row 1 and SportClubEvo on row 2 (desktop)", () => {
+  it("places tenant context on row 1; season switching via /dashboard/seasons (DS2-05B-R4)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("ScePlatformBrandRail");
-    expect(shell).toContain("sce-global-platform-brand-rail--row2");
+    expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
+    expect(shell).not.toMatch(/SceGlobalUtilities[\s\S]*activeSeasonLabel/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");
-    expect(tenantBar).toContain('data-testid="sce-platform-brand-rail"');
-    expect(tenantBar).toContain('layout={compact ? "under-product-compact" : "tenant-row-rail"}');
+    expect(tenantBar).not.toContain("sce-global-platform-brand-rail--mobile-secondary");
+
+    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
+    expect(drawer).toContain("PoweredByBadge");
   });
 
-  it("does not duplicate tenant identity in row 2 brand rail on desktop", () => {
+  it("does not duplicate tenant identity in a second navigation row on desktop", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const primaryBrandBlock = shell.match(
       /variant="primary"[\s\S]*?utilities=\{/,
@@ -37,15 +38,13 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(primaryBrandBlock).toContain("tenantContextRail");
     expect(primaryBrandBlock).not.toContain("ScePlatformBrandRail");
     expect(primaryBrandBlock).toContain("md:hidden");
-
-    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
-    expect(tenantRow).toContain("brand: ReactNode");
-    expect(tenantRow).toContain("brand={brand}");
+    expect(shell).not.toContain("SceTenantContextRow");
   });
 
-  it("removed permanent desktop Row 3 in favor of on-demand hierarchical domain panel", () => {
+  it("uses the on-demand hierarchical domain panel without a persistent L3 strip", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("<SceContextNavigation");
+    expect(shell).not.toContain("SceHierarchicalDesktopNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
 
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");

@@ -215,46 +215,32 @@ describe("SCE-ACTIVITY-CREATE-01J R4A — three-row programme card contract", ()
   });
 });
 
-describe("SCE-ACTIVITY-CREATE-01J R4B — Dashboard Mein Kalender adoption", () => {
-  it("opens canonical Mein Programm calendar route", () => {
+describe("SCE-ACTIVITY-CREATE-01J R4B — Dashboard calendar deep link (DS2-05B-R2)", () => {
+  it("opens canonical Mein Programm calendar route from programme header", () => {
     expect(buildMeinProgrammKalenderOpenHref("2026-10")).toBe(
       "/dashboard/mein-programm?ansicht=kalender&monat=2026-10",
     );
     const workspace = readRelative("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
     expect(workspace).toContain("buildMeinProgrammKalenderOpenHref");
     expect(workspace).not.toContain("/dashboard/kalender?monat=");
+    expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");
   });
 
-  it("keeps selected-day agenda removed and uses PersonalProgrammeMonthCalendar pipeline", () => {
+  it("spans Mein Programm full width on md+ cockpit grid", () => {
     const workspace = readRelative("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    expect(workspace).toContain("PersonalProgrammeMonthCalendar");
-    expect(workspace).toContain("showSelectedDayPanel={false}");
-    expect(workspace).not.toContain("DashboardCalendarEngine");
+    expect(workspace).toContain("md:col-span-2");
   });
 
-  it("only syncs programme scroll when selected day is in preview groups", () => {
-    const workspace = readRelative("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    expect(workspace).toContain("previewDayKeys");
-    expect(workspace).toContain("previewDayKeys.has(selectedDayKey)");
-  });
-
-  it("renders cockpit calendar open link with canonical href", () => {
+  it("renders Kalender öffnen CTA with canonical href", () => {
     render(
       <PersonalDashboardWorkspace
         groups={[]}
-        programmeItems={[]}
         programmeSupported
         timeLabelById={{}}
         monthParam="2026-10"
-        timeZone="Europe/Zurich"
-        navigation={{
-          previousMonthHref: "#prev",
-          nextMonthHref: "#next",
-          todayHref: "#today",
-        }}
       />,
     );
-    const link = screen.getByTestId("personal-calendar-open");
+    const link = screen.getByTestId("personal-programme-open-calendar");
     expect(link.getAttribute("href")).toBe("/dashboard/mein-programm?ansicht=kalender&monat=2026-10");
   });
 });

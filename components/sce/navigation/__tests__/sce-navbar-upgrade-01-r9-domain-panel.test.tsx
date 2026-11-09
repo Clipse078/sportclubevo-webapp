@@ -4,7 +4,7 @@
  * SCE-NAVBAR-UPGRADE-01-R9 — domain panel interaction smoke tests
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
@@ -70,7 +70,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R9 domain panel interactions", () => {
 
     const panel = screen.getByTestId("sce-domain-nav-panel");
     expect(panel).toHaveAttribute("data-sce-domain-nav-panel-mode", "hierarchical");
-    expect(screen.getByText("Organisationseinheiten")).toBeInTheDocument();
+    expect(within(panel).getByText("Organisationseinheiten")).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("sce-domain-nav-panel")).not.toBeInTheDocument();

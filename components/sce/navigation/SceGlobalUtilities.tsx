@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
+import { ScePlatformBrandRail } from "@/components/sce/navigation/SceTenantIdentityBar";
+import { cn } from "@/lib/cn";
 
 type SceGlobalUtilitiesProps = {
   platformWorkspace: boolean;
@@ -13,8 +15,9 @@ type SceGlobalUtilitiesProps = {
   trailingSlot?: ReactNode;
 };
 
+/** SCE-DS2-05B-R4 — SCE wordmark, notifications, account (no season selector). */
 export function SceGlobalUtilities({
-  platformWorkspace: _platformWorkspace,
+  platformWorkspace,
   firstName,
   lastName,
   email,
@@ -29,6 +32,17 @@ export function SceGlobalUtilities({
       data-sce-navbar-contextual-actions="none"
     >
       {trailingSlot}
+
+      {!platformWorkspace ? (
+        <div
+          className={cn(
+            "sce-global-header-platform-brand hidden shrink-0 md:flex",
+          )}
+          data-testid="sce-header-platform-brand"
+        >
+          <ScePlatformBrandRail className="sce-global-sce-brand--header-utilities" />
+        </div>
+      ) : null}
 
       <NotificationBell />
       <AccountMenu
