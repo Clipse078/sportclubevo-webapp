@@ -15,11 +15,11 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
-  it("places tenant context on row 1 with season on row 2 (desktop); platform wordmark in drawer", () => {
+  it("places tenant context on row 1 with season in utilities (DS2-05B-R3); drawer attribution remains", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*SceRow2SeasonContext/);
+    expect(shell).toMatch(/SceGlobalUtilities[\s\S]*activeSeasonLabel/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");
@@ -44,9 +44,10 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(tenantRow).toContain("brand={brand}");
   });
 
-  it("removed permanent desktop Row 3 in favor of on-demand hierarchical domain panel", () => {
+  it("uses persistent L3 strip plus on-demand hierarchical domain panel", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("<SceContextNavigation");
+    expect(shell).toContain("SceHierarchicalDesktopNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
 
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");

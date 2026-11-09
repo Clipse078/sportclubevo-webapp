@@ -20,8 +20,9 @@
   --sce-page-gutter: 1rem;
   --sce-page-max-width-dashboard: 87.5rem;
   --sce-page-max-width-readable: 75rem;
-  --topnav-height: 3.25rem;
-  --sce-nav-module-row-height: 2.375rem;
+  --topnav-height: 3.375rem;
+  --sce-nav-module-row-height: 2.5rem;
+  --sce-nav-context-row-height: 2.25rem;
   --sce-context-nav-panel-z: 45;
   --sce-domain-nav-panel-z: 46;
 }
@@ -87,6 +88,11 @@
 @media (min-width: 1024px) {
   [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
     --sce-nav-brand-rail-width: 15.5rem;
+  }
+
+  .sce-global-primary-nav-item {
+    font-size: 1.125rem;
+    letter-spacing: 0.04em;
   }
 }
 
@@ -192,6 +198,44 @@
 
 .sce-global-tenant-row-rail[data-tenant-layout="tenant-row-rail"] {
   gap: 0.4375rem;
+}
+
+/* SCE-DS2-05B-R3 — dominant tenant identity (Barlow Condensed 800 uppercase italic) */
+.sce-tenant-header-identity-name {
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: clamp(1.125rem, 0.35vw + 1.05rem, 1.4375rem);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+}
+
+.sce-global-tenant-row-rail[data-tenant-layout="tenant-header-primary"] {
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.sce-global-header-platform-brand .sce-global-platform-brand-rail {
+  min-height: 0;
+  padding: 0;
+}
+
+.sce-global-sce-brand--header-utilities .sce-global-sce-brand--wordmark img {
+  height: 1.25rem !important;
+  max-width: 7.75rem !important;
+}
+
+.sce-global-sce-brand--header-utilities .sce-global-sce-brand--compact img {
+  height: 1.125rem !important;
+  width: 1.125rem !important;
+}
+
+@media (min-width: 1024px) {
+  .sce-global-sce-brand--header-utilities .sce-global-sce-brand--wordmark img {
+    height: 1.3125rem !important;
+    max-width: 8.25rem !important;
+  }
 }
 
 /* Mobile-only stacked product + tenant in row 1 */
@@ -377,8 +421,11 @@
   min-height: 1.875rem;
   padding: 0 0.4375rem;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
   color: color-mix(in srgb, var(--muted) 95%, transparent);
   white-space: nowrap;
   text-decoration: none;
@@ -388,6 +435,38 @@
     color var(--transition-fast),
     box-shadow var(--transition-fast),
     background-color var(--transition-fast);
+}
+
+.sce-global-module-nav-item--r3 {
+  padding-inline: 0.5rem;
+}
+
+.sce-global-domain-section-heading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.sce-global-nav-level-separator {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.25rem;
+  margin-inline: 0.25rem;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.sce-global-module-nav-track,
+.sce-global-context-nav-track {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
+}
+
+.sce-global-module-nav-track:focus-within,
+.sce-global-context-nav-track:focus-within {
+  outline: none;
 }
 
 .sce-global-module-nav-item:hover {
@@ -448,7 +527,61 @@
   opacity: 1;
 }
 
-/* ── On-demand L3 contextual panel (no permanent Row 3) ─────────────────── */
+/* ── Persistent L3 destination strip (SCE-DS2-05B-R3) ─────────────────────── */
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  .sce-global-context-nav {
+  border-top: 1px solid color-mix(in srgb, var(--border) 32%, transparent);
+  min-height: var(--sce-nav-context-row-height);
+  background: color-mix(in srgb, var(--surface-1) 18%, var(--sce-app-chrome));
+}
+
+.sce-global-context-nav-track {
+  min-height: var(--sce-nav-context-row-height);
+  align-items: center;
+  padding-block: 0.125rem;
+  gap: 0.0625rem;
+}
+
+.sce-global-context-nav-item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-2) 92%, transparent);
+  white-space: nowrap;
+  text-decoration: none;
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 transparent;
+  transition:
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.sce-global-context-nav-item:hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--surface-2) 35%, transparent);
+}
+
+.sce-global-context-nav-item--active {
+  color: var(--sce-primary);
+  font-weight: 750;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--sce-primary) 65%, transparent);
+}
+
+.sce-global-context-nav-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--sce-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── On-demand L3 contextual panel (drawer / disclosure fallback) ─────────── */
 
 .sce-context-nav-panel {
   position: fixed;

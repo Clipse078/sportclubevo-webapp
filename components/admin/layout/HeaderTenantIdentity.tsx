@@ -8,7 +8,7 @@ type HeaderTenantIdentityProps = {
   platformWorkspace?: boolean;
   /** @deprecated use layout */
   compact?: boolean;
-  layout?: "inline" | "under-product" | "under-product-compact" | "tenant-row-rail";
+  layout?: "inline" | "under-product" | "under-product-compact" | "tenant-row-rail" | "tenant-header-primary";
   className?: string;
   homeHref?: string;
   homeTitle?: string;
@@ -19,6 +19,7 @@ const CREST_SIZE: Record<NonNullable<HeaderTenantIdentityProps["layout"]>, numbe
   "under-product": 26,
   "under-product-compact": 22,
   "tenant-row-rail": 24,
+  "tenant-header-primary": 38,
 };
 
 /**
@@ -39,10 +40,12 @@ export default function HeaderTenantIdentity({
     layout ?? (compact ? "under-product-compact" : "inline");
   const displayName = platformWorkspace ? "SportClubEvo Platform" : tenantName;
   const crestSize = CREST_SIZE[resolvedLayout];
+  const isHeaderPrimary = resolvedLayout === "tenant-header-primary";
   const isStacked =
     resolvedLayout === "under-product" ||
     resolvedLayout === "under-product-compact" ||
-    resolvedLayout === "tenant-row-rail";
+    resolvedLayout === "tenant-row-rail" ||
+    isHeaderPrimary;
 
   if (platformWorkspace) {
     return (
@@ -63,16 +66,21 @@ export default function HeaderTenantIdentity({
       />
       <p
         className={cn(
-          "min-w-0 font-semibold leading-tight tracking-[-0.01em] text-[var(--text-2)]",
-          isStacked
-            ? resolvedLayout === "under-product-compact"
-              ? "max-w-[9rem] truncate text-xs"
-              : resolvedLayout === "tenant-row-rail"
-                ? "max-w-[13rem] truncate text-[0.8125rem]"
-                : "max-w-[12rem] truncate text-[0.8125rem]"
-            : compact
-              ? "max-w-[8rem] truncate text-sm"
-              : "max-w-[14rem] truncate text-[0.9375rem] font-bold text-[var(--foreground)]",
+          "min-w-0 leading-tight text-[var(--foreground)]",
+          isHeaderPrimary
+            ? "sce-tenant-header-identity-name max-w-[min(100%,18rem)] truncate lg:max-w-[min(100%,22rem)]"
+            : cn(
+                "font-semibold tracking-[-0.01em] text-[var(--text-2)]",
+                isStacked
+                  ? resolvedLayout === "under-product-compact"
+                    ? "max-w-[9rem] truncate text-xs"
+                    : resolvedLayout === "tenant-row-rail"
+                      ? "max-w-[13rem] truncate text-[0.8125rem]"
+                      : "max-w-[12rem] truncate text-[0.8125rem]"
+                  : compact
+                    ? "max-w-[8rem] truncate text-sm"
+                    : "max-w-[14rem] truncate text-[0.9375rem] font-bold text-[var(--foreground)]",
+              ),
         )}
       >
         {displayName}

@@ -24,15 +24,16 @@ function readRelative(relativePath: string): string {
 const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
 
 describe("SCE-NAVBAR-UPGRADE-01-R9 hierarchical domain panel", () => {
-  it("keeps persistent Row 2 platform context without desktop horizontal L2 strip", () => {
+  it("keeps domain discovery panel alongside DS2-05B-R3 persistent desktop hierarchy", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceTenantContextRow");
+    expect(shell).toContain("SceHierarchicalDesktopNavigation");
     expect(shell).not.toContain("SceModuleNavigation");
     expect(shell).not.toContain("showDomainModuleNav");
     expect(shell).toContain("SceDomainNavigationPanel");
 
     const css = readRelative("app/(admin)/global-app-navigation.css");
-    expect(css).not.toMatch(/\.sce-global-module-nav-track[\s\S]*overflow-x:\s*auto/);
+    expect(css).toContain(".sce-global-module-nav-track");
+    expect(css).toContain(".sce-global-context-nav-track");
   });
 
   it("opens domain navigation from L1 disclosures using canonical secondary items", () => {

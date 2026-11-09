@@ -1,5 +1,7 @@
 "use client";
 
+/** SCE-DS2-05B-R3 — tenant-first header, hierarchical L2/L3, utilities season + SCE wordmark. */
+
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -48,8 +50,7 @@ import {
   ScePrimaryNavigation,
   SceTenantContextRail,
   SceTenantIdentityBar,
-  SceTenantContextRow,
-  SceRow2SeasonContext,
+  SceHierarchicalDesktopNavigation,
 } from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
@@ -368,6 +369,10 @@ function AppShellNavigationInner({
           utilities={
             <SceGlobalUtilities
               platformWorkspace={isPlatformWorkspace}
+              activeSeasonLabel={activeSeasonLabel}
+              activeSeasonKey={activeSeasonKey}
+              selectedSeasonKey={selectedSeason}
+              seasonSwitchLabel={t("seasonSwitchAria")}
               firstName={firstName}
               lastName={lastName}
               email={email}
@@ -376,19 +381,29 @@ function AppShellNavigationInner({
           }
         />
 
-        <SceTenantContextRow
-          ariaLabel={t("moduleNavAria")}
-          brand={null}
-          utilities={
-            <SceRow2SeasonContext
-              platformWorkspace={isPlatformWorkspace}
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeason}
-              seasonSwitchLabel={t("seasonSwitchAria")}
-            />
-          }
-        />
+        {active.activeDomain &&
+        active.activeDomainId !== "dashboard" &&
+        active.domainSecondaryItems.length > 0 ? (
+          <SceHierarchicalDesktopNavigation
+            moduleNavAria={t("moduleNavAria")}
+            contextNavAria={t("contextNavAria")}
+            domain={active.activeDomain}
+            domainHeading={domainLabel(active.activeDomain)}
+            items={active.domainSecondaryItems}
+            active={active}
+            resolveHref={resolveHref}
+            isL2Active={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
+            isL3Active={(child) =>
+              isModuleLocalChildPrimaryActive(
+                pathname,
+                child,
+                active.moduleLocalChildren,
+                active.activeChildKey,
+              )
+            }
+            onNavigateSibling={navigateToModuleLocalSibling}
+          />
+        ) : null}
 
         {openDomainPanel && openDomainPanelItems.length > 0 ? (
           <SceDomainNavigationPanel

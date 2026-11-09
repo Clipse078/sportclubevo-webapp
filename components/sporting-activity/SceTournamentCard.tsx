@@ -480,9 +480,8 @@ function SceTournamentListRowIdentityContent({
         data-sce-programme-card-contract="reference-row"
         data-sce-activity-card-layout="horizontal-full-width"
       >
-        <span className="sr-only">{model.typeLabel}</span>
         {showExceptionalStatus ? (
-          <div className="sm:col-span-full" data-sce-tournament-region="status">
+          <div className="md:col-span-full" data-sce-tournament-region="status">
             <SceTournamentCardStatus status={status} />
           </div>
         ) : null}
@@ -498,7 +497,7 @@ function SceTournamentListRowIdentityContent({
             <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTimeClass}>{timeLabel}</span>
           </div>
         ) : (
-          <span className="hidden sm:block" aria-hidden />
+          <span className="hidden md:block" aria-hidden />
         )}
         <div
           className="flex min-w-0 items-center gap-2"
@@ -513,6 +512,27 @@ function SceTournamentListRowIdentityContent({
               className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
             />
           ) : null}
+          {ownTeamsLabel || organiser ? (
+            <SceTeamName
+              as="span"
+              className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
+              density="MICRO"
+              lineClamp={1}
+              data-testid="sce-tournament-hauptteam"
+            >
+              {ownTeamsLabel ?? organiser}
+            </SceTeamName>
+          ) : null}
+        </div>
+        <div
+          className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceActivityCellClass}
+          data-testid="sce-tournament-list-row-activity"
+        >
+          <ActivityTypePill
+            activityKind="TOURNAMENT"
+            label={model.typeLabel}
+            className={cn("shrink-0", sceActivityListRowTypePillClass())}
+          />
           <p
             className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
             data-testid="sce-tournament-title"
@@ -521,16 +541,6 @@ function SceTournamentListRowIdentityContent({
             {model.tournamentTitle}
           </p>
         </div>
-        {ownTeamsLabel || organiser ? (
-          <p
-            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass}
-            data-testid="sce-tournament-hauptteam"
-          >
-            {ownTeamsLabel ?? organiser}
-          </p>
-        ) : (
-          <span className="hidden sm:block" aria-hidden />
-        )}
         {locationLine ? (
           <p
             className={cn(
@@ -540,7 +550,9 @@ function SceTournamentListRowIdentityContent({
             data-testid="sce-tournament-list-row-location"
           >
             <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
-            <span className="min-w-0 break-words">{locationLine}</span>
+            <span className="min-w-0 truncate" title={locationLine}>
+              {locationLine}
+            </span>
           </p>
         ) : (
           <span className="hidden sm:block" aria-hidden />

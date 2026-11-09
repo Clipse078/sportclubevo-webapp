@@ -381,6 +381,8 @@ function SceTrainingListRowOperationalContent({
   );
 
   const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+  const titleRedundantWithType =
+    rawTitle.localeCompare(model.typeLabel, "de-CH", { sensitivity: "accent" }) === 0;
 
   return (
     <div
@@ -414,13 +416,25 @@ function SceTrainingListRowOperationalContent({
         showTeamLine={showTeamLine}
         crestIdentity={crestIdentity}
       />
-      <p
-        className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
-        data-testid="sce-training-title"
-        title={title}
+      <div
+        className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceActivityCellClass}
+        data-testid="sce-training-list-row-activity"
       >
-        {title}
-      </p>
+        <ActivityTypePill
+          activityKind="TRAINING"
+          label={model.typeLabel}
+          className={cn("shrink-0", sceActivityListRowTypePillClass())}
+        />
+        {!titleRedundantWithType ? (
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
+            data-testid="sce-training-title"
+            title={title}
+          >
+            {title}
+          </p>
+        ) : null}
+      </div>
       {locationLine ? (
         <p
           className={cn(
@@ -430,7 +444,9 @@ function SceTrainingListRowOperationalContent({
           data-testid="sce-training-list-row-location"
         >
           <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
-          <span className="min-w-0 break-words">{locationLine}</span>
+          <span className="min-w-0 truncate" title={locationLine}>
+            {locationLine}
+          </span>
         </p>
       ) : (
         <span className="hidden sm:block" aria-hidden />
@@ -438,7 +454,7 @@ function SceTrainingListRowOperationalContent({
       {dressingRoomLabel ? (
         <p
           className={cn(
-            "flex min-w-0 items-center gap-1.5",
+            "flex min-w-0 items-center gap-1.5 md:hidden",
             SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceMetaClass,
           )}
           data-testid="sce-training-list-row-dressing-room"

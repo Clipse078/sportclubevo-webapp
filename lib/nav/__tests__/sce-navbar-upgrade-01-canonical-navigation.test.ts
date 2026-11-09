@@ -24,7 +24,7 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(shell).toContain("ScePrimaryNavigation");
     expect(shell).toContain("SceDomainNavigationPanel");
     expect(shell).not.toContain("<SceContextNavigation");
-    expect(shell).not.toContain("SceModuleNavigation");
+    expect(shell).toContain("SceHierarchicalDesktopNavigation");
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(panel).toContain("sce-domain-nav-panel");
     expect(shell).toContain("SceGlobalUtilities");

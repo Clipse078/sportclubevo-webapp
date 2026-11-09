@@ -37,7 +37,8 @@ describe("SCE-DS2-05B-R2 delivery", () => {
     const shell = readRepo("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRail");
     expect(shell).not.toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*brand=\{null\}/);
+    const hierarchical = readRepo("components/sce/navigation/SceHierarchicalDesktopNavigation.tsx");
+    expect(hierarchical).toMatch(/SceTenantContextRow[\s\S]*brand=\{null\}/);
   });
 
   it("relocates platform attribution to the global navigation drawer footer", () => {

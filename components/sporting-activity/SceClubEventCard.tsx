@@ -453,9 +453,8 @@ function SceClubEventListRowIdentityContent({
         data-sce-programme-card-contract="reference-row"
         data-sce-activity-card-layout="horizontal-full-width"
       >
-        <span className="sr-only">{model.typeLabel}</span>
         {showExceptionalStatus && status?.label ? (
-          <div className="sm:col-span-full" data-sce-club-event-region="status">
+          <div className="md:col-span-full" data-sce-club-event-region="status">
             <SceClubEventCardStatus status={status} />
           </div>
         ) : null}
@@ -471,13 +470,31 @@ function SceClubEventListRowIdentityContent({
             <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTimeClass}>{timeLabel}</span>
           </div>
         ) : (
-          <span className="hidden sm:block" aria-hidden />
+          <span className="hidden md:block" aria-hidden />
         )}
         <div
           className="flex min-w-0 items-center gap-2"
           data-testid="sce-club-event-list-row-primary-identity"
         >
           <SceClubEventPrimaryVisualCrest model={model} density={density} listRow />
+          {audienceLabel ? (
+            <span
+              className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass}
+              data-testid="sce-club-event-audience"
+            >
+              {audienceLabel}
+            </span>
+          ) : null}
+        </div>
+        <div
+          className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceActivityCellClass}
+          data-testid="sce-club-event-list-row-activity"
+        >
+          <ActivityTypePill
+            activityKind="EVENT"
+            label={model.typeLabel}
+            className={cn("shrink-0", sceActivityListRowTypePillClass())}
+          />
           <p
             className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
             data-testid="sce-club-event-title"
@@ -486,16 +503,6 @@ function SceClubEventListRowIdentityContent({
             {model.eventTitle}
           </p>
         </div>
-        {audienceLabel ? (
-          <p
-            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalWrapMetaClass}
-            data-testid="sce-club-event-audience"
-          >
-            {audienceLabel}
-          </p>
-        ) : (
-          <span className="hidden sm:block" aria-hidden />
-        )}
         {locationLine ? (
           <p
             className={cn(
@@ -505,7 +512,9 @@ function SceClubEventListRowIdentityContent({
             data-testid="sce-club-event-list-row-location"
           >
             <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
-            <span className="min-w-0 break-words">{locationLine}</span>
+            <span className="min-w-0 truncate" title={locationLine}>
+              {locationLine}
+            </span>
           </p>
         ) : (
           <span className="hidden sm:block" aria-hidden />

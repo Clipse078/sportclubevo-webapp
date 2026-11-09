@@ -26,17 +26,14 @@ describe("SCE-NAVBAR-UPGRADE-01-R10 tenant-first navigation shell", () => {
     expect(drawer).toContain("global-nav-drawer-platform-footer");
   });
 
-  it("moves season from Row 1 utilities to Row 2 right context", () => {
+  it("keeps season in Row 1 utilities after DS2-05B-R3 header compaction", () => {
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).toContain('displayMode="wide"');
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceRow2SeasonContext");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*utilities=\{/);
-
-    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
-    expect(row2Season).toContain('data-testid="sce-row2-season-context"');
-    expect(row2Season).toContain('displayMode="wide"');
+    expect(shell).not.toContain("SceRow2SeasonContext");
+    expect(shell).toContain("activeSeasonLabel={activeSeasonLabel}");
   });
 
   it("anchors domain panel below the complete two-row shell", () => {

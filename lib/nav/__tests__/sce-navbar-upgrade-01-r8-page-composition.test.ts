@@ -59,11 +59,11 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     );
   });
 
-  it("always renders desktop Row 2 including dashboard with empty contextual workspace", () => {
+  it("renders hierarchical Row 2/3 only when a non-dashboard domain has secondary navigation", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain("SceTenantContextRow");
+    expect(shell).toContain("SceHierarchicalDesktopNavigation");
     expect(shell).not.toContain("SceModuleNavigation");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*SceRow2SeasonContext/);
+    expect(shell).not.toContain("SceRow2SeasonContext");
 
     const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
     expect(row).toContain("sce-row2-context-workspace-empty");
@@ -80,11 +80,11 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     expect(switcher).toContain("displayMode");
     expect(switcher).toContain("sce-global-season-switcher--icon-only");
 
-    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
-    expect(row2Season).toContain('displayMode="wide"');
-    expect(row2Season).toContain('displayMode="medium"');
-    expect(row2Season).not.toContain('displayMode="icon"');
-    expect(row2Season).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
+    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
+    expect(utilities).toContain('displayMode="wide"');
+    expect(utilities).toContain('displayMode="medium"');
+    expect(utilities).not.toContain('displayMode="icon"');
+    expect(utilities).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
   });
 
   it("structures Wochenplaner chrome with hierarchical toolbars on page grid", () => {

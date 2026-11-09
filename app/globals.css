@@ -731,6 +731,17 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* SCE-DS2-05B-R3 — dashboard programme single-line row at desktop */
+@media (min-width: 768px) {
+  .sce-activity-dashboard-programme-row {
+    align-items: center;
+  }
+
+  .sce-activity-dashboard-programme-row > * {
+    min-width: 0;
+  }
+}
+
 /* SCE-DS2-05B — functional surfaces, forms, dense UI on white */
 [data-sce-theme="white"] .fca-card::before,
 [data-sce-theme="white"] .fca-section-card::before {

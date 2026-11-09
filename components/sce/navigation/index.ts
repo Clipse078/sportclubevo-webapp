@@ -12,3 +12,4 @@ export {
   SceTenantIdentityBar,
 } from "./SceTenantIdentityBar";
 export { SceTenantContextRow } from "./SceTenantContextRow";
+export { SceHierarchicalDesktopNavigation } from "./SceHierarchicalDesktopNavigation";

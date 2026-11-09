@@ -59,13 +59,11 @@ describe("SCE-NAVBAR-UPGRADE-01-R11 navbar polish", () => {
     expect(shell).toContain("SCE_MOBILE_BOTTOM_NAV_CLASS");
   });
 
-  it("defaults Row 2 season to full label on desktop breakpoints", () => {
-    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
-    expect(row2Season).toContain('displayMode="wide"');
-    expect(row2Season).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
-    expect(row2Season).not.toContain('displayMode="icon"');
-    expect(row2Season).not.toMatch(/min-\[1280px\]/);
-    expect(row2Season).not.toMatch(/min-\[1536px\]/);
+  it("defaults Row 1 utilities season to full label on desktop breakpoints", () => {
+    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
+    expect(utilities).toContain('displayMode="wide"');
+    expect(utilities).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
+    expect(utilities).not.toContain('displayMode="icon"');
 
     const switcher = readRelative("components/sce/navigation/SceGlobalSeasonSwitcher.tsx");
     expect(switcher).toContain('useTranslations("AppShell")');

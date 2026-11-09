@@ -26,5 +26,7 @@ export const SCE_DS2_HEADER_NAV_SURFACE_SELECTORS = [
   ".sce-mobile-bottom-nav-item",
   ".sce-domain-nav-panel-l2-link",
   ".sce-domain-nav-panel-l2-control",
+  ".sce-global-context-nav-item",
+  ".sce-global-domain-section-heading",
   ".sce-app-explorer-domain-rail [role='tab']",
 ] as const;
