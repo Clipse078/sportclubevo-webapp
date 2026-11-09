@@ -1,6 +1,7 @@
 "use client";
 
 import { ClubCrest, type ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
+import { SceTeamName } from "@/components/design-system/typography";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { cn } from "@/lib/cn";
 import { SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
@@ -102,12 +103,14 @@ export function SceTournamentFixtureParticipant({
   const nameTowardCenter = align === "start";
 
   const nameNode = (
-    <span
+    <SceTeamName
+      as="span"
+      density={density === "compact" ? "MICRO" : "STANDARD"}
+      truncate={false}
+      lineClamp={2}
       className={cn(
-        "min-w-0 text-sm font-medium leading-snug [overflow-wrap:anywhere]",
-        density === "compact"
-          ? "line-clamp-2 text-xs"
-          : "sm:line-clamp-2 lg:line-clamp-none",
+        "min-w-0 break-words text-sm font-medium leading-snug",
+        density === "compact" ? "text-xs" : "sm:line-clamp-2 lg:line-clamp-none",
         muted ? "text-[var(--muted)]" : "text-[var(--foreground)]",
       )}
       title={label}
@@ -119,7 +122,7 @@ export function SceTournamentFixtureParticipant({
           ({qualificationProvenanceLabel})
         </span>
       ) : null}
-    </span>
+    </SceTeamName>
   );
 
   const crestNode = (

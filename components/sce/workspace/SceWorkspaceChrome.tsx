@@ -7,7 +7,7 @@ export type SceWorkspaceChromeProps = {
   breadcrumbs?: SceBreadcrumbItem[];
   header?: SceWorkspaceHeaderProps;
   contextTabs?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   contentClassName?: string;
   /** When set, wraps main content in SceWorkspaceSurface rhythm (padding only). */

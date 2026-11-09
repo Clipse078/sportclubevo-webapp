@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
-import {
-  PageBreadcrumbs,
-  PageHeader,
-  PageActions,
-} from "@/components/ui/page";
+import { PageActions } from "@/components/ui/page";
 import type { BreadcrumbItem } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { LoadingSkeleton } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -20,6 +17,8 @@ export type DetailPagePatternProps = {
   headerBadge?: ReactNode;
   /** Breadcrumb trail shown above the header. */
   breadcrumbs?: BreadcrumbItem[];
+  /** Finance-style horizontal tabs below the page header. */
+  contextTabs?: ReactNode;
   /** Primary header-level CTAs (top-right: edit, delete, export…). */
   headerActions?: ReactNode;
   // ── Summary ────────────────────────────────────────────────────────────────
@@ -86,6 +85,7 @@ export function DetailPagePattern({
   description,
   headerBadge,
   breadcrumbs,
+  contextTabs,
   headerActions,
   summary,
   children,
@@ -94,27 +94,23 @@ export function DetailPagePattern({
   className,
 }: DetailPagePatternProps) {
   return (
-    <div className={cn("flex flex-col", className)}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <PageBreadcrumbs items={breadcrumbs} />
-      )}
-
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <PageHeader
-          eyebrow={eyebrow}
-          title={title}
-          description={description}
-          badge={headerBadge}
-          className="mb-0"
-        />
-        {headerActions && <PageActions>{headerActions}</PageActions>}
-      </div>
-
+    <SceWorkspaceChrome
+      className={cn("flex flex-col", className)}
+      breadcrumbs={breadcrumbs}
+      contextTabs={contextTabs}
+      header={{
+        eyebrow,
+        title,
+        description,
+        badge: headerBadge,
+        secondaryActions: headerActions ? <PageActions>{headerActions}</PageActions> : undefined,
+      }}
+    >
       {loading ? (
         <LoadingSkeleton variant="page" />
       ) : (
         <>
-          {summary && <div className="mb-6">{summary}</div>}
+          {summary ? <div>{summary}</div> : null}
 
           {sidebar ? (
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -126,6 +122,6 @@ export function DetailPagePattern({
           )}
         </>
       )}
-    </div>
+    </SceWorkspaceChrome>
   );
 }

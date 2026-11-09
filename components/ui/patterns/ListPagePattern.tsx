@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { PageActions, EmptyState } from "@/components/ui/page";
-import { SceBreadcrumbs } from "@/components/sce/navigation/SceBreadcrumbs";
-import { SceWorkspaceHeader } from "@/components/sce/workspace/SceWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import { LoadingSkeleton } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -18,6 +17,8 @@ export type ListPagePatternProps = {
   headerBadge?: ReactNode;
   /** Breadcrumb trail shown above the header. */
   breadcrumbs?: BreadcrumbItem[];
+  /** Finance-style horizontal tabs below the page header. */
+  contextTabs?: ReactNode;
   /** Slot for header-level CTAs (top-right of header row). */
   headerActions?: ReactNode;
   // ── Stats ──────────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export function ListPagePattern({
   description,
   headerBadge,
   breadcrumbs,
+  contextTabs,
   headerActions,
   stats,
   toolbar,
@@ -122,26 +124,23 @@ export function ListPagePattern({
   );
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      {breadcrumbs && breadcrumbs.length > 0 ? (
-        <SceBreadcrumbs items={breadcrumbs} />
-      ) : null}
-
-      <SceWorkspaceHeader
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-        badge={headerBadge}
-        secondaryActions={headerActions ? <PageActions>{headerActions}</PageActions> : undefined}
-      />
-
-      {stats && <div className="mb-6">{stats}</div>}
-
-      {toolbar && <div className="mb-4">{toolbar}</div>}
-
-      {loading && <LoadingSkeleton variant="table" rows={loadingRows} />}
-      {showEmpty && resolvedEmptyState}
-      {showContent && children}
-    </div>
+    <SceWorkspaceChrome
+      className={cn("flex flex-col", className)}
+      breadcrumbs={breadcrumbs}
+      contextTabs={contextTabs}
+      header={{
+        eyebrow,
+        title,
+        description,
+        badge: headerBadge,
+        secondaryActions: headerActions ? <PageActions>{headerActions}</PageActions> : undefined,
+      }}
+    >
+      {stats ? <div>{stats}</div> : null}
+      {toolbar ? <div>{toolbar}</div> : null}
+      {loading ? <LoadingSkeleton variant="table" rows={loadingRows} /> : null}
+      {showEmpty ? resolvedEmptyState : null}
+      {showContent ? children : null}
+    </SceWorkspaceChrome>
   );
 }

@@ -12,6 +12,7 @@ export type SceWorkspaceHeaderProps = {
   secondaryActions?: ReactNode;
   metadata?: ReactNode;
   className?: string;
+  descriptionTestId?: string;
 };
 
 /**
@@ -27,6 +28,7 @@ export function SceWorkspaceHeader({
   secondaryActions,
   metadata,
   className,
+  descriptionTestId,
 }: SceWorkspaceHeaderProps) {
   const hasActions = Boolean(primaryAction || secondaryActions);
 
@@ -44,6 +46,7 @@ export function SceWorkspaceHeader({
           description={description}
           badge={badge}
           className="mb-0 flex-1"
+          descriptionTestId={descriptionTestId}
         />
         {hasActions ? (
           <PageActions className={cn(SCE_WORKSPACE_HEADER_ACTIONS_CLASS, "lg:pt-1")}>

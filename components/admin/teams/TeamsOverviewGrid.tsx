@@ -55,15 +55,15 @@ const CATEGORY_CONFIG: Record<string, { label: string; accentDot: string }> = {
   TRAININGSGRUPPE: { label: "Trainingsgruppe", accentDot: "bg-purple-500" },
 };
 
-/** Dark SCE meta chip — avoids legacy light Tailwind surfaces (Human UAT R3). */
+/** Semantic status/meta chips for the teams directory (white-edition contrast). */
 export const TEAM_DIRECTORY_META_CHIP_ACTIVE =
-  "border-emerald-500/35 bg-emerald-500/10 text-emerald-200/95";
+  "border-[var(--sce-success-border)] bg-[var(--sce-success-light)] text-[var(--sce-color-status-success)]";
 export const TEAM_DIRECTORY_META_CHIP_INACTIVE =
-  "border-[var(--border)] bg-[var(--surface-2)]/60 text-[var(--muted)]";
+  "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
 export const TEAM_DIRECTORY_META_CHIP_NEUTRAL =
-  "border-[var(--border)] bg-[var(--surface-2)]/80 text-[var(--text-2)]";
+  "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
 export const TEAM_DIRECTORY_META_CHIP_WARNING =
-  "border-amber-500/35 bg-amber-500/10 text-amber-200/95";
+  "border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] text-[var(--sce-color-status-warning)]";
 
 function getCategoryConfig(category: string) {
   return (
@@ -197,7 +197,10 @@ function TeamRowStatus({ isActive }: { isActive: boolean }) {
       className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide ${TEAM_DIRECTORY_META_CHIP_ACTIVE}`}
       data-testid="team-row-status"
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/90" aria-hidden />
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-[var(--sce-color-status-success)]"
+        aria-hidden
+      />
       Aktiv
     </span>
   );

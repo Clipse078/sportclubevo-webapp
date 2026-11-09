@@ -28,6 +28,11 @@ export type SheetProps = {
   panelClassName?: string;
   /** Shrink panel/body to content height (avoids empty trailing sheet space). */
   fitContent?: boolean;
+  /**
+   * Light contextual side panel (Finance-aligned) — preferred for planning editors
+   * instead of centered modal chrome.
+   */
+  contextualPanel?: boolean;
 };
 
 /**
@@ -42,6 +47,7 @@ export function Sheet({
   footer,
   panelClassName,
   fitContent = false,
+  contextualPanel = false,
 }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -66,6 +72,7 @@ export function Sheet({
       contentViewportClassName={cn(
         "!justify-end !p-0",
         fitContent ? "!items-start" : "!items-stretch",
+        contextualPanel && "sce-contextual-side-panel-viewport",
       )}
     >
       <div
@@ -76,6 +83,7 @@ export function Sheet({
         aria-describedby={description ? "sce-sheet-desc" : undefined}
         tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
+        data-sce-contextual-side-panel={contextualPanel ? "true" : undefined}
         className={cn(
           "relative z-10 flex min-h-0 flex-col",
           fitContent
@@ -83,7 +91,10 @@ export function Sheet({
             : "h-full max-h-[var(--sce-dialog-max-height)]",
           panelClassName ??
             "w-full sm:w-[min(100%,720px)] lg:w-[min(100%,760px)]",
-          "border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
+          contextualPanel
+            ? "border-l border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)] shadow-lg"
+            : "border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)]",
+          "outline-none",
         )}
       >
         <div className={SCE_DIALOG_HEADER}>

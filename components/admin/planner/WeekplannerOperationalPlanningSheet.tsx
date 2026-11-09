@@ -432,6 +432,7 @@ function TrainingOperationalEditor({
 
   return (
     <Sheet
+      contextualPanel
       open
       onClose={onClose}
       title="Planung bearbeiten"
@@ -703,6 +704,7 @@ function MatchOperationalEditor({
 
   return (
     <Sheet
+      contextualPanel
       open
       onClose={onClose}
       title={WOCHENPLANNER_EDITOR_SHEET_TITLE}
@@ -907,6 +909,7 @@ function TournamentOperationalEditor({
 
   return (
     <Sheet
+      contextualPanel
       open
       onClose={onClose}
       title="Planung bearbeiten"

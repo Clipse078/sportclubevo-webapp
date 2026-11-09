@@ -520,7 +520,7 @@ export default function OrgUnitCanvasView({
       <div
         ref={viewportRef}
         className={cn(
-          "relative min-h-0 flex-1 touch-none overflow-hidden bg-[#0c1220]",
+          "relative min-h-0 flex-1 touch-none overflow-hidden bg-[var(--sce-color-surface-muted)]",
           isPanning || spacePan ? "cursor-grabbing" : "cursor-grab",
         )}
         style={gridStyle}

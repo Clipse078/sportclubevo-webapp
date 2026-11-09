@@ -14,6 +14,7 @@ import {
 import { getWeekplannerWeekCached } from "@/lib/weekplanner/weekplanner-request-cache";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
 import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
+import { PageShell } from "@/components/ui/page";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
 import PlannerWeekDataSection from "@/components/admin/planner/PlannerWeekDataSection";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
@@ -196,6 +197,7 @@ export default async function PlannerWeekPageRoute({
       : null;
 
   return (
+    <PageShell fullWidth widthMode="operational">
     <PlannerWeekStreamingRoot
       weekNav={{
         param: weekWindow.param,
@@ -246,5 +248,6 @@ export default async function PlannerWeekPageRoute({
         />
       </Suspense>
     </PlannerWeekStreamingRoot>
+    </PageShell>
   );
 }

@@ -574,6 +574,19 @@
 
   --sce-surface-shadow: var(--shadow-sm);
   --sce-surface-shadow-elevated: var(--shadow-md);
+
+  /* Status hues on light surfaces — WCAG AA body text on tinted fills (DS2-06R2) */
+  --sce-success: #166534;
+  --sce-success-hover: #14532d;
+  --sce-success-light: color-mix(in srgb, var(--sce-success) 14%, #ffffff);
+  --sce-success-border: color-mix(in srgb, var(--sce-success) 30%, var(--border));
+  --sce-color-status-success: #166534;
+
+  --sce-warning: #92400e;
+  --sce-warning-hover: #78350f;
+  --sce-warning-light: color-mix(in srgb, var(--sce-warning) 16%, #ffffff);
+  --sce-warning-border: color-mix(in srgb, var(--sce-warning) 32%, var(--border));
+  --sce-color-status-warning: #92400e;
 }
 
 /* SCE-DS2-04 — premium activity card surfaces */
@@ -1830,6 +1843,26 @@ html[data-sidebar-collapsed="1"] {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   pointer-events: auto;
+}
+
+/* SCE-DS2-06 — light contextual side panels (planning editors) preserve page context */
+.sce-modal-overlay-root:has([data-sce-contextual-side-panel="true"]) .sce-modal-overlay-backdrop {
+  background: rgb(15 23 42 / 14%);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+[data-sce-theme="white"]
+  .sce-modal-overlay-root:has([data-sce-contextual-side-panel="true"])
+  .sce-modal-overlay-backdrop {
+  background: rgb(15 23 42 / 10%);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.sce-contextual-side-panel-viewport {
+  justify-content: flex-end;
+  align-items: stretch;
 }
 
 .sce-modal-overlay-panel-host {
