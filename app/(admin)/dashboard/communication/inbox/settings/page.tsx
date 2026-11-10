@@ -1,6 +1,6 @@
 import CommunicationMailboxSettingsForm from "@/components/admin/communication/inbox/CommunicationMailboxSettingsForm";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { listCommunicationCenterMailboxes } from "@/lib/communication/inbox/mailbox-service";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -19,7 +19,8 @@ export default async function CommunicationInboxSettingsPage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <FormPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -28,15 +29,16 @@ export default async function CommunicationInboxSettingsPage() {
         ]}
         title="Postfach-Einstellungen"
         description="Inbound E-Mail/IMAP-Postfächer pro Verein konfigurieren."
-      />
-      <CommunicationContentSurface>
-        <CommunicationMailboxSettingsForm
-          initialMailboxes={mailboxes.map((mailbox) => ({
-            ...mailbox,
-            lastSyncSuccessAt: mailbox.lastSyncSuccessAt?.toISOString() ?? null,
-          }))}
-        />
-      </CommunicationContentSurface>
+      >
+        <CommunicationContentSurface>
+          <CommunicationMailboxSettingsForm
+            initialMailboxes={mailboxes.map((mailbox) => ({
+              ...mailbox,
+              lastSyncSuccessAt: mailbox.lastSyncSuccessAt?.toISOString() ?? null,
+            }))}
+          />
+        </CommunicationContentSurface>
+      </FormPagePattern>
     </PageShell>
   );
 }

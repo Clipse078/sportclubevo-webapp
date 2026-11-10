@@ -187,7 +187,7 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
 describe("SCE-COMM-UX-01 UX foundation primitives", () => {
   it("uses shared communication header and content surface on list routes", () => {
     const mitteilungen = readRelative("app/(admin)/dashboard/communication/mitteilungen/page.tsx");
-    expect(mitteilungen).toContain("CommunicationWorkspaceHeader");
+    expect(mitteilungen).toMatch(/SceWorkspaceChrome|ListPagePattern|DetailPagePattern|FormPagePattern/);
     expect(mitteilungen).toContain("CommunicationContentSurface");
     expect(readRelative("components/admin/communication/shared/CommunicationContentSurface.tsx")).toContain(
       "SCE_SURFACE_STANDARD_PANEL",

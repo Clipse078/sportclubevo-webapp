@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import EmailSenderWorkspace from "@/components/admin/communication/email-sender/EmailSenderWorkspace";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { PageShell } from "@/components/ui/page";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { EMAIL_SENDER_WORKSPACE_DESCRIPTION } from "@/lib/communication/email-sender-display";
@@ -20,18 +20,22 @@ export default async function EmailSenderPage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "E-Mail-Absender" },
         ]}
-        title="E-Mail-Absender"
-        description={EMAIL_SENDER_WORKSPACE_DESCRIPTION}
-      />
-      <ToastProvider>
-        <EmailSenderWorkspace initialModel={model} />
-      </ToastProvider>
+        header={{
+          eyebrow: "Kommunikation",
+          title: "E-Mail-Absender",
+          description: EMAIL_SENDER_WORKSPACE_DESCRIPTION,
+        }}
+      >
+        <ToastProvider>
+          <EmailSenderWorkspace initialModel={model} />
+        </ToastProvider>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

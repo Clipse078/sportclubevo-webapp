@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import ClubCommunicationComposer from "@/components/admin/communication/club/ClubCommunicationComposer";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
@@ -31,7 +31,8 @@ export default async function NewClubMitteilungPage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <FormPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -40,15 +41,16 @@ export default async function NewClubMitteilungPage() {
         ]}
         title="Neue Mitteilung"
         description="Inhalt, Empfänger, Kanäle und Zeitpunkt in einem durchgängigen Ablauf."
-      />
-      <CommunicationContentSurface>
-        <ClubCommunicationComposer
-          targetGroups={composer.targetGroups}
-          tenantTimezone={composer.tenantTimezone}
-          templateOptions={composer.templateOptions}
-          tenantId={composer.tenantId}
-        />
-      </CommunicationContentSurface>
+      >
+        <CommunicationContentSurface>
+          <ClubCommunicationComposer
+            targetGroups={composer.targetGroups}
+            tenantTimezone={composer.tenantTimezone}
+            templateOptions={composer.templateOptions}
+            tenantId={composer.tenantId}
+          />
+        </CommunicationContentSurface>
+      </FormPagePattern>
     </PageShell>
   );
 }

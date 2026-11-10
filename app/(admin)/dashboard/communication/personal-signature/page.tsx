@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import PersonalSignatureWorkspace from "@/components/admin/communication/personal-signature/PersonalSignatureWorkspace";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERSONAL_SIGNATURE_ROUTE_PERMISSIONS } from "@/lib/communication/personal-signature/route-access";
@@ -24,26 +24,31 @@ export default async function PersonalSignaturePage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Persönliche Signatur" },
         ]}
-        title="Persönliche Signatur"
-        description="Eigene Signatur für Mitteilungen, Direktnachrichten und Antworten im Kommunikationscenter."
-        secondaryActions={
-          <Link
-            href="/dashboard/communication/email-sender"
-            className="text-sm font-medium text-[var(--sce-primary)] underline-offset-2 hover:underline"
-          >
-            E-Mail-Absender (Verein)
-          </Link>
-        }
-      />
-      <CommunicationContentSurface>
-        <PersonalSignatureWorkspace initialPreference={preference} />
-      </CommunicationContentSurface>
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Persönliche Signatur",
+          description:
+            "Eigene Signatur für Mitteilungen, Direktnachrichten und Antworten im Kommunikationscenter.",
+          secondaryActions: (
+            <Link
+              href="/dashboard/communication/email-sender"
+              className="text-sm font-medium text-[var(--sce-primary)] underline-offset-2 hover:underline"
+            >
+              E-Mail-Absender (Verein)
+            </Link>
+          ),
+        }}
+      >
+        <CommunicationContentSurface>
+          <PersonalSignatureWorkspace initialPreference={preference} />
+        </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

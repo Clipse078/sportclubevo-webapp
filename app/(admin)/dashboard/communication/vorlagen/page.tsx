@@ -8,7 +8,7 @@ import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/ma
 import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
 import { prisma } from "@/lib/db/prisma";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -107,16 +107,19 @@ export default async function CommunicationTemplatesPage(props: PageProps = {}) 
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Vorlagen" },
         ]}
-        title="Vorlagen"
-        description={VORLAGEN_OVERVIEW_DESCRIPTION}
-        primaryAction={rows.length > 0 ? primaryAction : undefined}
-      />
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Vorlagen",
+          description: VORLAGEN_OVERVIEW_DESCRIPTION,
+          primaryAction: rows.length > 0 ? primaryAction : undefined,
+        }}
+      >
 
       <CommunicationContentSurface padded={rows.length === 0 && !hasActiveFilters}>
         <Suspense fallback={null}>
@@ -244,6 +247,7 @@ export default async function CommunicationTemplatesPage(props: PageProps = {}) 
           </>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

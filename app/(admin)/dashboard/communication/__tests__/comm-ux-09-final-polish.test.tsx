@@ -29,13 +29,17 @@ const COMMUNICATION_ROUTE_PAGES = [
   "app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx",
   "app/(admin)/dashboard/communication/email-sender/page.tsx",
   "app/(admin)/dashboard/communication/personal-signature/page.tsx",
+  "app/(admin)/dashboard/notifications/page.tsx",
 ];
 
+const CANONICAL_WORKSPACE_PATTERN =
+  /SceWorkspaceChrome|ListPagePattern|DetailPagePattern|FormPagePattern/;
+
 describe("SCE-COMM-UX-09 — cross-surface polish contracts", () => {
-  it("uses CommunicationWorkspaceHeader on all primary communication routes", () => {
+  it("uses canonical workspace chrome on all primary communication routes", () => {
     for (const route of COMMUNICATION_ROUTE_PAGES) {
       const source = readRelative(route);
-      expect(source, route).toContain("CommunicationWorkspaceHeader");
+      expect(source, route).toMatch(CANONICAL_WORKSPACE_PATTERN);
     }
   });
 

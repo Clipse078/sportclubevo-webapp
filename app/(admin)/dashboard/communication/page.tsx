@@ -1,7 +1,7 @@
 import { PageShell } from "@/components/ui/page";
 import { SceActionLink } from "@/components/sce/actions/SceActionLink";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { CommunicationHubView } from "@/components/admin/communication/hub/CommunicationHubView";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import {
@@ -22,15 +22,16 @@ export default async function CommunicationPage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation" },
         ]}
-        title="Kommunikation"
-        description="Kommunikation mit Mitgliedern, Teams und Partnern zentral steuern."
-        primaryAction={
-          access.mitteilungenSend ? (
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Kommunikation",
+          description: "Kommunikation mit Mitgliedern, Teams und Partnern zentral steuern.",
+          primaryAction: access.mitteilungenSend ? (
             <SceActionLink
               href="/dashboard/communication/mitteilungen/new"
               variant="primary"
@@ -38,10 +39,8 @@ export default async function CommunicationPage() {
             >
               Neue Mitteilung
             </SceActionLink>
-          ) : undefined
-        }
-        secondaryActions={
-          access.kampagnenSend ? (
+          ) : undefined,
+          secondaryActions: access.kampagnenSend ? (
             <SceActionLink
               href="/dashboard/communication/kampagnen/new"
               variant="secondary"
@@ -49,11 +48,11 @@ export default async function CommunicationPage() {
             >
               Neue Kampagne
             </SceActionLink>
-          ) : undefined
-        }
-      />
-
-      <CommunicationHubView access={access} />
+          ) : undefined,
+        }}
+      >
+        <CommunicationHubView access={access} />
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

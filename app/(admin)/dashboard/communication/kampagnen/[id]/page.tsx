@@ -3,7 +3,7 @@ import Link from "next/link";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import CampaignComposer from "@/components/admin/communication/campaign/CampaignComposer";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { DetailPagePattern } from "@/components/ui/patterns";
 import { CampaignArchiveButton } from "@/components/admin/communication/kampagnen/CampaignArchiveButton";
 import { PageShell, SectionCard } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -137,7 +137,8 @@ export default async function CampaignDetailPage({ params }: PageProps) {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <DetailPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -146,13 +147,12 @@ export default async function CampaignDetailPage({ params }: PageProps) {
         ]}
         title={title}
         description={`${displayStatus.label} · Zielgruppe: ${item.audienceSummary}`}
-        secondaryActions={
+        headerActions={
           canArchive && item.status !== "ARCHIVED" ? (
             <CampaignArchiveButton campaignId={item.id} />
           ) : undefined
         }
-      />
-
+      >
       <CommunicationContentSurface className="space-y-6">
         <SectionCard title="Übersicht">
           <dl className="grid gap-4 text-sm md:grid-cols-2 lg:grid-cols-4">
@@ -267,6 +267,7 @@ export default async function CampaignDetailPage({ params }: PageProps) {
           </SectionCard>
         ) : null}
       </CommunicationContentSurface>
+      </DetailPagePattern>
     </PageShell>
   );
 }

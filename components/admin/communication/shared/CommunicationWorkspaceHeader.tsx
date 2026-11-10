@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { SceBreadcrumbs } from "@/components/sce/navigation/SceBreadcrumbs";
-import { SceWorkspaceHeader } from "@/components/sce/workspace/SceWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import type { BreadcrumbItem } from "@/components/ui/page";
 
 type CommunicationWorkspaceHeaderProps = {
@@ -9,11 +8,12 @@ type CommunicationWorkspaceHeaderProps = {
   description?: string;
   primaryAction?: ReactNode;
   secondaryActions?: ReactNode;
+  children?: ReactNode;
 };
 
 /**
- * Canonical Communication module page header (SCE-COMM-UX-01).
- * Breadcrumb + title block + right-aligned actions on one predictable row.
+ * Communication module chrome — delegates to canonical SceWorkspaceChrome.
+ * Prefer importing SceWorkspaceChrome or page patterns directly in new routes.
  */
 export function CommunicationWorkspaceHeader({
   breadcrumbs,
@@ -21,17 +21,20 @@ export function CommunicationWorkspaceHeader({
   description,
   primaryAction,
   secondaryActions,
+  children,
 }: CommunicationWorkspaceHeaderProps) {
   return (
-    <>
-      <SceBreadcrumbs items={breadcrumbs} />
-      <SceWorkspaceHeader
-        eyebrow="Kommunikation"
-        title={title}
-        description={description}
-        secondaryActions={secondaryActions}
-        primaryAction={primaryAction}
-      />
-    </>
+    <SceWorkspaceChrome
+      breadcrumbs={breadcrumbs}
+      header={{
+        eyebrow: "Kommunikation",
+        title,
+        description,
+        primaryAction,
+        secondaryActions,
+      }}
+    >
+      {children}
+    </SceWorkspaceChrome>
   );
 }
