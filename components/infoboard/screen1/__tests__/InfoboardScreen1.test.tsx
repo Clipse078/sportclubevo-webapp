@@ -769,7 +769,9 @@ describe("Training row", () => {
       isEmpty: false,
     });
     render(<InfoboardScreen1 feed={feed} />);
-    expect(screen.getByText("E1 · O3")).toBeTruthy();
+    expect(screen.getByText("E1")).toBeTruthy();
+    expect(screen.getByText("O3")).toBeTruthy();
+    expect(screen.getByTestId("dressing-room-badge-group")).toBeTruthy();
     expect(screen.getAllByTestId("training-matrix-row")).toHaveLength(1);
   });
 

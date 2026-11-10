@@ -155,10 +155,8 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
     );
   });
 
-  it("allows deliberate wider multi-room badges without truncating values", () => {
-    expect(CSS).toMatch(
-      /\.participantRoomValue\[data-multi-room="true"\][\s\S]*width:\s*auto/,
-    );
+  it("wraps multi-room dressing badges in a flex group", () => {
+    expect(CSS).toMatch(/\.dressingRoomBadgeGroup[\s\S]*flex-wrap:\s*wrap/);
   });
 
   it("renders numeric and alphanumeric Kabine values in allocation block", () => {
@@ -235,9 +233,11 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
       />,
     );
 
-    const multiRoomBadge = screen.getByText("E1 · O3");
-    expect(multiRoomBadge.getAttribute("data-multi-room")).toBe("true");
-    expect(screen.getByText("03").getAttribute("data-multi-room")).toBeNull();
+    const group = screen.getByTestId("dressing-room-badge-group");
+    expect(group.getAttribute("data-dressing-room-count")).toBe("2");
+    expect(within(group).getByText("E1")).toBeTruthy();
+    expect(within(group).getByText("O3")).toBeTruthy();
+    expect(screen.getByText("03")).toBeTruthy();
   });
 
   it("preserves XLARGE tournament Kabine typography default", () => {

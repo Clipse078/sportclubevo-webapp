@@ -164,6 +164,27 @@ export function resolveDressingRoomDisplay(
 
 // ── Multiple-allocation display ────────────────────────────────────────────────
 
+/** Canonical separator between multiple allocation labels in a single display string. */
+export const ALLOCATION_LIST_SEPARATOR = " · ";
+
+/**
+ * Splits a combined allocation list label (from resolveAllocationList) into parts.
+ * Does not strip display prefixes — presentation layers handle Kabine trimming.
+ */
+export function splitAllocationListDisplay(
+  combined: string | null | undefined,
+  separator: string = ALLOCATION_LIST_SEPARATOR,
+): readonly string[] {
+  if (combined == null) return [];
+  const trimmed = combined.trim();
+  if (trimmed.length === 0) return [];
+  if (!trimmed.includes(separator)) return [trimmed];
+  return trimmed
+    .split(separator)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
 /**
  * Options for formatting a list of allocation labels.
  */
@@ -218,7 +239,7 @@ export function resolveAllocationList(
   inputs: readonly AllocationResourceInput[],
   options?: ResolveAllocationListOptions,
 ): string | null {
-  const separator = options?.separator ?? " · ";
+  const separator = options?.separator ?? ALLOCATION_LIST_SEPARATOR;
   const deduplicate = options?.deduplicate ?? true;
 
   const resolved: string[] = [];
