@@ -24,6 +24,18 @@ describe("SCE-DS2-06R2 route inventory", () => {
     }
   });
 
+  it("does not treat immediate redirect aliases as canonical visual surfaces", () => {
+    const aliases = SCE_DS2_06_ROUTE_INVENTORY.filter((entry) =>
+      entry.action.startsWith("redirect alias"),
+    );
+    expect(aliases.length).toBeGreaterThanOrEqual(2);
+    for (const alias of aliases) {
+      expect(alias.pageArchitecture, alias.route).not.toBe("canonical");
+      expect(alias.headerFinanceAligned, alias.route).toBe(false);
+      expect(alias.tabsFinanceAligned, alias.route).toBe(false);
+    }
+  });
+
   it("stays in sync with the repository scanner", () => {
     const before = readFileSync(
       join(ROOT, "lib/design-system/sce-ds2-06-route-inventory.ts"),

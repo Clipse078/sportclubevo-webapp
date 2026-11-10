@@ -291,8 +291,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/communication/email-sender (not a visual surface)"
   },
   {
     "route": "/dashboard/admin/facilities",
@@ -423,8 +423,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/admin/people-access/new (not a visual surface)"
   },
   {
     "route": "/dashboard/admin/users",
@@ -435,8 +435,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/admin/people-access (not a visual surface)"
   },
   {
     "route": "/dashboard/administration/roles/[id]",
@@ -1017,14 +1017,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/finance/income_statement",
     "source": "app/(admin)/dashboard/finance/income_statement/page.tsx",
-    "pageArchitecture": "canonical",
-    "headerFinanceAligned": true,
+    "pageArchitecture": "legacy",
+    "headerFinanceAligned": false,
     "tabsFinanceAligned": false,
-    "typographyConsistent": true,
-    "colorsContrastRisk": false,
+    "typographyConsistent": false,
+    "colorsContrastRisk": true,
     "interactionsLegacy": false,
     "priority": "Low",
-    "action": "DS2-07: align header/tabs tokens"
+    "action": "redirect alias → /dashboard/finance/reports (not a visual surface)"
   },
   {
     "route": "/dashboard/finance",
@@ -1419,8 +1419,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/planner/week (not a visual surface)"
   },
   {
     "route": "/dashboard/planner/week",
@@ -1479,8 +1479,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /tenant/:param/cockpit/registrations/archiv (not a visual surface)"
   },
   {
     "route": "/dashboard/registrations",
@@ -1491,8 +1491,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /tenant/:param/cockpit/registrations (not a visual surface)"
   },
   {
     "route": "/dashboard/registrations/warteliste",
@@ -1503,8 +1503,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /tenant/:param/cockpit/registrations/warteliste (not a visual surface)"
   },
   {
     "route": "/dashboard/roles/[id]",
@@ -1587,8 +1587,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/communication/zielgruppen/:param (not a visual surface)"
   },
   {
     "route": "/dashboard/target-groups/new",
@@ -1599,8 +1599,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/communication/zielgruppen/new (not a visual surface)"
   },
   {
     "route": "/dashboard/target-groups",
@@ -1611,8 +1611,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/communication/zielgruppen (not a visual surface)"
   },
   {
     "route": "/dashboard/teams/[teamId]/administration",
@@ -1761,14 +1761,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/teams/new",
     "source": "app/(admin)/dashboard/teams/new/page.tsx",
-    "pageArchitecture": "canonical",
-    "headerFinanceAligned": true,
+    "pageArchitecture": "legacy",
+    "headerFinanceAligned": false,
     "tabsFinanceAligned": false,
-    "typographyConsistent": true,
-    "colorsContrastRisk": false,
+    "typographyConsistent": false,
+    "colorsContrastRisk": true,
     "interactionsLegacy": false,
     "priority": "Low",
-    "action": "DS2-07: align header/tabs tokens"
+    "action": "redirect alias → /dashboard/teams/register (not a visual surface)"
   },
   {
     "route": "/dashboard/teams",
@@ -1821,14 +1821,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/teams/register",
     "source": "app/(admin)/dashboard/teams/register/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/tournamentcenter/[tournamentId]/edit",
@@ -2007,8 +2007,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → dynamic (not a visual surface)"
   },
   {
     "route": "/dashboard/veranstaltungen/freigaben",
@@ -2271,8 +2271,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → /dashboard/website/news/:param/edit (not a visual surface)"
   },
   {
     "route": "/dashboard/website/news/new",
@@ -2511,8 +2511,8 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": false,
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "redirect alias → dynamic (not a visual surface)"
   },
   {
     "route": "/vereinsleitung/finanzen/rechnungen",

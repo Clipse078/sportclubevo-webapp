@@ -4,6 +4,7 @@ import { PageShell } from "@/components/ui/page";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import TeamRegistrationWizard from "@/components/admin/teams/registration/TeamRegistrationWizard";
 
+/** DS2-07A — TeamRegistrationWizard composes SceWorkspaceChrome (client boundary). */
 export default async function TeamRegisterPage() {
   await requirePermission(PERMISSIONS.TEAMS_MANAGE);
 
