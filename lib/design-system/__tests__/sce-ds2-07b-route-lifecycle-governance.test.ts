@@ -49,6 +49,10 @@ function codes(blocking: { code: string }[]) {
   return blocking.map((item) => item.code);
 }
 
+function quotedPaths(section: string) {
+  return [...section.matchAll(/- "([^"]+)"/g)].map((match) => match[1]);
+}
+
 function govern(fixture: string, baseline: string[] = [], overlay?: GovernanceOverlay) {
   const discovery = discoverAppRouter(join(FIXTURES, fixture));
   const registry = buildRegistry({ discovery, baselineSourceFiles: baseline, overlay });
@@ -328,6 +332,37 @@ describe("SCE-DS2-07B route lifecycle governance", () => {
     expect(evaluation.blocking).toEqual([]);
     expect(isVerifiedAuthenticatedVisual(registry[0])).toBe(true);
     expect(registry[0]?.introducedAfterBaseline).toBe(true);
+  });
+
+  it("runs when shared components, tokens, layouts, and governance tests change", () => {
+    const workflow = readFileSync(
+      join(ROOT, ".github/workflows/route-lifecycle-governance.yml"),
+      "utf8",
+    );
+    const [pullRequest, push] = workflow.split(/\n {2}push:\n/);
+    const filters = {
+      pull_request: quotedPaths(pullRequest ?? ""),
+      push: quotedPaths((push ?? "").split(/\njobs:\n/)[0] ?? ""),
+    };
+    const required = [
+      "app/**",
+      "components/sce/**",
+      "components/design-system/**",
+      "components/ui/patterns/**",
+      "components/ui/page/**",
+      "components/admin/finance/FinanceWorkspaceTabs.tsx",
+      "components/admin/layout/**",
+      "components/admin/workspace/layout/**",
+      "app/globals.css",
+      "lib/design-system/**",
+      "lib/design-system/__tests__/**",
+      "lib/ui/sce-overlay-layering.ts",
+      ".github/workflows/route-lifecycle-governance.yml",
+    ];
+    expect(filters.pull_request).toEqual(expect.arrayContaining(required));
+    expect(filters.push).toEqual(expect.arrayContaining(required));
+    expect(workflow).toContain("branches:\n      - STAGE");
+    expect(workflow).not.toContain("- main");
   });
 
   it("publishes the same package and exception ids as the governance engine", () => {
