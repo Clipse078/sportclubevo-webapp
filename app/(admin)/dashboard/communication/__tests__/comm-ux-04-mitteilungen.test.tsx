@@ -330,7 +330,7 @@ describe("SCE-COMM-UX-04 Mitteilungen redesign", () => {
 
   it("retains COMM-UX-01 shell on list route", () => {
     const source = readRelative("app/(admin)/dashboard/communication/mitteilungen/page.tsx");
-    expect(source).toContain("CommunicationWorkspaceHeader");
+    expect(source).toMatch(/SceWorkspaceChrome|ListPagePattern|DetailPagePattern|FormPagePattern/);
     expect(source).toContain("CommunicationContentSurface");
   });
 

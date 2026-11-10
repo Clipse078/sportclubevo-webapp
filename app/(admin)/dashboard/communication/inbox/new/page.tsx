@@ -1,7 +1,7 @@
 import Link from "next/link";
 import DirectMessageComposer from "@/components/admin/communication/direct/DirectMessageComposer";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
@@ -17,27 +17,31 @@ export default async function NewDirectMessagePage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Kommunikationscenter", href: "/dashboard/communication/inbox" },
           { label: "Neue Nachricht" },
         ]}
-        title="Neue Nachricht"
-        description="Direkte Nachricht an eine oder mehrere Personen im Verein."
-        secondaryActions={
-          <Link
-            href="/dashboard/communication/inbox"
-            className="inline-flex items-center rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold"
-          >
-            Abbrechen
-          </Link>
-        }
-      />
-      <CommunicationContentSurface>
-        <DirectMessageComposer tenantId={tenant.id} />
-      </CommunicationContentSurface>
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Neue Nachricht",
+          description: "Direkte Nachricht an eine oder mehrere Personen im Verein.",
+          secondaryActions: (
+            <Link
+              href="/dashboard/communication/inbox"
+              className="inline-flex items-center rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold"
+            >
+              Abbrechen
+            </Link>
+          ),
+        }}
+      >
+        <CommunicationContentSurface>
+          <DirectMessageComposer tenantId={tenant.id} />
+        </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

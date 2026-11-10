@@ -3,12 +3,9 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import WebsiteSettingsForm from "@/components/admin/website/WebsiteSettingsForm";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-  SectionCard,
-} from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 export default async function WebsiteSettingsPage() {
   await requireAnyPermission([PERMISSIONS.WEBSITE_MANAGE]);
@@ -18,23 +15,23 @@ export default async function WebsiteSettingsPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Website" },
-          { label: "Einstellungen" },
-        ]}
-      />
-      <PageHeader
+      <ListPagePattern
         eyebrow="Website"
         title="Einstellungen"
         description="Website-Veröffentlichung und Vier-Augen-Prinzip konfigurieren."
-      />
-      <SectionCard>
-        <WebsiteSettingsForm
-          defaultValues={{ approvedDataOnly: ctx.approvedDataOnly }}
-        />
-      </SectionCard>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Website", href: "/dashboard/website" },
+          { label: "Einstellungen" },
+        ]}
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
+        <SectionCard>
+          <WebsiteSettingsForm
+            defaultValues={{ approvedDataOnly: ctx.approvedDataOnly }}
+          />
+        </SectionCard>
+      </ListPagePattern>
     </PageShell>
   );
 }

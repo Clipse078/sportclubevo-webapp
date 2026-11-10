@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import VorlageManagementForm from "@/components/admin/communication/vorlagen/VorlageManagementForm";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PLATFORM_TEMPLATE_MANAGE_ROUTE_PERMISSIONS } from "@/lib/communication/templates/route-access";
@@ -57,7 +57,8 @@ export default async function NewPlatformTemplatePage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <FormPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -66,8 +67,8 @@ export default async function NewPlatformTemplatePage() {
         ]}
         title="Neue Vorlage"
         description="Inhalte und optionale Standardwerte für wiederkehrende Kommunikation."
-      />
-      <CommunicationContentSurface>
+      >
+        <CommunicationContentSurface>
         <VorlageManagementForm
           mode="create"
           tenantId={tenant.id}
@@ -79,7 +80,8 @@ export default async function NewPlatformTemplatePage() {
           }))}
           sponsorOrganisations={sponsorOrganisations}
         />
-      </CommunicationContentSurface>
+        </CommunicationContentSurface>
+      </FormPagePattern>
     </PageShell>
   );
 }

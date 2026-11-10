@@ -4,7 +4,7 @@ import { Megaphone } from "lucide-react";
 import { notFound } from "next/navigation";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { KampagnenListToolbar } from "@/components/admin/communication/kampagnen/KampagnenListToolbar";
 import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -81,17 +81,20 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Kampagnen" },
         ]}
-        title="Kampagnen"
-        description="Geplante organisationsweite Kommunikation an definierte Zielgruppen — mit Kanälen, Terminplanung und Auswertung nach Veröffentlichung."
-        primaryAction={items.length > 0 ? primaryAction : undefined}
-      />
-
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Kampagnen",
+          description:
+            "Geplante organisationsweite Kommunikation an definierte Zielgruppen — mit Kanälen, Terminplanung und Auswertung nach Veröffentlichung.",
+          primaryAction: items.length > 0 ? primaryAction : undefined,
+        }}
+      >
       <CommunicationContentSurface padded={items.length === 0 && !hasActiveFilters}>
         {items.length === 0 ? (
           hasActiveFilters ? (
@@ -223,6 +226,7 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
           </>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

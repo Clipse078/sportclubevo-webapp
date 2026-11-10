@@ -6,7 +6,7 @@ import VorlageArchiveActions from "@/components/admin/communication/vorlagen/Vor
 import VorlageDetailActions from "@/components/admin/communication/vorlagen/VorlageDetailActions";
 import VorlageUsagePanel from "@/components/admin/communication/vorlagen/VorlageUsagePanel";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -94,26 +94,28 @@ export default async function VorlageDetailPage({ params, searchParams }: PagePr
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Vorlagen", href: "/dashboard/communication/vorlagen" },
           { label: template.name },
         ]}
-        title={template.name}
-        description={template.description ?? vorlageApplicabilityLabel(template.kind)}
-        primaryAction={
-          <Link
-            href="/dashboard/communication/vorlagen"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Zurück
-          </Link>
-        }
-      />
-
+        header={{
+          eyebrow: "Kommunikation",
+          title: template.name,
+          description: template.description ?? vorlageApplicabilityLabel(template.kind),
+          primaryAction: (
+            <Link
+              href="/dashboard/communication/vorlagen"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Zurück
+            </Link>
+          ),
+        }}
+      >
       <CommunicationContentSurface>
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <AdminStatusPill
@@ -258,6 +260,7 @@ export default async function VorlageDetailPage({ params, searchParams }: PagePr
           </div>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

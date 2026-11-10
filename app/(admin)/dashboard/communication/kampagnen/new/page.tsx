@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import CampaignComposer from "@/components/admin/communication/campaign/CampaignComposer";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
@@ -83,7 +83,8 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <FormPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -92,8 +93,8 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
         ]}
         title="Neue Kampagne"
         description="Planen Sie organisationsweite Kommunikation — Empfänger werden bei Veröffentlichung aufgelöst und eingefroren."
-      />
-      <CommunicationContentSurface>
+      >
+        <CommunicationContentSurface>
         <CampaignComposer
           tenantId={tenant.id}
           targetGroups={targetGroups.map((tg) => ({
@@ -120,7 +121,8 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
           initialSponsorContactIds={sponsorContactIds.map((id) => id.trim()).filter(Boolean)}
           tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
         />
-      </CommunicationContentSurface>
+        </CommunicationContentSurface>
+      </FormPagePattern>
     </PageShell>
   );
 }

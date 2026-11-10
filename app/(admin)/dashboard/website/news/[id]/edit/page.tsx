@@ -4,6 +4,11 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getNewsArticleAdminById } from "@/lib/news/admin-queries";
 import NewsArticleForm from "@/components/admin/news/NewsArticleForm";
+import { PageShell } from "@/components/ui/page";
+import type { FormPagePatternProps } from "@/components/ui/patterns";
+
+/** FormPagePattern is composed inside NewsArticleForm. */
+type _NewsFormShell = FormPagePatternProps;
 
 export default async function NewsArticleEditPage({
   params,
@@ -22,5 +27,9 @@ export default async function NewsArticleEditPage({
   const article = await getNewsArticleAdminById(ctx.id, id);
   if (!article) notFound();
 
-  return <NewsArticleForm article={article} requiresReview={ctx.approvedDataOnly} />;
+  return (
+    <PageShell fullWidth>
+      <NewsArticleForm article={article} requiresReview={ctx.approvedDataOnly} />
+    </PageShell>
+  );
 }

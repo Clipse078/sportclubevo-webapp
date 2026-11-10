@@ -41,10 +41,9 @@ import {
   type BlockDefinition,
   type BlockCategory,
   type BlockStatus } from "@/lib/homepage/block-registry";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 // ---------------------------------------------------------------------------
 // Icon map (Lucide components keyed by registry icon name)
@@ -265,23 +264,17 @@ export default async function BlockLibraryPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Block-Bibliothek"
+        description="Alle verfügbaren Homepage-Block-Typen mit Kategorien, Konfigurationsfeldern und Verfügbarkeitsstatus."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website", href: CMS_ROUTES.overview },
           { label: "Block-Bibliothek" },
         ]}
-      />
-
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website"
-          title="Block-Bibliothek"
-          description="Alle verfügbaren Homepage-Block-Typen mit Kategorien, Konfigurationsfeldern und Verfügbarkeitsstatus."
-          className="mb-0"
-        />
-      </div>
-
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
       {/* Foundation info banner */}
       <div className="mb-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex items-start gap-3">
@@ -398,6 +391,7 @@ export default async function BlockLibraryPage() {
           );
         })}
       </div>
+      </ListPagePattern>
     </PageShell>
   );
 }

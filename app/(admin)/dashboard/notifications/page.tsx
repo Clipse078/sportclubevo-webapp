@@ -1,4 +1,5 @@
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import NotificationCenterClient from "@/components/admin/notifications/NotificationCenterClient";
 import { listNotificationsForUser } from "@/lib/notifications/read-service";
 import { getNotificationRecipientContext } from "@/lib/notifications/server-context";
@@ -27,17 +28,27 @@ export default async function NotificationsPage({ searchParams }: Props) {
 
   return (
     <PageShell>
-      <PageHeader
-        title="Benachrichtigungen"
-        description="Was Aufmerksamkeit braucht — mit direkten Links zur jeweiligen Arbeitsfläche."
-      />
-      <NotificationCenterClient
-        items={items}
-        filter={filter}
-        page={page}
-        pageCount={pageCount}
-        totalCount={totalCount}
-      />
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Kommunikation", href: "/dashboard/communication" },
+          { label: "Benachrichtigungen" },
+        ]}
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Benachrichtigungen",
+          description:
+            "Was Aufmerksamkeit braucht — mit direkten Links zur jeweiligen Arbeitsfläche.",
+        }}
+      >
+        <NotificationCenterClient
+          items={items}
+          filter={filter}
+          page={page}
+          pageCount={pageCount}
+          totalCount={totalCount}
+        />
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

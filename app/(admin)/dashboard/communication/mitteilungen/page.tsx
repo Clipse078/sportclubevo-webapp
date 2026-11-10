@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 import { notFound } from "next/navigation";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { MitteilungenListToolbar } from "@/components/admin/communication/mitteilungen/MitteilungenListToolbar";
 import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -71,17 +71,20 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Mitteilungen" },
         ]}
-        title="Mitteilungen"
-        description="Operative Vereinsinformationen an definierte Zielgruppen — von der Vorbereitung bis zur Zustellung."
-        primaryAction={items.length > 0 ? primaryAction : undefined}
-      />
-
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Mitteilungen",
+          description:
+            "Operative Vereinsinformationen an definierte Zielgruppen — von der Vorbereitung bis zur Zustellung.",
+          primaryAction: items.length > 0 ? primaryAction : undefined,
+        }}
+      >
       <CommunicationContentSurface padded={items.length === 0}>
         {items.length === 0 ? (
           <EmptyState
@@ -196,6 +199,7 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
           </>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

@@ -28,10 +28,9 @@ import {
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { CMS_ROUTES } from "@/lib/cms/routes";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 import EditorialDashboard from "@/components/admin/editorial/EditorialDashboard";
 
 export default async function EditorialCenterPage() {
@@ -39,40 +38,31 @@ export default async function EditorialCenterPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Redaktion"
+        description="Operativer Überblick für CMS-Redakteure: Prüfqueue, Veröffentlichungsplan, Entwürfe, Aktivität und inhaltliche Hinweise."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website", href: CMS_ROUTES.overview },
           { label: "Redaktion" },
         ]}
-      />
-
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website · CMS V2"
-          title="Redaktion"
-          description="Operativer Überblick für CMS-Redakteure: Prüfqueue, Veröffentlichungsplan, Entwürfe, Aktivität und inhaltliche Hinweise."
-          className="mb-0"
-        />
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={CMS_ROUTES.review}
-            className="fca-button-secondary text-xs"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Freigabe-Queue
-          </Link>
-          <Link
-            href={CMS_ROUTES.publishing}
-            className="fca-button-secondary text-xs"
-          >
-            <DashboardSceIcon className="h-3.5 w-3.5" />
-            Veröffentlichungen
-          </Link>
-        </div>
-      </div>
-
-      <EditorialDashboard />
+        contextTabs={<WebsiteWorkspaceTabs />}
+        headerActions={
+          <>
+            <Link href={CMS_ROUTES.review} className="fca-button-secondary text-xs">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Freigabe-Queue
+            </Link>
+            <Link href={CMS_ROUTES.publishing} className="fca-button-secondary text-xs">
+              <DashboardSceIcon className="h-3.5 w-3.5" />
+              Veröffentlichungen
+            </Link>
+          </>
+        }
+      >
+        <EditorialDashboard />
+      </ListPagePattern>
     </PageShell>
   );
 }

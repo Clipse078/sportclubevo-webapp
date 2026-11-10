@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   listCampaigns: vi.fn(),
   listUpcomingPublicationSchedules: vi.fn(),
   listVorlagenForManagement: vi.fn(),
+  listZielgruppenForManagement: vi.fn(),
+  listPlatformCommunicationTemplates: vi.fn(),
   resolveClubCommunicationAuthorization: vi.fn(),
   resolveCampaignAuthorization: vi.fn(),
   resolvePlatformTemplateAuthorization: vi.fn(),
@@ -49,6 +51,15 @@ vi.mock("@/lib/communication/scheduling/publication-schedule-service", () => ({
 }));
 vi.mock("@/lib/communication/templates/template-management-service", () => ({
   listVorlagenForManagement: mocks.listVorlagenForManagement,
+}));
+vi.mock("@/lib/communication/zielgruppen/management-service", () => ({
+  listZielgruppenForManagement: mocks.listZielgruppenForManagement,
+}));
+vi.mock("@/lib/communication/templates/platform-template-service", () => ({
+  listPlatformCommunicationTemplates: mocks.listPlatformCommunicationTemplates,
+}));
+vi.mock("@/lib/sponsoring/sponsor-authorization", () => ({
+  resolveSponsorAudienceAuthorization: vi.fn().mockResolvedValue({ canViewSponsorData: false }),
 }));
 vi.mock("@/lib/communication/club/club-communication-authorization", () => ({
   resolveClubCommunicationAuthorization: mocks.resolveClubCommunicationAuthorization,
@@ -97,6 +108,8 @@ beforeEach(() => {
   mocks.listCampaigns.mockResolvedValue([]);
   mocks.listUpcomingPublicationSchedules.mockResolvedValue([]);
   mocks.listVorlagenForManagement.mockResolvedValue([]);
+  mocks.listZielgruppenForManagement.mockResolvedValue([]);
+  mocks.listPlatformCommunicationTemplates.mockResolvedValue([]);
   mocks.resolveClubCommunicationAuthorization.mockResolvedValue({ canSend: true });
   mocks.resolveCampaignAuthorization.mockResolvedValue({ canSend: true });
   mocks.resolvePlatformTemplateAuthorization.mockResolvedValue({ canManage: true, canView: true });
@@ -119,9 +132,9 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
     expect(screen.getByRole("heading", { level: 1, name: "Mitteilungen" })).toBeInTheDocument();
     expect(screen.getByText("Noch keine Mitteilungen")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Neue Mitteilung" })).toHaveAttribute(
-      "href",
-      "/dashboard/communication/mitteilungen/new",
+    expect(screen.getByRole("button", { name: "Neue Mitteilung" })).toHaveAttribute(
+      "data-sce-create-flow",
+      "modal",
     );
   });
 
@@ -131,9 +144,9 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
     expect(mocks.requireAnyPermission).toHaveBeenCalledWith(CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS);
     expect(screen.getByRole("heading", { level: 1, name: "Kampagnen" })).toBeInTheDocument();
     expect(screen.getByText("Noch keine Kampagnen")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Neue Kampagne" })).toHaveAttribute(
-      "href",
-      "/dashboard/communication/kampagnen/new",
+    expect(screen.getByRole("button", { name: "Neue Kampagne" })).toHaveAttribute(
+      "data-sce-create-flow",
+      "modal",
     );
   });
 
@@ -187,7 +200,7 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
 describe("SCE-COMM-UX-01 UX foundation primitives", () => {
   it("uses shared communication header and content surface on list routes", () => {
     const mitteilungen = readRelative("app/(admin)/dashboard/communication/mitteilungen/page.tsx");
-    expect(mitteilungen).toContain("CommunicationWorkspaceHeader");
+    expect(mitteilungen).toMatch(/SceWorkspaceChrome|ListPagePattern|DetailPagePattern|FormPagePattern/);
     expect(mitteilungen).toContain("CommunicationContentSurface");
     expect(readRelative("components/admin/communication/shared/CommunicationContentSurface.tsx")).toContain(
       "SCE_SURFACE_STANDARD_PANEL",

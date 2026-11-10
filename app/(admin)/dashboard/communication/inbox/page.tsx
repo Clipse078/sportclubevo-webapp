@@ -3,7 +3,7 @@ import { Settings2 } from "lucide-react";
 import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
 import CommunicationInboxWorkspace from "@/components/admin/communication/inbox/CommunicationInboxWorkspace";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { PageShell } from "@/components/ui/page";
 import {
   INBOX_MANAGE_PERMISSIONS,
@@ -57,28 +57,35 @@ export default async function CommunicationInboxPage() {
 
   return (
     <PageShell className="flex min-h-0 flex-col gap-6 overflow-hidden lg:flex-1 lg:pb-6">
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Kommunikationscenter" },
         ]}
-        title="Kommunikationscenter"
-        description="Nachrichten und Antworten zentral bearbeiten."
-        primaryAction={neueNachrichtAction ?? settingsAction}
-        secondaryActions={neueNachrichtAction && settingsAction ? settingsAction : undefined}
-      />
-      <CommunicationContentSurface
-        padded={false}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-5"
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Kommunikationscenter",
+          description: "Nachrichten und Antworten zentral bearbeiten.",
+          primaryAction: neueNachrichtAction ?? settingsAction,
+          secondaryActions:
+            neueNachrichtAction && settingsAction ? settingsAction : undefined,
+        }}
+        contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <CommunicationInboxWorkspace
-          currentUserId={session.user.id}
-          canReply={canReply}
-          canManage={canManage}
-          canSettings={canSettings}
-        />
-      </CommunicationContentSurface>
+        <CommunicationContentSurface
+          padded={false}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-5"
+        >
+          <CommunicationInboxWorkspace
+            currentUserId={session.user.id}
+            canReply={canReply}
+            canManage={canManage}
+            canSettings={canSettings}
+          />
+        </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

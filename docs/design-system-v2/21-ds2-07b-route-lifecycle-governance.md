@@ -22,7 +22,7 @@ Authenticated browser coverage for this package: **none**.
 | Public renderable pages | 39 |
 | Public redirect aliases | 1 |
 | Route handlers | 625 |
-| Special Next.js framework files | 38 |
+| Special Next.js framework files | 39 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
 
@@ -32,20 +32,20 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 105 |
-| PARTIAL | 42 |
-| LEGACY | 67 |
+| CANONICAL | 143 |
+| PARTIAL | 12 |
+| LEGACY | 59 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **105 / 214 (49.1%)**.
+Architectural canonical adoption: **143 / 214 (66.8%)**.
 
 ## Verification
 
 | Migration status | Count |
 | --- | ---: |
-| NOT_STARTED | 109 |
+| NOT_STARTED | 71 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 105 |
+| IMPLEMENTED | 143 |
 | VERIFIED | 0 |
 | EXCEPTION | 57 |
 
@@ -60,10 +60,10 @@ Unassigned authenticated visual routes: **0**.
 | Package | Outstanding routes | Scope |
 | --- | ---: | --- |
 | DS2-07C | 0 | Admin and configuration |
-| DS2-07D | 38 | Communication and website CMS |
+| DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 27 | Planning, matches, training, tournaments and events |
 | DS2-07F | 44 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 105 | Authenticated visual/accessibility verification and closure |
+| DS2-07G | 143 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -105,46 +105,7 @@ None.
 
 ### DS2-07D
 
-| URL pattern | Architecture | Status | Priority | Source |
-| --- | --- | --- | --- | --- |
-| `/dashboard/communication` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/page.tsx` |
-| `/dashboard/communication/email-sender` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/email-sender/page.tsx` |
-| `/dashboard/communication/inbox` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/inbox/page.tsx` |
-| `/dashboard/communication/inbox/new` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/inbox/new/page.tsx` |
-| `/dashboard/communication/inbox/settings` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/inbox/settings/page.tsx` |
-| `/dashboard/communication/kampagnen` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/kampagnen/page.tsx` |
-| `/dashboard/communication/kampagnen/[id]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx` |
-| `/dashboard/communication/kampagnen/new` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/kampagnen/new/page.tsx` |
-| `/dashboard/communication/mitteilungen` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/mitteilungen/page.tsx` |
-| `/dashboard/communication/mitteilungen/[id]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx` |
-| `/dashboard/communication/mitteilungen/new` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/mitteilungen/new/page.tsx` |
-| `/dashboard/communication/personal-signature` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/personal-signature/page.tsx` |
-| `/dashboard/communication/vorlagen` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/vorlagen/page.tsx` |
-| `/dashboard/communication/vorlagen/[id]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx` |
-| `/dashboard/communication/vorlagen/new` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/vorlagen/new/page.tsx` |
-| `/dashboard/communication/zielgruppen` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/zielgruppen/page.tsx` |
-| `/dashboard/communication/zielgruppen/[id]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx` |
-| `/dashboard/communication/zielgruppen/new` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/communication/zielgruppen/new/page.tsx` |
-| `/dashboard/notifications` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/notifications/page.tsx` |
-| `/dashboard/website` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/page.tsx` |
-| `/dashboard/website/blocks` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/blocks/page.tsx` |
-| `/dashboard/website/components` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/components/page.tsx` |
-| `/dashboard/website/components/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/components/[id]/edit/page.tsx` |
-| `/dashboard/website/components/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/components/new/page.tsx` |
-| `/dashboard/website/design-system` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/design-system/page.tsx` |
-| `/dashboard/website/editorial` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/editorial/page.tsx` |
-| `/dashboard/website/homepage` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/homepage/page.tsx` |
-| `/dashboard/website/media` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/media/page.tsx` |
-| `/dashboard/website/navigation` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/navigation/page.tsx` |
-| `/dashboard/website/news/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/news/[id]/edit/page.tsx` |
-| `/dashboard/website/news/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/news/new/page.tsx` |
-| `/dashboard/website/pages` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/pages/page.tsx` |
-| `/dashboard/website/pages/[id]/builder` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/pages/[id]/builder/page.tsx` |
-| `/dashboard/website/pages/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/pages/[id]/edit/page.tsx` |
-| `/dashboard/website/pages/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/website/pages/new/page.tsx` |
-| `/dashboard/website/publishing` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/publishing/page.tsx` |
-| `/dashboard/website/review` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/review/page.tsx` |
-| `/dashboard/website/settings` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/website/settings/page.tsx` |
+None.
 
 ### DS2-07E
 
@@ -264,6 +225,24 @@ None.
 | `/dashboard/administration/roles/assignments` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/assignments/page.tsx` |
 | `/dashboard/administration/roles/effective-access` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/effective-access/page.tsx` |
 | `/dashboard/administration/roles/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/new/page.tsx` |
+| `/dashboard/communication` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/page.tsx` |
+| `/dashboard/communication/email-sender` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/email-sender/page.tsx` |
+| `/dashboard/communication/inbox` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/inbox/page.tsx` |
+| `/dashboard/communication/inbox/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/inbox/new/page.tsx` |
+| `/dashboard/communication/inbox/settings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/inbox/settings/page.tsx` |
+| `/dashboard/communication/kampagnen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/kampagnen/page.tsx` |
+| `/dashboard/communication/kampagnen/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx` |
+| `/dashboard/communication/kampagnen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/kampagnen/new/page.tsx` |
+| `/dashboard/communication/mitteilungen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/mitteilungen/page.tsx` |
+| `/dashboard/communication/mitteilungen/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx` |
+| `/dashboard/communication/mitteilungen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/mitteilungen/new/page.tsx` |
+| `/dashboard/communication/personal-signature` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/personal-signature/page.tsx` |
+| `/dashboard/communication/vorlagen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/vorlagen/page.tsx` |
+| `/dashboard/communication/vorlagen/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx` |
+| `/dashboard/communication/vorlagen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/vorlagen/new/page.tsx` |
+| `/dashboard/communication/zielgruppen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/page.tsx` |
+| `/dashboard/communication/zielgruppen/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx` |
+| `/dashboard/communication/zielgruppen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/new/page.tsx` |
 | `/dashboard/competitions` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/competitions/page.tsx` |
 | `/dashboard/finance` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/page.tsx` |
 | `/dashboard/finance/actuals` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/actuals/page.tsx` |
@@ -280,6 +259,7 @@ None.
 | `/dashboard/finance/structure` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/structure/page.tsx` |
 | `/dashboard/logs` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/logs/page.tsx` |
 | `/dashboard/mein-programm` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/mein-programm/page.tsx` |
+| `/dashboard/notifications` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/notifications/page.tsx` |
 | `/dashboard/org-units` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/page.tsx` |
 | `/dashboard/org-units/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/page.tsx` |
 | `/dashboard/org-units/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/edit/page.tsx` |
@@ -323,7 +303,26 @@ None.
 | `/dashboard/vereine/[clubId]/teams/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx` |
 | `/dashboard/vereine/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/new/page.tsx` |
 | `/dashboard/vereine/teams/[teamId]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx` |
+| `/dashboard/website` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/page.tsx` |
+| `/dashboard/website/blocks` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/blocks/page.tsx` |
+| `/dashboard/website/components` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/components/page.tsx` |
+| `/dashboard/website/components/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/components/[id]/edit/page.tsx` |
+| `/dashboard/website/components/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/components/new/page.tsx` |
+| `/dashboard/website/design-system` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/design-system/page.tsx` |
+| `/dashboard/website/editorial` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/editorial/page.tsx` |
+| `/dashboard/website/homepage` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/homepage/page.tsx` |
+| `/dashboard/website/media` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/media/page.tsx` |
+| `/dashboard/website/navigation` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/navigation/page.tsx` |
 | `/dashboard/website/news` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/news/page.tsx` |
+| `/dashboard/website/news/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/news/[id]/edit/page.tsx` |
+| `/dashboard/website/news/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/news/new/page.tsx` |
+| `/dashboard/website/pages` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/pages/page.tsx` |
+| `/dashboard/website/pages/[id]/builder` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/pages/[id]/builder/page.tsx` |
+| `/dashboard/website/pages/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/pages/[id]/edit/page.tsx` |
+| `/dashboard/website/pages/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/pages/new/page.tsx` |
+| `/dashboard/website/publishing` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/publishing/page.tsx` |
+| `/dashboard/website/review` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/review/page.tsx` |
+| `/dashboard/website/settings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/settings/page.tsx` |
 | `/dashboard/workspace` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/page.tsx` |
 | `/dashboard/workspace/audit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/audit/page.tsx` |
 | `/dashboard/workspace/governance/break-glass` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/governance/break-glass/page.tsx` |
@@ -345,7 +344,7 @@ None.
 
 ## CI
 
-Blocking violations: **0**. Tracked existing debt: **109**.
+Blocking violations: **0**. Tracked existing debt: **71**.
 
 Blocking codes cover unregistered pages, duplicate URLs, missing lifecycle reconciliation, non-canonical new authenticated pages, missing verification evidence, redirect aliases marked verified, and invalid package assignments. Tracked debt is reported and does not fail the job.
 

@@ -5,12 +5,9 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import { prisma } from "@/lib/db/prisma";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import WebsitePageList from "@/components/admin/pages/WebsitePageList";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-  PageActions,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 export default async function WebsitePagesAdminPage() {
   const session = await requireAnyPermission([PERMISSIONS.WEBSITE_MANAGE]);
@@ -29,25 +26,22 @@ export default async function WebsitePagesAdminPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Seiten"
+        description="Statische Website-Seiten erstellen, bearbeiten und veröffentlichen. Veröffentlichte Seiten sind über die öffentliche API abrufbar."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Website" },
+          { label: "Website", href: "/dashboard/website" },
           { label: "Seiten" },
         ]}
-      />
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website"
-          title="Seiten"
-          description="Statische Website-Seiten erstellen, bearbeiten und veröffentlichen. Veröffentlichte Seiten sind über die öffentliche API abrufbar."
-          className="mb-0"
-        />
-        <PageActions>
+        contextTabs={<WebsiteWorkspaceTabs />}
+        headerActions={
           <WebsitePageCreateTrigger requiresReview={tenant?.approvedDataOnly ?? false} />
-        </PageActions>
-      </div>
-      <WebsitePageList canDelete={canDelete} />
+        }
+      >
+        <WebsitePageList canDelete={canDelete} />
+      </ListPagePattern>
     </PageShell>
   );
 }

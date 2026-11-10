@@ -9,7 +9,7 @@ import ZielgruppePreviewPanel from "@/components/admin/communication/zielgruppen
 import ZielgruppeUsagePanel from "@/components/admin/communication/zielgruppen/ZielgruppeUsagePanel";
 import TargetGroupDeleteButton from "@/components/admin/org/TargetGroupDeleteButton";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -72,26 +72,28 @@ export default async function CommunicationZielgruppeDetailPage({
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Zielgruppen", href: "/dashboard/communication/zielgruppen" },
           { label: tg.name },
         ]}
-        title={tg.name}
-        description={tg.description ?? ruleCharacter.label}
-        primaryAction={
-          <Link
-            href="/dashboard/communication/zielgruppen"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Zurück
-          </Link>
-        }
-      />
-
+        header={{
+          eyebrow: "Kommunikation",
+          title: tg.name,
+          description: tg.description ?? ruleCharacter.label,
+          primaryAction: (
+            <Link
+              href="/dashboard/communication/zielgruppen"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Zurück
+            </Link>
+          ),
+        }}
+      >
       <CommunicationContentSurface>
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <AdminStatusPill label={STATUS_LABELS[tg.status] ?? tg.status} tone="success" />
@@ -169,6 +171,7 @@ export default async function CommunicationZielgruppeDetailPage({
           </div>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

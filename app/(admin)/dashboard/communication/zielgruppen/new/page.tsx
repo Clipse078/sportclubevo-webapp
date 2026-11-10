@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import ZielgruppeManagementForm from "@/components/admin/communication/zielgruppen/ZielgruppeManagementForm";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -14,7 +14,8 @@ export default async function NewCommunicationZielgruppePage() {
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <FormPagePattern
+        eyebrow="Kommunikation"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
@@ -23,10 +24,11 @@ export default async function NewCommunicationZielgruppePage() {
         ]}
         title="Neue Zielgruppe"
         description="Bestimme, wer zu dieser Zielgruppe gehört."
-      />
-      <CommunicationContentSurface>
-        <ZielgruppeManagementForm mode="create" />
-      </CommunicationContentSurface>
+      >
+        <CommunicationContentSurface>
+          <ZielgruppeManagementForm mode="create" />
+        </CommunicationContentSurface>
+      </FormPagePattern>
     </PageShell>
   );
 }

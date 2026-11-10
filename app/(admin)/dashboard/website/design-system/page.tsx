@@ -3,11 +3,9 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getResolvedDesignSystem, getRawDesignSystem } from "@/lib/website/design-system-queries";
 import DesignSystemManager from "@/components/admin/design-system/DesignSystemManager";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 import Link from "next/link";
 import { ExternalLink, Palette } from "lucide-react";
@@ -25,27 +23,22 @@ export default async function DesignSystemPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Design System Manager"
+        description="Definiere das globale visuelle Design der Website. Templates und Sektionen erben diese Tokens automatisch."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website", href: CMS_ROUTES.overview },
           { label: "Design System" },
         ]}
-      />
-
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <PageHeader
-          eyebrow="Website Management"
-          title="Design System Manager"
-          description="Definiere das globale visuelle Design der Website. Templates und Sektionen erben diese Tokens automatisch."
-          className="mb-0"
-          badge={
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
-              CMS V4
-            </span>
-          }
-        />
-        <div className="flex items-center gap-2">
+        contextTabs={<WebsiteWorkspaceTabs />}
+        headerBadge={
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
+            CMS V4
+          </span>
+        }
+        headerActions={
           <Link
             href="/api/public/fc-allschwil/website/design-system"
             target="_blank"
@@ -54,9 +47,8 @@ export default async function DesignSystemPage() {
             <ExternalLink className="h-3.5 w-3.5" />
             Public API
           </Link>
-        </div>
-      </div>
-
+        }
+      >
       {/* Architecture callout */}
       <div className="mb-6 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-4">
         <div className="flex items-start gap-3">
@@ -92,6 +84,7 @@ export default async function DesignSystemPage() {
         initialDesignSystem={resolved}
         hasCustomConfig={raw !== null}
       />
+      </ListPagePattern>
     </PageShell>
   );
 }

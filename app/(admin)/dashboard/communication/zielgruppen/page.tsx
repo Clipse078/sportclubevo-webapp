@@ -8,7 +8,7 @@ import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import ZielgruppenListToolbar from "@/components/admin/communication/zielgruppen/ZielgruppenListToolbar";
 import ZielgruppenOverviewRowActions from "@/components/admin/communication/zielgruppen/ZielgruppenOverviewRowActions";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
-import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -68,17 +68,19 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
 
   return (
     <PageShell>
-      <CommunicationWorkspaceHeader
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Zielgruppen" },
         ]}
-        title="Zielgruppen"
-        description={ZIELGRUPPEN_OVERVIEW_DESCRIPTION}
-        primaryAction={rows.length > 0 ? primaryAction : undefined}
-      />
-
+        header={{
+          eyebrow: "Kommunikation",
+          title: "Zielgruppen",
+          description: ZIELGRUPPEN_OVERVIEW_DESCRIPTION,
+          primaryAction: rows.length > 0 ? primaryAction : undefined,
+        }}
+      >
       <CommunicationContentSurface padded={rows.length === 0 && !hasActiveFilters}>
         <Suspense fallback={null}>
           <ZielgruppenListToolbar canManage={canManage} showCreateAction={rows.length === 0} />
@@ -235,6 +237,7 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
           </>
         )}
       </CommunicationContentSurface>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

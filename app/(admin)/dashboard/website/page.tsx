@@ -9,10 +9,6 @@ import {
 } from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
 import {
-  Newspaper,
-  Send,
-  Globe,
-  Settings,
   AlertCircle,
   CheckCircle2,
   Clock,
@@ -29,12 +25,9 @@ import { BLOCK_REGISTRY } from "@/lib/homepage/block-registry";
 import { CmsSectionCard } from "@/components/admin/cms/CmsSectionCard";
 import { CmsStatCard } from "@/components/admin/cms/CmsStatCard";
 import { CmsLegend } from "@/components/admin/cms/CmsLegend";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-  PageActions,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 export default async function WebsiteCmsOverviewPage() {
   const session = await requireAnyPermission([
@@ -80,37 +73,36 @@ export default async function WebsiteCmsOverviewPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <SceWorkspaceChrome
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website" },
           { label: "Übersicht" },
         ]}
-      />
-
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website Management"
-          title="CMS Übersicht"
-          description="Redaktionelle Kontrolle für den Webauftritt. Inhalte erstellen, prüfen, planen und veröffentlichen."
-          className="mb-0"
-        />
-        <PageActions>
-          {canManageNews && (
-            <Link href={CMS_ROUTES.newsNew} className="fca-button-secondary">
-              <ProductDomainSceIcon name="news" size={16} />
-              Neue News
-            </Link>
-          )}
-          {canManageWebsite && (
-            <Link href={CMS_ROUTES.pagesNew} className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Neue Seite
-            </Link>
-          )}
-        </PageActions>
-      </div>
-
+        header={{
+          eyebrow: "Website",
+          title: "CMS Übersicht",
+          description:
+            "Redaktionelle Kontrolle für den Webauftritt. Inhalte erstellen, prüfen, planen und veröffentlichen.",
+          secondaryActions: (
+            <>
+              {canManageNews && (
+                <Link href={CMS_ROUTES.newsNew} className="fca-button-secondary">
+                  <ProductDomainSceIcon name="news" size={16} />
+                  Neue News
+                </Link>
+              )}
+              {canManageWebsite && (
+                <Link href={CMS_ROUTES.pagesNew} className="fca-button-primary">
+                  <Plus className="h-4 w-4" />
+                  Neue Seite
+                </Link>
+              )}
+            </>
+          ),
+        }}
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
       {/* ── Status alerts ─────────────────────────────────────────────────────── */}
       {hasUrgentItems && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
@@ -387,6 +379,7 @@ export default async function WebsiteCmsOverviewPage() {
 
       {/* ── Status Legend ─────────────────────────────────────────────────────── */}
       <CmsLegend />
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

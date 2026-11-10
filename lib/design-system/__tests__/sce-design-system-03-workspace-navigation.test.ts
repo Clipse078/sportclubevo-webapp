@@ -100,8 +100,8 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     const commHeader = readSrc(
       "components/admin/communication/shared/CommunicationWorkspaceHeader.tsx",
     );
-    expect(commHeader).toContain("SceWorkspaceHeader");
-    expect(commHeader).toContain("SceBreadcrumbs");
+    expect(commHeader).toContain("SceWorkspaceChrome");
+    expect(commHeader).toContain("Kommunikation");
 
     const master = readDoc("docs/design/SCE-DESIGN-SYSTEM.md");
     expect(master).toContain("COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE");

@@ -39,10 +39,9 @@ import {
 import {
   APPROVAL_STATUS,
   APPROVAL_STATUS_LABELS } from "@/lib/homepage/approval-constants";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 import {
   ReviewQueueClient,
   type ReviewQueueItem } from "@/components/admin/homepage/ReviewQueueClient";
@@ -113,23 +112,17 @@ export default async function ReviewQueuePage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Redaktionelle Freigabe"
+        description="Überprüfungsqueue für Homepage-Sektionen. Sektionen im Status «In Überprüfung» können hier freigegeben oder abgelehnt werden."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website", href: CMS_ROUTES.overview },
           { label: "Redaktionelle Freigabe" },
         ]}
-      />
-
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website"
-          title="Redaktionelle Freigabe"
-          description="Überprüfungsqueue für Homepage-Sektionen. Sektionen im Status «In Überprüfung» können hier freigegeben oder abgelehnt werden."
-          className="mb-0"
-        />
-      </div>
-
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
       {/* Architecture note */}
       <div className="mb-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex items-start gap-3">
@@ -210,6 +203,7 @@ export default async function ReviewQueuePage() {
         recentlyApproved={recentlyApprovedItems}
         approvalStatusLabels={APPROVAL_STATUS_LABELS}
       />
+      </ListPagePattern>
     </PageShell>
   );
 }
