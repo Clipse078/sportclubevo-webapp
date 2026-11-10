@@ -9,6 +9,8 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import MatchcenterDetail from "@/components/admin/matchcenter/MatchcenterDetail";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
@@ -215,8 +217,18 @@ export default async function MatchcenterDetailPage({
     />
   );
 
+  const matchTitle = match.title?.trim() || "Spieldetail";
+
   return (
     <ToastProvider>
+      <DetailPagePattern
+        eyebrow="Planung"
+        title={matchTitle}
+        description="Spieldetail und operative Vorbereitung."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(matchTitle, [
+          { label: "Spiele", href: "/dashboard/matchcenter" },
+        ])}
+      >
       <MatchcenterDetail
         match={match}
         locale={locale}
@@ -236,6 +248,7 @@ export default async function MatchcenterDetailPage({
         matchSquadSection={matchSquadSection}
         collaborationSection={collaborationSection}
       />
+      </DetailPagePattern>
     </ToastProvider>
   );
 }

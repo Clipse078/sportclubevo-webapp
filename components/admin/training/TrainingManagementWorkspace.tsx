@@ -68,6 +68,7 @@ type Props = {
   createTrigger?: ReactNode;
   activityCreateQuickAccessTrigger?: ReactNode;
   composerDrafts?: TrainingComposerDraftListItem[];
+  hidePlanningPageHeader?: boolean;
 };
 
 const LIST_HEADER =
@@ -97,7 +98,9 @@ export default function TrainingManagementWorkspace({
   resetFiltersHref,
   createTrigger,
   activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger,
-  composerDrafts = [] }: Props) {
+  composerDrafts = [],
+  hidePlanningPageHeader = false,
+}: Props) {
   void _activityCreateQuickAccessTrigger;
   void _isCoordinator;
   void _locale;
@@ -118,38 +121,40 @@ export default function TrainingManagementWorkspace({
 
   return (
     <div className="w-full space-y-4" data-testid="training-management-workspace">
-      <PlanningManagementPageHeader
-        breadcrumbLeaf="Trainings"
-        title="Trainings"
-        subtitle="Trainings verwalten und im Wochenplaner koordinieren."
-        subtitleTestId="training-header-subtitle"
-        actions={
-          <>
-            {archivedCount > 0 ? (
-              <Link
-                href={archiveToggleHref}
-                className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
-                data-testid="training-archive-toggle"
-              >
-                <ArchiveSceIcon className="h-4 w-4" />
-                {filters.archived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
-              </Link>
-            ) : null}
-            {canCreate ? (
-              createTrigger ?? (
+      {hidePlanningPageHeader ? null : (
+        <PlanningManagementPageHeader
+          breadcrumbLeaf="Trainings"
+          title="Trainings"
+          subtitle="Trainings verwalten und im Wochenplaner koordinieren."
+          subtitleTestId="training-header-subtitle"
+          actions={
+            <>
+              {archivedCount > 0 ? (
                 <Link
-                  href="/dashboard/training/new"
-                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-                  data-testid="training-create-link"
+                  href={archiveToggleHref}
+                  className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="training-archive-toggle"
                 >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  Training erstellen
+                  <ArchiveSceIcon className="h-4 w-4" />
+                  {filters.archived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
                 </Link>
-              )
-            ) : null}
-          </>
-        }
-      />
+              ) : null}
+              {canCreate ? (
+                createTrigger ?? (
+                  <Link
+                    href="/dashboard/training/new"
+                    className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                    data-testid="training-create-link"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Training erstellen
+                  </Link>
+                )
+              ) : null}
+            </>
+          }
+        />
+      )}
 
       <TrainingComposerDraftList drafts={composerDrafts} />
 

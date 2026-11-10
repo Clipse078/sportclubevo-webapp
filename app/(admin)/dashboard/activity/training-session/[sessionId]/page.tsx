@@ -5,6 +5,8 @@ import { getRequestEffectivePermissions } from "@/lib/permissions/request-effect
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { loadSportingActivityDetail } from "@/lib/sporting-activity-detail/load-sporting-activity-detail";
 import { SportingActivityDetailPageView } from "@/components/sporting-activity/detail/SportingActivityDetailPageView";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 
 type PageProps = {
   params: Promise<{ sessionId: string }>;
@@ -42,10 +44,19 @@ export default async function TrainingSessionActivityDetailPage({ params }: Page
   const fmtCfg = { locale: tenant.locale ?? "de-CH", timezone: tenant.timezone ?? "Europe/Zurich" };
 
   return (
-    <SportingActivityDetailPageView
-      detail={result.detail}
-      fmtCfg={fmtCfg}
-      backHref="/dashboard"
-    />
+    <DetailPagePattern
+      eyebrow="Planung"
+      title={result.detail.presentation.identity.title}
+      description={result.detail.presentation.identity.typeLabel}
+      breadcrumbs={buildPlanningActivitiesBreadcrumbs(result.detail.presentation.identity.title, [
+        { label: "Trainings", href: "/dashboard/training" },
+      ])}
+    >
+      <SportingActivityDetailPageView
+        detail={result.detail}
+        fmtCfg={fmtCfg}
+        backHref="/dashboard/training"
+      />
+    </DetailPagePattern>
   );
 }

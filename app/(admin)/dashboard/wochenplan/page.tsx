@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle } from "lucide-react";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import WochenplanBoard from "@/components/admin/wochenplan/WochenplanBoard";
 import WochenplanPlanBar from "@/components/admin/wochenplan/WochenplanPlanBar";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -103,53 +104,43 @@ export default async function WochenplanPage({ searchParams }: PageProps) {
     )
     .join(" – ");
 
+  const weekNavigation = (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--blue)]/30 bg-[var(--blue-light)] px-4 py-1.5 text-sm font-semibold text-[var(--blue)]">
+        <CalendarDays className="h-3.5 w-3.5" />
+        {weekLabel}
+      </span>
+      <span className="hidden text-[0.78rem] text-[var(--muted)] sm:block">{dateRange}</span>
+      <Link
+        href={`/dashboard/wochenplan?week=${previousWeekId}`}
+        className="fca-button-secondary flex items-center gap-1"
+        title="Vorherige Woche"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Vorherige
+      </Link>
+      <Link href="/dashboard/wochenplan" className="fca-button-secondary text-[0.78rem]" title="Aktuelle Woche">
+        Heute
+      </Link>
+      <Link
+        href={`/dashboard/wochenplan?week=${nextWeekId}`}
+        className="fca-button-secondary flex items-center gap-1"
+        title="Nächste Woche"
+      >
+        Nächste
+        <ChevronRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Header + week navigation */}
-      <section>
-        <p className="text-xs font-medium tracking-wide text-[var(--muted)]">Wochenplan</p>
-
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] leading-tight">Feld-/Garderobenplanung</h1>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--blue)]/30 bg-[var(--blue-light)] px-4 py-1.5 text-sm font-semibold text-[var(--blue)]">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {weekLabel}
-            </span>
-            <span className="hidden text-[0.78rem] text-[var(--muted)] sm:block">
-              {dateRange}
-            </span>
-          </div>
-
-          {/* Week navigation */}
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/dashboard/wochenplan?week=${previousWeekId}`}
-              className="fca-button-secondary flex items-center gap-1"
-              title="Vorherige Woche"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Vorherige
-            </Link>
-            <Link
-              href="/dashboard/wochenplan"
-              className="fca-button-secondary text-[0.78rem]"
-              title="Aktuelle Woche"
-            >
-              Heute
-            </Link>
-            <Link
-              href={`/dashboard/wochenplan?week=${nextWeekId}`}
-              className="fca-button-secondary flex items-center gap-1"
-              title="Nächste Woche"
-            >
-              Nächste
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Feld-/Garderobenplanung"
+      title="Feld-/Garderobenplanung"
+      description="Wochenplanung für Spielfelder und Garderoben."
+      primaryAction={weekNavigation}
+      contentClassName="space-y-6"
+    >
       {tenantId && plans.length > 0 ? (
         <WochenplanPlanBar
           weekParam={weekId}
@@ -202,6 +193,6 @@ export default async function WochenplanPage({ searchParams }: PageProps) {
         viewedPlanId={viewedPlanId ?? plans.find((p) => p.isDefault)?.id ?? plans[0]?.id ?? null}
         activePlanName={plans.find((p) => p.isActive)?.name ?? null}
       />
-    </div>
+    </PlanningActivitiesPageFrame>
   );
 }

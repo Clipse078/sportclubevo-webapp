@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -206,14 +207,20 @@ export default async function VeranstaltungenFreigabenPage() {
     tournamentAccess.kind === "unauthorized";
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4" data-testid="veranstaltungen-freigaben-page">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">Freigaben</h1>
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Freigaben"
+      breadcrumbTrail={[{ label: "Veranstaltungen", href: "/dashboard/veranstaltungen" }]}
+      title="Freigaben"
+      description="Freigaben für Veranstaltungen, Trainings, Spiele und Turniere."
+      primaryAction={
         <Link href="/dashboard/veranstaltungen" className="fca-button-secondary text-sm">
           Zurück
         </Link>
-      </div>
-
+      }
+      contentClassName="mx-auto max-w-3xl space-y-6"
+      shellClassName="p-4"
+    >
+      <div data-testid="veranstaltungen-freigaben-page">
       {unauthorized ? (
         <ClubEventFreigabenUnauthorizedState
           reason={clubAccess.kind === "unauthorized" ? clubAccess.reason : "MISSING_APPROVE_PERMISSION"}
@@ -255,6 +262,7 @@ export default async function VeranstaltungenFreigabenPage() {
           </section>
         </>
       )}
-    </div>
+      </div>
+    </PlanningActivitiesPageFrame>
   );
 }

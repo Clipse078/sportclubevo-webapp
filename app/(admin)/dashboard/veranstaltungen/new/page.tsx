@@ -1,3 +1,6 @@
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -102,7 +105,18 @@ export default async function NewVeranstaltungPage({
     }
   }
 
+  const formTitle = initialResumeDraft ? t("draftTitle") : t("title");
+
   return (
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={formTitle}
+        description={initialResumeDraft ? t("draftDescription") : t("description")}
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(formTitle, [
+          { label: "Veranstaltungen", href: "/dashboard/veranstaltungen" },
+        ])}
+      >
     <ToastProvider>
       <PlanningEditorShell testId="veranstaltung-create-page">
         <PlanningEditorHeader
@@ -137,5 +151,7 @@ export default async function NewVeranstaltungPage({
         />
       </PlanningEditorShell>
     </ToastProvider>
+      </FormPagePattern>
+    </PageShell>
   );
 }

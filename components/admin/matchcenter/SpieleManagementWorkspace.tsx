@@ -71,6 +71,7 @@ type Props = {
   statusMask?: readonly SpieleStatusMaskKey[] | null;
   activityCreateTrigger?: ReactNode;
   activityCreateQuickAccessTrigger?: ReactNode;
+  hidePageHeader?: boolean;
 };
 
 type DomainTab = {
@@ -147,6 +148,7 @@ export default function SpieleManagementWorkspace({
   statusMask: statusMaskProp = null,
   activityCreateTrigger = null,
   activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
+  hidePageHeader = false,
 }: Props) {
   void _activityCreateQuickAccessTrigger;
   const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
@@ -370,28 +372,30 @@ export default function SpieleManagementWorkspace({
 
   return (
     <div className="w-full space-y-4" data-testid="spiele-management-workspace">
-      <header className="space-y-3 border-b border-[var(--border)] pb-4">
-        <p className="text-xs text-[var(--muted)]">
-          <span>Planung</span>
-          <span className="mx-1.5 text-[var(--border-strong)]">›</span>
-          <span className="text-[var(--text-2)]">Spiele</span>
-        </p>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 space-y-1">
-            <h1 className="text-[1.625rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-              Spiele
-            </h1>
-            <p className="text-sm text-[var(--text-2)]" data-testid="spiele-header-subtitle">
-              Zentrale Spielplanung und operative Matchvorbereitung.
-            </p>
+      {hidePageHeader ? null : (
+        <header className="space-y-3 border-b border-[var(--border)] pb-4">
+          <p className="text-xs text-[var(--muted)]">
+            <span>Planung</span>
+            <span className="mx-1.5 text-[var(--border-strong)]">›</span>
+            <span className="text-[var(--text-2)]">Spiele</span>
+          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-[1.625rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+                Spiele
+              </h1>
+              <p className="text-sm text-[var(--text-2)]" data-testid="spiele-header-subtitle">
+                Zentrale Spielplanung und operative Matchvorbereitung.
+              </p>
+            </div>
+            <SpieleManagementHeaderMenu
+              canManage={canManage}
+              wochenplanerHref={wochenplanerHref}
+              activityCreateTrigger={activityCreateTrigger}
+            />
           </div>
-          <SpieleManagementHeaderMenu
-            canManage={canManage}
-            wochenplanerHref={wochenplanerHref}
-            activityCreateTrigger={activityCreateTrigger}
-          />
-        </div>
-      </header>
+        </header>
+      )}
 
       <nav aria-label="Spiele-Bereiche" className="flex flex-wrap gap-x-5 gap-y-2 border-b border-[var(--border)]/70">
         {DOMAIN_TABS.map((item) => {

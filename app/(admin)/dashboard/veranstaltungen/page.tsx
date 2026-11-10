@@ -16,7 +16,10 @@ import {
 } from "@/lib/planning-hub/admin-server-timing";
 import { parseMonthParam } from "@/lib/matchcenter/month-range";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import VeranstaltungenManagementWorkspace from "@/components/admin/veranstaltungen/VeranstaltungenManagementWorkspace";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import {
   normalizeVeranstaltungenPublicationFilter,
   normalizeVeranstaltungenReviewFilter,
@@ -107,7 +110,36 @@ export default async function VeranstaltungenPage({
 
   return (
     <ToastProvider>
-      <div className="w-full space-y-4">
+      <PlanningActivitiesPageFrame
+        breadcrumbLeaf="Veranstaltungen"
+        title="Veranstaltungen"
+        description="Tenant-verwaltete Vereinsanlässe wie Generalversammlung, Trainersitzung, Sponsorenanlass und weitere Vereinsevents."
+        descriptionTestId="veranstaltungen-header-subtitle"
+        primaryAction={
+          canManage ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/dashboard/veranstaltungen/freigaben"
+                className="fca-button-secondary text-sm"
+                data-testid="veranstaltungen-approvals-link"
+              >
+                Freigaben
+              </Link>
+              {activityCreateTrigger ?? (
+                <Link
+                  href="/dashboard/veranstaltungen/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="veranstaltungen-create-link"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Veranstaltung erstellen
+                </Link>
+              )}
+            </div>
+          ) : undefined
+        }
+        contentClassName="space-y-4"
+      >
         {showUpdated ? (
           <div className="fca-status-box fca-status-box-success">
             Veranstaltung wurde erfolgreich gespeichert.
@@ -121,6 +153,7 @@ export default async function VeranstaltungenPage({
         ) : null}
 
         <VeranstaltungenManagementWorkspace
+          hidePlanningPageHeader
           events={events}
           tab={tab}
           canManage={canManage}
@@ -135,7 +168,7 @@ export default async function VeranstaltungenPage({
           activityCreateTrigger={activityCreateTrigger}
           activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
         />
-      </div>
+      </PlanningActivitiesPageFrame>
     </ToastProvider>
   );
 }

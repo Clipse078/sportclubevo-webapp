@@ -9,6 +9,7 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 
 type PlannerEditPageProps = {
   params: Promise<{
@@ -86,6 +87,12 @@ export default async function PlannerEditPage({
   ) : null;
 
   return (
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Planereintrag bearbeiten"
+      breadcrumbTrail={[{ label: "Wochenplaner", href: "/dashboard/planner/week" }]}
+      title="Planereintrag bearbeiten"
+      description="Eintrag im Wochenplaner anpassen."
+    >
     <PlannerEntryEditForm
       data={{
         ...data,
@@ -97,5 +104,6 @@ export default async function PlannerEditPage({
       operationalExtensions={operationalExtensions}
       operationalRailExtensions={operationalRailExtensions}
     />
+    </PlanningActivitiesPageFrame>
   );
 }

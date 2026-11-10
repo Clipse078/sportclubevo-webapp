@@ -1,6 +1,8 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TournamentEventCreateForm from "@/components/admin/events/TournamentEventCreateForm";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -8,19 +10,22 @@ export default async function NewTournamentEventPage() {
   await requirePermission(PERMISSIONS.EVENTS_MANAGE);
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Events"
-        title="Turnier erstellen"
-        description="Manuelle Erfassung eines Turniers pro Team. Dieser Flow speist später Website, Wochenplan, Teamseiten und Infoboard direkt aus dem WebApp Backend."
-        actions={
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Planung"
+        title="Turnier-Event erstellen"
+        description="Manuelle Erfassung eines Turnier-Events pro Team und Saison."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs("Turnier-Event", [
+          { label: "Events", href: "/dashboard/events" },
+        ])}
+        cancelAction={
           <Link href="/dashboard/events?type=TOURNAMENT" className="fca-button-secondary">
             Zurück zu Events
           </Link>
         }
-      />
-
-      <TournamentEventCreateForm />
-    </div>
+      >
+        <TournamentEventCreateForm />
+      </FormPagePattern>
+    </PageShell>
   );
 }

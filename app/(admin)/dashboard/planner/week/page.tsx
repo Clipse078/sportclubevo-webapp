@@ -14,7 +14,8 @@ import {
 import { getWeekplannerWeekCached } from "@/lib/weekplanner/weekplanner-request-cache";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
 import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
-import { PageShell } from "@/components/ui/page";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
 import PlannerWeekDataSection from "@/components/admin/planner/PlannerWeekDataSection";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
@@ -197,8 +198,27 @@ export default async function PlannerWeekPageRoute({
       : null;
 
   return (
-    <PageShell fullWidth widthMode="operational">
+    <PlanningActivitiesPageFrame
+      fullWidth
+      widthMode="operational"
+      breadcrumbLeaf="Wochenplaner"
+      title="Wochenplaner"
+      description="Zentrale Wochenplanung und operative Übersicht über Trainings, Spiele, Turniere und Veranstaltungen."
+      descriptionTestId="weekplanner-header-subtitle"
+      primaryAction={
+        activityCreateMenuProps ? (
+          <SceActivityCreateMenu
+            {...activityCreateMenuProps}
+            reconcilePlanningHub
+          />
+        ) : undefined
+      }
+      shellClassName="flex min-h-0 flex-col overflow-hidden lg:flex-1"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+    >
     <PlannerWeekStreamingRoot
+      hidePlanningPageHeader
       weekNav={{
         param: weekWindow.param,
         previousParam: weekWindow.previousParam,
@@ -248,6 +268,6 @@ export default async function PlannerWeekPageRoute({
         />
       </Suspense>
     </PlannerWeekStreamingRoot>
-    </PageShell>
+    </PlanningActivitiesPageFrame>
   );
 }

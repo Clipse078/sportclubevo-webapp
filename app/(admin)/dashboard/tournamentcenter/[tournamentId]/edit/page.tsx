@@ -9,6 +9,8 @@ import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
@@ -179,6 +181,14 @@ export default async function TournamentEditPage({ params }: Props) {
 
   return (
     <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={tournament.title}
+        description="Turnier bearbeiten, Teams koordinieren und publizieren."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(tournament.title, [
+          { label: "Turniere", href: "/dashboard/tournamentcenter" },
+        ])}
+      >
       <ToastProvider>
         <TournamentEditForm
           tournament={tournament}
@@ -224,6 +234,7 @@ export default async function TournamentEditPage({ params }: Props) {
           plannerOwnershipAllowsPublication={plannerOwnership === "TENANT_ORGANISED"}
         />
       </ToastProvider>
+      </FormPagePattern>
     </PageShell>
   );
 }

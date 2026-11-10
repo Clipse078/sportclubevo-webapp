@@ -5,7 +5,7 @@
   "scripts": {
     "test": "vitest run",
     "test:design-system": "tsx scripts/run-design-system-governance.ts && vitest run lib/design-system components/admin/org/__tests__",
-    "test:route-governance": "node scripts/sce-ds2-07b-route-governance-check.mjs && vitest run lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts lib/design-system/__tests__/sce-ds2-07a-core-workspace-migration.test.ts lib/design-system/__tests__/sce-ds2-07b-route-lifecycle-governance.test.ts lib/design-system/__tests__/sce-ds2-07c-admin-configuration-migration.test.ts lib/design-system/__tests__/sce-ds2-07d-communication-website-cms-migration.test.ts",
+    "test:route-governance": "node scripts/sce-ds2-07b-route-governance-check.mjs && vitest run lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts lib/design-system/__tests__/sce-ds2-07a-core-workspace-migration.test.ts lib/design-system/__tests__/sce-ds2-07b-route-lifecycle-governance.test.ts lib/design-system/__tests__/sce-ds2-07c-admin-configuration-migration.test.ts lib/design-system/__tests__/sce-ds2-07d-communication-website-cms-migration.test.ts lib/design-system/__tests__/sce-ds2-07e-planning-activities-migration.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dev": "next dev --turbopack",

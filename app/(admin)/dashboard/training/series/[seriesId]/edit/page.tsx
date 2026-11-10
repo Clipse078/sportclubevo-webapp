@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { notFound } from "next/navigation";
 import { Info } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -134,6 +137,15 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     ) : null;
 
   return (
+    <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={series.title}
+        description="Trainingsserie bearbeiten, Ressourcen zuweisen und Veröffentlichung steuern."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(series.title, [
+          { label: "Trainings", href: "/dashboard/training" },
+        ])}
+      >
     <TrainingSeriesCollaborationHost trainingSeriesId={series.id}>
     <TrainingSeriesRecordWorkspace
       seriesId={series.id}
@@ -198,5 +210,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
       }
     />
     </TrainingSeriesCollaborationHost>
+      </FormPagePattern>
+    </PageShell>
   );
 }

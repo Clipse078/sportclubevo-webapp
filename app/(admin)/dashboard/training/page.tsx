@@ -30,7 +30,10 @@ import {
   listTeamSeasonFilterOptions,
 } from "@/lib/training/management-data";
 import { listAllocationsGroupedBySeries } from "@/lib/training/training-allocation-service";
+import Link from "next/link";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
 import { buildTrainingFilterHrefMaps } from "@/lib/training/management-navigation";
 import { listTrainingComposerDraftsForManagementView } from "@/lib/training/composer/list-composer-drafts-for-management-view";
@@ -218,9 +221,42 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     );
   }
 
+  const archiveToggleHref = showArchived ? "/dashboard/training" : "/dashboard/training?archived=1";
+
   return (
-    <div className="w-full">
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Trainings"
+      title="Trainings"
+      description="Trainings verwalten und im Wochenplaner koordinieren."
+      descriptionTestId="training-header-subtitle"
+      primaryAction={
+        <>
+          {archivedCount > 0 ? (
+            <Link
+              href={archiveToggleHref}
+              className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
+              data-testid="training-archive-toggle"
+            >
+              <ArchiveSceIcon className="h-4 w-4" />
+              {showArchived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
+            </Link>
+          ) : null}
+          {canCreate
+            ? createTrigger ?? (
+                <Link
+                  href="/dashboard/training/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="training-create-link"
+                >
+                  Training erstellen
+                </Link>
+              )
+            : null}
+        </>
+      }
+    >
       <TrainingManagementWorkspace
+        hidePlanningPageHeader
         composerDrafts={composerDrafts}
         createTrigger={createTrigger}
         activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
@@ -253,6 +289,6 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
           archived: showArchived,
         }}
       />
-    </div>
+    </PlanningActivitiesPageFrame>
   );
 }

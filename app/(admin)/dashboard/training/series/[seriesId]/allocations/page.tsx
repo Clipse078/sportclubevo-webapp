@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocation-service";
 import { TrainingSeriesNotFoundError } from "@/lib/training/errors";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -65,13 +65,13 @@ export default async function TrainingAllocationsPage({ params }: Props) {
     .filter((fg) => fg.resources.length > 0);
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
-        eyebrow="TrainingCenter"
-        title={`Ressourcen: ${series.title}`}
-        description="Weisen Sie dieser Trainingsserie eine oder mehrere Anlagen-Ressourcen zu. Die Zuweisung gilt für alle Trainings dieser Serie und dient als einzige Quelle für Wochenplanung, Infoboard und Ressourcennutzung."
-      />
-
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf={`Ressourcen: ${series.title}`}
+      breadcrumbTrail={[{ label: "Trainings", href: "/dashboard/training" }]}
+      title={`Ressourcen: ${series.title}`}
+      description="Weisen Sie dieser Trainingsserie eine oder mehrere Anlagen-Ressourcen zu. Die Zuweisung gilt für alle Trainings dieser Serie und dient als einzige Quelle für Wochenplanung, Infoboard und Ressourcennutzung."
+      contentClassName="space-y-6"
+    >
       <SceFeatureCard title="Ressourcenzuweisung">
         <TrainingAllocationEditor
           trainingSeriesId={seriesId}
@@ -81,6 +81,6 @@ export default async function TrainingAllocationsPage({ params }: Props) {
           canManage={canManage}
         />
       </SceFeatureCard>
-    </div>
+    </PlanningActivitiesPageFrame>
   );
 }

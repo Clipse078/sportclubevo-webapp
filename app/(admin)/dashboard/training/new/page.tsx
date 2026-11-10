@@ -9,7 +9,9 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
-import type { BreadcrumbItem } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { loadTrainingEffectiveGovernanceForSession } from "@/lib/training/composer/load-effective-governance-server";
 import { getTrainingComposerDraftForCreatorResume } from "@/lib/training/composer/training-composer-draft-access.server";
@@ -121,14 +123,19 @@ export default async function NewTrainingSeriesPage({
     }
   }
 
-  const breadcrumbs: BreadcrumbItem[] = [
-    { label: "Planung", href: "/dashboard/planner" },
-    { label: "Trainings", href: "/dashboard/training" },
-    { label: initialResumeDraft ? "Entwurf fortsetzen" : "Erstellen" },
-  ];
+  const leaf = initialResumeDraft ? "Entwurf fortsetzen" : "Erstellen";
 
   return (
-    <TrainingRecordWorkspaceShell breadcrumbs={breadcrumbs} testId="training-create-page">
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={leaf}
+        description="Trainingsserie anlegen oder Entwurf fortsetzen."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(leaf, [
+          { label: "Trainings", href: "/dashboard/training" },
+        ])}
+      >
+    <TrainingRecordWorkspaceShell breadcrumbs={[]} testId="training-create-page">
       <TrainingCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,
@@ -157,5 +164,7 @@ export default async function NewTrainingSeriesPage({
         }
       />
     </TrainingRecordWorkspaceShell>
+      </FormPagePattern>
+    </PageShell>
   );
 }

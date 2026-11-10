@@ -1,3 +1,6 @@
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import MatchCreateForm from "@/components/admin/matchcenter/MatchCreateForm";
 import SpieleRecordWorkspaceShell from "@/components/admin/matchcenter/record/SpieleRecordWorkspaceShell";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/matchcenter/record/spiele-record-layout";
@@ -58,22 +61,19 @@ export default async function NewMatchCenterPage({ searchParams }: Props) {
 
   const t = await getTranslations("PlanningEditor.match.create");
 
-  const header = (
-    <div className="space-y-1 pt-1" data-testid="spiele-match-create-header">
-      <p className="text-xs text-[var(--text-2)]">{t("eyebrow")}</p>
-      <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">{t("title")}</h1>
-      <p className="max-w-2xl text-sm text-[var(--text-2)]">{t("description")}</p>
-    </div>
-  );
-
   return (
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={t("title")}
+        description={t("description")}
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(t("title"), [
+          { label: "Spiele", href: "/dashboard/matchcenter" },
+        ])}
+      >
     <SpieleRecordWorkspaceShell
-      breadcrumbs={[
-        { label: t("backNav"), href: "/dashboard/matchcenter" },
-        { label: t("title") },
-      ]}
+      breadcrumbs={[]}
       backLabel={t("backNav")}
-      header={header}
       testId="spiele-match-create-workspace"
     >
       <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>
@@ -100,5 +100,7 @@ export default async function NewMatchCenterPage({ searchParams }: Props) {
         />
       </div>
     </SpieleRecordWorkspaceShell>
+      </FormPagePattern>
+    </PageShell>
   );
 }

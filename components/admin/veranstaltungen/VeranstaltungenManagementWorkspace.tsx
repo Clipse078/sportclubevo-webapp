@@ -62,6 +62,7 @@ type Props = {
   composerDrafts?: ClubEventComposerDraftListItem[];
   activityCreateTrigger?: ReactNode;
   activityCreateQuickAccessTrigger?: ReactNode;
+  hidePlanningPageHeader?: boolean;
 };
 
 export default function VeranstaltungenManagementWorkspace({
@@ -80,6 +81,7 @@ export default function VeranstaltungenManagementWorkspace({
   composerDrafts = [],
   activityCreateTrigger = null,
   activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
+  hidePlanningPageHeader = false,
 }: Props) {
   void _activityCreateQuickAccessTrigger;
   const tz = timeZone ?? "Europe/Zurich";
@@ -163,35 +165,37 @@ export default function VeranstaltungenManagementWorkspace({
 
   return (
     <div className="w-full space-y-4" data-testid="veranstaltungen-management-workspace">
-      <PlanningManagementPageHeader
-        breadcrumbLeaf="Veranstaltungen"
-        title="Veranstaltungen"
-        subtitle="Tenant-verwaltete Vereinsanlässe wie Generalversammlung, Trainersitzung, Sponsorenanlass und weitere Vereinsevents."
-        subtitleTestId="veranstaltungen-header-subtitle"
-        actions={
-          canManage ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/dashboard/veranstaltungen/freigaben"
-                className="fca-button-secondary text-sm"
-                data-testid="veranstaltungen-approvals-link"
-              >
-                Freigaben
-              </Link>
-              {activityCreateTrigger ?? (
+      {hidePlanningPageHeader ? null : (
+        <PlanningManagementPageHeader
+          breadcrumbLeaf="Veranstaltungen"
+          title="Veranstaltungen"
+          subtitle="Tenant-verwaltete Vereinsanlässe wie Generalversammlung, Trainersitzung, Sponsorenanlass und weitere Vereinsevents."
+          subtitleTestId="veranstaltungen-header-subtitle"
+          actions={
+            canManage ? (
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
-                  href="/dashboard/veranstaltungen/new"
-                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-                  data-testid="veranstaltungen-create-link"
+                  href="/dashboard/veranstaltungen/freigaben"
+                  className="fca-button-secondary text-sm"
+                  data-testid="veranstaltungen-approvals-link"
                 >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  Veranstaltung erstellen
+                  Freigaben
                 </Link>
-              )}
-            </div>
-          ) : null
-        }
-      />
+                {activityCreateTrigger ?? (
+                  <Link
+                    href="/dashboard/veranstaltungen/new"
+                    className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                    data-testid="veranstaltungen-create-link"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Veranstaltung erstellen
+                  </Link>
+                )}
+              </div>
+            ) : null
+          }
+        />
+      )}
 
       <nav
         aria-label="Veranstaltungen-Bereiche"

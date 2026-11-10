@@ -10,7 +10,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getAvailableTeamSeasons } from "@/lib/teams/queries";
 import { getEventsListData } from "@/lib/events/queries";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import SeasonContextSelector from "@/components/admin/shared/SeasonContextSelector";
 
 type SeasonOption = {
@@ -142,20 +142,18 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     OTHER: otherCount };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <AdminSectionHeader
-        eyebrow="Events"
-        title="Events"
-        description="Saisongeführte Eventverwaltung für Matches, Turniere, Trainings und weitere Vereinsanlässe."
-        actions={
-          <Link href="/dashboard/events/import" className="fca-button-secondary">
-            <Upload className="h-4 w-4" />
-            Import
-          </Link>
-        }
-      />
-
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Events"
+      title="Events"
+      description="Saisongeführte Eventverwaltung für Matches, Turniere, Trainings und weitere Vereinsanlässe."
+      primaryAction={
+        <Link href="/dashboard/events/import" className="fca-button-secondary">
+          <Upload className="h-4 w-4" />
+          Import
+        </Link>
+      }
+      contentClassName="space-y-6"
+    >
       {/* Feedback */}
       {submittedMessage ? (
         <div className="fca-status-box fca-status-box-success">
@@ -398,6 +396,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           </div>
         </div>
       </div>
-    </div>
+    </PlanningActivitiesPageFrame>
   );
 }
