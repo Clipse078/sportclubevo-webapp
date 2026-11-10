@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { VEREINSLEITUNG_PANEL_CLASS } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { Plus, FileText, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";

@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import {
-  ArrowRight,
-  CheckSquare,
-  ClipboardList,
-  Flag,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowRight, Flag, TrendingUp } from "lucide-react";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell } from "@/components/ui/page";

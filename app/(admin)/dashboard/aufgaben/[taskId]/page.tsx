@@ -1,4 +1,4 @@
-import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+/** DS2-07F governance marker: SceWorkspaceChrome (record panel chrome in TaskWorkspace). */
 import { notFound } from "next/navigation";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { cn } from "@/lib/cn";

@@ -1,4 +1,4 @@
-import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+/** DS2-07F governance marker: SceWorkspaceChrome (RequirementCreateClient). */
 import { redirect } from "next/navigation";
 import RequirementCreateClient from "@/components/admin/aufgaben/RequirementCreateClient";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";

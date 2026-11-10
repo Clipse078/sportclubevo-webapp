@@ -1,12 +1,4 @@
-import {
-  AlertCircle,
-  CheckSquare,
-  ChevronRight,
-  ClipboardList,
-  Clock,
-  ListChecks,
-  Plus,
-} from "lucide-react";
+import { AlertCircle, CheckSquare, ChevronRight, Clock, Plus } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, SectionCard } from "@/components/ui/page";

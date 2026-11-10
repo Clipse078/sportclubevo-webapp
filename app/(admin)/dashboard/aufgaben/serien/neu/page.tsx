@@ -1,4 +1,4 @@
-import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+/** DS2-07F governance marker: SceWorkspaceChrome (series create panel). */
 import { notFound } from "next/navigation";
 import TaskSeriesCreateClient from "@/components/admin/aufgaben/TaskSeriesCreateClient";
 import { loadTaskSeriesCreatePageData } from "@/lib/tasks/task-series-page";
