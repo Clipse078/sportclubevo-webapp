@@ -10,7 +10,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getAvailableTeamSeasons } from "@/lib/teams/queries";
 import { getEventsListData } from "@/lib/events/queries";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
-import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
+import { PlanningActivitiesPageFrame } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import SeasonContextSelector from "@/components/admin/shared/SeasonContextSelector";
 
 type SeasonOption = {

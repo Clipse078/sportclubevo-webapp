@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FormPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
@@ -8,7 +9,6 @@ import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
-import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
 import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
 import { getTranslations } from "next-intl/server";
@@ -116,17 +116,14 @@ export default async function NewVeranstaltungPage({
         breadcrumbs={buildPlanningActivitiesBreadcrumbs(formTitle, [
           { label: "Veranstaltungen", href: "/dashboard/veranstaltungen" },
         ])}
+        cancelAction={
+          <Link href="/dashboard/veranstaltungen" className="fca-button-secondary" data-testid="veranstaltung-create-back-link">
+            {t("backNav")}
+          </Link>
+        }
       >
     <ToastProvider>
       <PlanningEditorShell testId="veranstaltung-create-page">
-        <PlanningEditorHeader
-          backHref="/dashboard/veranstaltungen"
-          backLabel={t("backNav")}
-          title={initialResumeDraft ? t("draftTitle") : t("title")}
-          scheduleContext={initialResumeDraft ? t("draftDescription") : t("description")}
-          backLinkTestId="veranstaltung-create-back-link"
-          testId="veranstaltung-create-header"
-        />
         <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="veranstaltung-create-intro">
           {t("intro")}
         </p>

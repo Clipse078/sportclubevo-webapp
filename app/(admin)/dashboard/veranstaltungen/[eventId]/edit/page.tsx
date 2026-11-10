@@ -204,6 +204,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           backLabel={t("backNav")}
           model={sceContextModel}
           fmtCfg={{ locale, timezone: timeZone }}
+          suppressBackNav
           backLinkTestId="veranstaltung-edit-back-link"
           testId="veranstaltung-edit-header"
           contextTestId="veranstaltung-edit-schedule-context"

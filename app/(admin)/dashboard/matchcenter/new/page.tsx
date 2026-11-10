@@ -75,6 +75,7 @@ export default async function NewMatchCenterPage({ searchParams }: Props) {
       breadcrumbs={[]}
       backLabel={t("backNav")}
       header={null}
+      hideNavChrome
       testId="spiele-match-create-workspace"
     >
       <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>

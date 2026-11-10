@@ -10,6 +10,7 @@ type Props = {
   children: ReactNode;
   contextRail?: ReactNode;
   testId?: string;
+  hideNavChrome?: boolean;
 };
 
 export default function SpieleRecordWorkspaceShell({
@@ -20,6 +21,7 @@ export default function SpieleRecordWorkspaceShell({
   children,
   contextRail,
   testId,
+  hideNavChrome,
 }: Props) {
   return (
     <PlanningEditorRecordShell
@@ -30,6 +32,7 @@ export default function SpieleRecordWorkspaceShell({
       contextRail={contextRail}
       testId={testId}
       backLinkTestId="spiele-record-back-link"
+      hideNavChrome={hideNavChrome}
     >
       {children}
     </PlanningEditorRecordShell>

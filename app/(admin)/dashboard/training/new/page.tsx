@@ -135,7 +135,7 @@ export default async function NewTrainingSeriesPage({
           { label: "Trainings", href: "/dashboard/training" },
         ])}
       >
-    <TrainingRecordWorkspaceShell breadcrumbs={[]} testId="training-create-page">
+    <TrainingRecordWorkspaceShell breadcrumbs={[]} hideNavChrome testId="training-create-page">
       <TrainingCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,

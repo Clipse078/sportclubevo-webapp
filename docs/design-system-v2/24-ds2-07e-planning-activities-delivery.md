@@ -11,6 +11,8 @@
 
 Every route assigned to DS2-07E now renders canonical workspace chrome (`SceWorkspaceChrome`, `ListPagePattern`, `DetailPagePattern`, or `FormPagePattern`) with finance-style breadcrumbs, `Planung` eyebrow, and shared `PlanningActivitiesPageFrame` where appropriate. Management workspaces that previously duplicated headers accept `hidePlanningPageHeader` or `hidePageHeader` so page-level chrome is singular.
 
+Quality closure (SCE-DS2-07E): record create/edit flows nested under `FormPagePattern` use `hideNavChrome` on record shells, `suppressPageChrome` / `suppressBackNav` on planning headers, and Veranstaltung create drops the inner `PlanningEditorHeader`. Governance scanners treat `PlanningActivitiesPageFrame` as a canonical marker.
+
 Authenticated browser coverage for this package: **none**. All 27 routes are `IMPLEMENTED` on DS2-07G. None are `VERIFIED`.
 
 ## Architecture counts

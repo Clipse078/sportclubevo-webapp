@@ -148,6 +148,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
       >
     <TrainingSeriesCollaborationHost trainingSeriesId={series.id}>
     <TrainingSeriesRecordWorkspace
+      embedInCanonicalFormPage
       seriesId={series.id}
       seriesStatus={series.status}
       teamSeasons={teamSeasonRow ? [teamSeasonRow] : []}

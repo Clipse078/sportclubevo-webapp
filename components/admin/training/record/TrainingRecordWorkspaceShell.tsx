@@ -14,6 +14,7 @@ type Props = {
   children: ReactNode;
   contextRail?: ReactNode;
   testId?: string;
+  hideNavChrome?: boolean;
 };
 
 export default function TrainingRecordWorkspaceShell({
@@ -24,21 +25,30 @@ export default function TrainingRecordWorkspaceShell({
   children,
   contextRail,
   testId,
+  hideNavChrome = false,
 }: Props) {
+  const showBreadcrumbs = !hideNavChrome && breadcrumbs.length > 0;
+  const showBackLink = !hideNavChrome;
+  const showTopChrome = showBreadcrumbs || showBackLink || header != null;
+
   return (
     <div className={cn(TRAINING_FORM_MAX_WIDTH_CLASS, "space-y-5 pb-8")} data-testid={testId}>
-      <div className="space-y-3 border-b border-[var(--border)]/80 pb-4">
-        <PageBreadcrumbs items={breadcrumbs} />
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)]"
-          data-testid="training-record-back-link"
-        >
-          <ChevronRight className="h-3.5 w-3.5 rotate-180" aria-hidden />
-          {backLabel}
-        </Link>
-        {header ?? null}
-      </div>
+      {showTopChrome ? (
+        <div className="space-y-3 border-b border-[var(--border)]/80 pb-4">
+          {showBreadcrumbs ? <PageBreadcrumbs items={breadcrumbs} /> : null}
+          {showBackLink ? (
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)]"
+              data-testid="training-record-back-link"
+            >
+              <ChevronRight className="h-3.5 w-3.5 rotate-180" aria-hidden />
+              {backLabel}
+            </Link>
+          ) : null}
+          {header ?? null}
+        </div>
+      ) : null}
 
       <div className={cn(contextRail ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,22rem)] xl:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]" : undefined)}>
         <div className="min-w-0">{children}</div>

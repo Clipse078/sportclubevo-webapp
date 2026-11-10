@@ -12,6 +12,8 @@ type Props = {
   backLinkTestId?: string;
   titleTestId?: string;
   contextTestId?: string;
+  /** Parent FormPagePattern owns title, back link, and schedule context. */
+  suppressPageChrome?: boolean;
 };
 
 export default function PlanningEditorHeader({
@@ -24,7 +26,17 @@ export default function PlanningEditorHeader({
   backLinkTestId = "planning-editor-back-link",
   titleTestId,
   contextTestId,
+  suppressPageChrome = false,
 }: Props) {
+  if (suppressPageChrome) {
+    if (!actions) return null;
+    return (
+      <div className="flex flex-wrap items-center justify-end gap-2 border-b border-[var(--border)] pb-3" data-testid={testId}>
+        {actions}
+      </div>
+    );
+  }
+
   return (
     <header className="space-y-2 border-b border-[var(--border)] pb-3" data-testid={testId}>
       <Link

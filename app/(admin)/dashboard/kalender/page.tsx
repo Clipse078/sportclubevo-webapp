@@ -8,7 +8,7 @@ import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { parsePersonalKalenderUrlState } from "@/lib/personal-agenda/kalender-url";
 import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
 import { buildLegacyTermineKalenderRedirectTarget } from "@/lib/personal-agenda/mein-programm-url";
-import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
+import { PlanningActivitiesPageFrame } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { buildCalendarTimeLabelById } from "@/lib/personal-agenda/build-calendar-time-labels";
 
 type PageProps = {

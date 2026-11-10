@@ -76,6 +76,7 @@ export default async function NewTournamentCenterPage({ searchParams }: Props) {
     <TurniereRecordWorkspaceShell
       breadcrumbs={[]}
       header={null}
+      hideNavChrome
       testId="turniere-tournament-create-workspace"
     >
       <div className={TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS}>

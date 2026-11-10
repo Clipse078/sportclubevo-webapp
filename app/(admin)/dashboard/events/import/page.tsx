@@ -1,6 +1,6 @@
 import EventImportUploader from "@/components/admin/events/EventImportUploader";
 import EventImportRunsTable from "@/components/admin/events/EventImportRunsTable";
-import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
+import { PlanningActivitiesPageFrame } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 

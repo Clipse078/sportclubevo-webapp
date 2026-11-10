@@ -47,6 +47,7 @@ export const SCE_DS2_07E_ASSIGNED_SOURCES = [
 
 const CANONICAL_MARKERS = [
   "SceWorkspaceChrome",
+  "PlanningActivitiesPageFrame",
   "ListPagePattern",
   "DetailPagePattern",
   "FormPagePattern",

@@ -199,6 +199,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           wochenplanerHref={wochenplanerHref}
           toSeriesLabel={t("toSeries")}
           wochenplanerLabel={t("showInWeekPlanner")}
+          suppressPageChrome
         />
 
         <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="training-session-edit-inheritance-intro">
