@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { PageShell } from "@/components/ui/page";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import type { ScePageWidthMode } from "@/lib/shell/sce-page-layout";
 
 export { SceWorkspaceChrome };
 
@@ -39,7 +40,7 @@ export type PlanningActivitiesPageFrameProps = {
   contentClassName?: string;
   shellClassName?: string;
   fullWidth?: boolean;
-  widthMode?: "default" | "operational";
+  widthMode?: ScePageWidthMode;
   density?: "standard" | "dense";
   descriptionTestId?: string;
 };

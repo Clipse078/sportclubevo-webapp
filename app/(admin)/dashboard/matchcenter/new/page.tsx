@@ -74,6 +74,7 @@ export default async function NewMatchCenterPage({ searchParams }: Props) {
     <SpieleRecordWorkspaceShell
       breadcrumbs={[]}
       backLabel={t("backNav")}
+      header={null}
       testId="spiele-match-create-workspace"
     >
       <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>
