@@ -1647,7 +1647,7 @@
 .matchAllocRoom,
 .trainingGroupRoomValue,
 .participantRoomValue,
-.cardDressingRoomZone > .destRoomValue {
+.cardDressingRoomZone .destRoomValue {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1693,7 +1693,7 @@
 .root[data-theme="light"] .matchAllocRoom,
 .root[data-theme="light"] .trainingGroupRoomValue,
 .root[data-theme="light"] .participantRoomValue,
-.root[data-theme="light"] .cardDressingRoomZone > .destRoomValue {
+.root[data-theme="light"] .cardDressingRoomZone .destRoomValue {
   background: rgba(24, 73, 166, 0.1);
   border-color: rgba(24, 73, 166, 0.28);
   color: #0B1F3A;
@@ -1811,9 +1811,14 @@
   justify-self: start;
 }
 
-.participantRoomValue[data-multi-room="true"] {
-  width: auto;
+.dressingRoomBadgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: clamp(4px, 0.45vw, 8px);
   max-width: 100%;
+  min-width: 0;
 }
 
 .participantTeamName {

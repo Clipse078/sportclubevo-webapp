@@ -49,6 +49,8 @@ import {
   resolvePitchDisplay,
   resolveDressingRoomDisplay,
   resolveAllocationList,
+  splitAllocationListDisplay,
+  ALLOCATION_LIST_SEPARATOR,
 } from "../allocation-display-resolver";
 import type {
   AllocationResourceInput,
@@ -380,5 +382,32 @@ describe("resolveAllocationList", () => {
         { code: "KR2" },
       ]),
     ).toBe("KR2 · KR3");
+  });
+});
+
+describe("splitAllocationListDisplay", () => {
+  it("returns empty array for null or blank input", () => {
+    expect(splitAllocationListDisplay(null)).toEqual([]);
+    expect(splitAllocationListDisplay("")).toEqual([]);
+    expect(splitAllocationListDisplay("   ")).toEqual([]);
+  });
+
+  it("returns a single part when no separator is present", () => {
+    expect(splitAllocationListDisplay("E1")).toEqual(["E1"]);
+  });
+
+  it("splits on the canonical separator", () => {
+    expect(splitAllocationListDisplay(`E1${ALLOCATION_LIST_SEPARATOR}O3`)).toEqual([
+      "E1",
+      "O3",
+    ]);
+  });
+
+  it("supports three or more rooms", () => {
+    expect(splitAllocationListDisplay("E1 · O3 · O4")).toEqual(["E1", "O3", "O4"]);
+  });
+
+  it("preserves duplicate parts for presentation of explicit duplicates", () => {
+    expect(splitAllocationListDisplay("A · A")).toEqual(["A", "A"]);
   });
 });

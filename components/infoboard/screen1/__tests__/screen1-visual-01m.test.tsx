@@ -159,10 +159,8 @@ describe("INFOBOARD-SCREEN1-VISUAL-01M — canonical Kabine pill CSS", () => {
     }
   });
 
-  it("preserves tournament multi-room width escape hatch", () => {
-    expect(CSS).toMatch(
-      /\.participantRoomValue\[data-multi-room="true"\][\s\S]*width:\s*auto/,
-    );
+  it("preserves multi-room dressing badge flex group", () => {
+    expect(CSS).toMatch(/\.dressingRoomBadgeGroup[\s\S]*flex-wrap:\s*wrap/);
   });
 
   it("keeps training matrix filling card height with shared row tracks (R11R2)", () => {

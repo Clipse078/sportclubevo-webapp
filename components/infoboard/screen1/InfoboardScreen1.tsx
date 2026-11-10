@@ -186,6 +186,7 @@ import {
   resolveActivityAmbientSrc,
 } from "@/lib/infoboard/screen1-ambient-assets";
 import styles from "./InfoboardScreen1.module.css";
+import { DressingRoomBadges } from "./DressingRoomBadges";
 
 export {
   resolveVenuePresentationDensity,
@@ -657,10 +658,6 @@ export function resolveTrainingCohortTimePresentation(
   };
 }
 
-function formatDressingRoomLabel(label: string): string {
-  return label.replace(/^kabine\s+/i, "").trim();
-}
-
 function formatDisplayDate(dateKey: string): string {
   const d = new Date(dateKey + "T12:00:00.000Z");
   return d.toLocaleDateString("de-CH", {
@@ -1072,12 +1069,6 @@ function ParticipantAllocationBlock({
       data-testid="participant-allocation-block"
     >
       {allocations.map((alloc) => {
-        const roomLabel =
-          alloc.dressingRoomLabel !== null
-            ? formatDressingRoomLabel(alloc.dressingRoomLabel)
-            : "—";
-        const isMultiRoom = roomLabel.includes("·");
-
         return (
           <div
             key={alloc.id}
@@ -1087,12 +1078,15 @@ function ParticipantAllocationBlock({
                 : styles.participantAllocationRow
             }
           >
-            <span
-              className={styles.participantRoomValue}
-              data-multi-room={isMultiRoom ? "true" : undefined}
-            >
-              {roomLabel}
-            </span>
+            {alloc.dressingRoomLabel !== null ? (
+              <DressingRoomBadges
+                label={alloc.dressingRoomLabel}
+                badgeClassName={styles.participantRoomValue}
+                groupClassName={styles.dressingRoomBadgeGroup}
+              />
+            ) : (
+              <span className={styles.participantRoomValue}>—</span>
+            )}
             <span className={styles.participantTeamName}>
               {(() => {
                 const identity = resolveTournamentParticipantIdentity(alloc);
@@ -1163,18 +1157,22 @@ function MatchDestination({ event }: MatchDestinationProps): ReactElement {
               <div className={`${styles.matchAllocation} ${styles.venueColumnPrimary}`}>
                 {hasHome && (
                   <div className={styles.matchAllocRow}>
-                    <span className={styles.matchAllocRoom}>
-                      {formatDressingRoomLabel(homeDressingRoomLabel)}
-                    </span>
+                    <DressingRoomBadges
+                      label={homeDressingRoomLabel}
+                      badgeClassName={styles.matchAllocRoom}
+                      groupClassName={styles.dressingRoomBadgeGroup}
+                    />
                     <span className={styles.matchAllocRole}>Heim</span>
                   </div>
                 )}
 
                 {hasAway && (
                   <div className={styles.matchAllocRow}>
-                    <span className={styles.matchAllocRoom}>
-                      {formatDressingRoomLabel(awayDressingRoomLabel)}
-                    </span>
+                    <DressingRoomBadges
+                      label={awayDressingRoomLabel}
+                      badgeClassName={styles.matchAllocRoom}
+                      groupClassName={styles.dressingRoomBadgeGroup}
+                    />
                     <span className={styles.matchAllocRole}>Gast</span>
                   </div>
                 )}
@@ -1270,9 +1268,11 @@ function TrainingDestination({ event }: TrainingDestinationProps): ReactElement 
             {...{ [VENUE_COLUMN_BODY_ATTR]: VENUE_COLUMN_BODY_MARKER }}
           >
             {homeDressingRoomLabel !== null ? (
-              <span className={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}>
-                {formatDressingRoomLabel(homeDressingRoomLabel)}
-              </span>
+              <DressingRoomBadges
+                label={homeDressingRoomLabel}
+                badgeClassName={`${styles.destRoomValue} ${styles.venueColumnPrimary}`}
+                groupClassName={`${styles.dressingRoomBadgeGroup} ${styles.venueColumnPrimary}`}
+              />
             ) : (
               <span
                 className={styles.dressingRoomMissing}
@@ -1641,9 +1641,11 @@ function TrainingGroupCard({
 
                 <div className={styles.trainingMatrixCell}>
                   {homeDressingRoomLabel !== null ? (
-                    <span className={styles.trainingGroupRoomValue}>
-                      {formatDressingRoomLabel(homeDressingRoomLabel)}
-                    </span>
+                    <DressingRoomBadges
+                      label={homeDressingRoomLabel}
+                      badgeClassName={styles.trainingGroupRoomValue}
+                      groupClassName={styles.dressingRoomBadgeGroup}
+                    />
                   ) : (
                     <span
                       className={styles.dressingRoomMissing}
