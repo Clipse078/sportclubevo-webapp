@@ -94,6 +94,13 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     expect(tabs).toContain("ArrowRight");
     expect(tabs).toContain("ArrowLeft");
     expect(tabs).toContain("activateTabAtIndex");
+    expect(tabs).not.toContain("<details");
+  });
+
+  it("SidebarPlatformBrand avoids prohibited img grouping roles", () => {
+    const brand = readSrc("components/admin/branding/SidebarPlatformBrand.tsx");
+    expect(brand).not.toContain('role="img"');
+    expect(brand).toContain('alt="SportClubEvo"');
   });
 
   it("Communication remains primary visual reference without universal template claim", () => {

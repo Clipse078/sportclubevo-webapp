@@ -4944,20 +4944,23 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "VERIFIED",
-    "compactDesktop": "VERIFIED",
-    "tablet": "VERIFIED",
-    "mobile": "VERIFIED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [
-      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-desktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-compactDesktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-tablet.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-mobile.png"
-    ],
-    "defects": []
+    "evidenceReferences": [],
+    "defects": [
+      {
+        "id": "DS2-07G-fixture-app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
+        "introducedByDs2": null,
+        "status": "OPEN",
+        "summary": "Missing dynamic fixture for parameterized URL",
+        "reproduction": "/dashboard/website/news/[id]/edit"
+      }
+    ]
   },
   {
     "urlPattern": "/dashboard/website/news/new",
@@ -5532,20 +5535,23 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "VERIFIED",
-    "compactDesktop": "VERIFIED",
-    "tablet": "VERIFIED",
-    "mobile": "VERIFIED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-desktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-compactDesktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-tablet.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-mobile.png"
-    ],
-    "defects": []
+    "evidenceReferences": [],
+    "defects": [
+      {
+        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
+        "introducedByDs2": null,
+        "status": "OPEN",
+        "summary": "Missing dynamic fixture for parameterized URL",
+        "reproduction": "/vereinsleitung/initiativen/[slug]"
+      }
+    ]
   },
   {
     "urlPattern": "/vereinsleitung/initiativen/[slug]/edit",
@@ -6040,7 +6046,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-10-batch-3",
   "evidenceContractVersion": "2026-11-10-batch-3",
-  "generatedAt": "2026-11-10T22:30:46.808Z",
+  "generatedAt": "2026-11-10T23:17:24.821Z",
   "totalCanonicalRoutes": 214,
   "verifiedAuthenticatedVisualCount": 0,
   "pendingAuthenticatedVisualCount": 214,

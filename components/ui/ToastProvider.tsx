@@ -79,6 +79,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
       {/* Toast stack — bottom-right, above everything */}
       <div
+        role="region"
         aria-label="Benachrichtigungen"
         className={cn(
           "pointer-events-none fixed bottom-5 right-5 z-[9999]",

@@ -124,4 +124,22 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#ffffff",
     minimumRatio: 4.5,
   },
+  {
+    id: "tenant-eyebrow-on-canvas",
+    foreground: "#b91c1c",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "l1-nav-inactive-on-chrome",
+    foreground: "#475569",
+    background: "#fafafa",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "dayplanner-conflict-badge-on-canvas",
+    foreground: "#92400e",
+    background: "#f7efe8",
+    minimumRatio: 4.5,
+  },
 ];

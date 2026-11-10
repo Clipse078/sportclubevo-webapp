@@ -567,6 +567,8 @@
   --sce-accent-hover: #8f4f1f;
   --sce-color-accent-primary: #a35f28;
   --sce-color-accent-hover: #8f4f1f;
+  /* Tenant accent eyebrow — AA on white canvas (DS2-07G) */
+  --tenant-secondary: #b91c1c;
 
   --sce-bg:            var(--background);
   --sce-surface:       var(--surface);

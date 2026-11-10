@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T22:29:40.641Z",
+  "generatedAt": "2026-11-10T23:17:01.479Z",
   "baseUrl": "http://127.0.0.1:3000",
-  "batch": "batch-4-reassess-evidence-offset-0-limit-50",
+  "batch": "batch-4-reassess-evidence-offset-0-limit-41",
   "prefixes": [
     "/dashboard/planner/week",
     "/dashboard/planner/day",
@@ -76,10 +76,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: role detail tabs and permission matrix visible"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -293,11 +296,9 @@
         "visual": {
           "status": "FAIL",
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": true,
+          "screenshotReviewed": false,
           "details": [
-            "multiple h1 elements",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
+            "multiple h1 elements"
           ]
         },
         "responsive": {
@@ -368,12 +369,12 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: roles list workspace consistent with batch-6 review"
           ]
         },
         "responsive": {
@@ -1864,10 +1865,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: P&L reporting workspace loaded; tabs and investigation panel aligned"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -1891,13 +1895,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-prohibited-attr:serious",
-          "details": [
-            "aria-prohibited-attr:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -2325,11 +2327,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 3,
+          "axeViolations": 2,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious, definition-list:serious",
+          "reason": "axe violations: color-contrast:serious, definition-list:serious",
           "details": [
-            "aria-prohibited-attr:serious",
             "color-contrast:serious",
             "definition-list:serious"
           ]
@@ -2445,10 +2446,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: matchcenter operational shell; no error interstitial in capture"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -2473,11 +2477,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 4,
+          "axeViolations": 3,
           "axeIncomplete": 3,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious, nested-interactive:serious, target-size:serious",
+          "reason": "axe violations: color-contrast:serious, nested-interactive:serious, target-size:serious",
           "details": [
-            "aria-prohibited-attr:serious",
             "color-contrast:serious",
             "nested-interactive:serious",
             "target-size:serious"
@@ -2521,10 +2524,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: day planner grid and plan selector render without layout break"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -2548,14 +2554,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious, select-name:critical",
-          "details": [
-            "color-contrast:serious",
-            "select-name:critical"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -2739,10 +2742,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: training list workspace with white-edition chrome"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -2911,12 +2917,11 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 3,
+          "axeViolations": 2,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-allowed-attr:critical, aria-prohibited-attr:serious, color-contrast:serious",
+          "reason": "axe violations: aria-allowed-attr:critical, color-contrast:serious",
           "details": [
             "aria-allowed-attr:critical",
-            "aria-prohibited-attr:serious",
             "color-contrast:serious"
           ]
         },
@@ -2985,13 +2990,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-prohibited-attr:serious",
-          "details": [
-            "aria-prohibited-attr:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -3860,11 +3863,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
+          "axeViolations": 1,
           "axeIncomplete": 3,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
+          "reason": "axe violations: color-contrast:serious",
           "details": [
-            "aria-prohibited-attr:serious",
             "color-contrast:serious"
           ]
         },
@@ -4079,13 +4081,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 2,
-          "reason": "axe violations: aria-prohibited-attr:serious",
-          "details": [
-            "aria-prohibited-attr:serious"
-          ]
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -5956,7 +5956,7 @@
           "status": "PENDING",
           "reason": "Form route missing submit control (read-only probe)",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
           ]
         }
       },
@@ -6100,7 +6100,7 @@
           "status": "PASS",
           "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
           ]
         }
       },
@@ -6457,7 +6457,7 @@
           "status": "PENDING",
           "reason": "Form route missing submit control (read-only probe)",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":48,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
           ]
         }
       },
@@ -6809,13 +6809,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-prohibited-attr:serious",
-          "details": [
-            "aria-prohibited-attr:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -8260,12 +8258,12 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: notification center filters and empty-state readable"
           ]
         },
         "responsive": {
@@ -8336,10 +8334,13 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": false,
-          "details": []
+          "status": "PASS",
+          "reason": "Agent desktop screenshot review PASS (batch 7)",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read-batch7; reviewedAt=2026-11-10T23:17:24.515Z; verdict=PASS",
+            "finding: desktop-1440: CMS hub cards and navigation intact"
+          ]
         },
         "responsive": {
           "status": "PASS",
@@ -8955,12 +8956,11 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
+          "axeViolations": 1,
           "axeIncomplete": 1,
-          "reason": "axe violations: button-name:critical, color-contrast:serious",
+          "reason": "axe violations: button-name:critical",
           "details": [
-            "button-name:critical",
-            "color-contrast:serious"
+            "button-name:critical"
           ]
         },
         "functional": {
@@ -9101,13 +9101,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -9128,10 +9126,10 @@
     "app/(admin)/dashboard/website/news/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
       "urlPattern": "/dashboard/website/news/[id]/edit",
-      "desktop": "VERIFIED",
-      "compactDesktop": "VERIFIED",
-      "tablet": "VERIFIED",
-      "mobile": "VERIFIED",
+      "desktop": "PENDING",
+      "compactDesktop": "PENDING",
+      "tablet": "PENDING",
+      "mobile": "PENDING",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -9140,65 +9138,46 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated navigation succeeded"
+          "reason": "Authenticated session established"
         },
         "authorization": {
-          "status": "PASS",
-          "reason": "Session could reach route without unauthorized response"
+          "status": "PENDING",
+          "reason": "Dynamic fixture unavailable for probe URL"
         },
         "visual": {
-          "status": "FAIL",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "status": "PENDING",
+          "reason": "Missing dynamic fixture id",
           "screenshotReviewed": false,
-          "details": [
-            "missing main landmark"
-          ]
+          "details": []
         },
         "responsive": {
-          "status": "PASS",
-          "viewports": {
-            "desktop": {
-              "status": "PASS",
-              "details": []
-            },
-            "compactDesktop": {
-              "status": "PASS",
-              "details": []
-            },
-            "tablet": {
-              "status": "PASS",
-              "details": []
-            },
-            "mobile": {
-              "status": "PASS",
-              "details": []
-            }
-          }
+          "status": "PENDING",
+          "reason": "Missing dynamic fixture id",
+          "viewports": {}
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 2,
-          "reason": "axe violations: meta-refresh:critical",
-          "details": [
-            "meta-refresh:critical"
-          ]
+          "status": "PENDING",
+          "reason": "Route not probed — missing fixture",
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
-          "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
-          ]
+          "reason": "Route not probed — missing fixture",
+          "details": []
         }
       },
-      "evidenceReferences": [
-        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-desktop.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-compactDesktop.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-tablet.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-mobile.png"
-      ],
-      "defects": []
+      "evidenceReferences": [],
+      "defects": [
+        {
+          "id": "DS2-07G-fixture-app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
+          "introducedByDs2": null,
+          "status": "OPEN",
+          "summary": "Missing dynamic fixture for parameterized URL",
+          "reproduction": "/dashboard/website/news/[id]/edit"
+        }
+      ]
     },
     "app/(admin)/dashboard/website/news/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/news/new/page.tsx",
@@ -9250,11 +9229,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
+          "axeViolations": 1,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious, label:critical",
+          "reason": "axe violations: label:critical",
           "details": [
-            "color-contrast:serious",
             "label:critical"
           ]
         },
@@ -9323,13 +9301,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -9442,11 +9418,8 @@
         "visual": {
           "status": "PENDING",
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": true,
-          "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
-          ]
+          "screenshotReviewed": false,
+          "details": []
         },
         "responsive": {
           "status": "PASS",
@@ -9544,11 +9517,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
+          "axeViolations": 1,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious, label:critical",
+          "reason": "axe violations: label:critical",
           "details": [
-            "color-contrast:serious",
             "label:critical"
           ]
         },
@@ -9617,13 +9589,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -9763,13 +9733,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -9910,13 +9878,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -10054,13 +10020,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
+          "status": "PENDING",
+          "axeViolations": 0,
           "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -10081,10 +10045,10 @@
     "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
       "urlPattern": "/vereinsleitung/initiativen/[slug]",
-      "desktop": "VERIFIED",
-      "compactDesktop": "VERIFIED",
-      "tablet": "VERIFIED",
-      "mobile": "VERIFIED",
+      "desktop": "PENDING",
+      "compactDesktop": "PENDING",
+      "tablet": "PENDING",
+      "mobile": "PENDING",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -10093,63 +10057,46 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated navigation succeeded"
+          "reason": "Authenticated session established"
         },
         "authorization": {
-          "status": "PASS",
-          "reason": "Session could reach route without unauthorized response"
+          "status": "PENDING",
+          "reason": "Dynamic fixture unavailable for probe URL"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "reason": "Missing dynamic fixture id",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PASS",
-          "viewports": {
-            "desktop": {
-              "status": "PASS",
-              "details": []
-            },
-            "compactDesktop": {
-              "status": "PASS",
-              "details": []
-            },
-            "tablet": {
-              "status": "PASS",
-              "details": []
-            },
-            "mobile": {
-              "status": "PASS",
-              "details": []
-            }
-          }
+          "status": "PENDING",
+          "reason": "Missing dynamic fixture id",
+          "viewports": {}
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 1,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "reason": "Route not probed — missing fixture",
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
-          "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
-          ]
+          "reason": "Route not probed — missing fixture",
+          "details": []
         }
       },
-      "evidenceReferences": [
-        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-desktop.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-compactDesktop.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-tablet.png",
-        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-mobile.png"
-      ],
-      "defects": []
+      "evidenceReferences": [],
+      "defects": [
+        {
+          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
+          "introducedByDs2": null,
+          "status": "OPEN",
+          "summary": "Missing dynamic fixture for parameterized URL",
+          "reproduction": "/vereinsleitung/initiativen/[slug]"
+        }
+      ]
     },
     "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx",
@@ -10246,11 +10193,8 @@
         "visual": {
           "status": "PENDING",
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
-          "screenshotReviewed": true,
-          "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
-          ]
+          "screenshotReviewed": false,
+          "details": []
         },
         "responsive": {
           "status": "PASS",
@@ -13494,6 +13438,8 @@
           "screenshotReviewed": true,
           "details": [
             "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: dashboard home skeleton placeholders only in captured artifact; transient load state",
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
             "screenshotReview finding: desktop-1440: dashboard home skeleton placeholders only in captured artifact; transient load state"
           ]
         },
@@ -13567,6 +13513,8 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: captured artifact shows home skeleton, not roles list — probe URL or timing issue",
             "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
             "screenshotReview finding: desktop-1440: captured artifact shows home skeleton, not roles list — probe URL or timing issue"
           ]
@@ -14670,11 +14618,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
+          "axeViolations": 1,
           "axeIncomplete": 1,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
+          "reason": "axe violations: color-contrast:serious",
           "details": [
-            "aria-prohibited-attr:serious",
             "color-contrast:serious"
           ]
         },
@@ -14793,6 +14740,8 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: list stuck on loading spinner in captured artifact; needs re-capture after data hydration",
             "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
             "screenshotReview finding: desktop-1440: list stuck on loading spinner in captured artifact; needs re-capture after data hydration"
           ]
@@ -15419,9 +15368,10 @@
   "batch3RoutesAttemptedThisRun": 0,
   "batch3EvidenceRows": 173,
   "visualScreenshotReview": {
-    "lastReviewerMechanism": "cursor-agent-image-read",
-    "lastReviewedAt": "2026-11-10T23:45:00.000Z",
+    "lastReviewerMechanism": "cursor-agent-image-read-batch7",
+    "lastReviewedAt": "2026-11-10T23:17:24.515Z",
     "routesMarkedThisRun": 7,
-    "batch6RoutesMarked": 9
+    "batch6RoutesMarked": 9,
+    "batch7RoutesMarked": 8
   }
 }

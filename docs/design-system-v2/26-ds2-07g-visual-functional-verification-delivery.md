@@ -157,9 +157,35 @@ Helpers:
 
 Agent image inspection (desktop artifact reference) via `scripts/sce-ds2-07g-record-visual-review-batch6.mjs`. Full **214×4** manual review is not complete; routes with loading-only captures (e.g. platform home skeleton, Vereine list spinner) stay **screenshotReviewed** with **PENDING** verdict notes.
 
+## Batch 7 result (systemic a11y + toast/day planner + evidence refresh)
+
+| Status | Count |
+| --- | ---: |
+| Authenticated browser evidence rows | **214** / 214 |
+| Responsive PASS / PENDING (fixture) | **203** / **11** |
+| Accessibility PASS / FAIL / PENDING | **0** / **66** / **148** |
+| Functional PASS / PENDING | **130** / **84** |
+| Screenshot explicitly reviewed | **19** (batch 6 + batch 7 agent reads restored after reassess) |
+| Programme `authenticatedVisual` VERIFIED | **0** / 214 |
+
+### Batch 7 remediations (shared root causes)
+
+| Area | Change |
+| --- | --- |
+| Global toast stack | `ToastProvider` toast container `role="region"` (fixes `aria-prohibited-attr` on shell-wide `aria-label` divs) |
+| Day planner | Conflict badge tokens for white canvas; `DayPlannerPlanSelect` label + `name` |
+| Context tabs | `SceContextTabs` overflow `details/summary` → button menu (reduces `nested-interactive` / `target-size` debt) |
+| Platform brand | `SidebarPlatformBrand` drops prohibited `role="img"` grouping; single visible wordmark `alt` |
+| Tokens | White `--tenant-secondary` eyebrow contrast; extended `sce-ds2-06-contrast-pairs` |
+| Evidence | Targeted Playwright reassess of 45 + 72 axe-FAIL rows (`/opt/cursor/artifacts/sce-ds2-07g-reassess-*.log`) |
+
+### Environmental blockers (unchanged)
+
+Nine routes still lack STAGE fixtures (`Requirement`, `RequirementRecipient`, `CAMPAIGN`/`PlatformCommunicationTemplate`, `Meeting`, `Target`, `BankReconciliationImport`). Responsive + evidence remain **PENDING**; classified as **fixture unavailable**, not application defects.
+
 ## Remaining verification work
 
-1. Close the **9** fixture-environment blockers (read-only STAGE seed or disposable verification DB — never mutate operational STAGE records).
+1. Close the **11** fixture-environment blockers (read-only STAGE seed or disposable verification DB — never mutate operational STAGE records).
 2. Continue agent visual review (`visual.screenshotReviewed = true`) for remaining **198** routes × viewports.
 3. Triage axe failures (contrast/label/select-name baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
 4. Promote registry lifecycle only when `isVerifiedAuthenticatedVisual` is satisfied (still **0/214**).

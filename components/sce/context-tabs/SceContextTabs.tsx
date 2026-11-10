@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { useCallback, useRef, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { cn } from "@/lib/cn";
 import type { ContextTabId, ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 import {
@@ -49,6 +49,8 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
   const { activeTab, navigateToTab, hrefForTab } = useContextDetailTab(config);
   const dirtyNav = useOptionalContextDirtyNavigation();
   const tablistRef = useRef<HTMLDivElement>(null);
+  const overflowRef = useRef<HTMLDivElement>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
 
   const primaryTabs = listKeyboardNavigablePrimaryTabs(config);
   const overflowTabs = listVisibleOverflowTabs(config);
@@ -92,6 +94,28 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
     },
     [activeTab, focusTabAtIndex, navigateToTab, primaryTabs],
   );
+
+  useEffect(() => {
+    if (!overflowOpen) {
+      return;
+    }
+    function handlePointerDown(event: MouseEvent) {
+      if (!overflowRef.current?.contains(event.target as Node)) {
+        setOverflowOpen(false);
+      }
+    }
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOverflowOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [overflowOpen]);
 
   function handleTablistKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (primaryTabs.length === 0) {
@@ -190,18 +214,28 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
       </div>
 
       {overflowTabs.length > 0 ? (
-        <div className="relative mb-px flex shrink-0 items-end self-stretch pb-0">
-          <details className="group relative">
-            <summary
-              className={sceContextTabOverflowSummaryClassName(overflowActive)}
-              data-testid={`${testId}-mehr`}
-            >
-              Mehr
-              <ChevronDown
-                className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
-                aria-hidden="true"
-              />
-            </summary>
+        <div
+          ref={overflowRef}
+          className="relative mb-px flex shrink-0 items-end self-stretch pb-0"
+        >
+          <button
+            type="button"
+            className={sceContextTabOverflowSummaryClassName(overflowActive)}
+            data-testid={`${testId}-mehr`}
+            aria-expanded={overflowOpen}
+            aria-haspopup="menu"
+            onClick={() => setOverflowOpen((open) => !open)}
+          >
+            Mehr
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 transition-transform",
+                overflowOpen && "rotate-180",
+              )}
+              aria-hidden="true"
+            />
+          </button>
+          {overflowOpen ? (
             <div
               className="absolute right-0 top-full z-20 mt-1 min-w-[11rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-sm"
               role="menu"
@@ -211,7 +245,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                 const isActive = activeTab === tab.key;
 
                 const overflowClassName = cn(
-                  "block w-full px-3 py-2 text-left text-sm font-medium transition-colors",
+                  "block w-full min-h-[44px] px-3 py-2 text-left text-sm font-medium transition-colors",
                   isActive
                     ? "text-[var(--sce-primary)]"
                     : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
@@ -224,7 +258,10 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                       type="button"
                       role="menuitem"
                       data-testid={`${testId}-${tab.key}`}
-                      onClick={(event) => handleTabClick(event, tab.key)}
+                      onClick={(event) => {
+                        handleTabClick(event, tab.key);
+                        setOverflowOpen(false);
+                      }}
                       className={overflowClassName}
                     >
                       {formatTabLabel(tab.label, tab.count)}
@@ -238,7 +275,10 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                     href={href}
                     role="menuitem"
                     data-testid={`${testId}-${tab.key}`}
-                    onClick={(event) => handleTabClick(event, tab.key)}
+                    onClick={(event) => {
+                      handleTabClick(event, tab.key);
+                      setOverflowOpen(false);
+                    }}
                     className={overflowClassName}
                   >
                     {formatTabLabel(tab.label, tab.count)}
@@ -246,7 +286,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                 );
               })}
             </div>
-          </details>
+          ) : null}
         </div>
       ) : null}
     </nav>
