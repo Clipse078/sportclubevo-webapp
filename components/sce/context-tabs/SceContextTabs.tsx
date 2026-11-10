@@ -138,7 +138,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
         onKeyDown={handleTablistKeyDown}
         className={cn(
           SCE_ACTIVITY_NAV_TABLIST_CLASS,
-          "-mb-px flex min-h-[2.75rem] min-w-0 flex-1 flex-nowrap items-end gap-1",
+          "-mb-px flex min-h-[2.75rem] min-w-0 max-w-full flex-1 flex-nowrap items-end gap-1",
         )}
       >
         {primaryTabs.map((tab) => {
@@ -146,6 +146,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
           const isActive = activeTab === tab.key;
           const tabDomId = `${idPrefix}-${tab.key}`;
           const panelDomId = `${idPrefix}panel-${tab.key}`;
+          const tabAriaControls = localNavigation ? panelDomId : undefined;
 
           const tabClassName = sceContextTabClassName(isActive);
 
@@ -158,7 +159,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                 id={tabDomId}
                 tabIndex={isActive ? 0 : -1}
                 aria-selected={isActive}
-                aria-controls={panelDomId}
+                aria-controls={tabAriaControls}
                 data-testid={`${testId}-${tab.key}`}
                 onClick={(event) => handleTabClick(event, tab.key)}
                 className={tabClassName}
@@ -177,7 +178,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
               tabIndex={isActive ? 0 : -1}
               aria-selected={isActive}
               aria-current={isActive ? "page" : undefined}
-              aria-controls={panelDomId}
+              aria-controls={tabAriaControls}
               data-testid={`${testId}-${tab.key}`}
               onClick={(event) => handleTabClick(event, tab.key)}
               className={tabClassName}

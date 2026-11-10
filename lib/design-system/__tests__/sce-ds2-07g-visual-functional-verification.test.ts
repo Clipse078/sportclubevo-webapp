@@ -87,16 +87,19 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     );
     expect(manifest.evidenceContractVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
     expect(manifest.highRiskRoutesAttempted).toBe(41);
-    expect(Object.keys(manifest.bySourceFile).length).toBeGreaterThanOrEqual(41);
-    expect(manifest.batch3EvidenceRows ?? 0).toBeGreaterThanOrEqual(20);
-    const sample = Object.values(manifest.bySourceFile)[0] as {
+    expect(Object.keys(manifest.bySourceFile).length).toBeGreaterThanOrEqual(100);
+    expect(manifest.batch3EvidenceRows ?? 0).toBeGreaterThanOrEqual(60);
+    const rows = Object.values(manifest.bySourceFile) as Array<{
       dimensions: {
         authentication: { status: string };
         visual: { screenshotReviewed?: boolean };
       };
-    };
-    expect(sample.dimensions.authentication.status).toBeTruthy();
-    expect(sample.dimensions.visual.screenshotReviewed).toBe(false);
+    }>;
+    expect(rows.every((row) => row.dimensions.authentication.status)).toBe(true);
+    const reviewed = rows.filter((row) => row.dimensions.visual.screenshotReviewed === true);
+    const pendingReview = rows.filter((row) => row.dimensions.visual.screenshotReviewed === false);
+    expect(reviewed.length).toBeGreaterThanOrEqual(5);
+    expect(pendingReview.length).toBeGreaterThan(0);
   });
 
   it("regenerates the matrix from scripts without drift", () => {

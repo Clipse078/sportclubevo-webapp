@@ -634,14 +634,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -657,14 +662,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access_new-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access_new-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access_new-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_people-access_new-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -773,8 +783,8 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
     "desktop": "VERIFIED",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "VERIFIED",
@@ -785,22 +795,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-tablet.png",
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-mobile.png"
     ],
-    "defects": [
-      {
-        "id": "DS2-07G-compactDesktop-1",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "compactDesktop: horizontal overflow",
-        "reproduction": "http://localhost:3000/dashboard/administration/roles"
-      },
-      {
-        "id": "DS2-07G-tablet-2",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "tablet: horizontal overflow",
-        "reproduction": "http://localhost:3000/dashboard/administration/roles"
-      }
-    ]
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/administration/roles/[id]",
@@ -816,8 +811,8 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
     "desktop": "VERIFIED",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
@@ -828,22 +823,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-tablet.png",
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-mobile.png"
     ],
-    "defects": [
-      {
-        "id": "DS2-07G-compactDesktop-1",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "compactDesktop: horizontal overflow",
-        "reproduction": "http://localhost:3000/dashboard/administration/roles"
-      },
-      {
-        "id": "DS2-07G-tablet-2",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "tablet: horizontal overflow",
-        "reproduction": "http://localhost:3000/dashboard/administration/roles"
-      }
-    ]
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/administration/roles/assignments",
@@ -1194,14 +1174,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -1217,14 +1202,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -1240,14 +1230,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -1263,14 +1258,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_new-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_new-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_new-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_new-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -1286,14 +1286,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_settings-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_settings-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_settings-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_settings-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2359,14 +2364,18 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
+    "desktop": "VERIFIED",
     "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2466,14 +2475,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mein-programm-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mein-programm-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mein-programm-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mein-programm-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2489,14 +2503,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mitglieder-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mitglieder-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mitglieder-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mitglieder-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2673,14 +2692,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2696,14 +2720,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2719,14 +2748,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_edit-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2742,14 +2776,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_new-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_new-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_new-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_new-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2765,14 +2804,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_settings_development-criteria-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_settings_development-criteria-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_settings_development-criteria-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_settings_development-criteria-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2923,14 +2967,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_players-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_players-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_players-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_players-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -2946,14 +2995,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_programm-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_programm-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_programm-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_programm-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3089,14 +3143,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_sponsoring-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_sponsoring-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_sponsoring-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_sponsoring-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3112,14 +3171,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3135,14 +3199,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3158,14 +3227,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_administration-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_administration-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_administration-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_administration-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3181,14 +3255,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_anwesenheit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_anwesenheit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_anwesenheit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_anwesenheit-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3204,14 +3283,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_dokumente-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_dokumente-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_dokumente-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_dokumente-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3227,14 +3311,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kader-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kader-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kader-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kader-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3250,14 +3339,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kommunikation-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kommunikation-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kommunikation-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_kommunikation-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3273,14 +3367,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_programm-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_programm-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_programm-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_programm-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3296,14 +3395,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_rangliste-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_rangliste-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_rangliste-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_rangliste-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3319,14 +3423,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_resultate-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_resultate-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_resultate-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_resultate-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3342,14 +3451,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_spiele-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_spiele-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_spiele-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_spiele-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3365,14 +3479,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_teilnahmen-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_teilnahmen-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_teilnahmen-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_teilnahmen-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3388,14 +3507,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_trainerteam-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_trainerteam-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_trainerteam-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_trainerteam-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3411,14 +3535,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3434,14 +3563,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3457,14 +3591,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3480,14 +3619,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_register-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_register-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_register-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_register-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3572,14 +3716,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainer-staff-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainer-staff-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainer-staff-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainer-staff-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -3595,14 +3744,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainers-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainers-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainers-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainers-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -4077,14 +4231,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_edit-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -4100,14 +4259,19 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vorfaelle-disziplin-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vorfaelle-disziplin-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vorfaelle-disziplin-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vorfaelle-disziplin-mobile.png"
+    ],
     "defects": []
   },
   {
@@ -5270,7 +5434,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-10-batch-3",
   "evidenceContractVersion": "2026-11-10-batch-3",
-  "generatedAt": "2026-11-10T18:27:26.407Z",
+  "generatedAt": "2026-11-10T19:02:27.924Z",
   "totalCanonicalRoutes": 214,
   "verifiedAuthenticatedVisualCount": 0,
   "pendingAuthenticatedVisualCount": 214,
@@ -5278,10 +5442,10 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "automatedChecksPassedCount": 214,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
-  "highRiskResponsiveVerifiedCount": 39,
+  "highRiskResponsiveVerifiedCount": 41,
   "dimensionClosureCompleteCount": 0,
   "dimensionAccessibilityPassCount": 0,
-  "dimensionFunctionalPassCount": 37,
+  "dimensionFunctionalPassCount": 55,
   "authenticatedBrowserAvailable": true,
   "contrastSmokeDebt": [
     "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)"

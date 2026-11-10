@@ -10,6 +10,7 @@ import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrom
 import RoleScopeBadge from "@/components/admin/roles/RoleScopeBadge";
 import RolesAdminTabs from "@/components/admin/roles/RolesAdminTabs";
 import {
+  SCE_PAGE_OVERFLOW_GUARD_CLASS,
   SCE_TEXT_EXPANSION_SAFE_CLASS,
   SCE_WORKSPACE_HEADER_ACTIONS_CLASS,
 } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
@@ -33,7 +34,7 @@ export default async function TenantRolesLayout({ children }: LayoutProps) {
   const tenant = await getActiveTenant();
 
   return (
-    <PageShell widthMode="operational">
+    <PageShell widthMode="operational" className={SCE_PAGE_OVERFLOW_GUARD_CLASS}>
       <SceWorkspaceChrome
         density="dense"
         breadcrumbs={[

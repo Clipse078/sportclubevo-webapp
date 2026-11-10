@@ -123,6 +123,12 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     expect(areas.has("Wochenplaner")).toBe(true);
   });
 
+  it("context tab nav constrains horizontal overflow at the shell", () => {
+    const foundation = readSrc("lib/design-system/sce-context-tabs-foundation.ts");
+    expect(foundation).toContain("SCE_CONTEXT_TABS_NAV_CLASS");
+    expect(foundation).toMatch(/overflow-x-clip/);
+  });
+
   it("route-based roles admin tabs preserve URL ownership", () => {
     const config = buildRolesAdminTabNavigationConfig();
     expect(config.tabRoutes?.assignments).toContain("/assignments");

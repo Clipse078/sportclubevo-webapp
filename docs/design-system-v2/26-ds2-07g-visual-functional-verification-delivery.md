@@ -71,12 +71,13 @@ Each row includes route/module, inferred permissions and test persona, page arch
 | Status | Count |
 | --- | ---: |
 | Evidence contract | `2026-11-10-batch-3` (six independent dimensions) |
-| High-risk responsive (4 viewports) | **39 / 41** PASS (`2` routes: roles index/detail horizontal overflow at 1093/768) |
+| High-risk responsive (4 viewports) | **41 / 41** PASS (roles overflow remediated; contained-scroll heuristic) |
 | Programme closure (`authenticatedVisual`) | **0 / 214** (visual review + dimension closure required) |
-| Accessibility axe PASS (dimension) | **0** on high-risk reassess (baseline contrast/aria debt surfaced) |
-| Functional read-only PASS (dimension) | **37** across evidence rows (41 high-risk + batch-3 chunk) |
-| Batch-3 module sampling (chunk 0) | **20** wochenplaner-priority routes added to manifest (**61** evidence rows total) |
-| Remaining queue | **153** routes without browser evidence |
+| Accessibility axe PASS (dimension) | **0** (baseline `color-contrast` debt; `aria-valid-attr-value` fixed on route-owned context tabs) |
+| Functional read-only PASS (dimension) | **55** across **101** evidence rows |
+| Batch-3 module sampling | chunk 0 (**20**) + chunk 1 offset 20 limit 40 (**40**) → **101** evidence rows total |
+| Screenshot explicitly reviewed | **5** roles admin routes (`screenshotReviewed: true`) |
+| Remaining queue | **113** routes without browser evidence |
 
 ### Evidence contract (batch 3)
 
@@ -91,7 +92,7 @@ Helpers:
 
 ## Remaining verification work
 
-1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, `SCE_DS2_07G_ROUTE_OFFSET=20`, limit **153** pending).
+1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, `SCE_DS2_07G_ROUTE_OFFSET=60`, limit **113** pending).
 2. Agent visual review of captured screenshots (`visual.screenshotReviewed = true`) where layout heuristics are clean.
 3. Triage axe failures (contrast/aria baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
 4. Merge evidence into `sce-ds2-07g-verification-evidence.json` and regenerate the matrix after each chunk.

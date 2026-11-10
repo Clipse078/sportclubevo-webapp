@@ -5,7 +5,7 @@
 import { cn } from "@/lib/cn";
 
 export const SCE_CONTEXT_TABS_NAV_CLASS =
-  "flex min-w-0 items-stretch gap-2 border-b border-[var(--sce-color-border-standard)] sm:gap-3";
+  "flex min-w-0 max-w-full items-stretch gap-2 overflow-x-clip border-b border-[var(--sce-color-border-standard)] sm:gap-3";
 
 const SCE_CONTEXT_TAB_FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-focus-ring-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-app-background)]";
@@ -16,7 +16,7 @@ export function sceContextTabClassName(isActive: boolean): string {
     SCE_CONTEXT_TAB_FOCUS,
     isActive
       ? "border-[var(--sce-color-accent-primary)] text-[var(--sce-color-accent-primary)]"
-      : "border-transparent text-[var(--sce-color-text-secondary)] hover:text-[var(--sce-color-text-primary)]",
+      : "border-transparent text-[color-mix(in_srgb,var(--sce-color-text-primary)_78%,var(--sce-color-text-secondary)_22%)] hover:text-[var(--sce-color-text-primary)]",
   );
 }
 
@@ -26,6 +26,6 @@ export function sceContextTabOverflowSummaryClassName(overflowActive: boolean): 
     SCE_CONTEXT_TAB_FOCUS,
     overflowActive
       ? "text-[var(--sce-color-accent-primary)]"
-      : "text-[var(--sce-color-text-secondary)] hover:text-[var(--sce-color-text-primary)]",
+      : "text-[color-mix(in_srgb,var(--sce-color-text-primary)_78%,var(--sce-color-text-secondary)_22%)] hover:text-[var(--sce-color-text-primary)]",
   );
 }
