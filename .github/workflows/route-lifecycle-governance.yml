@@ -1,0 +1,66 @@
+name: SCE route lifecycle governance
+
+on:
+  pull_request:
+    paths:
+      # App Router pages, route handlers, and layouts.
+      - "app/**"
+      # Shared design-system components and canonical page patterns.
+      - "components/sce/**"
+      - "components/design-system/**"
+      - "components/ui/patterns/**"
+      - "components/ui/page/**"
+      - "components/admin/finance/FinanceWorkspaceTabs.tsx"
+      # Shared authenticated shell and workspace layouts.
+      - "components/admin/layout/**"
+      - "components/admin/workspace/layout/**"
+      # Design tokens and the contracts that name them.
+      - "app/globals.css"
+      - "lib/design-system/**"
+      - "lib/ui/sce-overlay-layering.ts"
+      # Governance tests, fixtures, scanner, and this workflow.
+      - "lib/design-system/__tests__/**"
+      - "scripts/sce-ds2-06-route-inventory-scan.mjs"
+      - "scripts/sce-ds2-07b-route-governance-check.mjs"
+      - "scripts/lib/**"
+      - "docs/design-system-v2/21-ds2-07b-route-lifecycle-governance.md"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/route-lifecycle-governance.yml"
+  push:
+    branches:
+      - STAGE
+    paths:
+      - "app/**"
+      - "components/sce/**"
+      - "components/design-system/**"
+      - "components/ui/patterns/**"
+      - "components/ui/page/**"
+      - "components/admin/finance/FinanceWorkspaceTabs.tsx"
+      - "components/admin/layout/**"
+      - "components/admin/workspace/layout/**"
+      - "app/globals.css"
+      - "lib/design-system/**"
+      - "lib/ui/sce-overlay-layering.ts"
+      - "lib/design-system/__tests__/**"
+      - "scripts/sce-ds2-06-route-inventory-scan.mjs"
+      - "scripts/sce-ds2-07b-route-governance-check.mjs"
+      - "scripts/lib/**"
+      - "docs/design-system-v2/21-ds2-07b-route-lifecycle-governance.md"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/route-lifecycle-governance.yml"
+
+jobs:
+  route-lifecycle-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Route discovery, registry sync, and new-page governance
+        run: npm run test:route-governance

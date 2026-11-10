@@ -9,6 +9,9 @@ on:
       - "lib/ui/sce-overlay-layering.ts"
       - "app/globals.css"
       - "scripts/run-design-system-governance.ts"
+      - "scripts/sce-ds2-06-route-inventory-scan.mjs"
+      - "scripts/sce-ds2-07b-route-governance-check.mjs"
+      - "scripts/lib/**"
       - "package.json"
   push:
     branches:
