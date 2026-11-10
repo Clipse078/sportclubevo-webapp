@@ -100,6 +100,29 @@ async function loadDynamicFixtures() {
     requirementId: process.env.SCE_DS2_07G_FIXTURE_REQUIREMENT_ID?.trim() ?? "",
     recipientId: process.env.SCE_DS2_07G_FIXTURE_RECIPIENT_ID?.trim() ?? "",
     scenarioId: process.env.SCE_DS2_07G_FIXTURE_SCENARIO_ID?.trim() ?? "",
+    orgUnitId: process.env.SCE_DS2_07G_FIXTURE_ORG_UNIT_ID?.trim() ?? "",
+    userId: process.env.SCE_DS2_07G_FIXTURE_USER_ID?.trim() ?? "",
+    tournamentId: process.env.SCE_DS2_07G_FIXTURE_TOURNAMENT_ID?.trim() ?? "",
+    entityKey: process.env.SCE_DS2_07G_FIXTURE_ENTITY_KEY?.trim() ?? "",
+    tenantSlug: process.env.SCE_DS2_07G_FIXTURE_TENANT_SLUG?.trim() ?? "",
+    registrationId: process.env.SCE_DS2_07G_FIXTURE_REGISTRATION_ID?.trim() ?? "",
+    teamId: process.env.SCE_DS2_07G_FIXTURE_TEAM_ID?.trim() ?? "",
+    personId: process.env.SCE_DS2_07G_FIXTURE_PERSON_ID?.trim() ?? "",
+    teamSeasonId: process.env.SCE_DS2_07G_FIXTURE_TEAM_SEASON_ID?.trim() ?? "",
+    mappingId: process.env.SCE_DS2_07G_FIXTURE_MAPPING_ID?.trim() ?? "",
+    targetGroupId: process.env.SCE_DS2_07G_FIXTURE_TARGET_GROUP_ID?.trim() ?? "",
+    communicationId: process.env.SCE_DS2_07G_FIXTURE_COMMUNICATION_ID?.trim() ?? "",
+    campaignId: process.env.SCE_DS2_07G_FIXTURE_CAMPAIGN_ID?.trim() ?? "",
+    templateId: process.env.SCE_DS2_07G_FIXTURE_TEMPLATE_ID?.trim() ?? "",
+    contractKey: process.env.SCE_DS2_07G_FIXTURE_CONTRACT_KEY?.trim() ?? "",
+    customerKey: process.env.SCE_DS2_07G_FIXTURE_CUSTOMER_KEY?.trim() ?? "",
+    invoiceKey: process.env.SCE_DS2_07G_FIXTURE_INVOICE_KEY?.trim() ?? "",
+    importKey: process.env.SCE_DS2_07G_FIXTURE_IMPORT_KEY?.trim() ?? "",
+    meetingSlug: process.env.SCE_DS2_07G_FIXTURE_MEETING_SLUG?.trim() ?? "",
+    targetId: process.env.SCE_DS2_07G_FIXTURE_TARGET_ID?.trim() ?? "",
+    governanceTemplateId: process.env.SCE_DS2_07G_FIXTURE_GOVERNANCE_TEMPLATE_ID?.trim() ?? "",
+    adminTenantSlug: process.env.SCE_DS2_07G_FIXTURE_ADMIN_TENANT_SLUG?.trim() ?? "",
+    adminUserId: process.env.SCE_DS2_07G_FIXTURE_ADMIN_USER_ID?.trim() ?? "",
   };
   if (Object.values(dynamicFixtures).every(Boolean)) return;
 
@@ -233,6 +256,159 @@ async function loadDynamicFixtures() {
       );
       dynamicFixtures.scenarioId = scenario.rows[0]?.id ?? "";
     }
+    if (!dynamicFixtures.orgUnitId && tenantId) {
+      const orgUnit = await client.query(
+        `SELECT id FROM "OrgUnit" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.orgUnitId = orgUnit.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.userId && tenantId && EMAIL) {
+      const otherUser = await client.query(
+        `SELECT u.id FROM "User" u
+         JOIN "TenantMembership" tm ON tm."userId" = u.id
+         WHERE tm."tenantId" = $1 AND tm."isActive" = true AND u.email <> $2
+         ORDER BY u."updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId, EMAIL],
+      );
+      dynamicFixtures.userId = otherUser.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.tournamentId && tenantId) {
+      const tournament = await client.query(
+        `SELECT id FROM "Event" WHERE "tenantId" = $1 AND type = 'TOURNAMENT'
+         ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.tournamentId = tournament.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.entityKey) {
+      const legalEntity = await client.query(
+        `SELECT key FROM "LegalEntity" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.entityKey = legalEntity.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.tenantSlug && tenantId) {
+      const tenant = await client.query(`SELECT key FROM "Tenant" WHERE id = $1 LIMIT 1`, [tenantId]);
+      dynamicFixtures.tenantSlug = tenant.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.registrationId && tenantId) {
+      const registration = await client.query(
+        `SELECT id FROM "Registration" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.registrationId = registration.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.teamId && tenantId) {
+      const team = await client.query(
+        `SELECT id FROM "Team" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.teamId = team.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.personId && tenantId) {
+      const person = await client.query(
+        `SELECT id FROM "Person" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.personId = person.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.teamSeasonId && tenantId) {
+      const teamSeason = await client.query(
+        `SELECT ts.id FROM "TeamSeason" ts
+         JOIN "Team" t ON t.id = ts."teamId"
+         WHERE t."tenantId" = $1
+         ORDER BY ts."updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.teamSeasonId = teamSeason.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.mappingId && tenantId) {
+      const mapping = await client.query(
+        `SELECT id FROM "TeamExternalMapping" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.mappingId = mapping.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.targetGroupId && tenantId) {
+      const targetGroup = await client.query(
+        `SELECT id FROM "TargetGroup" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.targetGroupId = targetGroup.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.communicationId && tenantId) {
+      const communication = await client.query(
+        `SELECT id FROM "PlatformCommunication" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.communicationId = communication.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.campaignId && tenantId) {
+      const campaign = await client.query(
+        `SELECT id FROM "PlatformCommunication" WHERE "tenantId" = $1 AND kind = 'CAMPAIGN' ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.campaignId = campaign.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.templateId && tenantId) {
+      const template = await client.query(
+        `SELECT id FROM "PlatformCommunicationTemplate" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.templateId = template.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.contractKey) {
+      const contract = await client.query(
+        `SELECT key FROM "BillingContract" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.contractKey = contract.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.customerKey) {
+      const customer = await client.query(
+        `SELECT key FROM "BillingCustomer" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.customerKey = customer.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.invoiceKey) {
+      const invoice = await client.query(
+        `SELECT key FROM "Invoice" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.invoiceKey = invoice.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.importKey) {
+      const importRow = await client.query(
+        `SELECT key FROM "BankReconciliationImport" ORDER BY "uploadedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.importKey = importRow.rows[0]?.key ?? "";
+    }
+    if (!dynamicFixtures.meetingSlug && tenantId) {
+      const meeting = await client.query(
+        `SELECT slug FROM "Meeting" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.meetingSlug = meeting.rows[0]?.slug ?? "";
+    }
+    if (!dynamicFixtures.targetId && tenantId) {
+      const target = await client.query(
+        `SELECT id FROM "Target" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        [tenantId],
+      );
+      dynamicFixtures.targetId = target.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.governanceTemplateId) {
+      const governanceTemplate = await client.query(
+        `SELECT id FROM "CommunicationTemplate" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.governanceTemplateId = governanceTemplate.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.adminTenantSlug) {
+      const adminTenant = await client.query(`SELECT key FROM "Tenant" ORDER BY "createdAt" ASC LIMIT 1`);
+      dynamicFixtures.adminTenantSlug = adminTenant.rows[0]?.key ?? dynamicFixtures.tenantSlug;
+    }
+    if (!dynamicFixtures.adminUserId) {
+      const adminUser = await client.query(`SELECT id FROM "User" ORDER BY "createdAt" ASC LIMIT 1`);
+      dynamicFixtures.adminUserId = adminUser.rows[0]?.id ?? dynamicFixtures.userId;
+    }
   } finally {
     await client.end().catch(() => {});
   }
@@ -246,7 +422,20 @@ function resolveProbePath(urlPattern) {
     else if (urlPattern.includes("/website/pages/")) fixtureValues.id = dynamicFixtures.pageId;
     else if (urlPattern.includes("/vereine/")) fixtureValues.id = dynamicFixtures.clubId;
     else if (urlPattern.includes("/administration/roles/")) fixtureValues.id = dynamicFixtures.roleId;
+    else if (urlPattern.includes("/dashboard/roles/")) fixtureValues.id = dynamicFixtures.roleId;
+    else if (urlPattern.includes("/org-units/")) fixtureValues.id = dynamicFixtures.orgUnitId;
+    else if (urlPattern.includes("/persons/")) fixtureValues.id = dynamicFixtures.personId;
+    else if (urlPattern.includes("/dashboard/communication/kampagnen/")) fixtureValues.id = dynamicFixtures.campaignId;
+    else if (urlPattern.includes("/dashboard/communication/mitteilungen/")) fixtureValues.id = dynamicFixtures.communicationId;
+    else if (urlPattern.includes("/dashboard/communication/vorlagen/")) fixtureValues.id = dynamicFixtures.templateId;
+    else if (urlPattern.includes("/dashboard/communication/zielgruppen/")) fixtureValues.id = dynamicFixtures.targetGroupId;
+    else if (urlPattern.includes("/vereinsleitung/targets/")) fixtureValues.id = dynamicFixtures.targetId;
+    else if (urlPattern.includes("/vereinsleitung/templates/")) fixtureValues.id = dynamicFixtures.governanceTemplateId;
+    else if (urlPattern.includes("/dashboard/teams/")) fixtureValues.id = dynamicFixtures.teamId;
     else if (urlPattern.includes("/infoboard/")) fixtureValues.id = dynamicFixtures.infoboardId;
+  }
+  if (!fixtureValues.slug && urlPattern.includes("/vereinsleitung/meetings/")) {
+    fixtureValues.slug = dynamicFixtures.meetingSlug;
   }
   for (const [key, value] of Object.entries(fixtureValues)) {
     if (!value) continue;

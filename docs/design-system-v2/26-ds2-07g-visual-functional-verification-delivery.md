@@ -134,13 +134,35 @@ Helpers:
 | Queue | `selectBatch3Routes` now prefers routes without evidence before re-sampling partial rows |
 | Visual review | Agent read of notifications, website page/component edit, communication hub, vereinsleitung initiative form |
 
+## Batch 6 result (214/214 browser coverage + fixture remediation + evidence closure)
+
+| Status | Count |
+| --- | ---: |
+| Authenticated browser evidence rows | **214** / 214 |
+| Remaining unsampled queue | **0** |
+| Responsive PASS / PENDING (fixture) / FAIL | **205** / **9** / **0** |
+| Accessibility PASS / FAIL / PENDING | **0** / **79** / **135** |
+| Functional PASS / PENDING | **130** / **84** |
+| Screenshot explicitly reviewed (cumulative) | **16** (9 batch-6 agent reads + prior roles/notifications/website samples) |
+| Programme `authenticatedVisual` VERIFIED | **0** / 214 |
+
+### Batch 6 execution
+
+- **Runner:** `SCE_WHITE_EDITION=1` + `SCE_DS2_07G_MODE=batch3` (33 routes) then `reassess-evidence` for 35 fixture-blocked rows.
+- **Fixture remediation:** Extended tenant-scoped resolution (`teamId`, `personId`, `orgUnitId`, billing keys, communication ids, `tenantSlug`, etc.) in `scripts/sce-ds2-07g-authenticated-route-verify.mjs`.
+- **Environmental blockers (9 routes):** No STAGE rows for `Requirement` / `RequirementRecipient`, communication campaign/template samples, Vereinsleitung meetings/targets, or bank reconciliation import key — left **PENDING** (not promoted to PASS).
+- **CMS hero editor:** `hero` reusable type lacks `ConfigForm` registration (`ReusableComponentEditor` default branch); reproduced on `origin/STAGE` — tracked debt `DS2-07G-CMS-HERO-EDITOR-GAP`.
+
+### Visual review (batch 6)
+
+Agent image inspection (desktop artifact reference) via `scripts/sce-ds2-07g-record-visual-review-batch6.mjs`. Full **214×4** manual review is not complete; routes with loading-only captures (e.g. platform home skeleton, Vereine list spinner) stay **screenshotReviewed** with **PENDING** verdict notes.
+
 ## Remaining verification work
 
-1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, **33** routes remain without evidence).
-2. Agent visual review of captured screenshots (`visual.screenshotReviewed = true`) where layout heuristics are clean.
-3. Triage axe failures (contrast/aria baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
-4. Merge evidence into `sce-ds2-07g-verification-evidence.json` and regenerate the matrix after each chunk.
-5. Promote registry lifecycle only when `isVerifiedAuthenticatedVisual` is satisfied (still **0/214**).
+1. Close the **9** fixture-environment blockers (read-only STAGE seed or disposable verification DB — never mutate operational STAGE records).
+2. Continue agent visual review (`visual.screenshotReviewed = true`) for remaining **198** routes × viewports.
+3. Triage axe failures (contrast/label/select-name baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
+4. Promote registry lifecycle only when `isVerifiedAuthenticatedVisual` is satisfied (still **0/214**).
 
 ## Functional regression (automated)
 

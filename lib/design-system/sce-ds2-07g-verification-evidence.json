@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T21:46:02.130Z",
+  "generatedAt": "2026-11-10T22:29:40.641Z",
   "baseUrl": "http://127.0.0.1:3000",
-  "batch": "batch-4-reassess-evidence-offset-0-limit-41",
+  "batch": "batch-4-reassess-evidence-offset-0-limit-50",
   "prefixes": [
     "/dashboard/planner/week",
     "/dashboard/planner/day",
@@ -26,7 +26,30 @@
     "infoboardId": "cmsqf2e7q0000iijsewcc1n37",
     "requirementId": "",
     "recipientId": "",
-    "scenarioId": "cmvmount6000008lbd49bq5un"
+    "scenarioId": "cmvmount6000008lbd49bq5un",
+    "orgUnitId": "cmq822v4r000oejjsuiwkpwsa",
+    "userId": "cmuo3i7kj000h04ibbahuwqyu",
+    "tournamentId": "cmw8wxtzk000007l8lkuc5avu",
+    "entityKey": "sportclubevo-by-tulip-digital",
+    "tenantSlug": "fc-allschwil",
+    "registrationId": "cmwb0bybl000208l3t6hw36pr",
+    "teamId": "cmq822sd50000ejjsbl32btzg",
+    "personId": "cmuo26ofc000004l6l5ousho7",
+    "teamSeasonId": "cmso8772p000504joyw9uh1g2",
+    "mappingId": "cmrkh1m0m000h04jua0waedrm",
+    "targetGroupId": "cmq5idbdo000004js98c7l1wx",
+    "communicationId": "cmv2a96wl000306l0qjopeimu",
+    "campaignId": "",
+    "templateId": "",
+    "contractKey": "fca-2026-001",
+    "customerKey": "fca-0001",
+    "invoiceKey": "inv-fca-2026-001-4",
+    "importKey": "",
+    "meetingSlug": "",
+    "targetId": "",
+    "governanceTemplateId": "cmq822van000qejjsfd18vi6j",
+    "adminTenantSlug": "fc-allschwil",
+    "adminUserId": "cmomykyal000064f37y58lzxx"
   },
   "highRiskRoutesAttempted": 41,
   "highRiskRoutesVerified": 0,
@@ -5303,10 +5326,10 @@
     "app/(admin)/dashboard/persons/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/persons/[id]/page.tsx",
       "urlPattern": "/dashboard/persons/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5315,102 +5338,134 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/persons/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/persons/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/persons/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/persons/[id]/edit/page.tsx",
       "urlPattern": "/dashboard/persons/[id]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: label:critical",
+          "details": [
+            "label:critical"
+          ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/persons/[id]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/persons/[id]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_persons_cmuo26ofc000004l6l5ousho7_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/persons/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/persons/new/page.tsx",
@@ -5630,10 +5685,10 @@
     "app/(admin)/dashboard/teams/[teamId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5642,54 +5697,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":43,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/administration/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/administration/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/administration",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5698,54 +5768,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/administration/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/administration"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_administration-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_administration-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_administration-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_administration-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/anwesenheit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/anwesenheit/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/anwesenheit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5754,54 +5839,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/anwesenheit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/anwesenheit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_anwesenheit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_anwesenheit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_anwesenheit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_anwesenheit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/dokumente/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/dokumente/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/dokumente",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5810,54 +5910,71 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: aria-hidden-focus:serious",
+          "details": [
+            "aria-hidden-focus:serious"
+          ]
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/dokumente/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/dokumente"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_dokumente-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_dokumente-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_dokumente-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_dokumente-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/kader/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/kader/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/kader",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5866,110 +5983,142 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/kader/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/kader"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kader-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kader-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kader-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kader-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/kommunikation/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/kommunikation/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/kommunikation",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: aria-required-children:critical",
+          "details": [
+            "aria-required-children:critical"
+          ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/kommunikation/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/kommunikation"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kommunikation-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kommunikation-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kommunikation-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_kommunikation-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/programm/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/programm/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/programm",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -5978,54 +6127,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":65,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/programm/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/programm"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_programm-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_programm-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_programm-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_programm-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/rangliste/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/rangliste/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/rangliste",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6034,54 +6198,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/rangliste/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/rangliste"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_rangliste-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_rangliste-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_rangliste-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_rangliste-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/resultate/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/resultate/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/resultate",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6090,54 +6269,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/resultate/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/resultate"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_resultate-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_resultate-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_resultate-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_resultate-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/spiele/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/spiele/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/spiele",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6146,54 +6340,69 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/spiele/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/spiele"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_spiele-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_spiele-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_spiele-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_spiele-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/teilnahmen/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/teilnahmen/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/teilnahmen",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6202,54 +6411,71 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/teilnahmen/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/teilnahmen"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_teilnahmen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_teilnahmen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_teilnahmen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_teilnahmen-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/[teamId]/trainerteam/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/[teamId]/trainerteam/page.tsx",
       "urlPattern": "/dashboard/teams/[teamId]/trainerteam",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6258,46 +6484,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/[teamId]/trainerteam/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/[teamId]/trainerteam"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_trainerteam-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_trainerteam-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_trainerteam-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_cmq822sd50000ejjsbl32btzg_trainerteam-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/provider-mapping/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/provider-mapping/page.tsx",
@@ -6375,10 +6616,10 @@
     "app/(admin)/dashboard/teams/provider-mapping/[teamSeasonId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/provider-mapping/[teamSeasonId]/page.tsx",
       "urlPattern": "/dashboard/teams/provider-mapping/[teamSeasonId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6387,54 +6628,72 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious, select-name:critical",
+          "details": [
+            "color-contrast:serious",
+            "select-name:critical"
+          ]
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/provider-mapping/[teamSeasonId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/provider-mapping/[teamSeasonId]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_cmso8772p000504joyw9uh1g2-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_cmso8772p000504joyw9uh1g2-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_cmso8772p000504joyw9uh1g2-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_cmso8772p000504joyw9uh1g2-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/provider-mapping/mapping/[mappingId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/provider-mapping/mapping/[mappingId]/page.tsx",
       "urlPattern": "/dashboard/teams/provider-mapping/mapping/[mappingId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6443,46 +6702,63 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/teams/provider-mapping/mapping/[mappingId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/teams/provider-mapping/mapping/[mappingId]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping_cmrkh1m0m000h04jua0waedrm-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping_cmrkh1m0m000h04jua0waedrm-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping_cmrkh1m0m000h04jua0waedrm-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_teams_provider-mapping_mapping_cmrkh1m0m000h04jua0waedrm-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/teams/register/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/teams/register/page.tsx",
@@ -6631,10 +6907,10 @@
     "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
       "urlPattern": "/dashboard/vereine/teams/[teamId]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -6643,46 +6919,63 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/vereine/teams/[teamId]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/page.tsx",
@@ -7318,10 +7611,10 @@
     "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
       "urlPattern": "/dashboard/communication/mitteilungen/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7330,46 +7623,63 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/communication/mitteilungen/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx",
@@ -7787,10 +8097,10 @@
     "app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx",
       "urlPattern": "/dashboard/communication/zielgruppen/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7799,46 +8109,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/communication/zielgruppen/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_cmq5idbdo000004js98c7l1wx-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_cmq5idbdo000004js98c7l1wx-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_cmq5idbdo000004js98c7l1wx-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_cmq5idbdo000004js98c7l1wx-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/zielgruppen/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/zielgruppen/new/page.tsx",
@@ -8282,7 +8607,15 @@
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-tablet.png",
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-mobile.png"
       ],
-      "defects": []
+      "defects": [
+        {
+          "id": "DS2-07G-CMS-HERO-EDITOR-GAP",
+          "introducedByDs2": false,
+          "status": "TRACKED_DEBT",
+          "summary": "Reusable component type «hero» has no registered config form in ReusableComponentEditor (shows «Kein Formular für Typ hero»); identical on origin/STAGE — missing editor registration, not a DS2 regression",
+          "reproduction": "/dashboard/website/components/[id]/edit when component.type is hero"
+        }
+      ]
     },
     "app/(admin)/dashboard/website/components/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/components/new/page.tsx",
@@ -10770,10 +11103,10 @@
     "app/(admin)/vereinsleitung/templates/[id]/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/templates/[id]/page.tsx",
       "urlPattern": "/vereinsleitung/templates/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -10782,102 +11115,136 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/templates/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/templates/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
       "urlPattern": "/vereinsleitung/templates/[id]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: select-name:critical",
+          "details": [
+            "select-name:critical"
+          ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/templates/[id]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_templates_cmq822van000qejjsfd18vi6j_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/templates/new/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/templates/new/page.tsx",
@@ -11384,10 +11751,10 @@
     "app/(admin)/dashboard/admin/commercial/billing/contracts/[contractKey]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/contracts/[contractKey]/page.tsx",
       "urlPattern": "/dashboard/admin/commercial/billing/contracts/[contractKey]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -11396,46 +11763,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/commercial/billing/contracts/[contractKey]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/commercial/billing/contracts/[contractKey]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_contracts_fca-2026-001-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_contracts_fca-2026-001-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_contracts_fca-2026-001-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_contracts_fca-2026-001-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/admin/commercial/billing/contracts/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/contracts/new/page.tsx",
@@ -11582,10 +11964,10 @@
     "app/(admin)/dashboard/admin/commercial/billing/customers/[customerKey]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/customers/[customerKey]/page.tsx",
       "urlPattern": "/dashboard/admin/commercial/billing/customers/[customerKey]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -11594,46 +11976,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/commercial/billing/customers/[customerKey]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/commercial/billing/customers/[customerKey]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_customers_fca-0001-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_customers_fca-0001-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_customers_fca-0001-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_customers_fca-0001-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/admin/commercial/billing/customers/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/customers/new/page.tsx",
@@ -11780,10 +12177,10 @@
     "app/(admin)/dashboard/admin/commercial/billing/invoices/[invoiceKey]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/invoices/[invoiceKey]/page.tsx",
       "urlPattern": "/dashboard/admin/commercial/billing/invoices/[invoiceKey]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -11792,46 +12189,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/commercial/billing/invoices/[invoiceKey]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/commercial/billing/invoices/[invoiceKey]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_invoices_inv-fca-2026-001-4-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_invoices_inv-fca-2026-001-4-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_invoices_inv-fca-2026-001-4-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_invoices_inv-fca-2026-001-4-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/admin/commercial/billing/invoices/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/invoices/new/page.tsx",
@@ -12391,10 +12803,10 @@
     "app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx",
       "urlPattern": "/dashboard/admin/tenants/[tenantSlug]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -12403,46 +12815,61 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/tenants/[tenantSlug]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_tenants_fc-allschwil-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_tenants_fc-allschwil-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_tenants_fc-allschwil-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_tenants_fc-allschwil-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/admin/tenants/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/tenants/new/page.tsx",
@@ -12518,10 +12945,10 @@
     "app/(admin)/dashboard/admin/users/[userId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/users/[userId]/page.tsx",
       "urlPattern": "/dashboard/admin/users/[userId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -12530,46 +12957,2459 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":49,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_users_cmuo3i7kj000h04ibbahuwqyu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_users_cmuo3i7kj000h04ibbahuwqyu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_users_cmuo3i7kj000h04ibbahuwqyu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_users_cmuo3i7kj000h04ibbahuwqyu-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/org-units/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/org-units/page.tsx",
+      "urlPattern": "/dashboard/org-units",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: org chart canvas, toolbar and hierarchy cards aligned; white-edition chrome intact"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 2,
+          "reason": "axe violations: nested-interactive:serious, target-size:serious",
+          "details": [
+            "nested-interactive:serious",
+            "target-size:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":109,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/org-units/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/org-units/[id]/page.tsx",
+      "urlPattern": "/dashboard/org-units/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: org unit detail shell renders with workspace chrome"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/org-units/[id]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/org-units/[id]/edit/page.tsx",
+      "urlPattern": "/dashboard/org-units/[id]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: edit form layout contained; no overflow"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: select-name:critical",
+          "details": [
+            "select-name:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_edit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/org-units/[id]/history/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/org-units/[id]/history/page.tsx",
+      "urlPattern": "/dashboard/org-units/[id]/history",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: history list pattern readable"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: select-name:critical",
+          "details": [
+            "select-name:critical"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_history-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_history-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_history-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_cmq822v4r000oejjsuiwkpwsa_history-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/org-units/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/org-units/new/page.tsx",
+      "urlPattern": "/dashboard/org-units/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: create form archetype consistent"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: select-name:critical",
+          "details": [
+            "select-name:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_org-units_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/permissions/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/permissions/page.tsx",
+      "urlPattern": "/dashboard/permissions",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
           "axeViolations": 0,
-          "axeIncomplete": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_permissions-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_permissions-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_permissions-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_permissions-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/platform/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/platform/page.tsx",
+      "urlPattern": "/dashboard/platform",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: dashboard home skeleton placeholders only in captured artifact; transient load state"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_platform-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_platform-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_platform-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_platform-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/roles/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/roles/page.tsx",
+      "urlPattern": "/dashboard/roles",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: captured artifact shows home skeleton, not roles list — probe URL or timing issue"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/roles/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/roles/[id]/page.tsx",
+      "urlPattern": "/dashboard/roles/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
           "details": []
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/users/[userId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/users/[userId]"
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles_cmuo3h0bt000104ib3v2p4fj3-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles_cmuo3h0bt000104ib3v2p4fj3-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles_cmuo3h0bt000104ib3v2p4fj3-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_roles_cmuo3h0bt000104ib3v2p4fj3-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/runtime/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/runtime/page.tsx",
+      "urlPattern": "/dashboard/runtime",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
         }
-      ]
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_runtime-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_runtime-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_runtime-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_runtime-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/seasons/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/seasons/page.tsx",
+      "urlPattern": "/dashboard/seasons",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_seasons-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_seasons-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_seasons-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_seasons-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/users/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/users/page.tsx",
+      "urlPattern": "/dashboard/users",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/users/[userId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/users/[userId]/page.tsx",
+      "urlPattern": "/dashboard/users/[userId]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_cmuo3i7kj000h04ibbahuwqyu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_cmuo3i7kj000h04ibbahuwqyu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_cmuo3i7kj000h04ibbahuwqyu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_cmuo3i7kj000h04ibbahuwqyu-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/users/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/users/new/page.tsx",
+      "urlPattern": "/dashboard/users/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_users_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/workspace/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/workspace/page.tsx",
+      "urlPattern": "/dashboard/workspace",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PASS",
+            "screenshotReview finding: desktop-1440: workspace folder tree + empty state; folder label typo 'Materiale' visible (copy debt, not layout break)"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: aria-required-attr:critical",
+          "details": [
+            "aria-required-attr:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/workspace/audit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/workspace/audit/page.tsx",
+      "urlPattern": "/dashboard/workspace/audit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_audit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_audit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_audit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_audit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/workspace/governance/break-glass/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/workspace/governance/break-glass/page.tsx",
+      "urlPattern": "/dashboard/workspace/governance/break-glass",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_governance_break-glass-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_governance_break-glass-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_governance_break-glass-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_workspace_governance_break-glass-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/admin/commercial/billing/settings/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/settings/page.tsx",
+      "urlPattern": "/dashboard/admin/commercial/billing/settings",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]/page.tsx",
+      "urlPattern": "/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_sportclubevo-by-tulip-digital-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_sportclubevo-by-tulip-digital-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_sportclubevo-by-tulip-digital-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_sportclubevo-by-tulip-digital-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/new/page.tsx",
+      "urlPattern": "/dashboard/admin/commercial/billing/settings/legal-entities/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_settings_legal-entities_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/events/tournaments/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/events/tournaments/new/page.tsx",
+      "urlPattern": "/dashboard/events/tournaments/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_events_tournaments_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_events_tournaments_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_events_tournaments_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_events_tournaments_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/tournamentcenter/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/tournamentcenter/page.tsx",
+      "urlPattern": "/dashboard/tournamentcenter",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 3,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx",
+      "urlPattern": "/dashboard/tournamentcenter/[tournamentId]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": [
+            "multiple h1 elements"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
+          "details": [
+            "aria-prohibited-attr:serious",
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/tournamentcenter/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/tournamentcenter/new/page.tsx",
+      "urlPattern": "/dashboard/tournamentcenter/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": [
+            "multiple h1 elements"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/vereine/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/vereine/page.tsx",
+      "urlPattern": "/dashboard/vereine",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": true,
+          "details": [
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T23:45:00.000Z; verdict=PENDING",
+            "screenshotReview finding: desktop-1440: list stuck on loading spinner in captured artifact; needs re-capture after data hydration"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/vereine/[clubId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/vereine/[clubId]/page.tsx",
+      "urlPattern": "/dashboard/vereine/[clubId]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/vereine/[clubId]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/vereine/[clubId]/edit/page.tsx",
+      "urlPattern": "/dashboard/vereine/[clubId]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_edit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/vereine/[clubId]/merge/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/vereine/[clubId]/merge/page.tsx",
+      "urlPattern": "/dashboard/vereine/[clubId]/merge",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_merge-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_merge-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_merge-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_merge-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/vereine/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/vereine/new/page.tsx",
+      "urlPattern": "/dashboard/vereine/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx": {
+      "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx",
+      "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx": {
+      "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx",
+      "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations/[registrationId]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_cmwb0bybl000208l3t6hw36pr-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_cmwb0bybl000208l3t6hw36pr-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_cmwb0bybl000208l3t6hw36pr-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_cmwb0bybl000208l3t6hw36pr-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx": {
+      "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx",
+      "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations/archiv",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_archiv-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_archiv-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_archiv-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_archiv-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/warteliste/page.tsx": {
+      "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/warteliste/page.tsx",
+      "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations/warteliste",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_warteliste-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_warteliste-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_warteliste-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_tenant_fc-allschwil_cockpit_registrations_warteliste-mobile.png"
+      ],
+      "defects": []
     }
   },
   "evidenceContractVersion": "2026-11-10-batch-3",
@@ -12577,10 +15417,11 @@
   "highRiskRoutesClosureComplete": 0,
   "lastRunMode": "reassess-evidence",
   "batch3RoutesAttemptedThisRun": 0,
-  "batch3EvidenceRows": 140,
+  "batch3EvidenceRows": 173,
   "visualScreenshotReview": {
     "lastReviewerMechanism": "cursor-agent-image-read",
-    "lastReviewedAt": "2026-11-10T21:46:06.359Z",
-    "routesMarkedThisRun": 7
+    "lastReviewedAt": "2026-11-10T23:45:00.000Z",
+    "routesMarkedThisRun": 7,
+    "batch6RoutesMarked": 9
   }
 }
