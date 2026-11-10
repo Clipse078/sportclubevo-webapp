@@ -62,7 +62,7 @@ export default async function InboardDetailPage({ params }: PageProps) {
       <DetailPagePattern
         eyebrow="Infoboard"
         title={board.name}
-        description={board.description ?? undefined}
+        description={board.headerSubtitleEnabled ? board.headerSubtitleText ?? undefined : undefined}
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Infoboards", href: "/dashboard/infoboard" },

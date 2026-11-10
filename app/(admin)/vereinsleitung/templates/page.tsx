@@ -1,9 +1,5 @@
 import Link from "next/link";
-import {
-  VEREINSLEITUNG_INNER_ROW_CLASS,
-  VEREINSLEITUNG_PANEL_CLASS,
-  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
-} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
+import { VEREINSLEITUNG_PANEL_CLASS } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { Plus, FileText, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";

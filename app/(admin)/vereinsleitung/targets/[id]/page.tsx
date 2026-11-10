@@ -21,7 +21,7 @@ import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import { Edit, ArrowLeft, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { Edit, ArrowLeft, Calendar, Tag } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   SPORTLICHE_ENTWICKLUNG: "Sportliche Entwicklung",
@@ -193,7 +193,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                         {metric.dataPoints.slice(0, 5).map((dp) => (
                           <div
                             key={dp.id}
-                            className="flex items-center justify-between VEREINSLEITUNG_INNER_ROW_CLASS"
+                            className={`flex items-center justify-between ${VEREINSLEITUNG_INNER_ROW_CLASS}`}
                           >
                             <span className="text-[12px] font-semibold text-[var(--foreground)]">
                               {dp.value}

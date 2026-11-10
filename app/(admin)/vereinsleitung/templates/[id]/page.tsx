@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  VEREINSLEITUNG_INNER_ROW_CLASS,
   VEREINSLEITUNG_PANEL_CLASS,
   VEREINSLEITUNG_SECONDARY_CHROME_LINK,
 } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
