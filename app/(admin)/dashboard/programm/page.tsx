@@ -4,7 +4,8 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import ProgrammeViewSwitcher from "@/components/programme/ProgrammeViewSwitcher";
 import ProgrammeListeView from "@/components/programme/ProgrammeListeView";
 import ProgrammeCalendarView from "@/components/programme/ProgrammeCalendarView";
@@ -107,11 +108,16 @@ export default async function ClubProgrammePage({ searchParams }: Props) {
   });
 
   return (
-    <PageShell>
-      <PageHeader
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Programm"
         title="Vereinsprogramm"
         description="Chronologisches Club-Programm — Training, Spiele, Turniere und Veranstaltungen."
-      />
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Vereinsprogramm" },
+        ]}
+      >
       <div className="space-y-3" data-testid="club-programme-workspace">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <ProgrammeViewSwitcher basePath={BASE} urlState={urlState} />
@@ -143,6 +149,7 @@ export default async function ClubProgrammePage({ searchParams }: Props) {
           />
         )}
       </div>
+      </ListPagePattern>
     </PageShell>
   );
 }

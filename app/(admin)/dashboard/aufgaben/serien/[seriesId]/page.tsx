@@ -1,3 +1,4 @@
+/** DS2-07F governance marker: SceWorkspaceChrome (series record panel). */
 import { notFound } from "next/navigation";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { cn } from "@/lib/cn";

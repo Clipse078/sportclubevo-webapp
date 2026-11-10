@@ -1,3 +1,4 @@
+/** DS2-07F governance marker: SceWorkspaceChrome (AufgabenWorkspaceShell). */
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";

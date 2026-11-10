@@ -1,8 +1,6 @@
 import Link from "next/link";
 import {
-  VEREINSLEITUNG_INNER_ROW_CLASS,
   VEREINSLEITUNG_PANEL_CLASS,
-  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
 } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -12,9 +10,10 @@ import { getMeetingLinkOptions, getInitiativeLinkOptions } from "@/lib/linking/q
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import TargetForm from "@/components/admin/targets/TargetForm";
 import TargetLinkEditor from "@/components/admin/targets/TargetLinkEditor";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import { ArrowLeft } from "lucide-react";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -27,7 +26,6 @@ export default async function EditTargetPage({ params }: PageProps) {
   const { id } = await params;
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
 
-  // Fetch target and link options in parallel — all respect VisibilityScope
   const [target, availableMeetings, availableInitiatives] = await Promise.all([
     getTargetById(id, actor),
     getMeetingLinkOptions(actor),
@@ -71,31 +69,40 @@ export default async function EditTargetPage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Ziele"
         title="Ziel bearbeiten"
         description={`Bearbeite: ${target.title}`}
-        actions={
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: target.title, href: `/vereinsleitung/targets/${id}` },
+          { label: "Bearbeiten" },
+        ]}
+      >
+        <div className="mb-4 flex justify-end">
           <Link
             href={`/vereinsleitung/targets/${id}`}
-            className={VEREINSLEITUNG_SECONDARY_CHROME_LINK}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3.5 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Zurück
           </Link>
-        }
-      />
+        </div>
 
-      <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
+        <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
 
-      <TargetLinkEditor
-        targetId={id}
-        initialInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
-        initialMeetingRefs={parseEntityRefs(target.linkedMeetingRefs)}
-        availableInitiatives={availableInitiatives}
-        availableMeetings={availableMeetings}
-      />
-    </div>
+        <section className={`${VEREINSLEITUNG_PANEL_CLASS} mt-6`}>
+          <TargetLinkEditor
+            targetId={id}
+            initialInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
+            initialMeetingRefs={parseEntityRefs(target.linkedMeetingRefs)}
+            availableInitiatives={availableInitiatives}
+            availableMeetings={availableMeetings}
+          />
+        </section>
+      </FormPagePattern>
+    </PageShell>
   );
 }

@@ -1,5 +1,6 @@
-﻿import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import TrainersList from "@/components/admin/trainers/TrainersList";
+﻿import TrainersList from "@/components/admin/trainers/TrainersList";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -16,14 +17,18 @@ export default async function TrainersPage() {
   }[] = [];
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Trainer"
         title="Trainer"
         description="Premium Trainerübersicht mit persönlicher Bildsprache, Rollenhinweisen und sauberer FCA Kartenlogik."
-      />
-
-      <TrainersList trainers={trainers} />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Trainer" },
+        ]}
+      >
+        <TrainersList trainers={trainers} />
+      </ListPagePattern>
+    </PageShell>
   );
 }

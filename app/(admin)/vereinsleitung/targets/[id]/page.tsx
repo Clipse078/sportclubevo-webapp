@@ -19,8 +19,9 @@ import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import { Edit, ArrowLeft, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { Edit, ArrowLeft, Calendar, Tag } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   SPORTLICHE_ENTWICKLUNG: "Sportliche Entwicklung",
@@ -79,12 +80,24 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
   const categoryLabel = CATEGORY_LABELS[target.category] ?? target.category;
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <DetailPagePattern
         eyebrow="Ziele"
         title={target.title}
-        description={target.description ?? ""}
-        actions={
+        description={target.description ?? undefined}
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: target.title },
+        ]}
+        headerBadge={
+          <span
+            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${statusInfo.classes}`}
+          >
+            {statusInfo.label}
+          </span>
+        }
+        headerActions={
           <div className="flex items-center gap-2">
             {canDelete ? (
               <TargetDeleteButton targetId={id} targetTitle={target.title} />
@@ -105,8 +118,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </Link>
           </div>
         }
-      />
-
+      >
       {qp.status === "saved" ? (
         <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800">
           Änderungen wurden gespeichert.
@@ -181,7 +193,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                         {metric.dataPoints.slice(0, 5).map((dp) => (
                           <div
                             key={dp.id}
-                            className="flex items-center justify-between VEREINSLEITUNG_INNER_ROW_CLASS"
+                            className={`flex items-center justify-between ${VEREINSLEITUNG_INNER_ROW_CLASS}`}
                           >
                             <span className="text-[12px] font-semibold text-[var(--foreground)]">
                               {dp.value}
@@ -311,6 +323,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
           />
         </aside>
       </div>
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

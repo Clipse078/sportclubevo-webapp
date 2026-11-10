@@ -22,7 +22,8 @@ import {
 } from "@/components/admin/club-directory/ArchiveRestoreControls";
 import { formatClubMetaValue } from "@/components/admin/club-directory/ClubDetailMetaValue";
 import { Badge, Button } from "@/components/ui";
-import { PageShell, PageBreadcrumbs, PageHeader, PageActions, SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 
 type Props = { params: Promise<{ clubId: string }> };
 
@@ -82,33 +83,29 @@ export default async function ClubDetailPage({ params }: Props) {
 
   return (
     <PageShell fullWidth>
-      <div className="flex flex-col gap-6" data-testid="club-detail-page">
-        <PageBreadcrumbs
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Vereine", href: "/dashboard/vereine" },
-            { label: club.name },
-          ]}
-        />
-
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <PageHeader
-            eyebrow="Organisation · Vereine"
-            title={club.name}
-            description={club.shortName ?? undefined}
-            badge={
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={club.hasProviderMapping ? "info" : "outline"}>
-                  {club.hasProviderMapping ? "Anbieter-verknüpft" : "Manuell erfasst"}
-                </Badge>
-                {isArchived ? <Badge variant="default">Archiviert</Badge> : <Badge variant="success">Aktiv</Badge>}
-              </div>
-            }
-            className="mb-0"
-          />
-          <PageActions>
+      <DetailPagePattern
+        eyebrow="Organisation · Vereine"
+        title={club.name}
+        description={club.shortName ?? undefined}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Vereine", href: "/dashboard/vereine" },
+          { label: club.name },
+        ]}
+        headerBadge={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={club.hasProviderMapping ? "info" : "outline"}>
+              {club.hasProviderMapping ? "Anbieter-verknüpft" : "Manuell erfasst"}
+            </Badge>
+            {isArchived ? <Badge variant="default">Archiviert</Badge> : <Badge variant="success">Aktiv</Badge>}
+          </div>
+        }
+        headerActions={
+          <>
             <Link href="/dashboard/vereine">
-              <Button type="button" variant="secondary" size="default">Zurück</Button>
+              <Button type="button" variant="secondary" size="default">
+                Zurück
+              </Button>
             </Link>
             {canManage && !isArchived ? (
               <Link href={`/dashboard/vereine/${club.id}/merge`}>
@@ -124,10 +121,10 @@ export default async function ClubDetailPage({ params }: Props) {
                 </Button>
               </Link>
             ) : null}
-          </PageActions>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
+          </>
+        }
+      >
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]" data-testid="club-detail-page">
           <div className="flex min-w-0 flex-col gap-6">
             <SectionCard title="Vereinsprofil" noPadding>
               <div className="flex flex-col gap-6 px-5 py-5 lg:flex-row lg:items-start">
@@ -276,7 +273,7 @@ export default async function ClubDetailPage({ params }: Props) {
             ) : null}
           </aside>
         </div>
-      </div>
+      </DetailPagePattern>
     </PageShell>
   );
 }

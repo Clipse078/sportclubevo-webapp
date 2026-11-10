@@ -1,3 +1,4 @@
+/** DS2-07F governance marker: SceWorkspaceChrome (intercept modal; no duplicate page chrome). */
 import { notFound } from "next/navigation";
 import TaskWorkspaceInterceptClient from "@/components/admin/aufgaben/TaskWorkspaceInterceptClient";
 import { loadTaskWorkspacePageData } from "@/lib/tasks/task-workspace-page";

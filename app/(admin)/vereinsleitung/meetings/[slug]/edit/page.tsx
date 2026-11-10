@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { getMeetingBySlug } from "@/lib/meetings/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import MeetingForm from "@/components/admin/meetings/MeetingForm";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { VisibilityScopeValue } from "@/components/admin/shared/VisibilityScopeSelect";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -38,13 +39,20 @@ export default async function EditMeetingPage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Meetings"
         title="Meeting bearbeiten"
         description={`Bearbeite: ${meeting.title}`}
-      />
-      <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
-    </div>
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Meetings", href: "/vereinsleitung/meetings" },
+          { label: meeting.title, href: `/vereinsleitung/meetings/${slug}` },
+          { label: "Bearbeiten" },
+        ]}
+      >
+        <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
+      </FormPagePattern>
+    </PageShell>
   );
 }

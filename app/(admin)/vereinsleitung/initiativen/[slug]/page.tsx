@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { ArrowLeft, Calendar, Flag, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Flag } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getInitiativeBySlug } from "@/lib/initiatives/queries";
@@ -11,7 +11,6 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import InitiativeGovernanceBanner from "@/components/admin/initiatives/InitiativeGovernanceBanner";
 import InitiativeDeleteButton from "@/components/admin/initiatives/InitiativeDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
-import { ShieldCheck } from "lucide-react";
 import { PageShell, SectionCard, EmptyState } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { Badge } from "@/components/ui";

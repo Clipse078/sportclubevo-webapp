@@ -1,3 +1,4 @@
+/** DS2-07F governance marker: SceWorkspaceChrome (create panel chrome). */
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";

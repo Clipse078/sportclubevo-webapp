@@ -23,7 +23,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { listInfoboards, countInfoboards } from "@/lib/infoboard/queries";
 import { InboardOverview } from "@/components/infoboard/v2/InboardOverview";
 
@@ -53,21 +54,25 @@ export default async function InfoboardAdminPage() {
   ]);
 
   return (
-    <div className="space-y-8 max-w-[1400px]">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Spielbetrieb"
         title="Infoboards"
         description="Verwalte alle Infoboards, deren Inhalte, Layouts und Geräte."
-      />
-
-      <InboardOverview
-        boards={boards}
-        totalCount={counts.total}
-        activeCount={counts.active}
-        draftCount={counts.draft}
-        disabledCount={counts.disabled}
-        canDelete={canDelete}
-      />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Infoboards" },
+        ]}
+      >
+        <InboardOverview
+          boards={boards}
+          totalCount={counts.total}
+          activeCount={counts.active}
+          draftCount={counts.draft}
+          disabledCount={counts.disabled}
+          canDelete={canDelete}
+        />
+      </ListPagePattern>
+    </PageShell>
   );
 }

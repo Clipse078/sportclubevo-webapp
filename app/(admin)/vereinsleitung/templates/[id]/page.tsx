@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  VEREINSLEITUNG_INNER_ROW_CLASS,
   VEREINSLEITUNG_PANEL_CLASS,
   VEREINSLEITUNG_SECONDARY_CHROME_LINK,
 } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
@@ -9,7 +8,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { renderTemplate, buildSampleContext, extractVariableKeys, TEMPLATE_VARIABLES } from "@/lib/communication/variables";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import { ArrowLeft, Edit, Sparkles } from "lucide-react";
 
@@ -36,12 +36,17 @@ export default async function TemplateDetailPage({ params }: PageProps) {
   const usedKeys = extractVariableKeys(template.subject + "\n" + template.bodyMarkdown);
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <DetailPagePattern
         eyebrow="Kommunikation"
         title={template.title}
         description={`${CATEGORY_LABELS[template.category] ?? template.category}${template.moduleKey ? ` · ${template.moduleKey}` : ""}`}
-        actions={
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Vorlagen", href: "/vereinsleitung/templates" },
+          { label: template.title },
+        ]}
+        headerActions={
           <div className="flex items-center gap-2">
             <Link href="/vereinsleitung/templates" className={VEREINSLEITUNG_SECONDARY_CHROME_LINK}>
               <ArrowLeft className="h-4 w-4" />Zurück
@@ -51,8 +56,7 @@ export default async function TemplateDetailPage({ params }: PageProps) {
             </Link>
           </div>
         }
-      />
-
+      >
       <div className="flex flex-wrap items-center gap-2">
         <ReviewStageBadge stage={template.reviewStage} />
       </div>
@@ -95,6 +99,7 @@ export default async function TemplateDetailPage({ params }: PageProps) {
           </section>
         </aside>
       </div>
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

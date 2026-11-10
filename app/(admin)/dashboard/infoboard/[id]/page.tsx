@@ -19,6 +19,8 @@ import { getInfoboard } from "@/lib/infoboard/queries";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { AnlageplanResourceOption } from "@/lib/infoboard/anlageplan-types";
 import { InboardDetailClient } from "@/components/infoboard/v2/InboardDetailClient";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -56,12 +58,23 @@ export default async function InboardDetailPage({ params }: PageProps) {
   );
 
   return (
-    <div className="max-w-[1400px]">
-      <InboardDetailClient
-        board={board}
-        tenantName={tenantContext.name}
-        facilityOptions={facilityOptions}
-      />
-    </div>
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Infoboard"
+        title={board.name}
+        description={board.headerSubtitleEnabled ? board.headerSubtitleText ?? undefined : undefined}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Infoboards", href: "/dashboard/infoboard" },
+          { label: board.name },
+        ]}
+      >
+        <InboardDetailClient
+          board={board}
+          tenantName={tenantContext.name}
+          facilityOptions={facilityOptions}
+        />
+      </DetailPagePattern>
+    </PageShell>
   );
 }

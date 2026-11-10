@@ -345,26 +345,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/admin/people-access/new",
     "source": "app/(admin)/dashboard/admin/people-access/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/admin/people-access",
     "source": "app/(admin)/dashboard/admin/people-access/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/admin/tenants/[tenantSlug]",
@@ -501,110 +501,110 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/aufgaben/@task",
     "source": "app/(admin)/dashboard/aufgaben/@task/(.)[taskId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/[taskId]",
     "source": "app/(admin)/dashboard/aufgaben/[taskId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/anforderung/[recipientId]",
     "source": "app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/anforderungen/[requirementId]",
     "source": "app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/anforderungen/neu",
     "source": "app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/neu",
     "source": "app/(admin)/dashboard/aufgaben/neu/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben",
     "source": "app/(admin)/dashboard/aufgaben/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/serien/[seriesId]",
     "source": "app/(admin)/dashboard/aufgaben/serien/[seriesId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/aufgaben/serien/neu",
     "source": "app/(admin)/dashboard/aufgaben/serien/neu/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/communication/email-sender",
@@ -837,14 +837,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/dev/sce-icons",
     "source": "app/(admin)/dashboard/dev/sce-icons/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/events/import",
@@ -1089,62 +1089,62 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/formulare-freigaben",
     "source": "app/(admin)/dashboard/formulare-freigaben/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/helfereinsaetze",
     "source": "app/(admin)/dashboard/helfereinsaetze/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/infoboard/[id]",
     "source": "app/(admin)/dashboard/infoboard/[id]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/infoboard",
     "source": "app/(admin)/dashboard/infoboard/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/infoboard/preview",
     "source": "app/(admin)/dashboard/infoboard/preview/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/kalender",
@@ -1221,14 +1221,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/mitglieder",
     "source": "app/(admin)/dashboard/mitglieder/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/notifications",
@@ -1365,14 +1365,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/persons/settings/development-criteria",
     "source": "app/(admin)/dashboard/persons/settings/development-criteria/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/planner/day",
@@ -1449,26 +1449,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/players",
     "source": "app/(admin)/dashboard/players/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
-    "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
-    "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
-  },
-  {
-    "route": "/dashboard/programm",
-    "source": "app/(admin)/dashboard/programm/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/dashboard/programm",
+    "source": "app/(admin)/dashboard/programm/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/registrations/archiv",
@@ -1569,14 +1569,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/sponsoring",
     "source": "app/(admin)/dashboard/sponsoring/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/target-groups/[id]",
@@ -1869,26 +1869,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/trainer-staff",
     "source": "app/(admin)/dashboard/trainer-staff/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/trainers",
     "source": "app/(admin)/dashboard/trainers/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/training/new",
@@ -2061,26 +2061,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/vereine/[clubId]/merge",
     "source": "app/(admin)/dashboard/vereine/[clubId]/merge/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vereine/[clubId]",
     "source": "app/(admin)/dashboard/vereine/[clubId]/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vereine/[clubId]/teams/new",
@@ -2133,14 +2133,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/vorfaelle-disziplin",
     "source": "app/(admin)/dashboard/vorfaelle-disziplin/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/website/blocks",
@@ -2493,14 +2493,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/club-entwicklung",
     "source": "app/(admin)/vereinsleitung/club-entwicklung/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/finanzen",
@@ -2517,26 +2517,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/finanzen/rechnungen",
     "source": "app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/initiativen/[slug]/edit",
     "source": "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/initiativen/[slug]",
@@ -2553,14 +2553,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/initiativen/new",
     "source": "app/(admin)/vereinsleitung/initiativen/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/initiativen",
@@ -2577,38 +2577,38 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/kpis",
     "source": "app/(admin)/vereinsleitung/kpis/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
-    "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
-    "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
-  },
-  {
-    "route": "/vereinsleitung/material",
-    "source": "app/(admin)/vereinsleitung/material/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/material",
+    "source": "app/(admin)/vereinsleitung/material/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/meetings/[slug]/edit",
     "source": "app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/meetings/[slug]",
@@ -2625,14 +2625,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/meetings/new",
     "source": "app/(admin)/vereinsleitung/meetings/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/meetings",
@@ -2649,62 +2649,62 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung",
     "source": "app/(admin)/vereinsleitung/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
-    "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
-    "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
-  },
-  {
-    "route": "/vereinsleitung/prozesse",
-    "source": "app/(admin)/vereinsleitung/prozesse/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/prozesse",
+    "source": "app/(admin)/vereinsleitung/prozesse/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/targets/[id]/edit",
     "source": "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/targets/[id]",
     "source": "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/targets/new",
     "source": "app/(admin)/vereinsleitung/targets/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/targets",
@@ -2721,50 +2721,50 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/templates/[id]/edit",
     "source": "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/templates/[id]",
     "source": "app/(admin)/vereinsleitung/templates/[id]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/templates/new",
     "source": "app/(admin)/vereinsleitung/templates/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/vereinsleitung/templates",
     "source": "app/(admin)/vereinsleitung/templates/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   }
 ] as const;
 

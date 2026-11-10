@@ -1,15 +1,11 @@
 import Link from "next/link";
-import {
-  VEREINSLEITUNG_INNER_ROW_CLASS,
-  VEREINSLEITUNG_PANEL_CLASS,
-  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
-} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { Plus, FileText, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getCommunicationTemplates } from "@/lib/communication/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
 import { EmptyState } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 
 const CATEGORY_LABELS: Record<string, string> = {
   GENERAL: "Allgemein", MATCH_INVITATION: "Spieleinladung", MEETING_FOLLOWUP: "Meeting Nachfass",
@@ -36,18 +32,22 @@ export default async function TemplatesPage({ searchParams }: PageProps) {
   const templates = await getCommunicationTemplates();
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Kommunikation"
         title="Vorlagen"
         description="Deterministische Kommunikationsvorlagen mit Variablen für kontextbewusste Clubkommunikation."
-        actions={
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Vorlagen" },
+        ]}
+        headerActions={
           <Link href="/vereinsleitung/templates/new" className="fca-button-primary">
             <Plus className="h-4 w-4" />
             Neue Vorlage
           </Link>
         }
-      />
+      >
 
       {params.status === "saved" ? (
         <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800">Vorlage gespeichert.</div>
@@ -88,6 +88,7 @@ export default async function TemplatesPage({ searchParams }: PageProps) {
           ))}
         </div>
       )}
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

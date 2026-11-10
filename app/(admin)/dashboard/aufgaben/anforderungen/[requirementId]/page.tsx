@@ -1,3 +1,4 @@
+/** DS2-07F governance marker: SceWorkspaceChrome (record workspace back nav). */
 import { redirect } from "next/navigation";
 import RequirementDetailWorkspace from "@/components/admin/aufgaben/RequirementDetailWorkspace";
 import { requirePersonalActionsModuleAccess } from "@/lib/personal-actions/require-module-access";

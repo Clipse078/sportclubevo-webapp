@@ -1,20 +1,27 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import MeetingForm from "@/components/admin/meetings/MeetingForm";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 export default async function NewMeetingPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Meetings"
         title="Neues Meeting erstellen"
         description="Meeting erfassen mit Datum, Ort und Sichtbarkeitseinstellungen."
-      />
-      <MeetingForm mode="create" layout="composer" />
-    </div>
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Meetings", href: "/vereinsleitung/meetings" },
+          { label: "Neues Meeting" },
+        ]}
+      >
+        <MeetingForm mode="create" layout="composer" />
+      </FormPagePattern>
+    </PageShell>
   );
 }

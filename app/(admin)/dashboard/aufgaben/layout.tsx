@@ -1,4 +1,8 @@
 import type { ReactNode } from "react";
+/**
+ * Governance marker: canonical Aufgaben chrome is composed in AufgabenWorkspaceShell
+ * and requirement/task record shells via SceWorkspaceChrome.
+ */
 
 export default function AufgabenLayout({
   children,

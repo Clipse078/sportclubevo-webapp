@@ -15,7 +15,8 @@ import {
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCapabilityCard";
 import { Badge } from "@/components/ui/Badge";
-import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 
@@ -33,21 +34,17 @@ export default async function SponsoringPage() {
   await requireAnyPermission(TENANT_ADMINISTRATION_PERMISSIONS);
 
   return (
-    <PageShell>
-      <PageBreadcrumbs
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Sponsoring" },
-        ]}
-      />
-
-      <PageHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Sponsoring"
         title="Sponsoring"
         description="Sponsoren, Verträge, Leistungen und Kampagnen zentral verwalten."
-        badge={<Badge variant="warning">Zukunftsmodul</Badge>}
-      />
-
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Sponsoring" },
+        ]}
+        headerBadge={<Badge variant="warning">Zukunftsmodul</Badge>}
+      >
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">
         <CommunicationSceIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-warning)]" />
         <p className="text-xs leading-5 text-[var(--sce-warning)]">
@@ -224,6 +221,7 @@ export default async function SponsoringPage() {
           </div>
         </SectionCard>
       </div>
+      </ListPagePattern>
     </PageShell>
   );
 }

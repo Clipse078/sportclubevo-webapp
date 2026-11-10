@@ -6,8 +6,9 @@ import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { getOrgUnitsForTenant } from "@/lib/people/queries";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import { prisma } from "@/lib/db/prisma";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import AddPersonAccessFlow from "@/components/admin/users/AddPersonAccessFlow";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 export default async function AddPersonAccessPage() {
   const session = await requireAnyPermission([
@@ -35,18 +36,25 @@ export default async function AddPersonAccessPage() {
     .map((r) => ({ id: r.id, name: r.name, key: r.key, isSystem: r.isSystem }));
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Administration · Personen & Zugänge"
+    <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Administration"
         title="Person hinzufügen"
         description="Person anlegen, Zugriff zuweisen und optional eine Einladung senden — ohne temporäres Passwort."
-      />
-      <AddPersonAccessFlow
-        availableRoles={availableRoles}
-        availableOrgUnits={orgUnits.map((u) => ({ id: u.id, name: u.name }))}
-        personsWithoutUser={personsWithoutUser}
-        clubAdminRoleKey={getTenantClubAdminRoleKey(tenant.key)}
-      />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Administration", href: "/dashboard/admin" },
+          { label: "Personen & Zugänge", href: "/dashboard/admin/people-access" },
+          { label: "Person hinzufügen" },
+        ]}
+      >
+        <AddPersonAccessFlow
+          availableRoles={availableRoles}
+          availableOrgUnits={orgUnits.map((u) => ({ id: u.id, name: u.name }))}
+          personsWithoutUser={personsWithoutUser}
+          clubAdminRoleKey={getTenantClubAdminRoleKey(tenant.key)}
+        />
+      </FormPagePattern>
+    </PageShell>
   );
 }
