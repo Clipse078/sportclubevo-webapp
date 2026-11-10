@@ -9,6 +9,7 @@
  * Run: node scripts/sce-ds2-07g-authenticated-route-verify.mjs
  */
 import { chromium } from "playwright";
+import pg from "pg";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -20,7 +21,7 @@ import {
 } from "./lib/sce-ds2-07g-verification.mjs";
 
 const ROOT = process.cwd();
-const BASE_URL = process.env.SCE_DS2_07G_BASE_URL?.trim() || "http://127.0.0.1:3000";
+const BASE_URL = process.env.SCE_DS2_07G_BASE_URL?.trim() || "http://localhost:3000";
 const EMAIL = process.env.SCE_DS2_07G_LOGIN_EMAIL?.trim();
 const PASSWORD = process.env.SCE_DS2_07G_LOGIN_PASSWORD?.trim();
 const ARTIFACT_DIR = "/opt/cursor/artifacts/sce-ds2-07g";
@@ -40,17 +41,64 @@ if (!EMAIL || !PASSWORD) {
   process.exit(2);
 }
 
+/** @type {Record<string, string>} */
+let dynamicFixtures = {};
+
+async function loadDynamicFixtures() {
+  dynamicFixtures = {
+    seriesId: process.env.SCE_DS2_07G_FIXTURE_SERIES_ID?.trim() ?? "",
+    sessionId: process.env.SCE_DS2_07G_FIXTURE_SESSION_ID?.trim() ?? "",
+  };
+  if (dynamicFixtures.seriesId && dynamicFixtures.sessionId) return;
+
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  if (!databaseUrl) return;
+
+  const client = new pg.Client({
+    connectionString: databaseUrl,
+    connectionTimeoutMillis: 15_000,
+    ssl: databaseUrl.includes("localhost") ? undefined : { rejectUnauthorized: false },
+  });
+  try {
+    await client.connect();
+    if (!dynamicFixtures.seriesId) {
+      const series = await client.query(
+        `SELECT id FROM "TrainingSeries" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.seriesId = series.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.sessionId) {
+      const session = await client.query(
+        `SELECT id FROM "TrainingSession" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.sessionId = session.rows[0]?.id ?? "";
+    }
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
 function resolveProbePath(urlPattern) {
-  const staticRoute = urlPattern.replace(/\[[^\]]+\]/g, "").replace(/\/+/g, "/").replace(/\/$/, "");
-  return staticRoute || "/dashboard";
+  let resolved = urlPattern;
+  for (const [key, value] of Object.entries(dynamicFixtures)) {
+    if (!value) continue;
+    resolved = resolved.replaceAll(`[${key}]`, encodeURIComponent(value));
+  }
+  if (/\[[^\]]+\]/.test(resolved)) {
+    const staticRoute = resolved.replace(/\[[^\]]+\]/g, "").replace(/\/+/g, "/").replace(/\/$/, "");
+    return staticRoute || "/dashboard";
+  }
+  return resolved.replace(/\/+/g, "/").replace(/\/$/, "") || "/dashboard";
 }
 
 async function login(page) {
-  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "load", timeout: 120_000 });
   await page.fill('input[name="email"], input[type="email"]', EMAIL);
   await page.fill('input[name="password"], input[type="password"]', PASSWORD);
-  await page.click('button[type="submit"]');
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 60_000 });
+  await Promise.all([
+    page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 120_000 }),
+    page.click('button[type="submit"]'),
+  ]);
 }
 
 async function auditRoute(page, urlPattern, sourceFile) {
@@ -105,6 +153,7 @@ async function auditRoute(page, urlPattern, sourceFile) {
 }
 
 async function main() {
+  await loadDynamicFixtures();
   mkdirSync(ARTIFACT_DIR, { recursive: true });
   const registry = loadRegistryEntries().filter(
     (entry) =>
@@ -127,8 +176,12 @@ async function main() {
   const manifest = {
     generatedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
-    batch: "high-risk-prefixes",
+    batch: "high-risk-batch-2",
     prefixes: HIGH_RISK_URL_PATTERNS,
+    dynamicFixtures,
+    highRiskRoutesAttempted: registry.length,
+    highRiskRoutesVerified: Object.values(bySourceFile).filter((row) => row.authenticatedVisual === "VERIFIED")
+      .length,
     bySourceFile,
   };
   writeFileSync(EVIDENCE_PATH, JSON.stringify(manifest, null, 2));

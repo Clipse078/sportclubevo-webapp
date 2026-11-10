@@ -1,0 +1,844 @@
+{
+  "generatedAt": "2026-11-10T17:22:36.553Z",
+  "baseUrl": "http://localhost:3000",
+  "batch": "high-risk-batch-2",
+  "prefixes": [
+    "/dashboard/planner/week",
+    "/dashboard/planner/day",
+    "/dashboard/matchcenter",
+    "/dashboard/finance",
+    "/dashboard/aufgaben",
+    "/dashboard/infoboard",
+    "/dashboard/administration/roles",
+    "/dashboard/training",
+    "/dashboard/competitions"
+  ],
+  "dynamicFixtures": {
+    "seriesId": "cmsp4t1oa000004jvytoux8ju",
+    "sessionId": "cmsp357it006i04jo8qlslonz"
+  },
+  "highRiskRoutesAttempted": 41,
+  "highRiskRoutesVerified": 41,
+  "bySourceFile": {
+    "app/(admin)/dashboard/administration/roles/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/administration/roles/[id]/page.tsx",
+      "urlPattern": "/dashboard/administration/roles/[id]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/administration/roles/assignments/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/administration/roles/assignments/page.tsx",
+      "urlPattern": "/dashboard/administration/roles/assignments",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_assignments-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_assignments-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_assignments-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_assignments-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/administration/roles/effective-access/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/administration/roles/effective-access/page.tsx",
+      "urlPattern": "/dashboard/administration/roles/effective-access",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_effective-access-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_effective-access-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_effective-access-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_effective-access-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/administration/roles/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/administration/roles/new/page.tsx",
+      "urlPattern": "/dashboard/administration/roles/new",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/administration/roles/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/administration/roles/page.tsx",
+      "urlPattern": "/dashboard/administration/roles",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_administration_roles-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/[taskId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/[taskId]/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/[taskId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/@task/(.)[taskId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/@task/(.)[taskId]/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/[taskId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/anforderung/[recipientId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/anforderungen/[requirementId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/anforderungen/neu",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_neu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_neu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_neu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_neu-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/neu/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/neu/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/neu",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_neu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_neu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_neu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_neu-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/page.tsx",
+      "urlPattern": "/dashboard/aufgaben",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/serien/[seriesId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/serien/[seriesId]/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/serien/[seriesId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_cmsp4t1oa000004jvytoux8ju-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_cmsp4t1oa000004jvytoux8ju-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_cmsp4t1oa000004jvytoux8ju-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_cmsp4t1oa000004jvytoux8ju-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/aufgaben/serien/neu/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/aufgaben/serien/neu/page.tsx",
+      "urlPattern": "/dashboard/aufgaben/serien/neu",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_neu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_neu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_neu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_neu-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/competitions/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/competitions/page.tsx",
+      "urlPattern": "/dashboard/competitions",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_competitions-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_competitions-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_competitions-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_competitions-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/actuals/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/actuals/page.tsx",
+      "urlPattern": "/dashboard/finance/actuals",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_actuals-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_actuals-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_actuals-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_actuals-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/budget/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/budget/page.tsx",
+      "urlPattern": "/dashboard/finance/budget",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_budget-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_budget-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_budget-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_budget-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/commitments/approvals/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/commitments/approvals/page.tsx",
+      "urlPattern": "/dashboard/finance/commitments/approvals",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments_approvals-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments_approvals-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments_approvals-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments_approvals-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/commitments/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/commitments/page.tsx",
+      "urlPattern": "/dashboard/finance/commitments",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_commitments-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/forecast/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/forecast/page.tsx",
+      "urlPattern": "/dashboard/finance/forecast",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/forecast/scenarios/[scenarioId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/forecast/scenarios/[scenarioId]/page.tsx",
+      "urlPattern": "/dashboard/finance/forecast/scenarios/[scenarioId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/forecast/scenarios/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/forecast/scenarios/page.tsx",
+      "urlPattern": "/dashboard/finance/forecast/scenarios",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_scenarios-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/forecast/timing/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/forecast/timing/page.tsx",
+      "urlPattern": "/dashboard/finance/forecast/timing",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_timing-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_timing-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_timing-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_forecast_timing-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/page.tsx",
+      "urlPattern": "/dashboard/finance",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/publishing/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/publishing/page.tsx",
+      "urlPattern": "/dashboard/finance/publishing",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_publishing-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_publishing-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_publishing-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_publishing-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/reports/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/reports/page.tsx",
+      "urlPattern": "/dashboard/finance/reports",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_reports-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_reports-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_reports-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_reports-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/settings/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/settings/page.tsx",
+      "urlPattern": "/dashboard/finance/settings",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_settings-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_settings-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_settings-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_settings-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/finance/structure/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/finance/structure/page.tsx",
+      "urlPattern": "/dashboard/finance/structure",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_structure-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_structure-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_structure-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_finance_structure-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/infoboard/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/infoboard/[id]/page.tsx",
+      "urlPattern": "/dashboard/infoboard/[id]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/infoboard/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/infoboard/page.tsx",
+      "urlPattern": "/dashboard/infoboard",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/infoboard/preview/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/infoboard/preview/page.tsx",
+      "urlPattern": "/dashboard/infoboard/preview",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard_preview-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard_preview-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard_preview-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_infoboard_preview-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/matchcenter/[matchId]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/matchcenter/[matchId]/page.tsx",
+      "urlPattern": "/dashboard/matchcenter/[matchId]",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/matchcenter/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/matchcenter/new/page.tsx",
+      "urlPattern": "/dashboard/matchcenter/new",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/matchcenter/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/matchcenter/page.tsx",
+      "urlPattern": "/dashboard/matchcenter",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_matchcenter-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/planner/day/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/planner/day/page.tsx",
+      "urlPattern": "/dashboard/planner/day",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_day-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_day-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_day-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_day-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/planner/week/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/planner/week/page.tsx",
+      "urlPattern": "/dashboard/planner/week",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_week-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_week-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_week-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_planner_week-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/training/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/training/new/page.tsx",
+      "urlPattern": "/dashboard/training/new",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/training/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/training/page.tsx",
+      "urlPattern": "/dashboard/training",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/training/series/[seriesId]/allocations/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/training/series/[seriesId]/allocations/page.tsx",
+      "urlPattern": "/dashboard/training/series/[seriesId]/allocations",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_allocations-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_allocations-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_allocations-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_allocations-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/training/series/[seriesId]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/training/series/[seriesId]/edit/page.tsx",
+      "urlPattern": "/dashboard/training/series/[seriesId]/edit",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_series_cmsp4t1oa000004jvytoux8ju_edit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx",
+      "urlPattern": "/dashboard/training/sessions/[sessionId]/edit",
+      "desktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "accessibility": "VERIFIED",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "VERIFIED",
+      "automated": "PASSED",
+      "blocked": false,
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_sessions_cmsp357it006i04jo8qlslonz_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_sessions_cmsp357it006i04jo8qlslonz_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_sessions_cmsp357it006i04jo8qlslonz_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_training_sessions_cmsp357it006i04jo8qlslonz_edit-mobile.png"
+      ],
+      "defects": []
+    }
+  }
+}

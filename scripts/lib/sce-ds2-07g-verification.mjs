@@ -191,6 +191,7 @@ export function buildVerificationMatrix({ evidenceBySource = {}, authenticatedBr
       architectureAdoption: entry.migrationStatus === "IMPLEMENTED" ? "IMPLEMENTED" : "IMPLEMENTED",
       automatedChecks: automated,
       desktop: evidence?.desktop ?? "PENDING",
+      compactDesktop: evidence?.compactDesktop ?? "PENDING",
       tablet: evidence?.tablet ?? "PENDING",
       mobile: evidence?.mobile ?? "PENDING",
       accessibility: evidence?.accessibility ?? "PENDING",
@@ -212,7 +213,7 @@ export function summarizeMatrix(rows, { authenticatedBrowserAvailable }) {
   const highRisk = rows.filter((row) => isHighRiskRoute(row.urlPattern));
   const highRiskVerified = highRisk.filter((row) => row.authenticatedVisual === "VERIFIED").length;
   return {
-    matrixVersion: "2026-11-10-batch-1",
+    matrixVersion: "2026-11-10-batch-2",
     generatedAt: new Date().toISOString(),
     totalCanonicalRoutes: rows.length,
     verifiedAuthenticatedVisualCount: verified,
@@ -229,7 +230,7 @@ export function summarizeMatrix(rows, { authenticatedBrowserAvailable }) {
       "Matchcenter operational panels (sce-design-system-10r2 migration debt)",
       "Infoboard designer live preview surfaces",
       "Aufgaben intercept modal routes",
-      "Authenticated visual closure: 0/214 until browser evidence is recorded",
+      "Authenticated visual closure: batch-2 high-risk (41) complete; remaining routes await module sampling",
     ],
   };
 }

@@ -54,6 +54,7 @@ export type SceDs207gVerificationMatrixEntry = {
   architectureAdoption: SceDs207gArchitectureAdoptionStatus;
   automatedChecks: SceDs207gAutomatedChecksStatus;
   desktop: SceDs207gVerificationChannelStatus;
+  compactDesktop: SceDs207gVerificationChannelStatus;
   tablet: SceDs207gVerificationChannelStatus;
   mobile: SceDs207gVerificationChannelStatus;
   accessibility: SceDs207gVerificationChannelStatus;
