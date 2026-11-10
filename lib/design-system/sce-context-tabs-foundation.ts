@@ -15,7 +15,7 @@ export function sceContextTabClassName(isActive: boolean): string {
     "sce-ds2-secondary-nav-label -mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm transition-colors sm:px-4",
     SCE_CONTEXT_TAB_FOCUS,
     isActive
-      ? "border-[var(--sce-color-accent-primary)] text-[var(--sce-color-accent-primary)]"
+      ? "border-[var(--sce-color-context-tab-active,var(--sce-color-accent-primary))] text-[var(--sce-color-context-tab-active,var(--sce-color-accent-primary))]"
       : "border-transparent text-[color-mix(in_srgb,var(--sce-color-text-primary)_78%,var(--sce-color-text-secondary)_22%)] hover:text-[var(--sce-color-text-primary)]",
   );
 }
@@ -25,7 +25,7 @@ export function sceContextTabOverflowSummaryClassName(overflowActive: boolean): 
     "sce-ds2-secondary-nav-label flex cursor-pointer list-none items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors marker:content-none [&::-webkit-details-marker]:hidden",
     SCE_CONTEXT_TAB_FOCUS,
     overflowActive
-      ? "text-[var(--sce-color-accent-primary)]"
+      ? "text-[var(--sce-color-context-tab-active,var(--sce-color-accent-primary))]"
       : "text-[color-mix(in_srgb,var(--sce-color-text-primary)_78%,var(--sce-color-text-secondary)_22%)] hover:text-[var(--sce-color-text-primary)]",
   );
 }

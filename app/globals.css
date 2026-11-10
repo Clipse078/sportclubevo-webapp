@@ -487,7 +487,9 @@
   --surface-3:         #f1f5f9;
   --foreground:        #0f172a;
   --text-2:            #475569;
-  --muted:             #64748b;
+  /* WCAG AA on #f1f5f9 dense surfaces (DS2-07G axe baseline) */
+  --muted:             #57606a;
+  --blue-light:        #e8f0fc;
   --border:            #e2e8f0;
   --border-strong:     #cbd5e1;
   --card:              #ffffff;
@@ -552,6 +554,10 @@
   --sce-color-text-muted: var(--muted);
   --sce-color-text-disabled: color-mix(in srgb, var(--muted) 72%, transparent);
   --sce-color-disabled: color-mix(in srgb, var(--muted) 55%, var(--surface));
+  /* L1 chrome active label — AA on #fafafa (DS2-07G) */
+  --sce-color-nav-active: #a35f28;
+  --sce-color-context-tab-active: var(--blue);
+  --sce-account-avatar-fallback: var(--blue);
 
   --sce-bg:            var(--background);
   --sce-surface:       var(--surface);
@@ -568,7 +574,7 @@
   --sce-icon-primary:   #0f172a;
   --sce-icon-secondary: var(--blue);
   --sce-icon-accent:    var(--orange);
-  --sce-icon-muted:     #64748b;
+  --sce-icon-muted:     #57606a;
 
   --sce-match-result-foreground: #0f172a;
 

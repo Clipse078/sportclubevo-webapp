@@ -88,4 +88,28 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#ffffff",
     minimumRatio: 4.5,
   },
+  {
+    id: "account-avatar-initials-on-fallback",
+    foreground: "#ffffff",
+    background: "#0b4aa2",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "selection-row-on-blue-light",
+    foreground: "#0b4aa2",
+    background: "#e8f0fc",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "metadata-on-dense-surface",
+    foreground: "#57606a",
+    background: "#f1f5f9",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "primary-nav-active-on-chrome",
+    foreground: "#a35f28",
+    background: "#fafafa",
+    minimumRatio: 4.5,
+  },
 ];

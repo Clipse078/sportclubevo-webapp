@@ -49,6 +49,7 @@ export default function SidebarPlatformBrand({
         collapsed && "px-1",
         className,
       )}
+      role="img"
       aria-label="SportClubEvo"
     >
       <Image

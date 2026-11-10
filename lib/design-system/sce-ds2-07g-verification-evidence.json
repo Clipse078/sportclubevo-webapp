@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T18:57:10.523Z",
+  "generatedAt": "2026-11-10T19:56:16.006Z",
   "baseUrl": "http://127.0.0.1:3000",
-  "batch": "batch-3-module-sampling-offset-20-limit-40",
+  "batch": "batch-3-module-sampling-offset-60-limit-40",
   "prefixes": [
     "/dashboard/planner/week",
     "/dashboard/planner/day",
@@ -17,7 +17,8 @@
     "seriesId": "cmsp4t1oa000004jvytoux8ju",
     "sessionId": "cmsp357it006i04jo8qlslonz",
     "eventId": "cmw72jaan009u08l83zagrrhc",
-    "taskId": "cmuhb94k1000004l8brm0ud12"
+    "taskId": "cmuhb94k1000004l8brm0ud12",
+    "clubId": "cmw93edip004608joy5g594t4"
   },
   "highRiskRoutesAttempted": 41,
   "highRiskRoutesVerified": 0,
@@ -48,7 +49,7 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T18:59:12.775Z"
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T19:57:00.911Z"
           ]
         },
         "responsive": {
@@ -75,7 +76,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -123,7 +124,7 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T18:59:12.775Z"
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T19:57:00.911Z"
           ]
         },
         "responsive": {
@@ -148,13 +149,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -198,7 +197,7 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T18:59:12.775Z"
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T19:57:00.911Z"
           ]
         },
         "responsive": {
@@ -223,13 +222,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -274,7 +271,7 @@
           "screenshotReviewed": true,
           "details": [
             "multiple h1 elements",
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T18:59:12.775Z"
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T19:57:08.207Z"
           ]
         },
         "responsive": {
@@ -301,7 +298,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -349,7 +346,7 @@
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
-            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T18:59:12.775Z"
+            "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T19:57:00.911Z"
           ]
         },
         "responsive": {
@@ -376,7 +373,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -451,7 +448,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 3,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical, select-name:critical",
           "details": [
             "color-contrast:serious",
@@ -528,7 +525,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 3,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical, select-name:critical",
           "details": [
             "color-contrast:serious",
@@ -603,14 +600,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -679,14 +673,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -757,7 +748,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical",
           "details": [
             "color-contrast:serious",
@@ -833,7 +824,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical",
           "details": [
             "color-contrast:serious",
@@ -909,7 +900,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -982,14 +973,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -1060,7 +1048,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1133,7 +1121,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1206,7 +1194,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1279,7 +1267,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: aria-allowed-attr:critical, color-contrast:serious",
           "details": [
             "aria-allowed-attr:critical",
@@ -1351,13 +1339,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -1426,7 +1412,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1499,7 +1485,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1572,7 +1558,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1645,7 +1631,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -1716,14 +1702,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 3,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -1790,13 +1773,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -1863,13 +1844,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -1937,12 +1916,11 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 3,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: aria-prohibited-attr:serious",
           "details": [
-            "aria-prohibited-attr:serious",
-            "color-contrast:serious"
+            "aria-prohibited-attr:serious"
           ]
         },
         "functional": {
@@ -2012,7 +1990,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2085,7 +2063,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2158,7 +2136,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2231,7 +2209,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2304,7 +2282,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2455,7 +2433,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2604,7 +2582,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, select-name:critical",
           "details": [
             "color-contrast:serious",
@@ -2678,7 +2656,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2751,13 +2729,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -2899,7 +2875,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -2972,7 +2948,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 3,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: aria-allowed-attr:critical, aria-prohibited-attr:serious, color-contrast:serious",
           "details": [
             "aria-allowed-attr:critical",
@@ -3047,7 +3023,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
           "details": [
             "aria-prohibited-attr:serious",
@@ -3121,7 +3097,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 4,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: aria-required-children:critical, color-contrast:serious, nested-interactive:serious, target-size:serious",
           "details": [
             "aria-required-children:critical",
@@ -3198,11 +3174,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious, label:critical",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: label:critical",
           "details": [
-            "color-contrast:serious",
             "label:critical"
           ]
         },
@@ -3273,7 +3248,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical",
           "details": [
             "color-contrast:serious",
@@ -3345,13 +3320,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -3420,7 +3393,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -3493,19 +3466,17 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
           "reason": "Form route missing submit control (read-only probe)",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
           ]
         }
       },
@@ -3568,7 +3539,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -3640,11 +3611,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious, label:critical",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: label:critical",
           "details": [
-            "color-contrast:serious",
             "label:critical"
           ]
         },
@@ -3713,13 +3683,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -3786,13 +3754,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -3859,13 +3825,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -4008,19 +3972,17 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
           "reason": "Form route missing submit control (read-only probe)",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
           ]
         }
       },
@@ -4083,7 +4045,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -4157,12 +4119,11 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 3,
-          "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: aria-prohibited-attr:serious",
           "details": [
-            "aria-prohibited-attr:serious",
-            "color-contrast:serious"
+            "aria-prohibited-attr:serious"
           ]
         },
         "functional": {
@@ -4232,19 +4193,17 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
           "reason": "Form route missing submit control (read-only probe)",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
           ]
         }
       },
@@ -4307,7 +4266,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: aria-required-children:critical, color-contrast:serious",
           "details": [
             "aria-required-children:critical",
@@ -4383,7 +4342,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -4454,13 +4413,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -4527,13 +4484,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -4555,7 +4510,7 @@
       "sourceFile": "app/(admin)/dashboard/logs/page.tsx",
       "urlPattern": "/dashboard/logs",
       "desktop": "VERIFIED",
-      "compactDesktop": "PENDING",
+      "compactDesktop": "VERIFIED",
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
@@ -4565,31 +4520,31 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
+          "status": "PASS",
           "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "FAIL",
+          "status": "PASS",
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "missing main landmark",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": [
             "missing main landmark"
           ]
         },
         "responsive": {
-          "status": "FAIL",
+          "status": "PASS",
           "viewports": {
             "desktop": {
               "status": "PASS",
               "details": []
             },
             "compactDesktop": {
-              "status": "FAIL",
-              "reason": "HTTP 200"
+              "status": "PASS",
+              "details": []
             },
             "tablet": {
               "status": "PASS",
@@ -4603,12 +4558,10 @@
         },
         "accessibility": {
           "status": "FAIL",
-          "axeViolations": 3,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious, meta-refresh:critical",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: meta-refresh:critical",
           "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious",
             "meta-refresh:critical"
           ]
         },
@@ -4622,6 +4575,7 @@
       },
       "evidenceReferences": [
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-compactDesktop.png",
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-tablet.png",
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_logs-mobile.png"
       ],
@@ -4678,7 +4632,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -4749,13 +4703,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -4822,13 +4774,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -4897,7 +4847,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 3,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious, nested-interactive:serious, target-size:serious",
           "details": [
             "color-contrast:serious",
@@ -4972,7 +4922,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5043,13 +4993,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -5116,13 +5064,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -5189,13 +5135,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PASS",
@@ -5264,7 +5208,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5335,13 +5279,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 1,
-          "axeIncomplete": 3,
-          "reason": "axe violations: color-contrast:serious",
-          "details": [
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -5410,7 +5352,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5483,7 +5425,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5556,14 +5498,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -5632,7 +5571,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, label:critical",
           "details": [
             "color-contrast:serious",
@@ -5706,7 +5645,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5779,7 +5718,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5852,7 +5791,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -5925,14 +5864,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6001,14 +5937,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6077,14 +6010,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6153,14 +6083,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6229,14 +6156,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6305,14 +6229,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6381,14 +6302,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6457,14 +6375,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6533,14 +6448,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6609,14 +6521,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6685,14 +6594,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6761,7 +6667,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -6834,7 +6740,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -6907,14 +6813,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -6983,7 +6886,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 2,
           "reason": "axe violations: aria-prohibited-attr:serious, color-contrast:serious",
           "details": [
             "aria-prohibited-attr:serious",
@@ -7009,65 +6912,72 @@
     "app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx",
       "urlPattern": "/dashboard/vereine/[clubId]/teams/new",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
+          "status": "PASS",
           "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "FAIL",
+          "status": "PASS",
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "FAIL",
-          "reason": "Responsive probe failed",
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "FAIL",
+          "status": "PASS",
           "viewports": {
             "desktop": {
-              "status": "FAIL",
-              "reason": "HTTP 404"
+              "status": "PASS",
+              "details": []
             },
             "compactDesktop": {
-              "status": "FAIL",
-              "reason": "HTTP 404"
+              "status": "PASS",
+              "details": []
             },
             "tablet": {
-              "status": "FAIL",
-              "reason": "HTTP 404"
+              "status": "PASS",
+              "details": []
             },
             "mobile": {
-              "status": "FAIL",
-              "reason": "HTTP 404"
+              "status": "PASS",
+              "details": []
             }
           }
         },
         "accessibility": {
           "status": "PENDING",
           "axeViolations": 0,
-          "axeIncomplete": 0,
-          "reason": "axe-core wcag2aa scan clean on desktop viewport",
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
           "details": []
         },
         "functional": {
-          "status": "PENDING",
+          "status": "PASS",
           "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
-          "details": []
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
         }
       },
-      "evidenceReferences": [],
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_teams_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_teams_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_teams_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_cmw93edip004608joy5g594t4_teams_new-mobile.png"
+      ],
       "defects": []
     },
     "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx": {
@@ -7121,14 +7031,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -7197,7 +7104,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -7270,14 +7177,11 @@
           }
         },
         "accessibility": {
-          "status": "FAIL",
-          "axeViolations": 2,
-          "axeIncomplete": 4,
-          "reason": "axe violations: aria-progressbar-name:serious, color-contrast:serious",
-          "details": [
-            "aria-progressbar-name:serious",
-            "color-contrast:serious"
-          ]
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
         },
         "functional": {
           "status": "PENDING",
@@ -7346,7 +7250,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -7419,7 +7323,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 1,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious",
           "details": [
             "color-contrast:serious"
@@ -7492,7 +7396,7 @@
         "accessibility": {
           "status": "FAIL",
           "axeViolations": 2,
-          "axeIncomplete": 3,
+          "axeIncomplete": 1,
           "reason": "axe violations: color-contrast:serious, target-size:serious",
           "details": [
             "color-contrast:serious",
@@ -7514,6 +7418,2909 @@
         "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_inbox_settings-mobile.png"
       ],
       "defects": []
+    },
+    "app/(admin)/dashboard/communication/kampagnen/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/kampagnen/page.tsx",
+      "urlPattern": "/dashboard/communication/kampagnen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx",
+      "urlPattern": "/dashboard/communication/kampagnen/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/kampagnen/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/kampagnen/new/page.tsx",
+      "urlPattern": "/dashboard/communication/kampagnen/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/mitteilungen/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/page.tsx",
+      "urlPattern": "/dashboard/communication/mitteilungen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
+      "urlPattern": "/dashboard/communication/mitteilungen/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx",
+      "urlPattern": "/dashboard/communication/mitteilungen/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious, label:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/personal-signature/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/personal-signature/page.tsx",
+      "urlPattern": "/dashboard/communication/personal-signature",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_personal-signature-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_personal-signature-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_personal-signature-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_personal-signature-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/vorlagen/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/vorlagen/page.tsx",
+      "urlPattern": "/dashboard/communication/vorlagen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx",
+      "urlPattern": "/dashboard/communication/vorlagen/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/vorlagen/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/vorlagen/new/page.tsx",
+      "urlPattern": "/dashboard/communication/vorlagen/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/zielgruppen/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/zielgruppen/page.tsx",
+      "urlPattern": "/dashboard/communication/zielgruppen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":51,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx",
+      "urlPattern": "/dashboard/communication/zielgruppen/[id]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":51,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/communication/zielgruppen/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/communication/zielgruppen/new/page.tsx",
+      "urlPattern": "/dashboard/communication/zielgruppen/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_zielgruppen_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/notifications/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/notifications/page.tsx",
+      "urlPattern": "/dashboard/notifications",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "PENDING",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Responsive probe failed",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "FAIL",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "FAIL",
+              "details": [
+                "keyboard focus did not move from body"
+              ]
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_notifications-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_notifications-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_notifications-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_notifications-mobile.png"
+      ],
+      "defects": [
+        {
+          "id": "DS2-07G-tablet-1",
+          "introducedByDs2": null,
+          "status": "OPEN",
+          "summary": "tablet: keyboard focus did not move from body",
+          "reproduction": "http://127.0.0.1:3000/dashboard/notifications"
+        }
+      ]
+    },
+    "app/(admin)/dashboard/website/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/page.tsx",
+      "urlPattern": "/dashboard/website",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":54,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/blocks/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/blocks/page.tsx",
+      "urlPattern": "/dashboard/website/blocks",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_blocks-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_blocks-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_blocks-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_blocks-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/components/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/components/page.tsx",
+      "urlPattern": "/dashboard/website/components",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: button-name:critical, select-name:critical",
+          "details": [
+            "button-name:critical",
+            "select-name:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/components/[id]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/components/[id]/edit/page.tsx",
+      "urlPattern": "/dashboard/website/components/[id]/edit",
+      "desktop": "PENDING",
+      "compactDesktop": "PENDING",
+      "tablet": "PENDING",
+      "mobile": "PENDING",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "FAIL",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "FAIL",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Responsive probe failed",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "FAIL",
+          "viewports": {
+            "desktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "compactDesktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "tablet": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "mobile": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "reason": "axe-core wcag2aa scan clean on desktop viewport",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": []
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/components/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/components/new/page.tsx",
+      "urlPattern": "/dashboard/website/components/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": [
+            "multiple h1 elements"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/design-system/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/design-system/page.tsx",
+      "urlPattern": "/dashboard/website/design-system",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": [
+            "multiple h1 elements"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/editorial/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/editorial/page.tsx",
+      "urlPattern": "/dashboard/website/editorial",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_editorial-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_editorial-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_editorial-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_editorial-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/homepage/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/homepage/page.tsx",
+      "urlPattern": "/dashboard/website/homepage",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_homepage-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_homepage-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_homepage-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_homepage-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/media/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/media/page.tsx",
+      "urlPattern": "/dashboard/website/media",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: button-name:critical, color-contrast:serious",
+          "details": [
+            "button-name:critical",
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_media-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_media-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_media-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_media-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/navigation/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/navigation/page.tsx",
+      "urlPattern": "/dashboard/website/navigation",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_navigation-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_navigation-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_navigation-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_navigation-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/news/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/news/page.tsx",
+      "urlPattern": "/dashboard/website/news",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/news/[id]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
+      "urlPattern": "/dashboard/website/news/[id]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": [
+            "missing main landmark"
+          ]
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: meta-refresh:critical",
+          "details": [
+            "meta-refresh:critical"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_edit-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/news/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/news/new/page.tsx",
+      "urlPattern": "/dashboard/website/news/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious, label:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/pages/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/pages/page.tsx",
+      "urlPattern": "/dashboard/website/pages",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/pages/[id]/builder/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/pages/[id]/builder/page.tsx",
+      "urlPattern": "/dashboard/website/pages/[id]/builder",
+      "desktop": "PENDING",
+      "compactDesktop": "PENDING",
+      "tablet": "PENDING",
+      "mobile": "PENDING",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "FAIL",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "FAIL",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Responsive probe failed",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "FAIL",
+          "viewports": {
+            "desktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "compactDesktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "tablet": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "mobile": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "reason": "axe-core wcag2aa scan clean on desktop viewport",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": []
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/pages/[id]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/pages/[id]/edit/page.tsx",
+      "urlPattern": "/dashboard/website/pages/[id]/edit",
+      "desktop": "PENDING",
+      "compactDesktop": "PENDING",
+      "tablet": "PENDING",
+      "mobile": "PENDING",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "FAIL",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "FAIL",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "FAIL",
+          "reason": "Responsive probe failed",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "FAIL",
+          "viewports": {
+            "desktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "compactDesktop": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "tablet": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            },
+            "mobile": {
+              "status": "FAIL",
+              "reason": "HTTP 404"
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "reason": "axe-core wcag2aa scan clean on desktop viewport",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": []
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/pages/new/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/pages/new/page.tsx",
+      "urlPattern": "/dashboard/website/pages/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious, label:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_pages_new-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/publishing/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/publishing/page.tsx",
+      "urlPattern": "/dashboard/website/publishing",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_publishing-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_publishing-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_publishing-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_publishing-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/review/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/review/page.tsx",
+      "urlPattern": "/dashboard/website/review",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_review-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_review-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_review-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_review-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/dashboard/website/settings/page.tsx": {
+      "sourceFile": "app/(admin)/dashboard/website/settings/page.tsx",
+      "urlPattern": "/dashboard/website/settings",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_settings-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_settings-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_settings-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_settings-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/page.tsx",
+      "urlPattern": "/vereinsleitung",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 1,
+          "reason": "axe violations: button-name:critical, color-contrast:serious",
+          "details": [
+            "button-name:critical",
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/club-entwicklung/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/club-entwicklung/page.tsx",
+      "urlPattern": "/vereinsleitung/club-entwicklung",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_club-entwicklung-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_club-entwicklung-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_club-entwicklung-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_club-entwicklung-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx",
+      "urlPattern": "/vereinsleitung/finanzen/rechnungen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules: 2",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_finanzen_rechnungen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_finanzen_rechnungen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_finanzen_rechnungen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_finanzen_rechnungen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/initiativen/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/initiativen/page.tsx",
+      "urlPattern": "/vereinsleitung/initiativen",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
+      "urlPattern": "/vereinsleitung/initiativen/[slug]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious"
+          ]
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-mobile.png"
+      ],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx",
+      "urlPattern": "/vereinsleitung/initiativen/[slug]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "PENDING",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": {
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
+        },
+        "authorization": {
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
+        },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PENDING",
+          "reason": "Form route missing submit control (read-only probe)",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+          ]
+        }
+      },
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-mobile.png"
+      ],
+      "defects": []
     }
   },
   "evidenceContractVersion": "2026-11-10-batch-3",
@@ -7521,10 +10328,10 @@
   "highRiskRoutesClosureComplete": 0,
   "lastRunMode": "batch3",
   "batch3RoutesAttemptedThisRun": 40,
-  "batch3EvidenceRows": 60,
+  "batch3EvidenceRows": 100,
   "visualScreenshotReview": {
     "lastReviewerMechanism": "cursor-agent-image-read",
-    "lastReviewedAt": "2026-11-10T18:59:12.775Z",
-    "routesMarkedThisRun": 5
+    "lastReviewedAt": "2026-11-10T19:57:08.207Z",
+    "routesMarkedThisRun": 1
   }
 }

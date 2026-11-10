@@ -8,7 +8,7 @@
  *   AUTH_SECRET or NEXTAUTH_SECRET on the app server (required for Auth.js session cookies)
  *
  * Optional:
- *   SCE_DS2_07G_MODE=reassess-batch2|batch3|high-risk (default reassess-batch2)
+ *   SCE_DS2_07G_MODE=reassess-batch2|reassess-evidence|batch3|high-risk (default reassess-batch2)
  *   SCE_DS2_07G_ROUTE_LIMIT=40
  *   SCE_DS2_07G_ROUTE_OFFSET=0
  *
@@ -23,7 +23,6 @@ import {
   EVIDENCE_CONTRACT_VERSION,
   VIEWPORT_KEYS,
   deriveLegacyChannelsFromDimensions,
-  extractDimensions,
 } from "./lib/sce-ds2-07g-evidence-contract.mjs";
 import {
   buildVerificationMatrix,
@@ -77,6 +76,9 @@ async function loadDynamicFixtures() {
     sessionId: process.env.SCE_DS2_07G_FIXTURE_SESSION_ID?.trim() ?? "",
     eventId: process.env.SCE_DS2_07G_FIXTURE_EVENT_ID?.trim() ?? "",
     taskId: process.env.SCE_DS2_07G_FIXTURE_TASK_ID?.trim() ?? "",
+    clubId: process.env.SCE_DS2_07G_FIXTURE_CLUB_ID?.trim() ?? "",
+    pageId: process.env.SCE_DS2_07G_FIXTURE_PAGE_ID?.trim() ?? "",
+    componentId: process.env.SCE_DS2_07G_FIXTURE_COMPONENT_ID?.trim() ?? "",
   };
   if (Object.values(dynamicFixtures).every(Boolean)) return;
 
@@ -112,6 +114,24 @@ async function loadDynamicFixtures() {
       );
       dynamicFixtures.taskId = task.rows[0]?.id ?? "";
     }
+    if (!dynamicFixtures.clubId) {
+      const club = await client.query(
+        `SELECT id FROM "ExternalClub" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.clubId = club.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.pageId) {
+      const page = await client.query(
+        `SELECT id FROM "WebsitePage" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.pageId = page.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.componentId) {
+      const component = await client.query(
+        `SELECT id FROM "ReusableComponent" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.componentId = component.rows[0]?.id ?? "";
+    }
   } finally {
     await client.end().catch(() => {});
   }
@@ -119,7 +139,13 @@ async function loadDynamicFixtures() {
 
 function resolveProbePath(urlPattern) {
   let resolved = urlPattern;
-  for (const [key, value] of Object.entries(dynamicFixtures)) {
+  const fixtureValues = { ...dynamicFixtures };
+  if (!fixtureValues.id) {
+    if (urlPattern.includes("/website/components/")) fixtureValues.id = dynamicFixtures.componentId;
+    else if (urlPattern.includes("/website/pages/")) fixtureValues.id = dynamicFixtures.pageId;
+    else if (urlPattern.includes("/vereine/")) fixtureValues.id = dynamicFixtures.clubId;
+  }
+  for (const [key, value] of Object.entries(fixtureValues)) {
     if (!value) continue;
     resolved = resolved.replaceAll(`[${key}]`, encodeURIComponent(value));
   }
@@ -265,6 +291,12 @@ async function auditRoute(page, urlPattern, sourceFile) {
       await page.waitForLoadState("domcontentloaded").catch(() => {});
     }
     const status = response?.status() ?? (page.url().startsWith(BASE_URL) ? 200 : 0);
+    await page
+      .waitForSelector("[data-sce-workspace-chrome], main[data-sce-page-shell]", {
+        timeout: 45_000,
+      })
+      .catch(() => {});
+
     if (!response || status >= 400) {
       viewportFailures.push(`HTTP ${status || "no-response"}`);
       if (status === 401 || status === 403) authBlocked = true;
@@ -417,6 +449,14 @@ function selectRoutes(existingBySource) {
       evidenceBySource: existingBySource,
     });
   }
+  if (MODE === "reassess-evidence") {
+    const byUrl = new Map(loadRegistryEntries().map((entry) => [entry.sourceFile, entry]));
+    const sourceFiles = Object.keys(existingBySource).sort();
+    return sourceFiles
+      .map((sourceFile) => byUrl.get(sourceFile))
+      .filter(Boolean)
+      .slice(ROUTE_OFFSET, ROUTE_OFFSET + ROUTE_LIMIT);
+  }
   const registry = loadRegistryEntries().filter(
     (entry) =>
       entry.migrationPackage === "DS2-07G" &&
@@ -496,7 +536,9 @@ async function main() {
     batch:
       MODE === "batch3"
         ? `batch-3-module-sampling-offset-${ROUTE_OFFSET}-limit-${ROUTE_LIMIT}`
-        : `${existing.batch ?? "high-risk-batch-2"}+batch-3-reassess`,
+        : MODE === "reassess-evidence"
+          ? `batch-4-reassess-evidence-offset-${ROUTE_OFFSET}-limit-${ROUTE_LIMIT}`
+          : `${existing.batch ?? "high-risk-batch-2"}+batch-3-reassess`,
     lastRunMode: MODE,
     prefixes: existing.prefixes,
     dynamicFixtures,

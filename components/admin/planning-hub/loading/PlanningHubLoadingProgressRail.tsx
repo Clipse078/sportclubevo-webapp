@@ -16,6 +16,7 @@ export default function PlanningHubLoadingProgressRail({
       className={cn("w-full max-w-[22rem] sm:max-w-[23.5rem]", className)}
       data-testid="planning-hub-loading-progress-rail"
       role="progressbar"
+      aria-label="Wochenplaner wird geladen"
       aria-valuetext="Wochenplaner wird geladen"
       aria-busy="true"
     >

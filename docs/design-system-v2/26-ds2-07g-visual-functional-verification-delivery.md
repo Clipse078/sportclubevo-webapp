@@ -90,9 +90,32 @@ Helpers:
 - `SCE_DS2_07G_MODE=reassess-batch2|batch3` on `scripts/sce-ds2-07g-authenticated-route-verify.mjs`
 - Auth.js login uses CSRF + credentials callback (`AUTH_SECRET` / `NEXTAUTH_SECRET` required on dev server)
 
+## Batch 4 result (contrast closure + route sampling chunk 2)
+
+| Status | Count |
+| --- | ---: |
+| Authenticated browser evidence rows | **141** / 214 |
+| Remaining queue (no browser row yet) | **73** |
+| Responsive all-viewport PASS | **137** / 141 |
+| Accessibility axe **PASS** | **0** (50 rows clean scan with axe *incomplete*; 91 FAIL with open rule debt) |
+| Accessibility zero violations | **50** (PENDING incomplete manual rules) |
+| Functional read-only PASS | **82** |
+| Screenshot explicitly reviewed | **5** (roles administration workspace) |
+| Programme `authenticatedVisual` VERIFIED | **0** / 214 |
+
+### Accessibility root cause (batch 4)
+
+| Group | Finding | Fix on branch |
+| --- | --- | --- |
+| Rule / token | `color-contrast` — orange L1 active label and account avatar on `#fafafa`; active context tabs; muted on `#f1f5f9`; selection row on legacy `--blue-light` | White-edition tokens: `--muted` `#57606a`, `--sce-color-nav-active`, `--sce-color-context-tab-active`, `--blue-light` `#e8f0fc`, account avatar fallback |
+| Component | `aria-prohibited-attr` on platform wordmark wrapper | `SidebarPlatformBrand` `role="img"` |
+| Component | `aria-progressbar-name` on finance/planning rails | Explicit `aria-label` on shared progress rails |
+| Baseline | `label` / `select-name` on form archetypes | Recorded FAIL — not suppressed |
+| Dynamic fixtures | `ExternalClub`, `WebsitePage`, `ReusableComponent` for `[clubId]` / `[id]` probes | Runner fixture resolution + workspace shell wait |
+
 ## Remaining verification work
 
-1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, `SCE_DS2_07G_ROUTE_OFFSET=60`, limit **113** pending).
+1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, next offset **73** remaining in priority queue).
 2. Agent visual review of captured screenshots (`visual.screenshotReviewed = true`) where layout heuristics are clean.
 3. Triage axe failures (contrast/aria baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
 4. Merge evidence into `sce-ds2-07g-verification-evidence.json` and regenerate the matrix after each chunk.
