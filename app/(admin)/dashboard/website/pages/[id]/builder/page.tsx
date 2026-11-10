@@ -16,16 +16,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, PenLine } from "lucide-react";
-import { BlockLibrarySceIcon } from "@/components/icons/domain-sce-icon-components";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getWebsitePageAdminById } from "@/lib/pages/admin-queries";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 import WebsitePageStatusBadge from "@/components/admin/pages/WebsitePageStatusBadge";
 import PageBuilderClient from "@/components/admin/page-builder/PageBuilderClient";
 
@@ -47,59 +44,41 @@ export default async function PageBuilderPage({
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <DetailPagePattern
+        eyebrow="Website"
+        title={page.title}
+        description={`Seiten-Slug: /${page.slug}`}
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Website" },
+          { label: "Website", href: "/dashboard/website" },
           { label: "Seiten", href: "/dashboard/website/pages" },
           { label: page.title, href: editHref },
           { label: "Page Builder" },
         ]}
-      />
-
-      {/* Page context banner */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)] border border-[var(--border)]">
-            <BlockLibrarySceIcon className="h-5 w-5 text-[var(--text-2)]" />
-          </div>
-          <div>
-            <PageHeader
-              eyebrow="Website · Page Builder"
-              title={page.title}
-              description={`Seiten-Slug: /${page.slug}`}
-              className="mb-0"
-            />
-            <div className="mt-1">
-              <WebsitePageStatusBadge status={page.status} />
-            </div>
-          </div>
-        </div>
-
-        {/* Links */}
-        <div className="flex items-center gap-2">
-          <Link
-            href={editHref}
-            className="fca-button-secondary"
-          >
-            <PenLine className="h-4 w-4" />
-            Seite bearbeiten
-          </Link>
-          <Link
-            href="/dashboard/website/pages"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            Alle Seiten
-          </Link>
-        </div>
-      </div>
-
-      <PageBuilderClient
-        pageId={id}
-        pageTitle={page.title}
-        pageSlug={page.slug}
-      />
+        contextTabs={<WebsiteWorkspaceTabs />}
+        headerBadge={<WebsitePageStatusBadge status={page.status} />}
+        headerActions={
+          <>
+            <Link href={editHref} className="fca-button-secondary">
+              <PenLine className="h-4 w-4" />
+              Seite bearbeiten
+            </Link>
+            <Link
+              href="/dashboard/website/pages"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Alle Seiten
+            </Link>
+          </>
+        }
+      >
+        <PageBuilderClient
+          pageId={id}
+          pageTitle={page.title}
+          pageSlug={page.slug}
+        />
+      </DetailPagePattern>
     </PageShell>
   );
 }

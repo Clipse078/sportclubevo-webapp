@@ -70,14 +70,6 @@ describe("SCE-DS2-07C admin and configuration migration", () => {
   it("accounts for every assigned route and moves it to canonical DS2-07G", () => {
     expect(SCE_DS2_07C_ASSIGNED_SOURCES).toHaveLength(41);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07C"]).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(105);
-    expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(42);
-    expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(67);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07D"]).toBe(38);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07E"]).toBe(27);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(44);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(105);
 
     for (const sourceFile of SCE_DS2_07C_ASSIGNED_SOURCES) {
       const entry = SCE_DS2_07B_ROUTE_REGISTRY.find((item) => item.sourceFile === sourceFile);

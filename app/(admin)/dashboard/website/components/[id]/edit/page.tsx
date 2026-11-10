@@ -3,6 +3,9 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getReusableComponent } from "@/lib/reusable-components/queries";
 import ReusableComponentEditor from "@/components/admin/reusable-components/ReusableComponentEditor";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -17,8 +20,21 @@ export default async function EditReusableComponentPage({ params }: PageProps) {
   if (!component) notFound();
 
   return (
-    <div className="mx-auto max-w-screen-lg px-5 py-8 md:px-8 md:py-10">
-      <ReusableComponentEditor mode="edit" initialData={component} />
-    </div>
+    <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Website"
+        title={component.title}
+        description="Wiederverwendbaren Inhalt bearbeiten."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Website", href: "/dashboard/website" },
+          { label: "Komponenten", href: "/dashboard/website/components" },
+          { label: component.title },
+        ]}
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
+        <ReusableComponentEditor mode="edit" initialData={component} />
+      </FormPagePattern>
+    </PageShell>
   );
 }

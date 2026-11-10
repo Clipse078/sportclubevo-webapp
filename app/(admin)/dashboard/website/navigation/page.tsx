@@ -7,11 +7,9 @@ import { prisma } from "@/lib/db/prisma";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 import NavigationManager from "@/components/admin/navigation/NavigationManager";
-import {
-  PageShell,
-  PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { WebsiteWorkspaceTabs } from "@/components/admin/cms/WebsiteWorkspaceTabs";
 
 export default async function NavigationManagementPage() {
   const session = await requireAnyPermission([PERMISSIONS.WEBSITE_MANAGE]);
@@ -26,23 +24,17 @@ export default async function NavigationManagementPage() {
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <ListPagePattern
+        eyebrow="Website"
+        title="Navigation"
+        description="Menüstruktur verwalten: Header-Navigation, Footer-Navigation, Links, Sortierung und Sichtbarkeit."
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website", href: CMS_ROUTES.overview },
           { label: "Navigation" },
         ]}
-      />
-
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <PageHeader
-          eyebrow="Website"
-          title="Navigation"
-          description="Menüstruktur verwalten: Header-Navigation, Footer-Navigation, Links, Sortierung und Sichtbarkeit."
-          className="mb-0"
-        />
-      </div>
-
+        contextTabs={<WebsiteWorkspaceTabs />}
+      >
       {/* Architecture note */}
       <div className="mb-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex items-start gap-3">
@@ -87,6 +79,7 @@ export default async function NavigationManagementPage() {
       </div>
 
       <NavigationManager canDelete={canDelete} />
+      </ListPagePattern>
     </PageShell>
   );
 }
