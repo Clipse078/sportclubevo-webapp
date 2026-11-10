@@ -1,9 +1,14 @@
 /**
- * SCE-DS2-06R2 — authenticated route inventory scanner.
+ * SCE-DS2-06R2 / SCE-DS2-07B — route inventory scanner.
  * Run: node scripts/sce-ds2-06-route-inventory-scan.mjs
+ *
+ * Writes the DS2-06 authenticated inventory and the DS2-07B lifecycle registry.
+ * Set SCE_DS2_07B_WRITE_BASELINE=1 only when intentionally freezing the
+ * existing-route baseline. Normal runs must not adopt new pages into that baseline.
  */
-import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { writeGovernanceArtifacts } from "./lib/sce-ds2-07b-route-governance.mjs";
 
 const ROOT = process.cwd();
 const ADMIN_ROOT = join(ROOT, "app/(admin)");
@@ -213,5 +218,14 @@ export const SCE_DS2_06_CORRECTED_IN_R2_ROUTES = [
 ] as const;
 `;
 
-writeFileSync(outPath, ts);
+const inventoryTmp = `${outPath}.${process.pid}.tmp`;
+writeFileSync(inventoryTmp, ts);
+renameSync(inventoryTmp, outPath);
 console.log(`Wrote ${inventory.length} routes to ${relative(ROOT, outPath)}`);
+
+const governance = writeGovernanceArtifacts(ROOT, {
+  writeBaseline: process.env.SCE_DS2_07B_WRITE_BASELINE === "1",
+});
+console.log(
+  `DS2-07B registry: pages=${governance.summary.pageCount} visual=${governance.summary.authenticatedVisualCount} blocking=${governance.summary.blockingCount} tracked=${governance.summary.trackedDebtCount}`,
+);

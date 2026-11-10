@@ -43,3 +43,4 @@ export * from "./sce-design-system-governance";
 export * from "./sce-design-system-exception-registry";
 export * from "./sce-design-system-governance-runner";
 export * from "./sce-design-system-11-meta";
+export * from "./sce-ds2-07b-meta";

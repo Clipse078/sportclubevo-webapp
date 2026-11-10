@@ -1,0 +1,43 @@
+name: SCE route lifecycle governance
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "lib/design-system/sce-ds2-07b*"
+      - "lib/design-system/sce-ds2-06-route-inventory.ts"
+      - "lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts"
+      - "lib/design-system/__tests__/sce-ds2-07a-core-workspace-migration.test.ts"
+      - "lib/design-system/__tests__/sce-ds2-07b-route-lifecycle-governance.test.ts"
+      - "lib/design-system/__tests__/fixtures/sce-ds2-07b/**"
+      - "scripts/sce-ds2-06-route-inventory-scan.mjs"
+      - "scripts/sce-ds2-07b-route-governance-check.mjs"
+      - "scripts/lib/**"
+      - "docs/design-system-v2/21-ds2-07b-route-lifecycle-governance.md"
+      - "package.json"
+      - "package-lock.json"
+  push:
+    branches:
+      - STAGE
+    paths:
+      - "app/**"
+      - "lib/design-system/sce-ds2-07b*"
+      - "lib/design-system/sce-ds2-06-route-inventory.ts"
+      - "scripts/sce-ds2-06-route-inventory-scan.mjs"
+      - "scripts/sce-ds2-07b-route-governance-check.mjs"
+      - "scripts/lib/**"
+      - "docs/design-system-v2/21-ds2-07b-route-lifecycle-governance.md"
+
+jobs:
+  route-lifecycle-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Route discovery, registry sync, and new-page governance
+        run: npm run test:route-governance

@@ -1,0 +1,3980 @@
+[
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/(personal-dashboard)/loading.tsx",
+    "urlPattern": "/dashboard",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/layout.tsx",
+    "urlPattern": "/dashboard/admin/commercial/billing",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/admin/layout.tsx",
+    "urlPattern": "/dashboard/admin",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/admin/loading.tsx",
+    "urlPattern": "/dashboard/admin",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/administration/roles/layout.tsx",
+    "urlPattern": "/dashboard/administration/roles",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/aufgaben/@task/default.tsx",
+    "urlPattern": "/dashboard/aufgaben",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/aufgaben/layout.tsx",
+    "urlPattern": "/dashboard/aufgaben",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/communication/inbox/layout.tsx",
+    "urlPattern": "/dashboard/communication/inbox",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/communication/layout.tsx",
+    "urlPattern": "/dashboard/communication",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/communication/loading.tsx",
+    "urlPattern": "/dashboard/communication",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/layout.tsx",
+    "urlPattern": "/dashboard",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/loading.tsx",
+    "urlPattern": "/dashboard",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/matchcenter/[matchId]/layout.tsx",
+    "urlPattern": "/dashboard/matchcenter/[matchId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/planner/week/loading.tsx",
+    "urlPattern": "/dashboard/planner/week",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/teams/[teamId]/layout.tsx",
+    "urlPattern": "/dashboard/teams/[teamId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/tournamentcenter/[tournamentId]/layout.tsx",
+    "urlPattern": "/dashboard/tournamentcenter/[tournamentId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/training/loading.tsx",
+    "urlPattern": "/dashboard/training",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/training/sessions/[sessionId]/layout.tsx",
+    "urlPattern": "/dashboard/training/sessions/[sessionId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/veranstaltungen/[eventId]/layout.tsx",
+    "urlPattern": "/dashboard/veranstaltungen/[eventId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/dashboard/website/loading.tsx",
+    "urlPattern": "/dashboard/website",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/layout.tsx",
+    "urlPattern": "/",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/layout.tsx",
+    "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations/[registrationId]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+    "urlPattern": "/tenant/[tenantSlug]",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/vereinsleitung/finanzen/layout.tsx",
+    "urlPattern": "/vereinsleitung/finanzen",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/vereinsleitung/material/layout.tsx",
+    "urlPattern": "/vereinsleitung/material",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/layout.tsx",
+    "urlPattern": "/vereinsleitung/prozesse",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(print)/layout.tsx",
+    "urlPattern": "/",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/account/change-password/route.ts",
+    "urlPattern": "/api/account/change-password",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/account/dashboard-hero-image/route.ts",
+    "urlPattern": "/api/account/dashboard-hero-image",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/account/me/route.ts",
+    "urlPattern": "/api/account/me",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/account/profile-image/route.ts",
+    "urlPattern": "/api/account/profile-image",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/communications/email-sender/route.ts",
+    "urlPattern": "/api/admin/communications/email-sender",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/clubs/master-import/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/clubs/master-import",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/competitions/sync/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/competitions/sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/config/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/config",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/detail/sync/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/detail/sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/diagnostics/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/diagnostics",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/schedule/sync/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/schedule/sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/teams/sync/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/teams/sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/integrations/sfv/test/route.ts",
+    "urlPattern": "/api/admin/integrations/sfv/test",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/sce/activity-governance/club-event/route.ts",
+    "urlPattern": "/api/admin/sce/activity-governance/club-event",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/sce/activity-governance/match/route.ts",
+    "urlPattern": "/api/admin/sce/activity-governance/match",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/sce/activity-governance/tournament/route.ts",
+    "urlPattern": "/api/admin/sce/activity-governance/tournament",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/sce/activity-governance/training/route.ts",
+    "urlPattern": "/api/admin/sce/activity-governance/training",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/invite/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/invite",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/membership/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/membership",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/permanent/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/permission-overrides/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/permission-overrides",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/roles/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/roles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/[userId]/scoped-roles/route.ts",
+    "urlPattern": "/api/admin/users/[userId]/scoped-roles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/invite/route.ts",
+    "urlPattern": "/api/admin/users/invite",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/lookup/route.ts",
+    "urlPattern": "/api/admin/users/lookup",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/route.ts",
+    "urlPattern": "/api/admin/users",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/users/validate-email/route.ts",
+    "urlPattern": "/api/admin/users/validate-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/audit-logs/route.ts",
+    "urlPattern": "/api/audit-logs",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/[...nextauth]/route.ts",
+    "urlPattern": "/api/auth/[...nextauth]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/forgot-password/route.ts",
+    "urlPattern": "/api/auth/forgot-password",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/impersonation-context/route.ts",
+    "urlPattern": "/api/auth/impersonation-context",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/invitation/accept/route.ts",
+    "urlPattern": "/api/auth/invitation/accept",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/reset-password/route.ts",
+    "urlPattern": "/api/auth/reset-password",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/auth/stop-impersonation/route.ts",
+    "urlPattern": "/api/auth/stop-impersonation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/branding/logo/route.ts",
+    "urlPattern": "/api/branding/logo",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/branding/route.ts",
+    "urlPattern": "/api/branding",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/logo/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]/logo",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/merge/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]/merge",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/provider-link/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]/provider-link",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/restore/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/[clubId]/teams/route.ts",
+    "urlPattern": "/api/club-directory/clubs/[clubId]/teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/clubs/route.ts",
+    "urlPattern": "/api/club-directory/clubs",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/[teamId]/logo/route.ts",
+    "urlPattern": "/api/club-directory/teams/[teamId]/logo",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/[teamId]/move/route.ts",
+    "urlPattern": "/api/club-directory/teams/[teamId]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/[teamId]/provider-link/route.ts",
+    "urlPattern": "/api/club-directory/teams/[teamId]/provider-link",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/[teamId]/restore/route.ts",
+    "urlPattern": "/api/club-directory/teams/[teamId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/[teamId]/route.ts",
+    "urlPattern": "/api/club-directory/teams/[teamId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-directory/teams/route.ts",
+    "urlPattern": "/api/club-directory/teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-events/composer/commit/route.ts",
+    "urlPattern": "/api/club-events/composer/commit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-events/composer/drafts/[draftId]/route.ts",
+    "urlPattern": "/api/club-events/composer/drafts/[draftId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-events/composer/drafts/route.ts",
+    "urlPattern": "/api/club-events/composer/drafts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-events/governance/decisions/route.ts",
+    "urlPattern": "/api/club-events/governance/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/clubs/selectable/[clubId]/teams/route.ts",
+    "urlPattern": "/api/clubs/selectable/[clubId]/teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/clubs/selectable/route.ts",
+    "urlPattern": "/api/clubs/selectable",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/club-events/[eventId]/prepare-communication/route.ts",
+    "urlPattern": "/api/collaboration/club-events/[eventId]/prepare-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/club-events/[eventId]/publish-communication/route.ts",
+    "urlPattern": "/api/collaboration/club-events/[eventId]/publish-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/matches/[matchId]/prepare-communication/route.ts",
+    "urlPattern": "/api/collaboration/matches/[matchId]/prepare-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/matches/[matchId]/publish-communication/route.ts",
+    "urlPattern": "/api/collaboration/matches/[matchId]/publish-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/tournaments/[tournamentId]/prepare-communication/route.ts",
+    "urlPattern": "/api/collaboration/tournaments/[tournamentId]/prepare-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/tournaments/[tournamentId]/publish-communication/route.ts",
+    "urlPattern": "/api/collaboration/tournaments/[tournamentId]/publish-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/training-series/[seriesId]/prepare-communication/route.ts",
+    "urlPattern": "/api/collaboration/training-series/[seriesId]/prepare-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/training-series/[seriesId]/publish-communication/route.ts",
+    "urlPattern": "/api/collaboration/training-series/[seriesId]/publish-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/training-sessions/[sessionId]/prepare-communication/route.ts",
+    "urlPattern": "/api/collaboration/training-sessions/[sessionId]/prepare-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/collaboration/training-sessions/[sessionId]/publish-communication/route.ts",
+    "urlPattern": "/api/collaboration/training-sessions/[sessionId]/publish-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/[communicationId]/analytics/route.ts",
+    "urlPattern": "/api/communication/[communicationId]/analytics",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/[communicationId]/delivery-detail/route.ts",
+    "urlPattern": "/api/communication/[communicationId]/delivery-detail",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/attachments/[attachmentId]/download/route.ts",
+    "urlPattern": "/api/communication/attachments/[attachmentId]/download",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/attachments/route.ts",
+    "urlPattern": "/api/communication/attachments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/audience/capabilities/route.ts",
+    "urlPattern": "/api/communication/audience/capabilities",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/audience/discover/route.ts",
+    "urlPattern": "/api/communication/audience/discover",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/audience/preview/route.ts",
+    "urlPattern": "/api/communication/audience/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/audience/search/route.ts",
+    "urlPattern": "/api/communication/audience/search",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/archive/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/engagement/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]/engagement",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/preview-content/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]/preview-content",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/publish/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/ready/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]/ready",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/[campaignId]/route.ts",
+    "urlPattern": "/api/communication/campaign/[campaignId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/preview/route.ts",
+    "urlPattern": "/api/communication/campaign/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/route.ts",
+    "urlPattern": "/api/communication/campaign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/campaign/sponsor-audience/route.ts",
+    "urlPattern": "/api/communication/campaign/sponsor-audience",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/[communicationId]/acknowledge/route.ts",
+    "urlPattern": "/api/communication/club/[communicationId]/acknowledge",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/[communicationId]/archive/route.ts",
+    "urlPattern": "/api/communication/club/[communicationId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/[communicationId]/engagement/route.ts",
+    "urlPattern": "/api/communication/club/[communicationId]/engagement",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/[communicationId]/publish/route.ts",
+    "urlPattern": "/api/communication/club/[communicationId]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/[communicationId]/route.ts",
+    "urlPattern": "/api/communication/club/[communicationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/preview/route.ts",
+    "urlPattern": "/api/communication/club/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/route.ts",
+    "urlPattern": "/api/communication/club",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/club/send/route.ts",
+    "urlPattern": "/api/communication/club/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/direct/recipients/route.ts",
+    "urlPattern": "/api/communication/direct/recipients",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/direct/send/route.ts",
+    "urlPattern": "/api/communication/direct/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/email/readiness/route.ts",
+    "urlPattern": "/api/communication/email/readiness",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/email/senders/[id]/route.ts",
+    "urlPattern": "/api/communication/email/senders/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/email/senders/readiness/route.ts",
+    "urlPattern": "/api/communication/email/senders/readiness",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/email/senders/route.ts",
+    "urlPattern": "/api/communication/email/senders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/email/test-delivery/route.ts",
+    "urlPattern": "/api/communication/email/test-delivery",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/assign/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/assign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/organization/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/organization",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/read/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/read",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/reply/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/reply",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/star/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/star",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/[conversationId]/status/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/[conversationId]/status",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/bulk/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations/bulk",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/conversations/route.ts",
+    "urlPattern": "/api/communication/inbox/conversations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/mailboxes/[mailboxId]/test-connection/route.ts",
+    "urlPattern": "/api/communication/inbox/mailboxes/[mailboxId]/test-connection",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/mailboxes/route.ts",
+    "urlPattern": "/api/communication/inbox/mailboxes",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/inbox/workspace-preferences/route.ts",
+    "urlPattern": "/api/communication/inbox/workspace-preferences",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/personal-signature/image/route.ts",
+    "urlPattern": "/api/communication/personal-signature/image",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/personal-signature/route.ts",
+    "urlPattern": "/api/communication/personal-signature",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/personalisation/fields/route.ts",
+    "urlPattern": "/api/communication/personalisation/fields",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/personalisation/preview/route.ts",
+    "urlPattern": "/api/communication/personalisation/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/preferences/route.ts",
+    "urlPattern": "/api/communication/preferences",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/schedules/[communicationId]/route.ts",
+    "urlPattern": "/api/communication/schedules/[communicationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/schedules/route.ts",
+    "urlPattern": "/api/communication/schedules",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/templates/[templateId]/duplicate/route.ts",
+    "urlPattern": "/api/communication/templates/[templateId]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/templates/[templateId]/route.ts",
+    "urlPattern": "/api/communication/templates/[templateId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/templates/[templateId]/use/route.ts",
+    "urlPattern": "/api/communication/templates/[templateId]/use",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/templates/from-communication/route.ts",
+    "urlPattern": "/api/communication/templates/from-communication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/communication/templates/route.ts",
+    "urlPattern": "/api/communication/templates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/competitions/[competitionId]/permanent/route.ts",
+    "urlPattern": "/api/competitions/[competitionId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/competitions/[competitionId]/route.ts",
+    "urlPattern": "/api/competitions/[competitionId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/competitions/route.ts",
+    "urlPattern": "/api/competitions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/billing-inbound-sync/route.ts",
+    "urlPattern": "/api/cron/billing-inbound-sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/communication-attachment-cleanup/route.ts",
+    "urlPattern": "/api/cron/communication-attachment-cleanup",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/communication-inbox-sync/route.ts",
+    "urlPattern": "/api/cron/communication-inbox-sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/communication-reminders/route.ts",
+    "urlPattern": "/api/cron/communication-reminders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/communication-scheduler/route.ts",
+    "urlPattern": "/api/cron/communication-scheduler",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/participation-notifications/route.ts",
+    "urlPattern": "/api/cron/participation-notifications",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/platform-communication-email/route.ts",
+    "urlPattern": "/api/cron/platform-communication-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/recurring-billing/route.ts",
+    "urlPattern": "/api/cron/recurring-billing",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/requirement-notifications/route.ts",
+    "urlPattern": "/api/cron/requirement-notifications",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/sfv-bounded-schedule-refresh/route.ts",
+    "urlPattern": "/api/cron/sfv-bounded-schedule-refresh",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/sfv-club-master-import/route.ts",
+    "urlPattern": "/api/cron/sfv-club-master-import",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/sfv-sync/route.ts",
+    "urlPattern": "/api/cron/sfv-sync",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/task-notifications/route.ts",
+    "urlPattern": "/api/cron/task-notifications",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/task-series-occurrences/route.ts",
+    "urlPattern": "/api/cron/task-series-occurrences",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/workspace-background-jobs/route.ts",
+    "urlPattern": "/api/cron/workspace-background-jobs",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/cron/workspace-trash-purge/route.ts",
+    "urlPattern": "/api/cron/workspace-trash-purge",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/dashboard/domain-operational-attention/execute/route.ts",
+    "urlPattern": "/api/dashboard/domain-operational-attention/execute",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf/route.ts",
+    "urlPattern": "/api/dashboard/finance/publications/[publicationId]/versions/[versionNumber]/pdf",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/dashboard/quick-access/route.ts",
+    "urlPattern": "/api/dashboard/quick-access",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/dashboard/sporting-activity-detail/route.ts",
+    "urlPattern": "/api/dashboard/sporting-activity-detail",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/editorial/health/route.ts",
+    "urlPattern": "/api/editorial/health",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/editorial/overview/route.ts",
+    "urlPattern": "/api/editorial/overview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/facility-allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/events/[eventId]/facility-allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/facility-allocations/route.ts",
+    "urlPattern": "/api/events/[eventId]/facility-allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/operational-end/route.ts",
+    "urlPattern": "/api/events/[eventId]/operational-end",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/participation-audience/[entryId]/route.ts",
+    "urlPattern": "/api/events/[eventId]/participation-audience/[entryId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/participation-audience/route.ts",
+    "urlPattern": "/api/events/[eventId]/participation-audience",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/participation-request/route.ts",
+    "urlPattern": "/api/events/[eventId]/participation-request",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/planning-submit/route.ts",
+    "urlPattern": "/api/events/[eventId]/planning-submit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/planning-validate/route.ts",
+    "urlPattern": "/api/events/[eventId]/planning-validate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/[eventId]/route.ts",
+    "urlPattern": "/api/events/[eventId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/import/clubcorner/route.ts",
+    "urlPattern": "/api/events/import/clubcorner",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/import/csv/route.ts",
+    "urlPattern": "/api/events/import/csv",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/import/preview/route.ts",
+    "urlPattern": "/api/events/import/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/import/route.ts",
+    "urlPattern": "/api/events/import",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/events/route.ts",
+    "urlPattern": "/api/events",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/permanent/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/resources/[resourceId]/allocations/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]/resources/[resourceId]/allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/resources/[resourceId]/permanent/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]/resources/[resourceId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/resources/[resourceId]/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]/resources/[resourceId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/resources/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]/resources",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/[facilityId]/route.ts",
+    "urlPattern": "/api/facilities/[facilityId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/availability/route.ts",
+    "urlPattern": "/api/facilities/availability",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/facilities/route.ts",
+    "urlPattern": "/api/facilities",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/health/diag/route.ts",
+    "urlPattern": "/api/health/diag",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/health/route.ts",
+    "urlPattern": "/api/health",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/approve/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/approve",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/config/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/config",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/duplicate/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/move/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/publish/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/reject/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/reject",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/request-review/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/request-review",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/schedule/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/schedule",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/toggle/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/toggle",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/[id]/unpublish/route.ts",
+    "urlPattern": "/api/homepage-sections/[id]/unpublish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/preview/route.ts",
+    "urlPattern": "/api/homepage-sections/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/reorder/route.ts",
+    "urlPattern": "/api/homepage-sections/reorder",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/review-queue/route.ts",
+    "urlPattern": "/api/homepage-sections/review-queue",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/homepage-sections/route.ts",
+    "urlPattern": "/api/homepage-sections",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboard/[eventId]/route.ts",
+    "urlPattern": "/api/infoboard/[eventId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboard/display-settings/route.ts",
+    "urlPattern": "/api/infoboard/display-settings",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboards/[id]/anlageplan/background/route.ts",
+    "urlPattern": "/api/infoboards/[id]/anlageplan/background",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboards/[id]/duplicate/route.ts",
+    "urlPattern": "/api/infoboards/[id]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboards/[id]/route.ts",
+    "urlPattern": "/api/infoboards/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/infoboards/route.ts",
+    "urlPattern": "/api/infoboards",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/initiatives/[id]/permanent/route.ts",
+    "urlPattern": "/api/initiatives/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/initiatives/[id]/route.ts",
+    "urlPattern": "/api/initiatives/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/initiatives/[id]/stage/route.ts",
+    "urlPattern": "/api/initiatives/[id]/stage",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/initiatives/route.ts",
+    "urlPattern": "/api/initiatives",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/match/composer/commit/route.ts",
+    "urlPattern": "/api/match/composer/commit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/match/composer/drafts/[draftId]/route.ts",
+    "urlPattern": "/api/match/composer/drafts/[draftId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/match/composer/drafts/route.ts",
+    "urlPattern": "/api/match/composer/drafts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/match/governance/decisions/route.ts",
+    "urlPattern": "/api/match/governance/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/match-squad/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/match-squad",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/participation-reminder/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/participation-reminder",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/participation-request/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/participation-request",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/participation-response/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/participation-response",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/player-release-requests/[requestId]/assign/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/player-release-requests/[requestId]/assign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/player-release-requests/[requestId]/cancel/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/player-release-requests/[requestId]/cancel",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/released-players/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]/released-players",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/[matchId]/route.ts",
+    "urlPattern": "/api/matchcenter/[matchId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/bulk-wochenplan-visibility/route.ts",
+    "urlPattern": "/api/matchcenter/bulk-wochenplan-visibility",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/team-mappings/route.ts",
+    "urlPattern": "/api/matchcenter/team-mappings",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/[id]/permanent/route.ts",
+    "urlPattern": "/api/media/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/[id]/restore/route.ts",
+    "urlPattern": "/api/media/[id]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/[id]/route.ts",
+    "urlPattern": "/api/media/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/[id]/usage/route.ts",
+    "urlPattern": "/api/media/[id]/usage",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/folders/[id]/route.ts",
+    "urlPattern": "/api/media/folders/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/folders/route.ts",
+    "urlPattern": "/api/media/folders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/route.ts",
+    "urlPattern": "/api/media",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/tags/[id]/route.ts",
+    "urlPattern": "/api/media/tags/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/media/tags/route.ts",
+    "urlPattern": "/api/media/tags",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/actions/[actionId]/route.ts",
+    "urlPattern": "/api/meetings/[id]/actions/[actionId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/actions/route.ts",
+    "urlPattern": "/api/meetings/[id]/actions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/agenda/[itemId]/route.ts",
+    "urlPattern": "/api/meetings/[id]/agenda/[itemId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/agenda/route.ts",
+    "urlPattern": "/api/meetings/[id]/agenda",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/decisions/[decisionId]/route.ts",
+    "urlPattern": "/api/meetings/[id]/decisions/[decisionId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/decisions/route.ts",
+    "urlPattern": "/api/meetings/[id]/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/participants/[participantId]/route.ts",
+    "urlPattern": "/api/meetings/[id]/participants/[participantId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/participants/route.ts",
+    "urlPattern": "/api/meetings/[id]/participants",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/permanent/route.ts",
+    "urlPattern": "/api/meetings/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/route.ts",
+    "urlPattern": "/api/meetings/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/stage/route.ts",
+    "urlPattern": "/api/meetings/[id]/stage",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/route.ts",
+    "urlPattern": "/api/meetings",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/news/[id]/media/route.ts",
+    "urlPattern": "/api/news/[id]/media",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/news/[id]/publish/route.ts",
+    "urlPattern": "/api/news/[id]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/news/[id]/route.ts",
+    "urlPattern": "/api/news/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/news/route.ts",
+    "urlPattern": "/api/news",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/notifications/[notificationId]/read/route.ts",
+    "urlPattern": "/api/notifications/[notificationId]/read",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/notifications/mark-all-read/route.ts",
+    "urlPattern": "/api/notifications/mark-all-read",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/notifications/preferences/route.ts",
+    "urlPattern": "/api/notifications/preferences",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/notifications/summary/route.ts",
+    "urlPattern": "/api/notifications/summary",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/ops/club-directory-02c-sfv-consolidation-execute/route.ts",
+    "urlPattern": "/api/ops/club-directory-02c-sfv-consolidation-execute",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/ops/club-directory-02c-sfv-consolidation/route.ts",
+    "urlPattern": "/api/ops/club-directory-02c-sfv-consolidation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/memberships/[membershipId]/route.ts",
+    "urlPattern": "/api/org-units/[id]/memberships/[membershipId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/memberships/history/route.ts",
+    "urlPattern": "/api/org-units/[id]/memberships/history",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/memberships/route.ts",
+    "urlPattern": "/api/org-units/[id]/memberships",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/permanent/route.ts",
+    "urlPattern": "/api/org-units/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/responsibilities/[userRoleId]/route.ts",
+    "urlPattern": "/api/org-units/[id]/responsibilities/[userRoleId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/responsibilities/route.ts",
+    "urlPattern": "/api/org-units/[id]/responsibilities",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/restore/route.ts",
+    "urlPattern": "/api/org-units/[id]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/route.ts",
+    "urlPattern": "/api/org-units/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/[id]/sort/route.ts",
+    "urlPattern": "/api/org-units/[id]/sort",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/org-units/route.ts",
+    "urlPattern": "/api/org-units",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/participation/my/requests/route.ts",
+    "urlPattern": "/api/participation/my/requests",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/participation/my/responses/route.ts",
+    "urlPattern": "/api/participation/my/responses",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/assessments/[assessmentId]/benchmarks/route.ts",
+    "urlPattern": "/api/people/[id]/assessments/[assessmentId]/benchmarks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/assessments/[assessmentId]/route.ts",
+    "urlPattern": "/api/people/[id]/assessments/[assessmentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/assessments/route.ts",
+    "urlPattern": "/api/people/[id]/assessments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/assignments/[assignmentId]/route.ts",
+    "urlPattern": "/api/people/[id]/assignments/[assignmentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/assignments/route.ts",
+    "urlPattern": "/api/people/[id]/assignments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/documents/[documentId]/download/route.ts",
+    "urlPattern": "/api/people/[id]/documents/[documentId]/download",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/documents/[documentId]/route.ts",
+    "urlPattern": "/api/people/[id]/documents/[documentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/documents/route.ts",
+    "urlPattern": "/api/people/[id]/documents",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/emergency-contacts/[contactId]/route.ts",
+    "urlPattern": "/api/people/[id]/emergency-contacts/[contactId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/emergency-contacts/route.ts",
+    "urlPattern": "/api/people/[id]/emergency-contacts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/guardians/[relationshipId]/route.ts",
+    "urlPattern": "/api/people/[id]/guardians/[relationshipId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/guardians/route.ts",
+    "urlPattern": "/api/people/[id]/guardians",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/link-user/route.ts",
+    "urlPattern": "/api/people/[id]/link-user",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/memberships/[membershipId]/route.ts",
+    "urlPattern": "/api/people/[id]/memberships/[membershipId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/memberships/route.ts",
+    "urlPattern": "/api/people/[id]/memberships",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/permanent/route.ts",
+    "urlPattern": "/api/people/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/profile-image/route.ts",
+    "urlPattern": "/api/people/[id]/profile-image",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/route.ts",
+    "urlPattern": "/api/people/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/squad-memberships/[squadMemberId]/route.ts",
+    "urlPattern": "/api/people/[id]/squad-memberships/[squadMemberId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/[id]/trainer-memberships/[trainerMemberId]/route.ts",
+    "urlPattern": "/api/people/[id]/trainer-memberships/[trainerMemberId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/criteria/[id]/route.ts",
+    "urlPattern": "/api/people/criteria/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/criteria/route.ts",
+    "urlPattern": "/api/people/criteria",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/linkable-users/route.ts",
+    "urlPattern": "/api/people/linkable-users",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/route.ts",
+    "urlPattern": "/api/people",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/people/search/route.ts",
+    "urlPattern": "/api/people/search",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning-hub/activity-rescheduling/validate/route.ts",
+    "urlPattern": "/api/planning-hub/activity-rescheduling/validate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning-hub/facility-groups/route.ts",
+    "urlPattern": "/api/planning-hub/facility-groups",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning-hub/planner-revalidate/route.ts",
+    "urlPattern": "/api/planning-hub/planner-revalidate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning-hub/resource-manipulation/validate/route.ts",
+    "urlPattern": "/api/planning-hub/resource-manipulation/validate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning/requirement-links/[referenceId]/route.ts",
+    "urlPattern": "/api/planning/requirement-links/[referenceId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning/requirement-links/route.ts",
+    "urlPattern": "/api/planning/requirement-links",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/planning/writable-teams/route.ts",
+    "urlPattern": "/api/planning/writable-teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/bank-accounts/[accountId]/route.ts",
+    "urlPattern": "/api/platform/billing/bank-accounts/[accountId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/bank-accounts/route.ts",
+    "urlPattern": "/api/platform/billing/bank-accounts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/communications-operations/route.ts",
+    "urlPattern": "/api/platform/billing/communications-operations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/contracts/[contractKey]/route.ts",
+    "urlPattern": "/api/platform/billing/contracts/[contractKey]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/contracts/route.ts",
+    "urlPattern": "/api/platform/billing/contracts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/customers/[customerKey]/profiles/route.ts",
+    "urlPattern": "/api/platform/billing/customers/[customerKey]/profiles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/customers/[customerKey]/route.ts",
+    "urlPattern": "/api/platform/billing/customers/[customerKey]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/customers/[customerKey]/tenants/route.ts",
+    "urlPattern": "/api/platform/billing/customers/[customerKey]/tenants",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/customers/route.ts",
+    "urlPattern": "/api/platform/billing/customers",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/delivery-email-identity/route.ts",
+    "urlPattern": "/api/platform/billing/delivery-email-identity",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/inbound-unresolved/[messageId]/resolve/route.ts",
+    "urlPattern": "/api/platform/billing/inbound-unresolved/[messageId]/resolve",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/communications/attachments/[attachmentId]/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/communications/attachments/[attachmentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/communications/attachments/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/communications/attachments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/communications/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/communications",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/deliveries/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/deliveries",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/delivery-email-preview/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/delivery-email-preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/finalize/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/finalize",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/payment-instruction/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/payment-instruction",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/payments/[paymentKey]/reverse/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/payments/[paymentKey]/reverse",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/payments/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/payments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/pdf/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/pdf",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/send/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/[invoiceKey]/test-delivery/route.ts",
+    "urlPattern": "/api/platform/billing/invoices/[invoiceKey]/test-delivery",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/invoices/route.ts",
+    "urlPattern": "/api/platform/billing/invoices",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/[key]/camt054-reconciliation/eligible-invoices/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities/[key]/camt054-reconciliation/eligible-invoices",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/[key]/camt054-reconciliation/imports/[importKey]/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities/[key]/camt054-reconciliation/imports/[importKey]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/[key]/camt054-reconciliation/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities/[key]/camt054-reconciliation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/[key]/camt054-reconciliation/transactions/[transactionKey]/assign/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities/[key]/camt054-reconciliation/transactions/[transactionKey]/assign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/[key]/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities/[key]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/legal-entities/route.ts",
+    "urlPattern": "/api/platform/billing/legal-entities",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/recurring-runs/route.ts",
+    "urlPattern": "/api/platform/billing/recurring-runs",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/tenants/[tenantKey]/account/route.ts",
+    "urlPattern": "/api/platform/billing/tenants/[tenantKey]/account",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/tenants/[tenantKey]/invoices/[invoiceId]/route.ts",
+    "urlPattern": "/api/platform/billing/tenants/[tenantKey]/invoices/[invoiceId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/tenants/[tenantKey]/invoices/route.ts",
+    "urlPattern": "/api/platform/billing/tenants/[tenantKey]/invoices",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/platform/billing/tenants/[tenantKey]/summary/route.ts",
+    "urlPattern": "/api/platform/billing/tenants/[tenantKey]/summary",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/provider-mapping/[mappingId]/route.ts",
+    "urlPattern": "/api/provider-mapping/[mappingId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/provider-mapping/providers/route.ts",
+    "urlPattern": "/api/provider-mapping/providers",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/provider-mapping/route.ts",
+    "urlPattern": "/api/provider-mapping",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/provider-mapping/suggest/route.ts",
+    "urlPattern": "/api/provider-mapping/suggest",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/registrations/route.ts",
+    "urlPattern": "/api/public/[tenant]/registrations",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/club-events/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/club-events",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/components/[id]/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/components/[id]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/design-system/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/design-system",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/events/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/events",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/homepage/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/homepage",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/matches/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/matches",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/media/[id]/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/media/[id]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/navigation/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/navigation",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/news/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/news",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/pages/[slug]/layout/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/pages/[slug]/layout",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/sponsors/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/sponsors",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/teams/[slug]/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/teams/[slug]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/teams/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/teams",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/tournaments/[tournamentId]/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/tournaments/[tournamentId]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/tournaments/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/tournaments",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/trainings/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/trainings",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/[tenant]/website/weekplan/route.ts",
+    "urlPattern": "/api/public/[tenant]/website/weekplan",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/events/route.ts",
+    "urlPattern": "/api/public/events",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/infoboard/route.ts",
+    "urlPattern": "/api/public/infoboard",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/infoboard/screen-1/route.ts",
+    "urlPattern": "/api/public/infoboard/screen-1",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/infoboard/transport/route.ts",
+    "urlPattern": "/api/public/infoboard/transport",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/infoboard/weather/route.ts",
+    "urlPattern": "/api/public/infoboard/weather",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/v1/website/news/[slug]/route.ts",
+    "urlPattern": "/api/public/v1/website/news/[slug]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/v1/website/news/route.ts",
+    "urlPattern": "/api/public/v1/website/news",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/v1/website/pages/[slug]/route.ts",
+    "urlPattern": "/api/public/v1/website/pages/[slug]",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/public/wochenplan/route.ts",
+    "urlPattern": "/api/public/wochenplan",
+    "audience": "PUBLIC_API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/publishing/overview/route.ts",
+    "urlPattern": "/api/publishing/overview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/push/devices/[registrationId]/route.ts",
+    "urlPattern": "/api/push/devices/[registrationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/push/devices/route.ts",
+    "urlPattern": "/api/push/devices",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/push/vapid-public-key/route.ts",
+    "urlPattern": "/api/push/vapid-public-key",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/duplicate/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/publish/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/revisions/[revId]/restore/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/revisions/[revId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/revisions/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/revisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/route.ts",
+    "urlPattern": "/api/reusable-components/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/unpublish/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/unpublish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/usage/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/usage",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/[id]/workflow/route.ts",
+    "urlPattern": "/api/reusable-components/[id]/workflow",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/route.ts",
+    "urlPattern": "/api/reusable-components",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/reusable-components/usage-counts/route.ts",
+    "urlPattern": "/api/reusable-components/usage-counts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/roles/[id]/permanent/route.ts",
+    "urlPattern": "/api/roles/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/roles/[id]/permissions/route.ts",
+    "urlPattern": "/api/roles/[id]/permissions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/roles/[id]/route.ts",
+    "urlPattern": "/api/roles/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/roles/route.ts",
+    "urlPattern": "/api/roles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/sce/selector/discover/route.ts",
+    "urlPattern": "/api/sce/selector/discover",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/seasons/[seasonId]/activate/route.ts",
+    "urlPattern": "/api/seasons/[seasonId]/activate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/seasons/[seasonId]/route.ts",
+    "urlPattern": "/api/seasons/[seasonId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/seasons/[seasonId]/team-rollover/route.ts",
+    "urlPattern": "/api/seasons/[seasonId]/team-rollover",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/seasons/route.ts",
+    "urlPattern": "/api/seasons",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/security/csp-report/route.ts",
+    "urlPattern": "/api/security/csp-report",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/share/finance/publication/[token]/pdf/route.ts",
+    "urlPattern": "/api/share/finance/publication/[token]/pdf",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/[id]/duplicate/route.ts",
+    "urlPattern": "/api/target-groups/[id]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/[id]/members/route.ts",
+    "urlPattern": "/api/target-groups/[id]/members",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/[id]/permanent/route.ts",
+    "urlPattern": "/api/target-groups/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/[id]/resolve/route.ts",
+    "urlPattern": "/api/target-groups/[id]/resolve",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/[id]/route.ts",
+    "urlPattern": "/api/target-groups/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/target-groups/route.ts",
+    "urlPattern": "/api/target-groups",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/[id]/links/route.ts",
+    "urlPattern": "/api/targets/[id]/links",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/[id]/metrics/[metricId]/datapoints/route.ts",
+    "urlPattern": "/api/targets/[id]/metrics/[metricId]/datapoints",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/[id]/permanent/route.ts",
+    "urlPattern": "/api/targets/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/[id]/route.ts",
+    "urlPattern": "/api/targets/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/[id]/stage/route.ts",
+    "urlPattern": "/api/targets/[id]/stage",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/targets/route.ts",
+    "urlPattern": "/api/targets",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tasks/context-options/route.ts",
+    "urlPattern": "/api/tasks/context-options",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/team-seasons/[teamSeasonId]/route.ts",
+    "urlPattern": "/api/team-seasons/[teamSeasonId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/archive/route.ts",
+    "urlPattern": "/api/teams/[teamId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/acknowledge/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/acknowledge",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/engagement/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/engagement",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/close/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/close",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/create-event/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/create-event",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/recipients/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/recipients",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/remind-non-responders/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/remind-non-responders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/response/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/response",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/poll/winner/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/poll/winner",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/reactions/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/reactions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/claim/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/claim",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/claimants/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/claimants",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/close/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/close",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/remind-non-responders/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/remind-non-responders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/remind-open-capacity/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/remind-open-capacity",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/status/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/status",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/[communicationId]/request/unclaim/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/[communicationId]/request/unclaim",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/alerts/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/alerts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/announcements/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/announcements",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/mark-read/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/mark-read",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/messages/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/messages",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/polls/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/polls",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/requests/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/requests",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/communications/unread-count/route.ts",
+    "urlPattern": "/api/teams/[teamId]/communications/unread-count",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/documents/[documentId]/download/route.ts",
+    "urlPattern": "/api/teams/[teamId]/documents/[documentId]/download",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/documents/[documentId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/documents/[documentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/documents/route.ts",
+    "urlPattern": "/api/teams/[teamId]/documents",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/events/communication/preview/route.ts",
+    "urlPattern": "/api/teams/[teamId]/events/communication/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/events/communication/remind-no-response/route.ts",
+    "urlPattern": "/api/teams/[teamId]/events/communication/remind-no-response",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/events/communication/send/route.ts",
+    "urlPattern": "/api/teams/[teamId]/events/communication/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/photo/route.ts",
+    "urlPattern": "/api/teams/[teamId]/photo",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/restore/route.ts",
+    "urlPattern": "/api/teams/[teamId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/events/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/events",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/events/sheet/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/events/sheet",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/players/[personId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/players/[personId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/records/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/records",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/attendance",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/competition/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/competition",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/inbound-player-releases/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/inbound-player-releases",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/org-units/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/org-units",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation/events/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation/events",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation/responses/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation/responses",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/participation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/permanent/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-release-requests/[requestId]/decide/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-release-requests/[requestId]/decide",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-release-requests/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-release-requests",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/[releaseId]/revoke/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/[releaseId]/revoke",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/[releaseId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/[releaseId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/plan/candidates/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/plan/candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/plan/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/plan",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/target-teams/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases/target-teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/publication/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/publication",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/roster-onboarding/person-context/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/roster-onboarding/person-context",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/squad-members/[squadMemberId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/squad-members/[squadMemberId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/squad-members/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/squad-members",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/trainer-members/[trainerMemberId]/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/trainer-members/[trainerMemberId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/[teamSeasonId]/trainer-members/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons/[teamSeasonId]/trainer-members",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/[teamId]/team-seasons/route.ts",
+    "urlPattern": "/api/teams/[teamId]/team-seasons",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/register-eligible-data/route.ts",
+    "urlPattern": "/api/teams/register-eligible-data",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/register/route.ts",
+    "urlPattern": "/api/teams/register",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/teams/route.ts",
+    "urlPattern": "/api/teams",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/templates/[id]/preview/route.ts",
+    "urlPattern": "/api/templates/[id]/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/templates/[id]/route.ts",
+    "urlPattern": "/api/templates/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/templates/route.ts",
+    "urlPattern": "/api/templates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/dressing-room-occupancy-presets/route.ts",
+    "urlPattern": "/api/tenant/dressing-room-occupancy-presets",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/effective-access/preview/route.ts",
+    "urlPattern": "/api/tenant/effective-access/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/effective-access/route.ts",
+    "urlPattern": "/api/tenant/effective-access",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/match-operational-policy/route.ts",
+    "urlPattern": "/api/tenant/match-operational-policy",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/members/route.ts",
+    "urlPattern": "/api/tenant/members",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/operational-duration-policy/route.ts",
+    "urlPattern": "/api/tenant/operational-duration-policy",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/roles/[id]/members/route.ts",
+    "urlPattern": "/api/tenant/roles/[id]/members",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/roles/[id]/permissions/route.ts",
+    "urlPattern": "/api/tenant/roles/[id]/permissions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/roles/[id]/route.ts",
+    "urlPattern": "/api/tenant/roles/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant/roles/route.ts",
+    "urlPattern": "/api/tenant/roles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/attachments/[attachmentId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/attachments/[attachmentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/attachments/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/attachments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/mention-candidates/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/mention-candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/comments/[commentId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/comments/[commentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/comments/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/comments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts/[draftId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts/[draftId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts/[draftId]/send/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts/[draftId]/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/drafts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages/[messageId]/retry/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages/[messageId]/retry",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages/email/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages/email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads/[threadId]/messages",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/communications/threads/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/communications/threads",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/logo/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/logo",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/permanent/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/[registrationId]/contact-email/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations/[registrationId]/contact-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/[registrationId]/create-person/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations/[registrationId]/create-person",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/[registrationId]/permanent/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations/[registrationId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/[registrationId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations/[registrationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/[registrationId]/timeline/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations/[registrationId]/timeline",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/registrations/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/registrations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/[entryId]/permanent/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list/[entryId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/[entryId]/place/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list/[entryId]/place",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/[entryId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list/[entryId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/[entryId]/timeline/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list/[entryId]/timeline",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/waiting-list/scope-options/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/waiting-list/scope-options",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/route.ts",
+    "urlPattern": "/api/tenants",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournament/composer/commit/route.ts",
+    "urlPattern": "/api/tournament/composer/commit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournament/composer/drafts/[draftId]/route.ts",
+    "urlPattern": "/api/tournament/composer/drafts/[draftId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournament/composer/drafts/route.ts",
+    "urlPattern": "/api/tournament/composer/drafts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournament/governance/decisions/route.ts",
+    "urlPattern": "/api/tournament/governance/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournamentcenter/[tournamentId]/activity-squad/route.ts",
+    "urlPattern": "/api/tournamentcenter/[tournamentId]/activity-squad",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournamentcenter/[tournamentId]/player-release-requests/[requestId]/assign/route.ts",
+    "urlPattern": "/api/tournamentcenter/[tournamentId]/player-release-requests/[requestId]/assign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournamentcenter/[tournamentId]/player-release-requests/[requestId]/cancel/route.ts",
+    "urlPattern": "/api/tournamentcenter/[tournamentId]/player-release-requests/[requestId]/cancel",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournamentcenter/[tournamentId]/released-players/route.ts",
+    "urlPattern": "/api/tournamentcenter/[tournamentId]/released-players",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/[participantId]/dressing-room-allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants/[participantId]/dressing-room-allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/[participantId]/dressing-room-allocations/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants/[participantId]/dressing-room-allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/[participantId]/playing-units/[unitId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants/[participantId]/playing-units/[unitId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/[participantId]/playing-units/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants/[participantId]/playing-units",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/[participantId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants/[participantId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participants/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participants",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/participation-request/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/participation-request",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/pitches/[pitchId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/pitches/[pitchId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/apply-recommended-timing/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/apply-recommended-timing",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/breaks/[breakId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/breaks/[breakId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/breaks/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/breaks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/fixture-result/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/fixture-result",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/generate/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/generate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/instantiate-template/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/instantiate-template",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/lock/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/lock",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/manual-move/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/manual-move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/pitches/[pitchId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/pitches/[pitchId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/programme-templates/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/programme-templates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/regenerate/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/regenerate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/scheduling-config/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/scheduling-config",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/setup/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/setup",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/planung/spielplan/pdf/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/planung/spielplan/pdf",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/resource-allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/resource-allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/resource-allocations/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]/resource-allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tournaments/[tournamentId]/route.ts",
+    "urlPattern": "/api/tournaments/[tournamentId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/allocations/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/participation-request/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/participation-request",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/permanent/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/restore/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/submit/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/submit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/[seriesId]/validate/route.ts",
+    "urlPattern": "/api/training-series/[seriesId]/validate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-series/route.ts",
+    "urlPattern": "/api/training-series",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]/allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/allocations/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]/allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/dressing-room-occupancy/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]/dressing-room-occupancy",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/participation-request/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]/participation-request",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/reschedule/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]/reschedule",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training-sessions/[sessionId]/route.ts",
+    "urlPattern": "/api/training-sessions/[sessionId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training/composer/commit/route.ts",
+    "urlPattern": "/api/training/composer/commit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training/composer/drafts/[draftId]/route.ts",
+    "urlPattern": "/api/training/composer/drafts/[draftId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training/composer/drafts/route.ts",
+    "urlPattern": "/api/training/composer/drafts",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training/governance/decisions/route.ts",
+    "urlPattern": "/api/training/governance/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/training/planning-grid/reassign/route.ts",
+    "urlPattern": "/api/training/planning-grid/reassign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/[userId]/impersonate/route.ts",
+    "urlPattern": "/api/users/[userId]/impersonate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/[userId]/reset-password/route.ts",
+    "urlPattern": "/api/users/[userId]/reset-password",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/[userId]/roles/route.ts",
+    "urlPattern": "/api/users/[userId]/roles",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/[userId]/route.ts",
+    "urlPattern": "/api/users/[userId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/create/route.ts",
+    "urlPattern": "/api/users/create",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/route.ts",
+    "urlPattern": "/api/users",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/users/select/route.ts",
+    "urlPattern": "/api/users/select",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/webhooks/resend/inbound/route.ts",
+    "urlPattern": "/api/webhooks/resend/inbound",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-design-system/route.ts",
+    "urlPattern": "/api/website-design-system",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-navigation/[id]/move/route.ts",
+    "urlPattern": "/api/website-navigation/[id]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-navigation/[id]/route.ts",
+    "urlPattern": "/api/website-navigation/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-navigation/[id]/toggle/route.ts",
+    "urlPattern": "/api/website-navigation/[id]/toggle",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-navigation/route.ts",
+    "urlPattern": "/api/website-navigation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/apply-template/route.ts",
+    "urlPattern": "/api/website-pages/[id]/apply-template",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/preview/route.ts",
+    "urlPattern": "/api/website-pages/[id]/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/publish/route.ts",
+    "urlPattern": "/api/website-pages/[id]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/route.ts",
+    "urlPattern": "/api/website-pages/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/duplicate/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/move/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/revisions/[revId]/restore/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/revisions/[revId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/revisions/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/revisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/toggle/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/toggle",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/[sectionId]/workflow/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/[sectionId]/workflow",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/reorder/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections/reorder",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/[id]/sections/route.ts",
+    "urlPattern": "/api/website-pages/[id]/sections",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/route.ts",
+    "urlPattern": "/api/website-pages",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-pages/templates/route.ts",
+    "urlPattern": "/api/website-pages/templates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/website-settings/route.ts",
+    "urlPattern": "/api/website-settings",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/weekplanner/plans/[planId]/allocations/[allocationId]/route.ts",
+    "urlPattern": "/api/weekplanner/plans/[planId]/allocations/[allocationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/weekplanner/plans/[planId]/allocations/route.ts",
+    "urlPattern": "/api/weekplanner/plans/[planId]/allocations",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/weekplanner/plans/[planId]/route.ts",
+    "urlPattern": "/api/weekplanner/plans/[planId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/weekplanner/plans/[planId]/time-overrides/route.ts",
+    "urlPattern": "/api/weekplanner/plans/[planId]/time-overrides",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/weekplanner/plans/route.ts",
+    "urlPattern": "/api/weekplanner/plans",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/wochenplan/[eventId]/allocation/route.ts",
+    "urlPattern": "/api/wochenplan/[eventId]/allocation",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/wochenplan/plans/[planId]/materialize/route.ts",
+    "urlPattern": "/api/wochenplan/plans/[planId]/materialize",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/wochenplan/plans/[planId]/route.ts",
+    "urlPattern": "/api/wochenplan/plans/[planId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/wochenplan/plans/route.ts",
+    "urlPattern": "/api/wochenplan/plans",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/wochenplan/publish/route.ts",
+    "urlPattern": "/api/wochenplan/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/access/audiences/route.ts",
+    "urlPattern": "/api/workspace/access/audiences",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/audit/route.ts",
+    "urlPattern": "/api/workspace/audit",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/access-summary/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/access-summary",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/access/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/access",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/archive/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/download/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/download",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/move-impact/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/move-impact",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/move/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/permanent/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/preview/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/preview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/rename/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/rename",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/restore-trash/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/restore-trash",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/restore/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/trash/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/trash",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/versions/[versionId]/restore/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/versions/[versionId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/[documentId]/versions/route.ts",
+    "urlPattern": "/api/workspace/documents/[documentId]/versions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/documents/route.ts",
+    "urlPattern": "/api/workspace/documents",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/favorites/route.ts",
+    "urlPattern": "/api/workspace/favorites",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/folders/[folderId]/access-summary/route.ts",
+    "urlPattern": "/api/workspace/folders/[folderId]/access-summary",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/folders/[folderId]/access/route.ts",
+    "urlPattern": "/api/workspace/folders/[folderId]/access",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/folders/[folderId]/move-impact/route.ts",
+    "urlPattern": "/api/workspace/folders/[folderId]/move-impact",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/folders/route.ts",
+    "urlPattern": "/api/workspace/folders",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/background-jobs/[jobId]/requeue/route.ts",
+    "urlPattern": "/api/workspace/governance/background-jobs/[jobId]/requeue",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/background-jobs/health/route.ts",
+    "urlPattern": "/api/workspace/governance/background-jobs/health",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/background-jobs/legacy-scan-backfill/route.ts",
+    "urlPattern": "/api/workspace/governance/background-jobs/legacy-scan-backfill",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/break-glass/activate/route.ts",
+    "urlPattern": "/api/workspace/governance/break-glass/activate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/break-glass/active/route.ts",
+    "urlPattern": "/api/workspace/governance/break-glass/active",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/break-glass/end/route.ts",
+    "urlPattern": "/api/workspace/governance/break-glass/end",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/break-glass/revoke/route.ts",
+    "urlPattern": "/api/workspace/governance/break-glass/revoke",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/break-glass/validate-target/route.ts",
+    "urlPattern": "/api/workspace/governance/break-glass/validate-target",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/holds/[holdId]/release/route.ts",
+    "urlPattern": "/api/workspace/governance/holds/[holdId]/release",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/governance/holds/route.ts",
+    "urlPattern": "/api/workspace/governance/holds",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/lifecycle/archived/route.ts",
+    "urlPattern": "/api/workspace/lifecycle/archived",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/lifecycle/trash/route.ts",
+    "urlPattern": "/api/workspace/lifecycle/trash",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/recent/route.ts",
+    "urlPattern": "/api/workspace/recent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/workspace/subtree-operations/[operationId]/route.ts",
+    "urlPattern": "/api/workspace/subtree-operations/[operationId]",
+    "audience": "API"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/layout.tsx",
+    "urlPattern": "/infoboard",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/preview/screen-1-1event/layout.tsx",
+    "urlPattern": "/infoboard/preview/screen-1-1event",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/preview/screen-1-2events/layout.tsx",
+    "urlPattern": "/infoboard/preview/screen-1-2events",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/preview/screen-1-theme-check/layout.tsx",
+    "urlPattern": "/infoboard/preview/screen-1-theme-check",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/preview/screen-1/layout.tsx",
+    "urlPattern": "/infoboard/preview/screen-1",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/preview/screen-2/layout.tsx",
+    "urlPattern": "/infoboard/preview/screen-2",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/screen-1-preview/layout.tsx",
+    "urlPattern": "/infoboard/screen-1-preview",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/screen-1/layout.tsx",
+    "urlPattern": "/infoboard/screen-1",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/infoboard/screen-2/layout.tsx",
+    "urlPattern": "/infoboard/screen-2",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/layout.tsx",
+    "urlPattern": "/",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/sce-preview/layout.tsx",
+    "urlPattern": "/sce-preview",
+    "audience": "FRAMEWORK"
+  }
+]
