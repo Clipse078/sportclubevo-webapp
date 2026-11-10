@@ -12,10 +12,17 @@ const CANONICAL_MARKERS = [
   "SceWorkspaceChrome",
   "ListPagePattern",
   "DetailPagePattern",
+  "FormPagePattern",
   "FinanceWorkspaceTabs",
   "SceContextTabs",
 ];
-const HEADER_MARKERS = ["ScePageHeader", "SceWorkspaceChrome", "ListPagePattern", "DetailPagePattern"];
+const HEADER_MARKERS = [
+  "ScePageHeader",
+  "SceWorkspaceChrome",
+  "ListPagePattern",
+  "DetailPagePattern",
+  "FormPagePattern",
+];
 const TAB_MARKERS = ["SceContextTabs", "FinanceWorkspaceTabs"];
 
 function walkPageFiles(dir, acc = []) {
@@ -45,7 +52,39 @@ function fileRouteFromPath(absPath) {
   return `/${segments.join("/")}`.replace(/\/+/g, "/");
 }
 
+function stripSourceComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
+/**
+ * Immediate redirect aliases never paint UI. Layout chrome on those files
+ * must not count as a visual/canonical migration.
+ */
+function isImmediateRedirectPage(source) {
+  const src = stripSourceComments(source);
+  if (!/\bredirect\s*\(/.test(src)) {
+    return false;
+  }
+  if (/<[A-Z][A-Za-z0-9.]*/.test(src)) {
+    return false;
+  }
+  if (/<(div|main|section|form|span|p|h[1-6]|nav|header|article)\b/.test(src)) {
+    return false;
+  }
+  return true;
+}
+
+function redirectAliasAction(source) {
+  const match = source.match(/redirect\(\s*(?:`([^`]*)`|'([^']*)'|"([^"]*)")/);
+  const raw = match?.[1] ?? match?.[2] ?? match?.[3] ?? "";
+  const destination = raw.replace(/\$\{[^}]+\}/g, ":param") || "dynamic";
+  return `redirect alias → ${destination} (not a visual surface)`;
+}
+
 function classifyArchitecture(source, layoutSources) {
+  if (isImmediateRedirectPage(source)) {
+    return "legacy";
+  }
   const blob = [source, ...layoutSources].join("\n");
   if (CANONICAL_MARKERS.some((m) => blob.includes(m))) {
     return "canonical";
@@ -60,7 +99,10 @@ function boolMarker(blob, markers) {
   return markers.some((m) => blob.includes(m));
 }
 
-function inferPriority(architecture, route) {
+function inferPriority(architecture, route, redirectAlias) {
+  if (redirectAlias) {
+    return "Low";
+  }
   if (architecture === "legacy" && route.startsWith("/dashboard/finance")) {
     return "High";
   }
@@ -76,7 +118,10 @@ function inferPriority(architecture, route) {
   return "Low";
 }
 
-function inferAction(architecture, headerAligned, tabsAligned) {
+function inferAction(architecture, headerAligned, tabsAligned, source) {
+  if (isImmediateRedirectPage(source)) {
+    return redirectAliasAction(source);
+  }
   if (architecture === "canonical" && headerAligned && tabsAligned) {
     return "none";
   }
@@ -113,12 +158,14 @@ function scan() {
   for (const file of files.sort()) {
     const source = readFileSync(file, "utf8");
     const layouts = readLayoutChain(file);
-    const blob = [source, ...layouts].join("\n");
+    const redirectAlias = isImmediateRedirectPage(source);
+    const blob = redirectAlias ? source : [source, ...layouts].join("\n");
     const route = fileRouteFromPath(file);
     const architecture = classifyArchitecture(source, layouts);
-    const headerAligned = boolMarker(blob, HEADER_MARKERS);
-    const tabsAligned = boolMarker(blob, TAB_MARKERS);
+    const headerAligned = redirectAlias ? false : boolMarker(blob, HEADER_MARKERS);
+    const tabsAligned = redirectAlias ? false : boolMarker(blob, TAB_MARKERS);
     const relativeSource = relative(ROOT, file).replace(/\\/g, "/");
+    const priority = inferPriority(architecture, route, redirectAlias);
 
     inventory.push({
       route,
@@ -129,13 +176,8 @@ function scan() {
       typographyConsistent: architecture !== "legacy",
       colorsContrastRisk: architecture === "legacy",
       interactionsLegacy: blob.includes("Dialog") && !blob.includes("contextualPanel"),
-      priority:
-        inferPriority(architecture, route) === "High"
-          ? "High"
-          : inferPriority(architecture, route) === "Medium"
-            ? "Medium"
-            : "Low",
-      action: inferAction(architecture, headerAligned, tabsAligned),
+      priority,
+      action: inferAction(architecture, headerAligned, tabsAligned, source),
     });
   }
 

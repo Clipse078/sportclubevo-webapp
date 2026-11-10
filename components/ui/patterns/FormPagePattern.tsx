@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { PageBreadcrumbs, PageHeader } from "@/components/ui/page";
 import type { BreadcrumbItem } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { ActionBar } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -52,7 +52,7 @@ export type FormPagePatternProps = {
  * FormPagePattern
  *
  * Reusable structural shell for create / edit form pages.
- * Composes: PageBreadcrumbs · PageHeader · ActionBar · FormSection (children)
+ * Composes: SceWorkspaceChrome · ActionBar · FormSection (children)
  *
  * Does NOT include PageShell — callers wrap with <PageShell fullWidth> when
  * using inside the admin layout.
@@ -99,24 +99,20 @@ export function FormPagePattern({
   const hasBothActions = !!(primaryAction && cancelAction);
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <PageBreadcrumbs items={breadcrumbs} />
-      )}
-
-      <PageHeader
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-      />
-
+    <SceWorkspaceChrome
+      className={cn("flex flex-col", className)}
+      breadcrumbs={breadcrumbs}
+      header={{
+        eyebrow,
+        title,
+        description,
+      }}
+    >
       <div className="flex flex-col">{children}</div>
 
-      {validationSummary && (
-        <div className="mt-4">{validationSummary}</div>
-      )}
+      {validationSummary ? <div className="mt-4">{validationSummary}</div> : null}
 
-      {hasActions && (
+      {hasActions ? (
         <ActionBar
           sticky={stickyActions}
           align={hasBothActions ? "between" : "right"}
@@ -125,7 +121,7 @@ export function FormPagePattern({
           {cancelAction}
           {primaryAction}
         </ActionBar>
-      )}
-    </div>
+      ) : null}
+    </SceWorkspaceChrome>
   );
 }

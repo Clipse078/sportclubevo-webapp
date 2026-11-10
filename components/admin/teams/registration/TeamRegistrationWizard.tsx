@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight } from "lucide-react";
 import { ApprovalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 import { Button, ValidationSummary } from "@/components/ui";
-import { PageBreadcrumbs, PageHeader } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { useToast } from "@/hooks/use-toast";
 
 import WizardStepIndicator from "./WizardStepIndicator";
@@ -451,27 +451,21 @@ export default function TeamRegistrationWizard() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col">
-      {/* Breadcrumbs */}
-      <PageBreadcrumbs
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Teams", href: "/dashboard/teams" },
-          { label: "Team registrieren" },
-        ]}
-      />
-
-      {/* Page header */}
-      <PageHeader
-        eyebrow="Teams"
-        title={showReview ? "Team prüfen" : "Team registrieren"}
-        description={
-          showReview
-            ? "Prüfe deine Angaben vor der Registrierung."
-            : stepDescriptions[currentStep]
-        }
-      />
-
+    <SceWorkspaceChrome
+      className="flex flex-col"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Teams", href: "/dashboard/teams" },
+        { label: "Team registrieren" },
+      ]}
+      header={{
+        eyebrow: "Teams",
+        title: showReview ? "Team prüfen" : "Team registrieren",
+        description: showReview
+          ? "Prüfe deine Angaben vor der Registrierung."
+          : stepDescriptions[currentStep],
+      }}
+    >
       {/* Step indicator */}
       <div className="mt-4 mb-8">
         <WizardStepIndicator
@@ -651,7 +645,7 @@ export default function TeamRegistrationWizard() {
           onDiscard={handleConfirmDiscard}
         />
       )}
-    </div>
+    </SceWorkspaceChrome>
   );
 }
 
