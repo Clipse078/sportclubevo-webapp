@@ -36,6 +36,9 @@ import {
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
 import SpieleManagementWorkspace from "@/components/admin/matchcenter/SpieleManagementWorkspace";
+import SpieleManagementHeaderMenu from "@/components/admin/matchcenter/SpieleManagementHeaderMenu";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
+import { buildSpieleManagementWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
 import { normalizeSpieleSearchQuery } from "@/lib/matchcenter/management-view";
 import { ToastProvider } from "@/components/ui/ToastProvider";
@@ -179,10 +182,25 @@ export default async function MatchcenterPage({
     );
   }
 
+  const wochenplanerHref = buildSpieleManagementWochenplanerHref({ timezone });
+
   return (
     <ToastProvider>
-      <div className="w-full">
+      <PlanningActivitiesPageFrame
+        breadcrumbLeaf="Spiele"
+        title="Spiele"
+        description="Zentrale Spielplanung und operative Matchvorbereitung."
+        descriptionTestId="spiele-header-subtitle"
+        primaryAction={
+          <SpieleManagementHeaderMenu
+            canManage={canManage}
+            wochenplanerHref={wochenplanerHref}
+            activityCreateTrigger={activityCreateTrigger}
+          />
+        }
+      >
         <SpieleManagementWorkspace
+          hidePageHeader
           matches={matches}
           tab={tab}
           actionFilter={actionFilter}
@@ -209,7 +227,7 @@ export default async function MatchcenterPage({
           activityCreateTrigger={activityCreateTrigger}
           activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
         />
-      </div>
+      </PlanningActivitiesPageFrame>
     </ToastProvider>
   );
 }

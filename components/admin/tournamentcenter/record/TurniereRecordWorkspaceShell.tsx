@@ -10,6 +10,7 @@ type Props = {
   children: ReactNode;
   contextRail?: ReactNode;
   testId?: string;
+  hideNavChrome?: boolean;
 };
 
 export default function TurniereRecordWorkspaceShell({
@@ -20,6 +21,7 @@ export default function TurniereRecordWorkspaceShell({
   children,
   contextRail,
   testId,
+  hideNavChrome,
 }: Props) {
   return (
     <PlanningEditorRecordShell
@@ -31,6 +33,7 @@ export default function TurniereRecordWorkspaceShell({
       testId={testId}
       backLinkTestId="turniere-record-back-link"
       mainRailTestId="turniere-record-main-rail-grid"
+      hideNavChrome={hideNavChrome}
     >
       {children}
     </PlanningEditorRecordShell>

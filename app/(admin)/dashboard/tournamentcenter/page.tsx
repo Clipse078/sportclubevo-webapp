@@ -28,6 +28,9 @@ import {
   normalizeTournamentSortMode,
 } from "@/lib/tournaments/workspace-view-model";
 import TournamentCenterWorkspace from "@/components/admin/tournamentcenter/TournamentCenterWorkspace";
+import TurniereManagementHeaderMenu from "@/components/admin/tournamentcenter/TurniereManagementHeaderMenu";
+import { PlanningActivitiesPageFrame, SceWorkspaceChrome } from "@/components/admin/planning/PlanningActivitiesPageFrame";
+import { buildTurniereManagementWochenplanerHref } from "@/lib/tournaments/management-view";
 import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
 import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
 import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
@@ -125,9 +128,24 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
     );
   }
 
+  const wochenplanerHref = buildTurniereManagementWochenplanerHref({ timezone });
+
   return (
-    <div className="w-full max-w-none space-y-6">
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Turniere"
+      title="Turniere"
+      description="Turniere planen, koordinieren und veröffentlichen."
+      descriptionTestId="turniere-header-subtitle"
+      primaryAction={
+        <TurniereManagementHeaderMenu
+          canCreate={canCreate}
+          wochenplanerHref={wochenplanerHref}
+          activityCreateTrigger={activityCreateTrigger}
+        />
+      }
+    >
       <TournamentCenterWorkspace
+        hidePageHeader
         tournaments={tournaments}
         scope={scope}
         search={search}
@@ -152,6 +170,6 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
         activityCreateTrigger={activityCreateTrigger}
         activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
       />
-    </div>
+    </PlanningActivitiesPageFrame>
   );
 }

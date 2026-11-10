@@ -60,9 +60,16 @@ describe("SCE-DS2-06 unified page architecture", () => {
   it("covers mandatory routes with Finance-aligned workspace chrome", () => {
     for (const route of SCE_DS2_06_MANDATORY_ROUTES) {
       if (route === "/dashboard/planner/week") {
-        expect(readRepo(MANDATORY_PAGE_FILES[route])).toContain("PageShell");
+        const plannerWeekSource = readRepo(MANDATORY_PAGE_FILES[route]);
+        expect(
+          plannerWeekSource.includes("PageShell") ||
+            plannerWeekSource.includes("PlanningActivitiesPageFrame"),
+        ).toBe(true);
         expect(readRepo("components/admin/planning/PlanningManagementPageHeader.tsx")).toContain(
           "SceWorkspaceChrome",
+        );
+        expect(readRepo("components/admin/planning/PlanningActivitiesPageFrame.tsx")).toContain(
+          "PageShell",
         );
         continue;
       }

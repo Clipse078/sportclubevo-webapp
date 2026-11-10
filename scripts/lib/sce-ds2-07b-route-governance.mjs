@@ -17,6 +17,7 @@ export const EXCEPTION_IDS = {
 
 const CANONICAL_MARKERS = [
   "SceWorkspaceChrome",
+  "PlanningActivitiesPageFrame",
   "ListPagePattern",
   "DetailPagePattern",
   "FormPagePattern",
@@ -26,6 +27,7 @@ const CANONICAL_MARKERS = [
 
 const PAGE_STRUCTURE_MARKERS = [
   "SceWorkspaceChrome",
+  "PlanningActivitiesPageFrame",
   "ListPagePattern",
   "DetailPagePattern",
   "FormPagePattern",

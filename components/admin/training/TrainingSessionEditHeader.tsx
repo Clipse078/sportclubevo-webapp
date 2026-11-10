@@ -13,6 +13,7 @@ type Props = {
   wochenplanerHref: string;
   toSeriesLabel: string;
   wochenplanerLabel: string;
+  suppressPageChrome?: boolean;
 };
 
 export default function TrainingSessionEditHeader({
@@ -23,7 +24,9 @@ export default function TrainingSessionEditHeader({
   seriesEditHref,
   wochenplanerHref,
   toSeriesLabel,
-  wochenplanerLabel }: Props) {
+  wochenplanerLabel,
+  suppressPageChrome,
+}: Props) {
   const actions: ReactNode = (
     <>
       <Link
@@ -55,6 +58,7 @@ export default function TrainingSessionEditHeader({
       testId="training-session-edit-header"
       backLinkTestId="training-session-edit-back-link"
       contextTestId="training-session-edit-schedule-context"
+      suppressPageChrome={suppressPageChrome}
     />
   );
 }

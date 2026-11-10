@@ -15,6 +15,7 @@ const ADMIN_ROOT = join(ROOT, "app/(admin)");
 
 const CANONICAL_MARKERS = [
   "SceWorkspaceChrome",
+  "PlanningActivitiesPageFrame",
   "ListPagePattern",
   "DetailPagePattern",
   "FormPagePattern",
@@ -24,6 +25,7 @@ const CANONICAL_MARKERS = [
 const HEADER_MARKERS = [
   "ScePageHeader",
   "SceWorkspaceChrome",
+  "PlanningActivitiesPageFrame",
   "ListPagePattern",
   "DetailPagePattern",
   "FormPagePattern",

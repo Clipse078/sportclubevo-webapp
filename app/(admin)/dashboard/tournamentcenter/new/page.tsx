@@ -1,3 +1,6 @@
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import TurniereRecordWorkspaceShell from "@/components/admin/tournamentcenter/record/TurniereRecordWorkspaceShell";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/tournamentcenter/record/turniere-record-layout";
@@ -60,23 +63,20 @@ export default async function NewTournamentCenterPage({ searchParams }: Props) {
     }
   }
 
-  const header = (
-    <div className="space-y-1 pt-1" data-testid="turniere-tournament-create-header">
-      <p className="text-xs text-[var(--text-2)]">Turniercenter</p>
-      <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Neues Turnier</h1>
-      <p className="max-w-2xl text-sm text-[var(--text-2)]">
-        Teilnehmende Teams, Termin, Ressourcen und Publikation im geführten Composer.
-      </p>
-    </div>
-  );
-
   return (
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Planung"
+        title="Neues Turnier"
+        description="Teilnehmende Teams, Termin, Ressourcen und Publikation im geführten Composer."
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs("Neues Turnier", [
+          { label: "Turniere", href: "/dashboard/tournamentcenter" },
+        ])}
+      >
     <TurniereRecordWorkspaceShell
-      breadcrumbs={[
-        { label: "Turniere", href: "/dashboard/tournamentcenter" },
-        { label: "Neues Turnier" },
-      ]}
-      header={header}
+      breadcrumbs={[]}
+      header={null}
+      hideNavChrome
       testId="turniere-tournament-create-workspace"
     >
       <div className={TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS}>
@@ -106,5 +106,7 @@ export default async function NewTournamentCenterPage({ searchParams }: Props) {
         />
       </div>
     </TurniereRecordWorkspaceShell>
+      </FormPagePattern>
+    </PageShell>
   );
 }

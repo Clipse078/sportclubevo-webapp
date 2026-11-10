@@ -9,6 +9,9 @@ import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocat
 import { listAllocationsByTrainingSession } from "@/lib/training/session-allocation-service";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import TrainingSessionEditForm from "@/components/admin/training/TrainingSessionEditForm";
 import TrainingSessionEditHeader from "@/components/admin/training/TrainingSessionEditHeader";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
@@ -176,6 +179,15 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     : undefined;
 
   return (
+    <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={pageTitle}
+        description={scheduleContext ?? undefined}
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(pageTitle, [
+          { label: "Trainings", href: "/dashboard/training" },
+        ])}
+      >
     <ToastProvider>
       <PlanningEditorShell testId="training-session-edit-page">
         <TrainingSessionEditHeader
@@ -187,6 +199,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           wochenplanerHref={wochenplanerHref}
           toSeriesLabel={t("toSeries")}
           wochenplanerLabel={t("showInWeekPlanner")}
+          suppressPageChrome
         />
 
         <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="training-session-edit-inheritance-intro">
@@ -336,5 +349,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         />
       </PlanningEditorShell>
     </ToastProvider>
+      </FormPagePattern>
+    </PageShell>
   );
 }

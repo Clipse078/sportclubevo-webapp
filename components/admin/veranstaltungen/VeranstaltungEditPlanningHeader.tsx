@@ -16,6 +16,7 @@ type Props = {
   testId?: string;
   backLinkTestId?: string;
   contextTestId?: string;
+  suppressBackNav?: boolean;
 };
 
 export default function VeranstaltungEditPlanningHeader({
@@ -27,17 +28,20 @@ export default function VeranstaltungEditPlanningHeader({
   testId = "veranstaltung-edit-header",
   backLinkTestId = "veranstaltung-edit-back-link",
   contextTestId = "veranstaltung-edit-schedule-context",
+  suppressBackNav = false,
 }: Props) {
   return (
     <header className="space-y-3 border-b border-[var(--border)] pb-3" data-testid={testId}>
-      <Link
-        href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-        data-testid={backLinkTestId}
-      >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-        {backLabel}
-      </Link>
+      {suppressBackNav ? null : (
+        <Link
+          href={backHref}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+          data-testid={backLinkTestId}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          {backLabel}
+        </Link>
+      )}
 
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1" data-testid={contextTestId}>

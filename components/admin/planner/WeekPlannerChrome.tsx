@@ -63,6 +63,7 @@ export type WeekPlannerChromeProps = {
   incompleteCount?: number;
   onReviewConflicts?: (incidents: PlanningConflictIncident[]) => void;
   resourceTimelineCatalog?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  hidePlanningPageHeader?: boolean;
 };
 
 function weekHref(param: string, urlState: PlanningHubUrlState): string {
@@ -90,6 +91,7 @@ export default function WeekPlannerChrome({
   incompleteCount = 0,
   onReviewConflicts,
   resourceTimelineCatalog,
+  hidePlanningPageHeader = false,
 }: WeekPlannerChromeProps) {
   const resolvedUrlState = { ...urlState, week: weekNav.param };
 
@@ -118,25 +120,27 @@ export default function WeekPlannerChrome({
 
   return (
     <div className="w-full space-y-3" data-testid="weekplanner-management-chrome">
-      <PlanningManagementPageHeader
-        breadcrumbLeaf="Wochenplaner"
-        title="Wochenplaner"
-        subtitle="Zentrale Wochenplanung und operative Übersicht über Trainings, Spiele, Turniere und Veranstaltungen."
-        subtitleTestId="weekplanner-header-subtitle"
-        actions={
-          createPermissions ? (
-            <SceActivityCreateMenu
-              permissions={createPermissions}
-              trainingComposer={trainingComposer}
-              matchComposer={matchComposer}
-              tournamentComposer={tournamentComposer}
-              clubEventComposer={clubEventComposer}
-              plannerUrlState={resolvedUrlState}
-              reconcilePlanningHub
-            />
-          ) : null
-        }
-      />
+      {hidePlanningPageHeader ? null : (
+        <PlanningManagementPageHeader
+          breadcrumbLeaf="Wochenplaner"
+          title="Wochenplaner"
+          subtitle="Zentrale Wochenplanung und operative Übersicht über Trainings, Spiele, Turniere und Veranstaltungen."
+          subtitleTestId="weekplanner-header-subtitle"
+          actions={
+            createPermissions ? (
+              <SceActivityCreateMenu
+                permissions={createPermissions}
+                trainingComposer={trainingComposer}
+                matchComposer={matchComposer}
+                tournamentComposer={tournamentComposer}
+                clubEventComposer={clubEventComposer}
+                plannerUrlState={resolvedUrlState}
+                reconcilePlanningHub
+              />
+            ) : null
+          }
+        />
+      )}
 
       <div
         className="space-y-3 rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/35 p-3"

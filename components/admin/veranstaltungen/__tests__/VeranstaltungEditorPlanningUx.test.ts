@@ -7,11 +7,12 @@ describe("Veranstaltungen create/edit — PLANNING-UX-04 SCE editor", () => {
   const editPage = join(process.cwd(), "app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx");
   const createForm = join(process.cwd(), "components/admin/veranstaltungen/VeranstaltungCreateForm.tsx");
 
-  it("create route uses PlanningEditorShell and i18n header", () => {
+  it("create route uses canonical FormPagePattern and PlanningEditorShell", () => {
     const source = readFileSync(createPage, "utf8");
     expect(source).toContain("PlanningEditorShell");
-    expect(source).toContain("PlanningEditorHeader");
+    expect(source).toContain("FormPagePattern");
     expect(source).toContain('getTranslations("Veranstaltungen.editor.create")');
+    expect(source).not.toContain("PlanningEditorHeader");
     expect(source).not.toContain("AdminSectionHeader");
     expect(source).not.toMatch(/max-w-\[900px\]/);
   });

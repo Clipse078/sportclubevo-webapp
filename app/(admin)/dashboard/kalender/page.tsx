@@ -8,7 +8,7 @@ import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { parsePersonalKalenderUrlState } from "@/lib/personal-agenda/kalender-url";
 import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
 import { buildLegacyTermineKalenderRedirectTarget } from "@/lib/personal-agenda/mein-programm-url";
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PlanningActivitiesPageFrame } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { buildCalendarTimeLabelById } from "@/lib/personal-agenda/build-calendar-time-labels";
 
 type PageProps = {
@@ -55,8 +55,11 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
   const timeLabelById = buildCalendarTimeLabelById(monthBundle.items, fmtCfg);
 
   return (
-    <PageShell>
-      <PageHeader title="Kalender" description="Persönliche Termine und Aufgaben-Fälligkeiten." />
+    <PlanningActivitiesPageFrame
+      breadcrumbLeaf="Kalender"
+      title="Kalender"
+      description="Persönliche Termine und Aufgaben-Fälligkeiten."
+    >
       <PersonalKalenderWorkspace
         itemsByDayKey={monthBundle.itemsByDayKey}
         timeLabelById={timeLabelById}
@@ -66,6 +69,6 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
         todayHref={todayHref}
         tenantDisplayNames={[tenantContext.name].filter(Boolean)}
       />
-    </PageShell>
+    </PlanningActivitiesPageFrame>
   );
 }

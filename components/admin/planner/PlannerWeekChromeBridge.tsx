@@ -54,10 +54,12 @@ type PlannerWeekStreamingRootProps = Omit<
   "week" | "teamOptions" | "facilityOptions" | "incompleteCount" | "onReviewConflicts"
 > & {
   children: ReactNode;
+  hidePlanningPageHeader?: boolean;
 };
 
 export default function PlannerWeekStreamingRoot({
   children,
+  hidePlanningPageHeader = false,
   ...chromeProps
 }: PlannerWeekStreamingRootProps) {
   const [bridge, setBridge] = useState<PlannerWeekChromeBridgePayload>({});
@@ -83,7 +85,9 @@ export default function PlannerWeekStreamingRoot({
           data-sce-page-width="operational"
           data-testid="planning-hub-workspace"
         >
-          {plannerReady ? <WeekPlannerChrome {...mergedChrome} /> : null}
+          {plannerReady ? (
+            <WeekPlannerChrome {...mergedChrome} hidePlanningPageHeader={hidePlanningPageHeader} />
+          ) : null}
           {children}
         </div>
       </BridgeContext.Provider>

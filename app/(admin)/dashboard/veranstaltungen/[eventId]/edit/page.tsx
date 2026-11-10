@@ -1,4 +1,7 @@
 import { notFound } from "next/navigation";
+import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell } from "@/components/ui/page";
+import { buildPlanningActivitiesBreadcrumbs } from "@/components/admin/planning/PlanningActivitiesPageFrame";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -185,6 +188,15 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   );
 
   return (
+    <PageShell fullWidth>
+      <FormPagePattern
+        eyebrow="Planung"
+        title={event.title}
+        description={t("description")}
+        breadcrumbs={buildPlanningActivitiesBreadcrumbs(event.title, [
+          { label: "Veranstaltungen", href: "/dashboard/veranstaltungen" },
+        ])}
+      >
     <VeranstaltungEditSubmitProvider>
       <PlanningEditorShell testId="veranstaltung-edit-page">
         <VeranstaltungEditPlanningHeader
@@ -192,6 +204,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           backLabel={t("backNav")}
           model={sceContextModel}
           fmtCfg={{ locale, timezone: timeZone }}
+          suppressBackNav
           backLinkTestId="veranstaltung-edit-back-link"
           testId="veranstaltung-edit-header"
           contextTestId="veranstaltung-edit-schedule-context"
@@ -234,5 +247,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
         />
       </PlanningEditorShell>
     </VeranstaltungEditSubmitProvider>
+      </FormPagePattern>
+    </PageShell>
   );
 }

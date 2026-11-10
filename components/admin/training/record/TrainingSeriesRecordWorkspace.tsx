@@ -74,6 +74,8 @@ type Props = {
   participationPolicy: ParticipationSeriesPolicyValues;
   createTaskAction?: ReactNode;
   relatedTasksPanel?: ReactNode;
+  /** Parent FormPagePattern owns breadcrumbs, title, and back navigation. */
+  embedInCanonicalFormPage?: boolean;
 };
 
 type WeekdayRow = {
@@ -166,6 +168,7 @@ export default function TrainingSeriesRecordWorkspace({
   participationPolicy,
   createTaskAction,
   relatedTasksPanel,
+  embedInCanonicalFormPage = false,
 }: Props) {
   const router = useRouter();
   const { setMultiImpact } = useActivityChangeCollaboration();
@@ -248,11 +251,13 @@ export default function TrainingSeriesRecordWorkspace({
     ? `${selectedTeamSeason.teamName} · ${selectedTeamSeason.seasonName}`
     : "—";
 
-  const breadcrumbs: BreadcrumbItem[] = [
-    { label: "Planung", href: "/dashboard/planner" },
-    { label: "Trainings", href: "/dashboard/training" },
-    { label: selectedTeamSeason?.teamName ?? "Training" },
-  ];
+  const breadcrumbs: BreadcrumbItem[] = embedInCanonicalFormPage
+    ? []
+    : [
+        { label: "Planung", href: "/dashboard/planner" },
+        { label: "Trainings", href: "/dashboard/training" },
+        { label: selectedTeamSeason?.teamName ?? "Training" },
+      ];
 
   const primaryTrainer = selectedTeamSeason?.trainers[0] ?? null;
   const teamSettingsHref = selectedTeamSeason
@@ -361,10 +366,14 @@ export default function TrainingSeriesRecordWorkspace({
             </>
           ) : null}
         </div>
-        <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-          {primaryTitle}
-        </h1>
-        {scheduleRail ? <p className="text-sm text-[var(--text-2)]">{scheduleRail}</p> : null}
+        {embedInCanonicalFormPage ? null : (
+          <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+            {primaryTitle}
+          </h1>
+        )}
+        {!embedInCanonicalFormPage && scheduleRail ? (
+          <p className="text-sm text-[var(--text-2)]">{scheduleRail}</p>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -399,6 +408,7 @@ export default function TrainingSeriesRecordWorkspace({
     <TrainingRecordWorkspaceShell
       breadcrumbs={breadcrumbs}
       header={header}
+      hideNavChrome={embedInCanonicalFormPage}
       testId="training-series-edit-page"
       contextRail={
         <div className="space-y-4" data-testid="training-series-edit-right-rail">

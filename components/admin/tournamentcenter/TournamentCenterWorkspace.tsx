@@ -69,6 +69,7 @@ export type TournamentCenterWorkspaceProps = {
   canCreate?: boolean;
   activityCreateTrigger?: ReactNode;
   activityCreateQuickAccessTrigger?: ReactNode;
+  hidePageHeader?: boolean;
 };
 
 type WorkspaceOverrides = Partial<{
@@ -132,6 +133,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     canCreate = true,
     activityCreateTrigger = null,
     activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
+    hidePageHeader = false,
   } = props;
   void _activityCreateQuickAccessTrigger;
 
@@ -304,26 +306,28 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
 
   return (
     <div className="w-full space-y-4" data-testid="turniere-management-workspace">
-      <header className="space-y-3 border-b border-[var(--border)] pb-4">
-        <p className="text-xs text-[var(--muted)]">
-          <span>Planung</span>
-          <span className="mx-1.5 text-[var(--border-strong)]">›</span>
-          <span className="text-[var(--text-2)]">Turniere</span>
-        </p>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 space-y-1">
-            <TurniereManagementPageTitle />
-            <p className="text-sm text-[var(--text-2)]" data-testid="turniere-header-subtitle">
-              Turniere planen, koordinieren und veröffentlichen.
-            </p>
+      {hidePageHeader ? null : (
+        <header className="space-y-3 border-b border-[var(--border)] pb-4">
+          <p className="text-xs text-[var(--muted)]">
+            <span>Planung</span>
+            <span className="mx-1.5 text-[var(--border-strong)]">›</span>
+            <span className="text-[var(--text-2)]">Turniere</span>
+          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <TurniereManagementPageTitle />
+              <p className="text-sm text-[var(--text-2)]" data-testid="turniere-header-subtitle">
+                Turniere planen, koordinieren und veröffentlichen.
+              </p>
+            </div>
+            <TurniereManagementHeaderMenu
+              canCreate={canCreate}
+              wochenplanerHref={wochenplanerHref}
+              activityCreateTrigger={activityCreateTrigger}
+            />
           </div>
-          <TurniereManagementHeaderMenu
-            canCreate={canCreate}
-            wochenplanerHref={wochenplanerHref}
-            activityCreateTrigger={activityCreateTrigger}
-          />
-        </div>
-      </header>
+        </header>
+      )}
 
       <nav
         aria-label="Turniere-Bereiche"
