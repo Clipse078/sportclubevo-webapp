@@ -12,10 +12,17 @@ const CANONICAL_MARKERS = [
   "SceWorkspaceChrome",
   "ListPagePattern",
   "DetailPagePattern",
+  "FormPagePattern",
   "FinanceWorkspaceTabs",
   "SceContextTabs",
 ];
-const HEADER_MARKERS = ["ScePageHeader", "SceWorkspaceChrome", "ListPagePattern", "DetailPagePattern"];
+const HEADER_MARKERS = [
+  "ScePageHeader",
+  "SceWorkspaceChrome",
+  "ListPagePattern",
+  "DetailPagePattern",
+  "FormPagePattern",
+];
 const TAB_MARKERS = ["SceContextTabs", "FinanceWorkspaceTabs"];
 
 function walkPageFiles(dir, acc = []) {

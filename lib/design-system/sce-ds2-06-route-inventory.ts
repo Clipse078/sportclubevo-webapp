@@ -1017,14 +1017,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/finance/income_statement",
     "source": "app/(admin)/dashboard/finance/income_statement/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "High",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/finance",
@@ -1317,14 +1317,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/persons/[id]/edit",
     "source": "app/(admin)/dashboard/persons/[id]/edit/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "High",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/persons/[id]",
@@ -1341,14 +1341,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/persons/new",
     "source": "app/(admin)/dashboard/persons/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "High",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/persons",
@@ -1761,14 +1761,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/teams/new",
     "source": "app/(admin)/dashboard/teams/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "High",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/teams",
@@ -2049,14 +2049,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/vereine/[clubId]/edit",
     "source": "app/(admin)/dashboard/vereine/[clubId]/edit/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vereine/[clubId]/merge",
@@ -2085,26 +2085,26 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/vereine/[clubId]/teams/new",
     "source": "app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vereine/new",
     "source": "app/(admin)/dashboard/vereine/new/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "High",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vereine",
@@ -2121,14 +2121,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/vereine/teams/[teamId]/edit",
     "source": "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
-    "pageArchitecture": "partial",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/vorfaelle-disziplin",
