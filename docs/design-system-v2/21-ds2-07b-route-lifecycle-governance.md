@@ -32,20 +32,20 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 170 |
-| PARTIAL | 9 |
-| LEGACY | 35 |
+| CANONICAL | 214 |
+| PARTIAL | 0 |
+| LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **170 / 214 (79.4%)**.
+Architectural canonical adoption: **214 / 214 (100%)**.
 
 ## Verification
 
 | Migration status | Count |
 | --- | ---: |
-| NOT_STARTED | 44 |
+| NOT_STARTED | 0 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 170 |
+| IMPLEMENTED | 214 |
 | VERIFIED | 0 |
 | EXCEPTION | 57 |
 
@@ -62,8 +62,8 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07C | 0 | Admin and configuration |
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
-| DS2-07F | 44 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 170 | Authenticated visual/accessibility verification and closure |
+| DS2-07F | 0 | Vereinsleitung and remaining workspaces |
+| DS2-07G | 214 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -113,52 +113,7 @@ None.
 
 ### DS2-07F
 
-| URL pattern | Architecture | Status | Priority | Source |
-| --- | --- | --- | --- | --- |
-| `/dashboard/admin/people-access` | LEGACY | NOT_STARTED | High | `app/(admin)/dashboard/admin/people-access/page.tsx` |
-| `/dashboard/admin/people-access/new` | LEGACY | NOT_STARTED | High | `app/(admin)/dashboard/admin/people-access/new/page.tsx` |
-| `/dashboard/aufgaben` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/page.tsx` |
-| `/dashboard/aufgaben/[taskId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/[taskId]/page.tsx` |
-| `/dashboard/aufgaben/[taskId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/@task/(.)[taskId]/page.tsx` |
-| `/dashboard/aufgaben/anforderung/[recipientId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx` |
-| `/dashboard/aufgaben/anforderungen/[requirementId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx` |
-| `/dashboard/aufgaben/anforderungen/neu` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx` |
-| `/dashboard/aufgaben/neu` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/neu/page.tsx` |
-| `/dashboard/aufgaben/serien/[seriesId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/serien/[seriesId]/page.tsx` |
-| `/dashboard/aufgaben/serien/neu` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/aufgaben/serien/neu/page.tsx` |
-| `/dashboard/dev/sce-icons` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/dev/sce-icons/page.tsx` |
-| `/dashboard/formulare-freigaben` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/formulare-freigaben/page.tsx` |
-| `/dashboard/helfereinsaetze` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/helfereinsaetze/page.tsx` |
-| `/dashboard/infoboard` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/infoboard/page.tsx` |
-| `/dashboard/infoboard/[id]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/infoboard/[id]/page.tsx` |
-| `/dashboard/infoboard/preview` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/infoboard/preview/page.tsx` |
-| `/dashboard/mitglieder` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/mitglieder/page.tsx` |
-| `/dashboard/persons/settings/development-criteria` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/persons/settings/development-criteria/page.tsx` |
-| `/dashboard/players` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/players/page.tsx` |
-| `/dashboard/programm` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/programm/page.tsx` |
-| `/dashboard/sponsoring` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/sponsoring/page.tsx` |
-| `/dashboard/trainer-staff` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/trainer-staff/page.tsx` |
-| `/dashboard/trainers` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/trainers/page.tsx` |
-| `/dashboard/vereine/[clubId]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/vereine/[clubId]/page.tsx` |
-| `/dashboard/vereine/[clubId]/merge` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/vereine/[clubId]/merge/page.tsx` |
-| `/dashboard/vorfaelle-disziplin` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/vorfaelle-disziplin/page.tsx` |
-| `/vereinsleitung` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/page.tsx` |
-| `/vereinsleitung/club-entwicklung` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/club-entwicklung/page.tsx` |
-| `/vereinsleitung/finanzen/rechnungen` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx` |
-| `/vereinsleitung/initiativen/[slug]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx` |
-| `/vereinsleitung/initiativen/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/initiativen/new/page.tsx` |
-| `/vereinsleitung/kpis` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/kpis/page.tsx` |
-| `/vereinsleitung/material` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/material/page.tsx` |
-| `/vereinsleitung/meetings/[slug]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx` |
-| `/vereinsleitung/meetings/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/meetings/new/page.tsx` |
-| `/vereinsleitung/prozesse` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/prozesse/page.tsx` |
-| `/vereinsleitung/targets/[id]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/targets/[id]/page.tsx` |
-| `/vereinsleitung/targets/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx` |
-| `/vereinsleitung/targets/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/targets/new/page.tsx` |
-| `/vereinsleitung/templates` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/templates/page.tsx` |
-| `/vereinsleitung/templates/[id]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/templates/[id]/page.tsx` |
-| `/vereinsleitung/templates/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx` |
-| `/vereinsleitung/templates/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/vereinsleitung/templates/new/page.tsx` |
+None.
 
 ### DS2-07G
 
@@ -190,6 +145,8 @@ None.
 | `/dashboard/admin/facilities` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/facilities/page.tsx` |
 | `/dashboard/admin/integrations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/integrations/page.tsx` |
 | `/dashboard/admin/integrations/sfv` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/integrations/sfv/page.tsx` |
+| `/dashboard/admin/people-access` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/people-access/page.tsx` |
+| `/dashboard/admin/people-access/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/people-access/new/page.tsx` |
 | `/dashboard/admin/tenants` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/page.tsx` |
 | `/dashboard/admin/tenants/[tenantSlug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx` |
 | `/dashboard/admin/tenants/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/new/page.tsx` |
@@ -199,6 +156,15 @@ None.
 | `/dashboard/administration/roles/assignments` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/assignments/page.tsx` |
 | `/dashboard/administration/roles/effective-access` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/effective-access/page.tsx` |
 | `/dashboard/administration/roles/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/new/page.tsx` |
+| `/dashboard/aufgaben` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/page.tsx` |
+| `/dashboard/aufgaben/[taskId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/[taskId]/page.tsx` |
+| `/dashboard/aufgaben/[taskId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/@task/(.)[taskId]/page.tsx` |
+| `/dashboard/aufgaben/anforderung/[recipientId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx` |
+| `/dashboard/aufgaben/anforderungen/[requirementId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx` |
+| `/dashboard/aufgaben/anforderungen/neu` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx` |
+| `/dashboard/aufgaben/neu` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/neu/page.tsx` |
+| `/dashboard/aufgaben/serien/[seriesId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/serien/[seriesId]/page.tsx` |
+| `/dashboard/aufgaben/serien/neu` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/aufgaben/serien/neu/page.tsx` |
 | `/dashboard/communication` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/page.tsx` |
 | `/dashboard/communication/email-sender` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/email-sender/page.tsx` |
 | `/dashboard/communication/inbox` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/inbox/page.tsx` |
@@ -218,6 +184,7 @@ None.
 | `/dashboard/communication/zielgruppen/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/[id]/page.tsx` |
 | `/dashboard/communication/zielgruppen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/new/page.tsx` |
 | `/dashboard/competitions` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/competitions/page.tsx` |
+| `/dashboard/dev/sce-icons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/dev/sce-icons/page.tsx` |
 | `/dashboard/events` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/page.tsx` |
 | `/dashboard/events/import` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/import/page.tsx` |
 | `/dashboard/events/matches/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/matches/new/page.tsx` |
@@ -237,12 +204,18 @@ None.
 | `/dashboard/finance/reports` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/reports/page.tsx` |
 | `/dashboard/finance/settings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/settings/page.tsx` |
 | `/dashboard/finance/structure` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/finance/structure/page.tsx` |
+| `/dashboard/formulare-freigaben` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/formulare-freigaben/page.tsx` |
+| `/dashboard/helfereinsaetze` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/helfereinsaetze/page.tsx` |
+| `/dashboard/infoboard` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/infoboard/page.tsx` |
+| `/dashboard/infoboard/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/infoboard/[id]/page.tsx` |
+| `/dashboard/infoboard/preview` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/infoboard/preview/page.tsx` |
 | `/dashboard/kalender` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/kalender/page.tsx` |
 | `/dashboard/logs` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/logs/page.tsx` |
 | `/dashboard/matchcenter` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/matchcenter/page.tsx` |
 | `/dashboard/matchcenter/[matchId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/matchcenter/[matchId]/page.tsx` |
 | `/dashboard/matchcenter/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/matchcenter/new/page.tsx` |
 | `/dashboard/mein-programm` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/mein-programm/page.tsx` |
+| `/dashboard/mitglieder` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/mitglieder/page.tsx` |
 | `/dashboard/notifications` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/notifications/page.tsx` |
 | `/dashboard/org-units` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/page.tsx` |
 | `/dashboard/org-units/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/page.tsx` |
@@ -254,16 +227,20 @@ None.
 | `/dashboard/persons/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/[id]/page.tsx` |
 | `/dashboard/persons/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/[id]/edit/page.tsx` |
 | `/dashboard/persons/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/new/page.tsx` |
+| `/dashboard/persons/settings/development-criteria` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/settings/development-criteria/page.tsx` |
 | `/dashboard/planner/day` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/day/page.tsx` |
 | `/dashboard/planner/edit/[eventId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/edit/[eventId]/page.tsx` |
 | `/dashboard/planner/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/new/page.tsx` |
 | `/dashboard/planner/week` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/week/page.tsx` |
 | `/dashboard/platform` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/platform/page.tsx` |
+| `/dashboard/players` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/players/page.tsx` |
+| `/dashboard/programm` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/programm/page.tsx` |
 | `/dashboard/roles` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/roles/page.tsx` |
 | `/dashboard/roles/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/roles/[id]/page.tsx` |
 | `/dashboard/runtime` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/runtime/page.tsx` |
 | `/dashboard/seasons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/seasons/page.tsx` |
 | `/dashboard/seasons/planner` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/seasons/planner/page.tsx` |
+| `/dashboard/sponsoring` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/sponsoring/page.tsx` |
 | `/dashboard/teams` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/page.tsx` |
 | `/dashboard/teams/[teamId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/[teamId]/page.tsx` |
 | `/dashboard/teams/[teamId]/administration` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/[teamId]/administration/page.tsx` |
@@ -284,6 +261,8 @@ None.
 | `/dashboard/tournamentcenter` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/tournamentcenter/page.tsx` |
 | `/dashboard/tournamentcenter/[tournamentId]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx` |
 | `/dashboard/tournamentcenter/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/tournamentcenter/new/page.tsx` |
+| `/dashboard/trainer-staff` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/trainer-staff/page.tsx` |
+| `/dashboard/trainers` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/trainers/page.tsx` |
 | `/dashboard/training` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/training/page.tsx` |
 | `/dashboard/training/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/training/new/page.tsx` |
 | `/dashboard/training/series/[seriesId]/allocations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/training/series/[seriesId]/allocations/page.tsx` |
@@ -297,10 +276,13 @@ None.
 | `/dashboard/veranstaltungen/freigaben` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/veranstaltungen/freigaben/page.tsx` |
 | `/dashboard/veranstaltungen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/veranstaltungen/new/page.tsx` |
 | `/dashboard/vereine` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/page.tsx` |
+| `/dashboard/vereine/[clubId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/page.tsx` |
 | `/dashboard/vereine/[clubId]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/edit/page.tsx` |
+| `/dashboard/vereine/[clubId]/merge` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/merge/page.tsx` |
 | `/dashboard/vereine/[clubId]/teams/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx` |
 | `/dashboard/vereine/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/new/page.tsx` |
 | `/dashboard/vereine/teams/[teamId]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx` |
+| `/dashboard/vorfaelle-disziplin` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vorfaelle-disziplin/page.tsx` |
 | `/dashboard/website` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/page.tsx` |
 | `/dashboard/website/blocks` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/blocks/page.tsx` |
 | `/dashboard/website/components` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/website/components/page.tsx` |
@@ -329,11 +311,28 @@ None.
 | `/tenant/[tenantSlug]/cockpit/registrations/[registrationId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx` |
 | `/tenant/[tenantSlug]/cockpit/registrations/archiv` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx` |
 | `/tenant/[tenantSlug]/cockpit/registrations/warteliste` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/warteliste/page.tsx` |
+| `/vereinsleitung` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/page.tsx` |
+| `/vereinsleitung/club-entwicklung` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/club-entwicklung/page.tsx` |
+| `/vereinsleitung/finanzen/rechnungen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx` |
 | `/vereinsleitung/initiativen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/page.tsx` |
 | `/vereinsleitung/initiativen/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx` |
+| `/vereinsleitung/initiativen/[slug]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx` |
+| `/vereinsleitung/initiativen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/new/page.tsx` |
+| `/vereinsleitung/kpis` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/kpis/page.tsx` |
+| `/vereinsleitung/material` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/material/page.tsx` |
 | `/vereinsleitung/meetings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/meetings/page.tsx` |
 | `/vereinsleitung/meetings/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/meetings/[slug]/page.tsx` |
+| `/vereinsleitung/meetings/[slug]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx` |
+| `/vereinsleitung/meetings/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/meetings/new/page.tsx` |
+| `/vereinsleitung/prozesse` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/prozesse/page.tsx` |
 | `/vereinsleitung/targets` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/page.tsx` |
+| `/vereinsleitung/targets/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/[id]/page.tsx` |
+| `/vereinsleitung/targets/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx` |
+| `/vereinsleitung/targets/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/new/page.tsx` |
+| `/vereinsleitung/templates` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/page.tsx` |
+| `/vereinsleitung/templates/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/[id]/page.tsx` |
+| `/vereinsleitung/templates/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx` |
+| `/vereinsleitung/templates/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/new/page.tsx` |
 
 ## Changes since the baseline
 
@@ -343,7 +342,7 @@ None.
 
 ## CI
 
-Blocking violations: **0**. Tracked existing debt: **44**.
+Blocking violations: **0**. Tracked existing debt: **0**.
 
 Blocking codes cover unregistered pages, duplicate URLs, missing lifecycle reconciliation, non-canonical new authenticated pages, missing verification evidence, redirect aliases marked verified, and invalid package assignments. Tracked debt is reported and does not fail the job.
 

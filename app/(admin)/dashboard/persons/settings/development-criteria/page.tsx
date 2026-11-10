@@ -18,7 +18,8 @@ import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenantId } from "@/lib/tenants/active-tenant";
 import { getTenantAllCriteria } from "@/lib/people/queries";
-import { PageShell, PageHeader } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import DevelopmentCriteriaManager from "@/components/admin/persons/DevelopmentCriteriaManager";
 
 export default async function DevelopmentCriteriaPage() {
@@ -27,12 +28,19 @@ export default async function DevelopmentCriteriaPage() {
   const criteria = tenantId ? await getTenantAllCriteria(tenantId) : [];
 
   return (
-    <PageShell>
-      <PageHeader
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Personen"
         title="Bewertungs-Kriterien"
         description="Konfigurieren Sie die Kriterien für Entwicklungs-Bewertungen in Ihrem Verein."
-      />
-      <DevelopmentCriteriaManager initialCriteria={criteria} />
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Personen", href: "/dashboard/persons" },
+          { label: "Bewertungs-Kriterien" },
+        ]}
+      >
+        <DevelopmentCriteriaManager initialCriteria={criteria} />
+      </ListPagePattern>
     </PageShell>
   );
 }

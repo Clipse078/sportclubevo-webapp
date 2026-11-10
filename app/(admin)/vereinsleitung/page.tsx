@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import VereinsleitungDashboard from "@/components/admin/vereinsleitung/VereinsleitungDashboard";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { getTargets } from "@/lib/targets/queries";
 import { getMeetings } from "@/lib/meetings/queries";
@@ -73,12 +75,21 @@ export default async function VereinsleitungPage() {
   ]);
 
   return (
-    <VereinsleitungDashboard
-      targets={targets.slice(0, 3)}
-      meetings={meetings.slice(0, 3)}
-      initiatives={initiatives.slice(0, 3)}
-      kpis={kpis}
-      governance={governance}
-    />
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Vereinsleitung"
+        title="Übersicht"
+        description="Operative KPIs, Governance-Signale und Schnellzugriffe für die Vereinsleitung."
+        breadcrumbs={[{ label: "Vereinsleitung" }]}
+      >
+        <VereinsleitungDashboard
+          targets={targets.slice(0, 3)}
+          meetings={meetings.slice(0, 3)}
+          initiatives={initiatives.slice(0, 3)}
+          kpis={kpis}
+          governance={governance}
+        />
+      </ListPagePattern>
+    </PageShell>
   );
 }

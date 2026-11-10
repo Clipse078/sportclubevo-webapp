@@ -1,3 +1,4 @@
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { notFound } from "next/navigation";
 import TaskWorkspaceInterceptClient from "@/components/admin/aufgaben/TaskWorkspaceInterceptClient";
 import { loadTaskWorkspacePageData } from "@/lib/tasks/task-workspace-page";

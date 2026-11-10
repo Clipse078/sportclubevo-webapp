@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
-import { PageShell, PageHeader, PageBreadcrumbs } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
 
 // ── Demo-only process data — never persisted, never DB-backed ─────────────────
@@ -104,20 +105,16 @@ export default function ClubEntwicklungPage() {
   ).length;
 
   return (
-    <PageShell>
-      <PageBreadcrumbs
-        items={[
-          { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Club Entwicklung" },
-        ]}
-      />
-
-      <PageHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Club Entwicklung"
         title="Club Entwicklung"
         description="Strategische Steuerung, operative Prozesse und Entwicklungsinitiativen — alles an einem Ort."
-      />
-
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Club Entwicklung" },
+        ]}
+      >
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
         <DashboardKpiCard
@@ -329,6 +326,7 @@ export default function ClubEntwicklungPage() {
           </div>
         </div>
       </section>
+      </ListPagePattern>
     </PageShell>
   );
 }

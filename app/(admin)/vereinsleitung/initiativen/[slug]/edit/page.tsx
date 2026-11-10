@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { getInitiativeBySlug } from "@/lib/initiatives/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import InitiativeForm from "@/components/admin/initiatives/InitiativeForm";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { VisibilityScopeValue } from "@/components/admin/shared/VisibilityScopeSelect";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -39,13 +40,20 @@ export default async function EditInitiativePage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Initiativen"
         title="Initiative bearbeiten"
         description={`Bearbeite: ${initiative.title}`}
-      />
-      <InitiativeForm mode="edit" initiativeId={initiative.id} defaultValues={defaultValues} />
-    </div>
+        breadcrumbs={[
+          { label: "Vereinsleitung", href: "/vereinsleitung" },
+          { label: "Initiativen", href: "/vereinsleitung/initiativen" },
+          { label: initiative.title, href: `/vereinsleitung/initiativen/${slug}` },
+          { label: "Bearbeiten" },
+        ]}
+      >
+        <InitiativeForm mode="edit" initiativeId={initiative.id} defaultValues={defaultValues} />
+      </FormPagePattern>
+    </PageShell>
   );
 }

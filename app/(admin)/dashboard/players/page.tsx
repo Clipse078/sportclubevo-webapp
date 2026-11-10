@@ -1,5 +1,6 @@
-﻿import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import PlayersList from "@/components/admin/players/PlayersList";
+﻿import PlayersList from "@/components/admin/players/PlayersList";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -17,14 +18,18 @@ export default async function PlayersPage() {
   }[] = [];
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Spieler"
         title="Spieler"
         description="Foto-first Spielerübersicht im FCA Premium UX Stil – vorbereitet für spätere Kader-, Team- und Website-Publikationslogik."
-      />
-
-      <PlayersList players={players} />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Spieler" },
+        ]}
+      >
+        <PlayersList players={players} />
+      </ListPagePattern>
+    </PageShell>
   );
 }

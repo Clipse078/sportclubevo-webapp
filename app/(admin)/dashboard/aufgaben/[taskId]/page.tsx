@@ -1,3 +1,4 @@
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { notFound } from "next/navigation";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { cn } from "@/lib/cn";

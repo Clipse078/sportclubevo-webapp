@@ -58,11 +58,11 @@ describe("SCE-DS2-07E planning activities migration", () => {
     expect(SCE_DS2_07E_ASSIGNED_SOURCES).toHaveLength(27);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07E"]).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(170);
-    expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(9);
-    expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(35);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(44);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(170);
+    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(214);
+    expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(0);
+    expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(0);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(0);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(214);
 
     for (const sourceFile of SCE_DS2_07E_ASSIGNED_SOURCES) {
       const entry = SCE_DS2_07B_ROUTE_REGISTRY.find((item) => item.sourceFile === sourceFile);

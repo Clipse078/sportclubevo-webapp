@@ -10,7 +10,8 @@ import {
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ArchiveSceIcon, MaterialInventorySceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
-import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
 
 // ── Demo-only data — never persisted, never DB-backed ─────────────────────────
@@ -203,22 +204,17 @@ export default function MaterialPage() {
   const categories = [...new Set(INVENTORY.map((i) => i.category))];
 
   return (
-    <PageShell>
-      <PageBreadcrumbs
-        items={[
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Material & Inventar"
+        title="Material & Inventar"
+        description="Vereinsmaterial, Inventar, Zuweisungen, Standorte und Wartungsstatus im Überblick."
+        breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Material & Inventar" },
         ]}
-      />
-
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <PageHeader
-          eyebrow="Material & Inventar"
-          title="Material & Inventar"
-          description="Vereinsmaterial, Inventar, Zuweisungen, Standorte und Wartungsstatus im Überblick."
-          badge={<Badge variant="warning">In Entwicklung</Badge>}
-          className="mb-0"
-        />
+        headerBadge={<Badge variant="warning">In Entwicklung</Badge>}
+        headerActions={
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
@@ -231,8 +227,8 @@ export default function MaterialPage() {
             <Badge variant="warning" size="sm">Demnächst</Badge>
           </button>
         </div>
-      </div>
-
+        }
+      >
       {/* Demo notice */}
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">
         <AlertCircle className="h-4 w-4 shrink-0 text-[var(--sce-warning)] mt-0.5" />
@@ -434,6 +430,7 @@ export default function MaterialPage() {
           })}
         </div>
       </div>
+      </ListPagePattern>
     </PageShell>
   );
 }

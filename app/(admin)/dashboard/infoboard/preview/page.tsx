@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { PreviewStudio } from "@/components/infoboard/preview/PreviewStudio";
 import { buildBoardConfig } from "@/lib/infoboard/board-config";
 import { getInfoboardBySlug } from "@/lib/infoboard/queries";
@@ -40,13 +41,18 @@ export default async function InfoboardPreviewPage({ searchParams }: PageProps) 
   );
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-5">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Infoboard"
         title="Vorschau"
         description="Prüfe geplante Infoboard-Zustände mit echten Mandantendaten."
-      />
-      <PreviewStudio
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Infoboards", href: "/dashboard/infoboard" },
+          { label: "Vorschau" },
+        ]}
+      >
+        <PreviewStudio
         key={`${preview.screen}:${preview.date}:${preview.time}:${initialDisplayTheme}`}
         initialScreen={preview.screen}
         initialDate={preview.date}
@@ -55,7 +61,8 @@ export default async function InfoboardPreviewPage({ searchParams }: PageProps) 
         timeZone={tenant.timezone}
         screen1BoardId={board?.id ?? null}
         initialStudio={boardConfig?.studio}
-      />
-    </div>
+        />
+      </ListPagePattern>
+    </PageShell>
   );
 }

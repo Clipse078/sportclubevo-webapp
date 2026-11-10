@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
-import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
 
 // ── Demo-only data — never persisted, never DB-backed ─────────────────────────
@@ -152,23 +153,18 @@ export default function ProzessePage() {
   const overdue = DEMO_ACTIVE.filter((p) => p.status === "Überfällig").length;
 
   return (
-    <PageShell>
-      <PageBreadcrumbs
-        items={[
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Club Entwicklung"
+        title="Prozesse & Aufgaben"
+        description="Wiederkehrende Vereinsprozesse als strukturierte Checklisten — mit Verantwortlichen, Fristen und Fortschrittsverfolgung."
+        breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Club Entwicklung", href: "/vereinsleitung/club-entwicklung" },
           { label: "Prozesse & Aufgaben" },
         ]}
-      />
-
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <PageHeader
-          eyebrow="Club Entwicklung"
-          title="Prozesse & Aufgaben"
-          description="Wiederkehrende Vereinsprozesse als strukturierte Checklisten — mit Verantwortlichen, Fristen und Fortschrittsverfolgung."
-          badge={<Badge variant="warning">In Entwicklung</Badge>}
-          className="mb-0"
-        />
+        headerBadge={<Badge variant="warning">In Entwicklung</Badge>}
+        headerActions={
         <button
           type="button"
           disabled
@@ -179,8 +175,8 @@ export default function ProzessePage() {
           Neuer Prozess
           <Badge variant="warning" size="sm">Demnächst</Badge>
         </button>
-      </div>
-
+        }
+      >
       {/* Demo notice */}
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">
         <AlertCircle className="h-4 w-4 shrink-0 text-[var(--sce-warning)] mt-0.5" />
@@ -344,6 +340,7 @@ export default function ProzessePage() {
           </SectionCard>
         </div>
       </div>
+      </ListPagePattern>
     </PageShell>
   );
 }

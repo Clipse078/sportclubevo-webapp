@@ -71,7 +71,7 @@ describe("SCE-DS2-07B route lifecycle governance", () => {
     const result = evaluateRepository(ROOT);
     expect(result.drift).toEqual([]);
     expect(result.evaluation.blocking).toEqual([]);
-    expect(result.evaluation.tracked.length).toBeGreaterThan(0);
+    expect(result.evaluation.tracked.length).toBe(0);
     expect(result.summary.blockingCount).toBe(0);
     expect(result.summary.unassignedCount).toBe(0);
     expect(result.summary.introducedAfterBaselineCount).toBe(0);

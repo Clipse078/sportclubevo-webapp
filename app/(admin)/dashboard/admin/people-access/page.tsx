@@ -10,8 +10,9 @@ import { getOrgUnitsForTenant } from "@/lib/people/queries";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import { getPrivilegedTenantRoleIds } from "@/lib/admin/people-access/privileged";
 import { prisma } from "@/lib/db/prisma";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
 import ClubEventGovernancePeopleAccessView from "@/components/admin/users/people-access/ClubEventGovernancePeopleAccessView";
 import {
@@ -98,7 +99,21 @@ export default async function PeopleAccessPage({ searchParams }: PageProps) {
     });
 
     return (
-      <ClubEventGovernancePeopleAccessView canManage={canManage} creatorRows={creatorRows} />
+      <PageShell fullWidth>
+        <ListPagePattern
+          eyebrow="Administration"
+          title="Club-Event Freigaben"
+          description="Freigaben für Club-Events und Validator-Pools verwalten."
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Administration", href: "/dashboard/admin" },
+            { label: "Personen & Zugänge", href: "/dashboard/admin/people-access" },
+            { label: "Club-Event Freigaben" },
+          ]}
+        >
+          <ClubEventGovernancePeopleAccessView canManage={canManage} creatorRows={creatorRows} />
+        </ListPagePattern>
+      </PageShell>
     );
   }
 
@@ -135,23 +150,29 @@ export default async function PeopleAccessPage({ searchParams }: PageProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Administration"
         title="Personen & Zugänge"
         description="Personen einladen, Rollen zuweisen und Zugriffe verwalten."
-      />
-      <TenantUsersSearchableList
-        initialUsers={users}
-        personsWithoutUser={personsWithoutUser}
-        currentUserId={currentUserId}
-        actorUserId={actorUserId}
-        canImpersonateTenant={canImpersonateTenant}
-        canInvite={canInvite}
-        canManage={canManage}
-        canGlobalDelete={canGlobalDelete}
-        wizardConfig={wizardConfig}
-      />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Administration", href: "/dashboard/admin" },
+          { label: "Personen & Zugänge" },
+        ]}
+      >
+        <TenantUsersSearchableList
+          initialUsers={users}
+          personsWithoutUser={personsWithoutUser}
+          currentUserId={currentUserId}
+          actorUserId={actorUserId}
+          canImpersonateTenant={canImpersonateTenant}
+          canInvite={canInvite}
+          canManage={canManage}
+          canGlobalDelete={canGlobalDelete}
+          wizardConfig={wizardConfig}
+        />
+      </ListPagePattern>
+    </PageShell>
   );
 }

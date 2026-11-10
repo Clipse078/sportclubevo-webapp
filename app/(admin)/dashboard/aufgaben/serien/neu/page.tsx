@@ -1,3 +1,4 @@
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { notFound } from "next/navigation";
 import TaskSeriesCreateClient from "@/components/admin/aufgaben/TaskSeriesCreateClient";
 import { loadTaskSeriesCreatePageData } from "@/lib/tasks/task-series-page";

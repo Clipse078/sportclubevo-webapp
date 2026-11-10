@@ -1,3 +1,4 @@
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";

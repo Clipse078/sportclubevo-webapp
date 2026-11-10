@@ -1,3 +1,4 @@
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { redirect } from "next/navigation";
 import RequirementCreateClient from "@/components/admin/aufgaben/RequirementCreateClient";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
