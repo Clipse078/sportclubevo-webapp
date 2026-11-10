@@ -1,7 +1,9 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
 import NativeBillingCreateInvoiceTrigger from "@/components/admin/billing/NativeBillingCreateInvoiceTrigger";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingInvoicesOperationsTable from "@/components/admin/billing/NativeBillingInvoicesOperationsTable";
 import { getBillingInvoiceOperationalRows } from "@/lib/billing/operations/billing-operations-service";
 import { listBillingCustomers } from "@/lib/billing/native-billing-repository";
@@ -29,12 +31,14 @@ export default async function NativeBillingInvoicesPage() {
   }
 
   return (
-    <BillingWorkspaceContent width="list">
-    <div className="space-y-6">
-      <BillingPageHeader
-        title="Rechnungen"
-        description="Operative Rechnungsliste mit Zahlungs-, Versand- und Fälligkeitsstatus."
-        actions={
+    <PageShell fullWidth>
+    <ListPagePattern
+      eyebrow="Abrechnung"
+      title="Rechnungen"
+      description="Operative Rechnungsliste mit Zahlungs-, Versand- und Fälligkeitsstatus."
+      breadcrumbs={billingWorkspaceBreadcrumbs("Rechnungen")}
+      contextTabs={<BillingWorkspaceTabs />}
+      headerActions={
           canManage ? (
             <NativeBillingCreateInvoiceTrigger
               contracts={contracts.map((c) => ({
@@ -45,13 +49,12 @@ export default async function NativeBillingInvoicesPage() {
             />
           ) : undefined
         }
-      />
-
+    >
       <NativeBillingInvoicesOperationsTable
         rows={rows}
         customerOptions={customers.map((c) => ({ key: c.key, label: c.displayName }))}
       />
-    </div>
-    </BillingWorkspaceContent>
+    </ListPagePattern>
+    </PageShell>
   );
 }

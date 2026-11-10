@@ -1,6 +1,8 @@
 import Link from "next/link";
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
@@ -82,12 +84,21 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
 
   if (!detail) {
     return (
-      <div className="space-y-4">
-        <BillingPageHeader title="Rechnung nicht gefunden" />
-        <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
-          Zurück zur Liste
-        </Link>
-      </div>
+      <PageShell fullWidth>
+        <DetailPagePattern
+          eyebrow="Abrechnung"
+          title="Rechnung nicht gefunden"
+          breadcrumbs={billingWorkspaceBreadcrumbs("Rechnung")}
+          contextTabs={<BillingWorkspaceTabs />}
+          headerActions={
+            <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
+              Zurück zur Liste
+            </Link>
+          }
+        >
+          <p className="text-sm text-[var(--text-2)]">Diese Rechnung ist nicht vorhanden.</p>
+        </DetailPagePattern>
+      </PageShell>
     );
   }
 
@@ -191,23 +202,26 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   const isHistoricalVoid = isVoid;
 
   return (
-    <BillingWorkspaceContent width="detail">
-      <div className={`space-y-8 ${isHistoricalVoid ? "opacity-95" : ""}`}>
-      <div className="space-y-6">
-        <BillingPageHeader
-          size="hero"
-          title={`Rechnung ${displayTitle}`}
-          description={customer?.displayName ?? "Kunde"}
-          actions={
-            <Link
-              href="/dashboard/admin/commercial/billing/invoices"
-              className="fca-button-secondary"
-            >
-              Zurück
-            </Link>
-          }
-        />
-
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Abrechnung"
+        title={`Rechnung ${displayTitle}`}
+        description={customer?.displayName ?? "Kunde"}
+        breadcrumbs={billingWorkspaceBreadcrumbs("Rechnung")}
+        contextTabs={<BillingWorkspaceTabs />}
+        headerBadge={
+          <BillingStatusBadge
+            label={statusPresentation.label.toUpperCase()}
+            tone={statusPresentation.tone}
+          />
+        }
+        headerActions={
+          <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
+            Zurück
+          </Link>
+        }
+        className={isHistoricalVoid ? "opacity-95" : undefined}
+      >
         {isHistoricalVoid ? (
           <p className="rounded-md bg-[color-mix(in_srgb,var(--muted)_18%,transparent)] px-4 py-3 text-sm text-[var(--text-2)] ring-1 ring-[color-mix(in_srgb,var(--border)_45%,transparent)]">
             Diese Rechnung wurde storniert und ist nicht zahlungswirksam.
@@ -266,7 +280,6 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
             ) : null}
           </div>
         </div>
-      </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <BillingPanel title="Finanzübersicht">
@@ -470,7 +483,7 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           </p>
         </details>
       ) : null}
-      </div>
-    </BillingWorkspaceContent>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

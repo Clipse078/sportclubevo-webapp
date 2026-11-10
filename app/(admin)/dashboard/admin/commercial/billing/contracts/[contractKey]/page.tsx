@@ -1,7 +1,9 @@
 import Link from "next/link";
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import {
   BillingDefinitionItem,
   BillingDefinitionList,
@@ -60,14 +62,21 @@ export default async function NativeBillingContractDetailPage({ params }: PagePr
 
   if (!contract) {
     return (
-      <BillingWorkspaceContent width="detail">
-        <div className="space-y-4">
+      <PageShell fullWidth>
+        <DetailPagePattern
+          eyebrow="Abrechnung"
+          title="Vertrag nicht gefunden"
+          breadcrumbs={billingWorkspaceBreadcrumbs("Vertrag")}
+          contextTabs={<BillingWorkspaceTabs />}
+          headerActions={
+            <Link href="/dashboard/admin/commercial/billing/contracts" className="fca-button-secondary">
+              Zurück
+            </Link>
+          }
+        >
           <p className="text-sm text-[var(--text-2)]">Vertrag nicht gefunden.</p>
-          <Link href="/dashboard/admin/commercial/billing/contracts" className="fca-button-secondary">
-            Zurück
-          </Link>
-        </div>
-      </BillingWorkspaceContent>
+        </DetailPagePattern>
+      </PageShell>
     );
   }
 
@@ -83,19 +92,21 @@ export default async function NativeBillingContractDetailPage({ params }: PagePr
   const vatLabel = presentSwissVatTreatment(contract.vatTreatment);
 
   return (
-    <BillingWorkspaceContent width="detail">
-      <div className="space-y-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <BillingPageHeader
-            size="hero"
-            title={contract.contractNumber}
-            description={contract.productName}
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Abrechnung"
+        title={contract.contractNumber}
+        description={contract.productName}
+        breadcrumbs={billingWorkspaceBreadcrumbs("Vertrag")}
+        contextTabs={<BillingWorkspaceTabs />}
+        headerBadge={
+          <BillingStatusBadge
+            label={statusPresentation.label.toUpperCase()}
+            tone={statusPresentation.tone}
           />
-          <div className="flex flex-col items-start gap-3 lg:items-end">
-            <BillingStatusBadge
-              label={statusPresentation.label.toUpperCase()}
-              tone={statusPresentation.tone}
-            />
+        }
+        headerActions={
+          <>
             <NativeBillingContractActions
               contractKey={contract.key}
               status={contract.status}
@@ -107,9 +118,9 @@ export default async function NativeBillingContractDetailPage({ params }: PagePr
             >
               Zurück zur Liste
             </Link>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         <div className="rounded-[var(--radius-lg)] bg-[color-mix(in_srgb,var(--card)_92%,transparent)] px-6 py-5 ring-1 ring-[color-mix(in_srgb,var(--border)_50%,transparent)]">
           <p className="text-3xl font-semibold tabular-nums tracking-tight">
             {negotiatedFormatted}
@@ -194,7 +205,7 @@ export default async function NativeBillingContractDetailPage({ params }: PagePr
             </BillingDataTableShell>
           )}
         </BillingPanel>
-      </div>
-    </BillingWorkspaceContent>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

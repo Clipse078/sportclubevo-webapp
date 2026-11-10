@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import RegistrationDetailCard from "@/components/admin/registrations/RegistrationDetailCard";
+import RegistrationWorkspaceTabs from "@/components/admin/registrations/RegistrationWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -66,7 +69,21 @@ export default async function TenantRegistrationDetailPage({ params }: Props) {
     notFound();
   }
 
+  const applicantName = `${registration.firstName} ${registration.lastName}`.trim();
+
   return (
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Registrierungen"
+        title={applicantName || "Anmeldung"}
+        description="Anmeldung prüfen und bearbeiten."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Registrierungen", href: `/tenant/${tenantSlug}/cockpit/registrations` },
+          { label: applicantName || "Anmeldung" },
+        ]}
+        contextTabs={<RegistrationWorkspaceTabs tenantSlug={tenantSlug} />}
+      >
     <RegistrationDetailCard
       tenantSlug={tenantSlug}
       initialRegistration={registration}
@@ -88,5 +105,7 @@ export default async function TenantRegistrationDetailPage({ params }: Props) {
         />
       }
     />
+      </DetailPagePattern>
+    </PageShell>
   );
 }

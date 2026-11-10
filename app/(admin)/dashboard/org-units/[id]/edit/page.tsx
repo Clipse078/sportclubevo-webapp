@@ -6,7 +6,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getOrgUnitById, getOrgUnits } from "@/lib/org/queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import OrgUnitForm from "@/components/admin/org/OrgUnitForm";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import OrgUnitRecordTabs from "@/components/admin/org/OrgUnitRecordTabs";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 // RPERM-04: tenant resolved via the single tenant-context helper (session.activeTenantId,
 // derived from TenantMembership — never the legacy User.tenantId column).
@@ -30,18 +32,25 @@ export default async function EditOrgUnitPage({ params }: PageProps) {
   if (unit.tenantId !== null && unit.tenantId !== tenant.id) notFound();
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Organisation"
         title={`${unit.name} bearbeiten`}
         description="Passe Stammdaten der Organisationseinheit an. Der Key bleibt unveränderlich."
-        actions={
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Organisation", href: "/dashboard/org-units" },
+          { label: unit.name, href: `/dashboard/org-units/${unit.id}` },
+          { label: "Bearbeiten" },
+        ]}
+        contextTabs={<OrgUnitRecordTabs orgUnitId={unit.id} />}
+        cancelAction={
           <Link href={`/dashboard/org-units/${unit.id}`} className="fca-button-secondary">
             <ArrowLeft className="h-4 w-4" />
             Zurück
           </Link>
         }
-      />
+      >
       <OrgUnitForm
         mode="edit"
         orgUnitId={unit.id}
@@ -56,6 +65,7 @@ export default async function EditOrgUnitPage({ params }: PageProps) {
           status: unit.status,
         }}
       />
-    </div>
+      </FormPagePattern>
+    </PageShell>
   );
 }

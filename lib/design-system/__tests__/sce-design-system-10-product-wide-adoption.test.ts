@@ -58,8 +58,11 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
     expect(readSrc("components/admin/shared/AdminSectionHeader.tsx")).toContain(
       "SceWorkspaceHeader",
     );
-    expect(readSrc("components/admin/billing/shell/BillingWorkspaceShell.tsx")).toContain(
+    expect(readSrc("components/admin/billing/shell/BillingWorkspaceTabs.tsx")).toContain(
       "BillingWorkspaceContextTabs",
+    );
+    expect(readSrc("components/admin/billing/shell/BillingWorkspaceContextTabs.tsx")).toContain(
+      "SceContextTabs",
     );
     expect(readSrc("app/(admin)/dashboard/admin/facilities/page.tsx")).toContain(
       "SceWorkspaceChrome",

@@ -32,20 +32,20 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 64 |
-| PARTIAL | 47 |
-| LEGACY | 103 |
+| CANONICAL | 105 |
+| PARTIAL | 42 |
+| LEGACY | 67 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **64 / 214 (29.9%)**.
+Architectural canonical adoption: **105 / 214 (49.1%)**.
 
 ## Verification
 
 | Migration status | Count |
 | --- | ---: |
-| NOT_STARTED | 150 |
+| NOT_STARTED | 109 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 64 |
+| IMPLEMENTED | 105 |
 | VERIFIED | 0 |
 | EXCEPTION | 57 |
 
@@ -59,11 +59,11 @@ Unassigned authenticated visual routes: **0**.
 
 | Package | Outstanding routes | Scope |
 | --- | ---: | --- |
-| DS2-07C | 41 | Admin and configuration |
+| DS2-07C | 0 | Admin and configuration |
 | DS2-07D | 38 | Communication and website CMS |
 | DS2-07E | 27 | Planning, matches, training, tournaments and events |
 | DS2-07F | 44 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 64 | Authenticated visual/accessibility verification and closure |
+| DS2-07G | 105 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -101,49 +101,7 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 
 ### DS2-07C
 
-| URL pattern | Architecture | Status | Priority | Source |
-| --- | --- | --- | --- | --- |
-| `/admin` | LEGACY | NOT_STARTED | Medium | `app/(admin)/admin/page.tsx` |
-| `/dashboard/account` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/account/page.tsx` |
-| `/dashboard/admin` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/page.tsx` |
-| `/dashboard/admin/branding` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/branding/page.tsx` |
-| `/dashboard/admin/commercial/billing` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/page.tsx` |
-| `/dashboard/admin/commercial/billing/contracts` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/contracts/page.tsx` |
-| `/dashboard/admin/commercial/billing/contracts/[contractKey]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/contracts/[contractKey]/page.tsx` |
-| `/dashboard/admin/commercial/billing/contracts/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/contracts/new/page.tsx` |
-| `/dashboard/admin/commercial/billing/customers` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/customers/page.tsx` |
-| `/dashboard/admin/commercial/billing/customers/[customerKey]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/customers/[customerKey]/page.tsx` |
-| `/dashboard/admin/commercial/billing/customers/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/customers/new/page.tsx` |
-| `/dashboard/admin/commercial/billing/invoices` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/invoices/page.tsx` |
-| `/dashboard/admin/commercial/billing/invoices/[invoiceKey]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/invoices/[invoiceKey]/page.tsx` |
-| `/dashboard/admin/commercial/billing/invoices/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/invoices/new/page.tsx` |
-| `/dashboard/admin/commercial/billing/operations` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/operations/page.tsx` |
-| `/dashboard/admin/commercial/billing/reconciliation` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/reconciliation/page.tsx` |
-| `/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx` |
-| `/dashboard/admin/commercial/billing/settings` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/settings/page.tsx` |
-| `/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]/page.tsx` |
-| `/dashboard/admin/commercial/billing/settings/legal-entities/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/new/page.tsx` |
-| `/dashboard/admin/integrations/sfv` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/integrations/sfv/page.tsx` |
-| `/dashboard/admin/tenants` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/tenants/page.tsx` |
-| `/dashboard/admin/tenants/[tenantSlug]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx` |
-| `/dashboard/admin/tenants/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/tenants/new/page.tsx` |
-| `/dashboard/admin/users/[userId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/admin/users/[userId]/page.tsx` |
-| `/dashboard/org-units/[id]/edit` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/org-units/[id]/edit/page.tsx` |
-| `/dashboard/org-units/[id]/history` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/org-units/[id]/history/page.tsx` |
-| `/dashboard/org-units/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/org-units/new/page.tsx` |
-| `/dashboard/permissions` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/permissions/page.tsx` |
-| `/dashboard/platform` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/platform/page.tsx` |
-| `/dashboard/roles` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/roles/page.tsx` |
-| `/dashboard/roles/[id]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/roles/[id]/page.tsx` |
-| `/dashboard/runtime` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/runtime/page.tsx` |
-| `/dashboard/seasons` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/seasons/page.tsx` |
-| `/dashboard/users` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/users/page.tsx` |
-| `/dashboard/users/[userId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/users/[userId]/page.tsx` |
-| `/dashboard/users/new` | LEGACY | NOT_STARTED | Medium | `app/(admin)/dashboard/users/new/page.tsx` |
-| `/tenant/[tenantSlug]/cockpit/registrations` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx` |
-| `/tenant/[tenantSlug]/cockpit/registrations/[registrationId]` | LEGACY | NOT_STARTED | Medium | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx` |
-| `/tenant/[tenantSlug]/cockpit/registrations/archiv` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx` |
-| `/tenant/[tenantSlug]/cockpit/registrations/warteliste` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/warteliste/page.tsx` |
+None.
 
 ### DS2-07D
 
@@ -273,9 +231,34 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 
 | URL pattern | Architecture | Status | Priority | Source |
 | --- | --- | --- | --- | --- |
+| `/admin` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/admin/page.tsx` |
 | `/dashboard` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/(personal-dashboard)/page.tsx` |
+| `/dashboard/account` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/account/page.tsx` |
+| `/dashboard/admin` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/page.tsx` |
+| `/dashboard/admin/branding` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/branding/page.tsx` |
+| `/dashboard/admin/commercial/billing` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/page.tsx` |
+| `/dashboard/admin/commercial/billing/contracts` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/contracts/page.tsx` |
+| `/dashboard/admin/commercial/billing/contracts/[contractKey]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/contracts/[contractKey]/page.tsx` |
+| `/dashboard/admin/commercial/billing/contracts/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/contracts/new/page.tsx` |
+| `/dashboard/admin/commercial/billing/customers` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/customers/page.tsx` |
+| `/dashboard/admin/commercial/billing/customers/[customerKey]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/customers/[customerKey]/page.tsx` |
+| `/dashboard/admin/commercial/billing/customers/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/customers/new/page.tsx` |
+| `/dashboard/admin/commercial/billing/invoices` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/invoices/page.tsx` |
+| `/dashboard/admin/commercial/billing/invoices/[invoiceKey]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/invoices/[invoiceKey]/page.tsx` |
+| `/dashboard/admin/commercial/billing/invoices/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/invoices/new/page.tsx` |
+| `/dashboard/admin/commercial/billing/operations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/operations/page.tsx` |
+| `/dashboard/admin/commercial/billing/reconciliation` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/reconciliation/page.tsx` |
+| `/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx` |
+| `/dashboard/admin/commercial/billing/settings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/settings/page.tsx` |
+| `/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/[entityKey]/page.tsx` |
+| `/dashboard/admin/commercial/billing/settings/legal-entities/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/commercial/billing/settings/legal-entities/new/page.tsx` |
 | `/dashboard/admin/facilities` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/facilities/page.tsx` |
 | `/dashboard/admin/integrations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/integrations/page.tsx` |
+| `/dashboard/admin/integrations/sfv` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/integrations/sfv/page.tsx` |
+| `/dashboard/admin/tenants` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/page.tsx` |
+| `/dashboard/admin/tenants/[tenantSlug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/[tenantSlug]/page.tsx` |
+| `/dashboard/admin/tenants/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/tenants/new/page.tsx` |
+| `/dashboard/admin/users/[userId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/admin/users/[userId]/page.tsx` |
 | `/dashboard/administration/roles` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/page.tsx` |
 | `/dashboard/administration/roles/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/[id]/page.tsx` |
 | `/dashboard/administration/roles/assignments` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/administration/roles/assignments/page.tsx` |
@@ -299,12 +282,21 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | `/dashboard/mein-programm` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/mein-programm/page.tsx` |
 | `/dashboard/org-units` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/page.tsx` |
 | `/dashboard/org-units/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/page.tsx` |
+| `/dashboard/org-units/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/edit/page.tsx` |
+| `/dashboard/org-units/[id]/history` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/[id]/history/page.tsx` |
+| `/dashboard/org-units/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/org-units/new/page.tsx` |
+| `/dashboard/permissions` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/permissions/page.tsx` |
 | `/dashboard/persons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/page.tsx` |
 | `/dashboard/persons/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/[id]/page.tsx` |
 | `/dashboard/persons/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/[id]/edit/page.tsx` |
 | `/dashboard/persons/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/persons/new/page.tsx` |
 | `/dashboard/planner/day` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/day/page.tsx` |
 | `/dashboard/planner/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/planner/new/page.tsx` |
+| `/dashboard/platform` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/platform/page.tsx` |
+| `/dashboard/roles` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/roles/page.tsx` |
+| `/dashboard/roles/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/roles/[id]/page.tsx` |
+| `/dashboard/runtime` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/runtime/page.tsx` |
+| `/dashboard/seasons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/seasons/page.tsx` |
 | `/dashboard/seasons/planner` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/seasons/planner/page.tsx` |
 | `/dashboard/teams` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/page.tsx` |
 | `/dashboard/teams/[teamId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/[teamId]/page.tsx` |
@@ -323,6 +315,9 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | `/dashboard/teams/provider-mapping/[teamSeasonId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/provider-mapping/[teamSeasonId]/page.tsx` |
 | `/dashboard/teams/provider-mapping/mapping/[mappingId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/provider-mapping/mapping/[mappingId]/page.tsx` |
 | `/dashboard/teams/register` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/teams/register/page.tsx` |
+| `/dashboard/users` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/users/page.tsx` |
+| `/dashboard/users/[userId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/users/[userId]/page.tsx` |
+| `/dashboard/users/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/users/new/page.tsx` |
 | `/dashboard/vereine` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/page.tsx` |
 | `/dashboard/vereine/[clubId]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/edit/page.tsx` |
 | `/dashboard/vereine/[clubId]/teams/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/vereine/[clubId]/teams/new/page.tsx` |
@@ -332,6 +327,10 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | `/dashboard/workspace` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/page.tsx` |
 | `/dashboard/workspace/audit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/audit/page.tsx` |
 | `/dashboard/workspace/governance/break-glass` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/governance/break-glass/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/registrations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/registrations/[registrationId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/registrations/archiv` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/registrations/warteliste` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/warteliste/page.tsx` |
 | `/vereinsleitung/initiativen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/page.tsx` |
 | `/vereinsleitung/initiativen/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx` |
 | `/vereinsleitung/meetings` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/meetings/page.tsx` |
@@ -346,7 +345,7 @@ None.
 
 ## CI
 
-Blocking violations: **0**. Tracked existing debt: **150**.
+Blocking violations: **0**. Tracked existing debt: **109**.
 
 Blocking codes cover unregistered pages, duplicate URLs, missing lifecycle reconciliation, non-canonical new authenticated pages, missing verification evidence, redirect aliases marked verified, and invalid package assignments. Tracked debt is reported and does not fail the job.
 

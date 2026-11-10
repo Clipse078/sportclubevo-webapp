@@ -4,7 +4,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getOrgUnits } from "@/lib/org/queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import OrgUnitForm from "@/components/admin/org/OrgUnitForm";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 // RPERM-04: tenant resolved via the single tenant-context helper (session.activeTenantId,
 // derived from TenantMembership — never the legacy User.tenantId column).
@@ -16,13 +17,19 @@ export default async function NewOrgUnitPage() {
   const parentOptions = await getOrgUnits(tenant.id);
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <FormPagePattern
         eyebrow="Organisation"
         title="Neue Organisationseinheit"
         description="Erstelle eine Einheit im Organigramm des Vereins."
-      />
-      <OrgUnitForm mode="create" layout="composer" parentOptions={parentOptions} />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Organisation", href: "/dashboard/org-units" },
+          { label: "Neu" },
+        ]}
+      >
+        <OrgUnitForm mode="create" layout="composer" parentOptions={parentOptions} />
+      </FormPagePattern>
+    </PageShell>
   );
 }

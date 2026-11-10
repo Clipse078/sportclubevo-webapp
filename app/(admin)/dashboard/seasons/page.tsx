@@ -4,8 +4,9 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getSeasonsOverviewData } from "@/lib/seasons/queries";
 import { suggestNextSeasonStartYear } from "@/lib/seasons/mutations";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import CreateSeasonTrigger from "@/components/admin/seasons/CreateSeasonTrigger";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import SeasonRowCard from "@/components/admin/seasons/SeasonRowCard";
 
 type SeasonsPageProps = {
@@ -71,14 +72,16 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
   const futureCount = seasons.filter((s) => s.currentStatus === "ZUKUENFTIG").length;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Saisons"
         title="Saisonverwaltung"
         description="Saisons sind Klassifikation/Kontext für Teams und Events. Beliebig viele sinnvolle Saisons können parallel existieren — genau eine ist als aktuell gesetzt."
-      />
-
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Saisons" },
+        ]}
+      >
       {/* Feedback */}
       {feedback ? <div className={`fca-status-box ${feedback.boxClass}`}>{feedback.text}</div> : null}
 
@@ -153,6 +156,7 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
           canRegisterTeams={canRegisterTeams}
         />
       ))}
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

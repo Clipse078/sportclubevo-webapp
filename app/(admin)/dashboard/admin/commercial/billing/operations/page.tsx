@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import BillingRecurringAutomationPanel from "@/components/admin/billing/BillingRecurringAutomationPanel";
@@ -34,13 +36,14 @@ export default async function BillingOperationsPage() {
   const automation = await getRecurringBillingAutomationStatus();
 
   return (
-    <BillingWorkspaceContent width="wide">
-      <div className="space-y-6">
-        <BillingPageHeader
-          title="Operations"
-          description="Commercial Abrechnung — Diagnose, Automatisierung und Provider-Status (nicht Plattform Runtime)."
-        />
-
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Abrechnung"
+        title="Operations"
+        description="Commercial Abrechnung — Diagnose, Automatisierung und Provider-Status (nicht Plattform Runtime)."
+        breadcrumbs={billingWorkspaceBreadcrumbs("Operations")}
+        contextTabs={<BillingWorkspaceTabs />}
+      >
         <CommercialBillingWorkspaceHint />
 
         <BillingRecurringAutomationPanel initialAutomation={automation} />
@@ -142,7 +145,7 @@ export default async function BillingOperationsPage() {
             </DiagnosticRow>
           </dl>
         </BillingPanel>
-      </div>
-    </BillingWorkspaceContent>
+      </ListPagePattern>
+    </PageShell>
   );
 }

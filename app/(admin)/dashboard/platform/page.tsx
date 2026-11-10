@@ -1,5 +1,5 @@
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import { SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
@@ -13,13 +13,16 @@ export default async function PlatformDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <AdminSectionHeader
+    <PageShell>
+      <ListPagePattern
         eyebrow="Platform"
         title="SportClubEvo Platform"
         description="Verwalte Vereine, kommerzielle Abläufe und Plattform-Services von diesem Workspace aus. Operative Club-Module sind hier bewusst nicht verfügbar."
-      />
-
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Platform" },
+        ]}
+      >
       <SectionCard
         title="Platform Workspace"
         description="Dies ist der minimale Einstieg für Platform Super Admins ohne aktiven Verein."
@@ -30,6 +33,7 @@ export default async function PlatformDashboardPage() {
           späteren Shell-Slices.
         </p>
       </SectionCard>
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

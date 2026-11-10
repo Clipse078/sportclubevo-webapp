@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingDetailGrid, {
   BillingDefinitionItem,
   BillingDefinitionList,
@@ -77,28 +79,25 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
   const invoiceCount = customerInvoices.length;
 
   return (
-    <BillingWorkspaceContent width="detail">
-      <div className="space-y-8">
-        <BillingPageHeader
-          size="hero"
-          title={customer.displayName}
-          description={`Kunde ${customer.key}`}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <BillingStatusBadge
-                label={statusPresentation.label.toUpperCase()}
-                tone={statusPresentation.tone}
-              />
-              <Link
-                href="/dashboard/admin/commercial/billing/customers"
-                className="fca-button-secondary"
-              >
-                Zurück zur Liste
-              </Link>
-            </div>
-          }
-        />
-
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Abrechnung"
+        title={customer.displayName}
+        description={`Kunde ${customer.key}`}
+        breadcrumbs={billingWorkspaceBreadcrumbs("Kunde")}
+        contextTabs={<BillingWorkspaceTabs />}
+        headerBadge={
+          <BillingStatusBadge
+            label={statusPresentation.label.toUpperCase()}
+            tone={statusPresentation.tone}
+          />
+        }
+        headerActions={
+          <Link href="/dashboard/admin/commercial/billing/customers" className="fca-button-secondary">
+            Zurück zur Liste
+          </Link>
+        }
+      >
         <div className="grid gap-4 rounded-[var(--radius-lg)] bg-[color-mix(in_srgb,var(--card)_90%,transparent)] px-5 py-4 ring-1 ring-[color-mix(in_srgb,var(--border)_50%,transparent)] sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="text-[0.8125rem] text-[var(--text-2)]">Offen</p>
@@ -257,7 +256,7 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
             </BillingPanel>
           </div>
         </BillingDetailGrid>
-      </div>
-    </BillingWorkspaceContent>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

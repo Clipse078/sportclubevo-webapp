@@ -1,8 +1,10 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import UserForm from "@/components/admin/users/UserForm";
 import { requirePermission } from "@/lib/permissions/require-permission";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 
 export default async function NewUserPage() {
   const session = await requirePermission("users.manage");
@@ -12,26 +14,23 @@ export default async function NewUserPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs font-medium tracking-wide text-[var(--muted)]">Benutzerverwaltung</p>
-          <h2 className="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] leading-tight">
-            <UserPlus className="h-5 w-5 text-[var(--text-2)]" />
-            Neuer Benutzer
-          </h2>
-          <p className="mt-1.5 max-w-2xl text-sm text-[var(--text-2)] leading-relaxed">
-            Lege ein neues Benutzerkonto für die WebApp an. Das temporäre
-            Passwort sollte nach dem ersten Login geändert werden.
-          </p>
-        </div>
-        <Link href="/dashboard/users" className="fca-button-secondary self-start md:self-auto">
-          <ArrowLeft className="h-4 w-4" />
-          Zurück
-        </Link>
-      </div>
-
+    <PageShell>
+      <FormPagePattern
+        eyebrow="Benutzerverwaltung"
+        title="Neuer Benutzer"
+        description="Lege ein neues Benutzerkonto für die WebApp an. Das temporäre Passwort sollte nach dem ersten Login geändert werden."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Benutzer", href: "/dashboard/users" },
+          { label: "Neu" },
+        ]}
+        cancelAction={
+          <Link href="/dashboard/users" className="fca-button-secondary">
+            <ArrowLeft className="h-4 w-4" />
+            Zurück
+          </Link>
+        }
+      >
       {/* Form section */}
       <div className="sce-detail-section">
         <div className="sce-detail-section-header">
@@ -43,6 +42,7 @@ export default async function NewUserPage() {
           <UserForm mode="create" />
         </div>
       </div>
-    </div>
+      </FormPagePattern>
+    </PageShell>
   );
 }

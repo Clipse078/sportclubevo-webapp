@@ -28,6 +28,7 @@ import OrgUnitDeleteButton from "@/components/admin/org/OrgUnitDeleteButton";
 import ScopedResponsibilitiesCard from "@/components/admin/shared/ScopedResponsibilitiesCard";
 import { PageShell, SectionCard } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import OrgUnitRecordTabs from "@/components/admin/org/OrgUnitRecordTabs";
 import { Badge, Card } from "@/components/ui";
 import { PropertyGrid } from "@/components/ui/PropertyGrid";
 import { MetadataCard } from "@/components/ui/MetadataCard";
@@ -192,6 +193,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
           </Badge>
         }
         breadcrumbs={breadcrumbs}
+        contextTabs={<OrgUnitRecordTabs orgUnitId={unit.id} showEdit={canManage} />}
         headerActions={
           <div className="flex items-center gap-2">
             {canManage ? (

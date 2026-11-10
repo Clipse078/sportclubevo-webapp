@@ -16,6 +16,8 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getSeasonOptionsData } from "@/lib/seasons/queries";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
 import AdminOnboardingProgress from "@/components/admin/admin/AdminOnboardingProgress";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 
 type SeasonOption = Awaited<ReturnType<typeof getSeasonOptionsData>>[number];
 
@@ -193,48 +195,28 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
-
-      {/* ── Entity Hero ──────────────────────────────────────────────── */}
-      <div className="sce-entity-hero">
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-                Platform
-              </p>
-              {data.tenant && (
-                <TenantStatusBadge status={data.tenant.status} />
-              )}
-            </div>
-            <h1 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl">
-              {data.tenant?.name ?? "SportClubEvo"}
-            </h1>
-            <p className="text-sm text-white/70 max-w-lg">
-              Admin-Übersicht — Tenant-Setup, Organisation, Benutzer und
-              Plattform-Governance auf einen Blick.
-            </p>
-          </div>
-
-          {data.activeSeason && (
-            <div
-              className="shrink-0 rounded-[var(--radius-xl)] px-4 py-3"
-              style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}
-            >
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/60">
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Platform"
+        title={data.tenant?.name ?? "SportClubEvo"}
+        description="Admin-Übersicht — Tenant-Setup, Organisation, Benutzer und Plattform-Governance auf einen Blick."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Admin" },
+        ]}
+        headerBadge={data.tenant ? <TenantStatusBadge status={data.tenant.status} /> : undefined}
+        headerActions={
+          data.activeSeason ? (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
                 Aktive Saison
               </p>
-              <p className="mt-1 text-base font-bold text-white">
-                {data.activeSeason.name}
-              </p>
-              <p className="mt-0.5 text-[0.72rem] text-white/60">
-                {data.activeSeason.lifecycleStatusLabel}
-              </p>
+              <p className="mt-1 text-base font-bold text-[var(--foreground)]">{data.activeSeason.name}</p>
+              <p className="mt-0.5 text-[0.72rem] text-[var(--muted)]">{data.activeSeason.lifecycleStatusLabel}</p>
             </div>
-          )}
-        </div>
-      </div>
-
+          ) : undefined
+        }
+      >
       {/* ── KPI Strip ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
@@ -665,6 +647,7 @@ export default async function AdminPage() {
       {/* ── Onboarding progress ───────────────────────────────────────── */}
       <AdminOnboardingProgress steps={onboardingSteps} />
 
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

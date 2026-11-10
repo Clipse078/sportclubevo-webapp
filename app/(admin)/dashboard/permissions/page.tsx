@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ArrowRight, KeyRound, Shield } from "lucide-react";
 import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import { EmptyState } from "@/components/ui/page";
+import GovernanceWorkspaceTabs from "@/components/admin/roles/GovernanceWorkspaceTabs";
+import { EmptyState, PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -133,12 +134,17 @@ export default async function PermissionsPage() {
   const unmappedPermissions = totalPermissions - mappedPermissions;
 
   return (
-    <div className="space-y-8 max-w-[1400px]">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Governance"
         title="Berechtigungen"
         description="Alle Systemberechtigungen nach Modul gegliedert — Rollen-Zuweisungen und Zugriffsrechte auf einen Blick. Berechtigungen einer Rolle bearbeiten: Rolle öffnen → Berechtigungen bearbeiten."
-        actions={
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Berechtigungen" },
+        ]}
+        contextTabs={<GovernanceWorkspaceTabs />}
+        headerActions={
           <Link
             href="/dashboard/roles"
             className="fca-button-secondary flex items-center gap-2"
@@ -147,8 +153,7 @@ export default async function PermissionsPage() {
             Rollen bearbeiten
           </Link>
         }
-      />
-
+      >
       {/* KPI Strip */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
@@ -212,6 +217,7 @@ export default async function PermissionsPage() {
           ))}
         </div>
       )}
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

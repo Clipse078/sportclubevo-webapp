@@ -39,7 +39,6 @@ import {
   UserCheck,
   Building2,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/page";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import NotificationPreferencesSection from "@/components/admin/notifications/NotificationPreferencesSection";
@@ -545,12 +544,6 @@ export default function AccountPageClient({
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-5">
-      <PageHeader
-        eyebrow="Konto"
-        title="Mein Konto"
-        description="Persönliche Daten und Einstellungen verwalten."
-      />
-
       {/* ── Profil card ─────────────────────────────────────────────────── */}
       <Card title="Profil">
         <div className="flex gap-6">

@@ -1,5 +1,5 @@
 import { PageShell } from "@/components/ui/page";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { AdminHubView } from "@/components/admin/admin-hub/AdminHubView";
 import { requireTenantAdministration } from "@/lib/permissions/require-tenant-administration";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
@@ -17,12 +17,17 @@ export default async function AdminHubPage() {
 
   return (
     <PageShell>
-      <AdminSectionHeader
+      <ListPagePattern
         eyebrow="Admin"
         title="Admin"
         description="Vereinsweite Einstellungen, Zugriffe und Administration."
-      />
-      <AdminHubView groups={groups} />
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Admin" },
+        ]}
+      >
+        <AdminHubView groups={groups} />
+      </ListPagePattern>
     </PageShell>
   );
 }

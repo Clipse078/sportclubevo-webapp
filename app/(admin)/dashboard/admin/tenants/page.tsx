@@ -3,8 +3,9 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenants } from "@/lib/tenants/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TenantList from "@/components/admin/tenants/TenantList";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 
 export default async function TenantsPage() {
   const session = await requireAnyPermission([
@@ -23,17 +24,20 @@ export default async function TenantsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Platform"
         title="Tenants"
         description="Alle Tenants dieser Instanz. Jeder Tenant repräsentiert eine eigenständige Vereinsinstanz."
-        actions={
-          canManage ? <TenantCreateTrigger /> : undefined
-        }
-      />
-
-      <TenantList tenants={tenants} canManage={canManage} />
-    </div>
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Admin", href: "/dashboard/admin" },
+          { label: "Tenants" },
+        ]}
+        headerActions={canManage ? <TenantCreateTrigger /> : undefined}
+      >
+        <TenantList tenants={tenants} canManage={canManage} />
+      </ListPagePattern>
+    </PageShell>
   );
 }

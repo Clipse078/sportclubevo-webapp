@@ -269,6 +269,8 @@ type Props = {
   orgUnits?: OrgUnitOption[];
   teamSeasons?: TeamSeasonOption[];
   currentUserId?: string | null;
+  /** Page chrome owns the h1. The inbox keeps the live count line. */
+  suppressPageTitle?: boolean;
 };
 
 export default function RegistrationInbox({
@@ -285,6 +287,7 @@ export default function RegistrationInbox({
   orgUnits = [],
   teamSeasons = [],
   currentUserId = null,
+  suppressPageTitle = false,
 }: Props) {
   const [registrations, setRegistrations] = useState(() =>
     initialRegistrations.filter((registration) => belongsInWorkspace(registration, workspaceMode)),
@@ -534,12 +537,14 @@ export default function RegistrationInbox({
     <div className="flex flex-col gap-0">
       <header className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
+          {suppressPageTitle ? null : (
           <h1
             className="text-lg font-bold tracking-tight text-[var(--foreground)] sm:text-xl"
             style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.01em" }}
           >
             {isArchive ? "Archiv" : "Registrierungen"}
           </h1>
+          )}
           <p className="mt-0.5 text-xs text-[var(--muted)] sm:text-sm">
             {isArchive ? (
               `${registrations.length} abgeschlossene Anmeldung${registrations.length !== 1 ? "en" : ""}`

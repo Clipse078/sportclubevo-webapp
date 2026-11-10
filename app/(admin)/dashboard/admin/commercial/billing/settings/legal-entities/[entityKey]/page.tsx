@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingDeleteLegalEntityButton from "@/components/admin/billing/NativeBillingDeleteLegalEntityButton";
 import { findLegalEntityByKey } from "@/lib/billing/native-billing-repository";
@@ -29,18 +32,19 @@ export default async function NativeBillingLegalEntityDetailPage({ params }: Pag
   const statusPresentation = presentLegalEntityStatus(entity.status);
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <PageShell>
+      <DetailPagePattern
+        eyebrow="Abrechnung"
         title={entity.displayName}
         description={`Rechtsträger · Key ${entity.key}`}
-        actions={
+        breadcrumbs={billingWorkspaceBreadcrumbs("Rechtsträger")}
+        contextTabs={<BillingWorkspaceTabs />}
+        headerActions={
           <Link href="/dashboard/admin/commercial/billing/settings" className="fca-button-secondary">
             Zurück zu Einstellungen
           </Link>
         }
-      />
-
+      >
       <section className="space-y-2 rounded-lg border border-border p-4">
         <h2 className="text-sm font-semibold">Stammdaten</h2>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
@@ -113,6 +117,7 @@ export default async function NativeBillingLegalEntityDetailPage({ params }: Pag
           />
         </section>
       ) : null}
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

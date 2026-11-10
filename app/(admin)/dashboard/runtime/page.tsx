@@ -2,8 +2,8 @@
 import { getDeploymentMetadata } from "@/lib/server/deployment";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import { SectionCard } from "@/components/ui/page";
+import { PageShell, SectionCard } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +14,16 @@ export default async function DashboardRuntimePage() {
   const deployment = getDeploymentMetadata();
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <AdminSectionHeader
+    <PageShell>
+      <ListPagePattern
         eyebrow="System"
         title="Runtime & Deployment"
         description="Deployment-Konfiguration, Umgebungsvariablen und Systemstatus auf einen Blick."
-      />
-
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Runtime" },
+        ]}
+      >
       <SectionCard title="Deployment" description="Aktive Konfiguration und Build-Informationen">
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between border-b border-[var(--border)] pb-3">
@@ -60,6 +63,7 @@ export default async function DashboardRuntimePage() {
           </span>
         </div>
       </SectionCard>
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }

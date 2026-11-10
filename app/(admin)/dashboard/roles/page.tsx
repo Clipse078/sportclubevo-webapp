@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import GovernanceWorkspaceTabs from "@/components/admin/roles/GovernanceWorkspaceTabs";
+import { EmptyState, PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getRolesWithCountsData, type RoleListItem } from "@/lib/roles/queries";
-import { EmptyState } from "@/components/ui/page";
 
 export default async function RolesPage() {
   await requirePermission(PERMISSIONS.USERS_MANAGE);
@@ -18,12 +19,17 @@ export default async function RolesPage() {
   const rolesWithUsers = roles.filter((r: RoleListItem) => r.userCount > 0).length;
 
   return (
-    <div className="space-y-8 max-w-[1400px]">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Governance"
         title="Rollen"
         description="Alle Systemrollen im Überblick — Benutzer-Zuweisungen, Berechtigungen und Org-Einheiten auf einen Blick."
-        actions={
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Rollen" },
+        ]}
+        contextTabs={<GovernanceWorkspaceTabs />}
+        headerActions={
           <Link
             href="/dashboard/permissions"
             className="fca-button-secondary flex items-center gap-2"
@@ -32,8 +38,7 @@ export default async function RolesPage() {
             Berechtigungen
           </Link>
         }
-      />
-
+      >
       {/* KPI Strip */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
@@ -280,6 +285,7 @@ export default async function RolesPage() {
           </>
         )}
       </div>
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }
