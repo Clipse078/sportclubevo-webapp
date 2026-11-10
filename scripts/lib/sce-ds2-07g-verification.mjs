@@ -270,6 +270,11 @@ export function selectBatch3Routes({ limit = 40, offset = 0, evidenceBySource = 
     return !isAuthenticatedVisualClosure(dimensions);
   });
   pending.sort((a, b) => {
+    const aHasEvidence = evidenceBySource[a.sourceFile] ? 1 : 0;
+    const bHasEvidence = evidenceBySource[b.sourceFile] ? 1 : 0;
+    if (aHasEvidence !== bHasEvidence) {
+      return aHasEvidence - bHasEvidence;
+    }
     const ai = BATCH_3_MODULE_PRIORITY.indexOf(a.module);
     const bi = BATCH_3_MODULE_PRIORITY.indexOf(b.module);
     const ar = ai === -1 ? 999 : ai;

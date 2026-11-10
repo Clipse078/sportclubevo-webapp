@@ -113,9 +113,30 @@ Helpers:
 | Baseline | `label` / `select-name` on form archetypes | Recorded FAIL — not suppressed |
 | Dynamic fixtures | `ExternalClub`, `WebsitePage`, `ReusableComponent` for `[clubId]` / `[id]` probes | Runner fixture resolution + workspace shell wait |
 
+## Batch 5 result (coverage + remediation + evidence closure)
+
+| Status | Count |
+| --- | ---: |
+| Authenticated browser evidence rows | **181** / 214 |
+| Remaining queue (no browser row yet) | **33** |
+| Responsive PASS / PENDING (fixture) / FAIL | **146** / **35** / **0** among sampled rows |
+| Accessibility PASS / FAIL / PENDING | **0** / **60** / **121** |
+| Functional PASS / PENDING | **109** / **72** |
+| Screenshot explicitly reviewed | **7** (+ 3 roles detail routes retain batch-4 review in history; re-marked after reassess) |
+| Programme `authenticatedVisual` VERIFIED | **0** / 214 |
+
+### Batch 5 remediations
+
+| Area | Change |
+| --- | --- |
+| Responsive (4 routes) | Tenant-scoped CMS fixtures; keyboard focus probe retries; notifications skip-link; HTTP 404 no longer misclassified as auth FAIL |
+| Accessibility | White-edition `--sce-primary` / filled CTA tokens darkened to `#a35f28` (AA with white text and on canvas); contrast regression pairs extended |
+| Queue | `selectBatch3Routes` now prefers routes without evidence before re-sampling partial rows |
+| Visual review | Agent read of notifications, website page/component edit, communication hub, vereinsleitung initiative form |
+
 ## Remaining verification work
 
-1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, next offset **73** remaining in priority queue).
+1. Continue batch-3 sampling (`SCE_DS2_07G_MODE=batch3`, **33** routes remain without evidence).
 2. Agent visual review of captured screenshots (`visual.screenshotReviewed = true`) where layout heuristics are clean.
 3. Triage axe failures (contrast/aria baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
 4. Merge evidence into `sce-ds2-07g-verification-evidence.json` and regenerate the matrix after each chunk.

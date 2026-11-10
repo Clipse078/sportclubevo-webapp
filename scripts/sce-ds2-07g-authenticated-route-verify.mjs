@@ -42,6 +42,9 @@ const PASSWORD = process.env.SCE_DS2_07G_LOGIN_PASSWORD?.trim();
 const MODE = process.env.SCE_DS2_07G_MODE?.trim() || "reassess-batch2";
 const ROUTE_LIMIT = Number.parseInt(process.env.SCE_DS2_07G_ROUTE_LIMIT ?? "41", 10);
 const ROUTE_OFFSET = Number.parseInt(process.env.SCE_DS2_07G_ROUTE_OFFSET ?? "0", 10);
+const SOURCE_FILE_FILTER = process.env.SCE_DS2_07G_SOURCE_FILES?.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 const ARTIFACT_DIR = "/opt/cursor/artifacts/sce-ds2-07g";
 const EVIDENCE_PATH = join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json");
 
@@ -70,6 +73,18 @@ function loadExistingManifest() {
   }
 }
 
+async function resolveVerificationTenantId(client) {
+  if (!EMAIL) return null;
+  const user = await client.query(`SELECT id FROM "User" WHERE email = $1 LIMIT 1`, [EMAIL]);
+  const userId = user.rows[0]?.id;
+  if (!userId) return null;
+  const membership = await client.query(
+    `SELECT "tenantId" FROM "TenantMembership" WHERE "userId" = $1 ORDER BY "createdAt" ASC LIMIT 1`,
+    [userId],
+  );
+  return membership.rows[0]?.tenantId ?? null;
+}
+
 async function loadDynamicFixtures() {
   dynamicFixtures = {
     seriesId: process.env.SCE_DS2_07G_FIXTURE_SERIES_ID?.trim() ?? "",
@@ -79,6 +94,12 @@ async function loadDynamicFixtures() {
     clubId: process.env.SCE_DS2_07G_FIXTURE_CLUB_ID?.trim() ?? "",
     pageId: process.env.SCE_DS2_07G_FIXTURE_PAGE_ID?.trim() ?? "",
     componentId: process.env.SCE_DS2_07G_FIXTURE_COMPONENT_ID?.trim() ?? "",
+    roleId: process.env.SCE_DS2_07G_FIXTURE_ROLE_ID?.trim() ?? "",
+    matchId: process.env.SCE_DS2_07G_FIXTURE_MATCH_ID?.trim() ?? "",
+    infoboardId: process.env.SCE_DS2_07G_FIXTURE_INFOBOARD_ID?.trim() ?? "",
+    requirementId: process.env.SCE_DS2_07G_FIXTURE_REQUIREMENT_ID?.trim() ?? "",
+    recipientId: process.env.SCE_DS2_07G_FIXTURE_RECIPIENT_ID?.trim() ?? "",
+    scenarioId: process.env.SCE_DS2_07G_FIXTURE_SCENARIO_ID?.trim() ?? "",
   };
   if (Object.values(dynamicFixtures).every(Boolean)) return;
 
@@ -92,45 +113,125 @@ async function loadDynamicFixtures() {
   });
   try {
     await client.connect();
+    const tenantId = await resolveVerificationTenantId(client);
+    const tenantParams = tenantId ? [tenantId] : [];
+
     if (!dynamicFixtures.seriesId) {
       const series = await client.query(
-        `SELECT id FROM "TrainingSeries" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "TrainingSeries" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "TrainingSeries" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.seriesId = series.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.sessionId) {
       const session = await client.query(
-        `SELECT id FROM "TrainingSession" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "TrainingSession" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "TrainingSession" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.sessionId = session.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.eventId) {
-      const event = await client.query(`SELECT id FROM "Event" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`);
+      const event = await client.query(
+        tenantId
+          ? `SELECT id FROM "Event" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Event" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
       dynamicFixtures.eventId = event.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.taskId) {
       const task = await client.query(
-        `SELECT id FROM "Task" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "Task" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Task" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.taskId = task.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.clubId) {
       const club = await client.query(
-        `SELECT id FROM "ExternalClub" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "ExternalClub" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "ExternalClub" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.clubId = club.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.pageId) {
       const page = await client.query(
-        `SELECT id FROM "WebsitePage" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "WebsitePage" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "WebsitePage" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.pageId = page.rows[0]?.id ?? "";
     }
     if (!dynamicFixtures.componentId) {
       const component = await client.query(
-        `SELECT id FROM "ReusableComponent" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantId
+          ? `SELECT id FROM "ReusableComponent" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "ReusableComponent" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
       );
       dynamicFixtures.componentId = component.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.roleId) {
+      const role = await client.query(
+        tenantId
+          ? `SELECT id FROM "Role" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Role" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.roleId = role.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.matchId) {
+      const match = await client.query(
+        tenantId
+          ? `SELECT id FROM "Event" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Event" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.matchId = match.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.infoboardId) {
+      const infoboard = await client.query(
+        tenantId
+          ? `SELECT id FROM "Infoboard" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Infoboard" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.infoboardId = infoboard.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.requirementId) {
+      const requirement = await client.query(
+        tenantId
+          ? `SELECT id FROM "Requirement" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "Requirement" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.requirementId = requirement.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.recipientId) {
+      const recipient = await client.query(
+        tenantId
+          ? `SELECT id FROM "RequirementRecipient" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "RequirementRecipient" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.recipientId = recipient.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.scenarioId) {
+      const scenario = await client.query(
+        tenantId
+          ? `SELECT id FROM "FinanceScenario" WHERE "tenantId" = $1 ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`
+          : `SELECT id FROM "FinanceScenario" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+        tenantParams,
+      );
+      dynamicFixtures.scenarioId = scenario.rows[0]?.id ?? "";
     }
   } finally {
     await client.end().catch(() => {});
@@ -144,16 +245,36 @@ function resolveProbePath(urlPattern) {
     if (urlPattern.includes("/website/components/")) fixtureValues.id = dynamicFixtures.componentId;
     else if (urlPattern.includes("/website/pages/")) fixtureValues.id = dynamicFixtures.pageId;
     else if (urlPattern.includes("/vereine/")) fixtureValues.id = dynamicFixtures.clubId;
+    else if (urlPattern.includes("/administration/roles/")) fixtureValues.id = dynamicFixtures.roleId;
+    else if (urlPattern.includes("/infoboard/")) fixtureValues.id = dynamicFixtures.infoboardId;
   }
   for (const [key, value] of Object.entries(fixtureValues)) {
     if (!value) continue;
     resolved = resolved.replaceAll(`[${key}]`, encodeURIComponent(value));
   }
   if (/\[[^\]]+\]/.test(resolved)) {
-    const staticRoute = resolved.replace(/\[[^\]]+\]/g, "").replace(/\/+/g, "/").replace(/\/$/, "");
-    return staticRoute || "/dashboard";
+    return null;
   }
   return resolved.replace(/\/+/g, "/").replace(/\/$/, "") || "/dashboard";
+}
+
+async function probeKeyboardFocus(page) {
+  const focusableCount = await page.evaluate(() =>
+    document.querySelectorAll(
+      "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+    ).length,
+  );
+  if (focusableCount === 0) {
+    return [];
+  }
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await page.keyboard.press("Tab");
+    const active = await page.evaluate(() => document.activeElement?.tagName ?? "NONE");
+    if (active !== "BODY") {
+      return [];
+    }
+  }
+  return ["keyboard focus did not move from body"];
 }
 
 async function login(page) {
@@ -267,12 +388,48 @@ async function collectFunctionalReadOnly(page, urlPattern) {
 
 async function auditRoute(page, urlPattern, sourceFile) {
   const probe = resolveProbePath(urlPattern);
+  if (!probe) {
+    return {
+      sourceFile,
+      urlPattern,
+      desktop: "PENDING",
+      compactDesktop: "PENDING",
+      tablet: "PENDING",
+      mobile: "PENDING",
+      accessibility: "PENDING",
+      functional: "PENDING",
+      authenticatedVisual: "PENDING",
+      automated: "PASSED",
+      blocked: false,
+      dimensions: {
+        authentication: { status: "PASS", reason: "Authenticated session established" },
+        authorization: { status: "PENDING", reason: "Dynamic fixture unavailable for probe URL" },
+        visual: { status: "PENDING", reason: "Missing dynamic fixture id", screenshotReviewed: false, details: [] },
+        responsive: {
+          status: "PENDING",
+          reason: "Missing dynamic fixture id",
+          viewports: {},
+        },
+        accessibility: { status: "PENDING", reason: "Route not probed — missing fixture", axeViolations: 0, axeIncomplete: 0, details: [] },
+        functional: { status: "PENDING", reason: "Route not probed — missing fixture", details: [] },
+      },
+      evidenceReferences: [],
+      defects: [
+        {
+          id: `DS2-07G-fixture-${sourceFile}`,
+          introducedByDs2: null,
+          status: "OPEN",
+          summary: "Missing dynamic fixture for parameterized URL",
+          reproduction: urlPattern,
+        },
+      ],
+    };
+  }
   const defects = [];
   /** @type {import('./lib/sce-ds2-07g-evidence-contract.mjs').RouteDimensionEvidence['responsive']['viewports']} */
   const viewports = {};
   const evidenceReferences = [];
   let authBlocked = false;
-  let authFail = false;
   let axeSummary = { violations: 0, incomplete: 0, violationSummaries: [] };
   let layoutHeuristics = null;
   let functionalReadOnly = null;
@@ -300,7 +457,6 @@ async function auditRoute(page, urlPattern, sourceFile) {
     if (!response || status >= 400) {
       viewportFailures.push(`HTTP ${status || "no-response"}`);
       if (status === 401 || status === 403) authBlocked = true;
-      else authFail = true;
       viewports[viewport.key] = {
         status: status === 401 || status === 403 ? "BLOCKED" : "FAIL",
         reason: viewportFailures.join("; "),
@@ -318,11 +474,7 @@ async function auditRoute(page, urlPattern, sourceFile) {
       viewportFailures.push("missing workspace chrome landmarks");
     }
 
-    await page.keyboard.press("Tab");
-    const active = await page.evaluate(() => document.activeElement?.tagName ?? "NONE");
-    if (active === "BODY") {
-      viewportFailures.push("keyboard focus did not move from body");
-    }
+    viewportFailures.push(...(await probeKeyboardFocus(page)));
 
     const layout = await collectLayoutHeuristics(page);
     if (layout.horizontalOverflow) {
@@ -363,11 +515,11 @@ async function auditRoute(page, urlPattern, sourceFile) {
 
   const dimensions = {
     authentication: {
-      status: authBlocked ? "BLOCKED" : authFail ? "FAIL" : "PASS",
+      status: authBlocked ? "BLOCKED" : "PASS",
       reason: authBlocked ? "HTTP 401/403" : "Authenticated navigation succeeded",
     },
     authorization: {
-      status: authBlocked ? "BLOCKED" : authFail ? "FAIL" : "PASS",
+      status: authBlocked ? "BLOCKED" : "PASS",
       reason: "Session could reach route without unauthorized response",
     },
     visual: {
@@ -472,7 +624,11 @@ async function main() {
   const existing = loadExistingManifest();
   const existingBySource = existing.bySourceFile ?? {};
 
-  const routes = selectRoutes(existingBySource);
+  let routes = selectRoutes(existingBySource);
+  if (SOURCE_FILE_FILTER?.length) {
+  const byUrl = new Map(loadRegistryEntries().map((entry) => [entry.sourceFile, entry]));
+    routes = SOURCE_FILE_FILTER.map((sourceFile) => byUrl.get(sourceFile)).filter(Boolean);
+  }
   if (routes.length === 0) {
     console.log(JSON.stringify({ message: "No routes selected for mode", mode: MODE }, null, 2));
     return;

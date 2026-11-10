@@ -558,6 +558,15 @@
   --sce-color-nav-active: #a35f28;
   --sce-color-context-tab-active: var(--blue);
   --sce-account-avatar-fallback: var(--blue);
+  /* Filled primary CTAs and brand accent text on white surfaces (WCAG AA) */
+  --orange: #a35f28;
+  --orange-hover: #8f4f1f;
+  --sce-primary: #a35f28;
+  --sce-primary-hover: #8f4f1f;
+  --sce-accent: #a35f28;
+  --sce-accent-hover: #8f4f1f;
+  --sce-color-accent-primary: #a35f28;
+  --sce-color-accent-hover: #8f4f1f;
 
   --sce-bg:            var(--background);
   --sce-surface:       var(--surface);

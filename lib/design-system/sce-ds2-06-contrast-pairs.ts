@@ -112,4 +112,16 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#fafafa",
     minimumRatio: 4.5,
   },
+  {
+    id: "primary-cta-on-white-edition",
+    foreground: "#ffffff",
+    background: "#a35f28",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "brand-accent-text-on-canvas",
+    foreground: "#a35f28",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
 ];

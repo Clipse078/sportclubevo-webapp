@@ -102,6 +102,13 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     expect(pendingReview.length).toBeGreaterThan(0);
   });
 
+  it("prefers never-sampled routes at the front of the batch-3 queue", async () => {
+    const { selectBatch3Routes } = await import("../../../scripts/lib/sce-ds2-07g-verification.mjs");
+    const existing = { "app/(admin)/dashboard/page.tsx": { dimensions: {} } };
+    const first = selectBatch3Routes({ limit: 3, offset: 0, evidenceBySource: existing })[0];
+    expect(existing[first.sourceFile as keyof typeof existing]).toBeUndefined();
+  });
+
   it("regenerates the matrix from scripts without drift", () => {
     execSync("node scripts/sce-ds2-07g-build-verification-matrix.mjs", {
       cwd: ROOT,
