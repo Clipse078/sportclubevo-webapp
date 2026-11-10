@@ -1,29 +1,48 @@
 /**
- * SCE-DS2-07G — authenticated Playwright verification for a controlled batch.
+ * SCE-DS2-07G — authenticated Playwright verification (batch-3 evidence contract).
  *
- * Requires (never bypass auth):
+ * Requires:
  *   SCE_DS2_07G_LOGIN_EMAIL
  *   SCE_DS2_07G_LOGIN_PASSWORD
  *   SCE_DS2_07G_BASE_URL (default http://127.0.0.1:3000)
+ *   AUTH_SECRET or NEXTAUTH_SECRET on the app server (required for Auth.js session cookies)
+ *
+ * Optional:
+ *   SCE_DS2_07G_MODE=reassess-batch2|batch3|high-risk (default reassess-batch2)
+ *   SCE_DS2_07G_ROUTE_LIMIT=40
+ *   SCE_DS2_07G_ROUTE_OFFSET=0
  *
  * Run: node scripts/sce-ds2-07g-authenticated-route-verify.mjs
  */
+import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import pg from "pg";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  EVIDENCE_CONTRACT_VERSION,
+  VIEWPORT_KEYS,
+  deriveLegacyChannelsFromDimensions,
+  extractDimensions,
+} from "./lib/sce-ds2-07g-evidence-contract.mjs";
+import {
   buildVerificationMatrix,
-  HIGH_RISK_URL_PATTERNS,
   isHighRiskRoute,
   loadRegistryEntries,
+  selectBatch3Routes,
   summarizeMatrix,
 } from "./lib/sce-ds2-07g-verification.mjs";
+
+const require = createRequire(import.meta.url);
+const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 const ROOT = process.cwd();
 const BASE_URL = process.env.SCE_DS2_07G_BASE_URL?.trim() || "http://localhost:3000";
 const EMAIL = process.env.SCE_DS2_07G_LOGIN_EMAIL?.trim();
 const PASSWORD = process.env.SCE_DS2_07G_LOGIN_PASSWORD?.trim();
+const MODE = process.env.SCE_DS2_07G_MODE?.trim() || "reassess-batch2";
+const ROUTE_LIMIT = Number.parseInt(process.env.SCE_DS2_07G_ROUTE_LIMIT ?? "41", 10);
+const ROUTE_OFFSET = Number.parseInt(process.env.SCE_DS2_07G_ROUTE_OFFSET ?? "0", 10);
 const ARTIFACT_DIR = "/opt/cursor/artifacts/sce-ds2-07g";
 const EVIDENCE_PATH = join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json");
 
@@ -44,12 +63,22 @@ if (!EMAIL || !PASSWORD) {
 /** @type {Record<string, string>} */
 let dynamicFixtures = {};
 
+function loadExistingManifest() {
+  try {
+    return JSON.parse(readFileSync(EVIDENCE_PATH, "utf8"));
+  } catch {
+    return { bySourceFile: {} };
+  }
+}
+
 async function loadDynamicFixtures() {
   dynamicFixtures = {
     seriesId: process.env.SCE_DS2_07G_FIXTURE_SERIES_ID?.trim() ?? "",
     sessionId: process.env.SCE_DS2_07G_FIXTURE_SESSION_ID?.trim() ?? "",
+    eventId: process.env.SCE_DS2_07G_FIXTURE_EVENT_ID?.trim() ?? "",
+    taskId: process.env.SCE_DS2_07G_FIXTURE_TASK_ID?.trim() ?? "",
   };
-  if (dynamicFixtures.seriesId && dynamicFixtures.sessionId) return;
+  if (Object.values(dynamicFixtures).every(Boolean)) return;
 
   const databaseUrl = process.env.DATABASE_URL?.trim();
   if (!databaseUrl) return;
@@ -73,6 +102,16 @@ async function loadDynamicFixtures() {
       );
       dynamicFixtures.sessionId = session.rows[0]?.id ?? "";
     }
+    if (!dynamicFixtures.eventId) {
+      const event = await client.query(`SELECT id FROM "Event" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`);
+      dynamicFixtures.eventId = event.rows[0]?.id ?? "";
+    }
+    if (!dynamicFixtures.taskId) {
+      const task = await client.query(
+        `SELECT id FROM "Task" ORDER BY "updatedAt" DESC NULLS LAST LIMIT 1`,
+      );
+      dynamicFixtures.taskId = task.rows[0]?.id ?? "";
+    }
   } finally {
     await client.end().catch(() => {});
   }
@@ -92,102 +131,339 @@ function resolveProbePath(urlPattern) {
 }
 
 async function login(page) {
-  await page.goto(`${BASE_URL}/login`, { waitUntil: "load", timeout: 120_000 });
-  await page.fill('input[name="email"], input[type="email"]', EMAIL);
-  await page.fill('input[name="password"], input[type="password"]', PASSWORD);
-  await Promise.all([
-    page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 120_000 }),
-    page.click('button[type="submit"]'),
-  ]);
+  const csrfResponse = await page.request.get(`${BASE_URL}/api/auth/csrf`);
+  if (!csrfResponse.ok()) {
+    throw new Error(`Failed to load Auth.js CSRF token (HTTP ${csrfResponse.status()})`);
+  }
+  const { csrfToken } = await csrfResponse.json();
+  const loginResponse = await page.request.post(`${BASE_URL}/api/auth/callback/credentials`, {
+    form: {
+      csrfToken,
+      email: EMAIL,
+      password: PASSWORD,
+      json: "true",
+    },
+  });
+  if (!loginResponse.ok()) {
+    throw new Error(`Credentials login failed (HTTP ${loginResponse.status()})`);
+  }
+  const payload = await loginResponse.json().catch(() => null);
+  if (payload?.error) {
+    throw new Error(`Credentials login rejected: ${payload.error}`);
+  }
+  const dashboard = await page.goto(`${BASE_URL}/dashboard`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  if (!dashboard || dashboard.status() >= 400) {
+    throw new Error(`Authenticated dashboard probe failed (HTTP ${dashboard?.status() ?? "no-response"})`);
+  }
+  if (page.url().includes("/login")) {
+    throw new Error("Session cookie not established after credentials login");
+  }
+}
+
+async function runAxe(page) {
+  await page.evaluate(axeSource);
+  return page.evaluate(async () => {
+    // @ts-expect-error injected axe
+    const results = await window.axe.run(document, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] },
+    });
+    return {
+      violations: results.violations.length,
+      incomplete: results.incomplete.length,
+      violationSummaries: results.violations.slice(0, 5).map((v) => `${v.id}:${v.impact}`),
+    };
+  });
+}
+
+async function collectLayoutHeuristics(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement;
+    const horizontalOverflow = root.scrollWidth > root.clientWidth + 2;
+    const h1Count = document.querySelectorAll("h1").length;
+    const duplicateHeader = h1Count > 1;
+    const mainLandmarks = document.querySelectorAll("main, [role='main']").length;
+    const navCount = document.querySelectorAll("nav").length;
+    return {
+      horizontalOverflow,
+      duplicateHeader,
+      mainLandmarks,
+      navCount,
+      h1Count,
+    };
+  });
+}
+
+async function collectFunctionalReadOnly(page, urlPattern) {
+  const formArchetype = /\/(new|edit)(\/|$)/.test(urlPattern) || urlPattern.includes("[");
+  return page.evaluate((needsForm) => {
+    const main = document.querySelector("main, [role='main']");
+    const hasPrimaryHeading =
+      Boolean(document.querySelector("h1")) ||
+      Boolean(document.querySelector("[aria-labelledby]"));
+    const interactive = document.querySelectorAll("a[href], button, input, select, textarea").length;
+    const hasSubmit = Boolean(document.querySelector("button[type='submit'], input[type='submit']"));
+    return {
+      hasMainLandmark: Boolean(main),
+      hasPrimaryHeading,
+      interactiveCount: interactive,
+      formCheckSkipped: !needsForm,
+      formSubmitPresent: needsForm ? hasSubmit : true,
+    };
+  }, formArchetype);
 }
 
 async function auditRoute(page, urlPattern, sourceFile) {
   const probe = resolveProbePath(urlPattern);
-  const failures = [];
+  const defects = [];
+  /** @type {import('./lib/sce-ds2-07g-evidence-contract.mjs').RouteDimensionEvidence['responsive']['viewports']} */
+  const viewports = {};
   const evidenceReferences = [];
+  let authBlocked = false;
+  let authFail = false;
+  let axeSummary = { violations: 0, incomplete: 0, violationSummaries: [] };
+  let layoutHeuristics = null;
+  let functionalReadOnly = null;
+
   for (const viewport of VIEWPORTS) {
+    const viewportFailures = [];
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    const response = await page.goto(`${BASE_URL}${probe}`, { waitUntil: "domcontentloaded" });
-    if (!response || response.status() >= 400) {
-      failures.push(`${viewport.key}: HTTP ${response?.status() ?? "no-response"}`);
+    const response = await page.goto(`${BASE_URL}${probe}`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+    const status = response?.status() ?? 0;
+    if (!response || status >= 400) {
+      viewportFailures.push(`HTTP ${status || "no-response"}`);
+      if (status === 401 || status === 403) authBlocked = true;
+      else authFail = true;
+      viewports[viewport.key] = {
+        status: status === 401 || status === 403 ? "BLOCKED" : "FAIL",
+        reason: viewportFailures.join("; "),
+      };
       continue;
     }
+
     const shot = join(ARTIFACT_DIR, `${probe.replace(/\//g, "_") || "root"}-${viewport.key}.png`);
     await page.screenshot({ path: shot, fullPage: true });
     evidenceReferences.push(shot);
+
     const hasWorkspaceChrome = await page.locator("[data-testid='sce-workspace-chrome']").count();
     const hasPrimaryNav = await page.locator("nav").count();
     if (hasWorkspaceChrome === 0 && hasPrimaryNav === 0) {
-      failures.push(`${viewport.key}: missing workspace chrome landmarks`);
+      viewportFailures.push("missing workspace chrome landmarks");
     }
-    const focused = await page.keyboard.press("Tab");
-    void focused;
+
+    await page.keyboard.press("Tab");
     const active = await page.evaluate(() => document.activeElement?.tagName ?? "NONE");
     if (active === "BODY") {
-      failures.push(`${viewport.key}: keyboard focus did not move from body`);
+      viewportFailures.push("keyboard focus did not move from body");
+    }
+
+    const layout = await collectLayoutHeuristics(page);
+    if (layout.horizontalOverflow) {
+      viewportFailures.push("horizontal overflow");
+    }
+
+    if (viewport.key === "desktop") {
+      layoutHeuristics = layout;
+      try {
+        axeSummary = await runAxe(page);
+      } catch (error) {
+        viewportFailures.push(`axe-core failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      functionalReadOnly = await collectFunctionalReadOnly(page, urlPattern);
+    }
+
+    viewports[viewport.key] = {
+      status: viewportFailures.length === 0 ? "PASS" : "FAIL",
+      details: viewportFailures,
+    };
+    for (const failure of viewportFailures) {
+      defects.push({
+        id: `DS2-07G-${viewport.key}-${defects.length + 1}`,
+        introducedByDs2: null,
+        status: "OPEN",
+        summary: `${viewport.key}: ${failure}`,
+        reproduction: `${BASE_URL}${probe}`,
+      });
     }
   }
-  const blocked = failures.some((item) => item.includes("HTTP 403") || item.includes("HTTP 401"));
-  const verified = failures.length === 0;
+
+  const responsivePass = VIEWPORT_KEYS.every((k) => viewports[k]?.status === "PASS");
+  const visualHeuristicFailures = [];
+  if (layoutHeuristics?.duplicateHeader) visualHeuristicFailures.push("multiple h1 elements");
+  if (layoutHeuristics && layoutHeuristics.mainLandmarks === 0) {
+    visualHeuristicFailures.push("missing main landmark");
+  }
+
+  const dimensions = {
+    authentication: {
+      status: authBlocked ? "BLOCKED" : authFail ? "FAIL" : "PASS",
+      reason: authBlocked ? "HTTP 401/403" : "Authenticated navigation succeeded",
+    },
+    authorization: {
+      status: authBlocked ? "BLOCKED" : authFail ? "FAIL" : "PASS",
+      reason: "Session could reach route without unauthorized response",
+    },
+    visual: {
+      status:
+        visualHeuristicFailures.length > 0
+          ? "FAIL"
+          : responsivePass
+            ? "PENDING"
+            : "FAIL",
+      reason: responsivePass
+        ? "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS"
+        : visualHeuristicFailures.join("; ") || "Responsive probe failed",
+      screenshotReviewed: false,
+      details: visualHeuristicFailures,
+    },
+    responsive: {
+      status: authBlocked ? "BLOCKED" : responsivePass ? "PASS" : "FAIL",
+      viewports,
+    },
+    accessibility: {
+      status:
+        authBlocked
+          ? "BLOCKED"
+          : axeSummary.violations > 0
+            ? "FAIL"
+            : axeSummary.incomplete > 0
+              ? "PENDING"
+              : responsivePass
+                ? "PASS"
+                : "PENDING",
+      axeViolations: axeSummary.violations,
+      axeIncomplete: axeSummary.incomplete,
+      reason:
+        axeSummary.violations > 0
+          ? `axe violations: ${axeSummary.violationSummaries.join(", ")}`
+          : axeSummary.incomplete > 0
+            ? `axe incomplete rules: ${axeSummary.incomplete}`
+            : "axe-core wcag2aa scan clean on desktop viewport",
+      details: axeSummary.violationSummaries,
+    },
+    functional: {
+      status: authBlocked
+        ? "BLOCKED"
+        : !functionalReadOnly
+          ? "PENDING"
+          : functionalReadOnly.hasMainLandmark &&
+              functionalReadOnly.hasPrimaryHeading &&
+              functionalReadOnly.interactiveCount > 0 &&
+              functionalReadOnly.formSubmitPresent
+            ? "PASS"
+            : "PENDING",
+      reason:
+        functionalReadOnly?.formCheckSkipped === false && !functionalReadOnly?.formSubmitPresent
+          ? "Form route missing submit control (read-only probe)"
+          : "Read-only functional smoke: landmarks, heading, interactive controls",
+      details: functionalReadOnly ? [JSON.stringify(functionalReadOnly)] : [],
+    },
+  };
+
+  const channels = deriveLegacyChannelsFromDimensions(dimensions);
+
   return {
     sourceFile,
     urlPattern,
-    desktop: verified ? "VERIFIED" : blocked ? "BLOCKED" : "PENDING",
-    tablet: verified ? "VERIFIED" : blocked ? "BLOCKED" : "PENDING",
-    mobile: verified ? "VERIFIED" : blocked ? "BLOCKED" : "PENDING",
-    compactDesktop: verified ? "VERIFIED" : blocked ? "BLOCKED" : "PENDING",
-    accessibility: verified ? "VERIFIED" : "PENDING",
-    functional: verified ? "VERIFIED" : "PENDING",
-    authenticatedVisual: verified ? "VERIFIED" : blocked ? "BLOCKED" : "PENDING",
+    ...channels,
     automated: "PASSED",
-    blocked,
+    blocked: channels.authenticatedVisual === "BLOCKED",
+    dimensions,
     evidenceReferences,
-    defects: failures.map((summary, index) => ({
-      id: `DS2-07G-BROWSER-${index + 1}`,
-      introducedByDs2: null,
-      status: "OPEN",
-      summary,
-      reproduction: `${BASE_URL}${probe}`,
-    })),
+    defects,
   };
+}
+
+function selectRoutes(existingBySource) {
+  if (MODE === "batch3") {
+    return selectBatch3Routes({
+      limit: ROUTE_LIMIT,
+      offset: ROUTE_OFFSET,
+      evidenceBySource: existingBySource,
+    });
+  }
+  const registry = loadRegistryEntries().filter(
+    (entry) =>
+      entry.migrationPackage === "DS2-07G" &&
+      entry.routeKind === "RENDERABLE_PAGE" &&
+      (MODE === "high-risk" || isHighRiskRoute(entry.urlPattern)),
+  );
+  return registry.slice(ROUTE_OFFSET, ROUTE_OFFSET + ROUTE_LIMIT);
 }
 
 async function main() {
   await loadDynamicFixtures();
   mkdirSync(ARTIFACT_DIR, { recursive: true });
-  const registry = loadRegistryEntries().filter(
-    (entry) =>
-      entry.migrationPackage === "DS2-07G" &&
-      entry.routeKind === "RENDERABLE_PAGE" &&
-      isHighRiskRoute(entry.urlPattern),
-  );
+  const existing = loadExistingManifest();
+  const existingBySource = existing.bySourceFile ?? {};
+
+  const routes = selectRoutes(existingBySource);
+  if (routes.length === 0) {
+    console.log(JSON.stringify({ message: "No routes selected for mode", mode: MODE }, null, 2));
+    return;
+  }
+
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
   await login(page);
 
-  const bySourceFile = {};
-  for (const entry of registry) {
-    bySourceFile[entry.sourceFile] = await auditRoute(page, entry.urlPattern, entry.sourceFile);
+  const batchResults = {};
+  for (const entry of routes) {
+    batchResults[entry.sourceFile] = await auditRoute(page, entry.urlPattern, entry.sourceFile);
   }
-
   await browser.close();
 
+  const mergedBySource = { ...existingBySource, ...batchResults };
+  const highRiskRows = Object.values(mergedBySource).filter((row) => isHighRiskRoute(row.urlPattern));
+
   const manifest = {
+    ...existing,
     generatedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
-    batch: "high-risk-batch-2",
-    prefixes: HIGH_RISK_URL_PATTERNS,
+    evidenceContractVersion: EVIDENCE_CONTRACT_VERSION,
+    batch:
+      MODE === "batch3"
+        ? `batch-3-module-sampling-offset-${ROUTE_OFFSET}-limit-${ROUTE_LIMIT}`
+        : `${existing.batch ?? "high-risk-batch-2"}+batch-3-reassess`,
+    lastRunMode: MODE,
+    prefixes: existing.prefixes,
     dynamicFixtures,
-    highRiskRoutesAttempted: registry.length,
-    highRiskRoutesVerified: Object.values(bySourceFile).filter((row) => row.authenticatedVisual === "VERIFIED")
+    highRiskRoutesAttempted: highRiskRows.length,
+    highRiskRoutesVerified: highRiskRows.filter((row) => row.authenticatedVisual === "VERIFIED").length,
+    highRiskRoutesResponsiveVerified: highRiskRows.filter(
+      (row) =>
+        row.desktop === "VERIFIED" &&
+        row.compactDesktop === "VERIFIED" &&
+        row.tablet === "VERIFIED" &&
+        row.mobile === "VERIFIED",
+    ).length,
+    batch3RoutesAttemptedThisRun: MODE === "batch3" ? routes.length : 0,
+    batch3EvidenceRows: Object.values(mergedBySource).filter((row) => !isHighRiskRoute(row.urlPattern))
       .length,
-    bySourceFile,
+    bySourceFile: mergedBySource,
   };
+
   writeFileSync(EVIDENCE_PATH, JSON.stringify(manifest, null, 2));
-  const rows = buildVerificationMatrix({ evidenceBySource: bySourceFile, authenticatedBrowserAvailable: true });
-  const summary = summarizeMatrix(rows, { authenticatedBrowserAvailable: true });
-  console.log(JSON.stringify({ summary, routesAttempted: registry.length }, null, 2));
+  const rows = buildVerificationMatrix({
+    evidenceBySource: mergedBySource,
+    authenticatedBrowserAvailable: true,
+  });
+  const summary = summarizeMatrix(rows, {
+    authenticatedBrowserAvailable: true,
+    evidenceBySource: mergedBySource,
+  });
+  console.log(
+    JSON.stringify(
+      {
+        summary,
+        mode: MODE,
+        routesAttemptedThisRun: routes.length,
+        totalEvidenceRows: Object.keys(mergedBySource).length,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 main().catch((error) => {

@@ -20,6 +20,38 @@ export type SceDs207gVerificationChannelStatus =
   | "BLOCKED"
   | "NOT_APPLICABLE";
 
+/** Independent verification dimension status (batch-3 evidence contract). */
+export type SceDs207gDimensionStatus =
+  | "PASS"
+  | "FAIL"
+  | "PENDING"
+  | "BLOCKED"
+  | "NOT_APPLICABLE";
+
+export type SceDs207gDimensionResult = {
+  status: SceDs207gDimensionStatus;
+  reason?: string;
+  details?: string[];
+};
+
+export type SceDs207gRouteDimensionEvidence = {
+  authentication: SceDs207gDimensionResult;
+  visual: SceDs207gDimensionResult & { screenshotReviewed?: boolean };
+  responsive: SceDs207gDimensionResult & {
+    viewports?: Partial<
+      Record<keyof typeof SCE_DS2_07G_VIEWPORTS, SceDs207gDimensionResult>
+    >;
+  };
+  accessibility: SceDs207gDimensionResult & {
+    axeViolations?: number;
+    axeIncomplete?: number;
+  };
+  functional: SceDs207gDimensionResult;
+  authorization: SceDs207gDimensionResult;
+};
+
+export const SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION = "2026-11-10-batch-3" as const;
+
 export type SceDs207gAutomatedChecksStatus = "PASSED" | "PENDING" | "FAILED";
 
 export type SceDs207gArchitectureAdoptionStatus = "IMPLEMENTED" | "VERIFIED";
@@ -66,6 +98,7 @@ export type SceDs207gVerificationMatrixEntry = {
 
 export type SceDs207gVerificationSummary = {
   matrixVersion: string;
+  evidenceContractVersion?: string;
   generatedAt: string;
   totalCanonicalRoutes: number;
   verifiedAuthenticatedVisualCount: number;
@@ -74,6 +107,10 @@ export type SceDs207gVerificationSummary = {
   automatedChecksPassedCount: number;
   highRiskBatchSize: number;
   highRiskVerifiedCount: number;
+  highRiskResponsiveVerifiedCount?: number;
+  dimensionClosureCompleteCount?: number;
+  dimensionAccessibilityPassCount?: number;
+  dimensionFunctionalPassCount?: number;
   authenticatedBrowserAvailable: boolean;
   contrastSmokeDebt: string[];
   trackedBaselineDebt: string[];

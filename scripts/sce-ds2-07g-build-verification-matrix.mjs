@@ -38,7 +38,7 @@ const authenticatedBrowserAvailable = Boolean(
   process.env.SCE_DS2_07G_LOGIN_EMAIL?.trim() && process.env.SCE_DS2_07G_LOGIN_PASSWORD?.trim(),
 );
 const rows = buildVerificationMatrix({ evidenceBySource, authenticatedBrowserAvailable });
-const summary = summarizeMatrix(rows, { authenticatedBrowserAvailable });
+const summary = summarizeMatrix(rows, { authenticatedBrowserAvailable, evidenceBySource });
 
 mkdirSync(join(ROOT, "lib/design-system"), { recursive: true });
 

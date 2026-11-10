@@ -4,6 +4,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { evaluateRepository } from "./sce-ds2-07b-route-governance.mjs";
+import {
+  EVIDENCE_CONTRACT_VERSION,
+  deriveLegacyChannelsFromDimensions,
+  extractDimensions,
+  isAuthenticatedVisualClosure,
+} from "./sce-ds2-07g-evidence-contract.mjs";
 
 const ROOT = process.cwd();
 
@@ -178,7 +184,18 @@ export function buildVerificationMatrix({ evidenceBySource = {}, authenticatedBr
     const archetype = inferPageArchetype(entry.sourceFile, entry.intercept);
     const persona = inferTestPersona(entry.module);
     const automated = entry.architecture === "CANONICAL" ? "PASSED" : "PENDING";
-    const visual = evidence?.authenticatedVisual ?? "PENDING";
+    const dimensions = evidence ? extractDimensions(evidence) : null;
+    const channels = dimensions
+      ? deriveLegacyChannelsFromDimensions(dimensions)
+      : {
+          desktop: "PENDING",
+          compactDesktop: "PENDING",
+          tablet: "PENDING",
+          mobile: "PENDING",
+          accessibility: "PENDING",
+          functional: "PENDING",
+          authenticatedVisual: "PENDING",
+        };
     rows.push({
       urlPattern: entry.urlPattern,
       sourceFile: entry.sourceFile,
@@ -190,13 +207,13 @@ export function buildVerificationMatrix({ evidenceBySource = {}, authenticatedBr
       parallelSlot: entry.parallelSlot,
       architectureAdoption: entry.migrationStatus === "IMPLEMENTED" ? "IMPLEMENTED" : "IMPLEMENTED",
       automatedChecks: automated,
-      desktop: evidence?.desktop ?? "PENDING",
-      compactDesktop: evidence?.compactDesktop ?? "PENDING",
-      tablet: evidence?.tablet ?? "PENDING",
-      mobile: evidence?.mobile ?? "PENDING",
-      accessibility: evidence?.accessibility ?? "PENDING",
-      functional: evidence?.functional ?? "PENDING",
-      authenticatedVisual: visual,
+      desktop: channels.desktop,
+      compactDesktop: channels.compactDesktop,
+      tablet: channels.tablet,
+      mobile: channels.mobile,
+      accessibility: channels.accessibility,
+      functional: channels.functional,
+      authenticatedVisual: channels.authenticatedVisual,
       evidenceReferences: evidence?.evidenceReferences ?? [],
       defects: evidence?.defects ?? [],
     });
@@ -205,15 +222,82 @@ export function buildVerificationMatrix({ evidenceBySource = {}, authenticatedBr
   return rows;
 }
 
-export function summarizeMatrix(rows, { authenticatedBrowserAvailable }) {
+export function countDimensionClosure(evidenceBySource) {
+  let closureComplete = 0;
+  let responsivePartial = 0;
+  let accessibilityPass = 0;
+  let functionalPass = 0;
+  for (const row of Object.values(evidenceBySource)) {
+    const dimensions = extractDimensions(row);
+    if (isAuthenticatedVisualClosure(dimensions)) closureComplete += 1;
+    if (dimensions.responsive?.status === "PASS") responsivePartial += 1;
+    if (dimensions.accessibility?.status === "PASS") accessibilityPass += 1;
+    if (dimensions.functional?.status === "PASS") functionalPass += 1;
+  }
+  return { closureComplete, responsivePartial, accessibilityPass, functionalPass };
+}
+
+/** Non-high-risk module batches for batch 3+ authenticated runs (priority order). */
+export const BATCH_3_MODULE_PRIORITY = [
+  "wochenplaner",
+  "events",
+  "training",
+  "matches",
+  "dashboard",
+  "persons",
+  "teams",
+  "communication",
+  "website-cms",
+  "vereinsleitung",
+  "administration",
+  "settings",
+  "tournaments",
+  "clubs",
+  "tenant-admin",
+];
+
+export function selectBatch3Routes({ limit = 40, offset = 0, evidenceBySource = {} } = {}) {
+  const registry = loadRegistryEntries().filter(
+    (entry) =>
+      entry.migrationPackage === "DS2-07G" &&
+      entry.routeKind === "RENDERABLE_PAGE" &&
+      !isHighRiskRoute(entry.urlPattern),
+  );
+  const pending = registry.filter((entry) => {
+    const evidence = evidenceBySource[entry.sourceFile];
+    if (!evidence) return true;
+    const dimensions = extractDimensions(evidence);
+    return !isAuthenticatedVisualClosure(dimensions);
+  });
+  pending.sort((a, b) => {
+    const ai = BATCH_3_MODULE_PRIORITY.indexOf(a.module);
+    const bi = BATCH_3_MODULE_PRIORITY.indexOf(b.module);
+    const ar = ai === -1 ? 999 : ai;
+    const br = bi === -1 ? 999 : bi;
+    if (ar !== br) return ar - br;
+    return a.urlPattern.localeCompare(b.urlPattern);
+  });
+  return pending.slice(offset, offset + limit);
+}
+
+export function summarizeMatrix(rows, { authenticatedBrowserAvailable, evidenceBySource = {} } = {}) {
   const verified = rows.filter((row) => row.authenticatedVisual === "VERIFIED").length;
   const pending = rows.filter((row) => row.authenticatedVisual === "PENDING").length;
   const blocked = rows.filter((row) => row.authenticatedVisual === "BLOCKED").length;
   const automatedPassed = rows.filter((row) => row.automatedChecks === "PASSED").length;
   const highRisk = rows.filter((row) => isHighRiskRoute(row.urlPattern));
   const highRiskVerified = highRisk.filter((row) => row.authenticatedVisual === "VERIFIED").length;
+  const highRiskResponsive = highRisk.filter(
+    (row) =>
+      row.desktop === "VERIFIED" &&
+      row.compactDesktop === "VERIFIED" &&
+      row.tablet === "VERIFIED" &&
+      row.mobile === "VERIFIED",
+  ).length;
+  const dimensionCounts = countDimensionClosure(evidenceBySource);
   return {
-    matrixVersion: "2026-11-10-batch-2",
+    matrixVersion: EVIDENCE_CONTRACT_VERSION,
+    evidenceContractVersion: EVIDENCE_CONTRACT_VERSION,
     generatedAt: new Date().toISOString(),
     totalCanonicalRoutes: rows.length,
     verifiedAuthenticatedVisualCount: verified,
@@ -222,6 +306,10 @@ export function summarizeMatrix(rows, { authenticatedBrowserAvailable }) {
     automatedChecksPassedCount: automatedPassed,
     highRiskBatchSize: highRisk.length,
     highRiskVerifiedCount: highRiskVerified,
+    highRiskResponsiveVerifiedCount: highRiskResponsive,
+    dimensionClosureCompleteCount: dimensionCounts.closureComplete,
+    dimensionAccessibilityPassCount: dimensionCounts.accessibilityPass,
+    dimensionFunctionalPassCount: dimensionCounts.functionalPass,
     authenticatedBrowserAvailable,
     contrastSmokeDebt: [
       "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)",
@@ -230,7 +318,7 @@ export function summarizeMatrix(rows, { authenticatedBrowserAvailable }) {
       "Matchcenter operational panels (sce-design-system-10r2 migration debt)",
       "Infoboard designer live preview surfaces",
       "Aufgaben intercept modal routes",
-      "Authenticated visual closure: batch-2 high-risk (41) complete; remaining routes await module sampling",
+      "Batch 3 evidence contract: responsive/auth from batch 2 preserved; visual/a11y/functional require independent proof",
     ],
   };
 }

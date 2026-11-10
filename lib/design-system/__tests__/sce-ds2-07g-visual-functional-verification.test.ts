@@ -1,5 +1,5 @@
 /**
- * SCE-DS2-07G — verification matrix governance and batch-1 closure checks.
+ * SCE-DS2-07G — verification matrix governance and batch-3 evidence contract.
  */
 
 import { execSync } from "node:child_process";
@@ -7,7 +7,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SCE_DS2_07B_SUMMARY } from "@/lib/design-system/sce-ds2-07b-route-registry";
-import { SCE_DS2_07G_PACKAGE_KEY } from "@/lib/design-system/sce-ds2-07g-meta";
+import {
+  SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
+  SCE_DS2_07G_PACKAGE_KEY,
+} from "@/lib/design-system/sce-ds2-07g-meta";
 import {
   SCE_DS2_07G_STATIC_AUDIT,
   SCE_DS2_07G_VERIFICATION_MATRIX,
@@ -24,33 +27,53 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     expect(new Set(SCE_DS2_07G_VERIFICATION_MATRIX.map((row) => row.sourceFile)).size).toBe(214);
   });
 
-  it("derives authenticated visual status from recorded browser evidence only", () => {
-    expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    const verifiedRows = SCE_DS2_07G_VERIFICATION_MATRIX.filter(
-      (row) => row.authenticatedVisual === "VERIFIED",
+  it("uses the batch-3 evidence contract in the matrix summary", () => {
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.evidenceContractVersion).toBe(
+      SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
     );
-    const pendingRows = SCE_DS2_07G_VERIFICATION_MATRIX.filter(
-      (row) => row.authenticatedVisual === "PENDING",
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.matrixVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
+  });
+
+  it("maps channel VERIFIED only from matching dimension PASS (never from navigation alone)", () => {
+    const manifest = JSON.parse(
+      readFileSync(join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json"), "utf8"),
     );
-    expect(verifiedRows.length).toBe(SCE_DS2_07G_VERIFICATION_SUMMARY.verifiedAuthenticatedVisualCount);
-    expect(pendingRows.length).toBe(SCE_DS2_07G_VERIFICATION_SUMMARY.pendingAuthenticatedVisualCount);
-    expect(verifiedRows.length + pendingRows.length).toBe(214);
-
-    for (const row of verifiedRows) {
-      expect(row.architectureAdoption).toBe("IMPLEMENTED");
-      expect(row.automatedChecks).toBe("PASSED");
-      expect(row.evidenceReferences.length).toBeGreaterThan(0);
-      expect(row.desktop).toBe("VERIFIED");
-      expect(row.compactDesktop).toBe("VERIFIED");
-      expect(row.tablet).toBe("VERIFIED");
-      expect(row.mobile).toBe("VERIFIED");
+    for (const row of Object.values(manifest.bySourceFile ?? {}) as Array<{
+      dimensions?: {
+        accessibility?: { status?: string };
+        functional?: { status?: string };
+        visual?: { screenshotReviewed?: boolean };
+      };
+      accessibility?: string;
+      functional?: string;
+      authenticatedVisual?: string;
+    }>) {
+      if (row.accessibility === "VERIFIED") {
+        expect(row.dimensions?.accessibility?.status).toBe("PASS");
+      }
+      if (row.functional === "VERIFIED") {
+        expect(row.dimensions?.functional?.status).toBe("PASS");
+      }
+      if (row.authenticatedVisual === "VERIFIED") {
+        expect(row.dimensions?.visual?.screenshotReviewed).toBe(true);
+      }
     }
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
+  });
 
-    for (const row of pendingRows) {
-      expect(row.architectureAdoption).toBe("IMPLEMENTED");
-      expect(row.automatedChecks).toBe("PASSED");
-      expect(row.evidenceReferences).toEqual([]);
-    }
+  it("preserves high-risk responsive evidence while full closure stays pending", () => {
+    const manifest = JSON.parse(
+      readFileSync(join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json"), "utf8"),
+    );
+    const highRiskSourceFiles = new Set(Object.keys(manifest.bySourceFile ?? {}));
+    const highRiskRows = SCE_DS2_07G_VERIFICATION_MATRIX.filter((row) =>
+      highRiskSourceFiles.has(row.sourceFile),
+    );
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.highRiskBatchSize).toBe(41);
+    expect(highRiskRows.length).toBeGreaterThanOrEqual(41);
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.highRiskVerifiedCount).toBe(0);
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.highRiskResponsiveVerifiedCount).toBeGreaterThanOrEqual(39);
   });
 
   it("runs static canonical audit without blocking defects", () => {
@@ -58,22 +81,22 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     expect(SCE_DS2_07G_STATIC_AUDIT.defects).toEqual([]);
   });
 
-  it("documents batch-2 high-risk closure separately from programme-wide pending count", () => {
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.highRiskBatchSize).toBe(41);
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.highRiskVerifiedCount).toBe(41);
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.verifiedAuthenticatedVisualCount).toBeGreaterThanOrEqual(41);
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.contrastSmokeDebt.length).toBeGreaterThan(0);
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.trackedBaselineDebt.length).toBeGreaterThan(0);
-  });
-
-  it("commits batch-2 evidence manifest for high-risk routes", () => {
+  it("commits batch-3 dimension fields on recorded browser evidence", () => {
     const manifest = JSON.parse(
       readFileSync(join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json"), "utf8"),
     );
-    expect(manifest.batch).toBe("high-risk-batch-2");
+    expect(manifest.evidenceContractVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
     expect(manifest.highRiskRoutesAttempted).toBe(41);
-    expect(manifest.highRiskRoutesVerified).toBe(41);
-    expect(Object.keys(manifest.bySourceFile)).toHaveLength(41);
+    expect(Object.keys(manifest.bySourceFile).length).toBeGreaterThanOrEqual(41);
+    expect(manifest.batch3EvidenceRows ?? 0).toBeGreaterThanOrEqual(20);
+    const sample = Object.values(manifest.bySourceFile)[0] as {
+      dimensions: {
+        authentication: { status: string };
+        visual: { screenshotReviewed?: boolean };
+      };
+    };
+    expect(sample.dimensions.authentication.status).toBeTruthy();
+    expect(sample.dimensions.visual.screenshotReviewed).toBe(false);
   });
 
   it("regenerates the matrix from scripts without drift", () => {
@@ -86,6 +109,6 @@ describe("SCE-DS2-07G visual and functional verification", () => {
       "utf8",
     );
     expect(regenerated).toContain(SCE_DS2_07G_PACKAGE_KEY);
-    expect(regenerated).toContain('"matrixVersion": "2026-11-10-batch-2"');
+    expect(regenerated).toContain(`"matrixVersion": "${SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION}"`);
   });
 });
