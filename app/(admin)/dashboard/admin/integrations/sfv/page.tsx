@@ -17,8 +17,9 @@
 import { notFound } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { PageShell } from "@/components/ui/page";
+import { FormPagePattern } from "@/components/ui/patterns";
 import SfvTenantConfigPanel from "@/components/admin/integrations/SfvTenantConfigPanel";
 import SfvConfigDeleteButton from "@/components/admin/integrations/SfvConfigDeleteButton";
 import { getSfvConfigForTenant } from "@/lib/integrations/sfv/tenant-config-service";
@@ -41,13 +42,17 @@ export default async function SfvIntegrationPage() {
 
   return (
     <ToastProvider>
-      <div className="max-w-2xl space-y-8">
-        <AdminSectionHeader
+      <PageShell>
+        <FormPagePattern
           eyebrow="Integrationen"
           title="SFV / ClubCorner"
           description="Schweizerischer Fussballverband — Mandantenverbindung konfigurieren und Diagnose ausführen."
-        />
-
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Admin", href: "/dashboard/admin" },
+            { label: "SFV / ClubCorner" },
+          ]}
+        >
         <SfvTenantConfigPanel initialConfig={initialConfig} />
 
         {initialConfig ? (
@@ -63,7 +68,8 @@ export default async function SfvIntegrationPage() {
             />
           </div>
         ) : null}
-      </div>
+        </FormPagePattern>
+      </PageShell>
     </ToastProvider>
   );
 }

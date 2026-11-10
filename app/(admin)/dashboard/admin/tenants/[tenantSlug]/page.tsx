@@ -8,8 +8,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantDetail } from "@/lib/tenants/queries";
 import { getCurrentTenantContext } from "@/lib/tenants/context";
 import { formatCurrency, formatDate, getCurrentSeasonLabel } from "@/lib/tenant-runtime/formatters";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TenantForm from "@/components/admin/tenants/TenantForm";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 import TenantConfigForm from "@/components/admin/tenants/TenantConfigForm";
 import BrandingPreviewCard from "@/components/admin/branding/BrandingPreviewCard";
 import TenantDeleteButton from "@/components/admin/tenants/TenantDeleteButton";
@@ -63,22 +64,27 @@ export default async function TenantDetailPage({ params }: PageProps) {
   const previewSeason = ctx ? getCurrentSeasonLabel(ctx) : null;
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      {/* Back link */}
-      <Link
-        href="/dashboard/admin/tenants"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] transition hover:text-[var(--foreground)]"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Alle Tenants
-      </Link>
-
-      <AdminSectionHeader
+    <PageShell>
+      <DetailPagePattern
         eyebrow="Platform"
         title={tenant.name}
         description="Tenant-Details und Konfiguration."
-        actions={<TenantStatusBadge status={tenant.status} />}
-      />
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Tenants", href: "/dashboard/admin/tenants" },
+          { label: tenant.name },
+        ]}
+        headerBadge={<TenantStatusBadge status={tenant.status} />}
+        headerActions={
+          <Link
+            href="/dashboard/admin/tenants"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] transition hover:text-[var(--foreground)]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Alle Tenants
+          </Link>
+        }
+      >
 
       {/* Meta card */}
       <div className="sce-detail-section">
@@ -298,6 +304,7 @@ export default async function TenantDetailPage({ params }: PageProps) {
           <TenantDeleteButton tenantSlug={tenant.key} tenantName={tenant.name} />
         </div>
       ) : null}
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

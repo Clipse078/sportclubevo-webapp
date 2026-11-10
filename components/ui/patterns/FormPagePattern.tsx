@@ -14,6 +14,8 @@ export type FormPagePatternProps = {
   description?: string;
   /** Breadcrumb trail shown above the header. */
   breadcrumbs?: BreadcrumbItem[];
+  /** Finance-style horizontal tabs below the page header. */
+  contextTabs?: ReactNode;
   // ── Form content ───────────────────────────────────────────────────────────
   /**
    * Grouped form sections — typically <FormSection> children.
@@ -88,6 +90,7 @@ export function FormPagePattern({
   title,
   description,
   breadcrumbs,
+  contextTabs,
   children,
   validationSummary,
   primaryAction,
@@ -102,6 +105,7 @@ export function FormPagePattern({
     <SceWorkspaceChrome
       className={cn("flex flex-col", className)}
       breadcrumbs={breadcrumbs}
+      contextTabs={contextTabs}
       header={{
         eyebrow,
         title,

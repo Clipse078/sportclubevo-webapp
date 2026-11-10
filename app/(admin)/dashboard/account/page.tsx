@@ -13,6 +13,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { listNotificationPreferencesForUser } from "@/lib/notifications/preference-service";
 import { listCommunicationPreferencesForUser } from "@/lib/communication/preferences/communication-preference-service";
 import AccountPageClient from "./AccountPageClient";
@@ -80,6 +81,17 @@ export default async function AccountPage() {
 
   return (
     <PageShell>
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Mein Konto" },
+        ]}
+        header={{
+          eyebrow: "Konto",
+          title: "Mein Konto",
+          description: "Persönliche Daten und Einstellungen verwalten.",
+        }}
+      >
       <AccountPageClient
         user={{
           id: user.id,
@@ -102,6 +114,7 @@ export default async function AccountPage() {
         notificationPreferences={notificationPreferences}
         communicationPreferences={communicationPreferences}
       />
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

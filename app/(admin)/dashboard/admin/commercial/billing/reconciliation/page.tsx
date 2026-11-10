@@ -1,6 +1,8 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingReconciliationWorkspace from "@/components/admin/billing/NativeBillingReconciliationWorkspace";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import { getCamt054ReconciliationOverview } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-overview-service";
 import { listLegalEntitiesForPlatform } from "@/lib/billing/native-billing-service";
@@ -32,13 +34,14 @@ export default async function NativeBillingReconciliationPage() {
   }
 
   return (
-    <BillingWorkspaceContent width="list">
-    <div className="space-y-6">
-      <BillingPageHeader
-        title="Bankabgleich"
-        description="camt.054-Zahlungsavis importieren, per Swiss QR zuordnen und Zahlungen verbuchen."
-      />
-
+    <PageShell fullWidth>
+    <ListPagePattern
+      eyebrow="Abrechnung"
+      title="Bankabgleich"
+      description="camt.054-Zahlungsavis importieren, per Swiss QR zuordnen und Zahlungen verbuchen."
+      breadcrumbs={billingWorkspaceBreadcrumbs("Bankabgleich")}
+      contextTabs={<BillingWorkspaceTabs />}
+    >
       <BillingPanel
         title="Betriebsstatus"
         description="Swiss QR und camt.054 für die konfigurierte Rechtsperson."
@@ -68,7 +71,7 @@ export default async function NativeBillingReconciliationPage() {
           canManage={canManage}
         />
       )}
-    </div>
-    </BillingWorkspaceContent>
+    </ListPagePattern>
+    </PageShell>
   );
 }

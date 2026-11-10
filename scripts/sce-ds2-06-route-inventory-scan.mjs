@@ -28,7 +28,14 @@ const HEADER_MARKERS = [
   "DetailPagePattern",
   "FormPagePattern",
 ];
-const TAB_MARKERS = ["SceContextTabs", "FinanceWorkspaceTabs"];
+const TAB_MARKERS = [
+  "SceContextTabs",
+  "FinanceWorkspaceTabs",
+  "BillingWorkspaceTabs",
+  "RegistrationWorkspaceTabs",
+  "GovernanceWorkspaceTabs",
+  "OrgUnitRecordTabs",
+];
 
 function walkPageFiles(dir, acc = []) {
   for (const entry of readdirSync(dir)) {

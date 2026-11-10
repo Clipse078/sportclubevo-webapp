@@ -14,6 +14,8 @@ import { listEligibleRegistrationCoordinatorsForTenant } from "@/lib/registratio
 import { listWaitingListEntriesForTenant } from "@/lib/registrations/waiting-list-queries";
 import { requireTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import RegistrationWorkspaceTabs from "@/components/admin/registrations/RegistrationWorkspaceTabs";
 
 type Props = {
   params: Promise<{ tenantSlug: string }>;
@@ -41,6 +43,17 @@ export default async function WartelistePage({ params }: Props) {
 
   return (
     <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Registrierungen"
+        title="Warteliste"
+        description="Übersicht und Verwaltung der Wartelisten-Einträge."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Registrierungen", href: `/tenant/${tenantSlug}/cockpit/registrations` },
+          { label: "Warteliste" },
+        ]}
+        contextTabs={<RegistrationWorkspaceTabs tenantSlug={tenantSlug} />}
+      >
       <WaitingListWorkspace
         tenantSlug={tenantSlug}
         initialEntries={entries}
@@ -48,7 +61,9 @@ export default async function WartelistePage({ params }: Props) {
         canDelete={canDelete}
         eligibleCoordinators={eligibleCoordinators}
         currentUserId={currentUserId}
+        suppressPageTitle
       />
+      </ListPagePattern>
     </PageShell>
   );
 }

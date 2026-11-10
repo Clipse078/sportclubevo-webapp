@@ -269,12 +269,12 @@ export default function RegistrationDetailCard({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1
+              <h2
                 className="text-xl font-bold text-[var(--foreground)]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 {registration.firstName} {registration.lastName}
-              </h1>
+              </h2>
               <span
                 className={`inline-flex h-6 items-center rounded-full border px-2.5 text-[0.7rem] font-semibold ${STATUS_BADGE_CLASS[registration.status]}`}
               >

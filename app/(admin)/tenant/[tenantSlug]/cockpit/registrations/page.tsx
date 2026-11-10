@@ -9,6 +9,8 @@ import { isActiveInboxRegistrationStatus } from "@/lib/registrations/status";
 import { requireTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import RegistrationWorkspaceTabs from "@/components/admin/registrations/RegistrationWorkspaceTabs";
 
 type Props = {
   params: Promise<{
@@ -70,6 +72,16 @@ export default async function TenantRegistrationsPage({ params }: Props) {
 
   return (
     <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Registrierungen"
+        title="Eingang"
+        description="Offene Anmeldungen prüfen, zuweisen und abschliessen."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Registrierungen" },
+        ]}
+        contextTabs={<RegistrationWorkspaceTabs tenantSlug={tenantSlug} />}
+      >
       <RegistrationInbox
         tenantSlug={tenantSlug}
         initialRegistrations={registrations}
@@ -83,7 +95,9 @@ export default async function TenantRegistrationsPage({ params }: Props) {
         orgUnits={scopeOptions.orgUnits}
         teamSeasons={scopeOptions.teamSeasons}
         currentUserId={currentUserId}
+        suppressPageTitle
       />
+      </ListPagePattern>
     </PageShell>
   );
 }

@@ -1,6 +1,8 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import NativeBillingCreateLegalEntityTrigger from "@/components/admin/billing/NativeBillingCreateLegalEntityTrigger";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import NativeBillingCreateBankAccountDialog from "@/components/admin/billing/NativeBillingCreateBankAccountDialog";
 import NativeBillingDeleteBankAccountButton from "@/components/admin/billing/NativeBillingDeleteBankAccountButton";
@@ -50,16 +52,15 @@ export default async function NativeBillingSettingsPage() {
   );
 
   return (
-    <BillingWorkspaceContent width="list">
-    <div className="space-y-8">
-      <BillingPageHeader
-        title="Einstellungen"
-        description="Rechtsträger, Bankkonten und Abrechnungsgrundlagen für native SCE-Rechnungen."
-        actions={
-          canManage ? <NativeBillingCreateLegalEntityTrigger /> : undefined
-        }
-      />
-
+    <PageShell fullWidth>
+    <ListPagePattern
+      eyebrow="Abrechnung"
+      title="Einstellungen"
+      description="Rechtsträger, Bankkonten und Abrechnungsgrundlagen für native SCE-Rechnungen."
+      breadcrumbs={billingWorkspaceBreadcrumbs("Einstellungen")}
+      contextTabs={<BillingWorkspaceTabs />}
+      headerActions={canManage ? <NativeBillingCreateLegalEntityTrigger /> : undefined}
+    >
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
           Rechtsträger
@@ -156,7 +157,7 @@ export default async function NativeBillingSettingsPage() {
           </ul>
         )}
       </section>
-    </div>
-    </BillingWorkspaceContent>
+    </ListPagePattern>
+    </PageShell>
   );
 }

@@ -3,12 +3,9 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
-  Calendar,
   Hash,
   KeyRound,
-  Mail,
   Pencil,
-  Shield,
   UserCog,
 } from "lucide-react";
 import UserForm from "@/components/admin/users/UserForm";
@@ -23,6 +20,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { getPlatformRolesListData, getUserDetailData } from "@/lib/users/queries";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 
 type UserDetailPageProps = {
   params: Promise<{
@@ -30,27 +29,12 @@ type UserDetailPageProps = {
   }>;
 };
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-}
-
 function formatDate(date: Date): string {
   return date.toLocaleDateString("de-CH", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-}
-
-function getRoleHeroBadgeClass(roleName: string): string {
-  const n = roleName.toLowerCase();
-  if (n.includes("superadmin"))
-    return "inline-flex h-5 items-center rounded-full border border-red-300/60 bg-red-500/20 px-2.5 text-[0.65rem] font-semibold text-red-200";
-  if (n.includes("admin"))
-    return "inline-flex h-5 items-center rounded-full border border-orange-300/60 bg-orange-500/20 px-2.5 text-[0.65rem] font-semibold text-orange-200";
-  if (n.includes("trainer"))
-    return "inline-flex h-5 items-center rounded-full border border-emerald-300/60 bg-emerald-500/20 px-2.5 text-[0.65rem] font-semibold text-emerald-200";
-  return "inline-flex h-5 items-center rounded-full border border-white/20 bg-white/10 px-2.5 text-[0.65rem] font-semibold text-white/70";
 }
 
 export default async function UserDetailPage({
@@ -82,97 +66,47 @@ export default async function UserDetailPage({
   const platformUserRoles = user.userRoles.filter((userRole) => userRole.role.scope === "PLATFORM");
   const tenantUserRoles = user.userRoles.filter((userRole) => userRole.role.scope === "TENANT");
   const initialRoleIds = platformUserRoles.map((userRole) => userRole.role.id);
-  const initials = getInitials(user.firstName, user.lastName);
   const displayName = `${user.firstName} ${user.lastName}`;
 
   return (
-    <div className="space-y-6">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div className="sce-entity-hero">
-        <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          {/* Identity */}
-          <div className="flex items-center gap-5">
-            <div className="sce-avatar-xl">{initials}</div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">
-                Benutzerkonto
-              </p>
-              <h1
-                className="mt-1 text-2xl font-bold text-white"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {displayName}
-              </h1>
-              <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                {/* Status badge */}
-                <span
-                  className={`inline-flex h-5 items-center rounded-full border px-2.5 text-[0.65rem] font-semibold ${
-                    user.isActive
-                      ? "border-emerald-300/60 bg-emerald-500/20 text-emerald-200"
-                      : "border-white/20 bg-white/10 text-white/60"
-                  }`}
-                >
-                  {user.isActive ? "Aktiv" : "Inaktiv"}
-                </span>
-                {/* Role badges */}
-                {user.userRoles.map(({ role }) => (
-                  <span key={role.id} className={getRoleHeroBadgeClass(role.name)}>
-                    {role.name}
-                  </span>
-                ))}
-                {user.userRoles.length === 0 ? (
-                  <span className="inline-flex h-5 items-center rounded-full border border-white/15 bg-white/08 px-2.5 text-[0.65rem] font-semibold text-white/40">
-                    Keine Rolle
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-2">
-            {canImpersonate ? (
-              <ImpersonateButton userId={user.id} variant="hero" />
-            ) : null}
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Benutzerkonto"
+        title={displayName}
+        description={
+          user.lastLoginAt
+            ? `${user.email} · Letzter Login ${formatDate(user.lastLoginAt)}`
+            : `${user.email} · Noch nie eingeloggt`
+        }
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Benutzer", href: "/dashboard/users" },
+          { label: displayName },
+        ]}
+        headerBadge={
+          <span
+            className={
+              user.isActive
+                ? "inline-flex h-5 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 text-[0.65rem] font-semibold text-emerald-700"
+                : "inline-flex h-5 items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 text-[0.65rem] font-semibold text-[var(--muted)]"
+            }
+          >
+            {user.isActive ? "Aktiv" : "Inaktiv"}
+          </span>
+        }
+        headerActions={
+          <>
+            {canImpersonate ? <ImpersonateButton userId={user.id} variant="default" /> : null}
             <Link
               href="/dashboard/users"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition hover:bg-white/20 hover:text-white"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Zurück
             </Link>
-          </div>
-        </div>
-
-        {/* Quick-info strip */}
-        <div className="relative z-10 mt-6 flex flex-wrap gap-6 border-t border-white/15 pt-4">
-          <div className="flex items-center gap-2 text-sm text-white/80">
-            <ProductDomainSceIcon name="communication" size={16} className="h-4 w-4 text-white/60" />
-            <span>{user.email}</span>
-          </div>
-          {user.lastLoginAt ? (
-            <div className="flex items-center gap-2 text-sm text-white/80">
-              <Calendar className="h-4 w-4 text-white/60" />
-              <span>
-                Letzter Login:{" "}
-                <span className="font-semibold text-white">
-                  {formatDate(user.lastLoginAt)}
-                </span>
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-white/50">
-              <Calendar className="h-4 w-4 text-white/40" />
-              <span>Noch nie eingeloggt</span>
-            </div>
-          )}
-        </div>
-      </div>
-
+          </>
+        }
+      >
       {/* ── Content grid ─────────────────────────────────────────────────── */}
       <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
         {/* Main column */}
@@ -357,6 +291,7 @@ export default async function UserDetailPage({
           </div>
         </div>
       </div>
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

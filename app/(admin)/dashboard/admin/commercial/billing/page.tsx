@@ -1,5 +1,7 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import BillingOperationsActivityFeed from "@/components/admin/billing/BillingOperationsActivityFeed";
 import BillingOperationsAttentionQueue from "@/components/admin/billing/BillingOperationsAttentionQueue";
 import BillingOperationsKpiStrip from "@/components/admin/billing/BillingOperationsKpiStrip";
@@ -33,26 +35,31 @@ export default async function PlatformCommercialBillingPage() {
 
   if (!dashboard) {
     return (
-      <div className="space-y-6">
-        <BillingPageHeader
+      <PageShell fullWidth>
+        <ListPagePattern
+          eyebrow="Abrechnung"
           title="Abrechnung"
           description="Finanzielle Übersicht und offene Aufgaben."
-        />
-        <p className="text-sm text-destructive">
-          Abrechnungsübersicht konnte nicht geladen werden. Bitte später erneut versuchen.
-        </p>
-      </div>
+          breadcrumbs={billingWorkspaceBreadcrumbs()}
+          contextTabs={<BillingWorkspaceTabs />}
+        >
+          <p className="text-sm text-destructive">
+            Abrechnungsübersicht konnte nicht geladen werden. Bitte später erneut versuchen.
+          </p>
+        </ListPagePattern>
+      </PageShell>
     );
   }
 
   return (
-    <BillingWorkspaceContent width="list">
-    <div className="space-y-8">
-      <BillingPageHeader
-        title="Abrechnung"
-        description="Finanzielle Übersicht und offene Aufgaben."
-      />
-
+    <PageShell fullWidth>
+    <ListPagePattern
+      eyebrow="Abrechnung"
+      title="Abrechnung"
+      description="Finanzielle Übersicht und offene Aufgaben."
+      breadcrumbs={billingWorkspaceBreadcrumbs()}
+      contextTabs={<BillingWorkspaceTabs />}
+    >
       <BillingOperationsKpiStrip metrics={dashboard.metrics} />
 
       {communicationsOps ? (
@@ -89,7 +96,7 @@ export default async function PlatformCommercialBillingPage() {
           <BillingOperationsReconciliationSummary summary={dashboard.reconciliation} />
         </section>
       </div>
-    </div>
-    </BillingWorkspaceContent>
+    </ListPagePattern>
+    </PageShell>
   );
 }

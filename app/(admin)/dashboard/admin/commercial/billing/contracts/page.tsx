@@ -1,9 +1,11 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
 import NativeBillingCreateContractTrigger from "@/components/admin/billing/NativeBillingCreateContractTrigger";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import { getBillingProductsCatalogue } from "@/lib/billing/native-billing-commercial-service";
 import { listActiveBillingCustomers, listActiveLegalEntities } from "@/lib/billing/native-billing-repository";
 import { presentLegalEntityContractSelectorLabel } from "@/lib/billing/native-billing-presentation";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingContractsTable from "@/components/admin/billing/NativeBillingContractsTable";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
 import { presentBillingInterval } from "@/lib/billing/native-billing-presentation";
@@ -37,12 +39,14 @@ export default async function NativeBillingContractsPage() {
   const customerById = new Map(customers.map((c) => [c.id, c.displayName]));
 
   return (
-    <BillingWorkspaceContent width="list">
-    <div className="space-y-6">
-      <BillingPageHeader
-        title="Verträge"
-        description="Aktive und historische SCE-Verträge mit Preisen, MWST und Abrechnungsintervall."
-        actions={
+    <PageShell fullWidth>
+    <ListPagePattern
+      eyebrow="Abrechnung"
+      title="Verträge"
+      description="Aktive und historische SCE-Verträge mit Preisen, MWST und Abrechnungsintervall."
+      breadcrumbs={billingWorkspaceBreadcrumbs("Verträge")}
+      contextTabs={<BillingWorkspaceTabs />}
+      headerActions={
           canManage ? (
             <NativeBillingCreateContractTrigger
               products={products.map((p) => ({
@@ -61,8 +65,7 @@ export default async function NativeBillingContractsPage() {
             />
           ) : undefined
         }
-      />
-
+    >
       <NativeBillingContractsTable
         rows={contracts.map((contract) => ({
           key: contract.key,
@@ -78,7 +81,7 @@ export default async function NativeBillingContractsPage() {
           billingIntervalLabel: presentBillingInterval(contract.billingInterval),
         }))}
       />
-    </div>
-    </BillingWorkspaceContent>
+    </ListPagePattern>
+    </PageShell>
   );
 }

@@ -1,7 +1,9 @@
-import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import NativeBillingCreateCustomerTrigger from "@/components/admin/billing/NativeBillingCreateCustomerTrigger";
 import { getTenants } from "@/lib/tenants/queries";
-import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
 import { pickLatestCustomerLastInvoice } from "@/lib/billing/billing-customer-last-invoice";
 import {
@@ -77,12 +79,14 @@ export default async function NativeBillingCustomersPage() {
   );
 
   return (
-    <BillingWorkspaceContent width="list">
-      <div className="space-y-6">
-      <BillingPageHeader
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Abrechnung"
         title="Kunden"
         description="Finanzielle Kundenübersicht mit Salden, Verträgen und Abrechnungsstatus."
-        actions={
+        breadcrumbs={billingWorkspaceBreadcrumbs("Kunden")}
+        contextTabs={<BillingWorkspaceTabs />}
+        headerActions={
           canManage ? (
             <NativeBillingCreateCustomerTrigger
               tenants={tenants.map((t) => ({
@@ -92,8 +96,7 @@ export default async function NativeBillingCustomersPage() {
             />
           ) : undefined
         }
-      />
-
+      >
       <NativeBillingCustomersTable
         canManage={canManage}
         rows={rows.map((customer) => {
@@ -120,7 +123,7 @@ export default async function NativeBillingCustomersPage() {
           };
         })}
       />
-      </div>
-    </BillingWorkspaceContent>
+      </ListPagePattern>
+    </PageShell>
   );
 }

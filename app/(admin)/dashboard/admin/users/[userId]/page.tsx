@@ -9,7 +9,8 @@ import { getTenantUserDetail } from "@/lib/users/queries";
 import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { getScopedAssignmentsForUser } from "@/lib/roles/scoped-mutations";
 import { getOrgUnitsForTenant } from "@/lib/people/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import TenantRoleAssignmentControl from "@/components/admin/users/TenantRoleAssignmentControl";
@@ -184,11 +185,16 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6" data-testid="person-detail-workspace-root">
-      <AdminSectionHeader
+    <PageShell>
+      <DetailPagePattern
         eyebrow="Personen & Zugänge"
         title={displayName}
-        actions={
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Personen & Zugänge", href: "/dashboard/admin/people-access" },
+          { label: displayName },
+        ]}
+        headerActions={
           <Link
             href={peopleAccessBackHref}
             className="fca-button-secondary inline-flex items-center gap-1.5"
@@ -199,8 +205,8 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
             {peopleAccessBackLabel}
           </Link>
         }
-      />
-
+      >
+      <div data-testid="person-detail-workspace-root" className="space-y-6">
       <header
         className="sce-detail-section overflow-hidden"
         data-testid="person-detail-header"
@@ -211,7 +217,7 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
               <AdminAvatar name={displayName} size="lg" />
               <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-semibold text-[var(--foreground)]">{displayName}</h1>
+                  <p className="text-xl font-semibold text-[var(--foreground)]">{displayName}</p>
                   {isSelf ? (
                     <span className="rounded-full border border-amber-500/40 bg-amber-950/30 px-2 py-0.5 text-[0.65rem] font-semibold text-amber-200">
                       Ich
@@ -345,6 +351,8 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
           />
         </div>
       </div>
-    </div>
+      </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SceTeamName } from "@/components/design-system/typography/SceTeamName";
 import type { WaitingListEntryItem } from "@/lib/registrations/waiting-list-queries";
 import type { AssignableUser } from "@/lib/registrations/workflow-types";
 import {
@@ -49,6 +50,8 @@ type Props = {
   canDelete: boolean;
   eligibleCoordinators: AssignableUser[];
   currentUserId: string | null;
+  /** Page chrome owns the h1. */
+  suppressPageTitle?: boolean;
 };
 
 function MetricCard({
@@ -221,6 +224,7 @@ export function WaitingListWorkspace({
   canDelete,
   eligibleCoordinators,
   currentUserId,
+  suppressPageTitle = false,
 }: Props) {
   const [entries, setEntries] = useState<WaitingListEntryItem[]>(initialEntries);
   const [selectedEntry, setSelectedEntry] = useState<WaitingListEntryItem | null>(null);
@@ -407,6 +411,7 @@ export function WaitingListWorkspace({
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="border-b border-[var(--border)] bg-[var(--card)] px-6 py-4">
+          {suppressPageTitle ? null : (
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
               <h1
@@ -421,6 +426,7 @@ export function WaitingListWorkspace({
               </p>
             </div>
           </div>
+          )}
 
           {/* ── KPI metrics — clickable to filter by status ─────────────── */}
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -623,7 +629,16 @@ export function WaitingListWorkspace({
                         <p className="text-xs text-[var(--foreground)]">{entry.registration.type}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-xs font-medium text-[var(--foreground)]">{scopeLabel(entry)}</p>
+                        {entry.teamSeason ? (
+                          <p className="text-xs font-medium text-[var(--foreground)]">
+                            <SceTeamName density="COMPACT" lineClamp={1}>
+                              {entry.teamSeason.team.name}
+                            </SceTeamName>
+                            <span className="text-[var(--text-2)]"> — {entry.teamSeason.displayName}</span>
+                          </p>
+                        ) : (
+                          <p className="text-xs font-medium text-[var(--foreground)]">{scopeLabel(entry)}</p>
+                        )}
                         <p className="text-[0.68rem] text-[var(--muted)]">{scopeTypeLabel(entry)}</p>
                       </td>
                       <td className="px-4 py-3 text-xs">

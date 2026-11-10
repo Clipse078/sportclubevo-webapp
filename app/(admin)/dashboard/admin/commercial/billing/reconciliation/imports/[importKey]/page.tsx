@@ -1,5 +1,8 @@
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingReconciliationImportDetail from "@/components/admin/billing/NativeBillingReconciliationImportDetail";
+import BillingWorkspaceTabs from "@/components/admin/billing/shell/BillingWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
+import { billingWorkspaceBreadcrumbs } from "@/lib/nav/billing-workspace-breadcrumbs";
 import { getCamt054ReconciliationImportDetail } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-overview-service";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -25,18 +28,21 @@ export default async function NativeBillingReconciliationImportPage({ params }: 
   }
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Abrechnung"
         title="Import-Details"
         description={`Bankabgleich — ${detail.import.legalEntityName ?? ""}`}
-      />
+        breadcrumbs={billingWorkspaceBreadcrumbs("Import")}
+        contextTabs={<BillingWorkspaceTabs />}
+      >
       <NativeBillingReconciliationImportDetail
         legalEntityKey={detail.import.legalEntityKey}
         filename={detail.import.filename}
         transactions={detail.transactions}
         canManage={canManage}
       />
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

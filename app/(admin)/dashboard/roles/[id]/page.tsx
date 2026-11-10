@@ -3,10 +3,7 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
-  Building2,
   CheckCircle2,
-  Shield,
-  Users,
   XCircle,
 } from "lucide-react";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
@@ -19,6 +16,9 @@ import {
   type RoleOrgUnit,
 } from "@/lib/roles/queries";
 import RolePermissionEditor from "@/components/admin/roles/RolePermissionEditor";
+import GovernanceWorkspaceTabs from "@/components/admin/roles/GovernanceWorkspaceTabs";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -46,36 +46,19 @@ export default async function RoleDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-8 max-w-[1400px]">
-      {/* Back link + header */}
-      <div>
-        <Link
-          href="/dashboard/roles"
-          className="mb-4 inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-[var(--text-2)] transition-colors hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Alle Rollen
-        </Link>
-
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--blue-light)]">
-              <ProductDomainSceIcon name="roles-access" size={24} className="h-6 w-6 text-[var(--blue)]" />
-            </div>
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--red)] font-[var(--font-display)]">
-                Governance
-              </p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--blue)] font-[var(--font-display)]">
-                {role.name}
-              </h2>
-              <p className="mt-1 font-mono text-[0.78rem] text-[var(--muted)]">
-                {role.key}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
+    <PageShell fullWidth>
+      <DetailPagePattern
+        eyebrow="Governance"
+        title={role.name}
+        description={role.key}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Rollen", href: "/dashboard/roles" },
+          { label: role.name },
+        ]}
+        contextTabs={<GovernanceWorkspaceTabs />}
+        headerBadge={
+          <span className="flex flex-wrap items-center gap-2">
             <AdminStatusPill label="Plattform" tone="default" />
             {role.isSystem && <AdminStatusPill label="Geschützt" tone="warning" />}
             {role.users.length > 0 ? (
@@ -83,16 +66,18 @@ export default async function RoleDetailPage({ params }: PageProps) {
             ) : (
               <AdminStatusPill label="Leer" tone="muted" />
             )}
-            {role.canAccessVereinsleitung && (
-              <AdminStatusPill label="Vereinsleitung" tone="default" />
-            )}
-            {role.canAttendVereinsleitungMeetings && (
-              <AdminStatusPill label="Meetings" tone="default" />
-            )}
-          </div>
-        </div>
-      </div>
-
+          </span>
+        }
+        headerActions={
+          <Link
+            href="/dashboard/roles"
+            className="inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-[var(--text-2)] transition-colors hover:text-[var(--foreground)]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Alle Rollen
+          </Link>
+        }
+      >
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <div className="sce-kpi-card p-5">
@@ -367,6 +352,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
 
         </div>
       </div>
-    </div>
+      </DetailPagePattern>
+    </PageShell>
   );
 }

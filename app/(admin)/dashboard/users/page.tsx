@@ -2,7 +2,8 @@
 import UsersSearchableList from "@/components/admin/users/UsersSearchableList";
 import PlatformUserCreateTrigger from "@/components/admin/users/PlatformUserCreateTrigger";
 import RoleManagementCard from "@/components/admin/users/RoleManagementCard";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { PageShell } from "@/components/ui/page";
+import { ListPagePattern } from "@/components/ui/patterns";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getPlatformRolesListData, getUsersListData } from "@/lib/users/queries";
@@ -22,17 +23,21 @@ export default async function UsersPage() {
   const roles = await getPlatformRolesListData();
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
+    <PageShell fullWidth>
+      <ListPagePattern
         eyebrow="Benutzer & Rollen"
         title="Benutzer"
         description="Alle Benutzerkonten im System — Rollen, Status und Zugriffe auf einen Blick."
-        actions={<PlatformUserCreateTrigger />}
-      />
-
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Benutzer" },
+        ]}
+        headerActions={<PlatformUserCreateTrigger />}
+      >
       <UsersSearchableList currentUserId={currentUserId} initialUsers={users} />
 
       <RoleManagementCard initialRoles={roles} />
-    </div>
+      </ListPagePattern>
+    </PageShell>
   );
 }
