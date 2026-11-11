@@ -376,7 +376,7 @@ export function SceIconSpecimen() {
   return (
     <div className="mx-auto max-w-5xl p-6 text-[var(--foreground)]">
       <header className="mb-8">
-        <h1 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h1>
+        <h2 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h2>
         <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">
           Internal development surface for the <strong>V2 canonical</strong> SCE icon family — 90
           approved monochrome masters at 16–64px on dark/light surfaces. Domain geometry uses{" "}

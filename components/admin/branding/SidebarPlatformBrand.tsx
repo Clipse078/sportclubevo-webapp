@@ -49,12 +49,10 @@ export default function SidebarPlatformBrand({
         collapsed && "px-1",
         className,
       )}
-      aria-label="SportClubEvo"
     >
       <Image
         src={SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}
-        alt=""
-        aria-hidden
+        alt="SportClubEvo"
         width={onLight.width}
         height={onLight.height}
         className={cn(

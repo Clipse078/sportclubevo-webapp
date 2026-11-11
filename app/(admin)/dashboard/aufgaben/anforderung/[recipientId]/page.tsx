@@ -23,14 +23,14 @@ export default async function PersonalRequirementExecutionPage({ params, searchP
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      <div className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}>
+      <main data-sce-page-shell className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}>
         <PersonalRequirementExecutionWorkspace
           view={data.view}
           locale={data.locale}
           timeZone={data.timeZone}
           backHref={data.backHref}
         />
-      </div>
+      </main>
     </div>
   );
 }

@@ -181,11 +181,11 @@ function ConflictBadge({
 
   return (
     <div
-      className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-200/95"
+      className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-md border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[color-mix(in_srgb,var(--warning)_12%,var(--surface))] px-2.5 py-1 text-[11px] font-medium text-[color-mix(in_srgb,var(--warning)_88%,var(--foreground))]"
       title={title}
       data-testid="dayplanner-conflict-badge"
     >
-      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400/90" />
+      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-[var(--warning)]" aria-hidden />
       <span className="truncate">{line}</span>
     </div>
   );

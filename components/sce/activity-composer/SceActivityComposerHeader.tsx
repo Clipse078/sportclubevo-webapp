@@ -34,6 +34,7 @@ export function SceActivityComposerHeader({
   persistenceStatusLabel,
 }: SceActivityComposerHeaderProps) {
   const identity = resolveSceActivityComposerSemanticIdentity(activityKind);
+  const TitleTag = presentation === "page" ? "h2" : "h1";
 
   return (
     <header
@@ -55,14 +56,14 @@ export function SceActivityComposerHeader({
             </span>
           ) : null}
         </div>
-        <h1
+        <TitleTag
           ref={titleRef}
           id={titleId}
           tabIndex={-1}
           className="text-lg font-semibold text-[var(--foreground)] outline-none sm:text-xl"
         >
           {title}
-        </h1>
+        </TitleTag>
         {description ? (
           <p id={descriptionId} className="text-sm text-[var(--text-2)]">
             {description}

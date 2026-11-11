@@ -16,8 +16,8 @@ export default function PlanningHubLoadingProgressRail({
       className={cn("w-full max-w-[22rem] sm:max-w-[23.5rem]", className)}
       data-testid="planning-hub-loading-progress-rail"
       role="progressbar"
+      aria-label="Wochenplaner wird geladen"
       aria-valuetext="Wochenplaner wird geladen"
-      aria-busy="true"
     >
       <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-[var(--surface-2)]/90">
         <div className={`absolute inset-y-0 left-0 w-[32%] rounded-full ${styles.progressRailSegment}`} />

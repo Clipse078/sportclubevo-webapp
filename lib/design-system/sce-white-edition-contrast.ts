@@ -26,8 +26,14 @@ export const SCE_WHITE_EDITION_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
   },
   {
     id: "muted-on-canvas",
-    foreground: "#64748b",
+    foreground: "#57606a",
     background: "#ffffff",
+    minimumRatio: 4.5,
+  },
+  {
+    id: "muted-on-dense-surface",
+    foreground: "#57606a",
+    background: "#f1f5f9",
     minimumRatio: 4.5,
   },
   {
@@ -50,7 +56,7 @@ export const SCE_WHITE_EDITION_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
   },
   {
     id: "placeholder-on-input",
-    foreground: "#64748b",
+    foreground: "#57606a",
     background: "#ffffff",
     minimumRatio: 4.5,
   },
@@ -62,7 +68,7 @@ export const SCE_WHITE_EDITION_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
   },
   {
     id: "disabled-on-subtle",
-    foreground: "#64748b",
+    foreground: "#57606a",
     background: "#f8fafc",
     minimumRatio: 4.5,
   },

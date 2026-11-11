@@ -81,6 +81,7 @@ export default function TaskContextField({
           value={contextType}
           disabled={disabled}
           onChange={(e) => onTypeChange(e.target.value)}
+          aria-label="Kontexttyp"
         >
           <option value="">Kein Kontext</option>
           {SUPPORTED_TASK_CONTEXT_TYPES.map((type) => (

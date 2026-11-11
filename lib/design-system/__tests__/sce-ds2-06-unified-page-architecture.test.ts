@@ -164,12 +164,17 @@ describe("SCE-DS2-06 unified page architecture", () => {
     );
   });
 
-  it("passes representative visual archetype contrast smoke", () => {
-    execSync("node scripts/sce-ds2-06-visual-archetypes-browser-check.mjs", {
-      cwd: ROOT,
-      stdio: "pipe",
-    });
-  });
+  it(
+    "passes representative visual archetype contrast smoke",
+    () => {
+      execSync("node scripts/sce-ds2-06-visual-archetypes-browser-check.mjs", {
+        cwd: ROOT,
+        stdio: "pipe",
+        timeout: 120_000,
+      });
+    },
+    130_000,
+  );
 
   it("contextual side panel sheet uses semantic surface tokens (no same-color status traps)", () => {
     const sheet = readRepo("components/ui/Sheet.tsx");

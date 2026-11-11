@@ -28,6 +28,13 @@ describe("RolesAdminTabs — SceContextTabs", () => {
     );
   });
 
+  it("omits aria-controls on URL-owned tabs (no co-located tabpanel)", () => {
+    render(<RolesAdminTabs />);
+    for (const key of ["roles", "assignments", "effective-access"] as const) {
+      expect(screen.getByTestId(`roles-admin-tabs-${key}`)).not.toHaveAttribute("aria-controls");
+    }
+  });
+
   it("marks roles tab active on role detail sub-routes", () => {
     vi.mocked(usePathname).mockReturnValue(
       "/dashboard/administration/roles/role-id-1",

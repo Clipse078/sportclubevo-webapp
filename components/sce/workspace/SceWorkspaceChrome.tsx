@@ -28,7 +28,11 @@ export function SceWorkspaceChrome({
   density = "standard",
 }: SceWorkspaceChromeProps) {
   return (
-    <div className={cn("min-w-0", className)} data-sce-workspace-chrome>
+    <div
+      className={cn("min-w-0", className)}
+      data-sce-workspace-chrome
+      data-testid="sce-workspace-chrome"
+    >
       {breadcrumbs && breadcrumbs.length > 0 ? (
         <SceBreadcrumbs items={breadcrumbs} />
       ) : null}
@@ -38,14 +42,16 @@ export function SceWorkspaceChrome({
           {contextTabs}
         </div>
       ) : null}
-      <div
+      <main
+        id="sce-workspace-main"
+        data-sce-page-shell
         className={cn(
           density === "dense" ? "space-y-4" : "space-y-6",
           contentClassName,
         )}
       >
         {children}
-      </div>
+      </main>
     </div>
   );
 }

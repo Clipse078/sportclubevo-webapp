@@ -491,6 +491,7 @@ export function FinanceForecastTimingWorkspacePanel({
                       aria-valuenow={Math.min(100, coveragePercent)}
                       aria-valuemin={0}
                       aria-valuemax={100}
+                      aria-label={`${t("coverageLabel")} ${Math.min(100, coveragePercent)} Prozent`}
                     >
                       <div
                         className={cn(

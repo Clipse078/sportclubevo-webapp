@@ -259,9 +259,9 @@ export default function PlannerEntryEditForm({
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
             {pageTitle}
           </p>
-          <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)] sm:text-2xl">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)] sm:text-2xl">
             {subtitle}
-          </h1>
+          </h2>
           {scheduleLine ? (
             <p className="text-sm text-[var(--muted)]">{scheduleLine}</p>
           ) : null}

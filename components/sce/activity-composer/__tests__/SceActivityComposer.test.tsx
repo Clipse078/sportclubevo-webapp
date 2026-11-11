@@ -83,6 +83,8 @@ describe("SceActivityComposer foundation (01B)", () => {
     expect(screen.getByTestId("sce-activity-composer-tabs-grunddaten")).toBeTruthy();
     fireEvent.keyDown(screen.getByRole("tablist"), { key: "ArrowRight" });
     expect(push).toHaveBeenCalledWith("/sce-preview/activity-composer/page-mode?tab=details");
+    expect(document.querySelector("h1")).toBeNull();
+    expect(document.querySelector("h2")).not.toBeNull();
   });
 
   it("E — first invalid tab resolution helper", () => {

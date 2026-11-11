@@ -238,7 +238,7 @@ function SubtaskRow({
         className={cn(
           "text-[0.75rem] tabular-nums",
           deadline.emphasis === "urgent" && "font-medium text-orange-400",
-          deadline.emphasis === "attention" && "text-amber-300",
+          deadline.emphasis === "attention" && "text-amber-800",
           deadline.emphasis === "calm" && "text-[var(--muted)]",
         )}
       >
@@ -360,7 +360,7 @@ function TaskListRow({
           className={cn(
             "inline-flex items-center justify-end gap-1 text-[0.8125rem] tabular-nums md:text-right",
             deadline.emphasis === "urgent" && "font-medium text-orange-400",
-            deadline.emphasis === "attention" && "text-amber-300",
+            deadline.emphasis === "attention" && "text-amber-800",
             deadline.emphasis === "calm" && "text-[var(--text-2)]",
           )}
         >

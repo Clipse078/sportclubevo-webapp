@@ -94,6 +94,13 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     expect(tabs).toContain("ArrowRight");
     expect(tabs).toContain("ArrowLeft");
     expect(tabs).toContain("activateTabAtIndex");
+    expect(tabs).not.toContain("<details");
+  });
+
+  it("SidebarPlatformBrand avoids prohibited img grouping roles", () => {
+    const brand = readSrc("components/admin/branding/SidebarPlatformBrand.tsx");
+    expect(brand).not.toContain('role="img"');
+    expect(brand).toContain('alt="SportClubEvo"');
   });
 
   it("Communication remains primary visual reference without universal template claim", () => {
@@ -121,6 +128,12 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     expect(areas.has("Communication")).toBe(true);
     expect(areas.has("Personen & Zugänge")).toBe(true);
     expect(areas.has("Wochenplaner")).toBe(true);
+  });
+
+  it("context tab nav constrains horizontal overflow at the shell", () => {
+    const foundation = readSrc("lib/design-system/sce-context-tabs-foundation.ts");
+    expect(foundation).toContain("SCE_CONTEXT_TABS_NAV_CLASS");
+    expect(foundation).toMatch(/overflow-x-clip/);
   });
 
   it("route-based roles admin tabs preserve URL ownership", () => {

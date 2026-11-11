@@ -5,7 +5,7 @@
   "scripts": {
     "test": "vitest run",
     "test:design-system": "tsx scripts/run-design-system-governance.ts && vitest run lib/design-system components/admin/org/__tests__",
-    "test:route-governance": "node scripts/sce-ds2-07b-route-governance-check.mjs && vitest run lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts lib/design-system/__tests__/sce-ds2-07a-core-workspace-migration.test.ts lib/design-system/__tests__/sce-ds2-07b-route-lifecycle-governance.test.ts lib/design-system/__tests__/sce-ds2-07c-admin-configuration-migration.test.ts lib/design-system/__tests__/sce-ds2-07d-communication-website-cms-migration.test.ts lib/design-system/__tests__/sce-ds2-07e-planning-activities-migration.test.ts lib/design-system/__tests__/sce-ds2-07f-remaining-workspaces-migration.test.ts",
+    "test:route-governance": "node scripts/sce-ds2-07b-route-governance-check.mjs && node scripts/sce-ds2-07g-build-verification-matrix.mjs && vitest run lib/design-system/__tests__/sce-ds2-06-route-inventory.test.ts lib/design-system/__tests__/sce-ds2-07a-core-workspace-migration.test.ts lib/design-system/__tests__/sce-ds2-07b-route-lifecycle-governance.test.ts lib/design-system/__tests__/sce-ds2-07c-admin-configuration-migration.test.ts lib/design-system/__tests__/sce-ds2-07d-communication-website-cms-migration.test.ts lib/design-system/__tests__/sce-ds2-07e-planning-activities-migration.test.ts lib/design-system/__tests__/sce-ds2-07f-remaining-workspaces-migration.test.ts lib/design-system/__tests__/sce-ds2-07g-evidence-contract-batch8.test.ts lib/design-system/__tests__/sce-ds2-07g-workspace-main-landmark.test.tsx lib/design-system/__tests__/sce-ds2-07g-visual-functional-verification.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dev": "next dev --turbopack",
@@ -65,7 +65,11 @@
     "finance:04b:04:stage-migration-verify": "tsx scripts/sce-finance-04b-04-stage-migration-verify.ts",
     "finance:06a:r1:stage-migration-verify": "tsx scripts/sce-finance-06a-r1-stage-migration-verify.ts",
     "finance:06d:r2:stage-migration-verify": "tsx scripts/sce-finance-06d-r2-stage-migration-verify.ts",
-    "finance:06e:r2:stage-migration-verify": "tsx scripts/sce-finance-06e-r2-stage-migration-verify.ts"
+    "finance:06e:r2:stage-migration-verify": "tsx scripts/sce-finance-06e-r2-stage-migration-verify.ts",
+    "ds2-07g:provision-verification-db": "tsx scripts/sce-ds2-07g-provision-verification-database.ts",
+    "ds2-07g:seed-verification-fixtures": "tsx scripts/sce-ds2-07g-seed-verification-fixtures.ts",
+    "ds2-07g:teardown-verification-fixtures": "tsx scripts/sce-ds2-07g-teardown-verification-fixtures.ts",
+    "ds2-07g:mutation-harness": "node scripts/sce-ds2-07g-functional-mutation-harness.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",

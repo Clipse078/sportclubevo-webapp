@@ -44,7 +44,11 @@ export default function AccountMenu({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--header-bg)]",
           open && "ring-2 ring-[var(--sce-primary)] ring-offset-1 ring-offset-[var(--header-bg)]",
         )}
-        style={imageUrl ? undefined : { background: "var(--sce-accent)" }}
+        style={
+          imageUrl
+            ? undefined
+            : { background: "var(--sce-account-avatar-fallback, var(--sce-accent))" }
+        }
         aria-label="Konto-Menü"
         aria-expanded={open}
         aria-haspopup="menu"

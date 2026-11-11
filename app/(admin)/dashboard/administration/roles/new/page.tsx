@@ -7,7 +7,6 @@ import {
   getTenantPermissionCatalog,
 } from "@/lib/roles/tenant-queries";
 import CreateTenantRoleForm from "@/components/admin/roles/CreateTenantRoleForm";
-import { PageBreadcrumbs, PageHeader } from "@/components/ui/page";
 
 export default async function NewTenantRolePage() {
   const tenantId = await requireActiveTenantId();
@@ -19,36 +18,19 @@ export default async function NewTenantRolePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <PageBreadcrumbs
-            items={[
-              {
-                label: "Administration",
-                href: "/dashboard/administration/roles",
-              },
-              {
-                label: "Rollen & Berechtigungen",
-                href: "/dashboard/administration/roles",
-              },
-              { label: "Neue Rolle" },
-            ]}
-          />
-          <PageHeader
-            title="Neue Rolle erstellen"
-            description="Definiere eine Rolle und wähle die passenden Berechtigungen aus. Rollen helfen, den Zugriff im Verein einfach und sicher zu steuern."
-          />
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-medium tracking-wide text-[var(--muted)]">Neue Rolle</p>
+          <h2 className="sce-type-page-title text-lg">Neue Rolle erstellen</h2>
+          <p className="mt-1 max-w-2xl text-sm text-[var(--text-2)]">
+            Definiere eine Rolle und wähle die passenden Berechtigungen aus.
+          </p>
         </div>
-
-        <Link
-          href="/dashboard/administration/roles"
-          className="fca-button-secondary shrink-0 self-start"
-        >
+        <Link href="/dashboard/administration/roles" className="fca-button-secondary shrink-0 self-start">
           Zurück zur Übersicht
         </Link>
       </div>
-
       <CreateTenantRoleForm
         moduleGroups={moduleGroups}
         actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}

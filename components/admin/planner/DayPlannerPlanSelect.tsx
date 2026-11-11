@@ -47,8 +47,12 @@ export function DayPlannerPlanSelect({ dayParam, weekParam, plans, activePlanId 
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="dayplanner-plan-bar">
+      <label htmlFor="dayplanner-plan-select" className="sr-only">
+        Tagesplan-Variante
+      </label>
       <select
         id="dayplanner-plan-select"
+        name="dayplannerPlan"
         data-testid="dayplanner-plan-select"
         value={activePlanId ?? STANDARDPLAN_VALUE}
         onChange={(e) => handleSelect(e.target.value)}

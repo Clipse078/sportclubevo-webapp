@@ -381,6 +381,11 @@
   box-shadow: none;
 }
 
+[data-sce-theme="white"] .sce-global-primary-nav-item--active,
+[data-sce-theme="white"] .sce-global-primary-nav-item--active:hover {
+  color: var(--sce-color-nav-active);
+}
+
 .sce-global-primary-nav-item--route-context {
   color: color-mix(in srgb, var(--text-2) 92%, var(--foreground));
   font-weight: 700;

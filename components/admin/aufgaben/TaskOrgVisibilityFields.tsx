@@ -74,6 +74,7 @@ export default function TaskOrgVisibilityFields({
           value={visibilityScope}
           onChange={(e) => setVisibilityScope(e.target.value as TaskVisibilityScope)}
           data-testid="task-visibility-select"
+          aria-label="Sichtbarkeit"
         >
           {VISIBILITY_OPTIONS.map((scope) => (
             <option key={scope} value={scope}>
@@ -95,7 +96,7 @@ export default function TaskOrgVisibilityFields({
             disabled={disabled}
           />
           {requiresOrgUnits && orgUnitGrantIds.length === 0 ? (
-            <p className="text-xs text-amber-300" data-testid="task-org-unit-required-hint">
+            <p className="text-xs text-amber-800" data-testid="task-org-unit-required-hint">
               Bitte mindestens eine Organisationseinheit wählen.
             </p>
           ) : null}

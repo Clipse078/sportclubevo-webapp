@@ -15,6 +15,7 @@ import RoleDeleteButton from "@/components/admin/roles/RoleDeleteButton";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import TenantRoleDetailsForm from "@/components/admin/roles/TenantRoleDetailsForm";
 import TenantRolePermissionEditor from "@/components/admin/roles/TenantRolePermissionEditor";
+import { SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -42,7 +43,7 @@ export default async function TenantRoleDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className={`${SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS} space-y-8`} data-testid="roles-detail-page-root">
       <div>
         <Link
           href="/dashboard/administration/roles"

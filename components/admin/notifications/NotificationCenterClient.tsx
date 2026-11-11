@@ -56,6 +56,9 @@ export default function NotificationCenterClient({
 
   return (
     <div className="space-y-4">
+      <a href="#notification-list" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:bg-[var(--surface)] focus:px-3 focus:py-2 focus:text-sm focus:shadow-md">
+        Zur Benachrichtigungsliste
+      </a>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-lg border border-[var(--border)] p-0.5">
           <Link
@@ -91,7 +94,7 @@ export default function NotificationCenterClient({
           {emptyMessage}
         </p>
       ) : (
-        <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-1)]">
+        <ul id="notification-list" className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-1)]">
           {items.map((item) => {
             const { sceIcon, className, utilityIcon: UtilityIcon } = notificationListIcon({
               category: item.category,
