@@ -26,6 +26,7 @@ const MEETING_LIST_SELECT = {
   meetingDate: true,
   location: true,
   attendeeCount: true,
+  plannedDurationMin: true,
   status: true,
   reviewStage: true,
   requiresFourEyeReview: true,
@@ -110,22 +111,41 @@ export async function getMeetingSubEntities(meetingId: string) {
     prisma.meetingAgendaItem.findMany({
       where: { meetingId },
       orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-      select: { id: true, title: true, notes: true, owner: true, durationMin: true, orderIndex: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        notes: true,
+        owner: true,
+        ownerPersonId: true,
+        durationMin: true,
+        initiativeId: true,
+        orderIndex: true,
+        status: true,
+        initiative: { select: { id: true, slug: true, title: true, status: true } },
+      },
     }),
     prisma.meetingDecision.findMany({
       where: { meetingId },
       orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-      select: { id: true, title: true, description: true, status: true, owner: true, orderIndex: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        owner: true,
+        ownerPersonId: true,
+        orderIndex: true,
+      },
     }),
     prisma.meetingAction.findMany({
       where: { meetingId },
       orderBy: { createdAt: "asc" },
-      select: { id: true, title: true, owner: true, dueDate: true, status: true },
+      select: { id: true, title: true, owner: true, ownerPersonId: true, dueDate: true, status: true },
     }),
     prisma.meetingParticipant.findMany({
       where: { meetingId },
       orderBy: { createdAt: "asc" },
-      select: { id: true, name: true, role: true, status: true, userId: true },
+      select: { id: true, name: true, role: true, status: true, userId: true, personId: true },
     }),
   ]);
   return { agendaItems, decisions, actions, participants };

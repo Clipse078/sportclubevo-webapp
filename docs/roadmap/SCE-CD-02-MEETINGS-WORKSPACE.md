@@ -11,6 +11,14 @@
 - Meeting header with lifecycle status, logistics, and link to metadata edit
 - Template preview hardening: strategic entity context respects VL workspace access + visibility queries
 
+### SCE-CD-02R1 (UAT corrections)
+
+- **Navigation:** Club-Betrieb header resolves to Sitzungen (`/vereinsleitung/meetings`), not Material demo
+- **Creation UX:** full-page workflow at `/vereinsleitung/meetings/new` (list CTA uses page flow, not modal)
+- **People pickers:** tenant-scoped `PeoplePicker` for participants, agenda/decision/action owners (`personId` / `ownerPersonId`)
+- **Agenda duration:** optional `durationMin` per item + meeting `plannedDurationMin` with non-blocking overrun hint
+- **Initiative linking:** optional `initiativeId` on agenda items with visibility-gated API validation
+
 ## Meeting authority & invitations (Phase E)
 
 SportClubEvo remains the system of record. No Google Calendar / Outlook sync is implemented in this package. Existing communication templates and audience infrastructure can be reused for future invitation dispatch; **no automatic outbound invitations** are sent from workspace mutations or tests.

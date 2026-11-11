@@ -32,6 +32,8 @@ export default async function EditMeetingPage({ params }: PageProps) {
     meetingDate: new Date(meeting.meetingDate).toISOString().slice(0, 16),
     location: meeting.location ?? "",
     attendeeCount: meeting.attendeeCount != null ? String(meeting.attendeeCount) : "",
+    plannedDurationMin:
+      meeting.plannedDurationMin != null ? String(meeting.plannedDurationMin) : "",
     status: meeting.status,
     visibilityScope: meeting.visibilityScope as VisibilityScopeValue,
     visibleOrgUnitRefs: parseStringArray(meeting.visibleOrgUnitRefs),
@@ -53,7 +55,7 @@ export default async function EditMeetingPage({ params }: PageProps) {
         ]}
       >
         <ClubDevelopmentFormWorkflowShell>
-          <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
+          <MeetingForm mode="edit" layout="page" meetingId={meeting.id} defaultValues={defaultValues} />
         </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>

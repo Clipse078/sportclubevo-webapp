@@ -22,7 +22,7 @@ export default async function NewMeetingPage() {
         ]}
       >
         <ClubDevelopmentFormWorkflowShell>
-          <MeetingForm mode="create" layout="composer" />
+          <MeetingForm mode="create" layout="page" />
         </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>

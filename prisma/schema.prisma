@@ -3139,7 +3139,8 @@ model Initiative {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  linkedAgendaItems   MeetingAgendaItem[] @relation("MeetingAgendaInitiativeLink")
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -3170,6 +3171,8 @@ model Meeting {
   meetingDate   DateTime
   location      String?
   attendeeCount Int?
+  /// SCE-CD-02R1 — optional planned session length for agenda timeboxing (minutes).
+  plannedDurationMin Int?
   status        MeetingStatus @default(PLANNED)
 
   // Governance — consistent with Target governance pattern
@@ -4215,16 +4218,20 @@ model MeetingAgendaItem {
   title           String
   notes           String?
   owner           String?
+  ownerPersonId   String?
   durationMin     Int?
+  initiativeId    String?
   orderIndex      Int                     @default(0)
   status          MeetingAgendaItemStatus @default(OPEN)
   createdByUserId String?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
-  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meeting    Meeting     @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  initiative Initiative? @relation("MeetingAgendaInitiativeLink", fields: [initiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([meetingId, orderIndex])
+  @@index([initiativeId])
 }
 
 model MeetingDecision {
@@ -4234,6 +4241,7 @@ model MeetingDecision {
   description     String?
   status          MeetingDecisionStatus @default(CONFIRMED)
   owner           String?
+  ownerPersonId   String?
   orderIndex      Int                   @default(0)
   linkedRefs      Json?
   createdByUserId String?
@@ -4250,6 +4258,7 @@ model MeetingAction {
   meetingId       String
   title           String
   owner           String?
+  ownerPersonId   String?
   dueDate         DateTime?
   status          MeetingActionStatus @default(OPEN)
   linkedRefs      Json?
@@ -5315,6 +5324,7 @@ model MeetingParticipant {
   role      String?
   status    MeetingParticipantStatus @default(INVITED)
   userId    String?
+  personId  String?
   createdAt DateTime                 @default(now())
   updatedAt DateTime                 @updatedAt
 

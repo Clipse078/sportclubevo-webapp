@@ -5,6 +5,9 @@ import { MeetingAgendaItemStatus } from "@prisma/client";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
+import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
+import { resolveMeetingAgendaInitiativeLink } from "@/lib/meetings/meeting-initiative-link";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 
 async function requireSession() {
   const session = await auth();
@@ -29,17 +32,45 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const body = await req.json().catch(() => ({}));
   const validStatuses = Object.values(MeetingAgendaItemStatus);
 
+  const patch: Record<string, unknown> = {
+    title: body?.title?.trim() || undefined,
+    notes: body?.notes !== undefined ? body?.notes?.trim() || null : undefined,
+    orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
+    status: validStatuses.includes(body?.status) ? body.status : undefined,
+  };
+
+  if (body?.durationMin !== undefined) {
+    patch.durationMin = normalizeAgendaDurationMin(body.durationMin);
+  }
+
+  if (body?.ownerPersonId !== undefined) {
+    const pid = body.ownerPersonId?.trim() || null;
+    if (!pid) {
+      patch.ownerPersonId = null;
+      patch.owner = body?.owner?.trim() || null;
+    } else if (actor.tenantId) {
+      const snap = await resolveMeetingPersonSnapshot(actor.tenantId, pid);
+      if (!snap) return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+      patch.ownerPersonId = snap.personId;
+      patch.owner = snap.displayName;
+    }
+  } else if (body?.owner !== undefined) {
+    patch.owner = body?.owner?.trim() || null;
+  }
+
+  if (body?.initiativeId !== undefined) {
+    try {
+      const link = await resolveMeetingAgendaInitiativeLink(actor, body.initiativeId);
+      patch.initiativeId = link.initiativeId;
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : "Ungültiges Vorhaben." }, { status: 400 });
+    }
+  }
+
   try {
     const updated = await prisma.meetingAgendaItem.update({
       where: { id: itemId },
-      data: {
-        title: body?.title?.trim() || undefined,
-        notes: body?.notes?.trim() || null,
-        owner: body?.owner?.trim() || null,
-        durationMin: body?.durationMin !== undefined ? Number(body.durationMin) || null : undefined,
-        orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
-        status: validStatuses.includes(body?.status) ? body.status : undefined,
-      },
+      data: patch,
       select: { id: true, title: true, status: true },
     });
     void logAuditEvent({ actorUserId: actor.userId, module: "meetings", entityId: id, action: "AGENDA_UPDATE", after: { itemId: updated.id } });

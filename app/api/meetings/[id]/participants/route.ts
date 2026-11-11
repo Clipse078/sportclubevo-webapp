@@ -5,6 +5,7 @@ import { MeetingParticipantStatus } from "@prisma/client";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 
 async function requireSession() {
   const session = await auth();
@@ -24,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   const participants = await prisma.meetingParticipant.findMany({
     where: { meetingId: id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, role: true, status: true, userId: true },
+    select: { id: true, name: true, role: true, status: true, userId: true, personId: true },
   });
   return NextResponse.json({ participants });
 }
@@ -37,13 +38,24 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   const guard = await requireMeetingAccess({ actor, id, access: "write" });
   if (!guard.ok) return guard.response;
   const body = await req.json().catch(() => ({}));
-  const name = (body?.name ?? "").trim();
+  let name = (body?.name ?? "").trim();
+  let personId: string | null = body?.personId?.trim() || null;
+  let userId: string | null = body?.userId?.trim() || null;
+
+  if (personId && actor.tenantId) {
+    const snap = await resolveMeetingPersonSnapshot(actor.tenantId, personId);
+    if (!snap) return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+    name = snap.displayName;
+    personId = snap.personId;
+    userId = snap.userId ?? userId;
+  }
+
   if (!name) return NextResponse.json({ error: "Name ist erforderlich." }, { status: 400 });
   const validStatuses = Object.values(MeetingParticipantStatus);
   const status: MeetingParticipantStatus = validStatuses.includes(body?.status) ? body.status : MeetingParticipantStatus.INVITED;
   try {
     const participant = await prisma.meetingParticipant.create({
-      data: { meetingId: id, name, role: body?.role?.trim() || null, status, userId: body?.userId?.trim() || null },
+      data: { meetingId: id, name, role: body?.role?.trim() || null, status, userId, personId },
       select: { id: true, name: true, status: true },
     });
     void logAuditEvent({ actorUserId: actor.userId, module: "meetings", entityId: id, action: "PARTICIPANT_CREATE", after: { participantId: participant.id, name: participant.name } });

@@ -49,6 +49,12 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         meetingDate: body?.meetingDate ? new Date(body.meetingDate) : undefined,
         location: body?.location?.trim() || null,
         attendeeCount: body?.attendeeCount !== undefined ? Number(body.attendeeCount) || null : undefined,
+        plannedDurationMin:
+          body?.plannedDurationMin !== undefined
+            ? body.plannedDurationMin === null || body.plannedDurationMin === ""
+              ? null
+              : Math.max(0, Math.trunc(Number(body.plannedDurationMin))) || null
+            : undefined,
         status: validStatuses.includes(body?.status as MeetingStatus)
           ? (body.status as MeetingStatus)
           : undefined,

@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
         meetingDate,
         location: body?.location?.trim() || null,
         attendeeCount: body?.attendeeCount ? Number(body.attendeeCount) : null,
+        plannedDurationMin:
+          body?.plannedDurationMin !== undefined && body?.plannedDurationMin !== null && body?.plannedDurationMin !== ""
+            ? Math.max(0, Math.trunc(Number(body.plannedDurationMin))) || null
+            : null,
         status,
         visibilityScope,
         createdByUserId: actor.userId,

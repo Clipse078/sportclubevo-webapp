@@ -61,6 +61,7 @@ export default function MeetingWorkspace({
           <div className="space-y-5">
             <MeetingAgendaSection
               meetingId={meeting.id}
+              meetingPlannedDurationMin={meeting.plannedDurationMin}
               canManage={canManage}
               items={agendaItems}
               onItemsChange={setAgendaItems}

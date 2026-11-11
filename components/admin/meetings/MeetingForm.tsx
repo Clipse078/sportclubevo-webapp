@@ -9,6 +9,7 @@ import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
+import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
 
 type MeetingFormProps = {
@@ -23,6 +24,7 @@ type MeetingFormProps = {
     meetingDate?: string;
     location?: string;
     attendeeCount?: string;
+    plannedDurationMin?: string;
     status?: string;
     visibilityScope?: VisibilityScopeValue;
     visibleOrgUnitRefs?: string[];
@@ -53,6 +55,7 @@ export default function MeetingForm({
   const [meetingDate, setMeetingDate] = useState(defaultValues?.meetingDate ?? "");
   const [location, setLocation] = useState(defaultValues?.location ?? "");
   const [attendeeCount, setAttendeeCount] = useState(defaultValues?.attendeeCount ?? "");
+  const [plannedDurationMin, setPlannedDurationMin] = useState(defaultValues?.plannedDurationMin ?? "");
   const [status, setStatus] = useState(defaultValues?.status ?? "PLANNED");
   const [visibilityScope, setVisibilityScope] = useState<VisibilityScopeValue>(
     defaultValues?.visibilityScope ?? "ORGANISATION",
@@ -81,6 +84,7 @@ export default function MeetingForm({
       meetingDate,
       location,
       attendeeCount,
+      plannedDurationMin,
       status,
       visibilityScope,
       visibleOrgUnitRefs,
@@ -94,6 +98,7 @@ export default function MeetingForm({
       meetingDate,
       location,
       attendeeCount,
+      plannedDurationMin,
       status,
       visibilityScope,
       visibleOrgUnitRefs,
@@ -126,6 +131,7 @@ export default function MeetingForm({
         meetingDate,
         location: location.trim() || null,
         attendeeCount: attendeeCount ? Number(attendeeCount) : null,
+        plannedDurationMin: plannedDurationMin ? Number(plannedDurationMin) : null,
         status,
         visibilityScope,
         visibleOrgUnitRefs: visibilityScope === "RESTRICTED" ? visibleOrgUnitRefs : [],
@@ -183,9 +189,8 @@ export default function MeetingForm({
         </div>
       ) : null}
 
-      <section className={sectionClass}>
-        <h3 className={sectionTitleClass}>Grunddaten</h3>
-
+      <section className={sectionClass} data-testid="meeting-form-core">
+        <h3 className={sectionTitleClass}>Meeting</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Titel *</label>
@@ -198,18 +203,6 @@ export default function MeetingForm({
               required
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className={labelClass}>Beschreibung</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kurze Beschreibung des Meetings…"
-              rows={3}
-              className={fieldClass}
-            />
-          </div>
-
           <div>
             <label className={labelClass}>Datum & Uhrzeit *</label>
             <input
@@ -220,22 +213,6 @@ export default function MeetingForm({
               required
             />
           </div>
-
-          <div>
-            <label className={labelClass}>Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className={fieldClass}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div>
             <label className={labelClass}>Ort</label>
             <input
@@ -246,9 +223,29 @@ export default function MeetingForm({
               className={fieldClass}
             />
           </div>
-
+          <div className="md:col-span-2">
+            <label className={labelClass}>Beschreibung</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Kurze Beschreibung des Meetings…"
+              rows={2}
+              className={fieldClass}
+            />
+          </div>
           <div>
-            <label className={labelClass}>Teilnehmeranzahl</label>
+            <label className={labelClass}>Geplante Dauer (Minuten)</label>
+            <input
+              type="number"
+              min={1}
+              value={plannedDurationMin}
+              onChange={(e) => setPlannedDurationMin(e.target.value)}
+              placeholder="z.B. 90"
+              className={fieldClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Teilnehmeranzahl (Plan)</label>
             <input
               type="number"
               min={0}
@@ -261,25 +258,42 @@ export default function MeetingForm({
         </div>
       </section>
 
-      <section className={sectionClass}>
-        <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
-        <p className="mb-5 text-[12px] text-[var(--muted)]">
-          Wer kann dieses Meeting sehen? Wähle sorgfältig — Privat und Eingeschränkt
-          verbergen diesen Eintrag für nicht berechtigte Benutzer.
-        </p>
-        <VisibilityScopeSelect value={visibilityScope} onChange={setVisibilityScope} />
-        <AllowlistPanel
-          visibilityScope={visibilityScope}
-          visibleOrgUnitRefs={visibleOrgUnitRefs}
-          visibleRoleRefs={visibleRoleRefs}
-          visibleUserRefs={visibleUserRefs}
-          visibleTargetGroupRefs={visibleTargetGroupRefs}
-          onOrgUnitsChange={setVisibleOrgUnitRefs}
-          onRolesChange={setVisibleRoleRefs}
-          onUsersChange={setVisibleUserRefs}
-          onTargetGroupsChange={setVisibleTargetGroupRefs}
-        />
-      </section>
+      <SceExpandablePanel
+        defaultOpen={layout === "composer"}
+        summary={<span className="text-sm font-semibold text-[var(--foreground)]">Erweiterte Einstellungen</span>}
+      >
+        <div className="space-y-6">
+          <div>
+            <label className={labelClass}>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={fieldClass}>
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
+            <p className="mb-5 text-[12px] text-[var(--muted)]">
+              Wer kann dieses Meeting sehen? Privat und Eingeschränkt verbergen den Eintrag für nicht berechtigte
+              Benutzer.
+            </p>
+            <VisibilityScopeSelect value={visibilityScope} onChange={setVisibilityScope} />
+            <AllowlistPanel
+              visibilityScope={visibilityScope}
+              visibleOrgUnitRefs={visibleOrgUnitRefs}
+              visibleRoleRefs={visibleRoleRefs}
+              visibleUserRefs={visibleUserRefs}
+              visibleTargetGroupRefs={visibleTargetGroupRefs}
+              onOrgUnitsChange={setVisibleOrgUnitRefs}
+              onRolesChange={setVisibleRoleRefs}
+              onUsersChange={setVisibleUserRefs}
+              onTargetGroupsChange={setVisibleTargetGroupRefs}
+            />
+          </div>
+        </div>
+      </SceExpandablePanel>
 
       <div className="flex items-center justify-between gap-4">
         <button

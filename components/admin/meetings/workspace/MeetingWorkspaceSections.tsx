@@ -1,8 +1,24 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import Link from "next/link";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
+import {
+  MeetingInitiativeLinkSelect,
+  type InitiativeLinkOption,
+} from "@/components/admin/meetings/workspace/MeetingInitiativeLinkSelect";
+import {
+  MeetingWorkspacePeopleField,
+  personDisplayLabel,
+  personPickerFromIds,
+} from "@/components/admin/meetings/workspace/MeetingWorkspacePeopleField";
+import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
+import {
+  AGENDA_DURATION_PRESETS_MIN,
+  agendaExceedsMeetingPlannedTime,
+  sumAgendaPlannedMinutes,
+} from "@/lib/meetings/agenda-duration";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import {
@@ -68,11 +84,12 @@ function SectionShell({
 
 export function MeetingAgendaSection({
   meetingId,
+  meetingPlannedDurationMin,
   canManage,
   items,
   onItemsChange,
   onDirtyChange,
-}: SectionProps<AgendaItem>) {
+}: SectionProps<AgendaItem> & { meetingPlannedDurationMin?: number | null }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [newTitle, setNewTitle] = useState("");
@@ -102,7 +119,7 @@ export function MeetingAgendaSection({
     });
   }
 
-  function saveItem(item: AgendaItem, draft: Partial<AgendaItem>) {
+  function saveItem(item: AgendaItem, draft: Record<string, unknown>) {
     setError(null);
     startTransition(async () => {
       try {
@@ -127,8 +144,29 @@ export function MeetingAgendaSection({
     });
   }
 
+  const agendaTotalMin = useMemo(() => sumAgendaPlannedMinutes(items), [items]);
+  const exceedsPlanned = agendaExceedsMeetingPlannedTime({
+    agendaTotalMin,
+    meetingPlannedDurationMin,
+  });
+
   return (
     <SectionShell title="Traktanden" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">
+        <span>
+          Geplante Traktandenzeit: <strong className="text-[var(--foreground)]">{agendaTotalMin} min</strong>
+        </span>
+        {typeof meetingPlannedDurationMin === "number" && meetingPlannedDurationMin > 0 ? (
+          <span>
+            Meeting-Dauer: <strong className="text-[var(--foreground)]">{meetingPlannedDurationMin} min</strong>
+          </span>
+        ) : null}
+      </div>
+      {exceedsPlanned ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+          Die geplante Traktandenzeit übersteigt die Meeting-Dauer — nur ein Hinweis, kein Blocker.
+        </p>
+      ) : null}
       <ErrorBanner message={error} />
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-2)]">Noch keine Traktanden — erfasse den Ablauf der Sitzung.</p>
@@ -180,24 +218,50 @@ function AgendaItemRow({
   item: AgendaItem;
   canManage: boolean;
   pending: boolean;
-  onSave: (draft: Partial<AgendaItem>) => void;
+  onSave: (draft: Record<string, unknown>) => void;
   onDelete: () => void;
   onDirty: () => void;
 }) {
   const [title, setTitle] = useState(item.title);
   const [notes, setNotes] = useState(item.notes ?? "");
-  const [owner, setOwner] = useState(item.owner ?? "");
   const [status, setStatus] = useState(item.status);
+  const [durationMin, setDurationMin] = useState(
+    item.durationMin != null ? String(item.durationMin) : "",
+  );
+  const [customDuration, setCustomDuration] = useState("");
+  const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
+    personPickerFromIds(item.ownerPersonId, item.owner),
+  );
+  const initiativeFromItem = item.initiative;
+  const [initiative, setInitiative] = useState<InitiativeLinkOption | null>(
+    initiativeFromItem
+      ? {
+          id: initiativeFromItem.id,
+          slug: initiativeFromItem.slug,
+          title: initiativeFromItem.title,
+          status: initiativeFromItem.status,
+        }
+      : null,
+  );
+
+  const durationLabel =
+    item.durationMin && item.durationMin > 0 ? ` · ${item.durationMin} min` : "";
 
   return (
     <SceExpandablePanel
       defaultOpen={false}
       summary={
-        <span className="flex items-center gap-2">
+        <span className="flex flex-wrap items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-xs font-semibold text-[#0b4aa2]">
             {index}
           </span>
-          <span className="font-medium">{item.title}</span>
+          <span className="font-medium">
+            {item.title}
+            {durationLabel}
+          </span>
+          {initiativeFromItem ? (
+            <span className="text-xs text-[var(--text-2)]">↗ {initiativeFromItem.title}</span>
+          ) : null}
         </span>
       }
     >
@@ -210,7 +274,43 @@ function AgendaItemRow({
             onChange={(e) => { setNotes(e.target.value); onDirty(); }}
             placeholder="Notizen"
           />
-          <input className={workspaceInputClass} value={owner} onChange={(e) => { setOwner(e.target.value); onDirty(); }} placeholder="Verantwortlich" />
+          <MeetingWorkspacePeopleField
+            label="Traktanden-Verantwortliche/r"
+            selected={ownerPerson}
+            onSelect={(person) => { setOwnerPerson(person); onDirty(); }}
+            onClear={() => { setOwnerPerson(null); onDirty(); }}
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Geplante Dauer</label>
+              <select
+                className={workspaceInputClass}
+                value={durationMin}
+                onChange={(e) => { setDurationMin(e.target.value); onDirty(); }}
+              >
+                <option value="">Keine Angabe</option>
+                {AGENDA_DURATION_PRESETS_MIN.map((preset) => (
+                  <option key={preset} value={String(preset)}>
+                    {preset} min
+                  </option>
+                ))}
+                <option value="custom">Eigene Dauer…</option>
+              </select>
+            </div>
+            {durationMin === "custom" ? (
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Minuten</label>
+                <input
+                  type="number"
+                  min={1}
+                  className={workspaceInputClass}
+                  value={customDuration}
+                  onChange={(e) => { setCustomDuration(e.target.value); onDirty(); }}
+                />
+              </div>
+            ) : null}
+          </div>
+          <MeetingInitiativeLinkSelect value={initiative} onChange={(next) => { setInitiative(next); onDirty(); }} />
           <select
             className={workspaceInputClass}
             value={status}
@@ -225,7 +325,23 @@ function AgendaItemRow({
               type="button"
               className={workspacePrimaryButtonClass}
               disabled={pending || !title.trim()}
-              onClick={() => onSave({ title: title.trim(), notes, owner, status })}
+              onClick={() => {
+                const resolvedDuration =
+                  durationMin === "custom"
+                    ? customDuration
+                    : durationMin === ""
+                      ? null
+                      : durationMin;
+                onSave({
+                  title: title.trim(),
+                  notes,
+                  status,
+                  durationMin: resolvedDuration,
+                  ownerPersonId: ownerPerson?.id ?? null,
+                  owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
+                  initiativeId: initiative?.id ?? null,
+                });
+              }}
             >
               Speichern
             </button>
@@ -238,6 +354,16 @@ function AgendaItemRow({
         <div className="space-y-2 text-sm text-[var(--text-2)]">
           {item.notes ? <p>{item.notes}</p> : null}
           {item.owner ? <p>Verantwortlich: {item.owner}</p> : null}
+          {item.durationMin ? <p>Dauer: {item.durationMin} min</p> : null}
+          {initiativeFromItem ? (
+            <p>
+              Vorhaben:{" "}
+              <Link href={`/vereinsleitung/initiativen/${initiativeFromItem.slug}`} className="font-semibold text-[#0b4aa2]">
+                {initiativeFromItem.title}
+              </Link>{" "}
+              ({initiativeFromItem.status})
+            </p>
+          ) : null}
         </div>
       )}
     </SceExpandablePanel>
@@ -253,17 +379,17 @@ export function MeetingParticipantsSection({
 }: SectionProps<Participant>) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [name, setName] = useState("");
+  const [selectedPerson, setSelectedPerson] = useState<PersonPickerResult | null>(null);
   const [role, setRole] = useState("");
 
   function addParticipant() {
-    const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!selectedPerson) return;
     setError(null);
     startTransition(async () => {
       try {
         const { participant } = await meetingWorkspaceApi.participants.create(meetingId, {
-          name: trimmed,
+          personId: selectedPerson.id,
+          name: personDisplayLabel(selectedPerson),
           role: role.trim() || null,
           status: "INVITED",
         });
@@ -273,9 +399,16 @@ export function MeetingParticipantsSection({
         else
           onItemsChange([
             ...items,
-            { id: participant.id, name: trimmed, role: role.trim() || null, status: "INVITED", userId: null },
+            {
+              id: participant.id,
+              name: personDisplayLabel(selectedPerson),
+              role: role.trim() || null,
+              status: "INVITED",
+              userId: null,
+              personId: selectedPerson.id,
+            },
           ]);
-        setName("");
+        setSelectedPerson(null);
         setRole("");
         onDirtyChange?.(false);
       } catch (e) {
@@ -335,9 +468,16 @@ export function MeetingParticipantsSection({
       )}
       {canManage ? (
         <div className="flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4">
-          <input className={workspaceInputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+          <div className="min-w-[220px] flex-1">
+            <MeetingWorkspacePeopleField
+              label="Teilnehmer/in"
+              selected={selectedPerson}
+              onSelect={setSelectedPerson}
+              onClear={() => setSelectedPerson(null)}
+            />
+          </div>
           <input className={workspaceInputClass} value={role} onChange={(e) => setRole(e.target.value)} placeholder="Rolle (optional)" />
-          <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !name.trim()} onClick={addParticipant}>
+          <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !selectedPerson} onClick={addParticipant}>
             Hinzufügen
           </button>
         </div>
@@ -355,17 +495,24 @@ export function MeetingDecisionsSection({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
+  const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
 
   function addDecision() {
     const trimmed = title.trim();
     if (!trimmed) return;
     startTransition(async () => {
       try {
-        await meetingWorkspaceApi.decisions.create(meetingId, { title: trimmed, status: "CONFIRMED" });
+        await meetingWorkspaceApi.decisions.create(meetingId, {
+          title: trimmed,
+          status: "CONFIRMED",
+          ownerPersonId: ownerPerson?.id ?? null,
+          owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
+        });
         const res = await fetch(`/api/meetings/${meetingId}/decisions`);
         const data = await res.json();
         if (res.ok) onItemsChange(data.decisions);
         setTitle("");
+        setOwnerPerson(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Fehler");
       }
@@ -379,11 +526,18 @@ export function MeetingDecisionsSection({
         <div key={d.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
           <p className="font-semibold text-[var(--foreground)]">{d.title}</p>
           {d.description ? <p className="mt-1 text-sm text-[var(--text-2)]">{d.description}</p> : null}
+          {d.owner ? <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {d.owner}</p> : null}
         </div>
       ))}
       {canManage ? (
-        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
-          <input className={`${workspaceInputClass} flex-1`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
+        <div className="space-y-3 border-t border-[var(--border)] pt-4">
+          <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
+          <MeetingWorkspacePeopleField
+            label="Verantwortliche/r (optional)"
+            selected={ownerPerson}
+            onSelect={setOwnerPerson}
+            onClear={() => setOwnerPerson(null)}
+          />
           <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addDecision}>
             Erfassen
           </button>
@@ -402,19 +556,23 @@ export function MeetingActionsSection({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
-  const [owner, setOwner] = useState("");
+  const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
 
   function addAction() {
     const trimmed = title.trim();
     if (!trimmed) return;
     startTransition(async () => {
       try {
-        await meetingWorkspaceApi.actions.create(meetingId, { title: trimmed, owner: owner.trim() || null });
+        await meetingWorkspaceApi.actions.create(meetingId, {
+          title: trimmed,
+          ownerPersonId: ownerPerson?.id ?? null,
+          owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
+        });
         const res = await fetch(`/api/meetings/${meetingId}/actions`);
         const data = await res.json();
         if (res.ok) onItemsChange(data.actions);
         setTitle("");
-        setOwner("");
+        setOwnerPerson(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Fehler");
       }
@@ -431,9 +589,14 @@ export function MeetingActionsSection({
         </div>
       ))}
       {canManage ? (
-        <div className="flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4">
+        <div className="space-y-3 border-t border-[var(--border)] pt-4">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Massnahme" />
-          <input className={workspaceInputClass} value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="Verantwortlich" />
+          <MeetingWorkspacePeopleField
+            label="Verantwortliche/r (optional)"
+            selected={ownerPerson}
+            onSelect={setOwnerPerson}
+            onClear={() => setOwnerPerson(null)}
+          />
           <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addAction}>
             Erfassen
           </button>
