@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import InitiativeForm from "@/components/admin/initiatives/InitiativeForm";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
 
@@ -20,7 +21,9 @@ export default async function NewInitiativePage() {
           { label: "Neue Initiative" },
         ]}
       >
-        <InitiativeForm mode="create" layout="composer" />
+        <ClubDevelopmentFormWorkflowShell>
+          <InitiativeForm mode="create" layout="composer" />
+        </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>
   );

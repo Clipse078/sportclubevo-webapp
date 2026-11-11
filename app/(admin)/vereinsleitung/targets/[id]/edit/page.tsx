@@ -9,6 +9,7 @@ import { getTargetById } from "@/lib/targets/queries";
 import { getMeetingLinkOptions, getInitiativeLinkOptions } from "@/lib/linking/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import TargetForm from "@/components/admin/targets/TargetForm";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import TargetLinkEditor from "@/components/admin/targets/TargetLinkEditor";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import { ArrowLeft } from "lucide-react";
@@ -91,7 +92,9 @@ export default async function EditTargetPage({ params }: PageProps) {
           </Link>
         </div>
 
-        <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
+        <ClubDevelopmentFormWorkflowShell>
+          <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
+        </ClubDevelopmentFormWorkflowShell>
 
         <section className={`${VEREINSLEITUNG_PANEL_CLASS} mt-6`}>
           <TargetLinkEditor

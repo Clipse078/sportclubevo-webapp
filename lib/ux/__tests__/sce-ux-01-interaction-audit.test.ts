@@ -63,11 +63,11 @@ describe("SCE-UX-01 — interaction workflow audit contract", () => {
     expect(doc).toContain("SCE-UX-01A");
   });
 
-  it("evidence: Club Development composers use Dialog workspace pattern", () => {
+  it("evidence: Club Development composers use shared workspace shell", () => {
     expect(readRepo("components/admin/targets/CreateTargetComposerDialog.tsx")).toContain(
-      'size="workspace"',
+      "SceClubDevelopmentComposerShell",
     );
-    expect(readRepo("components/admin/initiatives/CreateInitiativeComposerDialog.tsx")).toContain(
+    expect(readRepo("components/sce/club-development/SceClubDevelopmentComposerShell.tsx")).toContain(
       'size="workspace"',
     );
   });

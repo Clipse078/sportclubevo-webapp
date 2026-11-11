@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Dialog } from "@/components/ui/Dialog";
 import InitiativeForm from "@/components/admin/initiatives/InitiativeForm";
+import { SceClubDevelopmentComposerShell } from "@/components/sce/club-development/SceClubDevelopmentComposerShell";
+import { ClubDevelopmentComposerCancelBridge } from "@/components/sce/club-development/ClubDevelopmentComposerCancelBridge";
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -10,27 +11,27 @@ export default function CreateInitiativeComposerDialog({ open, onClose }: Props)
   const router = useRouter();
 
   return (
-    <Dialog
+    <SceClubDevelopmentComposerShell
       open={open}
       onClose={onClose}
       title="Neue Initiative"
       description="Initiative im Workspace erfassen — ohne die Übersicht zu verlassen."
-      size="workspace"
-      bodyLayout="flex"
-      footer={null}
+      testId="create-initiative-composer"
     >
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <InitiativeForm
-          mode="create"
-          layout="composer"
-          onCancel={onClose}
-          onSuccess={(slug) => {
-            onClose();
-            router.push(slug ? `/vereinsleitung/initiativen/${slug}` : "/vereinsleitung/initiativen?status=saved");
-            router.refresh();
-          }}
-        />
-      </div>
-    </Dialog>
+      <ClubDevelopmentComposerCancelBridge onClose={onClose}>
+        {(onCancel) => (
+          <InitiativeForm
+            mode="create"
+            layout="composer"
+            onCancel={onCancel}
+            onSuccess={(slug) => {
+              onClose();
+              router.push(slug ? `/vereinsleitung/initiativen/${slug}` : "/vereinsleitung/initiativen?status=saved");
+              router.refresh();
+            }}
+          />
+        )}
+      </ClubDevelopmentComposerCancelBridge>
+    </SceClubDevelopmentComposerShell>
   );
 }

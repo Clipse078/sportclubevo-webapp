@@ -1,4 +1,5 @@
-import { AlertCircle, CheckSquare, ChevronRight, Clock, Plus } from "lucide-react";
+import { AlertCircle, CheckSquare, ChevronRight, Clock } from "lucide-react";
+import CreateProcessTrigger from "@/components/admin/prozesse/CreateProcessTrigger";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, SectionCard } from "@/components/ui/page";
@@ -156,18 +157,7 @@ export default function ProzessePage() {
           { label: "Prozesse & Aufgaben" },
         ]}
         headerBadge={<Badge variant="warning">In Entwicklung</Badge>}
-        headerActions={
-        <button
-          type="button"
-          disabled
-          title="Demnächst verfügbar"
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm font-medium text-[var(--muted)] cursor-not-allowed"
-        >
-          <Plus className="h-4 w-4" />
-          Neuer Prozess
-          <Badge variant="warning" size="sm">Demnächst</Badge>
-        </button>
-        }
+        headerActions={<CreateProcessTrigger />}
       >
       {/* Demo notice */}
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">

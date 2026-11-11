@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import TargetNewPageClient from "@/components/admin/targets/TargetNewPageClient";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
 
@@ -20,7 +21,9 @@ export default async function NewTargetPage() {
           { label: "Neues Ziel" },
         ]}
       >
-        <TargetNewPageClient layout="composer" />
+        <ClubDevelopmentFormWorkflowShell>
+          <TargetNewPageClient layout="composer" />
+        </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>
   );

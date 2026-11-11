@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getMeetingBySlug } from "@/lib/meetings/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import MeetingForm from "@/components/admin/meetings/MeetingForm";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import type { VisibilityScopeValue } from "@/components/admin/shared/VisibilityScopeSelect";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
@@ -51,7 +52,9 @@ export default async function EditMeetingPage({ params }: PageProps) {
           { label: "Bearbeiten" },
         ]}
       >
-        <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
+        <ClubDevelopmentFormWorkflowShell>
+          <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
+        </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>
   );
