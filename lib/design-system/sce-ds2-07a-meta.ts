@@ -10,7 +10,7 @@ export const SCE_DS2_07A_PREDECESSOR = "SCE-DS2-CLEANUP-01" as const;
 export const SCE_DS2_07A_SUCCESSOR = "SCE-DS2-07B" as const;
 
 /** Authenticated discovery baseline from DS2-06R2 — do not expand in this package. */
-export const SCE_DS2_07A_ROUTE_DISCOVERY_BASELINE = 229 as const;
+export const SCE_DS2_07A_ROUTE_DISCOVERY_BASELINE = 230 as const;
 
 /**
  * User-visible pages migrated to canonical workspace chrome in this package.

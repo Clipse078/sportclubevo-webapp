@@ -15,9 +15,9 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 271 |
-| Authenticated renderable pages | 216 |
-| Authenticated visual pages (completion denominator) | 214 |
+| Page entries | 272 |
+| Authenticated renderable pages | 217 |
+| Authenticated visual pages (completion denominator) | 215 |
 | Authenticated redirect aliases | 15 |
 | Public renderable pages | 39 |
 | Public redirect aliases | 1 |
@@ -32,12 +32,12 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 214 |
+| CANONICAL | 215 |
 | PARTIAL | 0 |
 | LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **214 / 214 (100%)**.
+Architectural canonical adoption: **215 / 215 (100%)**.
 
 ## Verification
 
@@ -45,11 +45,11 @@ Architectural canonical adoption: **214 / 214 (100%)**.
 | --- | ---: |
 | NOT_STARTED | 0 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 214 |
+| IMPLEMENTED | 215 |
 | VERIFIED | 0 |
 | EXCEPTION | 57 |
 
-Verified authenticated visual pages: **0 / 214 (0%)**.
+Verified authenticated visual pages: **0 / 215 (0%)**.
 
 `IMPLEMENTED` means canonical workspace architecture is present. `VERIFIED` additionally requires recorded visual, accessibility, functional, and responsive evidence.
 
@@ -63,7 +63,7 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
 | DS2-07F | 0 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 214 | Authenticated visual/accessibility verification and closure |
+| DS2-07G | 215 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -333,6 +333,7 @@ None.
 | `/vereinsleitung/templates/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/[id]/page.tsx` |
 | `/vereinsleitung/templates/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx` |
 | `/vereinsleitung/templates/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/templates/new/page.tsx` |
+| `/vereinsleitung/vorhaben` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/vorhaben/page.tsx` |
 
 ## Changes since the baseline
 

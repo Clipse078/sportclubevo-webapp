@@ -7434,6 +7434,37 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/vereinsleitung/vorhaben",
+    "routeKey": "/vereinsleitung/vorhaben",
+    "sourceFile": "app/(admin)/vereinsleitung/vorhaben/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/forgot-password",
     "routeKey": "/forgot-password",
     "sourceFile": "app/(auth)/forgot-password/page.tsx",
@@ -8748,16 +8779,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 271,
-  "authenticatedRenderableCount": 216,
-  "authenticatedVisualCount": 214,
+  "pageCount": 272,
+  "authenticatedRenderableCount": 217,
+  "authenticatedVisualCount": 215,
   "authenticatedRedirectCount": 15,
   "publicRenderableCount": 39,
   "publicRedirectCount": 1,
   "routeHandlerCount": 625,
   "frameworkFileCount": 39,
   "architecture": {
-    "CANONICAL": 214,
+    "CANONICAL": 215,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -8765,13 +8796,13 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 214,
+    "IMPLEMENTED": 215,
     "VERIFIED": 0,
     "EXCEPTION": 57
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 214,
+  "architecturalCanonicalCount": 215,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
@@ -8785,7 +8816,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 214
+    "DS2-07G": 215
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,
