@@ -183,12 +183,39 @@ Agent image inspection (desktop artifact reference) via `scripts/sce-ds2-07g-rec
 
 Nine routes still lack STAGE fixtures (`Requirement`, `RequirementRecipient`, `CAMPAIGN`/`PlatformCommunicationTemplate`, `Meeting`, `Target`, `BankReconciliationImport`). Responsive + evidence remain **PENDING**; classified as **fixture unavailable**, not application defects.
 
-## Remaining verification work
+## Batch 8 result (verification framework, evidence quality, closure strategy)
 
-1. Close the **11** fixture-environment blockers (read-only STAGE seed or disposable verification DB — never mutate operational STAGE records).
-2. Continue agent visual review (`visual.screenshotReviewed = true`) for remaining **198** routes × viewports.
-3. Triage axe failures (contrast/label/select-name baseline vs DS2 regressions); fix confirmed DS2 regressions on this branch.
-4. Promote registry lifecycle only when `isVerifiedAuthenticatedVisual` is satisfied (still **0/214**).
+| Status | Count |
+| --- | ---: |
+| Evidence contract | `2026-11-11-batch-8` |
+| Fully VERIFIED (`authenticatedVisual`) | **0** / 214 |
+| Accessibility PASS / FAIL / PENDING | **0** / **66** / **148** |
+| Functional PASS / PENDING / NOT_APPLICABLE | **129** / **79** / **6** |
+| Visual PASS / PENDING / FAIL | **8** / **181** / **25** |
+| Screenshot explicitly reviewed | **19** |
+| Fixture-environment blockers | **11** |
+
+### Batch 8 evidence-contract corrections
+
+| Area | Change |
+| --- | --- |
+| Closure rule | `isAuthenticatedVisualClosure` requires `visual.status === PASS` and `screenshotReviewed === true` |
+| Accessibility | `resolveAccessibilityDimension` records axe incomplete rule ids; classifies manual vs keyboard supplement; never PASS on incomplete alone |
+| Functional | `resolveFunctionalDimension` with governed `NOT_APPLICABLE` (5 future-module + 1 intercept); form vs read-only classification |
+| Runner | Preserves visual review metadata on reassess merge; fixes workspace chrome landmark selector; serializes `incompleteSummaries` |
+| Workspace | `SceWorkspaceChrome` exposes `data-testid` and `<main data-sce-page-shell>` |
+| Offline | `sce-ds2-07g-reconcile-evidence-batch8.mjs`, `sce-ds2-07g-closure-report.mjs`, visual readiness check |
+| Fixtures | `docs/design-system-v2/27-ds2-07g-fixture-isolation-strategy.md` (isolated DB plan; STAGE mutation refused) |
+
+Closure queue artifact: `docs/design-system-v2/28-ds2-07g-closure-queue-batch8.md` (grouped by root cause, not route list only).
+
+### Remaining verification work
+
+1. Close **11** `FIXTURE_ENVIRONMENT` routes via disposable verification DB (see fixture strategy doc).
+2. Reassess accessibility with batch-8 runner to persist incomplete rule ids; remediate **66** axe FAIL rows (shared contrast/label debt).
+3. Agent visual review for **181** routes without `screenshotReviewed`.
+4. Mutation workflows (**79** functional PENDING) — isolated harness or tracked baseline debt; do not infer from render-only probes.
+5. Programme closure remains **0/214** until all six dimensions satisfy batch-8 contract.
 
 ## Functional regression (automated)
 

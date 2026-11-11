@@ -1,7 +1,29 @@
 /**
- * SCE-DS2-07G batch-3 — independent verification dimensions and channel mapping.
+ * SCE-DS2-07G — independent verification dimensions and channel mapping.
+ * Batch 8 extends accessibility incomplete taxonomy, functional expectations, and closure rules.
  */
-export const EVIDENCE_CONTRACT_VERSION = "2026-11-10-batch-3";
+export const EVIDENCE_CONTRACT_VERSION = "2026-11-11-batch-8";
+
+/** Axe rules that require human or keyboard supplement — zero violations alone is insufficient. */
+export const AXE_INCOMPLETE_MANUAL_REVIEW_RULES = new Set([
+  "color-contrast",
+  "css-orientation-lock",
+  "focus-order-semantics",
+  "hidden-content",
+  "landmark-complementary-is-top-level",
+  "link-in-text-block",
+  "scrollable-region-focusable",
+  "meta-viewport",
+  "p-as-heading",
+  "table-duplicate-name",
+]);
+
+/** Incomplete rules that keyboard/focus probe can partially satisfy when violations are zero. */
+export const AXE_INCOMPLETE_KEYBOARD_SUPPLEMENT_RULES = new Set([
+  "frame-tested",
+  "focus-order-semantics",
+  "scrollable-region-focusable",
+]);
 
 /** @typedef {"PASS" | "FAIL" | "PENDING" | "BLOCKED" | "NOT_APPLICABLE"} DimensionStatus */
 
@@ -41,9 +63,165 @@ export function responsiveViewportStatus(dimensions, viewportKey) {
   return dimensionToChannelStatus(viewport?.status);
 }
 
+/**
+ * @param {{ violations: number, incomplete: number, incompleteSummaries?: string[], keyboardProbeFailures?: string[] }} axe
+ * @param {{ responsivePass: boolean, authBlocked: boolean }} context
+ */
+export function resolveAccessibilityDimension(axe, context) {
+  const keyboardProbeFailures = axe.keyboardProbeFailures ?? [];
+  const incompleteSummaries = axe.incompleteSummaries ?? [];
+  const classification = classifyAxeIncomplete(incompleteSummaries);
+
+  if (context.authBlocked) {
+    return {
+      status: /** @type {const} */ ("BLOCKED"),
+      axeViolations: axe.violations,
+      axeIncomplete: axe.incomplete,
+      reason: "Authorization blocked",
+      details: incompleteSummaries,
+      incompleteClassification: classification,
+    };
+  }
+  if (axe.violations > 0) {
+    return {
+      status: /** @type {const} */ ("FAIL"),
+      axeViolations: axe.violations,
+      axeIncomplete: axe.incomplete,
+      reason: `axe violations: ${axe.violationSummaries?.join(", ") ?? axe.violations}`,
+      details: [...(axe.violationSummaries ?? []), ...incompleteSummaries.map((s) => `incomplete:${s}`)],
+      incompleteClassification: classification,
+    };
+  }
+  if (keyboardProbeFailures.length > 0) {
+    return {
+      status: /** @type {const} */ ("FAIL"),
+      axeViolations: 0,
+      axeIncomplete: axe.incomplete,
+      reason: `keyboard focus probe failed: ${keyboardProbeFailures.join("; ")}`,
+      details: [...incompleteSummaries.map((s) => `incomplete:${s}`), ...keyboardProbeFailures],
+      incompleteClassification: classification,
+    };
+  }
+  if (axe.incomplete > 0) {
+    return {
+      status: /** @type {const} */ ("PENDING"),
+      axeViolations: 0,
+      axeIncomplete: axe.incomplete,
+      reason: `axe incomplete rules (${classification.manualReview.length} manual, ${classification.keyboardSupplement.length} keyboard supplement): ${axe.incomplete}`,
+      details: incompleteSummaries.map((s) => `incomplete:${s}`),
+      incompleteClassification: classification,
+    };
+  }
+  if (!context.responsivePass) {
+    return {
+      status: /** @type {const} */ ("PENDING"),
+      axeViolations: 0,
+      axeIncomplete: 0,
+      reason: "axe clean; responsive probe incomplete",
+      details: [],
+      incompleteClassification: classification,
+    };
+  }
+  return {
+    status: /** @type {const} */ ("PASS"),
+    axeViolations: 0,
+    axeIncomplete: 0,
+    reason: "axe-core wcag2aa scan clean; keyboard focus probe clean on desktop viewport",
+    details: [],
+    incompleteClassification: classification,
+  };
+}
+
+/**
+ * @param {string[]} incompleteSummaries e.g. "color-contrast:serious"
+ */
+export function classifyAxeIncomplete(incompleteSummaries) {
+  const manualReview = [];
+  const keyboardSupplement = [];
+  const unclassified = [];
+  for (const entry of incompleteSummaries) {
+    const ruleId = entry.split(":")[0] ?? entry;
+    if (AXE_INCOMPLETE_MANUAL_REVIEW_RULES.has(ruleId)) {
+      manualReview.push(ruleId);
+    } else if (AXE_INCOMPLETE_KEYBOARD_SUPPLEMENT_RULES.has(ruleId)) {
+      keyboardSupplement.push(ruleId);
+    } else {
+      unclassified.push(ruleId);
+    }
+  }
+  return { manualReview, keyboardSupplement, unclassified };
+}
+
+/**
+ * @param {{ pageArchetype: string, urlPattern: string, intercept: boolean }} route
+ * @param {{ hasMainLandmark: boolean, hasPrimaryHeading: boolean, interactiveCount: number, formSubmitPresent: boolean, formCheckSkipped: boolean } | null} probe
+ * @param {{ authBlocked: boolean }} context
+ */
+export function resolveFunctionalDimension(route, probe, context) {
+  if (context.authBlocked) {
+    return { status: /** @type {const} */ ("BLOCKED"), reason: "Authorization blocked", details: [] };
+  }
+  if (route.pageArchetype === "future-module") {
+    return {
+      status: /** @type {const} */ ("NOT_APPLICABLE"),
+      reason:
+        "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
+      details: ["functionalClass:FUTURE_MODULE_PLACEHOLDER"],
+    };
+  }
+  if (route.intercept) {
+    return {
+      status: /** @type {const} */ ("NOT_APPLICABLE"),
+      reason: "Parallel intercept slot; full-page workflow verification not applicable (modal pass tracked separately)",
+      details: ["functionalClass:INTERCEPT_SLOT"],
+    };
+  }
+  if (!probe) {
+    return { status: /** @type {const} */ ("PENDING"), reason: "Functional probe not executed", details: [] };
+  }
+  const workspaceLandmark =
+    probe.hasMainLandmark || probe.hasWorkspaceChromeEquivalent === true;
+  const readOnlyOk =
+    workspaceLandmark && probe.hasPrimaryHeading && probe.interactiveCount > 0;
+  if (probe.formCheckSkipped) {
+    return readOnlyOk
+      ? {
+          status: /** @type {const} */ ("PASS"),
+          reason: "Read-only functional smoke: workspace landmark, heading, interactive controls",
+          details: [JSON.stringify(probe), "functionalClass:READ_ONLY_SMOKE"],
+        }
+      : {
+          status: /** @type {const} */ ("PENDING"),
+          reason: "Read-only route missing workspace landmark, heading, or interactive controls",
+          details: [JSON.stringify(probe), "functionalClass:READ_ONLY_SMOKE"],
+        };
+  }
+  if (!probe.formSubmitPresent) {
+    return {
+      status: /** @type {const} */ ("PENDING"),
+      reason: "Form route missing submit control (read-only probe); mutation workflow not verified",
+      details: [JSON.stringify(probe), "functionalClass:MUTATION_WORKFLOW"],
+    };
+  }
+  return readOnlyOk
+    ? {
+        status: /** @type {const} */ ("PASS"),
+        reason: "Form route rendered with submit affordance; read-only smoke passed",
+        details: [JSON.stringify(probe), "functionalClass:FORM_RENDER_SMOKE"],
+      }
+    : {
+        status: /** @type {const} */ ("PENDING"),
+        reason: "Form route missing workspace landmark or heading",
+        details: [JSON.stringify(probe), "functionalClass:FORM_RENDER_SMOKE"],
+      };
+}
+
 /** @param {RouteDimensionEvidence | null | undefined} dimensions */
 export function isAuthenticatedVisualClosure(dimensions) {
   if (!dimensions) return false;
+  if (dimensions.visual?.status !== "PASS" || dimensions.visual?.screenshotReviewed !== true) {
+    return false;
+  }
   const required = [
     dimensions.authentication?.status,
     dimensions.authorization?.status,

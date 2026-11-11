@@ -27,11 +27,26 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     expect(new Set(SCE_DS2_07G_VERIFICATION_MATRIX.map((row) => row.sourceFile)).size).toBe(214);
   });
 
-  it("uses the batch-3 evidence contract in the matrix summary", () => {
+  it("uses the batch-8 evidence contract in the matrix summary", () => {
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.evidenceContractVersion).toBe(
       SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
     );
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.matrixVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
+    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-8");
+  });
+
+  it("allows NOT_APPLICABLE functional only for governed placeholder or intercept routes", async () => {
+    const manifest = JSON.parse(
+      readFileSync(join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json"), "utf8"),
+    );
+    const rows = Object.values(manifest.bySourceFile ?? {}) as Array<{
+      dimensions?: { functional?: { status?: string; details?: string[] } };
+    }>;
+    for (const row of rows) {
+      if (row.dimensions?.functional?.status !== "NOT_APPLICABLE") continue;
+      const detail = row.dimensions.functional.details?.join(" ") ?? "";
+      expect(detail).toMatch(/FUTURE_MODULE_PLACEHOLDER|INTERCEPT_SLOT/);
+    }
   });
 
   it("maps channel VERIFIED only from matching dimension PASS (never from navigation alone)", () => {

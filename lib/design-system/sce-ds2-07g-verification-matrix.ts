@@ -1065,7 +1065,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben-desktop.png",
@@ -1121,7 +1121,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_cmuhb94k1000004l8brm0ud12-desktop.png",
@@ -1211,7 +1211,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_neu-desktop.png",
@@ -1239,7 +1239,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_neu-desktop.png",
@@ -1295,7 +1295,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_serien_neu-desktop.png",
@@ -2421,7 +2421,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "VERIFIED",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_formulare-freigaben-desktop.png",
@@ -2449,7 +2449,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "VERIFIED",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_helfereinsaetze-desktop.png",
@@ -2729,7 +2729,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "VERIFIED",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_mitglieder-desktop.png",
@@ -4017,7 +4017,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "VERIFIED",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_trainer-staff-desktop.png",
@@ -4605,7 +4605,7 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "tablet": "VERIFIED",
     "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "VERIFIED",
+    "functional": "NOT_APPLICABLE",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [
       "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vorfaelle-disziplin-desktop.png",
@@ -6044,9 +6044,9 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 ];
 
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
-  "matrixVersion": "2026-11-10-batch-3",
-  "evidenceContractVersion": "2026-11-10-batch-3",
-  "generatedAt": "2026-11-10T23:17:24.821Z",
+  "matrixVersion": "2026-11-11-batch-8",
+  "evidenceContractVersion": "2026-11-11-batch-8",
+  "generatedAt": "2026-11-11T06:48:07.060Z",
   "totalCanonicalRoutes": 214,
   "verifiedAuthenticatedVisualCount": 0,
   "pendingAuthenticatedVisualCount": 214,
@@ -6057,7 +6057,7 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "highRiskResponsiveVerifiedCount": 39,
   "dimensionClosureCompleteCount": 0,
   "dimensionAccessibilityPassCount": 0,
-  "dimensionFunctionalPassCount": 130,
+  "dimensionFunctionalPassCount": 129,
   "authenticatedBrowserAvailable": true,
   "contrastSmokeDebt": [
     "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)"

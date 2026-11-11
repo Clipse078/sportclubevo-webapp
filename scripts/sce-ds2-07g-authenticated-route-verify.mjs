@@ -23,9 +23,12 @@ import {
   EVIDENCE_CONTRACT_VERSION,
   VIEWPORT_KEYS,
   deriveLegacyChannelsFromDimensions,
+  resolveAccessibilityDimension,
+  resolveFunctionalDimension,
 } from "./lib/sce-ds2-07g-evidence-contract.mjs";
 import {
   buildVerificationMatrix,
+  inferPageArchetype,
   isHighRiskRoute,
   loadRegistryEntries,
   selectBatch3Routes,
@@ -506,7 +509,8 @@ async function runAxe(page) {
     return {
       violations: results.violations.length,
       incomplete: results.incomplete.length,
-      violationSummaries: results.violations.slice(0, 5).map((v) => `${v.id}:${v.impact}`),
+      violationSummaries: results.violations.slice(0, 8).map((v) => `${v.id}:${v.impact}`),
+      incompleteSummaries: results.incomplete.slice(0, 12).map((v) => `${v.id}:${v.impact ?? "unknown"}`),
     };
   });
 }
@@ -544,7 +548,9 @@ async function collectLayoutHeuristics(page) {
 
     const h1Count = document.querySelectorAll("h1").length;
     const duplicateHeader = h1Count > 1;
-    const mainLandmarks = document.querySelectorAll("main, [role='main']").length;
+    const mainLandmarks = document.querySelectorAll(
+      "main, [role='main'], [data-sce-workspace-chrome]",
+    ).length;
     const navCount = document.querySelectorAll("nav").length;
     return {
       horizontalOverflow,
@@ -557,16 +563,27 @@ async function collectLayoutHeuristics(page) {
 }
 
 async function collectFunctionalReadOnly(page, urlPattern) {
-  const formArchetype = /\/(new|edit)(\/|$)/.test(urlPattern) || urlPattern.includes("[");
+  const formArchetype = /\/(new|edit|neu)(\/|$)/.test(urlPattern) || urlPattern.includes("[");
   return page.evaluate((needsForm) => {
     const main = document.querySelector("main, [role='main']");
+    const hasWorkspaceChromeEquivalent = Boolean(
+      document.querySelector("[data-sce-workspace-chrome], [data-testid='sce-workspace-chrome']"),
+    );
     const hasPrimaryHeading =
       Boolean(document.querySelector("h1")) ||
       Boolean(document.querySelector("[aria-labelledby]"));
     const interactive = document.querySelectorAll("a[href], button, input, select, textarea").length;
-    const hasSubmit = Boolean(document.querySelector("button[type='submit'], input[type='submit']"));
+    const hasSubmit = Boolean(
+      document.querySelector(
+        "button[type='submit'], input[type='submit'], [data-testid*='submit']",
+      ) ||
+        [...document.querySelectorAll("form button")].some(
+          (btn) => btn.getAttribute("type") !== "button",
+        ),
+    );
     return {
       hasMainLandmark: Boolean(main),
+      hasWorkspaceChromeEquivalent,
       hasPrimaryHeading,
       interactiveCount: interactive,
       formCheckSkipped: !needsForm,
@@ -575,7 +592,43 @@ async function collectFunctionalReadOnly(page, urlPattern) {
   }, formArchetype);
 }
 
-async function auditRoute(page, urlPattern, sourceFile) {
+function mergeEvidenceRow(existing, fresh) {
+  if (!existing?.dimensions?.visual?.screenshotReviewed) {
+    return fresh;
+  }
+  const priorVisual = existing.dimensions.visual;
+  const nextVisual = fresh.dimensions?.visual;
+  if (!nextVisual) return fresh;
+
+  const preservedDetails = (priorVisual.details ?? []).filter(
+    (line) => line.startsWith("screenshotReview:") || line.startsWith("finding:"),
+  );
+  const mergedVisual = {
+    ...nextVisual,
+    screenshotReviewed: true,
+    details: [
+      ...(nextVisual.details ?? []).filter(
+        (line) => !line.startsWith("screenshotReview:") && !line.startsWith("finding:"),
+      ),
+      ...preservedDetails,
+    ],
+  };
+  if (priorVisual.status === "PASS" && nextVisual.status !== "FAIL") {
+    mergedVisual.status = "PASS";
+    mergedVisual.reason = priorVisual.reason ?? nextVisual.reason;
+  }
+  return {
+    ...fresh,
+    dimensions: {
+      ...fresh.dimensions,
+      visual: mergedVisual,
+    },
+  };
+}
+
+async function auditRoute(page, urlPattern, sourceFile, registryEntry) {
+  const pageArchetype = inferPageArchetype(sourceFile, Boolean(registryEntry?.intercept));
+  const intercept = Boolean(registryEntry?.intercept);
   const probe = resolveProbePath(urlPattern);
   if (!probe) {
     return {
@@ -619,7 +672,8 @@ async function auditRoute(page, urlPattern, sourceFile) {
   const viewports = {};
   const evidenceReferences = [];
   let authBlocked = false;
-  let axeSummary = { violations: 0, incomplete: 0, violationSummaries: [] };
+  let axeSummary = { violations: 0, incomplete: 0, violationSummaries: [], incompleteSummaries: [] };
+  let desktopKeyboardFailures = [];
   let layoutHeuristics = null;
   let functionalReadOnly = null;
 
@@ -657,13 +711,19 @@ async function auditRoute(page, urlPattern, sourceFile) {
     await page.screenshot({ path: shot, fullPage: true });
     evidenceReferences.push(shot);
 
-    const hasWorkspaceChrome = await page.locator("[data-testid='sce-workspace-chrome']").count();
+    const hasWorkspaceChrome = await page.locator(
+      "[data-sce-workspace-chrome], [data-testid='sce-workspace-chrome']",
+    ).count();
     const hasPrimaryNav = await page.locator("nav").count();
     if (hasWorkspaceChrome === 0 && hasPrimaryNav === 0) {
       viewportFailures.push("missing workspace chrome landmarks");
     }
 
-    viewportFailures.push(...(await probeKeyboardFocus(page)));
+    const keyboardFailures = await probeKeyboardFocus(page);
+    if (viewport.key === "desktop") {
+      desktopKeyboardFailures = keyboardFailures;
+    }
+    viewportFailures.push(...keyboardFailures);
 
     const layout = await collectLayoutHeuristics(page);
     if (layout.horizontalOverflow) {
@@ -728,44 +788,18 @@ async function auditRoute(page, urlPattern, sourceFile) {
       status: authBlocked ? "BLOCKED" : responsivePass ? "PASS" : "FAIL",
       viewports,
     },
-    accessibility: {
-      status:
-        authBlocked
-          ? "BLOCKED"
-          : axeSummary.violations > 0
-            ? "FAIL"
-            : axeSummary.incomplete > 0
-              ? "PENDING"
-              : responsivePass
-                ? "PASS"
-                : "PENDING",
-      axeViolations: axeSummary.violations,
-      axeIncomplete: axeSummary.incomplete,
-      reason:
-        axeSummary.violations > 0
-          ? `axe violations: ${axeSummary.violationSummaries.join(", ")}`
-          : axeSummary.incomplete > 0
-            ? `axe incomplete rules: ${axeSummary.incomplete}`
-            : "axe-core wcag2aa scan clean on desktop viewport",
-      details: axeSummary.violationSummaries,
-    },
-    functional: {
-      status: authBlocked
-        ? "BLOCKED"
-        : !functionalReadOnly
-          ? "PENDING"
-          : functionalReadOnly.hasMainLandmark &&
-              functionalReadOnly.hasPrimaryHeading &&
-              functionalReadOnly.interactiveCount > 0 &&
-              functionalReadOnly.formSubmitPresent
-            ? "PASS"
-            : "PENDING",
-      reason:
-        functionalReadOnly?.formCheckSkipped === false && !functionalReadOnly?.formSubmitPresent
-          ? "Form route missing submit control (read-only probe)"
-          : "Read-only functional smoke: landmarks, heading, interactive controls",
-      details: functionalReadOnly ? [JSON.stringify(functionalReadOnly)] : [],
-    },
+    accessibility: resolveAccessibilityDimension(
+      {
+        ...axeSummary,
+        keyboardProbeFailures: desktopKeyboardFailures,
+      },
+      { responsivePass, authBlocked },
+    ),
+    functional: resolveFunctionalDimension(
+      { pageArchetype, urlPattern, intercept },
+      functionalReadOnly,
+      { authBlocked },
+    ),
   };
 
   const channels = deriveLegacyChannelsFromDimensions(dimensions);
@@ -831,7 +865,7 @@ async function main() {
   const batchResults = {};
   for (const entry of routes) {
     try {
-      batchResults[entry.sourceFile] = await auditRoute(page, entry.urlPattern, entry.sourceFile);
+      batchResults[entry.sourceFile] = await auditRoute(page, entry.urlPattern, entry.sourceFile, entry);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`[sce-ds2-07g] route audit failed for ${entry.urlPattern}: ${message}`);
@@ -870,7 +904,10 @@ async function main() {
   }
   await browser.close();
 
-  const mergedBySource = { ...existingBySource, ...batchResults };
+  const mergedBySource = { ...existingBySource };
+  for (const [sourceFile, fresh] of Object.entries(batchResults)) {
+    mergedBySource[sourceFile] = mergeEvidenceRow(existingBySource[sourceFile], fresh);
+  }
   const highRiskRows = Object.values(mergedBySource).filter((row) => isHighRiskRoute(row.urlPattern));
 
   const manifest = {

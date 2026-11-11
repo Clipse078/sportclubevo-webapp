@@ -116,9 +116,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":98,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":98,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -187,9 +188,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -258,9 +260,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -333,9 +336,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -409,9 +413,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -486,9 +491,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -508,7 +514,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -562,10 +568,10 @@
           ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "status": "NOT_APPLICABLE",
+          "reason": "Parallel intercept slot; full-page workflow verification not applicable (modal pass tracked separately)",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "functionalClass:INTERCEPT_SLOT"
           ]
         }
       },
@@ -618,7 +624,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -674,7 +680,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -697,7 +703,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -749,10 +755,11 @@
           ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -772,7 +779,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -824,10 +831,11 @@
           ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -847,7 +855,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -899,10 +907,11 @@
           ]
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -973,9 +982,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -995,7 +1005,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -1045,10 +1055,11 @@
           "details": []
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1117,9 +1128,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1188,9 +1200,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":95,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":95,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1261,9 +1274,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1332,9 +1346,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1403,9 +1418,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1474,9 +1490,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1545,9 +1562,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -1616,9 +1634,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1687,9 +1706,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1758,9 +1778,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1829,9 +1850,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1903,9 +1925,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -1974,9 +1997,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":55,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":55,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2045,9 +2069,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2121,9 +2146,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2192,9 +2218,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2263,9 +2290,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2337,9 +2365,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2410,9 +2439,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":43,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":43,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2488,9 +2518,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2562,9 +2593,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2633,9 +2665,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":138,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":138,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2706,9 +2739,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2782,9 +2816,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":42,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":42,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -2853,9 +2888,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2927,9 +2963,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -2998,9 +3035,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -3074,9 +3112,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":107,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":107,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3149,9 +3188,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -3223,9 +3263,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":47,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":47,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -3294,9 +3335,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3367,9 +3409,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3440,9 +3483,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -3513,9 +3557,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3586,9 +3631,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":20,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":20,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3657,9 +3703,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -3728,9 +3775,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -3799,9 +3847,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -3872,9 +3921,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":48,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":48,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -3945,9 +3995,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -4016,9 +4067,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":20,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":20,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4089,9 +4141,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":47,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":47,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -4162,9 +4215,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -4235,9 +4289,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4310,9 +4365,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4332,7 +4388,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "VERIFIED",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -4380,10 +4436,10 @@
           "details": []
         },
         "functional": {
-          "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "NOT_APPLICABLE",
+          "reason": "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "functionalClass:FUTURE_MODULE_PLACEHOLDER"
           ]
         }
       },
@@ -4403,7 +4459,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "VERIFIED",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -4451,10 +4507,10 @@
           "details": []
         },
         "functional": {
-          "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "NOT_APPLICABLE",
+          "reason": "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "functionalClass:FUTURE_MODULE_PLACEHOLDER"
           ]
         }
       },
@@ -4523,9 +4579,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4594,9 +4651,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":116,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":116,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4616,7 +4674,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "VERIFIED",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -4664,10 +4722,10 @@
           "details": []
         },
         "functional": {
-          "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "NOT_APPLICABLE",
+          "reason": "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "functionalClass:FUTURE_MODULE_PLACEHOLDER"
           ]
         }
       },
@@ -4736,9 +4794,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4810,9 +4869,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":780,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":780,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4883,9 +4943,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -4905,7 +4966,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "VERIFIED",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -4953,10 +5014,10 @@
           "details": []
         },
         "functional": {
-          "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "NOT_APPLICABLE",
+          "reason": "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "functionalClass:FUTURE_MODULE_PLACEHOLDER"
           ]
         }
       },
@@ -5025,9 +5086,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -5047,7 +5109,7 @@
       "tablet": "VERIFIED",
       "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "VERIFIED",
+      "functional": "NOT_APPLICABLE",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
@@ -5095,10 +5157,10 @@
           "details": []
         },
         "functional": {
-          "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "status": "NOT_APPLICABLE",
+          "reason": "Future-module placeholder surface; mutation and workflow verification outside DS2-07G read-only scope",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "functionalClass:FUTURE_MODULE_PLACEHOLDER"
           ]
         }
       },
@@ -5167,9 +5229,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -5238,9 +5301,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -5309,9 +5373,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -5380,9 +5445,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -5453,9 +5519,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -5526,9 +5593,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -5597,9 +5665,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -5668,9 +5737,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":50,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -5739,9 +5809,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":43,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":43,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -5810,9 +5881,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -5881,9 +5953,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -5954,9 +6027,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6025,9 +6099,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":33,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6098,9 +6173,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -6169,9 +6245,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":65,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":65,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6240,9 +6317,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6311,9 +6389,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6382,9 +6461,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6455,9 +6535,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":48,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":48,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6526,9 +6607,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6599,9 +6681,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":93,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":93,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -6673,9 +6756,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6746,9 +6830,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -6817,9 +6902,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -6888,9 +6974,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -6961,9 +7048,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -7035,9 +7123,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7108,9 +7197,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only route missing workspace landmark, heading, or interactive controls",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7179,9 +7269,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7250,9 +7341,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -7323,9 +7415,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7394,9 +7487,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7449,7 +7543,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -7521,9 +7615,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -7592,9 +7687,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7665,9 +7761,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -7738,9 +7835,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":34,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -7809,9 +7907,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7880,9 +7979,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -7935,7 +8035,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -8007,9 +8107,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -8078,9 +8179,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":51,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":51,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8149,9 +8251,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -8222,9 +8325,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -8298,9 +8402,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8374,9 +8479,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":54,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":54,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8447,9 +8553,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8521,9 +8628,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8596,9 +8704,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -8677,9 +8786,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -8750,9 +8860,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8821,9 +8932,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8892,9 +9004,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -8965,9 +9078,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9038,9 +9152,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9109,9 +9224,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9164,7 +9280,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -9238,9 +9354,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":27,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -9309,9 +9426,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9380,9 +9498,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -9453,9 +9572,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -9526,9 +9646,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -9597,9 +9718,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9670,9 +9792,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9741,9 +9864,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9815,9 +9939,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9886,9 +10011,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -9957,9 +10083,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10028,9 +10155,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10083,7 +10211,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -10155,9 +10283,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -10230,9 +10359,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -10301,9 +10431,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10372,9 +10503,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10443,9 +10575,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10498,7 +10631,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -10554,7 +10687,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -10630,9 +10763,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -10701,9 +10835,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10772,9 +10907,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":18,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -10827,7 +10963,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -10883,7 +11019,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -10959,9 +11095,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -11030,9 +11167,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11103,9 +11241,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -11176,9 +11315,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -11249,9 +11389,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":35,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -11323,9 +11464,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11394,9 +11536,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":81,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":81,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11465,9 +11608,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11536,9 +11680,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11607,9 +11752,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11678,9 +11824,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11749,9 +11896,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -11820,9 +11968,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -11891,9 +12040,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -11962,9 +12112,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12033,9 +12184,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12104,9 +12256,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12175,9 +12328,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12246,9 +12400,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12317,9 +12472,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12388,9 +12544,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12443,7 +12600,7 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
+          "reason": "Functional probe not executed",
           "details": []
         }
       },
@@ -12517,9 +12674,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":57,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":57,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12588,9 +12746,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12659,9 +12818,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12730,9 +12890,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -12801,9 +12962,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12872,9 +13034,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -12945,9 +13108,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":49,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":49,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -13022,9 +13186,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":109,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":109,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13098,9 +13263,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -13174,9 +13340,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -13250,9 +13417,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":23,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -13326,9 +13494,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -13397,9 +13566,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13473,9 +13643,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13549,9 +13720,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13620,9 +13792,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -13691,9 +13864,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13764,9 +13938,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13835,9 +14010,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -13906,9 +14082,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -13977,9 +14154,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14053,9 +14231,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14124,9 +14303,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":17,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14195,9 +14375,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14266,9 +14447,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14337,9 +14519,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14408,9 +14591,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14479,9 +14663,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":38,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -14552,9 +14737,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14627,9 +14813,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14700,9 +14887,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14776,9 +14964,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":true,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
           ]
         }
       },
@@ -14847,9 +15036,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":30,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -14918,9 +15108,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":25,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -14989,9 +15180,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":21,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -15060,9 +15252,10 @@
         },
         "functional": {
           "status": "PASS",
-          "reason": "Read-only functional smoke: landmarks, heading, interactive controls",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":false,\"formSubmitPresent\":true}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":26,\"formCheckSkipped\":false,\"formSubmitPresent\":true,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
           ]
         }
       },
@@ -15133,9 +15326,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -15204,9 +15398,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":37,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -15275,9 +15470,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":24,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -15346,9 +15542,10 @@
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Form route missing submit control (read-only probe)",
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
           "details": [
-            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false}"
+            "{\"hasMainLandmark\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":false,\"hasWorkspaceChromeEquivalent\":true}",
+            "functionalClass:MUTATION_WORKFLOW"
           ]
         }
       },
@@ -15361,7 +15558,7 @@
       "defects": []
     }
   },
-  "evidenceContractVersion": "2026-11-10-batch-3",
+  "evidenceContractVersion": "2026-11-11-batch-8",
   "highRiskRoutesResponsiveVerified": 39,
   "highRiskRoutesClosureComplete": 0,
   "lastRunMode": "reassess-evidence",
@@ -15373,5 +15570,11 @@
     "routesMarkedThisRun": 7,
     "batch6RoutesMarked": 9,
     "batch7RoutesMarked": 8
+  },
+  "batch8Reconcile": {
+    "reconciledAt": "2026-11-11T06:47:47.223Z",
+    "functionalRowsUpdated": 4,
+    "functionalNotApplicableCount": 6,
+    "accessibilityEvidenceDebt": "Batches 2–7 did not persist axe incompleteSummaries; accessibility PENDING rows require targeted reassess with batch-8 runner"
   }
 }
