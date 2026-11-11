@@ -3,6 +3,7 @@ import VereinsleitungMeetingAgendaCard from "@/components/admin/vereinsleitung/V
 import VereinsleitungMeetingDecisionsCard from "@/components/admin/vereinsleitung/VereinsleitungMeetingDecisionsCard";
 import VereinsleitungMeetingInfoCard from "@/components/admin/vereinsleitung/VereinsleitungMeetingInfoCard";
 import VereinsleitungMeetingParticipantsCard from "@/components/admin/vereinsleitung/VereinsleitungMeetingParticipantsCard";
+import MeetingWorkspace from "@/components/admin/meetings/workspace/MeetingWorkspace";
 import type { ReactNode } from "react";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 
@@ -17,14 +18,30 @@ type VereinsleitungMeetingDetailProps = {
   dbMeeting?: MeetingLiveData | null;
   subEntities?: MeetingSubEntities | null;
   relatedTasksPanel?: ReactNode;
+  meetingSlug?: string;
+  canManage?: boolean;
 };
 
 export default function VereinsleitungMeetingDetail({
   dbMeeting,
   subEntities,
   relatedTasksPanel,
+  meetingSlug,
+  canManage = false,
 }: VereinsleitungMeetingDetailProps) {
   const isDbBacked = Boolean(dbMeeting);
+
+  if (dbMeeting && subEntities && meetingSlug) {
+    return (
+      <MeetingWorkspace
+        meeting={dbMeeting}
+        slug={meetingSlug}
+        canManage={canManage}
+        initialSubEntities={subEntities}
+        relatedTasksPanel={relatedTasksPanel}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">

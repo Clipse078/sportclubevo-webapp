@@ -47,6 +47,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   }
 
   const pageTitle = dbMeeting?.title ?? "Sitzung";
+  const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
   const tWork = await getTranslations("PlanningEditor.operational.work");
 
   return (
@@ -98,6 +99,8 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         <VereinsleitungMeetingDetail
           dbMeeting={dbMeeting}
           subEntities={subEntities}
+          meetingSlug={slug}
+          canManage={canManage}
           relatedTasksPanel={
             dbMeeting ? (
               <ContextRelatedTasksPanel contextType="MEETING" contextId={dbMeeting.id} />
