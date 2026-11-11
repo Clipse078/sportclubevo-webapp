@@ -5,6 +5,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { prisma } from "@/lib/db/prisma";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 
 export type StrategicApiContext = {
   tenantId: string;
@@ -31,6 +32,12 @@ export async function resolveLiveTenantActor(
     select: { id: true },
   });
   if (!membership) return null;
+
+  const hasVereinsleitungAccess = await userHasVereinsleitungWorkspaceAccess(
+    actorUserId,
+    tenantId,
+  );
+  if (!hasVereinsleitungAccess) return null;
 
   const [effective, assignments] = await Promise.all([
     createEffectivePermissionResolver(prisma).getEffectivePermissions({
@@ -72,6 +79,18 @@ export async function requireStrategicApiContext(
   }
 
   const { tenantId, actorUserId, roleKeys, permissionKeys } = access.context;
+
+  const hasVereinsleitungAccess = await userHasVereinsleitungWorkspaceAccess(
+    actorUserId,
+    tenantId,
+  );
+  if (!hasVereinsleitungAccess) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
+  }
+
   const actor = await getActorContext(
     { id: actorUserId, roleKeys, permissionKeys },
     tenantId,

@@ -29,6 +29,8 @@ export type NavItemChild = {
   label: string;
   href: string;
   permissionKeys?: PermissionKey[];
+  /** SCE-CD-01R1: requires Role.canAccessVereinsleitung in addition to permissions. */
+  requiresVereinsleitungMembership?: boolean;
   /** Shell workspace visibility; defaults to club-only. */
   navContexts?: NavContext[];
   /** Visual grouping in sidebar (primary workflow vs admin). */
@@ -42,6 +44,8 @@ export type NavItemChild = {
 export type NavCapabilityContext = {
   /** AUFGABEN-05-UI: participation/self/guardian domain without tasks.view */
   personalActionsModule?: boolean;
+  /** SCE-CD-01R1: assigned role with Role.canAccessVereinsleitung */
+  vereinsleitungWorkspace?: boolean;
 };
 
 export type NavItem = {
@@ -49,6 +53,8 @@ export type NavItem = {
   label: string;
   href: string;
   permissionKeys?: PermissionKey[];
+  /** SCE-CD-01R1: requires Role.canAccessVereinsleitung in addition to permissions. */
+  requiresVereinsleitungMembership?: boolean;
   /** When true, item is also visible when {@link NavCapabilityContext.personalActionsModule}. */
   personalActionsNavFallback?: boolean;
   /** Shell workspace visibility; defaults to club-only. */
@@ -584,6 +590,7 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/vereinsleitung/club-entwicklung",
         navContexts: ["club"],
         permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+        requiresVereinsleitungMembership: true,
         children: [
           {
             key: "club-entwicklung-uebersicht",
@@ -591,6 +598,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/vereinsleitung/club-entwicklung",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
             matchExact: true,
           },
           {
@@ -599,6 +607,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/vereinsleitung/targets",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
           },
           {
             key: "club-entwicklung-sitzungen",
@@ -606,6 +615,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/vereinsleitung/meetings",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
           },
           {
             key: "club-entwicklung-vorhaben",
@@ -613,6 +623,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/vereinsleitung/vorhaben",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
           },
           {
             key: "club-entwicklung-prozesse",
@@ -620,6 +631,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/vereinsleitung/prozesse",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
           },
         ],
       },
@@ -629,6 +641,7 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/vereinsleitung/material",
         navContexts: ["club"],
         permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
+        requiresVereinsleitungMembership: true,
       },
       {
         key: "finanzen",
@@ -761,6 +774,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     label: "Vereinsleitung",
     description: "Meetings, Initiativen, KPIs und Entscheidungen.",
     href: "/vereinsleitung",
+    permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
     carrySeason: false,
   },
   {
@@ -828,11 +842,25 @@ function hasAccess(userKeys: PermissionKey[], required?: PermissionKey[]): boole
   return required.some((p) => userKeys.includes(p));
 }
 
-function hasNavItemAccess(
-  userKeys: PermissionKey[],
-  item: Pick<NavItem, "permissionKeys" | "personalActionsNavFallback">,
+function hasVereinsleitungNavMembership(
+  item: Pick<NavItem, "requiresVereinsleitungMembership">,
   capabilities?: NavCapabilityContext,
 ): boolean {
+  if (!item.requiresVereinsleitungMembership) return true;
+  return capabilities?.vereinsleitungWorkspace === true;
+}
+
+function hasNavItemAccess(
+  userKeys: PermissionKey[],
+  item: Pick<
+    NavItem,
+    "permissionKeys" | "personalActionsNavFallback" | "requiresVereinsleitungMembership"
+  >,
+  capabilities?: NavCapabilityContext,
+): boolean {
+  if (!hasVereinsleitungNavMembership(item, capabilities)) {
+    return false;
+  }
   if (hasAccess(userKeys, item.permissionKeys)) {
     return true;
   }
@@ -867,6 +895,7 @@ export function getVisibleNavSections(
         ...item,
         children: item.children
           ?.filter((child) => isVisibleInNavContext(child.navContexts, workspaceContext))
+          ?.filter((child) => hasVereinsleitungNavMembership(child, capabilities))
           ?.filter((child) => hasAccess(permissionKeys, child.permissionKeys)),
       })),
   })).filter((section) => section.items.length > 0);
