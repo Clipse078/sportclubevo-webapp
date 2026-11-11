@@ -3,7 +3,7 @@
 | Metric | Value |
 | --- | ---: |
 | Fully VERIFIED | 0 / 214 |
-| Evidence contract | 2026-11-11-batch-9 |
+| Evidence contract | 2026-11-11-batch-10 |
 
 ## Queue by root cause
 
@@ -17,39 +17,39 @@
 
 ### ACCESSIBILITY_AXE_FAIL
 
-- **Count:** 77
+- **Count:** 75
 
 ### ACCESSIBILITY_AXE_INCOMPLETE
 
-- **Count:** 137
+- **Count:** 128
 
 ### ACCESSIBILITY_FIXTURE_UNPROBED
 
-- **Count:** 0
+- **Count:** 11
 
 ### VISUAL_REVIEW_REQUIRED
 
-- **Count:** 170
+- **Count:** 182
 
 ### VISUAL_HEURISTIC_FAIL
 
-- **Count:** 26
+- **Count:** 14
 
 ### FUNCTIONAL_MUTATION_WORKFLOW
 
-- **Count:** 75
+- **Count:** 65
 
 ### FUNCTIONAL_READ_ONLY_GAP
 
-- **Count:** 1
+- **Count:** 11
 
 ### RESPONSIVE_FAIL
 
-- **Count:** 0
+- **Count:** 11
 
 ### CONFIRMED_PRODUCT_DEFECT
 
-- **Count:** 0
+- **Count:** 11
 
 
 ## Recommended closure sequence

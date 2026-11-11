@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { TaskPriority, TaskSeriesWeekday } from "@prisma/client";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
@@ -108,21 +109,27 @@ export default function TaskSeriesCreateClient({
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      <div className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[60vh] w-full")} data-testid="task-series-create">
-        <header className="flex items-center gap-3 border-b border-[var(--border)] px-6 py-4">
-          <Link
-            href={backHref}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-[var(--surface-2)]"
-            aria-label="Zurück"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-semibold text-[var(--foreground)]">Wiederkehrende Aufgabe erstellen</h1>
-            <p className="text-xs text-[var(--muted)]">Serien-Vorlage für automatisch erzeugte Aufgaben.</p>
-          </div>
-        </header>
-
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Aufgaben", href: backHref },
+          { label: "Neue Serie" },
+        ]}
+        header={{
+          title: "Wiederkehrende Aufgabe erstellen",
+          description: "Serien-Vorlage für automatisch erzeugte Aufgaben.",
+          secondaryActions: (
+            <Link href={backHref} className="fca-button-secondary text-sm">
+              Zurück
+            </Link>
+          ),
+        }}
+        density="dense"
+      >
+        <div
+          className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[60vh] w-full")}
+          data-testid="task-series-create"
+        >
         <form className="px-6 py-5" onSubmit={onSubmit}>
           {error ? (
             <p className="mb-4 rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200">
@@ -230,6 +237,7 @@ export default function TaskSeriesCreateClient({
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value as "WEEKLY" | "MONTHLY")}
                   className="fca-input w-full"
+                  aria-label="Rhythmus"
                 >
                   <option value="WEEKLY">Wöchentlich</option>
                   <option value="MONTHLY">Monatlich</option>
@@ -244,7 +252,13 @@ export default function TaskSeriesCreateClient({
               {frequency === "WEEKLY" ? (
                 <label className="block space-y-1">
                   <span className="text-xs font-medium text-[var(--muted)]">Wochentag</span>
-                  <select name="weekday" defaultValue="SUNDAY" className="fca-input w-full" required>
+                  <select
+                    name="weekday"
+                    defaultValue="SUNDAY"
+                    className="fca-input w-full"
+                    required
+                    aria-label="Wochentag"
+                  >
                     {WEEKDAYS.map((d) => (
                       <option key={d.value} value={d.value}>
                         {d.label}
@@ -291,7 +305,8 @@ export default function TaskSeriesCreateClient({
             </aside>
           </div>
         </form>
-      </div>
+        </div>
+      </SceWorkspaceChrome>
     </div>
   );
 }

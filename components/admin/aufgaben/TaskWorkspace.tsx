@@ -861,7 +861,7 @@ export function TaskWorkspacePanel({
                 className={cn(
                   "text-sm tabular-nums",
                   deadline.emphasis === "urgent" && "font-medium text-orange-400",
-                  deadline.emphasis === "attention" && "text-amber-300",
+                  deadline.emphasis === "attention" && "text-amber-800",
                 )}
               >
                 {deadline.label || "Kein Termin"}

@@ -2,7 +2,7 @@
  * SCE-DS2-07G — independent verification dimensions and channel mapping.
  * Batch 8 extends accessibility incomplete taxonomy, functional expectations, and closure rules.
  */
-export const EVIDENCE_CONTRACT_VERSION = "2026-11-11-batch-9";
+export const EVIDENCE_CONTRACT_VERSION = "2026-11-11-batch-10";
 
 /** Axe rules that require human or keyboard supplement — zero violations alone is insufficient. */
 export const AXE_INCOMPLETE_MANUAL_REVIEW_RULES = new Set([

@@ -32,7 +32,7 @@ describe("SCE-DS2-07G visual and functional verification", () => {
       SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
     );
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.matrixVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
-    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-9");
+    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-10");
   });
 
   it("allows NOT_APPLICABLE functional only for governed placeholder or intercept routes", async () => {

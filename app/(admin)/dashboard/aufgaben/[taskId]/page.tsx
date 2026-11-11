@@ -23,7 +23,10 @@ export default async function AufgabenTaskDetailPage({ params, searchParams }: P
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      <div className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}>
+      <main
+        data-sce-page-shell
+        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}
+      >
         <TaskWorkspacePanel
           bundle={data.bundle}
           assigneeOptions={data.assigneeOptions}
@@ -35,7 +38,7 @@ export default async function AufgabenTaskDetailPage({ params, searchParams }: P
           currentUserId={data.currentUserId}
           presentation="page"
         />
-      </div>
+      </main>
     </div>
   );
 }

@@ -142,4 +142,10 @@ export const SCE_DS2_06_CONTRAST_PAIRS: SceWhiteEditionContrastPair[] = [
     background: "#f7efe8",
     minimumRatio: 4.5,
   },
+  {
+    id: "attention-deadline-on-canvas",
+    foreground: "#92400e",
+    background: "#ffffff",
+    minimumRatio: 4.5,
+  },
 ];

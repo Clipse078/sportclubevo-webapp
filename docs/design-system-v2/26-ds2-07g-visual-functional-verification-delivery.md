@@ -229,6 +229,28 @@ Provision: `npm run ds2-07g:provision-verification-db` → `npm run ds2-07g:seed
 4. Mutation workflows (**79** functional PENDING) — isolated harness or tracked baseline debt; do not infer from render-only probes.
 5. Programme closure remains **0/214** until all six dimensions satisfy batch-8 contract.
 
+## Batch 10 result (accessibility remediation + visual heuristic closure)
+
+| Status | Count (pre-batch-10 evidence) |
+| --- | ---: |
+| Evidence contract | `2026-11-11-batch-10` |
+| Fully VERIFIED | **0** / 214 |
+| Accessibility PASS / FAIL / PENDING | **0** / **77** / **137** |
+| Visual PASS / PENDING / FAIL (heuristic) | **8** / **180** / **26** |
+| Screenshot explicitly reviewed | **19** |
+
+### Batch 10 shared remediations
+
+| Area | Change |
+| --- | --- |
+| Document outline | `SceActivityComposerHeader` uses **h2** in page mode; specimen/infoboard detail headings demoted to **h2** |
+| Main landmark | Aufgaben record/create/series routes compose `main` or `SceWorkspaceChrome` instead of dialog-only shells |
+| Tenant roles create | Removed nested `FormPagePattern` h1 under roles layout chrome (module layout already owns **h1**) |
+| Labels | Task context/visibility/series selects receive explicit accessible names; attention deadline color darkened for white canvas |
+| Evidence | Targeted Playwright reassess of visual-heuristic FAIL queue + contract bump to batch-10 |
+
+Programme **VERIFIED** count remains **0** until screenshot review, axe incomplete resolution, and functional mutation evidence align per batch-8 closure rules.
+
 ## Functional regression (automated)
 
 Route governance, design-system governance, and targeted planning/layout characterization tests were executed in this batch (see PR CI). No permission or navigation regressions were introduced by DS2-07G scaffolding.

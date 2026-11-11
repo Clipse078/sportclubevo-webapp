@@ -50,7 +50,7 @@ export type SceDs207gRouteDimensionEvidence = {
   authorization: SceDs207gDimensionResult;
 };
 
-export const SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION = "2026-11-11-batch-9" as const;
+export const SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION = "2026-11-11-batch-10" as const;
 
 export type SceDs207gAutomatedChecksStatus = "PASSED" | "PENDING" | "FAILED";
 
