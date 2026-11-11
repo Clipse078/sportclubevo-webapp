@@ -12,7 +12,7 @@ export default function CreateMeetingTrigger({ className }: { className?: string
       data-testid="meeting-create-trigger"
     >
       <Plus className="h-4 w-4" aria-hidden />
-      Neues Meeting
+      Neue Sitzung
     </Link>
   );
 }

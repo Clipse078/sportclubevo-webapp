@@ -158,7 +158,7 @@ export function MeetingAgendaSection({
         </span>
         {typeof meetingPlannedDurationMin === "number" && meetingPlannedDurationMin > 0 ? (
           <span>
-            Meeting-Dauer: <strong className="text-[var(--foreground)]">{meetingPlannedDurationMin} min</strong>
+            Sitzungsdauer: <strong className="text-[var(--foreground)]">{meetingPlannedDurationMin} min</strong>
           </span>
         ) : null}
       </div>

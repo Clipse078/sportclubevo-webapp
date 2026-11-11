@@ -6,7 +6,7 @@ function readSrc(relative: string) {
   return readFileSync(join(process.cwd(), relative), "utf8");
 }
 
-describe("SCE-CD-02R1 meeting creation UX", () => {
+describe("SCE-CD-02R3 meeting creation UX", () => {
   it("does not ship legacy modal composer component", () => {
     expect(() => readSrc("components/admin/meetings/CreateMeetingComposerDialog.tsx")).toThrow();
   });
@@ -20,6 +20,10 @@ describe("SCE-CD-02R1 meeting creation UX", () => {
     );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/new/page.tsx")).toContain('layout="page"');
     expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain("Erweiterte Einstellungen");
+    expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain("MeetingParticipantMultiPicker");
+    expect(readSrc("components/admin/meetings/MeetingForm.tsx")).not.toContain("Teilnehmeranzahl");
+    expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain('defaultValues?.visibilityScope ?? "RESTRICTED"');
+    expect(readSrc("app/api/meetings/route.ts")).toContain("resolveMeetingVisibilityOnCreate");
   });
 
   it("wires people pickers in workspace sections", () => {

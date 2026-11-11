@@ -51,6 +51,17 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   }
 
   if (!name) return NextResponse.json({ error: "Name ist erforderlich." }, { status: 400 });
+
+  if (personId) {
+    const duplicate = await prisma.meetingParticipant.findFirst({
+      where: { meetingId: id, personId },
+      select: { id: true },
+    });
+    if (duplicate) {
+      return NextResponse.json({ error: "Diese Person ist bereits als Teilnehmer/in erfasst." }, { status: 409 });
+    }
+  }
+
   const validStatuses = Object.values(MeetingParticipantStatus);
   const status: MeetingParticipantStatus = validStatuses.includes(body?.status) ? body.status : MeetingParticipantStatus.INVITED;
   try {

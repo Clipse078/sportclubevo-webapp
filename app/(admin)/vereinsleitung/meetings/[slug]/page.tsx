@@ -12,7 +12,6 @@ import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/Con
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
 import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
-import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getTranslations } from "next-intl/server";
@@ -55,11 +54,6 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
       <DetailPagePattern
         eyebrow="Vereinsleitung"
         title={pageTitle}
-        headerBadge={
-          dbMeeting ? (
-            <ReviewStageBadge stage={dbMeeting.reviewStage} />
-          ) : undefined
-        }
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Sitzungen", href: "/vereinsleitung/meetings" },

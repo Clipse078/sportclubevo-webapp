@@ -18,18 +18,18 @@ export default async function VereinsleitungMeetingsPage() {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Meetings"
-        title="Meetings"
+        eyebrow="Sitzungen"
+        title="Sitzungen"
         description="Übersicht aller Sitzungen – absteigend vom neuesten zum ältesten Eintrag."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Meetings" },
+          { label: "Sitzungen" },
         ]}
         headerActions={<CreateMeetingTrigger />}
         isEmpty={meetings.length === 0}
         emptyIcon={<CalendarDays className="h-10 w-10" />}
-        emptyHeading="Keine zugänglichen Meetings"
-        emptyDescription="Noch keine Meetings erfasst oder keine für dich sichtbaren Einträge."
+        emptyHeading="Keine zugänglichen Sitzungen"
+        emptyDescription="Noch keine Sitzungen erfasst oder keine für dich sichtbaren Einträge."
       >
         <VereinsleitungMeetingsList meetings={meetings} />
       </ListPagePattern>

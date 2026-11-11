@@ -55,6 +55,9 @@ export default function MeetingWorkspace({
           canManage={canManage}
           agendaCount={agendaItems.length}
           participantCount={participants.length}
+          decisionCount={decisions.length}
+          actionCount={actions.length}
+          hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
         />
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.85fr)_360px]">

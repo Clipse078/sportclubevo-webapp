@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { MeetingStatus, VisibilityScope } from "@prisma/client";
 import { getMeetingById } from "@/lib/meetings/queries";
+import { resolveMeetingVisibilityOnUpdate } from "@/lib/meetings/meeting-visibility-payload";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -39,7 +40,15 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const body = await request.json().catch(() => ({}));
     const validStatuses = Object.values(MeetingStatus);
-    const validScopes = Object.values(VisibilityScope);
+
+    const visibilityResolved = await resolveMeetingVisibilityOnUpdate(
+      body,
+      guard.entity.visibilityScope as VisibilityScope,
+    );
+    if (!visibilityResolved.ok) {
+      return NextResponse.json({ error: visibilityResolved.error }, { status: 400 });
+    }
+    const visibilityPatch = visibilityResolved.payload;
 
     const updated = await prisma.meeting.update({
       where: { id, tenantId },
@@ -58,18 +67,17 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         status: validStatuses.includes(body?.status as MeetingStatus)
           ? (body.status as MeetingStatus)
           : undefined,
-        visibilityScope: validScopes.includes(body?.visibilityScope as VisibilityScope)
-          ? (body.visibilityScope as VisibilityScope)
-          : undefined,
+        visibilityScope: visibilityPatch.visibilityScope,
         requiresFourEyeReview:
           typeof body?.requiresFourEyeReview === "boolean"
             ? body.requiresFourEyeReview
             : undefined,
-        visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs) ? body.visibleOrgUnitRefs : undefined,
-        visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? body.visibleRoleRefs : undefined,
-        visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? body.visibleUserRefs : undefined,
-        // Phase D: target group refs for resolved-member visibility
-        visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs) ? body.visibleTargetGroupRefs : undefined,
+        visibleOrgUnitRefs: visibilityPatch.allowlists?.visibleOrgUnitRefs,
+        visibleRoleRefs: visibilityPatch.allowlists?.visibleRoleRefs,
+        visibleUserRefs: visibilityPatch.allowlists?.visibleUserRefs,
+        visibleTargetGroupRefs: visibilityPatch.allowlists?.visibleTargetGroupRefs,
+        visibleTeamRefs: visibilityPatch.allowlists?.visibleTeamRefs,
+        visiblePersonRefs: visibilityPatch.allowlists?.visiblePersonRefs,
       },
       select: { id: true, slug: true, title: true },
     });
