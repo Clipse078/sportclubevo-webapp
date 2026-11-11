@@ -1,14 +1,15 @@
 import { VisibilityScope } from "@prisma/client";
 import {
+  parseMeetingAllowlistInput,
   sanitizeMeetingVisibilityAllowlists,
   validateMeetingRestrictedVisibility,
-  type MeetingVisibilityAllowlists,
+  type SanitizedMeetingVisibilityAllowlists,
 } from "@/lib/meetings/meeting-visibility";
 import { getVereinsleitungMeetingCreateDefaults } from "@/lib/meetings/meeting-create-defaults";
 
 export type ResolvedMeetingVisibilityPayload = {
   visibilityScope: VisibilityScope;
-  allowlists: MeetingVisibilityAllowlists;
+  allowlists: SanitizedMeetingVisibilityAllowlists;
 };
 
 export async function resolveMeetingVisibilityOnCreate(
@@ -23,20 +24,17 @@ export async function resolveMeetingVisibilityOnCreate(
   const defaults = await getVereinsleitungMeetingCreateDefaults(tenantId);
   const visibilityScope = requestedScope ?? defaults.visibilityScope;
 
-  let allowlists: MeetingVisibilityAllowlists = sanitizeMeetingVisibilityAllowlists(visibilityScope, {
-    visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs)
-      ? (body.visibleOrgUnitRefs as string[])
-      : defaults.visibleOrgUnitRefs,
-    visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? (body.visibleRoleRefs as string[]) : undefined,
-    visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? (body.visibleUserRefs as string[]) : undefined,
-    visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs)
-      ? (body.visibleTargetGroupRefs as string[])
-      : undefined,
+  const parsedOrgUnitRefs = parseMeetingAllowlistInput(body?.visibleOrgUnitRefs);
+  let allowlists: SanitizedMeetingVisibilityAllowlists = sanitizeMeetingVisibilityAllowlists(visibilityScope, {
+    visibleOrgUnitRefs: parsedOrgUnitRefs !== undefined ? parsedOrgUnitRefs : defaults.visibleOrgUnitRefs,
+    visibleRoleRefs: parseMeetingAllowlistInput(body?.visibleRoleRefs),
+    visibleUserRefs: parseMeetingAllowlistInput(body?.visibleUserRefs),
+    visibleTargetGroupRefs: parseMeetingAllowlistInput(body?.visibleTargetGroupRefs),
   });
 
   if (
     visibilityScope === VisibilityScope.RESTRICTED &&
-    (!allowlists.visibleOrgUnitRefs?.length || allowlists.visibleOrgUnitRefs.length === 0) &&
+    allowlists.visibleOrgUnitRefs.length === 0 &&
     defaults.visibleOrgUnitRefs.length > 0
   ) {
     allowlists = {
@@ -61,14 +59,10 @@ export async function resolveMeetingVisibilityOnUpdate(
     : currentScope;
 
   const allowlists = sanitizeMeetingVisibilityAllowlists(visibilityScope, {
-    visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs)
-      ? (body.visibleOrgUnitRefs as string[])
-      : undefined,
-    visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? (body.visibleRoleRefs as string[]) : undefined,
-    visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? (body.visibleUserRefs as string[]) : undefined,
-    visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs)
-      ? (body.visibleTargetGroupRefs as string[])
-      : undefined,
+    visibleOrgUnitRefs: parseMeetingAllowlistInput(body?.visibleOrgUnitRefs),
+    visibleRoleRefs: parseMeetingAllowlistInput(body?.visibleRoleRefs),
+    visibleUserRefs: parseMeetingAllowlistInput(body?.visibleUserRefs),
+    visibleTargetGroupRefs: parseMeetingAllowlistInput(body?.visibleTargetGroupRefs),
   });
 
   const validation = validateMeetingRestrictedVisibility(visibilityScope, allowlists);

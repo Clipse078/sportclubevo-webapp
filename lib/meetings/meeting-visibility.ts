@@ -13,6 +13,23 @@ export type MeetingVisibilityAllowlists = {
   visiblePersonRefs?: string[] | null;
 };
 
+/** Allowlists after `sanitizeMeetingVisibilityAllowlists` (always concrete arrays for Prisma JSON). */
+export type SanitizedMeetingVisibilityAllowlists = {
+  visibleOrgUnitRefs: string[];
+  visibleRoleRefs: string[];
+  visibleUserRefs: string[];
+  visibleTargetGroupRefs: string[];
+  visibleTeamRefs: string[];
+  visiblePersonRefs: string[];
+};
+
+/** Parses allowlist fields from untyped request bodies at API boundaries. */
+export function parseMeetingAllowlistInput(value: unknown): string[] | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  return nonEmptyStringArray(value);
+}
+
 function nonEmptyStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((v) => (typeof v === "string" ? v.trim() : "")).filter(Boolean);
@@ -47,7 +64,7 @@ export function validateMeetingRestrictedVisibility(
 export function sanitizeMeetingVisibilityAllowlists(
   scope: VisibilityScope,
   refs: MeetingVisibilityAllowlists,
-): MeetingVisibilityAllowlists {
+): SanitizedMeetingVisibilityAllowlists {
   if (scope !== VisibilityScope.RESTRICTED) {
     return {
       visibleOrgUnitRefs: [],
@@ -69,13 +86,6 @@ export function sanitizeMeetingVisibilityAllowlists(
 }
 
 /** Prisma JSON columns — string[] only (no null; satisfies InputJsonValue). */
-export function meetingAllowlistsForPrisma(allowlists: MeetingVisibilityAllowlists) {
-  return {
-    visibleOrgUnitRefs: nonEmptyStringArray(allowlists.visibleOrgUnitRefs),
-    visibleRoleRefs: nonEmptyStringArray(allowlists.visibleRoleRefs),
-    visibleUserRefs: nonEmptyStringArray(allowlists.visibleUserRefs),
-    visibleTargetGroupRefs: nonEmptyStringArray(allowlists.visibleTargetGroupRefs),
-    visibleTeamRefs: nonEmptyStringArray(allowlists.visibleTeamRefs),
-    visiblePersonRefs: nonEmptyStringArray(allowlists.visiblePersonRefs),
-  };
+export function meetingAllowlistsForPrisma(allowlists: SanitizedMeetingVisibilityAllowlists) {
+  return allowlists;
 }
