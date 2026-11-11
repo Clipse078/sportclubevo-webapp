@@ -9,7 +9,7 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/VereinsleitungMeetingDetail";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
-import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
+import MeetingTaskCreateScrollLink from "@/components/admin/meetings/workspace/MeetingTaskCreateScrollLink";
 import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
 import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
 import { PageShell } from "@/components/ui/page";
@@ -31,7 +31,9 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const dbMeeting = await getMeetingBySlug(slug, actor);
 
   // Fetch sub-entities in parallel once meeting is confirmed visible
-  const subEntities = dbMeeting ? await getMeetingSubEntities(dbMeeting.id) : null;
+  const subEntities = dbMeeting
+    ? await getMeetingSubEntities(dbMeeting.id, actor.tenantId)
+    : null;
 
   // Resolve permanent-delete authority for delete button visibility
   const tenantId = session.user?.activeTenantId;
@@ -61,13 +63,8 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         ]}
         headerActions={
           <div className="flex items-center gap-2">
-            {dbMeeting ? (
-              <ContextualTaskCreateTriggerServer
-                contextType="MEETING"
-                contextId={dbMeeting.id}
-                variant="button"
-                label={tWork("createTask")}
-              />
+            {dbMeeting && canManage ? (
+              <MeetingTaskCreateScrollLink label={tWork("createTask")} />
             ) : null}
             {canDelete && dbMeeting ? (
               <MeetingDeleteButton

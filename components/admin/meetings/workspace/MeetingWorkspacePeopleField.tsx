@@ -1,6 +1,7 @@
 "use client";
 
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
+import { meetingPersonFallbackLabel, looksLikeOpaquePersonId } from "@/lib/meetings/meeting-person-display";
 
 type Props = {
   label?: string;
@@ -36,13 +37,16 @@ export function personPickerFromIds(
   displayName: string | null | undefined,
 ): PersonPickerResult | null {
   if (!personId) return null;
-  const name = (displayName ?? "").trim();
+  let name = (displayName ?? "").trim();
+  if (!name || looksLikeOpaquePersonId(name)) {
+    name = meetingPersonFallbackLabel(personId);
+  }
   const parts = name.split(/\s+/).filter(Boolean);
   return {
     id: personId,
     firstName: parts[0] ?? name,
     lastName: parts.slice(1).join(" ") || "",
-    displayName: name || null,
+    displayName: name,
     email: null,
     phone: null,
   };

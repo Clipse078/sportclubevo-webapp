@@ -6,6 +6,7 @@ import {
   SceChipMultiSelectorField,
   type SceChipSelection,
 } from "@/components/sce/list-selector/SceChipMultiSelectorField";
+import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
 import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 
@@ -23,6 +24,7 @@ type Props = {
   omitHiddenField?: boolean;
   allowAdd?: boolean;
   form?: string;
+  panelHost?: SceListSelectorPanelHost;
 };
 
 function formatName(firstName: string, lastName: string, displayName?: string): string {
@@ -43,6 +45,7 @@ export default function TaskPeopleMultiPicker({
   omitHiddenField = false,
   allowAdd = true,
   form,
+  panelHost = "sheet",
 }: Props) {
   const [addedKnown, setAddedKnown] = useState<Record<string, TaskAssigneeOption>>({});
 
@@ -135,6 +138,7 @@ export default function TaskPeopleMultiPicker({
       lockedIds={lockedUserIds}
       allowAdd={allowAdd}
       searchPlaceholder="Personen suchen …"
+      panelHost={panelHost}
     />
   );
 }

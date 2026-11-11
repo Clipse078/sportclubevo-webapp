@@ -39,6 +39,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       initiativeId: true,
       orderIndex: true,
       status: true,
+      sourceAgendaItemId: true,
       initiative: { select: { id: true, slug: true, title: true, status: true } },
     },
   });
@@ -79,6 +80,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Ungültiges Vorhaben." }, { status: 400 });
   }
 
+  const sourceAgendaItemId =
+    typeof body?.sourceAgendaItemId === "string" ? body.sourceAgendaItemId.trim() || null : null;
+
   try {
     const item = await prisma.meetingAgendaItem.create({
       data: {
@@ -89,6 +93,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         ownerPersonId,
         durationMin: normalizeAgendaDurationMin(body?.durationMin),
         initiativeId,
+        sourceAgendaItemId,
         orderIndex: body?.orderIndex ?? 0,
         status,
         createdByUserId: actor.userId,

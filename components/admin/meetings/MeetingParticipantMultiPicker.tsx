@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  SceChipMultiSelectorField,
-  type SceChipSelection,
-} from "@/components/sce/list-selector/SceChipMultiSelectorField";
-import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
-import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
+  SceInlineMultiPersonPicker,
+  type SceInlineMultiPersonChip,
+} from "@/components/sce/list-selector/SceInlineMultiPersonPicker";
+import { meetingPersonFallbackLabel, looksLikeOpaquePersonId } from "@/lib/meetings/meeting-person-display";
 
 type KnownPerson = {
   personId: string;
@@ -29,47 +28,50 @@ export default function MeetingParticipantMultiPicker({
   initialKnown = [],
   disabled = false,
 }: Props) {
+  const [addedKnown, setAddedKnown] = useState<Record<string, SceInlineMultiPersonChip>>({});
+
   const knownById = useMemo(() => {
-    const map = new Map<string, KnownPerson>();
+    const map = new Map<string, SceInlineMultiPersonChip>();
     for (const person of initialKnown) {
-      map.set(person.personId, person);
+      map.set(person.personId, {
+        id: person.personId,
+        label: person.label,
+        description: person.description ?? null,
+      });
+    }
+    for (const [id, chip] of Object.entries(addedKnown)) {
+      map.set(id, chip);
+    }
+    for (const id of selectedPersonIds) {
+      if (map.has(id)) continue;
+      if (looksLikeOpaquePersonId(id)) {
+        map.set(id, { id, label: meetingPersonFallbackLabel(id) });
+      }
     }
     return map;
-  }, [initialKnown]);
+  }, [initialKnown, addedKnown, selectedPersonIds]);
 
-  const committedPickKeys = useMemo(
-    () => new Set(selectedPersonIds.map((id) => sceSelectorPickKey("PERSON", id))),
-    [selectedPersonIds],
-  );
-
-  const selectedChips: SceChipSelection[] = selectedPersonIds.map((id) => {
-    const known = knownById.get(id);
-    return { id, label: known?.label ?? id, description: known?.description ?? null };
-  });
+  function handleSelectionKnown(entries: SceInlineMultiPersonChip[]) {
+    setAddedKnown((prev) => {
+      const next = { ...prev };
+      for (const entry of entries) {
+        next[entry.id] = entry;
+      }
+      return next;
+    });
+  }
 
   return (
-    <SceChipMultiSelectorField
+    <SceInlineMultiPersonPicker
       label={label}
       hideLabel={false}
-      selected={selectedChips}
       selectedIds={selectedPersonIds}
       onSelectedIdsChange={onSelectedPersonIdsChange}
-      authContext="CLUB_REFERENCE"
-      sourceTypes={["PERSON"]}
-      committedPickKeys={committedPickKeys}
-      mapPickToId={(pick: SceSelectorPick) => pick.id}
-      mapPickToChip={(pick) => ({
-        id: pick.id,
-        label: pick.label,
-        description: pick.description,
-      })}
+      onSelectionKnown={handleSelectionKnown}
+      knownById={knownById}
       disabled={disabled}
-      addButtonLabel="Teilnehmer/in hinzufügen"
-      dialogTitle="Teilnehmer wählen"
-      dialogDescription="Personen aus dem Verein suchen und zur Sitzung hinzufügen. Es werden keine Einladungen versendet."
       testIdPrefix="meeting-participant-picker"
-      searchPlaceholder="Person im Verein suchen…"
-      panelHost="sheet"
+      placeholder="Person im Verein suchen…"
     />
   );
 }

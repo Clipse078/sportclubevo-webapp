@@ -17,6 +17,10 @@
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildVisibilityWhere, applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
+import { enrichMeetingSubEntitiesWithPersonLabels } from "@/lib/meetings/enrich-meeting-sub-entities";
+import type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
+
+export type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
 
 const MEETING_LIST_SELECT = {
   id: true,
@@ -106,7 +110,10 @@ export function canSeeMeeting(
   return canSeeEntity(meeting as Parameters<typeof canSeeEntity>[0], actor);
 }
 
-export async function getMeetingSubEntities(meetingId: string) {
+export async function getMeetingSubEntities(
+  meetingId: string,
+  tenantId?: string | null,
+): Promise<MeetingSubEntities> {
   const [agendaItems, decisions, actions, participants] = await Promise.all([
     prisma.meetingAgendaItem.findMany({
       where: { meetingId },
@@ -121,6 +128,7 @@ export async function getMeetingSubEntities(meetingId: string) {
         initiativeId: true,
         orderIndex: true,
         status: true,
+        sourceAgendaItemId: true,
         initiative: { select: { id: true, slug: true, title: true, status: true } },
       },
     }),
@@ -148,10 +156,13 @@ export async function getMeetingSubEntities(meetingId: string) {
       select: { id: true, name: true, role: true, status: true, userId: true, personId: true },
     }),
   ]);
-  return { agendaItems, decisions, actions, participants };
+  const base: MeetingSubEntities = { agendaItems, decisions, actions, participants };
+  if (tenantId) {
+    return enrichMeetingSubEntitiesWithPersonLabels(tenantId, base);
+  }
+  return base;
 }
 
-export type MeetingSubEntities = Awaited<ReturnType<typeof getMeetingSubEntities>>;
 export type MeetingListItem = Awaited<ReturnType<typeof getMeetings>>[number];
 export type MeetingDetail = Awaited<ReturnType<typeof getMeetingBySlug>>;
 

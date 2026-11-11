@@ -21,12 +21,17 @@ import {
 } from "@/lib/meetings/agenda-duration";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
 import {
   workspaceGhostButtonClass,
   workspaceInputClass,
   workspacePanelClass,
   workspacePrimaryButtonClass,
 } from "./meetingWorkspaceFieldClasses";
+
+function meetingSectionDomId(title: string): string {
+  return `meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
+}
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 type Participant = MeetingSubEntities["participants"][number];
@@ -63,8 +68,13 @@ function SectionShell({
   children: ReactNode;
   action?: ReactNode;
 }) {
+  const sectionId = meetingSectionDomId(title);
   return (
-    <section className={workspacePanelClass} data-testid={`meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`}>
+    <section
+      id={sectionId}
+      className={workspacePanelClass}
+      data-testid={sectionId}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {icon}
@@ -168,6 +178,15 @@ export function MeetingAgendaSection({
         </p>
       ) : null}
       <ErrorBanner message={error} />
+      {canManage ? (
+        <MeetingCarryForwardPanel
+          meetingId={meetingId}
+          canManage={canManage}
+          onApplied={async () => {
+            await refreshFromServer();
+          }}
+        />
+      ) : null}
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-2)]">Noch keine Traktanden — erfasse den Ablauf der Sitzung.</p>
       ) : (
