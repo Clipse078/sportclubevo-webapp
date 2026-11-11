@@ -151,6 +151,12 @@
   },
   {
     "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(admin)/vereinsleitung/layout.tsx",
+    "urlPattern": "/vereinsleitung",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
     "sourceFile": "app/(admin)/vereinsleitung/material/layout.tsx",
     "urlPattern": "/vereinsleitung/material",
     "audience": "FRAMEWORK"
