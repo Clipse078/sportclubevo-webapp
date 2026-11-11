@@ -29,7 +29,7 @@
 
 ### VISUAL_REVIEW_REQUIRED
 
-- **Count:** 182
+- **Count:** 177
 
 ### VISUAL_HEURISTIC_FAIL
 

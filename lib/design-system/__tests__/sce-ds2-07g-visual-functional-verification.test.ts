@@ -32,7 +32,7 @@ describe("SCE-DS2-07G visual and functional verification", () => {
       SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
     );
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.matrixVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
-    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-10");
+    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-11");
   });
 
   it("allows NOT_APPLICABLE functional only for governed placeholder or intercept routes", async () => {
@@ -122,6 +122,16 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     const existing = { "app/(admin)/dashboard/page.tsx": { dimensions: {} } };
     const first = selectBatch3Routes({ limit: 3, offset: 0, evidenceBySource: existing })[0];
     expect(existing[first.sourceFile as keyof typeof existing]).toBeUndefined();
+  });
+
+  it("commits batch-11 release risk register with zero release-blocking findings", () => {
+    const register = JSON.parse(
+      readFileSync(join(ROOT, "lib/design-system/sce-ds2-07g-release-risk-register.json"), "utf8"),
+    );
+    expect(register.summary.recommendation).toMatch(/^B\.CONDITIONALLY_READY$/);
+    expect(register.summary.releaseBlockingCount).toBe(0);
+    expect(register.gates.fullVerificationCompletion.fullyVerifiedCount).toBe(0);
+    expect(register.findings.length).toBeGreaterThan(100);
   });
 
   it("regenerates the matrix from scripts without drift", () => {

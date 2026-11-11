@@ -105,23 +105,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/activity/event/[eventId]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.screenshot: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/activity/event/cmw72jaan009u08l83zagrrhc"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/activity/training-session/[sessionId]",
@@ -137,22 +134,18 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
     "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/activity/training-session/[sessionId]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/activity/training-session/cmsp357it006i04jo8qlslonz"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/admin",
@@ -1343,23 +1336,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/communication/email-sender/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/communication/email-sender"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/communication/inbox",
@@ -1570,23 +1560,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/communication/mitteilungen/cmv2a96wl000306l0qjopeimu"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/communication/mitteilungen/new",
@@ -3953,23 +3940,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/tournamentcenter/cmw8wxtzk000007l8lkuc5avu/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/tournamentcenter/new",
@@ -3984,23 +3968,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/tournamentcenter/new/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/tournamentcenter/new"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/trainer-staff",
@@ -4323,23 +4304,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/veranstaltungen/cmw72jaan009u08l83zagrrhc/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/veranstaltungen/freigaben",
@@ -4578,23 +4556,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/vereine/teams/cmq822sd50000ejjsbl32btzg/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/vorfaelle-disziplin",
@@ -4721,23 +4696,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/website/components/[id]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/website/components/cmr3f738400005ajswu1sszoq/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/website/components/new",
@@ -4752,23 +4724,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/website/components/new/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/website/components/new"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/website/design-system",
@@ -4783,23 +4752,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-audit-app/(admin)/dashboard/website/design-system/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "page.setViewportSize: Target page, context or browser has been closed",
-        "reproduction": "http://127.0.0.1:3000/dashboard/website/design-system"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/website/editorial",
@@ -6036,9 +6002,9 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 ];
 
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
-  "matrixVersion": "2026-11-11-batch-10",
-  "evidenceContractVersion": "2026-11-11-batch-10",
-  "generatedAt": "2026-11-11T10:46:52.519Z",
+  "matrixVersion": "2026-11-11-batch-11",
+  "evidenceContractVersion": "2026-11-11-batch-11",
+  "generatedAt": "2026-11-11T11:21:43.087Z",
   "totalCanonicalRoutes": 214,
   "verifiedAuthenticatedVisualCount": 0,
   "pendingAuthenticatedVisualCount": 214,
@@ -6049,7 +6015,7 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "highRiskResponsiveVerifiedCount": 41,
   "dimensionClosureCompleteCount": 0,
   "dimensionAccessibilityPassCount": 0,
-  "dimensionFunctionalPassCount": 132,
+  "dimensionFunctionalPassCount": 133,
   "authenticatedBrowserAvailable": true,
   "contrastSmokeDebt": [
     "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)"

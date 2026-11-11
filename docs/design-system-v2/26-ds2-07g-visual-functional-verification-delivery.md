@@ -251,6 +251,28 @@ Provision: `npm run ds2-07g:provision-verification-db` → `npm run ds2-07g:seed
 
 Programme **VERIFIED** count remains **0** until screenshot review, axe incomplete resolution, and functional mutation evidence align per batch-8 closure rules.
 
+## Batch 11 result (release gate and risk-based verification)
+
+| Status | Count (HEAD evidence, pre-browser refresh) |
+| --- | ---: |
+| Evidence contract | `2026-11-11-batch-11` |
+| Fully VERIFIED | **0** / 214 |
+| Accessibility FAIL / PENDING | **75** / **139** |
+| Visual heuristic FAIL / PENDING | **12** / **194** (FAIL = unreviewed screenshots, not confirmed layout defects) |
+| Functional mutation PENDING | **65** |
+| Release recommendation | **B — CONDITIONALLY READY** |
+
+### Batch 11 remediations and artifacts
+
+| Area | Change |
+| --- | --- |
+| Planner edit | Duplicate page **h1** removed (`PlannerEntryEditForm` subtitle → **h2**) |
+| Release gate | `docs/design-system-v2/29-ds2-07g-release-gate-batch11.md`, `lib/design-system/sce-ds2-07g-release-risk-register.json`, `scripts/sce-ds2-07g-release-gate-batch11.mjs` |
+| Isolated mutations | Re-validated **3/3 PASS** on local `sce_ds2_07g_verification` (no STAGE mutation) |
+| Visual FAIL queue | Targeted Playwright reassess for 14 routes (artifact log under `/opt/cursor/artifacts/sce-ds2-07g-batch11-visual-reassess.log`) |
+
+Gate 1 (merge safety) and Gate 2 (214-route VERIFIED programme) remain **separate** — see batch 11 doc. **Do not merge** from this batch alone.
+
 ## Functional regression (automated)
 
 Route governance, design-system governance, and targeted planning/layout characterization tests were executed in this batch (see PR CI). No permission or navigation regressions were introduced by DS2-07G scaffolding.

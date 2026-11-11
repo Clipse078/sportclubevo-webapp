@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-11T10:46:45.059Z",
+  "generatedAt": "2026-11-11T11:21:22.976Z",
   "baseUrl": "http://127.0.0.1:3000",
-  "batch": "batch-4-reassess-evidence-offset-0-limit-10",
+  "batch": "batch-4-reassess-evidence-offset-0-limit-10+batch-3-reassess",
   "prefixes": [
     "/dashboard/planner/week",
     "/dashboard/planner/day",
@@ -32,7 +32,7 @@
     "tournamentId": "cmw8wxtzk000007l8lkuc5avu",
     "entityKey": "sportclubevo-by-tulip-digital",
     "tenantSlug": "fc-allschwil",
-    "registrationId": "cmwbyi0an000008jv3pjywq7m",
+    "registrationId": "cmwbzsdf4000308lcci0jj9yl",
     "teamId": "cmq822sd50000ejjsbl32btzg",
     "personId": "cmuo26ofc000004l6l5ousho7",
     "teamSeasonId": "cmso8772p000504joyw9uh1g2",
@@ -3297,12 +3297,10 @@
           "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "FAIL",
+          "status": "PENDING",
           "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": [
-            "multiple h1 elements"
-          ]
+          "details": []
         },
         "responsive": {
           "status": "PASS",
@@ -3583,10 +3581,10 @@
     "app/(admin)/dashboard/activity/event/[eventId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/activity/event/[eventId]/page.tsx",
       "urlPattern": "/dashboard/activity/event/[eventId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -3594,43 +3592,76 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.screenshot: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.screenshot: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.screenshot: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:bypass:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value",
+              "bypass"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/activity/event/[eventId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.screenshot: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/activity/event/cmw72jaan009u08l83zagrrhc"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_event_cmw72jaan009u08l83zagrrhc-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/events/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/events/page.tsx",
@@ -4073,10 +4104,10 @@
     "app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx",
       "urlPattern": "/dashboard/veranstaltungen/[eventId]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -4084,43 +4115,76 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:bypass:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value",
+              "bypass"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/veranstaltungen/cmw72jaan009u08l83zagrrhc/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_veranstaltungen_cmw72jaan009u08l83zagrrhc_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/veranstaltungen/freigaben/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/veranstaltungen/freigaben/page.tsx",
@@ -4281,9 +4345,9 @@
       "sourceFile": "app/(admin)/dashboard/activity/training-session/[sessionId]/page.tsx",
       "urlPattern": "/dashboard/activity/training-session/[sessionId]",
       "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -4291,43 +4355,64 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Responsive probe failed",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "viewports": {
+            "desktop": {
+              "status": "FAIL",
+              "reason": "HTTP 200"
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 0,
+          "reason": "axe clean; responsive probe incomplete",
+          "details": [],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": []
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Functional probe not executed",
+          "details": []
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/activity/training-session/[sessionId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/activity/training-session/cmsp357it006i04jo8qlslonz"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_activity_training-session_cmsp357it006i04jo8qlslonz-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/(personal-dashboard)/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/(personal-dashboard)/page.tsx",
@@ -7099,10 +7184,10 @@
     "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
       "urlPattern": "/dashboard/vereine/teams/[teamId]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7110,43 +7195,76 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:bypass:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value",
+              "bypass"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/vereine/teams/[teamId]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/vereine/teams/cmq822sd50000ejjsbl32btzg/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_vereine_teams_cmq822sd50000ejjsbl32btzg_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/page.tsx",
@@ -7226,10 +7344,10 @@
     "app/(admin)/dashboard/communication/email-sender/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/email-sender/page.tsx",
       "urlPattern": "/dashboard/communication/email-sender",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7237,43 +7355,76 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:bypass:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value",
+              "bypass"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Read-only route missing workspace landmark, heading, or interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":true,\"formSubmitPresent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/communication/email-sender/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/communication/email-sender"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_email-sender-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/inbox/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/inbox/page.tsx",
@@ -7797,10 +7948,10 @@
     "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
       "urlPattern": "/dashboard/communication/mitteilungen/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7808,43 +7959,76 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:bypass:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value",
+              "bypass"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":false,\"interactiveCount\":14,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/communication/mitteilungen/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/communication/mitteilungen/cmv2a96wl000306l0qjopeimu"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_mitteilungen_cmv2a96wl000306l0qjopeimu-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/mitteilungen/new/page.tsx",
@@ -8745,10 +8929,10 @@
     "app/(admin)/dashboard/website/components/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/components/[id]/edit/page.tsx",
       "urlPattern": "/dashboard/website/components/[id]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -8756,54 +8940,84 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": true,
           "details": [
+            "multiple h1 elements",
             "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:34:04.220Z",
             "screenshotReview: mechanism=cursor-agent-image-read; reviewedAt=2026-11-10T21:46:06.359Z"
           ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 1",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":32,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/website/components/[id]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/website/components/cmr3f738400005ajswu1sszoq/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_cmr3f738400005ajswu1sszoq_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/website/components/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/components/new/page.tsx",
       "urlPattern": "/dashboard/website/components/new",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -8811,95 +9025,157 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "multiple h1 elements"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 1",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":36,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/website/components/new/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/website/components/new"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_components_new-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/website/design-system/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/design-system/page.tsx",
       "urlPattern": "/dashboard/website/design-system",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "multiple h1 elements"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 1",
+          "details": [
+            "incomplete:aria-valid-attr-value:critical"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":true,\"formSubmitPresent\":true}",
+            "functionalClass:READ_ONLY_SMOKE"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/website/design-system/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/website/design-system"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_design-system-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/website/editorial/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/editorial/page.tsx",
@@ -14991,10 +15267,10 @@
     "app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx",
       "urlPattern": "/dashboard/tournamentcenter/[tournamentId]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -15002,51 +15278,83 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "multiple h1 elements"
+          ]
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 1,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":76,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/tournamentcenter/cmw8wxtzk000007l8lkuc5avu/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_cmw8wxtzk000007l8lkuc5avu_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/tournamentcenter/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/tournamentcenter/new/page.tsx",
       "urlPattern": "/dashboard/tournamentcenter/new",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -15054,43 +15362,74 @@
       "blocked": false,
       "dimensions": {
         "authentication": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed"
+          "status": "PASS",
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Route audit aborted"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "FAIL",
-          "reason": "page.setViewportSize: Target page, context or browser has been closed",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "axeViolations": 0,
+          "axeIncomplete": 2,
+          "reason": "axe incomplete rules (0 manual, 0 keyboard supplement): 2",
+          "details": [
+            "incomplete:aria-prohibited-attr:serious",
+            "incomplete:aria-valid-attr-value:critical"
+          ],
+          "incompleteClassification": {
+            "manualReview": [],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-prohibited-attr",
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Route audit aborted"
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-audit-app/(admin)/dashboard/tournamentcenter/new/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "page.setViewportSize: Target page, context or browser has been closed",
-          "reproduction": "http://127.0.0.1:3000/dashboard/tournamentcenter/new"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_tournamentcenter_new-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/vereine/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/vereine/page.tsx",
@@ -15748,10 +16087,10 @@
       "defects": []
     }
   },
-  "evidenceContractVersion": "2026-11-11-batch-10",
+  "evidenceContractVersion": "2026-11-11-batch-11",
   "highRiskRoutesResponsiveVerified": 41,
   "highRiskRoutesClosureComplete": 0,
-  "lastRunMode": "reassess-evidence",
+  "lastRunMode": "reassess-batch2",
   "batch3RoutesAttemptedThisRun": 0,
   "batch3EvidenceRows": 173,
   "visualScreenshotReview": {
@@ -15779,5 +16118,6 @@
     "completedAt": "2026-11-11T10:46:46.733Z",
     "visualHeuristicFailRemaining": 14,
     "accessibilityFailRemaining": 75
-  }
+  },
+  "batch11VisualReassessAt": "2026-11-11T11:21:41.111Z"
 }
