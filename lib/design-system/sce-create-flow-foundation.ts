@@ -100,14 +100,6 @@ export const SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT: SceCreateFlowAuditRow[] = [
     notes: "Fallback route uses layout=composer",
   },
   {
-    entity: "Neues Meeting",
-    route: "/vereinsleitung/meetings/new",
-    classification: "MODAL_FIRST_DS09",
-    ds09Action: "ADOPTED_MODAL",
-    canonicalEntry: "CreateMeetingComposerDialog",
-    notes: "Fallback route uses layout=composer",
-  },
-  {
     entity: "Anlage erstellen",
     route: "/dashboard/admin/facilities",
     classification: "MODAL_FIRST_DS09",

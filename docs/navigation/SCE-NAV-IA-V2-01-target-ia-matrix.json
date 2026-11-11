@@ -1589,11 +1589,10 @@
       "label": "Club-Betrieb",
       "headerVisible": true,
       "keys": [
-        "meetings",
-        "material",
         "helfereinsaetze",
         "formulare-freigaben",
-        "vorfaelle-disziplin"
+        "vorfaelle-disziplin",
+        "material"
       ]
     },
     {

@@ -7,6 +7,10 @@ function readSrc(relative: string) {
 }
 
 describe("SCE-CD-02R1 meeting creation UX", () => {
+  it("does not ship legacy modal composer component", () => {
+    expect(() => readSrc("components/admin/meetings/CreateMeetingComposerDialog.tsx")).toThrow();
+  });
+
   it("uses full-page create entry instead of modal composer", () => {
     expect(readSrc("components/admin/meetings/CreateMeetingTrigger.tsx")).toContain(
       'href="/vereinsleitung/meetings/new"',

@@ -13,11 +13,15 @@
 
 ### SCE-CD-02R1 (UAT corrections)
 
-- **Navigation:** Club-Betrieb header resolves to Sitzungen (`/vereinsleitung/meetings`), not Material demo
 - **Creation UX:** full-page workflow at `/vereinsleitung/meetings/new` (list CTA uses page flow, not modal)
 - **People pickers:** tenant-scoped `PeoplePicker` for participants, agenda/decision/action owners (`personId` / `ownerPersonId`)
 - **Agenda duration:** optional `durationMin` per item + meeting `plannedDurationMin` with non-blocking overrun hint
 - **Initiative linking:** optional `initiativeId` on agenda items with visibility-gated API validation
+
+### SCE-CD-02R2 (UAT readiness)
+
+- **Navigation:** Club-Betrieb header resolves to operational **Helfereinsätze** (`/dashboard/helfereinsaetze`), not Sitzungen/Meetings or Material demo
+- **Create-flow metadata:** Meetings documented as full-page canonical create (`SCE-DS-EX-DOM-006`); unused `CreateMeetingComposerDialog` removed
 
 ## Meeting authority & invitations (Phase E)
 

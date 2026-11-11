@@ -372,8 +372,6 @@ export const CLUB_TARGET_L2_GROUPS = [
     label: "Club-Betrieb",
     headerVisible: true,
     keys: [
-      "meetings",
-      "club-entwicklung-sitzungen",
       "helfereinsaetze",
       "formulare-freigaben",
       "vorfaelle-disziplin",
