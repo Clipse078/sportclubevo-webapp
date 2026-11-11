@@ -18,10 +18,29 @@ The main gaps are **consistency**, not missing primitives:
 1. **Oversized overlays** — several Sheets/Drawers exceed ~400–850 LOC (registrations, player release, people-access wizard) without tabbed decomposition or dirty guards.
 2. **Dual entry models** — intentional DS-09 modal-first + `/new` deep links, plus legacy full-page-only flows (team register, aufgaben full create, activity `/new`).
 3. **Legacy local tabs** — `PersonDetailTabs`, registration drawer tabs vs canonical `SceContextTabs`.
-4. **Club Development** — Targets/Initiatives/Meetings follow modal-first composers; **hub + Processes** are not yet aligned (hub is demo data; processes route exists but interaction model is unset for 2.0).
+4. **Club Development** — Targets/Initiatives/Meetings use shared composer shell + dirty guards (01A/B); **hub + Processes** are demo-only (no persistence); process create stays disabled until a real workflow ships — not a modal placeholder.
 5. **Dirty-state coverage** — strong on activity composers and match record; **weak or absent** on many workspace `Dialog` composers and large Sheets.
 
 This audit defines **decision rules** and **six small implementation packages**, prioritizing Club Development composer parity (`SCE-UX-01A`) without migrating unrelated working surfaces.
+
+### Preferred interaction hierarchy (normative)
+
+New and redesigned flows should prefer surfaces in this order — not every tier applies to every domain:
+
+| Priority | Surface | Use for |
+| --- | --- | --- |
+| 1 | **Collapsible cards & inline editing** | Simple, contextual edits on a list or board where the parent view must stay visible (expand row, accordion operational details, `SceInlineEditor`). |
+| 2 | **Dedicated full-page workflows** | Complex create/edit with tabs, long forms, deep links (`/new`, `?tab=`), `SceWorkspaceChrome` + `SceContextTabs`. |
+| 3 | **Drawers (Sheet)** | Inspect or lightly edit one entity while preserving grid/list/planning context (`Sheet`, `contextualPanel`). |
+| 4 | **Small modals** | Confirmations, destructive actions, and short focused creates (≤~12 fields) where the user should not leave the list (`Dialog`, `SceConfirmDialog`, workspace `*CreateComposerDialog`). |
+
+**Guards**
+
+- Do **not** ship modal-first create flows for domains that cannot persist (demo/vision surfaces stay disabled or informational).
+- **Do not** migrate additional working surfaces to modal-first solely for visual parity (`SCE-UX-01A` limits shell + dirty guards on **existing functional** Club Development forms).
+- Existing functional modals may remain until their workflows are intentionally redesigned.
+
+**SCE-UX-01A/B delivery (PR family):** Targets, Initiativen, and Meetings use the shared `SceClubDevelopmentComposerShell` with unsaved-change guards. **Prozesse** remain on the prior disabled “Demnächst” control until a persisted process-creation workflow exists.
 
 ---
 
@@ -65,9 +84,9 @@ This audit defines **decision rules** and **six small implementation packages**,
 | Ziele | Modal-first + deep link | `CreateTargetComposerDialog` → `TargetNewPageClient layout=composer` |
 | Initiativen | Modal-first + deep link | `CreateInitiativeComposerDialog` → `InitiativeForm layout=composer` |
 | Meetings | Modal-first + deep link | `CreateMeetingComposerDialog` |
-| Prozesse | Route in IA | `/vereinsleitung/prozesse` — interaction pattern not unified with siblings |
+| Prozesse | Demo list; disabled create | `/vereinsleitung/prozesse` — “Demnächst”; no composer until persistence |
 
-**Club Development 2.0 implication:** Reuse existing composer forms; add workspace shell + dirty guard + process create parity — do **not** introduce a second modal system.
+**Club Development 2.0 implication:** Reuse existing composer forms for **persisted** entities; add workspace shell + dirty guard. **Do not** expose modal create for Processes until save path exists — do **not** introduce a second modal system.
 
 #### Finance
 
@@ -197,9 +216,9 @@ These are **valid** when classified in the decision matrix as `FULL_PAGE_WORKFLO
 
 ### Recommended first package: **SCE-UX-01A**
 
-**Scope:** Shared `SceWorkspaceChrome` on Vereinsentwicklung list routes; extract a thin `SceClubDevelopmentComposerShell` wrapping existing `Dialog size=workspace` + `layout=composer` forms; document dirty-close behaviour; align Process create with Target/Initiative modal-first pattern.
+**Scope (delivered in 01A/B):** Thin `SceClubDevelopmentComposerShell` around existing Target/Initiative/Meeting `Dialog size=workspace` + `layout=composer` forms; dirty-close behaviour on those forms; **no** new modal-first migrations beyond existing functional composers.
 
-**Out of scope for 01A:** Process engine, KPI persistence, initiative workflow automation.
+**Out of scope for 01A:** Process engine, process create UI, KPI persistence, initiative workflow automation, Club Development 2.0 hub (01F).
 
 ### Dependencies
 
