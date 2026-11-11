@@ -125,7 +125,7 @@ export const SCE_UX_01_DOMAIN_AUDIT: SceUx01DomainFinding[] = [
     evidence: [
       "CreateTargetComposerDialog · CreateInitiativeComposerDialog · CreateMeetingComposerDialog (Dialog size=workspace)",
       "Target/Initiative/Meeting forms shared with /new deep-link routes (layout=composer)",
-      "club-entwicklung hub is demo KPI surface (DEMO_PROCESSES) — Club Development 2.0 not started",
+      "club-entwicklung hub uses permission-scoped overview (SCE-CD-01); prozesse route remains demo-only",
     ],
     inconsistencies: [
       "Hub vs list create parity not yet unified under SceWorkspaceChrome",

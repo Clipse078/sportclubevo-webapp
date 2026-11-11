@@ -162,17 +162,25 @@ function getHeaderContent(pathname: string): HeaderContent {
 
   if (pathname === "/vereinsleitung/club-entwicklung") {
     return {
-      eyebrow: "Club Entwicklung",
-      title: "Club Entwicklung",
-      description: "Strategische Steuerung, operative Prozesse und Entwicklungsinitiativen — alles an einem Ort.",
+      eyebrow: "Vereinsentwicklung",
+      title: "Übersicht",
+      description: "Ziele, Initiativen, Sitzungen und offene Massnahmen — mit echten, berechtigungsgefilterten Daten.",
+    };
+  }
+
+  if (pathname === "/vereinsleitung/vorhaben") {
+    return {
+      eyebrow: "Vereinsentwicklung",
+      title: "Vorhaben & Aufgaben",
+      description: "Gemeinsamer Arbeitsbereich für Initiativen und Aufgaben — schrittweise Erweiterung.",
     };
   }
 
   if (pathname === "/vereinsleitung/prozesse") {
     return {
-      eyebrow: "Club Entwicklung",
-      title: "Prozesse & Aufgaben",
-      description: "Wiederkehrende Vereinsprozesse als strukturierte Checklisten — mit Verantwortlichen, Fristen und Fortschrittsverfolgung.",
+      eyebrow: "Vereinsentwicklung",
+      title: "Prozesse & Richtlinien",
+      description: "Dokumentierte Vereinsabläufe — Persistenz und Freigabe folgen (derzeit Vorschau).",
     };
   }
 

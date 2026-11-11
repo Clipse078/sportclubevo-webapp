@@ -152,7 +152,7 @@ export default function ProzessePage() {
         description="Wiederkehrende Vereinsprozesse als strukturierte Checklisten — mit Verantwortlichen, Fristen und Fortschrittsverfolgung."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Club Entwicklung", href: "/vereinsleitung/club-entwicklung" },
+          { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },
           { label: "Prozesse & Aufgaben" },
         ]}
         headerBadge={<Badge variant="warning">In Entwicklung</Badge>}

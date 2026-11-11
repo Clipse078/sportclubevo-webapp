@@ -273,11 +273,20 @@ describe("NAV_SECTIONS static structure", () => {
 
     expect(fuehrung!.items.map((item) => item.key)).toEqual([
       "trainer-staff",
-      "meetings",
       "club-entwicklung",
       "material",
       "finanzen",
       "sponsoring",
+    ]);
+
+    const clubDev = fuehrung!.items.find((i) => i.key === "club-entwicklung");
+    expect(clubDev?.label).toBe("Vereinsentwicklung");
+    expect(clubDev?.children?.map((c) => c.label)).toEqual([
+      "Übersicht",
+      "Pläne & Ziele",
+      "Sitzungen",
+      "Vorhaben & Aufgaben",
+      "Prozesse & Richtlinien",
     ]);
     expect(sponsoring).toEqual(expect.objectContaining({
       label: "Sponsoring",

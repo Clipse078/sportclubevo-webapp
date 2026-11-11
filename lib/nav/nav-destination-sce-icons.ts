@@ -31,6 +31,8 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   "trainer-staff": "coach",
   meetings: "committee-board",
   "club-entwicklung": "insight",
+  "club-entwicklung-sitzungen": "committee-board",
+  "club-entwicklung-vorhaben": "tasks",
   "club-entwicklung-prozesse": "workflow",
   website: "website",
   "website-overview": "website",
