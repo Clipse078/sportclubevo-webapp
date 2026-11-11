@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   tenantMembershipFindFirst: vi.fn(),
   userRoleFindFirst: vi.fn(),
+  isPlatformSuperAdmin: vi.fn(),
+  isTenantClubAdmin: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -12,47 +14,70 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/security/platform-superadmin", () => ({
+  isPlatformSuperAdmin: mocks.isPlatformSuperAdmin,
+}));
+
+vi.mock("@/lib/roles/is-tenant-club-admin", () => ({
+  isTenantClubAdmin: mocks.isTenantClubAdmin,
+}));
+
 import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 
-describe("userHasVereinsleitungWorkspaceAccess (SCE-CD-01R1)", () => {
+describe("userHasVereinsleitungWorkspaceAccess (SCE-CD-01R2)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.tenantMembershipFindFirst.mockResolvedValue({ id: "m1" });
+    mocks.isPlatformSuperAdmin.mockResolvedValue(false);
+    mocks.isTenantClubAdmin.mockResolvedValue(false);
+    mocks.tenantMembershipFindFirst.mockResolvedValue({
+      tenant: { key: "fc-demo" },
+    });
     mocks.userRoleFindFirst.mockResolvedValue(null);
   });
 
-  it("denies when tenant membership is missing", async () => {
+  it("allows SCE platform superadmin without tenant membership lookup", async () => {
+    mocks.isPlatformSuperAdmin.mockResolvedValue(true);
+    await expect(
+      userHasVereinsleitungWorkspaceAccess("super-1", "tenant-1"),
+    ).resolves.toBe(true);
+    expect(mocks.tenantMembershipFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("denies unprivileged users without VL flag, club admin, or superadmin", async () => {
+    await expect(
+      userHasVereinsleitungWorkspaceAccess("user-1", "tenant-1"),
+    ).resolves.toBe(false);
+  });
+
+  it("allows materialized tenant Club Admin within their club", async () => {
+    mocks.isTenantClubAdmin.mockResolvedValue(true);
+    await expect(
+      userHasVereinsleitungWorkspaceAccess("club-admin-1", "tenant-1"),
+    ).resolves.toBe(true);
+    expect(mocks.userRoleFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("allows explicitly authorized VL role holders", async () => {
+    mocks.userRoleFindFirst.mockResolvedValue({ id: "ur-1" });
+    await expect(
+      userHasVereinsleitungWorkspaceAccess("vl-1", "tenant-1"),
+    ).resolves.toBe(true);
+  });
+
+  it("denies when tenant membership is missing (non-superadmin)", async () => {
     mocks.tenantMembershipFindFirst.mockResolvedValue(null);
     await expect(
       userHasVereinsleitungWorkspaceAccess("user-1", "tenant-1"),
     ).resolves.toBe(false);
-    expect(mocks.userRoleFindFirst).not.toHaveBeenCalled();
+    expect(mocks.isTenantClubAdmin).not.toHaveBeenCalled();
   });
 
-  it("denies when no role grants canAccessVereinsleitung", async () => {
-    mocks.userRoleFindFirst.mockResolvedValue(null);
-    await expect(
-      userHasVereinsleitungWorkspaceAccess("user-1", "tenant-1"),
-    ).resolves.toBe(false);
-  });
-
-  it("allows when a VL-flagged role is assigned", async () => {
-    mocks.userRoleFindFirst.mockResolvedValue({ id: "ur-1" });
-    await expect(
-      userHasVereinsleitungWorkspaceAccess("user-1", "tenant-1"),
-    ).resolves.toBe(true);
-  });
-
-  it("scopes userRole lookup to platform or matching tenant roles", async () => {
-    mocks.userRoleFindFirst.mockResolvedValue({ id: "ur-1" });
+  it("scopes club admin check to the active tenant key", async () => {
     await userHasVereinsleitungWorkspaceAccess("user-1", "tenant-1");
-    expect(mocks.userRoleFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          userId: "user-1",
-          role: expect.objectContaining({ canAccessVereinsleitung: true }),
-        }),
-      }),
+    expect(mocks.isTenantClubAdmin).toHaveBeenCalledWith(
+      "user-1",
+      "tenant-1",
+      "fc-demo",
     );
   });
 });

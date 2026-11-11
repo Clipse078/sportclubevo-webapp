@@ -32,6 +32,20 @@ describe("SCE-CD-01R1 Vereinsleitung nav visibility", () => {
     expect(clubDev?.children?.length).toBeGreaterThan(0);
   });
 
+  it("shows Vereinsentwicklung for club admins without strategic permission keys (CD-01R2)", () => {
+    const sections = getVisibleNavSections([], "club", {
+      vereinsleitungWorkspace: true,
+    });
+    const clubDev = findClubEntwicklung(sections);
+    expect(clubDev?.children?.map((c) => c.key)).toEqual([
+      "club-entwicklung-uebersicht",
+      "club-entwicklung-ziele",
+      "club-entwicklung-sitzungen",
+      "club-entwicklung-vorhaben",
+      "club-entwicklung-prozesse",
+    ]);
+  });
+
   it("does not expose Vereinsentwicklung to tenant admin membership permission alone", () => {
     const sections = getVisibleNavSections([PERMISSIONS.USERS_MANAGE_MEMBERSHIPS], "club", {
       vereinsleitungWorkspace: false,

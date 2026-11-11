@@ -861,6 +861,12 @@ function hasNavItemAccess(
   if (!hasVereinsleitungNavMembership(item, capabilities)) {
     return false;
   }
+  if (
+    item.requiresVereinsleitungMembership &&
+    capabilities?.vereinsleitungWorkspace === true
+  ) {
+    return true;
+  }
   if (hasAccess(userKeys, item.permissionKeys)) {
     return true;
   }
@@ -896,7 +902,12 @@ export function getVisibleNavSections(
         children: item.children
           ?.filter((child) => isVisibleInNavContext(child.navContexts, workspaceContext))
           ?.filter((child) => hasVereinsleitungNavMembership(child, capabilities))
-          ?.filter((child) => hasAccess(permissionKeys, child.permissionKeys)),
+          ?.filter(
+            (child) =>
+              (child.requiresVereinsleitungMembership &&
+                capabilities?.vereinsleitungWorkspace === true) ||
+              hasAccess(permissionKeys, child.permissionKeys),
+          ),
       })),
   })).filter((section) => section.items.length > 0);
 }
