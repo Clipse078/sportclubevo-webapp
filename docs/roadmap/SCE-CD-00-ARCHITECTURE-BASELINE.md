@@ -160,6 +160,8 @@ Capabilities are numbered for implementation packages; **none are implemented in
 
 **Intent:** Full meeting lifecycle on top of existing API.
 
+**Product direction (Meetings 2.0):** SportClubEvo is the single authoritative workspace for organizing club meetings, including invitations, RSVPs, agenda, decisions, minutes, and follow-up. Google Calendar and Outlook are optional notification and calendar synchronization channels — not alternative meeting-management systems.
+
 **Architecture:**
 
 1. **UI package:** Agenda / decisions / actions / participants editors on meeting detail (inline cards + full-page for bulk edit).
