@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import type { CarryForwardEligibleItem, CarryForwardSourceType } from "@/lib/meetings/meeting-carry-forward";
 import {
   workspaceGhostButtonClass,
@@ -120,12 +121,12 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
                 key={item.key}
                 className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
               >
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="mt-1"
+                <div className="flex items-start gap-3">
+                  <SwitchThumb
+                    id={`carry-fwd-${item.key}`}
                     checked={selected.has(item.key)}
                     onChange={() => toggle(item.key)}
+                    aria-label={`${item.title} zur Übernahme auswählen`}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium text-[var(--foreground)]">{item.title}</span>
@@ -137,7 +138,7 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
                       <span className="block text-xs text-[var(--muted)]">Verantwortlich: {item.ownerLabel}</span>
                     ) : null}
                   </span>
-                </label>
+                </div>
               </li>
             ))}
           </ul>
