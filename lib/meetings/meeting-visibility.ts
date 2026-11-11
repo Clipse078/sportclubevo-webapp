@@ -67,3 +67,15 @@ export function sanitizeMeetingVisibilityAllowlists(
     visiblePersonRefs: nonEmptyStringArray(refs.visiblePersonRefs),
   };
 }
+
+/** Prisma JSON columns — string[] only (no null; satisfies InputJsonValue). */
+export function meetingAllowlistsForPrisma(allowlists: MeetingVisibilityAllowlists) {
+  return {
+    visibleOrgUnitRefs: nonEmptyStringArray(allowlists.visibleOrgUnitRefs),
+    visibleRoleRefs: nonEmptyStringArray(allowlists.visibleRoleRefs),
+    visibleUserRefs: nonEmptyStringArray(allowlists.visibleUserRefs),
+    visibleTargetGroupRefs: nonEmptyStringArray(allowlists.visibleTargetGroupRefs),
+    visibleTeamRefs: nonEmptyStringArray(allowlists.visibleTeamRefs),
+    visiblePersonRefs: nonEmptyStringArray(allowlists.visiblePersonRefs),
+  };
+}

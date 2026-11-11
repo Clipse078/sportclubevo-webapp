@@ -25,11 +25,13 @@ export async function resolveMeetingVisibilityOnCreate(
 
   let allowlists: MeetingVisibilityAllowlists = sanitizeMeetingVisibilityAllowlists(visibilityScope, {
     visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs)
-      ? body.visibleOrgUnitRefs
+      ? (body.visibleOrgUnitRefs as string[])
       : defaults.visibleOrgUnitRefs,
-    visibleRoleRefs: body?.visibleRoleRefs,
-    visibleUserRefs: body?.visibleUserRefs,
-    visibleTargetGroupRefs: body?.visibleTargetGroupRefs,
+    visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? (body.visibleRoleRefs as string[]) : undefined,
+    visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? (body.visibleUserRefs as string[]) : undefined,
+    visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs)
+      ? (body.visibleTargetGroupRefs as string[])
+      : undefined,
   });
 
   if (
@@ -59,10 +61,14 @@ export async function resolveMeetingVisibilityOnUpdate(
     : currentScope;
 
   const allowlists = sanitizeMeetingVisibilityAllowlists(visibilityScope, {
-    visibleOrgUnitRefs: body?.visibleOrgUnitRefs,
-    visibleRoleRefs: body?.visibleRoleRefs,
-    visibleUserRefs: body?.visibleUserRefs,
-    visibleTargetGroupRefs: body?.visibleTargetGroupRefs,
+    visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs)
+      ? (body.visibleOrgUnitRefs as string[])
+      : undefined,
+    visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? (body.visibleRoleRefs as string[]) : undefined,
+    visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? (body.visibleUserRefs as string[]) : undefined,
+    visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs)
+      ? (body.visibleTargetGroupRefs as string[])
+      : undefined,
   });
 
   const validation = validateMeetingRestrictedVisibility(visibilityScope, allowlists);

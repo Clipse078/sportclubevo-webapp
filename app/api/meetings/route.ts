@@ -4,6 +4,7 @@ import { MeetingStatus } from "@prisma/client";
 import { getMeetings } from "@/lib/meetings/queries";
 import { createMeetingParticipantsFromPersonIds } from "@/lib/meetings/meeting-participant-create";
 import { resolveMeetingVisibilityOnCreate } from "@/lib/meetings/meeting-visibility-payload";
+import { meetingAllowlistsForPrisma } from "@/lib/meetings/meeting-visibility";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 
@@ -78,12 +79,7 @@ export async function POST(request: NextRequest) {
         status,
         visibilityScope,
         createdByUserId: actor.userId,
-        visibleOrgUnitRefs: allowlists.visibleOrgUnitRefs,
-        visibleRoleRefs: allowlists.visibleRoleRefs,
-        visibleUserRefs: allowlists.visibleUserRefs,
-        visibleTargetGroupRefs: allowlists.visibleTargetGroupRefs,
-        visibleTeamRefs: allowlists.visibleTeamRefs,
-        visiblePersonRefs: allowlists.visiblePersonRefs,
+        ...meetingAllowlistsForPrisma(allowlists),
       },
       select: { id: true, slug: true, title: true },
     });

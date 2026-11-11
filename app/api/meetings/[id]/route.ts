@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { MeetingStatus, VisibilityScope } from "@prisma/client";
 import { getMeetingById } from "@/lib/meetings/queries";
 import { resolveMeetingVisibilityOnUpdate } from "@/lib/meetings/meeting-visibility-payload";
+import { meetingAllowlistsForPrisma } from "@/lib/meetings/meeting-visibility";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -72,12 +73,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
           typeof body?.requiresFourEyeReview === "boolean"
             ? body.requiresFourEyeReview
             : undefined,
-        visibleOrgUnitRefs: visibilityPatch.allowlists?.visibleOrgUnitRefs,
-        visibleRoleRefs: visibilityPatch.allowlists?.visibleRoleRefs,
-        visibleUserRefs: visibilityPatch.allowlists?.visibleUserRefs,
-        visibleTargetGroupRefs: visibilityPatch.allowlists?.visibleTargetGroupRefs,
-        visibleTeamRefs: visibilityPatch.allowlists?.visibleTeamRefs,
-        visiblePersonRefs: visibilityPatch.allowlists?.visiblePersonRefs,
+        ...(visibilityPatch.allowlists
+          ? meetingAllowlistsForPrisma(visibilityPatch.allowlists)
+          : {}),
       },
       select: { id: true, slug: true, title: true },
     });
