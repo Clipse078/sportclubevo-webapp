@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGuardedComposerCancel } from "@/lib/ux/use-guarded-composer-cancel";
+import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import VisibilityScopeSelect, {
   type VisibilityScopeValue,
@@ -140,6 +142,48 @@ export default function TargetForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guardedCancel = useGuardedComposerCancel();
+
+  const formSnapshot = useMemo(
+    () => ({
+      title,
+      description,
+      category,
+      status,
+      period,
+      periodLabel,
+      sportCategory,
+      ageGroupHint,
+      startsAt,
+      endsAt,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+      metrics,
+    }),
+    [
+      title,
+      description,
+      category,
+      status,
+      period,
+      periodLabel,
+      sportCategory,
+      ageGroupHint,
+      startsAt,
+      endsAt,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+      metrics,
+    ],
+  );
+
+  const { resetBaseline } = useSceComposerFormDirty(formSnapshot);
 
   function addMetric() {
     setMetrics((prev) => [...prev, emptyMetric()]);
@@ -213,6 +257,7 @@ export default function TargetForm({
 
       const data = await res.json();
       const id = data?.target?.id ?? targetId ?? "";
+      resetBaseline();
       if (onSuccess) {
         onSuccess(id);
         return;
@@ -523,8 +568,9 @@ export default function TargetForm({
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => (onCancel ? onCancel() : router.back())}
+          onClick={() => guardedCancel(() => (onCancel ? onCancel() : router.back()))}
           className={cancelButtonClass}
+          data-testid="target-form-cancel"
         >
           Abbrechen
         </button>

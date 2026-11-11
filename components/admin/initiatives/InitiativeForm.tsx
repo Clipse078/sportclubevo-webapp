@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useGuardedComposerCancel } from "@/lib/ux/use-guarded-composer-cancel";
+import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
@@ -75,6 +77,40 @@ export default function InitiativeForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guardedCancel = useGuardedComposerCancel();
+
+  const formSnapshot = useMemo(
+    () => ({
+      title,
+      summary,
+      description,
+      status,
+      owner,
+      progress,
+      dueDate,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+    }),
+    [
+      title,
+      summary,
+      description,
+      status,
+      owner,
+      progress,
+      dueDate,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+    ],
+  );
+
+  const { resetBaseline } = useSceComposerFormDirty(formSnapshot);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -120,6 +156,7 @@ export default function InitiativeForm({
 
       const data = await res.json().catch(() => ({}));
       const slug = typeof data?.initiative?.slug === "string" ? data.initiative.slug : "";
+      resetBaseline();
       if (onSuccess) {
         onSuccess(slug);
         return;
@@ -263,8 +300,9 @@ export default function InitiativeForm({
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => (onCancel ? onCancel() : router.back())}
+          onClick={() => guardedCancel(() => (onCancel ? onCancel() : router.back()))}
           className={cancelButtonClass}
+          data-testid="initiative-form-cancel"
         >
           Abbrechen
         </button>

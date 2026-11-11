@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useGuardedComposerCancel } from "@/lib/ux/use-guarded-composer-cancel";
+import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
@@ -70,6 +72,38 @@ export default function MeetingForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guardedCancel = useGuardedComposerCancel();
+
+  const formSnapshot = useMemo(
+    () => ({
+      title,
+      description,
+      meetingDate,
+      location,
+      attendeeCount,
+      status,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+    }),
+    [
+      title,
+      description,
+      meetingDate,
+      location,
+      attendeeCount,
+      status,
+      visibilityScope,
+      visibleOrgUnitRefs,
+      visibleRoleRefs,
+      visibleUserRefs,
+      visibleTargetGroupRefs,
+    ],
+  );
+
+  const { resetBaseline } = useSceComposerFormDirty(formSnapshot);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -117,6 +151,7 @@ export default function MeetingForm({
 
       const data = await res.json().catch(() => ({}));
       const slug = typeof data?.meeting?.slug === "string" ? data.meeting.slug : "";
+      resetBaseline();
       if (onSuccess) {
         onSuccess(slug);
         return;
@@ -249,8 +284,9 @@ export default function MeetingForm({
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => (onCancel ? onCancel() : router.back())}
+          onClick={() => guardedCancel(() => (onCancel ? onCancel() : router.back()))}
           className={cancelButtonClass}
+          data-testid="meeting-form-cancel"
         >
           Abbrechen
         </button>

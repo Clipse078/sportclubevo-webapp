@@ -6,6 +6,37 @@
 export const SCE_UX_01_DESIGN_PRINCIPLE =
   "Simple understanding. Shallow navigation. Deep capability." as const;
 
+/**
+ * Preferred surface choice order for new/redesigned flows (see docs/ux/SCE-UX-01-interaction-workflow-audit.md).
+ * Existing functional modals may remain until intentionally redesigned.
+ */
+export const SCE_UX_01_PREFERRED_INTERACTION_HIERARCHY = [
+  {
+    rank: 1 as const,
+    label: "Collapsible cards & inline editing",
+    patterns: ["INLINE_EDIT"] as const,
+    when: "Simple contextual edits; parent list/board must stay visible.",
+  },
+  {
+    rank: 2 as const,
+    label: "Dedicated full-page workflows",
+    patterns: ["FULL_PAGE_WORKFLOW", "GUIDED_STEPS"] as const,
+    when: "Complex create/edit, tabs, deep links, long forms.",
+  },
+  {
+    rank: 3 as const,
+    label: "Drawers",
+    patterns: ["DRAWER_CONTEXT"] as const,
+    when: "Inspect + light edit with spatial context preserved.",
+  },
+  {
+    rank: 4 as const,
+    label: "Small modals",
+    patterns: ["MODAL_DECISION"] as const,
+    when: "Confirmations, destructive actions, short focused creates with persistence.",
+  },
+] as const;
+
 export type SceUx01InteractionPattern =
   | "INLINE_EDIT"
   | "MODAL_DECISION"
@@ -35,7 +66,8 @@ export const SCE_UX_01_DECISION_MATRIX: SceUx01DecisionRule[] = [
   },
   {
     pattern: "MODAL_DECISION",
-    when: "Short create/edit (≤~12 fields), destructive confirm, or reversible decision; user should not leave list/workspace.",
+    when:
+      "Confirmations, destructive actions, or short persisted create/edit (≤~12 fields); user should not leave list/workspace. Do not use for non-persisted demo domains.",
     canonicalPrimitive:
       "Dialog (size workspace|lg) on SceModalOverlay · SceConfirmDialog · *CreateComposerDialog",
     dirtyGuard: "RECOMMENDED",
@@ -97,8 +129,7 @@ export const SCE_UX_01_DOMAIN_AUDIT: SceUx01DomainFinding[] = [
     ],
     inconsistencies: [
       "Hub vs list create parity not yet unified under SceWorkspaceChrome",
-      "Process domain (prozesse) interaction model undefined vs modal-first siblings",
-      "No SceContextDirtyGuard on composer dialogs (inline close/backdrop)",
+      "Process domain (prozesse) is demo-only — create disabled; no modal parity until persistence",
     ],
     clubDevelopment20Relevance: "HIGH",
   },
@@ -216,7 +247,7 @@ export const SCE_UX_01_IMPLEMENTATION_PACKAGES: SceUx01ImplementationPackage[] =
     id: "SCE-UX-01A",
     title: "Club Development composer contract",
     scope:
-      "Unify Target/Initiative/Meeting/Process create-edit under shared composer shell (Dialog workspace + layout=composer forms), SceWorkspaceChrome on lists, dirty-close parity.",
+      "Shared composer shell (Dialog workspace + layout=composer) and dirty-close on Target/Initiative/Meeting forms. Prozesse create remains disabled until a persisted workflow exists — no modal placeholder.",
     patterns: ["MODAL_DECISION", "FULL_PAGE_WORKFLOW"],
     dependencies: ["DS2-06 page primitives", "SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT"],
     risks: ["Oversized workspace dialogs if Process domain adds long checklists"],

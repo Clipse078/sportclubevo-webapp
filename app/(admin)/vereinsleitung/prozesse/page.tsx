@@ -157,16 +157,19 @@ export default function ProzessePage() {
         ]}
         headerBadge={<Badge variant="warning">In Entwicklung</Badge>}
         headerActions={
-        <button
-          type="button"
-          disabled
-          title="Demnächst verfügbar"
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm font-medium text-[var(--muted)] cursor-not-allowed"
-        >
-          <Plus className="h-4 w-4" />
-          Neuer Prozess
-          <Badge variant="warning" size="sm">Demnächst</Badge>
-        </button>
+          <button
+            type="button"
+            disabled
+            title="Demnächst verfügbar"
+            data-testid="process-create-disabled"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm font-medium text-[var(--muted)] cursor-not-allowed"
+          >
+            <Plus className="h-4 w-4" />
+            Neuer Prozess
+            <Badge variant="warning" size="sm">
+              Demnächst
+            </Badge>
+          </button>
         }
       >
       {/* Demo notice */}

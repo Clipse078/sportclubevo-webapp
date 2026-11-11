@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import MeetingForm from "@/components/admin/meetings/MeetingForm";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
 
@@ -20,7 +21,9 @@ export default async function NewMeetingPage() {
           { label: "Neues Meeting" },
         ]}
       >
-        <MeetingForm mode="create" layout="composer" />
+        <ClubDevelopmentFormWorkflowShell>
+          <MeetingForm mode="create" layout="composer" />
+        </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>
   );

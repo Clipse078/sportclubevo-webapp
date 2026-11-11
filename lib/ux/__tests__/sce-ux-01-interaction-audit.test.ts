@@ -7,6 +7,7 @@ import {
   SCE_UX_01_DESIGN_PRINCIPLE,
   SCE_UX_01_DOMAIN_AUDIT,
   SCE_UX_01_IMPLEMENTATION_PACKAGES,
+  SCE_UX_01_PREFERRED_INTERACTION_HIERARCHY,
   SCE_UX_01_RECOMMENDED_FIRST_PACKAGE_ID,
   SCE_UX_01_REUSABLE_PRIMITIVES,
 } from "../sce-ux-01-interaction-architecture";
@@ -61,13 +62,27 @@ describe("SCE-UX-01 — interaction workflow audit contract", () => {
     expect(doc).toContain("SCE-UX-01");
     expect(doc).toContain("sce-ux-01-interaction-architecture.ts");
     expect(doc).toContain("SCE-UX-01A");
+    expect(doc).toContain("Preferred interaction hierarchy");
   });
 
-  it("evidence: Club Development composers use Dialog workspace pattern", () => {
+  it("documents preferred interaction hierarchy (four tiers)", () => {
+    expect(SCE_UX_01_PREFERRED_INTERACTION_HIERARCHY).toHaveLength(4);
+    expect(SCE_UX_01_PREFERRED_INTERACTION_HIERARCHY[0]?.label).toMatch(/inline/i);
+    expect(SCE_UX_01_PREFERRED_INTERACTION_HIERARCHY[3]?.patterns).toContain("MODAL_DECISION");
+  });
+
+  it("does not ship a functional process create composer placeholder", () => {
+    expect(() => readRepo("components/admin/prozesse/CreateProcessTrigger.tsx")).toThrow();
+    const page = readRepo("app/(admin)/vereinsleitung/prozesse/page.tsx");
+    expect(page).toContain("process-create-disabled");
+    expect(page).toContain("Demnächst");
+  });
+
+  it("evidence: Club Development composers use shared workspace shell", () => {
     expect(readRepo("components/admin/targets/CreateTargetComposerDialog.tsx")).toContain(
-      'size="workspace"',
+      "SceClubDevelopmentComposerShell",
     );
-    expect(readRepo("components/admin/initiatives/CreateInitiativeComposerDialog.tsx")).toContain(
+    expect(readRepo("components/sce/club-development/SceClubDevelopmentComposerShell.tsx")).toContain(
       'size="workspace"',
     );
   });

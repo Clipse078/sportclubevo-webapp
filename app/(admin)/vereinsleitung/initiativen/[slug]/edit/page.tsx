@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getInitiativeBySlug } from "@/lib/initiatives/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import InitiativeForm from "@/components/admin/initiatives/InitiativeForm";
+import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import type { VisibilityScopeValue } from "@/components/admin/shared/VisibilityScopeSelect";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
@@ -52,7 +53,9 @@ export default async function EditInitiativePage({ params }: PageProps) {
           { label: "Bearbeiten" },
         ]}
       >
-        <InitiativeForm mode="edit" initiativeId={initiative.id} defaultValues={defaultValues} />
+        <ClubDevelopmentFormWorkflowShell>
+          <InitiativeForm mode="edit" initiativeId={initiative.id} defaultValues={defaultValues} />
+        </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>
   );
