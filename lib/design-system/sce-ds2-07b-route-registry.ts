@@ -6721,6 +6721,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/club-entwicklung",
     "sourceFile": "app/(admin)/vereinsleitung/club-entwicklung/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6753,6 +6754,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "sourceFile": "app/(admin)/vereinsleitung/finanzen/page.tsx",
     "inheritedLayouts": [
       "app/(admin)/vereinsleitung/finanzen/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6785,6 +6787,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "sourceFile": "app/(admin)/vereinsleitung/finanzen/rechnungen/page.tsx",
     "inheritedLayouts": [
       "app/(admin)/vereinsleitung/finanzen/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6816,6 +6819,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/initiativen/[slug]/edit",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6847,6 +6851,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/initiativen/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6878,6 +6883,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/initiativen/new",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/new/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6909,6 +6915,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/initiativen",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6940,6 +6947,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/kpis",
     "sourceFile": "app/(admin)/vereinsleitung/kpis/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -6972,6 +6980,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "sourceFile": "app/(admin)/vereinsleitung/material/page.tsx",
     "inheritedLayouts": [
       "app/(admin)/vereinsleitung/material/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7003,6 +7012,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/meetings/[slug]/edit",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7034,6 +7044,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/meetings/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7065,6 +7076,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/meetings/new",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/new/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7096,6 +7108,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/meetings",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7127,6 +7140,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung",
     "sourceFile": "app/(admin)/vereinsleitung/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7159,6 +7173,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "sourceFile": "app/(admin)/vereinsleitung/prozesse/page.tsx",
     "inheritedLayouts": [
       "app/(admin)/vereinsleitung/prozesse/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7190,6 +7205,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/targets/[id]/edit",
     "sourceFile": "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7221,6 +7237,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/targets/[id]",
     "sourceFile": "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7252,6 +7269,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/targets/new",
     "sourceFile": "app/(admin)/vereinsleitung/targets/new/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7283,6 +7301,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/targets",
     "sourceFile": "app/(admin)/vereinsleitung/targets/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7314,6 +7333,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/templates/[id]/edit",
     "sourceFile": "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7345,6 +7365,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/templates/[id]",
     "sourceFile": "app/(admin)/vereinsleitung/templates/[id]/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7376,6 +7397,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/templates/new",
     "sourceFile": "app/(admin)/vereinsleitung/templates/new/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -7407,6 +7429,39 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/vereinsleitung/templates",
     "sourceFile": "app/(admin)/vereinsleitung/templates/page.tsx",
     "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/vereinsleitung/vorhaben",
+    "routeKey": "/vereinsleitung/vorhaben",
+    "sourceFile": "app/(admin)/vereinsleitung/vorhaben/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
       "app/(admin)/layout.tsx",
       "app/layout.tsx"
     ],
@@ -8748,16 +8803,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 271,
-  "authenticatedRenderableCount": 216,
-  "authenticatedVisualCount": 214,
+  "pageCount": 272,
+  "authenticatedRenderableCount": 217,
+  "authenticatedVisualCount": 215,
   "authenticatedRedirectCount": 15,
   "publicRenderableCount": 39,
   "publicRedirectCount": 1,
   "routeHandlerCount": 625,
-  "frameworkFileCount": 39,
+  "frameworkFileCount": 40,
   "architecture": {
-    "CANONICAL": 214,
+    "CANONICAL": 215,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -8765,13 +8820,13 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 214,
+    "IMPLEMENTED": 215,
     "VERIFIED": 0,
     "EXCEPTION": 57
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 214,
+  "architecturalCanonicalCount": 215,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
@@ -8785,7 +8840,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 214
+    "DS2-07G": 215
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,

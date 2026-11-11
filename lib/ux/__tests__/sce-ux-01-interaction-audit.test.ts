@@ -78,6 +78,13 @@ describe("SCE-UX-01 — interaction workflow audit contract", () => {
     expect(page).toContain("Demnächst");
   });
 
+  it("evidence: Vereinsentwicklung overview uses real data queries (SCE-CD-01)", () => {
+    const page = readRepo("app/(admin)/vereinsleitung/club-entwicklung/page.tsx");
+    expect(page).not.toContain("DEMO_PROCESSES");
+    expect(page).toContain("getTargets");
+    expect(page).toContain("ClubDevelopmentOverview");
+  });
+
   it("evidence: Club Development composers use shared workspace shell", () => {
     expect(readRepo("components/admin/targets/CreateTargetComposerDialog.tsx")).toContain(
       "SceClubDevelopmentComposerShell",

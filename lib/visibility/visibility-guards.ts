@@ -32,6 +32,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "./actor-context";
 import { canSeeEntity } from "./visibility-filter";
 import { canSeeTarget } from "./can-see-target";
+import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 
 export type AccessMode = "read" | "write" | "delete" | "stage";
 
@@ -63,6 +64,19 @@ function forbidden(message: string): GuardFailure {
     ok: false,
     response: NextResponse.json({ error: message }, { status: 403 }),
   };
+}
+
+async function requireVereinsleitungActor(
+  actor: ActorContext,
+): Promise<GuardFailure | null> {
+  if (!actor.tenantId) {
+    return forbidden("Vereinsleitung-Zugang erforderlich.");
+  }
+  const allowed = await userHasVereinsleitungWorkspaceAccess(actor.userId, actor.tenantId);
+  if (!allowed) {
+    return forbidden("Vereinsleitung-Zugang erforderlich.");
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -185,6 +199,8 @@ export async function requireMeetingAccess(opts: {
   id: string;
   access: AccessMode;
 }): Promise<GuardResult<MeetingGuardEntity>> {
+  const vlGate = await requireVereinsleitungActor(opts.actor);
+  if (vlGate) return vlGate;
   if (!opts.actor.tenantId) return notFound("Meeting nicht gefunden.");
   const meeting = await prisma.meeting.findFirst({
     where: { id: opts.id, tenantId: opts.actor.tenantId },
@@ -228,6 +244,8 @@ export async function requireInitiativeAccess(opts: {
   id: string;
   access: AccessMode;
 }): Promise<GuardResult<InitiativeGuardEntity>> {
+  const vlGate = await requireVereinsleitungActor(opts.actor);
+  if (vlGate) return vlGate;
   if (!opts.actor.tenantId) return notFound("Initiative nicht gefunden.");
   const initiative = await prisma.initiative.findFirst({
     where: { id: opts.id, tenantId: opts.actor.tenantId },
@@ -273,6 +291,8 @@ export async function requireTargetAccess(opts: {
   id: string;
   access: AccessMode;
 }): Promise<GuardResult<TargetGuardEntity>> {
+  const vlGate = await requireVereinsleitungActor(opts.actor);
+  if (vlGate) return vlGate;
   if (!opts.actor.tenantId) return notFound("Ziel nicht gefunden.");
   const target = await prisma.target.findFirst({
     where: { id: opts.id, tenantId: opts.actor.tenantId },

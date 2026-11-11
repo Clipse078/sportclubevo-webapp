@@ -64,6 +64,7 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   Übersicht: "uebersicht",
   Vorschau: "vorschau",
   Meetings: "meetings",
+  Vereinsentwicklung: "club-entwicklung",
   "Club Entwicklung": "club-entwicklung",
   Ziele: "ziele",
   Initiativen: "initiativen",

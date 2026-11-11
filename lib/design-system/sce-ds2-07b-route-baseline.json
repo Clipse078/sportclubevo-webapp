@@ -224,6 +224,7 @@
   "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
   "app/(admin)/vereinsleitung/targets/new/page.tsx",
   "app/(admin)/vereinsleitung/targets/page.tsx",
+  "app/(admin)/vereinsleitung/vorhaben/page.tsx",
   "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
   "app/(admin)/vereinsleitung/templates/[id]/page.tsx",
   "app/(admin)/vereinsleitung/templates/new/page.tsx",

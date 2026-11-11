@@ -2765,6 +2765,18 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "interactionsLegacy": false,
     "priority": "Low",
     "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/vorhaben",
+    "source": "app/(admin)/vereinsleitung/vorhaben/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   }
 ] as const;
 

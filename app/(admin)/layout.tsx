@@ -17,6 +17,7 @@ import { SceApplicationPageGrid } from "@/components/sce/shell/SceApplicationPag
 import "./authenticated-shell.css";
 import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
+import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 import { getActiveSeasonForTenant } from "@/lib/people/queries";
 import {
   initSceHotfixLogin01DashboardTrace,
@@ -58,7 +59,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   const activeTenantId = session.user.activeTenantId ?? null;
   const workspaceContext = resolveWorkspaceContextFromSessionUser(session.user);
 
-  const [ctx, linkedPersonProfile, participationNavCapable, activeSeason] = await Promise.all([
+  const actorUserId = session.user.effectiveUserId ?? session.user.id;
+
+  const [ctx, linkedPersonProfile, participationNavCapable, vereinsleitungWorkspace, activeSeason] =
+    await Promise.all([
     sceHotfixLogin01TraceEnabled()
       ? runWithSceHotfixLogin01Trace("layout-tenant", () => getActiveTenant())
       : getActiveTenant(),
@@ -75,6 +79,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             tenantId: activeTenantId,
             userId: session.user.id,
           })
+      : Promise.resolve(false),
+    activeTenantId
+      ? userHasVereinsleitungWorkspaceAccess(actorUserId, activeTenantId)
       : Promise.resolve(false),
     activeTenantId && workspaceContext !== "platform"
       ? getActiveSeasonForTenant(activeTenantId)
@@ -137,6 +144,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             logoUrl={ctx?.logoUrl}
             navCapabilities={{
               personalActionsModule: participationNavCapable,
+              vereinsleitungWorkspace,
             }}
             activeSeasonLabel={activeSeason?.name ?? activeSeason?.key ?? null}
             activeSeasonKey={activeSeason?.key ?? null}
