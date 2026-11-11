@@ -35,8 +35,8 @@ Unblock **11** parameterized routes that cannot be probed against operational ST
 | --- | --- |
 | Runner env overrides for fixture ids | **Implemented** (batch 6) |
 | STAGE read-only resolution for most domains | **Implemented** |
-| Dedicated verification DB + seed script | **Planned** — isolation cannot be demonstrated on linked STAGE alone |
-| Routes remain PENDING | **11** — classified `FIXTURE_ENVIRONMENT`, not product defects |
+| Dedicated verification DB + seed script | **Implemented** (batch 9) — local `sce_ds2_07g_verification` + guards |
+| Routes remain PENDING | **11** on STAGE until isolated runner replay; not product defects |
 
 ## Verification harness (when DB available)
 

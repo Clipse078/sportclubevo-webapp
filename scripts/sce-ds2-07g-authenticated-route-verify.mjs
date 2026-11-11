@@ -34,6 +34,12 @@ import {
   selectBatch3Routes,
   summarizeMatrix,
 } from "./lib/sce-ds2-07g-verification.mjs";
+import {
+  assertSafeVerificationDatabaseUrl,
+  fingerprintVerificationDatabase,
+  loadVerificationFixtureManifest,
+  maskDatabaseUrl,
+} from "./lib/sce-ds2-07g-verification-database.mjs";
 
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
@@ -49,7 +55,9 @@ const SOURCE_FILE_FILTER = process.env.SCE_DS2_07G_SOURCE_FILES?.split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 const ARTIFACT_DIR = "/opt/cursor/artifacts/sce-ds2-07g";
-const EVIDENCE_PATH = join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json");
+const EVIDENCE_PATH =
+  process.env.SCE_DS2_07G_EVIDENCE_PATH?.trim() ||
+  join(ROOT, "lib/design-system/sce-ds2-07g-verification-evidence.json");
 
 const VIEWPORTS = [
   { key: "desktop", width: 1440, height: 900 },
@@ -67,6 +75,9 @@ if (!EMAIL || !PASSWORD) {
 
 /** @type {Record<string, string>} */
 let dynamicFixtures = {};
+
+/** @type {Record<string, unknown> | null} */
+let verificationEnvironment = null;
 
 function loadExistingManifest() {
   try {
@@ -126,10 +137,50 @@ async function loadDynamicFixtures() {
     governanceTemplateId: process.env.SCE_DS2_07G_FIXTURE_GOVERNANCE_TEMPLATE_ID?.trim() ?? "",
     adminTenantSlug: process.env.SCE_DS2_07G_FIXTURE_ADMIN_TENANT_SLUG?.trim() ?? "",
     adminUserId: process.env.SCE_DS2_07G_FIXTURE_ADMIN_USER_ID?.trim() ?? "",
+    newsArticleId: process.env.SCE_DS2_07G_FIXTURE_NEWS_ARTICLE_ID?.trim() ?? "",
+    initiativeSlug: process.env.SCE_DS2_07G_FIXTURE_INITIATIVE_SLUG?.trim() ?? "",
   };
+
+  const fixtureManifest = loadVerificationFixtureManifest();
+  if (fixtureManifest?.fixtures) {
+    for (const [key, value] of Object.entries(fixtureManifest.fixtures)) {
+      if (!dynamicFixtures[key] && value) {
+        dynamicFixtures[key] = value;
+      }
+    }
+    if (process.env.SCE_DS2_07G_VERIFICATION_MODE?.trim() === "isolated") {
+      verificationEnvironment = {
+        mode: "isolated",
+        databaseFingerprint: fixtureManifest.databaseFingerprint,
+        tenantId: fixtureManifest.tenantId,
+        tenantKey: fixtureManifest.tenantKey,
+        fixtureManifestVersion: fixtureManifest.version,
+        databaseUrlMasked: fixtureManifest.databaseFingerprint
+          ? `local/${fixtureManifest.databaseFingerprint.split("/").pop()}`
+          : undefined,
+      };
+    }
+  }
+
   if (Object.values(dynamicFixtures).every(Boolean)) return;
 
-  const databaseUrl = process.env.DATABASE_URL?.trim();
+  let databaseUrl = process.env.DATABASE_URL?.trim();
+  if (process.env.SCE_DS2_07G_VERIFICATION_MODE?.trim() === "isolated") {
+    try {
+      databaseUrl = assertSafeVerificationDatabaseUrl();
+      verificationEnvironment = {
+        ...(verificationEnvironment ?? {}),
+        mode: "isolated",
+        databaseFingerprint: fingerprintVerificationDatabase(databaseUrl),
+        databaseUrlMasked: maskDatabaseUrl(databaseUrl),
+      };
+    } catch (error) {
+      console.warn(
+        `[sce-ds2-07g] isolated fixture DB refused: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return;
+    }
+  }
   if (!databaseUrl) return;
 
   const client = new pg.Client({
@@ -432,6 +483,7 @@ function resolveProbePath(urlPattern) {
     else if (urlPattern.includes("/dashboard/communication/mitteilungen/")) fixtureValues.id = dynamicFixtures.communicationId;
     else if (urlPattern.includes("/dashboard/communication/vorlagen/")) fixtureValues.id = dynamicFixtures.templateId;
     else if (urlPattern.includes("/dashboard/communication/zielgruppen/")) fixtureValues.id = dynamicFixtures.targetGroupId;
+    else if (urlPattern.includes("/dashboard/website/news/")) fixtureValues.id = dynamicFixtures.newsArticleId;
     else if (urlPattern.includes("/vereinsleitung/targets/")) fixtureValues.id = dynamicFixtures.targetId;
     else if (urlPattern.includes("/vereinsleitung/templates/")) fixtureValues.id = dynamicFixtures.governanceTemplateId;
     else if (urlPattern.includes("/dashboard/teams/")) fixtureValues.id = dynamicFixtures.teamId;
@@ -439,6 +491,9 @@ function resolveProbePath(urlPattern) {
   }
   if (!fixtureValues.slug && urlPattern.includes("/vereinsleitung/meetings/")) {
     fixtureValues.slug = dynamicFixtures.meetingSlug;
+  }
+  if (!fixtureValues.slug && urlPattern.includes("/vereinsleitung/initiativen/")) {
+    fixtureValues.slug = dynamicFixtures.initiativeSlug;
   }
   for (const [key, value] of Object.entries(fixtureValues)) {
     if (!value) continue;
@@ -914,6 +969,7 @@ async function main() {
     ...existing,
     generatedAt: new Date().toISOString(),
     baseUrl: BASE_URL,
+    verificationEnvironment: verificationEnvironment ?? existing.verificationEnvironment ?? null,
     evidenceContractVersion: EVIDENCE_CONTRACT_VERSION,
     batch:
       MODE === "batch3"

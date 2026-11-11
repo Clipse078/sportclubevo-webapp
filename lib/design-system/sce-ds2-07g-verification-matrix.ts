@@ -553,23 +553,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/admin/commercial/billing/settings",
@@ -1144,23 +1141,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/aufgaben/anforderung/[recipientId]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/aufgaben/anforderungen/[requirementId]",
@@ -1175,23 +1169,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/aufgaben/anforderungen/[requirementId]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/aufgaben/anforderungen/neu",
@@ -1486,23 +1477,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/communication/kampagnen/[id]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/communication/kampagnen/new",
@@ -1685,23 +1673,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/communication/vorlagen/[id]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/communication/vorlagen/new",
@@ -4944,23 +4929,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/dashboard/website/news/[id]/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/dashboard/website/news/new",
@@ -5535,23 +5517,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/vereinsleitung/initiativen/[slug]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/vereinsleitung/initiativen/[slug]/edit",
@@ -5706,23 +5685,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/vereinsleitung/meetings/[slug]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/vereinsleitung/meetings/[slug]/edit",
@@ -5737,23 +5713,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/vereinsleitung/meetings/[slug]/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/vereinsleitung/meetings/new",
@@ -5852,23 +5825,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/targets/[id]/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/vereinsleitung/targets/[id]"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/vereinsleitung/targets/[id]/edit",
@@ -5883,23 +5853,20 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "parallelSlot": null,
     "architectureAdoption": "IMPLEMENTED",
     "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
     "accessibility": "PENDING",
-    "functional": "PENDING",
+    "functional": "VERIFIED",
     "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": [
-      {
-        "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
-        "introducedByDs2": null,
-        "status": "OPEN",
-        "summary": "Missing dynamic fixture for parameterized URL",
-        "reproduction": "/vereinsleitung/targets/[id]/edit"
-      }
-    ]
+    "evidenceReferences": [
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-desktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-compactDesktop.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-tablet.png",
+      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-mobile.png"
+    ],
+    "defects": []
   },
   {
     "urlPattern": "/vereinsleitung/targets/new",
@@ -6044,9 +6011,9 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 ];
 
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
-  "matrixVersion": "2026-11-11-batch-8",
-  "evidenceContractVersion": "2026-11-11-batch-8",
-  "generatedAt": "2026-11-11T06:48:07.060Z",
+  "matrixVersion": "2026-11-11-batch-9",
+  "evidenceContractVersion": "2026-11-11-batch-9",
+  "generatedAt": "2026-11-11T09:50:14.349Z",
   "totalCanonicalRoutes": 214,
   "verifiedAuthenticatedVisualCount": 0,
   "pendingAuthenticatedVisualCount": 214,
@@ -6054,10 +6021,10 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "automatedChecksPassedCount": 214,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
-  "highRiskResponsiveVerifiedCount": 39,
+  "highRiskResponsiveVerifiedCount": 41,
   "dimensionClosureCompleteCount": 0,
   "dimensionAccessibilityPassCount": 0,
-  "dimensionFunctionalPassCount": 129,
+  "dimensionFunctionalPassCount": 132,
   "authenticatedBrowserAvailable": true,
   "contrastSmokeDebt": [
     "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)"

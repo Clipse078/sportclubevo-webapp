@@ -209,9 +209,21 @@ Nine routes still lack STAGE fixtures (`Requirement`, `RequirementRecipient`, `C
 
 Closure queue artifact: `docs/design-system-v2/28-ds2-07g-closure-queue-batch8.md` (grouped by root cause, not route list only).
 
+## Batch 9 result (isolated verification environment)
+
+| Item | Result |
+| --- | --- |
+| Local verification DB | `sce_ds2_07g_verification` @ `127.0.0.1` (guarded by `DATABASE_URL_VERIFICATION`) |
+| Fixture manifest | `lib/design-system/sce-ds2-07g-verification-fixtures.json` |
+| FIXTURE_ENVIRONMENT queue | **0** (11 routes probed on isolated stack) |
+| Mutation harness | **3/3 PASS** (`lib/design-system/sce-ds2-07g-mutation-evidence.json`) |
+| Evidence contract | `2026-11-11-batch-9` (+ `verificationEnvironment` on runner manifest) |
+
+Provision: `npm run ds2-07g:provision-verification-db` → `npm run ds2-07g:seed-verification-fixtures` (requires `SCE_DS2_07G_VERIFICATION_CONFIRM` + `SCE_OPERATION_AUTHORIZATION`).
+
 ### Remaining verification work
 
-1. Close **11** `FIXTURE_ENVIRONMENT` routes via disposable verification DB (see fixture strategy doc).
+1. ~~Close **11** `FIXTURE_ENVIRONMENT` routes via disposable verification DB~~ — **done on isolated env**; STAGE URLs unchanged.
 2. Reassess accessibility with batch-8 runner to persist incomplete rule ids; remediate **66** axe FAIL rows (shared contrast/label debt).
 3. Agent visual review for **181** routes without `screenshotReviewed`.
 4. Mutation workflows (**79** functional PENDING) — isolated harness or tracked baseline debt; do not infer from render-only probes.

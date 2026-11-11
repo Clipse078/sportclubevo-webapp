@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-11-11T09:45:11.190Z",
+  "verificationEnvironment": {
+    "mode": "isolated",
+    "databaseFingerprint": "127.0.0.1/sce_ds2_07g_verification",
+    "fixtureManifestVersion": "2026-11-11-batch-9"
+  },
+  "executed": 3,
+  "pass": 3,
+  "fail": 0,
+  "results": [
+    {
+      "workflow": "connection_identity",
+      "status": "PASS",
+      "details": {
+        "fingerprint": "127.0.0.1/sce_ds2_07g_verification",
+        "database": "sce_ds2_07g_verification",
+        "role": "fca"
+      }
+    },
+    {
+      "workflow": "requirement_title_mutation_roundtrip",
+      "status": "PASS",
+      "cleanupStatus": "reverted",
+      "fixtureIds": {
+        "requirementId": "sce-ds2-07g-vfy-requirement"
+      }
+    },
+    {
+      "workflow": "news_title_mutation_roundtrip",
+      "status": "PASS",
+      "cleanupStatus": "reverted",
+      "fixtureIds": {
+        "newsArticleId": "sce-ds2-07g-vfy-news"
+      }
+    }
+  ]
+}

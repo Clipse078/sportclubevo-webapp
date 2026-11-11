@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-10T23:17:01.479Z",
+  "generatedAt": "2026-11-11T09:50:00.456Z",
   "baseUrl": "http://127.0.0.1:3000",
-  "batch": "batch-4-reassess-evidence-offset-0-limit-41",
+  "batch": "batch-4-reassess-evidence-offset-0-limit-20",
   "prefixes": [
     "/dashboard/planner/week",
     "/dashboard/planner/day",
@@ -14,42 +14,44 @@
     "/dashboard/competitions"
   ],
   "dynamicFixtures": {
-    "seriesId": "cmsp4t1oa000004jvytoux8ju",
-    "sessionId": "cmsp357it006i04jo8qlslonz",
-    "eventId": "cmw72jaan009u08l83zagrrhc",
-    "taskId": "cmuhb94k1000004l8brm0ud12",
-    "clubId": "cmw93edip004608joy5g594t4",
-    "pageId": "cmq41ifml0000fjjsgnx5tmbx",
-    "componentId": "cmr3f738400005ajswu1sszoq",
-    "roleId": "cmuo3h0bt000104ib3v2p4fj3",
-    "matchId": "cmw72jaan009u08l83zagrrhc",
-    "infoboardId": "cmsqf2e7q0000iijsewcc1n37",
-    "requirementId": "",
-    "recipientId": "",
-    "scenarioId": "cmvmount6000008lbd49bq5un",
-    "orgUnitId": "cmq822v4r000oejjsuiwkpwsa",
-    "userId": "cmuo3i7kj000h04ibbahuwqyu",
-    "tournamentId": "cmw8wxtzk000007l8lkuc5avu",
-    "entityKey": "sportclubevo-by-tulip-digital",
-    "tenantSlug": "fc-allschwil",
-    "registrationId": "cmwb0bybl000208l3t6hw36pr",
-    "teamId": "cmq822sd50000ejjsbl32btzg",
-    "personId": "cmuo26ofc000004l6l5ousho7",
-    "teamSeasonId": "cmso8772p000504joyw9uh1g2",
-    "mappingId": "cmrkh1m0m000h04jua0waedrm",
-    "targetGroupId": "cmq5idbdo000004js98c7l1wx",
-    "communicationId": "cmv2a96wl000306l0qjopeimu",
-    "campaignId": "",
-    "templateId": "",
-    "contractKey": "fca-2026-001",
-    "customerKey": "fca-0001",
-    "invoiceKey": "inv-fca-2026-001-4",
-    "importKey": "",
-    "meetingSlug": "",
-    "targetId": "",
-    "governanceTemplateId": "cmq822van000qejjsfd18vi6j",
+    "seriesId": "",
+    "sessionId": "",
+    "eventId": "",
+    "taskId": "",
+    "clubId": "",
+    "pageId": "",
+    "componentId": "",
+    "roleId": "sce-ds2-07g-vfy-role-club-admin",
+    "matchId": "",
+    "infoboardId": "",
+    "requirementId": "sce-ds2-07g-vfy-requirement",
+    "recipientId": "sce-ds2-07g-vfy-recipient",
+    "scenarioId": "",
+    "orgUnitId": "sce-ds2-07g-vfy-org-unit",
+    "userId": "",
+    "tournamentId": "",
+    "entityKey": "ds2-07g-verification-entity",
+    "tenantSlug": "sce-ds2-07g-verification-club",
+    "registrationId": "",
+    "teamId": "",
+    "personId": "sce-ds2-07g-vfy-person",
+    "teamSeasonId": "",
+    "mappingId": "",
+    "targetGroupId": "",
+    "communicationId": "sce-ds2-07g-vfy-campaign",
+    "campaignId": "sce-ds2-07g-vfy-campaign",
+    "templateId": "sce-ds2-07g-vfy-template",
+    "contractKey": "",
+    "customerKey": "",
+    "invoiceKey": "",
+    "importKey": "ds2-07g-verification-import",
+    "meetingSlug": "ds2-07g-verification-meeting",
+    "targetId": "sce-ds2-07g-vfy-target",
+    "governanceTemplateId": "",
     "adminTenantSlug": "fc-allschwil",
-    "adminUserId": "cmomykyal000064f37y58lzxx"
+    "adminUserId": "sce-ds2-07g-vfy-user",
+    "newsArticleId": "sce-ds2-07g-vfy-news",
+    "initiativeSlug": "ds2-07g-verification-initiative"
   },
   "highRiskRoutesAttempted": 41,
   "highRiskRoutesVerified": 0,
@@ -586,10 +588,10 @@
     "app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx",
       "urlPattern": "/dashboard/aufgaben/anforderung/[recipientId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -598,54 +600,85 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "status": "FAIL",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
-          "details": []
+          "details": [
+            "missing main landmark"
+          ]
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":false,\"hasWorkspaceChromeEquivalent\":false,\"hasPrimaryHeading\":true,\"interactiveCount\":16,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/aufgaben/anforderung/[recipientId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/aufgaben/anforderung/[recipientId]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderung_sce-ds2-07g-vfy-recipient-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx",
       "urlPattern": "/dashboard/aufgaben/anforderungen/[requirementId]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -654,46 +687,75 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":41,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/aufgaben/anforderungen/[requirementId]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/aufgaben/anforderungen/[requirementId]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_aufgaben_anforderungen_sce-ds2-07g-vfy-requirement-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/aufgaben/anforderungen/neu/page.tsx",
@@ -7505,10 +7567,10 @@
     "app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx",
       "urlPattern": "/dashboard/communication/kampagnen/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -7517,46 +7579,75 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":39,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/kampagnen/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/communication/kampagnen/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_kampagnen_sce-ds2-07g-vfy-campaign-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/kampagnen/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/kampagnen/new/page.tsx",
@@ -7997,10 +8088,10 @@
     "app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx",
       "urlPattern": "/dashboard/communication/vorlagen/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -8009,46 +8100,75 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/communication/vorlagen/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/communication/vorlagen/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_communication_vorlagen_sce-ds2-07g-vfy-template-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/communication/vorlagen/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/communication/vorlagen/new/page.tsx",
@@ -9242,58 +9362,88 @@
     "app/(admin)/dashboard/website/news/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
       "urlPattern": "/dashboard/website/news/[id]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 2,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious, label:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "status": "PASS",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":31,\"formCheckSkipped\":false,\"formSubmitPresent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/website/news/[id]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/website/news/[id]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_website_news_sce-ds2-07g-vfy-news_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/website/news/new/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/website/news/new/page.tsx",
@@ -10173,10 +10323,10 @@
     "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
       "urlPattern": "/vereinsleitung/initiativen/[slug]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -10185,46 +10335,75 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":19,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/initiativen/[slug]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_ds2-07g-verification-initiative-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx",
@@ -10593,10 +10772,10 @@
     "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
       "urlPattern": "/vereinsleitung/meetings/[slug]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -10605,102 +10784,162 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/meetings/[slug]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx",
       "urlPattern": "/vereinsleitung/meetings/[slug]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 3,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious, label:critical, select-name:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical",
+            "select-name:critical",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "status": "PASS",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":28,\"formCheckSkipped\":false,\"formSubmitPresent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/meetings/[slug]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/meetings/[slug]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_meetings_ds2-07g-verification-meeting_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/meetings/new/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/meetings/new/page.tsx",
@@ -10925,10 +11164,10 @@
     "app/(admin)/vereinsleitung/targets/[id]/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
       "urlPattern": "/vereinsleitung/targets/[id]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -10937,102 +11176,164 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 3,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious, definition-list:serious, dlitem:serious",
+          "details": [
+            "color-contrast:serious",
+            "definition-list:serious",
+            "dlitem:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":22,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/targets/[id]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/targets/[id]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
       "urlPattern": "/vereinsleitung/targets/[id]/edit",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
-      "functional": "PENDING",
+      "functional": "VERIFIED",
       "authenticatedVisual": "PENDING",
       "automated": "PASSED",
       "blocked": false,
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 3,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious, label:critical, select-name:critical",
+          "details": [
+            "color-contrast:serious",
+            "label:critical",
+            "select-name:critical",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
-          "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "status": "PASS",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":44,\"formCheckSkipped\":false,\"formSubmitPresent\":true}",
+            "functionalClass:FORM_RENDER_SMOKE"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/vereinsleitung/targets/[id]/edit"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets_sce-ds2-07g-vfy-target_edit-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/vereinsleitung/targets/new/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/targets/new/page.tsx",
@@ -12562,10 +12863,10 @@
     "app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx",
       "urlPattern": "/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]",
-      "desktop": "PENDING",
-      "compactDesktop": "PENDING",
-      "tablet": "PENDING",
-      "mobile": "PENDING",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
       "accessibility": "PENDING",
       "functional": "PENDING",
       "authenticatedVisual": "PENDING",
@@ -12574,46 +12875,75 @@
       "dimensions": {
         "authentication": {
           "status": "PASS",
-          "reason": "Authenticated session established"
+          "reason": "Authenticated navigation succeeded"
         },
         "authorization": {
-          "status": "PENDING",
-          "reason": "Dynamic fixture unavailable for probe URL"
+          "status": "PASS",
+          "reason": "Session could reach route without unauthorized response"
         },
         "visual": {
           "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
           "screenshotReviewed": false,
           "details": []
         },
         "responsive": {
-          "status": "PENDING",
-          "reason": "Missing dynamic fixture id",
-          "viewports": {}
+          "status": "PASS",
+          "viewports": {
+            "desktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "compactDesktop": {
+              "status": "PASS",
+              "details": []
+            },
+            "tablet": {
+              "status": "PASS",
+              "details": []
+            },
+            "mobile": {
+              "status": "PASS",
+              "details": []
+            }
+          }
         },
         "accessibility": {
-          "status": "PENDING",
-          "reason": "Route not probed — missing fixture",
-          "axeViolations": 0,
-          "axeIncomplete": 0,
-          "details": []
+          "status": "FAIL",
+          "axeViolations": 1,
+          "axeIncomplete": 2,
+          "reason": "axe violations: color-contrast:serious",
+          "details": [
+            "color-contrast:serious",
+            "incomplete:aria-valid-attr-value:critical",
+            "incomplete:color-contrast:serious"
+          ],
+          "incompleteClassification": {
+            "manualReview": [
+              "color-contrast"
+            ],
+            "keyboardSupplement": [],
+            "unclassified": [
+              "aria-valid-attr-value"
+            ]
+          }
         },
         "functional": {
           "status": "PENDING",
-          "reason": "Functional probe not executed",
-          "details": []
+          "reason": "Form route missing submit control (read-only probe); mutation workflow not verified",
+          "details": [
+            "{\"hasMainLandmark\":true,\"hasWorkspaceChromeEquivalent\":true,\"hasPrimaryHeading\":true,\"interactiveCount\":29,\"formCheckSkipped\":false,\"formSubmitPresent\":false}",
+            "functionalClass:MUTATION_WORKFLOW"
+          ]
         }
       },
-      "evidenceReferences": [],
-      "defects": [
-        {
-          "id": "DS2-07G-fixture-app/(admin)/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]/page.tsx",
-          "introducedByDs2": null,
-          "status": "OPEN",
-          "summary": "Missing dynamic fixture for parameterized URL",
-          "reproduction": "/dashboard/admin/commercial/billing/reconciliation/imports/[importKey]"
-        }
-      ]
+      "evidenceReferences": [
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-desktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-compactDesktop.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-tablet.png",
+        "/opt/cursor/artifacts/sce-ds2-07g/_dashboard_admin_commercial_billing_reconciliation_imports_ds2-07g-verification-import-mobile.png"
+      ],
+      "defects": []
     },
     "app/(admin)/dashboard/admin/facilities/page.tsx": {
       "sourceFile": "app/(admin)/dashboard/admin/facilities/page.tsx",
@@ -15558,8 +15888,8 @@
       "defects": []
     }
   },
-  "evidenceContractVersion": "2026-11-11-batch-8",
-  "highRiskRoutesResponsiveVerified": 39,
+  "evidenceContractVersion": "2026-11-11-batch-9",
+  "highRiskRoutesResponsiveVerified": 41,
   "highRiskRoutesClosureComplete": 0,
   "lastRunMode": "reassess-evidence",
   "batch3RoutesAttemptedThisRun": 0,
@@ -15576,5 +15906,13 @@
     "functionalRowsUpdated": 4,
     "functionalNotApplicableCount": 6,
     "accessibilityEvidenceDebt": "Batches 2–7 did not persist axe incompleteSummaries; accessibility PENDING rows require targeted reassess with batch-8 runner"
+  },
+  "verificationEnvironment": {
+    "mode": "isolated",
+    "databaseFingerprint": "127.0.0.1/sce_ds2_07g_verification",
+    "tenantId": "sce-ds2-07g-vfy-tenant",
+    "tenantKey": "sce-ds2-07g-verification-club",
+    "fixtureManifestVersion": "2026-11-11-batch-9",
+    "databaseUrlMasked": "postgresql://fca:***@127.0.0.1/sce_ds2_07g_verification"
   }
 }

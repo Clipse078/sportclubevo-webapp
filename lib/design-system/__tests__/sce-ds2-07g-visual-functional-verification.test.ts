@@ -27,12 +27,12 @@ describe("SCE-DS2-07G visual and functional verification", () => {
     expect(new Set(SCE_DS2_07G_VERIFICATION_MATRIX.map((row) => row.sourceFile)).size).toBe(214);
   });
 
-  it("uses the batch-8 evidence contract in the matrix summary", () => {
+  it("uses the batch-9 evidence contract in the matrix summary", () => {
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.evidenceContractVersion).toBe(
       SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION,
     );
     expect(SCE_DS2_07G_VERIFICATION_SUMMARY.matrixVersion).toBe(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION);
-    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-8");
+    expect(SCE_DS2_07G_EVIDENCE_CONTRACT_VERSION).toBe("2026-11-11-batch-9");
   });
 
   it("allows NOT_APPLICABLE functional only for governed placeholder or intercept routes", async () => {

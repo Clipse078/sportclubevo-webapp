@@ -65,7 +65,11 @@
     "finance:04b:04:stage-migration-verify": "tsx scripts/sce-finance-04b-04-stage-migration-verify.ts",
     "finance:06a:r1:stage-migration-verify": "tsx scripts/sce-finance-06a-r1-stage-migration-verify.ts",
     "finance:06d:r2:stage-migration-verify": "tsx scripts/sce-finance-06d-r2-stage-migration-verify.ts",
-    "finance:06e:r2:stage-migration-verify": "tsx scripts/sce-finance-06e-r2-stage-migration-verify.ts"
+    "finance:06e:r2:stage-migration-verify": "tsx scripts/sce-finance-06e-r2-stage-migration-verify.ts",
+    "ds2-07g:provision-verification-db": "tsx scripts/sce-ds2-07g-provision-verification-database.ts",
+    "ds2-07g:seed-verification-fixtures": "tsx scripts/sce-ds2-07g-seed-verification-fixtures.ts",
+    "ds2-07g:teardown-verification-fixtures": "tsx scripts/sce-ds2-07g-teardown-verification-fixtures.ts",
+    "ds2-07g:mutation-harness": "node scripts/sce-ds2-07g-functional-mutation-harness.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",

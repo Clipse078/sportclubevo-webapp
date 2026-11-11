@@ -1,0 +1,19 @@
+{
+  "version": "2026-11-11-batch-9",
+  "seededAt": "2026-11-11T09:54:07.604Z",
+  "databaseFingerprint": "127.0.0.1/sce_ds2_07g_verification",
+  "tenantId": "sce-ds2-07g-vfy-tenant",
+  "tenantKey": "sce-ds2-07g-verification-club",
+  "verificationPersonaEmailEnv": "SCE_DS2_07G_VERIFICATION_PERSONA_PASSWORD",
+  "fixtures": {
+    "requirementId": "sce-ds2-07g-vfy-requirement",
+    "recipientId": "sce-ds2-07g-vfy-recipient",
+    "campaignId": "sce-ds2-07g-vfy-campaign",
+    "templateId": "sce-ds2-07g-vfy-template",
+    "newsArticleId": "sce-ds2-07g-vfy-news",
+    "initiativeSlug": "ds2-07g-verification-initiative",
+    "meetingSlug": "ds2-07g-verification-meeting",
+    "targetId": "sce-ds2-07g-vfy-target",
+    "importKey": "ds2-07g-verification-import"
+  }
+}
