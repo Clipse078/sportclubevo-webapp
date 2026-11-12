@@ -2659,6 +2659,42 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
+    "route": "/vereinsleitung/prozesse/[slug]/edit",
+    "source": "app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/prozesse/[slug]",
+    "source": "app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/prozesse/new",
+    "source": "app/(admin)/vereinsleitung/prozesse/new/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
     "route": "/vereinsleitung/prozesse",
     "source": "app/(admin)/vereinsleitung/prozesse/page.tsx",
     "pageArchitecture": "canonical",

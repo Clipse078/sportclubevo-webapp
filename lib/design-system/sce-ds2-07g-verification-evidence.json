@@ -11199,6 +11199,153 @@
       ],
       "defects": []
     },
+    "app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx",
+      "urlPattern": "/vereinsleitung/prozesse/[slug]/edit",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": { "status": "PASS", "reason": "Authenticated navigation succeeded" },
+        "authorization": { "status": "PASS", "reason": "Session could reach route without unauthorized response" },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": { "status": "PASS", "details": [] },
+            "compactDesktop": { "status": "PASS", "details": [] },
+            "tablet": { "status": "PASS", "details": [] },
+            "mobile": { "status": "PASS", "details": [] }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
+          "details": [
+            "functionalClass:FORM_RENDER_SMOKE",
+            "vitest lib/club-development/__tests__/sce-cd-03r2-uat.test.ts"
+          ]
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx",
+      "urlPattern": "/vereinsleitung/prozesse/[slug]",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": { "status": "PASS", "reason": "Authenticated navigation succeeded" },
+        "authorization": { "status": "PASS", "reason": "Session could reach route without unauthorized response" },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": { "status": "PASS", "details": [] },
+            "compactDesktop": { "status": "PASS", "details": [] },
+            "tablet": { "status": "PASS", "details": [] },
+            "mobile": { "status": "PASS", "details": [] }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Read-only functional smoke: workspace landmark, heading, interactive controls",
+          "details": [
+            "functionalClass:READ_ONLY_SMOKE",
+            "vitest lib/club-development/__tests__/sce-cd-03r2-uat.test.ts"
+          ]
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
+    "app/(admin)/vereinsleitung/prozesse/new/page.tsx": {
+      "sourceFile": "app/(admin)/vereinsleitung/prozesse/new/page.tsx",
+      "urlPattern": "/vereinsleitung/prozesse/new",
+      "desktop": "VERIFIED",
+      "compactDesktop": "VERIFIED",
+      "tablet": "VERIFIED",
+      "mobile": "VERIFIED",
+      "accessibility": "PENDING",
+      "functional": "VERIFIED",
+      "authenticatedVisual": "PENDING",
+      "automated": "PASSED",
+      "blocked": false,
+      "dimensions": {
+        "authentication": { "status": "PASS", "reason": "Authenticated navigation succeeded" },
+        "authorization": { "status": "PASS", "reason": "Session could reach route without unauthorized response" },
+        "visual": {
+          "status": "PENDING",
+          "reason": "Screenshots captured; automated layout heuristics clean; agent visual review still required for PASS",
+          "screenshotReviewed": false,
+          "details": []
+        },
+        "responsive": {
+          "status": "PASS",
+          "viewports": {
+            "desktop": { "status": "PASS", "details": [] },
+            "compactDesktop": { "status": "PASS", "details": [] },
+            "tablet": { "status": "PASS", "details": [] },
+            "mobile": { "status": "PASS", "details": [] }
+          }
+        },
+        "accessibility": {
+          "status": "PENDING",
+          "axeViolations": 0,
+          "axeIncomplete": 1,
+          "reason": "axe incomplete rules: 1",
+          "details": []
+        },
+        "functional": {
+          "status": "PASS",
+          "reason": "Form route rendered with submit affordance; read-only smoke passed",
+          "details": [
+            "functionalClass:FORM_RENDER_SMOKE",
+            "vitest lib/club-development/__tests__/sce-cd-03r2-uat.test.ts"
+          ]
+        }
+      },
+      "evidenceReferences": [],
+      "defects": []
+    },
     "app/(admin)/vereinsleitung/prozesse/page.tsx": {
       "sourceFile": "app/(admin)/vereinsleitung/prozesse/page.tsx",
       "urlPattern": "/vereinsleitung/prozesse",

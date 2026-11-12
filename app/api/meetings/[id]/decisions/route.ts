@@ -6,6 +6,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import { resolveMeetingDecisionAgendaLink } from "@/lib/meetings/meeting-decision-agenda-link";
 
 async function requireSession() {
   const session = await auth();
@@ -33,6 +34,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       owner: true,
       ownerPersonId: true,
       orderIndex: true,
+      sourceAgendaItemId: true,
+      sourceAgendaItem: { select: { id: true, title: true } },
     },
   });
   return NextResponse.json({ decisions });
@@ -59,6 +62,20 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     ownerPersonId = snap.personId;
   }
 
+  let sourceAgendaItemId: string | null = null;
+  try {
+    sourceAgendaItemId = await resolveMeetingDecisionAgendaLink(
+      actor,
+      id,
+      body?.sourceAgendaItemId,
+    );
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Ungültiges Traktandum." },
+      { status: 400 },
+    );
+  }
+
   try {
     const decision = await prisma.meetingDecision.create({
       data: {
@@ -69,6 +86,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         owner,
         ownerPersonId,
         orderIndex: body?.orderIndex ?? 0,
+        sourceAgendaItemId,
         createdByUserId: actor.userId,
       },
       select: { id: true, title: true, status: true },

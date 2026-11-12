@@ -6,6 +6,8 @@ import { requireInitiativeAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import { shouldInvalidateInitiativeApproval } from "@/lib/club-development/initiative-approval-service";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -42,43 +44,96 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const body = await request.json().catch(() => ({}));
     const validStatuses = Object.values(InitiativeStatus);
 
-    const rawProgress = body?.progress !== undefined ? Number(body.progress) : undefined;
-    const progress =
-      rawProgress !== undefined && Number.isInteger(rawProgress) && rawProgress >= 0 && rawProgress <= 100
-        ? rawProgress
-        : rawProgress === null
-          ? null
-          : undefined;
+    const existingDetail = await prisma.initiative.findFirst({
+      where: { id, tenantId },
+      select: {
+        title: true,
+        summary: true,
+        description: true,
+        approvalRequired: true,
+        approvalContentRevision: true,
+        approvedContentHash: true,
+      },
+    });
+
+    const nextTitle = body?.title !== undefined ? String(body.title).trim() : existingDetail?.title ?? "";
+    const nextSummary =
+      body?.summary !== undefined ? body.summary?.trim() || null : existingDetail?.summary ?? null;
+    const nextDescription =
+      body?.description !== undefined
+        ? body.description?.trim() || null
+        : existingDetail?.description ?? null;
+
+    const fieldsChanged =
+      nextTitle !== (existingDetail?.title ?? "") ||
+      nextSummary !== (existingDetail?.summary ?? null) ||
+      nextDescription !== (existingDetail?.description ?? null);
+
+    const invalidate = existingDetail
+      ? shouldInvalidateInitiativeApproval({
+          approvedContentHash: existingDetail.approvedContentHash,
+          title: nextTitle,
+          summary: nextSummary,
+          description: nextDescription,
+          approvalContentRevision: existingDetail.approvalContentRevision,
+          approvalRequired: existingDetail.approvalRequired,
+          fieldsChanged,
+        })
+      : false;
+
+    const data: Record<string, unknown> = {
+      title: body?.title?.trim() || undefined,
+      summary: body?.summary !== undefined ? body.summary?.trim() || null : undefined,
+      description: body?.description !== undefined ? body.description?.trim() || null : undefined,
+      status: validStatuses.includes(body?.status as InitiativeStatus)
+        ? (body.status as InitiativeStatus)
+        : undefined,
+      dueDate:
+        body?.dueDate !== undefined
+          ? body.dueDate
+            ? new Date(body.dueDate)
+            : null
+          : undefined,
+      visibilityScope: Object.values(VisibilityScope).includes(body?.visibilityScope as VisibilityScope)
+        ? (body.visibilityScope as VisibilityScope)
+        : undefined,
+      requiresFourEyeReview:
+        typeof body?.requiresFourEyeReview === "boolean"
+          ? body.requiresFourEyeReview
+          : undefined,
+      visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs) ? body.visibleOrgUnitRefs : undefined,
+      visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? body.visibleRoleRefs : undefined,
+      visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? body.visibleUserRefs : undefined,
+      visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs) ? body.visibleTargetGroupRefs : undefined,
+      ...(invalidate
+        ? {
+            approvalStatus: "PENDING",
+            approvalContentRevision: { increment: 1 },
+            approvedContentHash: null,
+          }
+        : {}),
+    };
+
+    if (body?.ownerPersonId !== undefined) {
+      const pid = body.ownerPersonId?.trim() || null;
+      if (!pid) {
+        data.ownerPersonId = null;
+        data.owner = body?.owner?.trim() || null;
+      } else {
+        const snap = await resolveMeetingPersonSnapshot(tenantId, pid);
+        if (!snap) {
+          return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+        }
+        data.ownerPersonId = snap.personId;
+        data.owner = snap.displayName;
+      }
+    } else if (body?.owner !== undefined) {
+      data.owner = body?.owner?.trim() || null;
+    }
 
     const updated = await prisma.initiative.update({
       where: { id, tenantId },
-      data: {
-        title: body?.title?.trim() || undefined,
-        summary: body?.summary?.trim() || null,
-        description: body?.description?.trim() || null,
-        status: validStatuses.includes(body?.status as InitiativeStatus)
-          ? (body.status as InitiativeStatus)
-          : undefined,
-        owner: body?.owner?.trim() || null,
-        progress,
-        dueDate:
-          body?.dueDate !== undefined
-            ? body.dueDate
-              ? new Date(body.dueDate)
-              : null
-            : undefined,
-        visibilityScope: Object.values(VisibilityScope).includes(body?.visibilityScope as VisibilityScope)
-          ? (body.visibilityScope as VisibilityScope)
-          : undefined,
-        requiresFourEyeReview:
-          typeof body?.requiresFourEyeReview === "boolean"
-            ? body.requiresFourEyeReview
-            : undefined,
-        visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs) ? body.visibleOrgUnitRefs : undefined,
-        visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? body.visibleRoleRefs : undefined,
-        visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? body.visibleUserRefs : undefined,
-        visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs) ? body.visibleTargetGroupRefs : undefined,
-      },
+      data,
       select: { id: true, slug: true, title: true },
     });
 

@@ -7,6 +7,7 @@ import { TaskValidationError } from "./errors";
 import { validateTaskContext } from "./context-validation";
 import { createTask } from "./task-service";
 import type { CreateTaskInput, TaskDto, TaskServiceContext } from "./types";
+import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
 
 export type TrustedTaskContextDefaults = {
   contextType: TaskContextType;
@@ -52,9 +53,11 @@ export async function createTaskWithContextDefaults(
   await validateTaskContext(ctx, contextType, contextId);
   assertTrustedContextMatches(input.trustedContext, contextType, contextId);
 
-  return createTask(ctx, {
+  const created = await createTask(ctx, {
     ...input.task,
     contextType,
     contextId,
   });
+  await refreshInitiativeProgressForTaskContext(ctx.tenantId, contextType, contextId);
+  return created;
 }

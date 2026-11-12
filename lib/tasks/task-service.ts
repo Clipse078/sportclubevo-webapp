@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
+import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
 
 function schedulePersonalDashboardRebuildForTaskUsers(
   tenantId: string,
@@ -1050,6 +1051,29 @@ export async function updateTask(
     ctx.userId,
     ...updated.assignees.map((a) => a.userId),
   ]);
+
+  if (
+    input.status !== undefined ||
+    input.contextType !== undefined ||
+    input.contextId !== undefined
+  ) {
+    await refreshInitiativeProgressForTaskContext(
+      ctx.tenantId,
+      updated.contextType,
+      updated.contextId,
+    );
+    if (
+      existing.contextType !== updated.contextType ||
+      existing.contextId !== updated.contextId
+    ) {
+      await refreshInitiativeProgressForTaskContext(
+        ctx.tenantId,
+        existing.contextType,
+        existing.contextId,
+      );
+    }
+  }
+
   return mapTask(updated);
 }
 
@@ -1173,6 +1197,12 @@ export async function completeTask(
     ctx.userId,
     ...existing.assignees.map((a) => a.userId),
   ]);
+
+  await refreshInitiativeProgressForTaskContext(
+    ctx.tenantId,
+    updated.contextType,
+    updated.contextId,
+  );
 
   return mapTask(updated);
 }

@@ -14,7 +14,7 @@ export default async function NewInitiativePage() {
       <FormPagePattern
         eyebrow="Initiativen"
         title="Neue Initiative erstellen"
-        description="Initiative erfassen mit Status, Fortschritt und Sichtbarkeitseinstellungen."
+        description="Initiative mit Verantwortlichen, Status, optionaler Freigabe und Sichtbarkeit erfassen."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Initiativen", href: "/vereinsleitung/initiativen" },

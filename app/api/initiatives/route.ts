@@ -4,6 +4,9 @@ import { InitiativeStatus, VisibilityScope } from "@prisma/client";
 import { getInitiatives } from "@/lib/initiatives/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import { MeetingApprovalRule } from "@prisma/client";
+import { validateApprovalConfig, parseApproverPersonIds } from "@/lib/meetings/meeting-approval-presentation";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -54,11 +57,33 @@ export async function POST(request: NextRequest) {
       ? (body.status as InitiativeStatus)
       : InitiativeStatus.PLANNED;
 
-    const rawProgress = body?.progress !== undefined ? Number(body.progress) : null;
-    const progress =
-      rawProgress !== null && Number.isInteger(rawProgress) && rawProgress >= 0 && rawProgress <= 100
-        ? rawProgress
-        : null;
+    let owner = body?.owner?.trim() || null;
+    let ownerPersonId: string | null = body?.ownerPersonId?.trim() || null;
+    if (ownerPersonId) {
+      const snap = await resolveMeetingPersonSnapshot(tenantId, ownerPersonId);
+      if (!snap) {
+        return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+      }
+      owner = snap.displayName;
+      ownerPersonId = snap.personId;
+    }
+
+    const approvalRequired = body?.approvalRequired === true;
+    const approvalRule: MeetingApprovalRule =
+      Object.values(MeetingApprovalRule).includes(body?.approvalRule)
+        ? body.approvalRule
+        : MeetingApprovalRule.ALL;
+    let approverPersonIds: string[] = [];
+    if (Array.isArray(body?.approverPersonIds)) {
+      approverPersonIds = parseApproverPersonIds(body.approverPersonIds);
+    }
+    const approvalValidation = validateApprovalConfig({
+      approvalRequired,
+      approverPersonIds,
+    });
+    if (approvalValidation) {
+      return NextResponse.json({ error: approvalValidation }, { status: 400 });
+    }
 
     const created = await prisma.initiative.create({
       data: {
@@ -68,8 +93,13 @@ export async function POST(request: NextRequest) {
         summary: body?.summary?.trim() || null,
         description: body?.description?.trim() || null,
         status,
-        owner: body?.owner?.trim() || null,
-        progress,
+        owner,
+        ownerPersonId,
+        progress: 0,
+        approvalRequired,
+        approvalRule,
+        approverPersonIds: approvalRequired ? approverPersonIds : undefined,
+        approvalStatus: approvalRequired ? "NOT_REQUIRED" : "NOT_REQUIRED",
         dueDate: body?.dueDate ? new Date(body.dueDate) : null,
         createdByUserId: actor.userId,
         visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs) ? body.visibleOrgUnitRefs : undefined,

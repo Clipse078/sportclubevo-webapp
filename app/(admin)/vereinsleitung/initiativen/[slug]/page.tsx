@@ -17,6 +17,17 @@ import { Badge } from "@/components/ui";
 import { PropertyGrid } from "@/components/ui/PropertyGrid";
 import { MetadataCard } from "@/components/ui/MetadataCard";
 import { TimelinePlaceholder } from "@/components/ui/TimelinePlaceholder";
+import { loadInitiativeConnectedWork } from "@/lib/club-development/initiative-connected-work";
+import InitiativeConnectedWorkSection from "@/components/admin/club-development/InitiativeConnectedWorkSection";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
+import InitiativeApprovalPanel from "@/components/admin/initiatives/InitiativeApprovalPanel";
+import { resolvePersonIdForUser } from "@/lib/meetings/meeting-person-payload";
+import { getInitiativeApprovalVotes } from "@/lib/club-development/initiative-approval-queries";
+import { groupApprovalVotesByRevision } from "@/lib/club-development/club-development-approval-vote-revision";
+import { parseApproverPersonIds } from "@/lib/club-development/initiative-approval-presentation";
+import { personLabelFromRecord } from "@/lib/meetings/meeting-person-display";
+import type { MeetingApprovalVoteView } from "@/lib/meetings/meeting-approval-workspace-data";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -72,6 +83,63 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
       permission: PERMISSIONS.INITIATIVES_DELETE,
       tenantId,
     });
+  }
+
+  const connectedWork =
+    dbInitiative && actor.tenantId
+      ? await loadInitiativeConnectedWork(actor, dbInitiative.id)
+      : null;
+
+  const progressSnapshot =
+    dbInitiative && actor.tenantId
+      ? await computeInitiativeProgressSnapshot(actor.tenantId, dbInitiative.id)
+      : null;
+
+  const actorPersonId =
+    dbInitiative && actor.tenantId
+      ? await resolvePersonIdForUser(actor.tenantId, actor.userId)
+      : null;
+  const canManageInitiative = actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
+
+  let initiativeVoteViews: MeetingApprovalVoteView[] = [];
+  let initiativeVoteHistory: ReturnType<typeof groupApprovalVotesByRevision>["history"] = [];
+  const initiativeApproverLabels: Record<string, string> = {};
+
+  if (dbInitiative && actor.tenantId) {
+    const votes = await getInitiativeApprovalVotes(dbInitiative.id, actor.tenantId);
+    const { currentVotes, history } = groupApprovalVotesByRevision(
+      votes.map((v) => ({
+        approverPersonId: v.approverPersonId,
+        decision: v.decision,
+        contentRevision: v.contentRevision,
+        comment: v.comment,
+        decidedAt: v.decidedAt,
+        legacyRevisionUnscoped: v.legacyRevisionUnscoped,
+      })),
+      dbInitiative.approvalContentRevision,
+    );
+    initiativeVoteHistory = history;
+    const approverIds = [
+      ...parseApproverPersonIds(dbInitiative.approverPersonIds),
+      ...votes.map((v) => v.approverPersonId),
+    ];
+    const uniqueIds = [...new Set(approverIds)];
+    if (uniqueIds.length > 0) {
+      const people = await prisma.person.findMany({
+        where: { tenantId: actor.tenantId, id: { in: uniqueIds } },
+        select: { id: true, displayName: true, firstName: true, lastName: true },
+      });
+      for (const p of people) {
+        initiativeApproverLabels[p.id] = personLabelFromRecord(p);
+      }
+    }
+    initiativeVoteViews = currentVotes.map((v) => ({
+      approverPersonId: v.approverPersonId,
+      approverLabel: initiativeApproverLabels[v.approverPersonId] ?? "Unbekannte Person",
+      decision: v.decision,
+      comment: v.comment ?? null,
+      decidedAt: v.decidedAt ?? null,
+    }));
   }
 
   const pageTitle = dbInitiative?.title ?? slug;
@@ -191,27 +259,63 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                 </p>
               )}
 
-              {dbInitiative.progress !== null ? (
-                <div className="mt-5">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                      Fortschritt
-                    </p>
-                    <span className="text-sm font-semibold text-[var(--sce-primary)]">
-                      {dbInitiative.progress}%
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-[var(--surface-2)]">
-                    <div
-                      className="h-2 rounded-full bg-[var(--sce-primary)]"
-                      style={{
-                        width: `${Math.min(100, dbInitiative.progress)}%`,
-                      }}
-                    />
-                  </div>
+              <div className="mt-5" data-testid="initiative-auto-progress">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                    Fortschritt (automatisch)
+                  </p>
+                  <span className="text-sm font-semibold text-[var(--sce-primary)]">
+                    {progressSnapshot?.progress ?? 0}%
+                  </span>
                 </div>
-              ) : null}
+                <div className="h-2 rounded-full bg-[var(--surface-2)]">
+                  <div
+                    className="h-2 rounded-full bg-[var(--sce-primary)]"
+                    style={{
+                      width: `${Math.min(100, progressSnapshot?.progress ?? 0)}%`,
+                    }}
+                  />
+                </div>
+                {progressSnapshot && progressSnapshot.eligibleCount === 0 ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Noch keine verknüpften Aufgaben — Fortschritt wird aus erledigten Aufgaben berechnet.
+                  </p>
+                ) : progressSnapshot ? (
+                  <p className="mt-2 text-xs text-[var(--text-2)]">
+                    {progressSnapshot.completedCount} von {progressSnapshot.eligibleCount} Aufgaben erledigt
+                  </p>
+                ) : null}
+              </div>
             </SectionCard>
+
+            <SectionCard title="Optionale Freigabe">
+              <InitiativeApprovalPanel
+                initiativeId={dbInitiative.id}
+                canManage={canManageInitiative}
+                actorPersonId={actorPersonId}
+                contentRevision={dbInitiative.approvalContentRevision}
+                votes={initiativeVoteViews}
+                voteHistory={initiativeVoteHistory}
+                approverLabels={initiativeApproverLabels}
+                initiative={{
+                  approvalRequired: dbInitiative.approvalRequired,
+                  approvalRule: dbInitiative.approvalRule,
+                  approverPersonIds: dbInitiative.approverPersonIds,
+                  approvalStatus: dbInitiative.approvalStatus,
+                }}
+              />
+            </SectionCard>
+
+            {connectedWork ? <InitiativeConnectedWorkSection connected={connectedWork} /> : null}
+
+            {dbInitiative ? (
+              <SectionCard title="Aufgaben zum Vorhaben">
+                <ContextRelatedTasksPanel
+                  contextType="INITIATIVE"
+                  contextId={dbInitiative.id}
+                />
+              </SectionCard>
+            ) : null}
           </>
         ) : (
           // Graceful fallback for slugs not yet in DB (legacy mock links still work)

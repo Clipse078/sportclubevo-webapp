@@ -9,6 +9,7 @@ import "server-only";
 import type { TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { canSeeMeeting } from "@/lib/meetings/queries";
+import { canSeeEntity } from "@/lib/visibility/visibility-filter";
 import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
 import { buildActorContext } from "@/lib/visibility/actor-context";
 import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
@@ -211,6 +212,137 @@ export const TASK_CONTEXT_REGISTRY: TaskContextRegistryEntry[] = [
           id: row.id,
           label: row.title,
           secondary: row.meetingDate.toISOString().slice(0, 10),
+        }));
+    },
+  },
+  {
+    type: "MEETING_DECISION",
+    operationalReadPermission: PERMISSIONS.MEETINGS_VIEW,
+    buildHref: (entity) =>
+      entity.slug
+        ? `/vereinsleitung/meetings/${encodeURIComponent(entity.slug)}`
+        : null,
+    validateAttachable: async (ctx, id) => {
+      const decision = await prisma.meetingDecision.findFirst({
+        where: { id, meeting: { tenantId: ctx.tenantId } },
+        select: {
+          id: true,
+          meeting: {
+            select: {
+              id: true,
+              slug: true,
+              visibilityScope: true,
+              createdByUserId: true,
+              visibleRoleRefs: true,
+              visibleUserRefs: true,
+              visibleTeamRefs: true,
+              visibleOrgUnitRefs: true,
+              visiblePersonRefs: true,
+              visibleTargetGroupRefs: true,
+            },
+          },
+        },
+      });
+      if (!decision) return false;
+      const actor = await buildMeetingActor(ctx);
+      return canSeeMeeting(decision.meeting, actor);
+    },
+    searchOptions: async (ctx, query, limit) => {
+      const actor = await buildMeetingActor(ctx);
+      const rows = await prisma.meetingDecision.findMany({
+        where: {
+          meeting: { tenantId: ctx.tenantId },
+          ...(query ? { title: { contains: query, mode: "insensitive" } } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit * 3,
+        select: {
+          id: true,
+          title: true,
+          meeting: {
+            select: {
+              slug: true,
+              title: true,
+              meetingDate: true,
+              visibilityScope: true,
+              createdByUserId: true,
+              visibleRoleRefs: true,
+              visibleUserRefs: true,
+              visibleTeamRefs: true,
+              visibleOrgUnitRefs: true,
+              visiblePersonRefs: true,
+              visibleTargetGroupRefs: true,
+            },
+          },
+        },
+      });
+      return rows
+        .filter((row) => canSeeMeeting(row.meeting, actor))
+        .slice(0, limit)
+        .map((row) => ({
+          id: row.id,
+          label: row.title,
+          secondary: row.meeting.title,
+        }));
+    },
+  },
+  {
+    type: "INITIATIVE",
+    operationalReadPermission: PERMISSIONS.INITIATIVES_VIEW,
+    buildHref: (entity) =>
+      entity.slug
+        ? `/vereinsleitung/initiativen/${encodeURIComponent(entity.slug)}`
+        : null,
+    validateAttachable: async (ctx, id) => {
+      const row = await prisma.initiative.findFirst({
+        where: { id, tenantId: ctx.tenantId },
+        select: {
+          id: true,
+          visibilityScope: true,
+          createdByUserId: true,
+          visibleRoleRefs: true,
+          visibleUserRefs: true,
+          visibleTeamRefs: true,
+          visibleOrgUnitRefs: true,
+          visiblePersonRefs: true,
+          visibleTargetGroupRefs: true,
+        },
+      });
+      if (!row) return false;
+      const actor = await buildMeetingActor(ctx);
+      return canSeeEntity(row, actor);
+    },
+    searchOptions: async (ctx, query, limit) => {
+      const actor = await buildMeetingActor(ctx);
+      const rows = await prisma.initiative.findMany({
+        where: {
+          tenantId: ctx.tenantId,
+          ...(query ? { title: { contains: query, mode: "insensitive" } } : {}),
+        },
+        orderBy: { updatedAt: "desc" },
+        take: limit * 3,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          status: true,
+          visibilityScope: true,
+          createdByUserId: true,
+          visibleRoleRefs: true,
+          visibleUserRefs: true,
+          visibleTeamRefs: true,
+          visibleOrgUnitRefs: true,
+          visiblePersonRefs: true,
+          visibleTargetGroupRefs: true,
+        },
+      });
+      return rows
+        .filter((row) => canSeeEntity(row, actor))
+        .slice(0, limit)
+        .map((row) => ({
+          id: row.id,
+          label: row.title,
+          secondary: row.status,
         }));
     },
   },

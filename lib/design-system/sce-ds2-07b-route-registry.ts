@@ -7168,6 +7168,105 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/vereinsleitung/prozesse/[slug]/edit",
+    "routeKey": "/vereinsleitung/prozesse/[slug]/edit",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/prozesse/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/vereinsleitung/prozesse/[slug]",
+    "routeKey": "/vereinsleitung/prozesse/[slug]",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/prozesse/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/vereinsleitung/prozesse/new",
+    "routeKey": "/vereinsleitung/prozesse/new",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/new/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/prozesse/layout.tsx",
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/vereinsleitung/prozesse",
     "routeKey": "/vereinsleitung/prozesse",
     "sourceFile": "app/(admin)/vereinsleitung/prozesse/page.tsx",
@@ -8834,16 +8933,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 273,
-  "authenticatedRenderableCount": 218,
-  "authenticatedVisualCount": 215,
+  "pageCount": 276,
+  "authenticatedRenderableCount": 221,
+  "authenticatedVisualCount": 218,
   "authenticatedRedirectCount": 15,
   "publicRenderableCount": 39,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 629,
+  "routeHandlerCount": 634,
   "frameworkFileCount": 40,
   "architecture": {
-    "CANONICAL": 215,
+    "CANONICAL": 218,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -8851,13 +8950,13 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 215,
+    "IMPLEMENTED": 218,
     "VERIFIED": 0,
     "EXCEPTION": 58
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 215,
+  "architecturalCanonicalCount": 218,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
@@ -8871,7 +8970,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 215
+    "DS2-07G": 218
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,
