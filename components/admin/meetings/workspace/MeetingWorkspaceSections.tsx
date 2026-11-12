@@ -556,6 +556,18 @@ export function MeetingDecisionsSection({
           <p className="font-semibold text-[var(--foreground)]">{d.title}</p>
           {d.description ? <p className="mt-1 text-sm text-[var(--text-2)]">{d.description}</p> : null}
           {d.owner ? <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {d.owner}</p> : null}
+          {d.approvalRequired ? (
+            <p className="mt-1 text-[11px] font-medium text-[var(--muted)]" data-testid={`decision-approval-status-${d.id}`}>
+              Freigabe:{" "}
+              {{
+                NOT_REQUIRED: "Nicht erforderlich",
+                PENDING: "Ausstehend",
+                APPROVED: "Genehmigt",
+                CHANGES_REQUESTED: "Änderungen angefordert",
+                REJECTED: "Abgelehnt",
+              }[d.approvalStatus] ?? d.approvalStatus}
+            </p>
+          ) : null}
         </div>
       ))}
       {canManage ? (
