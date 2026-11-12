@@ -17,6 +17,9 @@ import { Badge } from "@/components/ui";
 import { PropertyGrid } from "@/components/ui/PropertyGrid";
 import { MetadataCard } from "@/components/ui/MetadataCard";
 import { TimelinePlaceholder } from "@/components/ui/TimelinePlaceholder";
+import { loadInitiativeConnectedWork } from "@/lib/club-development/initiative-connected-work";
+import InitiativeConnectedWorkSection from "@/components/admin/club-development/InitiativeConnectedWorkSection";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -73,6 +76,11 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
       tenantId,
     });
   }
+
+  const connectedWork =
+    dbInitiative && actor.tenantId
+      ? await loadInitiativeConnectedWork(actor, dbInitiative.id)
+      : null;
 
   const pageTitle = dbInitiative?.title ?? slug;
   const statusLabel = dbInitiative?.status
@@ -212,6 +220,17 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                 </div>
               ) : null}
             </SectionCard>
+
+            {connectedWork ? <InitiativeConnectedWorkSection connected={connectedWork} /> : null}
+
+            {dbInitiative ? (
+              <SectionCard title="Aufgaben zum Vorhaben">
+                <ContextRelatedTasksPanel
+                  contextType="INITIATIVE"
+                  contextId={dbInitiative.id}
+                />
+              </SectionCard>
+            ) : null}
           </>
         ) : (
           // Graceful fallback for slugs not yet in DB (legacy mock links still work)

@@ -5,6 +5,7 @@ import { MeetingDecisionStatus } from "@prisma/client";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
+import { resolveMeetingDecisionAgendaLink } from "@/lib/meetings/meeting-decision-agenda-link";
 
 async function requireSession() {
   const session = await auth();
@@ -72,6 +73,22 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     fieldsChanged,
   });
 
+  let nextSourceAgendaItemId: string | null | undefined = undefined;
+  if (body?.sourceAgendaItemId !== undefined) {
+    try {
+      nextSourceAgendaItemId = await resolveMeetingDecisionAgendaLink(
+        actor,
+        id,
+        body.sourceAgendaItemId,
+      );
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Ungültiges Traktandum." },
+        { status: 400 },
+      );
+    }
+  }
+
   try {
     const updated = await prisma.meetingDecision.update({
       where: { id: decisionId },
@@ -81,8 +98,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         status: validStatuses.includes(body?.status) ? body.status : undefined,
         owner: body?.owner?.trim() || null,
         orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
-        sourceAgendaItemId:
-          body?.sourceAgendaItemId !== undefined ? body.sourceAgendaItemId || null : undefined,
+        sourceAgendaItemId: nextSourceAgendaItemId,
         ...(invalidate
           ? {
               approvalStatus: "PENDING",

@@ -11,6 +11,7 @@ import {
 } from "./task-creator-display";
 import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
+import { resolveTaskProvenance, type TaskProvenance } from "./task-provenance";
 import { computeSubtaskProgress } from "./subtask-rules";
 import { getTaskSeriesForRead } from "./task-series-service";
 import { requireVisibleTask } from "./task-access";
@@ -118,6 +119,7 @@ export type TaskWorkspaceBundle = {
   seriesTitle: string | null;
   canOpenSeriesWorkspace: boolean;
   context: TaskContextPresentation | null;
+  provenance: TaskProvenance | null;
   creator: TaskWorkspaceCreator;
   capabilities: TaskWorkspaceCapabilities;
   follow: TaskFollowStateDto;
@@ -138,7 +140,7 @@ export async function loadTaskWorkspace(
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
     : Promise.resolve(null);
 
-  const [subtasks, parentTask, seriesRow, creatorUser, context, follow, documentReferences, accessGrants] =
+  const [subtasks, parentTask, seriesRow, creatorUser, context, provenance, follow, documentReferences, accessGrants] =
     await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
@@ -160,6 +162,7 @@ export async function loadTaskWorkspace(
       locale,
       timeZone,
     ),
+    resolveTaskProvenance(ctx, task.contextType, task.contextId),
     getTaskFollowStateForVisibleTask(ctx, visibleTask),
     listTaskDocumentReferencesForVisibleTask(ctx, visibleTask),
     loadTaskAccessGrantSnapshot(ctx.tenantId, task.id),
@@ -200,6 +203,7 @@ export async function loadTaskWorkspace(
     seriesTitle: seriesRow?.title ?? null,
     canOpenSeriesWorkspace: Boolean(seriesRow),
     context,
+    provenance,
     creator: creatorUser
       ? {
           userId: creatorUser.id,

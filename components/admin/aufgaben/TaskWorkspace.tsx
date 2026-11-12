@@ -521,6 +521,7 @@ export function TaskWorkspacePanel({
     seriesTitle,
     canOpenSeriesWorkspace,
     context,
+    provenance,
     creator,
     capabilities,
     follow,
@@ -897,6 +898,24 @@ export function TaskWorkspacePanel({
               <span className="text-sm text-[var(--text-2)]">
                 {context.compactSecondary ?? context.typeLabel}
               </span>
+            </PropertyRow>
+          ) : null}
+
+          {provenance && provenance.links.length > 0 ? (
+            <PropertyRow label="Entstanden aus">
+              <ul className="space-y-1 text-sm text-[var(--text-2)]">
+                {provenance.links.map((link) => (
+                  <li key={`${link.kind}-${link.label}`}>
+                    {link.href && !link.restricted ? (
+                      <Link href={link.href} className="font-medium text-[#0b4aa2] hover:underline">
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <span>{link.restricted ? "Eingeschränkter Bezug" : link.label}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </PropertyRow>
           ) : null}
 

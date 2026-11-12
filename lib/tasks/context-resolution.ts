@@ -413,6 +413,117 @@ export async function resolveTaskContextsBatch(
     );
   }
 
+  if (byType.has("INITIATIVE")) {
+    const ids = [...(byType.get("INITIATIVE") ?? [])];
+    loads.push(
+      (async () => {
+        const rows = await prisma.initiative.findMany({
+          where: { id: { in: ids }, tenantId: ctx.tenantId },
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            visibilityScope: true,
+            createdByUserId: true,
+            visibleRoleRefs: true,
+            visibleUserRefs: true,
+            visibleTeamRefs: true,
+            visibleOrgUnitRefs: true,
+            visiblePersonRefs: true,
+            visibleTargetGroupRefs: true,
+          },
+        });
+        const rowById = new Map(rows.map((r) => [r.id, r]));
+        const canSeeModule = canResolveTaskContextDetails(ctx, "INITIATIVE");
+        const actorResolved = await hydrateActorForMeetings(ctx);
+        const { canSeeEntity } = await import("@/lib/visibility/visibility-filter");
+        for (const id of ids) {
+          const key = contextKey("INITIATIVE", id);
+          const row = rowById.get(id);
+          if (!row) {
+            resolvedRows.set(key, {
+              title: TASK_CONTEXT_UNAVAILABLE_LABEL,
+              subtitle: null,
+              href: null,
+              unavailable: true,
+            });
+            continue;
+          }
+          if (!canSeeModule || !canSeeEntity(row, actorResolved)) {
+            resolvedRows.set(key, { title: null, subtitle: null, href: null, unavailable: false });
+            continue;
+          }
+          resolvedRows.set(key, {
+            title: row.title,
+            subtitle: null,
+            href: buildOperationalContextHref("INITIATIVE", { id: row.id, slug: row.slug }),
+            unavailable: false,
+          });
+        }
+      })(),
+    );
+  }
+
+  if (byType.has("MEETING_DECISION")) {
+    const ids = [...(byType.get("MEETING_DECISION") ?? [])];
+    loads.push(
+      (async () => {
+        const actor = await hydrateActorForMeetings(ctx);
+        const rows = await prisma.meetingDecision.findMany({
+          where: { id: { in: ids }, meeting: { tenantId: ctx.tenantId } },
+          select: {
+            id: true,
+            title: true,
+            meeting: {
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                meetingDate: true,
+                visibilityScope: true,
+                createdByUserId: true,
+                visibleRoleRefs: true,
+                visibleUserRefs: true,
+                visibleTeamRefs: true,
+                visibleOrgUnitRefs: true,
+                visiblePersonRefs: true,
+                visibleTargetGroupRefs: true,
+              },
+            },
+          },
+        });
+        const rowById = new Map(rows.map((r) => [r.id, r]));
+        const canSeeModule = canResolveTaskContextDetails(ctx, "MEETING_DECISION");
+        for (const id of ids) {
+          const key = contextKey("MEETING_DECISION", id);
+          const row = rowById.get(id);
+          if (!row) {
+            resolvedRows.set(key, {
+              title: TASK_CONTEXT_UNAVAILABLE_LABEL,
+              subtitle: null,
+              href: null,
+              unavailable: true,
+            });
+            continue;
+          }
+          if (!canSeeModule || !canSeeMeeting(row.meeting, actor)) {
+            resolvedRows.set(key, { title: null, subtitle: null, href: null, unavailable: false });
+            continue;
+          }
+          resolvedRows.set(key, {
+            title: row.title,
+            subtitle: row.meeting.title,
+            href: buildOperationalContextHref("MEETING_DECISION", {
+              id: row.id,
+              slug: row.meeting.slug,
+            }),
+            unavailable: false,
+          });
+        }
+      })(),
+    );
+  }
+
   if (byType.has("MEETING")) {
     const ids = [...(byType.get("MEETING") ?? [])];
     loads.push(

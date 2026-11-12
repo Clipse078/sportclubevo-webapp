@@ -82,7 +82,9 @@ export default function MeetingWorkspace({
               meetingPlannedDurationMin={meeting.plannedDurationMin}
               canManage={effectiveCanManage}
               items={agendaItems}
+              decisions={decisions}
               onItemsChange={setAgendaItems}
+              onDecisionsChange={setDecisions}
               onDirtyChange={setIsDirty}
             />
             <MeetingDecisionsSection
@@ -92,6 +94,7 @@ export default function MeetingWorkspace({
               documentationEditable={effectiveCanManage}
               actorPersonId={actorPersonId}
               approvalWorkspaceData={approvalWorkspaceData}
+              agendaItems={agendaItems}
               items={decisions}
               onItemsChange={setDecisions}
             />

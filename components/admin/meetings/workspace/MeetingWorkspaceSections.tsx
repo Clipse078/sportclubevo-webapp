@@ -33,6 +33,7 @@ import {
   workspacePanelClass,
   workspacePrimaryButtonClass,
 } from "./meetingWorkspaceFieldClasses";
+import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 
 function meetingSectionDomId(title: string): string {
   return `meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
@@ -102,9 +103,15 @@ export function MeetingAgendaSection({
   meetingPlannedDurationMin,
   canManage,
   items,
+  decisions,
   onItemsChange,
+  onDecisionsChange,
   onDirtyChange,
-}: SectionProps<AgendaItem> & { meetingPlannedDurationMin?: number | null }) {
+}: SectionProps<AgendaItem> & {
+  meetingPlannedDurationMin?: number | null;
+  decisions: Decision[];
+  onDecisionsChange: (items: Decision[]) => void;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [newTitle, setNewTitle] = useState("");
@@ -202,9 +209,16 @@ export function MeetingAgendaSection({
             item={item}
             canManage={canManage}
             pending={pending}
+            relatedDecisions={decisions.filter((d) => d.sourceAgendaItemId === item.id)}
+            meetingId={meetingId}
             onSave={(draft) => saveItem(item, draft)}
             onDelete={() => deleteItem(item.id)}
             onDirty={() => onDirtyChange?.(true)}
+            onDecisionCreated={async () => {
+              const res = await fetch(`/api/meetings/${meetingId}/decisions`);
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.decisions)) onDecisionsChange(data.decisions);
+            }}
           />
         ))
       )}
@@ -234,17 +248,23 @@ function AgendaItemRow({
   item,
   canManage,
   pending,
+  relatedDecisions,
+  meetingId,
   onSave,
   onDelete,
   onDirty,
+  onDecisionCreated,
 }: {
   index: number;
   item: AgendaItem;
   canManage: boolean;
   pending: boolean;
+  relatedDecisions: Decision[];
+  meetingId: string;
   onSave: (draft: Record<string, unknown>) => void;
   onDelete: () => void;
   onDirty: () => void;
+  onDecisionCreated: () => void | Promise<void>;
 }) {
   const [title, setTitle] = useState(item.title);
   const [notes, setNotes] = useState(item.notes ?? "");
@@ -269,6 +289,21 @@ function AgendaItemRow({
   );
 
   const collapsedMetadata = buildAgendaItemCollapsedMetadata(item);
+  const [creatingDecision, setCreatingDecision] = useState(false);
+  const [decisionTitle, setDecisionTitle] = useState("");
+
+  async function createDecisionFromAgenda() {
+    const trimmed = decisionTitle.trim();
+    if (!trimmed) return;
+    await meetingWorkspaceApi.decisions.create(meetingId, {
+      title: trimmed,
+      sourceAgendaItemId: item.id,
+      status: "CONFIRMED",
+    });
+    setDecisionTitle("");
+    setCreatingDecision(false);
+    await onDecisionCreated();
+  }
 
   return (
     <SceExpandablePanel
@@ -353,6 +388,43 @@ function AgendaItemRow({
             <option value="DISCUSSED">Besprochen</option>
             <option value="SKIPPED">Übersprungen</option>
           </select>
+          {relatedDecisions.length > 0 ? (
+            <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Beschlüsse</p>
+              <ul className="space-y-1 text-sm">
+                {relatedDecisions.map((d) => (
+                  <li key={d.id} className="font-medium text-[var(--foreground)]">
+                    {d.title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {creatingDecision ? (
+            <div className="flex flex-wrap items-end gap-2">
+              <input
+                className={workspaceInputClass}
+                value={decisionTitle}
+                onChange={(e) => setDecisionTitle(e.target.value)}
+                placeholder="Beschlusstitel"
+              />
+              <button
+                type="button"
+                className={workspacePrimaryButtonClass}
+                disabled={pending || !decisionTitle.trim()}
+                onClick={() => void createDecisionFromAgenda()}
+              >
+                Beschluss erfassen
+              </button>
+              <button type="button" className={workspaceGhostButtonClass} onClick={() => setCreatingDecision(false)}>
+                Abbrechen
+              </button>
+            </div>
+          ) : (
+            <button type="button" className={workspaceGhostButtonClass} onClick={() => setCreatingDecision(true)}>
+              Beschluss aus Traktandum
+            </button>
+          )}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -396,6 +468,14 @@ function AgendaItemRow({
               </Link>{" "}
               ({initiativeFromItem.status})
             </p>
+          ) : null}
+          {relatedDecisions.length > 0 ? (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs font-semibold text-[var(--muted)]">Beschlüsse</p>
+              {relatedDecisions.map((d) => (
+                <p key={d.id}>{d.title}</p>
+              ))}
+            </div>
           ) : null}
         </div>
       )}
@@ -526,6 +606,7 @@ export function MeetingDecisionsSection({
   documentationEditable,
   actorPersonId,
   approvalWorkspaceData,
+  agendaItems,
   items,
   onItemsChange,
 }: SectionProps<Decision> & {
@@ -533,6 +614,7 @@ export function MeetingDecisionsSection({
   documentationEditable: boolean;
   actorPersonId: string | null;
   approvalWorkspaceData: MeetingApprovalWorkspaceData;
+  agendaItems: AgendaItem[];
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -565,30 +647,25 @@ export function MeetingDecisionsSection({
     <SectionShell title="Beschlüsse" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
       <ErrorBanner message={error} />
       {items.map((d) => (
-        <div key={d.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-3">
-          <p className="font-semibold text-[var(--foreground)]">{d.title}</p>
-          {d.description ? <p className="mt-1 text-sm text-[var(--text-2)]">{d.description}</p> : null}
-          {d.owner ? <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {d.owner}</p> : null}
-          <p
-            className="text-[11px] font-medium text-[var(--muted)]"
-            data-testid={`decision-approval-status-${d.id}`}
-          >
-            {d.approvalRequired
-              ? `Freigabe: ${meetingApprovalAggregateStatusLabel(d.approvalStatus)}`
-              : "Freigabe: Nicht erforderlich"}
-          </p>
-          <MeetingDecisionApprovalPanel
-            meetingId={meetingId}
-            meetingStatus={meetingStatus}
-            decision={d}
-            canManage={canManage}
-            actorPersonId={actorPersonId}
-            approvalData={approvalWorkspaceData}
-            onDecisionUpdated={(updated) => {
-              onItemsChange(items.map((row) => (row.id === d.id ? { ...row, ...updated } : row)));
-            }}
-          />
-        </div>
+        <MeetingDecisionCard
+          key={d.id}
+          meetingId={meetingId}
+          meetingStatus={meetingStatus}
+          decision={d}
+          canManage={canManage}
+          documentationEditable={documentationEditable}
+          actorPersonId={actorPersonId}
+          approvalWorkspaceData={approvalWorkspaceData}
+          agendaItems={agendaItems}
+          onDecisionUpdated={(updated) => {
+            onItemsChange(items.map((row) => (row.id === d.id ? { ...row, ...updated } : row)));
+          }}
+          onSourceAgendaChange={(sourceAgendaItemId) => {
+            onItemsChange(
+              items.map((row) => (row.id === d.id ? { ...row, sourceAgendaItemId } : row)),
+            );
+          }}
+        />
       ))}
       {documentationEditable ? (
         <div className="space-y-3 border-t border-[var(--border)] pt-4">
@@ -605,6 +682,105 @@ export function MeetingDecisionsSection({
         </div>
       ) : null}
     </SectionShell>
+  );
+}
+
+function MeetingDecisionCard({
+  meetingId,
+  meetingStatus,
+  decision,
+  canManage,
+  documentationEditable,
+  actorPersonId,
+  approvalWorkspaceData,
+  agendaItems,
+  onDecisionUpdated,
+  onSourceAgendaChange,
+}: {
+  meetingId: string;
+  meetingStatus: MeetingStatus;
+  decision: Decision;
+  canManage: boolean;
+  documentationEditable: boolean;
+  actorPersonId: string | null;
+  approvalWorkspaceData: MeetingApprovalWorkspaceData;
+  agendaItems: AgendaItem[];
+  onDecisionUpdated: (updated: Partial<Decision>) => void;
+  onSourceAgendaChange: (sourceAgendaItemId: string | null) => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
+  const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
+
+  function saveAgendaLink(nextId: string) {
+    setSourceAgendaItemId(nextId);
+    startTransition(async () => {
+      try {
+        await meetingWorkspaceApi.decisions.update(meetingId, decision.id, {
+          sourceAgendaItemId: nextId || null,
+        });
+        onSourceAgendaChange(nextId || null);
+      } catch {
+        // silent — workspace error surface via parent if needed
+      }
+    });
+  }
+
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-3">
+      <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+      {decision.description ? (
+        <p className="mt-1 text-sm text-[var(--text-2)]">{decision.description}</p>
+      ) : null}
+      {decision.owner ? (
+        <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {decision.owner}</p>
+      ) : null}
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Zugehöriges Traktandum</label>
+        {documentationEditable ? (
+          <select
+            className={workspaceInputClass}
+            value={sourceAgendaItemId}
+            disabled={pending}
+            onChange={(e) => saveAgendaLink(e.target.value)}
+          >
+            <option value="">Kein Traktandum</option>
+            {agendaItems.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.title}
+              </option>
+            ))}
+          </select>
+        ) : linkedAgenda ? (
+          <p className="text-sm text-[var(--text-2)]">{linkedAgenda.title}</p>
+        ) : (
+          <p className="text-sm italic text-[var(--muted)]">Kein Traktandum verknüpft</p>
+        )}
+      </div>
+      <p
+        className="text-[11px] font-medium text-[var(--muted)]"
+        data-testid={`decision-approval-status-${decision.id}`}
+      >
+        {decision.approvalRequired
+          ? `Freigabe: ${meetingApprovalAggregateStatusLabel(decision.approvalStatus)}`
+          : "Freigabe: Nicht erforderlich"}
+      </p>
+      <MeetingDecisionApprovalPanel
+        meetingId={meetingId}
+        meetingStatus={meetingStatus}
+        decision={decision}
+        canManage={canManage}
+        actorPersonId={actorPersonId}
+        approvalData={approvalWorkspaceData}
+        onDecisionUpdated={onDecisionUpdated}
+      />
+      <MeetingDecisionTasksPanel
+        meetingId={meetingId}
+        decisionId={decision.id}
+        decisionTitle={decision.title}
+        canManage={documentationEditable}
+      />
+    </div>
   );
 }
 
