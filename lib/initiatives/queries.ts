@@ -26,6 +26,7 @@ const INITIATIVE_LIST_SELECT = {
   approvalRule: true,
   approverPersonIds: true,
   approvalStatus: true,
+  approvalContentRevision: true,
   dueDate: true,
   reviewStage: true,
   requiresFourEyeReview: true,

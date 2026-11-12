@@ -137,10 +137,6 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       select: { id: true, slug: true, title: true },
     });
 
-    if (invalidate) {
-      await prisma.initiativeApprovalVote.deleteMany({ where: { initiativeId: id } });
-    }
-
     void logAuditEvent({
       actorUserId: actor.userId,
       module: "initiatives",

@@ -21,6 +21,8 @@ import {
   MeetingApprovalVoteActions,
   MeetingApprovalVoteList,
 } from "@/components/admin/meetings/approval/meetingApprovalShared";
+import type { ApprovalVoteHistoryGroup } from "@/lib/club-development/club-development-approval-vote-revision";
+import ClubDevelopmentApprovalVoteHistory from "@/components/admin/club-development/ClubDevelopmentApprovalVoteHistory";
 
 type ProcessApprovalPanelProps = {
   processId: string;
@@ -34,6 +36,7 @@ type ProcessApprovalPanelProps = {
     approvalStatus: string;
   };
   votes: MeetingApprovalVoteView[];
+  voteHistory: ApprovalVoteHistoryGroup[];
   approverLabels: Record<string, string>;
 };
 
@@ -44,6 +47,7 @@ export default function ProcessApprovalPanel({
   contentRevision,
   process,
   votes,
+  voteHistory,
   approverLabels,
 }: ProcessApprovalPanelProps) {
   const router = useRouter();
@@ -228,9 +232,10 @@ export default function ProcessApprovalPanel({
         ) : null}
         {process.approvalStatus === "CHANGES_REQUESTED" && canManage ? (
           <p className="text-xs text-[var(--text-2)]">
-            Änderungen anwenden, speichern und erneut einreichen — materielle Änderungen setzen die Freigabe-Revision zurück.
+            Änderungen anwenden, speichern und erneut einreichen — materielle Änderungen nach Freigabe erhöhen die Inhaltsrevision; frühere Stimmen bleiben im Verlauf sichtbar.
           </p>
         ) : null}
+        <ClubDevelopmentApprovalVoteHistory history={voteHistory} approverLabels={approverLabels} />
         {showVoteActions ? (
           <MeetingApprovalVoteActions
             disabled={loading !== null}

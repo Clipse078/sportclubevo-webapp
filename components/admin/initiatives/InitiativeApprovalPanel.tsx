@@ -18,12 +18,20 @@ import { meetingApprovalRuleLabel } from "@/lib/meetings/meeting-approval-rules"
 import {
   MeetingApprovalRuleSelect,
   MeetingApprovalVoteActions,
+  MeetingApprovalVoteList,
 } from "@/components/admin/meetings/approval/meetingApprovalShared";
+import type { MeetingApprovalVoteView } from "@/lib/meetings/meeting-approval-workspace-data";
+import type { ApprovalVoteHistoryGroup } from "@/lib/club-development/club-development-approval-vote-revision";
+import ClubDevelopmentApprovalVoteHistory from "@/components/admin/club-development/ClubDevelopmentApprovalVoteHistory";
 
 type InitiativeApprovalProps = {
   initiativeId: string;
   canManage: boolean;
   actorPersonId: string | null;
+  contentRevision: number;
+  votes: MeetingApprovalVoteView[];
+  voteHistory: ApprovalVoteHistoryGroup[];
+  approverLabels: Record<string, string>;
   initiative: {
     approvalRequired: boolean;
     approvalRule: MeetingApprovalRule;
@@ -36,6 +44,10 @@ export default function InitiativeApprovalPanel({
   initiativeId,
   canManage,
   actorPersonId,
+  contentRevision,
+  votes,
+  voteHistory,
+  approverLabels,
   initiative,
 }: InitiativeApprovalProps) {
   const router = useRouter();
@@ -158,6 +170,9 @@ export default function InitiativeApprovalPanel({
       }
     >
       <div className="space-y-4 pt-2">
+        <p className="text-xs text-[var(--muted)]">
+          Inhaltsrevision für Freigabe: {contentRevision}
+        </p>
         {error ? <p className="text-xs text-rose-700">{error}</p> : null}
         {configEditable ? (
           <div className="space-y-3">
@@ -182,11 +197,24 @@ export default function InitiativeApprovalPanel({
             </button>
           </div>
         ) : null}
+        {initiative.approvalRequired && savedApproverIds.length > 0 ? (
+          <MeetingApprovalVoteList
+            votes={votes}
+            approverLabels={approverLabels}
+            approverPersonIds={savedApproverIds}
+          />
+        ) : null}
         {canSubmit ? (
           <button type="button" className="fca-button-secondary text-sm" disabled={loading !== null} onClick={() => void submitForApproval()}>
             Zur Freigabe einreichen
           </button>
         ) : null}
+        {initiative.approvalStatus === "CHANGES_REQUESTED" && canManage ? (
+          <p className="text-xs text-[var(--text-2)]">
+            Änderungen anwenden, speichern und erneut einreichen — materielle Änderungen nach Freigabe erhöhen die Inhaltsrevision; frühere Stimmen bleiben im Verlauf sichtbar.
+          </p>
+        ) : null}
+        <ClubDevelopmentApprovalVoteHistory history={voteHistory} approverLabels={approverLabels} />
         {showVoteActions ? (
           <MeetingApprovalVoteActions
             disabled={loading !== null}

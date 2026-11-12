@@ -23,6 +23,11 @@ import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/Con
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import InitiativeApprovalPanel from "@/components/admin/initiatives/InitiativeApprovalPanel";
 import { resolvePersonIdForUser } from "@/lib/meetings/meeting-person-payload";
+import { getInitiativeApprovalVotes } from "@/lib/club-development/initiative-approval-queries";
+import { groupApprovalVotesByRevision } from "@/lib/club-development/club-development-approval-vote-revision";
+import { parseApproverPersonIds } from "@/lib/club-development/initiative-approval-presentation";
+import { personLabelFromRecord } from "@/lib/meetings/meeting-person-display";
+import type { MeetingApprovalVoteView } from "@/lib/meetings/meeting-approval-workspace-data";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -95,6 +100,47 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
       ? await resolvePersonIdForUser(actor.tenantId, actor.userId)
       : null;
   const canManageInitiative = actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
+
+  let initiativeVoteViews: MeetingApprovalVoteView[] = [];
+  let initiativeVoteHistory: ReturnType<typeof groupApprovalVotesByRevision>["history"] = [];
+  const initiativeApproverLabels: Record<string, string> = {};
+
+  if (dbInitiative && actor.tenantId) {
+    const votes = await getInitiativeApprovalVotes(dbInitiative.id, actor.tenantId);
+    const { currentVotes, history } = groupApprovalVotesByRevision(
+      votes.map((v) => ({
+        approverPersonId: v.approverPersonId,
+        decision: v.decision,
+        contentRevision: v.contentRevision,
+        comment: v.comment,
+        decidedAt: v.decidedAt,
+        legacyRevisionUnscoped: v.legacyRevisionUnscoped,
+      })),
+      dbInitiative.approvalContentRevision,
+    );
+    initiativeVoteHistory = history;
+    const approverIds = [
+      ...parseApproverPersonIds(dbInitiative.approverPersonIds),
+      ...votes.map((v) => v.approverPersonId),
+    ];
+    const uniqueIds = [...new Set(approverIds)];
+    if (uniqueIds.length > 0) {
+      const people = await prisma.person.findMany({
+        where: { tenantId: actor.tenantId, id: { in: uniqueIds } },
+        select: { id: true, displayName: true, firstName: true, lastName: true },
+      });
+      for (const p of people) {
+        initiativeApproverLabels[p.id] = personLabelFromRecord(p);
+      }
+    }
+    initiativeVoteViews = currentVotes.map((v) => ({
+      approverPersonId: v.approverPersonId,
+      approverLabel: initiativeApproverLabels[v.approverPersonId] ?? "Unbekannte Person",
+      decision: v.decision,
+      comment: v.comment ?? null,
+      decidedAt: v.decidedAt ?? null,
+    }));
+  }
 
   const pageTitle = dbInitiative?.title ?? slug;
   const statusLabel = dbInitiative?.status
@@ -247,6 +293,10 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                 initiativeId={dbInitiative.id}
                 canManage={canManageInitiative}
                 actorPersonId={actorPersonId}
+                contentRevision={dbInitiative.approvalContentRevision}
+                votes={initiativeVoteViews}
+                voteHistory={initiativeVoteHistory}
+                approverLabels={initiativeApproverLabels}
                 initiative={{
                   approvalRequired: dbInitiative.approvalRequired,
                   approvalRule: dbInitiative.approvalRule,

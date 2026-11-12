@@ -10,6 +10,7 @@ import type {
 } from "@prisma/client";
 import { evaluateMeetingApprovalRule } from "@/lib/meetings/meeting-approval-rules";
 import { assertApproverActsAsSelf } from "@/lib/meetings/meeting-person-payload";
+import { filterVotesForContentRevision } from "@/lib/club-development/club-development-approval-vote-revision";
 import { createHash } from "node:crypto";
 
 function parsePersonIds(raw: unknown): string[] {
@@ -97,17 +98,22 @@ export async function recordInitiativeApprovalVote(input: {
     approverPersonId: input.approverPersonId,
   });
 
+  const contentRevision = initiative.approvalContentRevision;
+
   await prisma.initiativeApprovalVote.upsert({
     where: {
-      initiativeId_approverPersonId: {
+      initiativeId_approverPersonId_contentRevision: {
         initiativeId: input.initiativeId,
         approverPersonId: input.approverPersonId,
+        contentRevision,
       },
     },
     create: {
       tenantId: input.tenantId,
       initiativeId: input.initiativeId,
       approverPersonId: input.approverPersonId,
+      contentRevision,
+      legacyRevisionUnscoped: false,
       decision: input.decision,
       comment: input.comment?.trim() || null,
       decidedByUserId: input.actorUserId,
@@ -122,10 +128,11 @@ export async function recordInitiativeApprovalVote(input: {
     },
   });
 
-  const votes = await prisma.initiativeApprovalVote.findMany({
+  const allVotes = await prisma.initiativeApprovalVote.findMany({
     where: { initiativeId: input.initiativeId },
-    select: { approverPersonId: true, decision: true },
+    select: { approverPersonId: true, decision: true, contentRevision: true },
   });
+  const votes = filterVotesForContentRevision(allVotes, contentRevision);
 
   const aggregateStatus = computeInitiativeAggregateStatus({
     approvalRequired: initiative.approvalRequired,

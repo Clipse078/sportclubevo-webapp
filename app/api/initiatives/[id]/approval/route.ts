@@ -56,7 +56,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (validation) {
       return NextResponse.json({ error: validation }, { status: 400 });
     }
-    await prisma.initiativeApprovalVote.deleteMany({ where: { initiativeId: id } });
     const updated = await prisma.initiative.update({
       where: { id },
       data: { approvalStatus: "PENDING" },
@@ -135,10 +134,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       approvalStatus: true,
     },
   });
-
-  if (approvalRequired === false) {
-    await prisma.initiativeApprovalVote.deleteMany({ where: { initiativeId: id } });
-  }
 
   void logAuditEvent({
     actorUserId: actor.userId,

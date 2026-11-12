@@ -99,10 +99,12 @@ export async function getClubDevelopmentProcessById(id: string, actor: ActorCont
 export async function getProcessApprovalVotes(processId: string, tenantId: string) {
   return prisma.clubDevelopmentProcessApprovalVote.findMany({
     where: { processId, tenantId },
-    orderBy: { decidedAt: "asc" },
+    orderBy: [{ contentRevision: "desc" }, { decidedAt: "asc" }],
     select: {
       id: true,
       approverPersonId: true,
+      contentRevision: true,
+      legacyRevisionUnscoped: true,
       decision: true,
       comment: true,
       decidedAt: true,

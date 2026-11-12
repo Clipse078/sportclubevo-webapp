@@ -3203,12 +3203,16 @@ model Initiative {
   @@index([visibilityScope])
 }
 
-/// Immutable approver vote on an Initiative (SCE-CD-03R2).
+/// Immutable approver vote on an Initiative (SCE-CD-03R2; revision-scoped SCE-CD-03R3F1).
 model InitiativeApprovalVote {
   id               String                      @id @default(cuid())
   tenantId         String
   initiativeId     String
   approverPersonId String
+  /// Content revision this vote applies to (must match Initiative.approvalContentRevision at vote time).
+  contentRevision  Int                         @default(1)
+  /// True when revision was inferred at migration — attribution may be approximate.
+  legacyRevisionUnscoped Boolean               @default(false)
   decision         MeetingApprovalDecisionKind
   comment          String?
   decidedByUserId  String
@@ -3218,8 +3222,8 @@ model InitiativeApprovalVote {
   tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([initiativeId, approverPersonId])
-  @@index([tenantId, initiativeId])
+  @@unique([initiativeId, approverPersonId, contentRevision])
+  @@index([tenantId, initiativeId, contentRevision])
 }
 
 /// Persisted Prozess/Richtlinie document (SCE-CD-03R2 — replaces demo-only list over time).
@@ -3265,6 +3269,8 @@ model ClubDevelopmentProcessApprovalVote {
   tenantId         String
   processId        String
   approverPersonId String
+  contentRevision  Int                         @default(1)
+  legacyRevisionUnscoped Boolean               @default(false)
   decision         MeetingApprovalDecisionKind
   comment          String?
   decidedByUserId  String
@@ -3274,8 +3280,8 @@ model ClubDevelopmentProcessApprovalVote {
   tenant  Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   process ClubDevelopmentProcess @relation(fields: [processId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([processId, approverPersonId])
-  @@index([tenantId, processId])
+  @@unique([processId, approverPersonId, contentRevision])
+  @@index([tenantId, processId, contentRevision])
 }
 
 // ---------------------------------------------------------------------------

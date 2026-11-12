@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui";
 import { PropertyGrid } from "@/components/ui/PropertyGrid";
 import { MetadataCard } from "@/components/ui/MetadataCard";
 import { meetingApprovalAggregateStatusLabel, parseApproverPersonIds } from "@/lib/club-development/process-approval-presentation";
+import { groupApprovalVotesByRevision } from "@/lib/club-development/club-development-approval-vote-revision";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -52,10 +53,23 @@ export default async function ProcessDetailPage({ params }: PageProps) {
       : null;
 
   let voteViews: MeetingApprovalVoteView[] = [];
+  let voteHistory: ReturnType<typeof groupApprovalVotesByRevision>["history"] = [];
   const approverLabels: Record<string, string> = {};
 
   if (process && actor.tenantId) {
     const votes = await getProcessApprovalVotes(process.id, actor.tenantId);
+    const { currentVotes, history } = groupApprovalVotesByRevision(
+      votes.map((v) => ({
+        approverPersonId: v.approverPersonId,
+        decision: v.decision,
+        contentRevision: v.contentRevision,
+        comment: v.comment,
+        decidedAt: v.decidedAt,
+        legacyRevisionUnscoped: v.legacyRevisionUnscoped,
+      })),
+      process.approvalContentRevision,
+    );
+    voteHistory = history;
     const approverIds = [
       ...parseApproverPersonIds(process.approverPersonIds),
       ...votes.map((v: { approverPersonId: string }) => v.approverPersonId),
@@ -70,12 +84,12 @@ export default async function ProcessDetailPage({ params }: PageProps) {
         approverLabels[p.id] = personLabelFromRecord(p);
       }
     }
-    voteViews = votes.map((v: (typeof votes)[number]) => ({
+    voteViews = currentVotes.map((v) => ({
       approverPersonId: v.approverPersonId,
       approverLabel: approverLabels[v.approverPersonId] ?? "Unbekannte Person",
       decision: v.decision,
-      comment: v.comment,
-      decidedAt: v.decidedAt,
+      comment: v.comment ?? null,
+      decidedAt: v.decidedAt ?? null,
     }));
   }
 
@@ -187,6 +201,7 @@ export default async function ProcessDetailPage({ params }: PageProps) {
                   approvalStatus: process.approvalStatus,
                 }}
                 votes={voteViews}
+                voteHistory={voteHistory}
                 approverLabels={approverLabels}
               />
             </SectionCard>
