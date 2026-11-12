@@ -104,6 +104,19 @@ describe("SCE-DESIGN-SYSTEM-10-R2 — activity card temporal consistency", () =>
     );
   });
 
+  it("DATE-01R1: match reference layout uses canonical date tile in meta column", () => {
+    const refLayout = readSrc("components/sporting-activity/SceMatchFixtureReferenceLayout.tsx");
+    expect(refLayout).toContain("SceDateTile");
+    expect(refLayout).toContain('testId="sce-match-reference-date"');
+    expect(refLayout).not.toContain("formatFixtureDateLine");
+  });
+
+  it("DATE-01R1: Vereinsleitung meetings overview uses SceDateTile", () => {
+    const list = readSrc("components/admin/vereinsleitung/VereinsleitungMeetingsList.tsx");
+    expect(list).toContain("SceDateTile");
+    expect(list).toContain("vereinsleitung-meeting-date-");
+  });
+
   it("preserves match home/away grammar and activity semantic colours", () => {
     const matchRow = readSrc("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
     expect(matchRow).toMatch(/home|away|VS/i);

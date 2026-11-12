@@ -3,10 +3,8 @@
 import type { ReactNode } from "react";
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
-import {
-  formatFixtureDateLine,
-  formatFixtureTime,
-} from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import { SceDateTile } from "@/components/design-system/date";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { SceTeamName } from "@/components/design-system/typography";
 import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
@@ -115,7 +113,6 @@ export function SceMatchFixtureReferenceLayout({
   forceCompetitionLine = false,
 }: SceMatchFixtureReferenceLayoutProps) {
   const startAt = new Date(model.schedule.startAt);
-  const dateLine = formatFixtureDateLine(startAt, fmtCfg);
   const showCrests = isSceActivityDimensionVisible(density, "crests");
   const locationLine = model.location
     ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
@@ -149,9 +146,13 @@ export function SceMatchFixtureReferenceLayout({
             <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
           </div>
         ) : null}
-        <p className={SCE_ACTIVITY_REFERENCE_LAYOUT.datePrimaryClass} data-testid="sce-match-reference-date">
-          {dateLine}
-        </p>
+        <SceDateTile
+          value={startAt}
+          fmtCfg={fmtCfg}
+          size="compact"
+          testId="sce-match-reference-date"
+          decorative
+        />
         {teamContextLabel ? (
           <p
             className={SCE_ACTIVITY_REFERENCE_LAYOUT.teamContextClass}

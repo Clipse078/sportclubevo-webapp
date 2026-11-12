@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, MoreHorizontal } from "lucide-react";
@@ -31,7 +31,28 @@ export default function MeetingWorkspaceStatusBar({
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [reopenReason, setReopenReason] = useState("");
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   const summary = buildMeetingWorkspaceStatusSummary({
     meeting,
@@ -90,7 +111,7 @@ export default function MeetingWorkspaceStatusBar({
         </dl>
 
         {canManage ? (
-          <div className="relative flex shrink-0 items-center gap-2">
+          <div ref={menuRef} className="relative flex shrink-0 items-center gap-2">
             {meeting.status === "PLANNED" && !meeting.conductedAt ? (
               <button
                 type="button"

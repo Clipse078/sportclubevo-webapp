@@ -9,11 +9,13 @@
 
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Clock3, Edit, MapPin } from "lucide-react";
+import { ChevronRight, Clock3, Edit, MapPin } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import VisibilityScopeBadge from "@/components/admin/shared/VisibilityScopeBadge";
 import { Badge } from "@/components/ui";
+import { SceDateTile } from "@/components/design-system/date";
 import type { MeetingListItem } from "@/lib/meetings/queries";
+import { formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 const STATUS_LABELS: Record<MeetingListItem["status"], string> = {
   PLANNED: "Geplant",
@@ -29,23 +31,6 @@ const STATUS_VARIANTS: Record<MeetingListItem["status"], StatusVariant> = {
   CANCELLED: "danger",
 };
 
-function formatSwissDate(date: Date) {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(date));
-}
-
-function formatMeetingTime(date: Date) {
-  return new Intl.DateTimeFormat("de-CH", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  }).format(new Date(date));
-}
-
 function formatPlannedDuration(minutes: number | null | undefined) {
   if (minutes == null || minutes <= 0) return null;
   if (minutes < 60) return `${minutes} min`;
@@ -57,12 +42,17 @@ function formatPlannedDuration(minutes: number | null | undefined) {
 type VereinsleitungMeetingsListProps = {
   meetings: MeetingListItem[];
   canManage?: boolean;
+  locale?: string;
+  timezone?: string;
 };
 
 export default function VereinsleitungMeetingsList({
   meetings,
   canManage = false,
+  locale = "de-CH",
+  timezone = "Europe/Zurich",
 }: VereinsleitungMeetingsListProps) {
+  const fmtCfg: TenantFormatConfig = { locale, timezone };
   return (
     <ul className="list-none space-y-3">
       {meetings.map((meeting) => {
@@ -83,7 +73,14 @@ export default function VereinsleitungMeetingsList({
                 data-testid="vereinsleitung-meeting-card-link"
               />
 
-              <div className="pointer-events-none relative z-[1] flex flex-wrap items-start justify-between gap-4">
+              <div className="pointer-events-none relative z-[1] flex items-start gap-4">
+                <SceDateTile
+                  value={meeting.meetingDate}
+                  fmtCfg={fmtCfg}
+                  testId={`vereinsleitung-meeting-date-${meeting.slug}`}
+                  decorative
+                />
+                <div className="flex min-w-0 flex-1 flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1 pr-2">
                   <h3
                     className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--blue)] motion-safe:transition-colors"
@@ -93,9 +90,12 @@ export default function VereinsleitungMeetingsList({
                   </h3>
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-[var(--text-2)]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
-                      {formatSwissDate(meeting.meetingDate)}, {formatMeetingTime(meeting.meetingDate)} Uhr
+                    <span
+                      className="inline-flex items-center gap-1.5 tabular-nums"
+                      data-testid={`vereinsleitung-meeting-time-${meeting.slug}`}
+                    >
+                      <Clock3 className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                      {formatTime(meeting.meetingDate, fmtCfg)} Uhr
                     </span>
 
                     {durationLabel ? (
@@ -150,6 +150,7 @@ export default function VereinsleitungMeetingsList({
                       <ChevronRight className="h-4 w-4" aria-hidden />
                     </span>
                   </div>
+                </div>
                 </div>
               </div>
             </article>
