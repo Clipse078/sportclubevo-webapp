@@ -12,7 +12,12 @@ import {
 import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
 import { resolveTaskProvenance, type TaskProvenance } from "./task-provenance";
-import { computeSubtaskProgress } from "./subtask-rules";
+import {
+  computeParentTaskProgress,
+  countOpenEligibleSubtasks,
+  deriveEffectiveParentStatus,
+  nextRelevantSubtaskDeadline,
+} from "./task-hierarchy-progress";
 import { getTaskSeriesForRead } from "./task-series-service";
 import { requireVisibleTask } from "./task-access";
 import type {
@@ -114,6 +119,10 @@ export type TaskWorkspaceBundle = {
   parentTask: { id: string; title: string } | null;
   subtasks: TaskDto[];
   progress: TaskProgressDto;
+  /** Derived status when parent has Teilaufgaben (stored status may lag). */
+  effectiveStatus: import("@prisma/client").TaskStatus;
+  openSubtaskCount: number;
+  nextSubtaskDueAt: string | null;
   seriesRecurrenceLabel: string | null;
   seriesId: string | null;
   seriesTitle: string | null;
@@ -174,15 +183,34 @@ export async function loadTaskWorkspace(
     subtasks,
   );
 
-  const progressSource = task.parentTaskId
-    ? []
-    : enrichedSubtasks.map((s) => ({ status: s.status }));
-  const progressRaw = computeSubtaskProgress(progressSource);
+  const progress = task.parentTaskId
+    ? {
+        completedCount: 0,
+        totalCount: 0,
+        percent: 0,
+        label: "—",
+      }
+    : computeParentTaskProgress({
+        parentStatus: task.status,
+        subtasks: enrichedSubtasks.map((s) => ({ status: s.status })),
+      });
 
-  const progress: TaskProgressDto = {
-    ...progressRaw,
-    percent: progressRaw.totalCount === 0 ? 0 : progressRaw.percent,
-  };
+  const effectiveStatus = task.parentTaskId
+    ? task.status
+    : deriveEffectiveParentStatus(
+        task.status,
+        enrichedSubtasks.map((s) => ({ status: s.status })),
+      );
+
+  const openSubtaskCount = task.parentTaskId
+    ? 0
+    : countOpenEligibleSubtasks(enrichedSubtasks.map((s) => ({ status: s.status })));
+
+  const nextSubtaskDueAt = task.parentTaskId
+    ? null
+    : nextRelevantSubtaskDeadline(
+        enrichedSubtasks.map((s) => ({ status: s.status, dueAt: s.dueAt })),
+      );
 
   const seriesRecurrenceLabel = seriesRow
     ? formatTaskSeriesRecurrenceLabel(seriesRow)
@@ -198,6 +226,9 @@ export async function loadTaskWorkspace(
     parentTask: parentTask ? { id: parentTask.id, title: parentTask.title } : null,
     subtasks: enrichedSubtasks,
     progress,
+    effectiveStatus,
+    openSubtaskCount,
+    nextSubtaskDueAt,
     seriesRecurrenceLabel,
     seriesId: seriesRow?.id ?? task.taskSeriesId,
     seriesTitle: seriesRow?.title ?? null,

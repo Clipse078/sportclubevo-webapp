@@ -460,7 +460,7 @@ function SubtaskCreateInline({
         onClick={() => setOpen(true)}
         data-testid="task-workspace-subtask-add"
       >
-        + Unteraufgabe hinzufügen
+        + Teilaufgabe hinzufügen
       </button>
     );
   }
@@ -516,6 +516,9 @@ export function TaskWorkspacePanel({
     parentTask,
     subtasks,
     progress,
+    effectiveStatus,
+    openSubtaskCount,
+    nextSubtaskDueAt,
     seriesRecurrenceLabel,
     seriesId,
     seriesTitle,
@@ -538,7 +541,7 @@ export function TaskWorkspacePanel({
     locale,
     timeZone,
   });
-  const status = taskStatusPresentation(task.status);
+  const displayStatus = !task.parentTaskId ? effectiveStatus : task.status;
 
   const runAction = useCallback(
     (runner: () => Promise<{ ok: boolean; message?: string }>) => {
@@ -569,8 +572,8 @@ export function TaskWorkspacePanel({
   }
 
   const headerStatus = (
-    <span className={cn("shrink-0", taskStatusBadgeClass(task.status))}>
-      <TaskStatusLabel status={task.status} />
+    <span className={cn("shrink-0", taskStatusBadgeClass(displayStatus))}>
+      <TaskStatusLabel status={displayStatus} />
     </span>
   );
 
@@ -610,7 +613,7 @@ export function TaskWorkspacePanel({
           <div className="min-w-0 flex-1">
             {parentTask ? (
               <p className="truncate text-xs text-[var(--muted)]">
-                Unteraufgabe von{" "}
+                Übergeordnete Aufgabe:{" "}
                 <button
                   type="button"
                   className="text-[var(--primary)] hover:underline"
@@ -704,9 +707,9 @@ export function TaskWorkspacePanel({
 
           {!task.parentTaskId ? (
             <section aria-labelledby="task-subtasks-heading">
-              <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h2 id="task-subtasks-heading" className="text-sm font-semibold text-[var(--foreground)]">
-                  Unteraufgaben
+                  Teilaufgaben
                 </h2>
                 {progress.totalCount > 0 ? (
                   <span className="text-xs text-[var(--muted)]" data-testid="task-workspace-progress">
@@ -714,6 +717,37 @@ export function TaskWorkspacePanel({
                   </span>
                 ) : null}
               </div>
+              {progress.totalCount > 0 ? (
+                <div
+                  className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progress.percent}
+                  data-testid="task-workspace-progress-bar"
+                >
+                  <div
+                    className="h-full rounded-full bg-[var(--primary)] transition-[width]"
+                    style={{ width: `${Math.min(100, progress.percent)}%` }}
+                  />
+                </div>
+              ) : null}
+              {openSubtaskCount > 0 || nextSubtaskDueAt ? (
+                <p className="mb-2 text-xs text-[var(--muted)]" data-testid="task-workspace-subtask-summary">
+                  {openSubtaskCount > 0
+                    ? `${openSubtaskCount} offene Teilaufgabe${openSubtaskCount === 1 ? "" : "n"}`
+                    : null}
+                  {openSubtaskCount > 0 && nextSubtaskDueAt ? " · " : null}
+                  {nextSubtaskDueAt
+                    ? `Nächste Frist: ${presentTaskDeadline({
+                        dueAt: nextSubtaskDueAt,
+                        status: "OPEN",
+                        locale,
+                        timeZone,
+                      }).label}`
+                    : null}
+                </p>
+              ) : null}
               {subtasks.length > 0 ? (
                 <ul className="divide-y divide-[var(--border)]/60 rounded-lg border border-[var(--border)]">
                   {subtasks.map((sub) => {
@@ -743,7 +777,7 @@ export function TaskWorkspacePanel({
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-[var(--muted)]">Noch keine Unteraufgaben.</p>
+                <p className="text-sm text-[var(--muted)]">Noch keine Teilaufgaben.</p>
               )}
               <SubtaskCreateInline
                 parentTaskId={task.id}

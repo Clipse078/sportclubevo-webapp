@@ -32,11 +32,8 @@ import {
   TaskValidationError,
 } from "./errors";
 import { sortPersonalTasks } from "./personal-ordering";
-import {
-  assertNotSubtaskParent,
-  computeSubtaskProgress,
-  hasActionableSubtasks,
-} from "./subtask-rules";
+import { assertNotSubtaskParent, hasActionableSubtasks } from "./subtask-rules";
+import { computeParentTaskProgress } from "./task-hierarchy-progress";
 import type {
   CreateQuickTaskInput,
   CreateSubtaskInput,
@@ -165,9 +162,17 @@ async function validateAssigneeUserIds(
   }
 }
 
+function isReopenTransition(current: TaskStatus, next: TaskStatus): boolean {
+  return (
+    current === TaskStatusEnum.DONE &&
+    (next === TaskStatusEnum.OPEN || next === TaskStatusEnum.IN_PROGRESS)
+  );
+}
+
 function applyStatusTransition(
   current: TaskStatus,
   next: TaskStatus,
+  options?: { allowReopen?: boolean },
 ): { status: TaskStatus; completedAt: Date | null } {
   if (current === next) {
     return {
@@ -178,7 +183,9 @@ function applyStatusTransition(
 
   const terminal = [TaskStatusEnum.DONE, TaskStatusEnum.CANCELLED] as TaskStatus[];
   if (terminal.includes(current) && next !== current) {
-    throw new TaskValidationError("Cannot reopen a completed or cancelled task");
+    if (!(options?.allowReopen && isReopenTransition(current, next))) {
+      throw new TaskValidationError("Cannot reopen a completed or cancelled task");
+    }
   }
 
   if (next === TaskStatusEnum.DONE) {
@@ -812,11 +819,18 @@ export async function getTaskProgress(
     select: { status: true },
   });
 
-  const progress = computeSubtaskProgress(children);
-  return {
-    ...progress,
-    percent: progress.totalCount === 0 ? 0 : progress.percent,
-  };
+  const parent = await prisma.task.findFirst({
+    where: { id: taskId, tenantId: ctx.tenantId },
+    select: { status: true },
+  });
+  if (!parent) {
+    throw new TaskValidationError("Task not found");
+  }
+
+  return computeParentTaskProgress({
+    parentStatus: parent.status,
+    subtasks: children,
+  });
 }
 
 export async function updateTask(
@@ -951,8 +965,31 @@ export async function updateTask(
     if (input.contextId !== undefined) data.contextId = input.contextId;
   }
 
+  if (input.detachFromParent) {
+    if (!existing.parentTaskId) {
+      throw new TaskValidationError("Task is not linked to a parent");
+    }
+    if (!canManage) {
+      throw new TaskForbiddenError();
+    }
+    data.parentTask = { disconnect: true };
+  }
+
   if (input.status !== undefined) {
-    const transition = applyStatusTransition(existing.status, input.status);
+    const allowReopen = isReopenTransition(existing.status, input.status);
+    if (input.status === TaskStatusEnum.DONE && !existing.parentTaskId) {
+      const children = await prisma.task.findMany({
+        where: { tenantId: ctx.tenantId, parentTaskId: existing.id },
+        select: { status: true },
+      });
+      if (hasActionableSubtasks(children)) {
+        throw new ParentHasOpenSubtasksError();
+      }
+    }
+
+    const transition = applyStatusTransition(existing.status, input.status, {
+      allowReopen,
+    });
     data.status = transition.status;
     data.completedAt = transition.completedAt;
   }
@@ -1025,6 +1062,21 @@ export async function updateTask(
       },
     });
 
+    if (
+      existing.parentTaskId &&
+      input.status !== undefined &&
+      isReopenTransition(existing.status, input.status)
+    ) {
+      await tx.task.updateMany({
+        where: {
+          id: existing.parentTaskId,
+          tenantId: ctx.tenantId,
+          status: TaskStatusEnum.DONE,
+        },
+        data: { status: TaskStatusEnum.OPEN, completedAt: null },
+      });
+    }
+
     if (input.dueAt !== undefined) {
       const tenant = await tx.tenant.findUnique({
         where: { id: ctx.tenantId },
@@ -1055,7 +1107,8 @@ export async function updateTask(
   if (
     input.status !== undefined ||
     input.contextType !== undefined ||
-    input.contextId !== undefined
+    input.contextId !== undefined ||
+    input.detachFromParent
   ) {
     await refreshInitiativeProgressForTaskContext(
       ctx.tenantId,
