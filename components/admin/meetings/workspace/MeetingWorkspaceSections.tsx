@@ -291,18 +291,24 @@ function AgendaItemRow({
   const collapsedMetadata = buildAgendaItemCollapsedMetadata(item);
   const [creatingDecision, setCreatingDecision] = useState(false);
   const [decisionTitle, setDecisionTitle] = useState("");
+  const [decisionError, setDecisionError] = useState<string | null>(null);
 
   async function createDecisionFromAgenda() {
     const trimmed = decisionTitle.trim();
     if (!trimmed) return;
-    await meetingWorkspaceApi.decisions.create(meetingId, {
-      title: trimmed,
-      sourceAgendaItemId: item.id,
-      status: "CONFIRMED",
-    });
-    setDecisionTitle("");
-    setCreatingDecision(false);
-    await onDecisionCreated();
+    setDecisionError(null);
+    try {
+      await meetingWorkspaceApi.decisions.create(meetingId, {
+        title: trimmed,
+        sourceAgendaItemId: item.id,
+        status: "CONFIRMED",
+      });
+      setDecisionTitle("");
+      setCreatingDecision(false);
+      await onDecisionCreated();
+    } catch (e) {
+      setDecisionError(e instanceof Error ? e.message : "Beschluss konnte nicht gespeichert werden.");
+    }
   }
 
   return (
@@ -399,6 +405,11 @@ function AgendaItemRow({
                 ))}
               </ul>
             </div>
+          ) : null}
+          {decisionError ? (
+            <p className="text-xs text-rose-700" role="alert">
+              {decisionError}
+            </p>
           ) : null}
           {creatingDecision ? (
             <div className="flex flex-wrap items-end gap-2">
@@ -601,6 +612,7 @@ export function MeetingParticipantsSection({
 
 export function MeetingDecisionsSection({
   meetingId,
+  meetingSlug,
   meetingStatus,
   canManage,
   documentationEditable,
@@ -610,6 +622,7 @@ export function MeetingDecisionsSection({
   items,
   onItemsChange,
 }: SectionProps<Decision> & {
+  meetingSlug: string;
   meetingStatus: MeetingStatus;
   documentationEditable: boolean;
   actorPersonId: string | null;
@@ -650,6 +663,7 @@ export function MeetingDecisionsSection({
         <MeetingDecisionCard
           key={d.id}
           meetingId={meetingId}
+          meetingSlug={meetingSlug}
           meetingStatus={meetingStatus}
           decision={d}
           canManage={canManage}
@@ -687,6 +701,7 @@ export function MeetingDecisionsSection({
 
 function MeetingDecisionCard({
   meetingId,
+  meetingSlug,
   meetingStatus,
   decision,
   canManage,
@@ -698,6 +713,7 @@ function MeetingDecisionCard({
   onSourceAgendaChange,
 }: {
   meetingId: string;
+  meetingSlug: string;
   meetingStatus: MeetingStatus;
   decision: Decision;
   canManage: boolean;
@@ -776,6 +792,7 @@ function MeetingDecisionCard({
       />
       <MeetingDecisionTasksPanel
         meetingId={meetingId}
+        meetingSlug={meetingSlug}
         decisionId={decision.id}
         decisionTitle={decision.title}
         canManage={documentationEditable}

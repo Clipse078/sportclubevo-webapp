@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { buildContextualTaskCreateHref } from "@/lib/tasks/task-create-navigation";
+import { TaskContextType } from "@prisma/client";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Loader2, Plus } from "lucide-react";
 import {
@@ -20,6 +22,7 @@ type TaskRow = {
 
 type Props = {
   meetingId: string;
+  meetingSlug?: string;
   decisionId: string;
   decisionTitle: string;
   canManage: boolean;
@@ -27,6 +30,7 @@ type Props = {
 
 export function MeetingDecisionTasksPanel({
   meetingId,
+  meetingSlug,
   decisionId,
   decisionTitle,
   canManage,
@@ -34,8 +38,14 @@ export function MeetingDecisionTasksPanel({
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [showCreate, setShowCreate] = useState(false);
-  const [title, setTitle] = useState(decisionTitle);
+  const createHref = buildContextualTaskCreateHref(
+    TaskContextType.MEETING_DECISION,
+    decisionId,
+    {
+      meetingSlug: meetingSlug ?? meetingId,
+      originLabel: decisionTitle,
+    },
+  );
   const [linkQuery, setLinkQuery] = useState("");
   const [linkable, setLinkable] = useState<{ id: string; title: string }[]>([]);
   const [showLink, setShowLink] = useState(false);
@@ -70,30 +80,6 @@ export function MeetingDecisionTasksPanel({
     }, 250);
     return () => window.clearTimeout(handle);
   }, [linkQuery, showLink, meetingId, decisionId]);
-
-  function createTask() {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    setError(null);
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/meetings/${meetingId}/decisions/${decisionId}/tasks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: trimmed,
-            idempotencyKey: `${decisionId}:${trimmed}`,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Fehler");
-        await refresh();
-        setShowCreate(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Fehler");
-      }
-    });
-  }
 
   function linkTask(taskId: string) {
     setError(null);
@@ -152,45 +138,15 @@ export function MeetingDecisionTasksPanel({
       )}
       {canManage ? (
         <div className="flex flex-wrap gap-2 pt-1">
-          {!showCreate ? (
-            <button
-              type="button"
-              className={workspaceGhostButtonClass}
-              onClick={() => setShowCreate(true)}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Massnahme erstellen
-            </button>
-          ) : null}
+          <Link href={createHref} className={workspaceGhostButtonClass}>
+            <Plus className="h-3.5 w-3.5" />
+            Massnahme erstellen
+          </Link>
           {!showLink ? (
             <button type="button" className={workspaceGhostButtonClass} onClick={() => setShowLink(true)}>
               Bestehende Aufgabe verknüpfen
             </button>
           ) : null}
-        </div>
-      ) : null}
-      {showCreate && canManage ? (
-        <div className="space-y-2 pt-2">
-          <input
-            className={workspaceInputClass}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Aufgabentitel"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={workspacePrimaryButtonClass}
-              disabled={pending || !title.trim()}
-              onClick={createTask}
-            >
-              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Speichern
-            </button>
-            <button type="button" className={workspaceGhostButtonClass} onClick={() => setShowCreate(false)}>
-              Abbrechen
-            </button>
-          </div>
         </div>
       ) : null}
       {showLink && canManage ? (

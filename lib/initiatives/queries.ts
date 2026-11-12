@@ -11,6 +11,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildVisibilityWhere, applyVisibilityFilter, canSeeEntity } from "@/lib/visibility/visibility-filter";
+import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 
 const INITIATIVE_LIST_SELECT = {
   id: true,
@@ -19,7 +20,12 @@ const INITIATIVE_LIST_SELECT = {
   summary: true,
   status: true,
   owner: true,
+  ownerPersonId: true,
   progress: true,
+  approvalRequired: true,
+  approvalRule: true,
+  approverPersonIds: true,
+  approvalStatus: true,
   dueDate: true,
   reviewStage: true,
   requiresFourEyeReview: true,
@@ -46,7 +52,18 @@ export async function getInitiatives(actor: ActorContext) {
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     select: INITIATIVE_LIST_SELECT,
   });
-  return applyVisibilityFilter(rows, actor);
+  const visible = applyVisibilityFilter(rows, actor);
+  return Promise.all(
+    visible.map(async (row) => {
+      const snapshot = await computeInitiativeProgressSnapshot(actor.tenantId!, row.id);
+      return {
+        ...row,
+        progress: snapshot.progress,
+        progressEligibleTaskCount: snapshot.eligibleCount,
+        progressCompletedTaskCount: snapshot.completedCount,
+      };
+    }),
+  );
 }
 
 const INITIATIVE_DETAIL_SELECT = {
@@ -71,7 +88,13 @@ export async function getInitiativeBySlug(slug: string, actor: ActorContext) {
   });
   if (!initiative) return null;
   if (!canSeeEntity(initiative, actor)) return null;
-  return initiative;
+  const snapshot = await computeInitiativeProgressSnapshot(actor.tenantId!, initiative.id);
+  return {
+    ...initiative,
+    progress: snapshot.progress,
+    progressEligibleTaskCount: snapshot.eligibleCount,
+    progressCompletedTaskCount: snapshot.completedCount,
+  };
 }
 
 export async function getInitiativeById(id: string, actor: ActorContext) {
@@ -87,7 +110,13 @@ export async function getInitiativeById(id: string, actor: ActorContext) {
   });
   if (!initiative) return null;
   if (!canSeeEntity(initiative, actor)) return null;
-  return initiative;
+  const snapshot = await computeInitiativeProgressSnapshot(actor.tenantId!, initiative.id);
+  return {
+    ...initiative,
+    progress: snapshot.progress,
+    progressEligibleTaskCount: snapshot.eligibleCount,
+    progressCompletedTaskCount: snapshot.completedCount,
+  };
 }
 
 export type InitiativeListItem = Awaited<ReturnType<typeof getInitiatives>>[number];

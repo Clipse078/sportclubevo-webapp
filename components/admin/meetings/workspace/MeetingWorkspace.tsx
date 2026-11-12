@@ -89,6 +89,7 @@ export default function MeetingWorkspace({
             />
             <MeetingDecisionsSection
               meetingId={meeting.id}
+              meetingSlug={slug}
               meetingStatus={meeting.status}
               canManage={canManage}
               documentationEditable={effectiveCanManage}

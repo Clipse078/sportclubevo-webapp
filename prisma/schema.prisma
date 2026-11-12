@@ -848,6 +848,12 @@ enum InitiativeStatus {
   CANCELLED
 }
 
+enum ClubDevelopmentProcessStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
 enum TargetCategory {
   SPORTLICHE_ENTWICKLUNG
   MITGLIEDERWACHSTUM
@@ -1251,6 +1257,9 @@ model Tenant {
   meetingProtocolApprovalVotes     MeetingProtocolApprovalVote[]
   meetingLifecycleEvents           MeetingLifecycleEvent[]
   initiatives                      Initiative[]
+  initiativeApprovalVotes          InitiativeApprovalVote[]
+  clubDevelopmentProcesses         ClubDevelopmentProcess[]
+  clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
   targets                          Target[]
   tasks                            Task[]
   taskAssignees                    TaskAssignee[]
@@ -3150,8 +3159,17 @@ model Initiative {
   description String?
   status      InitiativeStatus @default(PLANNED)
   owner       String?
+  ownerPersonId String?
   progress    Int?
   dueDate     DateTime?
+
+  // SCE-CD-03R2 — optional person-based approval (Meetings 2.0 pattern)
+  approvalRequired        Boolean                       @default(false)
+  approvalRule            MeetingApprovalRule           @default(ALL)
+  approverPersonIds       Json?
+  approvalStatus          MeetingApprovalAggregateStatus @default(NOT_REQUIRED)
+  approvalContentRevision Int                           @default(1)
+  approvedContentHash     String?
 
   // Governance — consistent with Meeting and Target governance pattern
   reviewStage           ReviewWorkflowStage @default(DRAFT)
@@ -3175,6 +3193,7 @@ model Initiative {
 
   tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   linkedAgendaItems   MeetingAgendaItem[] @relation("MeetingAgendaInitiativeLink")
+  approvalVotes       InitiativeApprovalVote[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -3182,6 +3201,81 @@ model Initiative {
   @@index([reviewStage])
   @@index([dueDate])
   @@index([visibilityScope])
+}
+
+/// Immutable approver vote on an Initiative (SCE-CD-03R2).
+model InitiativeApprovalVote {
+  id               String                      @id @default(cuid())
+  tenantId         String
+  initiativeId     String
+  approverPersonId String
+  decision         MeetingApprovalDecisionKind
+  comment          String?
+  decidedByUserId  String
+  decidedAt        DateTime                    @default(now())
+  clientRequestId  String?
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([initiativeId, approverPersonId])
+  @@index([tenantId, initiativeId])
+}
+
+/// Persisted Prozess/Richtlinie document (SCE-CD-03R2 — replaces demo-only list over time).
+model ClubDevelopmentProcess {
+  id          String                       @id @default(cuid())
+  tenantId    String
+  slug        String
+  title       String
+  summary     String?
+  description String?
+  status      ClubDevelopmentProcessStatus @default(DRAFT)
+  owner       String?
+  ownerPersonId String?
+  documentRevision Int                     @default(1)
+
+  approvalRequired        Boolean                       @default(false)
+  approvalRule            MeetingApprovalRule           @default(ALL)
+  approverPersonIds       Json?
+  approvalStatus          MeetingApprovalAggregateStatus @default(NOT_REQUIRED)
+  approvalContentRevision Int                           @default(1)
+  approvedContentHash     String?
+
+  visibilityScope        VisibilityScope @default(ORGANISATION)
+  createdByUserId        String?
+  visibleRoleRefs        Json?
+  visibleUserRefs        Json?
+  visibleOrgUnitRefs     Json?
+  visibleTargetGroupRefs Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  approvalVotes ClubDevelopmentProcessApprovalVote[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([status])
+}
+
+model ClubDevelopmentProcessApprovalVote {
+  id               String                      @id @default(cuid())
+  tenantId         String
+  processId        String
+  approverPersonId String
+  decision         MeetingApprovalDecisionKind
+  comment          String?
+  decidedByUserId  String
+  decidedAt        DateTime                    @default(now())
+  clientRequestId  String?
+
+  tenant  Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  process ClubDevelopmentProcess @relation(fields: [processId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([processId, approverPersonId])
+  @@index([tenantId, processId])
 }
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { useGuardedComposerCancel } from "@/lib/ux/use-guarded-composer-cancel";
 import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import VisibilityScopeSelect, {
@@ -23,7 +24,7 @@ type InitiativeFormProps = {
     description?: string;
     status?: string;
     owner?: string;
-    progress?: string;
+    ownerPersonId?: string;
     dueDate?: string;
     visibilityScope?: VisibilityScopeValue;
     visibleOrgUnitRefs?: string[];
@@ -56,8 +57,30 @@ export default function InitiativeForm({
   const [summary, setSummary] = useState(defaultValues?.summary ?? "");
   const [description, setDescription] = useState(defaultValues?.description ?? "");
   const [status, setStatus] = useState(defaultValues?.status ?? "PLANNED");
-  const [owner, setOwner] = useState(defaultValues?.owner ?? "");
-  const [progress, setProgress] = useState(defaultValues?.progress ?? "");
+  const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
+    defaultValues?.ownerPersonId
+      ? {
+          id: defaultValues.ownerPersonId,
+          firstName: "",
+          lastName: "",
+          displayName: defaultValues.owner ?? null,
+          email: null,
+          phone: null,
+        }
+      : defaultValues?.owner
+        ? {
+            id: "",
+            firstName: "",
+            lastName: "",
+            displayName: defaultValues.owner,
+            email: null,
+            phone: null,
+          }
+        : null,
+  );
+  const [approvalRequired, setApprovalRequired] = useState(false);
+  const [approvalRule, setApprovalRule] = useState<"ALL" | "ONE" | "MAJORITY">("ALL");
+  const [approverPersonIds, setApproverPersonIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState(defaultValues?.dueDate ?? "");
   const [visibilityScope, setVisibilityScope] = useState<VisibilityScopeValue>(
     defaultValues?.visibilityScope ?? "ORGANISATION",
@@ -85,8 +108,8 @@ export default function InitiativeForm({
       summary,
       description,
       status,
-      owner,
-      progress,
+      ownerPerson,
+      approvalRequired,
       dueDate,
       visibilityScope,
       visibleOrgUnitRefs,
@@ -99,8 +122,8 @@ export default function InitiativeForm({
       summary,
       description,
       status,
-      owner,
-      progress,
+      ownerPerson,
+      approvalRequired,
       dueDate,
       visibilityScope,
       visibleOrgUnitRefs,
@@ -123,15 +146,20 @@ export default function InitiativeForm({
 
     setLoading(true);
     try {
-      const rawProgress = progress !== "" ? Number(progress) : null;
+      const ownerLabel = ownerPerson?.displayName
+        || [ownerPerson?.firstName, ownerPerson?.lastName].filter(Boolean).join(" ")
+        || null;
       const payload = {
         title: title.trim(),
         summary: summary.trim() || null,
         description: description.trim() || null,
         status,
-        owner: owner.trim() || null,
-        progress: rawProgress !== null && rawProgress >= 0 && rawProgress <= 100 ? rawProgress : null,
+        owner: ownerLabel,
+        ownerPersonId: ownerPerson?.id?.trim() || null,
         dueDate: dueDate || null,
+        approvalRequired,
+        approvalRule,
+        approverPersonIds: approvalRequired ? approverPersonIds : [],
         visibilityScope,
         visibleOrgUnitRefs: visibilityScope === "RESTRICTED" ? visibleOrgUnitRefs : [],
         visibleRoleRefs: visibilityScope === "RESTRICTED" ? visibleRoleRefs : [],
@@ -161,7 +189,11 @@ export default function InitiativeForm({
         onSuccess(slug);
         return;
       }
-      router.push("/vereinsleitung/initiativen?status=saved");
+      if (mode === "create" && slug) {
+        router.push(`/vereinsleitung/initiativen/${slug}`);
+      } else {
+        router.push("/vereinsleitung/initiativen?status=saved");
+      }
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
@@ -241,28 +273,19 @@ export default function InitiativeForm({
             </select>
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <label className={labelClass}>Verantwortlich</label>
-            <input
-              type="text"
-              value={owner}
-              onChange={(e) => setOwner(e.target.value)}
-              placeholder="z.B. Michael Weber"
-              className={fieldClass}
+            <PeoplePicker
+              selected={ownerPerson}
+              onSelect={setOwnerPerson}
+              onClearSelected={() => setOwnerPerson(null)}
+              placeholder="Person suchen…"
             />
-          </div>
-
-          <div>
-            <label className={labelClass}>Fortschritt (0–100)</label>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={progress}
-              onChange={(e) => setProgress(e.target.value)}
-              placeholder="z.B. 65"
-              className={fieldClass}
-            />
+            {ownerPerson?.id ? null : ownerPerson?.displayName ? (
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Bestehender Freitext-Verantwortlicher: {ownerPerson.displayName}
+              </p>
+            ) : null}
           </div>
 
           <div>
@@ -276,6 +299,39 @@ export default function InitiativeForm({
           </div>
         </div>
       </section>
+
+      {mode === "create" ? (
+        <section className={sectionClass}>
+          <h3 className={sectionTitleClass}>Freigabe (optional)</h3>
+          <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">
+            <input
+              type="checkbox"
+              checked={approvalRequired}
+              onChange={(e) => setApprovalRequired(e.target.checked)}
+            />
+            Freigabe vor Veröffentlichung erforderlich
+          </label>
+          {approvalRequired ? (
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className={labelClass}>Freigaberegel</label>
+                <select
+                  className={fieldClass}
+                  value={approvalRule}
+                  onChange={(e) => setApprovalRule(e.target.value as typeof approvalRule)}
+                >
+                  <option value="ALL">Alle müssen zustimmen</option>
+                  <option value="ONE">Eine Zustimmung reicht</option>
+                  <option value="MAJORITY">Mehrheit</option>
+                </select>
+              </div>
+              <p className="text-xs text-[var(--muted)]">
+                Prüfer werden nach dem Erstellen auf der Initiative bearbeitet und können eingereicht werden.
+              </p>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className={sectionClass}>
         <h3 className={sectionTitleClass}>Sichtbarkeit</h3>

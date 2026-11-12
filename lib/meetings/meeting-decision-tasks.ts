@@ -10,6 +10,7 @@ import { listTasksForContext } from "@/lib/tasks/list-tasks-for-context";
 import { updateTask } from "@/lib/tasks/task-service";
 import { TaskValidationError } from "@/lib/tasks/errors";
 import type { ContextRelatedTaskSummaryDto } from "@/lib/tasks/context-related-task-types";
+import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
 
 export type MeetingDecisionTaskSummary = ContextRelatedTaskSummaryDto;
 
@@ -114,6 +115,12 @@ export async function createMeetingDecisionTask(
     },
   });
 
+  await refreshInitiativeProgressForTaskContext(
+    ctx.tenantId,
+    TaskContextType.MEETING_DECISION,
+    decisionId,
+  );
+
   return { taskId: task.id, deduplicated: false as const };
 }
 
@@ -158,6 +165,12 @@ export async function linkExistingTaskToMeetingDecision(
     contextType: TaskContextType.MEETING_DECISION,
     contextId: decisionId,
   });
+
+  await refreshInitiativeProgressForTaskContext(
+    ctx.tenantId,
+    TaskContextType.MEETING_DECISION,
+    decisionId,
+  );
 
   return { taskId: task.id, alreadyLinked: false as const };
 }

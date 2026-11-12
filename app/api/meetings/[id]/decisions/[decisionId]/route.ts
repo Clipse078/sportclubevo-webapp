@@ -6,6 +6,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingDecisionAgendaLink } from "@/lib/meetings/meeting-decision-agenda-link";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 
 async function requireSession() {
   const session = await auth();
@@ -89,25 +90,49 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
   }
 
+  const patch: Record<string, unknown> = {
+    title: body?.title?.trim() || undefined,
+    description: body?.description !== undefined ? body.description?.trim() || null : undefined,
+    status: validStatuses.includes(body?.status) ? body.status : undefined,
+    orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
+    ...(nextSourceAgendaItemId !== undefined ? { sourceAgendaItemId: nextSourceAgendaItemId } : {}),
+    ...(invalidate
+      ? {
+          approvalStatus: "PENDING",
+          approvalContentRevision: { increment: 1 },
+          approvedContentHash: null,
+        }
+      : {}),
+  };
+
+  if (body?.ownerPersonId !== undefined) {
+    const pid = body.ownerPersonId?.trim() || null;
+    if (!pid) {
+      patch.ownerPersonId = null;
+      patch.owner = body?.owner?.trim() || null;
+    } else if (actor.tenantId) {
+      const snap = await resolveMeetingPersonSnapshot(actor.tenantId, pid);
+      if (!snap) return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+      patch.ownerPersonId = snap.personId;
+      patch.owner = snap.displayName;
+    }
+  } else if (body?.owner !== undefined) {
+    patch.owner = body?.owner?.trim() || null;
+  }
+
   try {
     const updated = await prisma.meetingDecision.update({
       where: { id: decisionId },
-      data: {
-        title: body?.title?.trim() || undefined,
-        description: body?.description !== undefined ? body.description?.trim() || null : undefined,
-        status: validStatuses.includes(body?.status) ? body.status : undefined,
-        owner: body?.owner?.trim() || null,
-        orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
-        sourceAgendaItemId: nextSourceAgendaItemId,
-        ...(invalidate
-          ? {
-              approvalStatus: "PENDING",
-              approvalContentRevision: { increment: 1 },
-              approvedContentHash: null,
-            }
-          : {}),
+      data: patch,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        approvalStatus: true,
+        owner: true,
+        ownerPersonId: true,
+        sourceAgendaItemId: true,
       },
-      select: { id: true, title: true, status: true, approvalStatus: true },
     });
     if (invalidate) {
       await prisma.meetingDecisionApprovalVote.deleteMany({ where: { decisionId } });

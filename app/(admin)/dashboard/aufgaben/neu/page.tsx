@@ -9,6 +9,7 @@ import type { TaskContextType } from "@prisma/client";
 import AufgabenFullCreateClient from "@/components/admin/aufgaben/AufgabenFullCreateClient";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
 import { prisma } from "@/lib/db/prisma";
+import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,20 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
   const initialContextId =
     initialContextType && contextIdRaw ? contextIdRaw : null;
 
+  const contextualView =
+    initialContextType && initialContextId
+      ? await loadContextualTaskCreateView(
+          ctx,
+          initialContextType,
+          initialContextId,
+          "de-CH",
+          timeZone,
+        )
+      : null;
+
+  const initialTitle = sp.originLabel?.trim() || sp.title?.trim() || "";
+  const originMeetingSlug = sp.meetingSlug?.trim() || null;
+
   return (
     <AufgabenFullCreateClient
       orgUnitOptions={orgUnitOptions}
@@ -53,6 +68,10 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
       backHref={backHref}
       initialContextType={initialContextType}
       initialContextId={initialContextId}
+      initialContextLabel={contextualView?.presentation?.title ?? null}
+      initialContextSecondary={contextualView?.presentation?.subtitle ?? null}
+      initialTitle={initialTitle}
+      originMeetingSlug={originMeetingSlug}
     />
   );
 }

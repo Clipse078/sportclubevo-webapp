@@ -20,6 +20,9 @@ import { TimelinePlaceholder } from "@/components/ui/TimelinePlaceholder";
 import { loadInitiativeConnectedWork } from "@/lib/club-development/initiative-connected-work";
 import InitiativeConnectedWorkSection from "@/components/admin/club-development/InitiativeConnectedWorkSection";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
+import InitiativeApprovalPanel from "@/components/admin/initiatives/InitiativeApprovalPanel";
+import { resolvePersonIdForUser } from "@/lib/meetings/meeting-person-payload";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -81,6 +84,17 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
     dbInitiative && actor.tenantId
       ? await loadInitiativeConnectedWork(actor, dbInitiative.id)
       : null;
+
+  const progressSnapshot =
+    dbInitiative && actor.tenantId
+      ? await computeInitiativeProgressSnapshot(actor.tenantId, dbInitiative.id)
+      : null;
+
+  const actorPersonId =
+    dbInitiative && actor.tenantId
+      ? await resolvePersonIdForUser(actor.tenantId, actor.userId)
+      : null;
+  const canManageInitiative = actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
 
   const pageTitle = dbInitiative?.title ?? slug;
   const statusLabel = dbInitiative?.status
@@ -199,26 +213,47 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                 </p>
               )}
 
-              {dbInitiative.progress !== null ? (
-                <div className="mt-5">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                      Fortschritt
-                    </p>
-                    <span className="text-sm font-semibold text-[var(--sce-primary)]">
-                      {dbInitiative.progress}%
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-[var(--surface-2)]">
-                    <div
-                      className="h-2 rounded-full bg-[var(--sce-primary)]"
-                      style={{
-                        width: `${Math.min(100, dbInitiative.progress)}%`,
-                      }}
-                    />
-                  </div>
+              <div className="mt-5" data-testid="initiative-auto-progress">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                    Fortschritt (automatisch)
+                  </p>
+                  <span className="text-sm font-semibold text-[var(--sce-primary)]">
+                    {progressSnapshot?.progress ?? 0}%
+                  </span>
                 </div>
-              ) : null}
+                <div className="h-2 rounded-full bg-[var(--surface-2)]">
+                  <div
+                    className="h-2 rounded-full bg-[var(--sce-primary)]"
+                    style={{
+                      width: `${Math.min(100, progressSnapshot?.progress ?? 0)}%`,
+                    }}
+                  />
+                </div>
+                {progressSnapshot && progressSnapshot.eligibleCount === 0 ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Noch keine verknüpften Aufgaben — Fortschritt wird aus erledigten Aufgaben berechnet.
+                  </p>
+                ) : progressSnapshot ? (
+                  <p className="mt-2 text-xs text-[var(--text-2)]">
+                    {progressSnapshot.completedCount} von {progressSnapshot.eligibleCount} Aufgaben erledigt
+                  </p>
+                ) : null}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Optionale Freigabe">
+              <InitiativeApprovalPanel
+                initiativeId={dbInitiative.id}
+                canManage={canManageInitiative}
+                actorPersonId={actorPersonId}
+                initiative={{
+                  approvalRequired: dbInitiative.approvalRequired,
+                  approvalRule: dbInitiative.approvalRule,
+                  approverPersonIds: dbInitiative.approverPersonIds,
+                  approvalStatus: dbInitiative.approvalStatus,
+                }}
+              />
             </SectionCard>
 
             {connectedWork ? <InitiativeConnectedWorkSection connected={connectedWork} /> : null}

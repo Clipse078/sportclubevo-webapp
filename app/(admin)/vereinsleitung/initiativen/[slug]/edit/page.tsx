@@ -32,7 +32,7 @@ export default async function EditInitiativePage({ params }: PageProps) {
     description: initiative.description ?? "",
     status: initiative.status,
     owner: initiative.owner ?? "",
-    progress: initiative.progress != null ? String(initiative.progress) : "",
+    ownerPersonId: initiative.ownerPersonId ?? undefined,
     dueDate: initiative.dueDate ? new Date(initiative.dueDate).toISOString().slice(0, 10) : "",
     visibilityScope: initiative.visibilityScope as VisibilityScopeValue,
     visibleOrgUnitRefs: parseStringArray(initiative.visibleOrgUnitRefs),
