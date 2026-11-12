@@ -68,12 +68,12 @@ describe("SCE-DS2-07D communication and website CMS migration", () => {
     expect(SCE_DS2_07D_ASSIGNED_SOURCES).toHaveLength(38);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07D"]).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(215);
+    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(218);
     expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07E"]).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(215);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(218);
 
     for (const sourceFile of SCE_DS2_07D_ASSIGNED_SOURCES) {
       const entry = SCE_DS2_07B_ROUTE_REGISTRY.find((item) => item.sourceFile === sourceFile);

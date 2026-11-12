@@ -5776,6 +5776,75 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
+    "urlPattern": "/vereinsleitung/prozesse/[slug]",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "detail",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
+    "accessibility": "PENDING",
+    "functional": "VERIFIED",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/vereinsleitung/prozesse/[slug]/edit",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "form",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
+    "accessibility": "PENDING",
+    "functional": "VERIFIED",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/vereinsleitung/prozesse/new",
+    "sourceFile": "app/(admin)/vereinsleitung/prozesse/new/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "form",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "VERIFIED",
+    "compactDesktop": "VERIFIED",
+    "tablet": "VERIFIED",
+    "mobile": "VERIFIED",
+    "accessibility": "PENDING",
+    "functional": "VERIFIED",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
     "urlPattern": "/vereinsleitung/targets",
     "sourceFile": "app/(admin)/vereinsleitung/targets/page.tsx",
     "module": "vereinsleitung",
@@ -6027,18 +6096,18 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-12T10:26:23.824Z",
-  "totalCanonicalRoutes": 215,
+  "generatedAt": "2026-11-12T11:28:11.540Z",
+  "totalCanonicalRoutes": 218,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 215,
+  "pendingAuthenticatedVisualCount": 218,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 215,
+  "automatedChecksPassedCount": 218,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
   "dimensionClosureCompleteCount": 0,
   "dimensionAccessibilityPassCount": 0,
-  "dimensionFunctionalPassCount": 133,
+  "dimensionFunctionalPassCount": 136,
   "authenticatedBrowserAvailable": true,
   "contrastSmokeDebt": [
     "vitest contrast smoke may time out during cold Playwright install; direct script passes (scripts/sce-ds2-06-visual-archetypes-browser-check.mjs)"
@@ -6052,6 +6121,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 215,
+  "entriesScanned": 218,
   "defects": []
 };

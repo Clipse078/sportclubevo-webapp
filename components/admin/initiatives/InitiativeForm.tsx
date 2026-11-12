@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { useGuardedComposerCancel } from "@/lib/ux/use-guarded-composer-cancel";
 import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import VisibilityScopeSelect, {

@@ -113,6 +113,28 @@ const INITIATIVE_GUARD_SELECT = {
   visibleTargetGroupRefs: true,
 } as const;
 
+const CLUB_DEVELOPMENT_PROCESS_GUARD_SELECT = {
+  id: true,
+  slug: true,
+  visibilityScope: true,
+  createdByUserId: true,
+  visibleRoleRefs: true,
+  visibleUserRefs: true,
+  visibleOrgUnitRefs: true,
+  visibleTargetGroupRefs: true,
+} as const;
+
+type ClubDevelopmentProcessGuardEntity = {
+  id: string;
+  slug: string;
+  visibilityScope: import("@prisma/client").VisibilityScope;
+  createdByUserId: string | null;
+  visibleRoleRefs: unknown;
+  visibleUserRefs: unknown;
+  visibleOrgUnitRefs: unknown;
+  visibleTargetGroupRefs: unknown;
+};
+
 const TARGET_GUARD_SELECT = {
   id: true,
   title: true,
@@ -270,6 +292,46 @@ export async function requireInitiativeAccess(opts: {
   // Four-eye enforcement applied in the stage route handler via lib/governance/four-eye.ts.
 
   return { ok: true, entity: initiative };
+}
+
+// ---------------------------------------------------------------------------
+// requireClubDevelopmentProcessAccess
+// ---------------------------------------------------------------------------
+
+export async function requireClubDevelopmentProcessAccess(opts: {
+  actor: ActorContext;
+  id: string;
+  access: AccessMode;
+}): Promise<GuardResult<ClubDevelopmentProcessGuardEntity>> {
+  const vlGate = await requireVereinsleitungActor(opts.actor);
+  if (vlGate) return vlGate;
+  if (!opts.actor.tenantId) return notFound("Prozess nicht gefunden.");
+  const process = await prisma.clubDevelopmentProcess.findFirst({
+    where: { id: opts.id, tenantId: opts.actor.tenantId },
+    select: CLUB_DEVELOPMENT_PROCESS_GUARD_SELECT,
+  });
+
+  if (!process) return notFound("Prozess nicht gefunden.");
+  if (
+    !canSeeEntity(
+      { ...process, visibleTeamRefs: null, visiblePersonRefs: null },
+      opts.actor,
+    )
+  ) {
+    return notFound("Prozess nicht gefunden.");
+  }
+
+  if (opts.access === "read") {
+    if (!hasPermission(opts.actor, PERM.INITIATIVES_VIEW, PERM.INITIATIVES_MANAGE)) {
+      return forbidden("initiatives.view Berechtigung erforderlich.");
+    }
+  } else {
+    if (!hasPermission(opts.actor, PERM.INITIATIVES_MANAGE)) {
+      return forbidden("initiatives.manage Berechtigung erforderlich.");
+    }
+  }
+
+  return { ok: true, entity: process };
 }
 
 // ---------------------------------------------------------------------------

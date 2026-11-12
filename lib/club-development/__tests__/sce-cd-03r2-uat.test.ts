@@ -45,6 +45,21 @@ describe("SCE-CD-03R2 UAT corrections", () => {
     );
   });
 
+  it("prozesse page uses persisted list, not demo-only", () => {
+    const page = readSrc("app/(admin)/vereinsleitung/prozesse/page.tsx");
+    expect(page).toContain("getClubDevelopmentProcesses");
+    expect(page).not.toContain("DEMO_ACTIVE");
+  });
+
+  it("process approval API and service registered", () => {
+    expect(readSrc("lib/club-development/process-approval-service.ts")).toContain(
+      "recordProcessApprovalVote",
+    );
+    expect(readSrc("app/api/club-development/processes/[id]/approval/route.ts")).toContain(
+      "recordProcessApprovalVote",
+    );
+  });
+
   it("contextual task create navigates to full workspace page", () => {
     const trigger = readSrc("components/admin/aufgaben/contextual/ContextualTaskCreateTrigger.tsx");
     expect(trigger).toContain("buildContextualTaskCreateHref");

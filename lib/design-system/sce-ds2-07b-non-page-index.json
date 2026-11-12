@@ -391,6 +391,18 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/processes/[id]/approval/route.ts",
+    "urlPattern": "/api/club-development/processes/[id]/approval",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/processes/[id]/route.ts",
+    "urlPattern": "/api/club-development/processes/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/processes/route.ts",
     "urlPattern": "/api/club-development/processes",
     "audience": "API"
