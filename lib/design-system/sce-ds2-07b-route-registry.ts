@@ -7040,38 +7040,6 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
-    "urlPattern": "/vereinsleitung/meetings/[slug]/protokoll",
-    "routeKey": "/vereinsleitung/meetings/[slug]/protokoll",
-    "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/protokoll/page.tsx",
-    "inheritedLayouts": [
-      "app/(admin)/vereinsleitung/layout.tsx",
-      "app/(admin)/layout.tsx",
-      "app/layout.tsx"
-    ],
-    "module": "vereinsleitung",
-    "authenticationScope": "AUTHENTICATED",
-    "routeKind": "RENDERABLE_PAGE",
-    "intercept": false,
-    "parallelSlot": null,
-    "architecture": "CANONICAL",
-    "migrationStatus": "IMPLEMENTED",
-    "migrationPackage": "SCE-CD-02R9",
-    "priority": "Low",
-    "visualVerificationStatus": "PENDING",
-    "accessibilityVerificationStatus": "PENDING",
-    "functionalVerificationStatus": "PENDING",
-    "exceptionId": null,
-    "exceptionRationale": null,
-    "redirectDestination": null,
-    "introducedAfterBaseline": true,
-    "verificationEvidence": {
-      "visual": null,
-      "accessibility": null,
-      "functional": null,
-      "responsive": null
-    }
-  },
-  {
     "urlPattern": "/vereinsleitung/meetings/[slug]",
     "routeKey": "/vereinsleitung/meetings/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
@@ -7645,6 +7613,37 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "urlPattern": "/tournaments/[tournamentId]/spielplan/print/team/[participantId]",
     "routeKey": "/tournaments/[tournamentId]/spielplan/print/team/[participantId]",
     "sourceFile": "app/(print)/tournaments/[tournamentId]/spielplan/print/team/[participantId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(print)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "print",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PRINT",
+    "exceptionRationale": "Print/PDF spielplan document. Semantic paper surface, outside authenticated workspace chrome, and excluded from visual completion.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/vereinsleitung/meetings/[slug]/protokoll",
+    "routeKey": "/vereinsleitung/meetings/[slug]/protokoll",
+    "sourceFile": "app/(print)/vereinsleitung/meetings/[slug]/protokoll/page.tsx",
     "inheritedLayouts": [
       "app/(print)/layout.tsx",
       "app/layout.tsx"
@@ -8835,13 +8834,13 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 272,
-  "authenticatedRenderableCount": 217,
+  "pageCount": 273,
+  "authenticatedRenderableCount": 218,
   "authenticatedVisualCount": 215,
   "authenticatedRedirectCount": 15,
   "publicRenderableCount": 39,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 626,
+  "routeHandlerCount": 629,
   "frameworkFileCount": 40,
   "architecture": {
     "CANONICAL": 215,
@@ -8854,7 +8853,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "IN_PROGRESS": 0,
     "IMPLEMENTED": 215,
     "VERIFIED": 0,
-    "EXCEPTION": 57
+    "EXCEPTION": 58
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
@@ -8865,7 +8864,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "SCE-DS2-07B-EX-REDIRECT": 16,
     "SCE-DS2-07B-EX-PUBLIC": 25,
     "SCE-DS2-07B-EX-PREVIEW": 14,
-    "SCE-DS2-07B-EX-PRINT": 2
+    "SCE-DS2-07B-EX-PRINT": 3
   },
   "outstandingByPackage": {
     "DS2-07C": 0,

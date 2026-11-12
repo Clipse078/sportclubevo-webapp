@@ -15,13 +15,13 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 272 |
-| Authenticated renderable pages | 217 |
+| Page entries | 273 |
+| Authenticated renderable pages | 218 |
 | Authenticated visual pages (completion denominator) | 215 |
 | Authenticated redirect aliases | 15 |
 | Public renderable pages | 39 |
 | Public redirect aliases | 1 |
-| Route handlers | 626 |
+| Route handlers | 629 |
 | Special Next.js framework files | 40 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -47,7 +47,7 @@ Architectural canonical adoption: **215 / 215 (100%)**.
 | IN_PROGRESS | 0 |
 | IMPLEMENTED | 215 |
 | VERIFIED | 0 |
-| EXCEPTION | 57 |
+| EXCEPTION | 58 |
 
 Verified authenticated visual pages: **0 / 215 (0%)**.
 
@@ -72,7 +72,7 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | Id | Routes |
 | --- | ---: |
 | SCE-DS2-07B-EX-PREVIEW | 14 |
-| SCE-DS2-07B-EX-PRINT | 2 |
+| SCE-DS2-07B-EX-PRINT | 3 |
 | SCE-DS2-07B-EX-PUBLIC | 25 |
 | SCE-DS2-07B-EX-REDIRECT | 16 |
 

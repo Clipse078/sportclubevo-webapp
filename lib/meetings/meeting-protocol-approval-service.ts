@@ -91,7 +91,7 @@ export async function recordProtocolApprovalVote(input: {
     votes,
   });
 
-  let nextStage = meeting.reviewStage;
+  let nextStage: ReviewWorkflowStage = meeting.reviewStage;
   if (evalResult.satisfied) {
     nextStage = ReviewWorkflowStage.APPROVED;
   } else if (evalResult.hasChangesRequested) {

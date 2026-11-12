@@ -234,6 +234,7 @@
   "app/(auth)/reset-password/page.tsx",
   "app/(print)/tournaments/[tournamentId]/spielplan/print/master/page.tsx",
   "app/(print)/tournaments/[tournamentId]/spielplan/print/team/[participantId]/page.tsx",
+  "app/(print)/vereinsleitung/meetings/[slug]/protokoll/page.tsx",
   "app/infoboard/[slug]/page.tsx",
   "app/infoboard/page.tsx",
   "app/infoboard/preview-frame/page.tsx",

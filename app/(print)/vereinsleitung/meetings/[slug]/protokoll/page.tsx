@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getMeetingBySlug, getMeetingSubEntities } from "@/lib/meetings/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
-import { PageShell } from "@/components/ui/page";
 import MeetingProtocolPrintView from "@/components/admin/meetings/workspace/MeetingProtocolPrintView";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -18,9 +17,5 @@ export default async function MeetingProtocolPrintPage({ params }: Props) {
 
   const subEntities = await getMeetingSubEntities(meeting.id, actor.tenantId);
 
-  return (
-    <PageShell fullWidth>
-      <MeetingProtocolPrintView meeting={meeting} subEntities={subEntities} />
-    </PageShell>
-  );
+  return <MeetingProtocolPrintView meeting={meeting} subEntities={subEntities} />;
 }

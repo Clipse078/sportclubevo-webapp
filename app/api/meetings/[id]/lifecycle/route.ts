@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { MeetingStatus } from "@prisma/client";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
-import { logAuditEvent } from "@/lib/audit/audit-log";
+import { logAuditEvent, type GovernanceAction } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import {
@@ -17,6 +17,23 @@ import {
 } from "@/lib/meetings/meeting-lifecycle-service";
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+function lifecycleAuditAction(action: string): GovernanceAction {
+  switch (action) {
+    case "conduct":
+      return "LIFECYCLE_CONDUCT";
+    case "close":
+      return "LIFECYCLE_CLOSE";
+    case "reopen":
+      return "LIFECYCLE_REOPEN";
+    case "submit_protocol":
+      return "LIFECYCLE_SUBMIT_PROTOCOL";
+    case "cancel":
+      return "LIFECYCLE_CANCEL";
+    default:
+      return "LIFECYCLE_UNKNOWN";
+  }
+}
 
 const MEETING_LIFECYCLE_SELECT = {
   id: true,
@@ -108,7 +125,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       actorUserId: actor.userId,
       module: "meetings",
       entityId: id,
-      action: `LIFECYCLE_${action?.toUpperCase() ?? "UNKNOWN"}`,
+      action: lifecycleAuditAction(action),
       after: updated,
     });
 
