@@ -11,6 +11,7 @@ import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard"
 import { resolveSceTrainingPresentationFromSessionManagementRow } from "@/lib/sporting-activity-presentation/canonical/adapters/training-session-management";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
+import { SceDateTile } from "@/components/design-system/date";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -22,7 +23,7 @@ type Props = {
   tenantClubName?: string | null;
 };
 
-function formatShortDate(date: string, locale: string, timezone: string): string {
+function formatMobileDateSummary(date: string, locale: string, timezone: string): string {
   const parsed = new Date(`${date}T12:00:00.000Z`);
   return new Intl.DateTimeFormat(locale, {
     weekday: "short",
@@ -82,7 +83,12 @@ export default function TrainingSessionManagementRow({
       data-testid={`training-session-row-${row.sessionId}`}
       data-sce-training-session-list-row
     >
-      <p className="text-sm font-medium text-[var(--foreground)]">{formatShortDate(row.date, locale, timezone)}</p>
+      <SceDateTile
+        value={{ dateOnly: row.date }}
+        fmtCfg={fmtCfg}
+        size="compact"
+        testId={`training-session-row-date-${row.sessionId}`}
+      />
       <div className="min-w-0" data-testid="training-session-row-identity">
         <SceTrainingCard
           model={sceModel}
@@ -187,7 +193,7 @@ export default function TrainingSessionManagementRow({
       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)] md:hidden">
         <span className="inline-flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5 opacity-70" aria-hidden />
-          {formatShortDate(row.date, locale, timezone)}
+          {formatMobileDateSummary(row.date, locale, timezone)}
         </span>
       </div>
     </article>

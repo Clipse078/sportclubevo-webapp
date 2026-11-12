@@ -15,6 +15,7 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/club-event-schedule-presentation";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
 import type { SceClubEventPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import { SceDateTile } from "@/components/design-system/date";
 import {
   VERANSTALTUNGEN_ROW_CONTEXT_CELL,
   VERANSTALTUNGEN_ROW_DATE_CELL,
@@ -118,17 +119,8 @@ export default function VeranstaltungListRow({
 }: VeranstaltungListRowProps) {
   const tz = resolveTenantEventTimezone(timeZone);
   const locale = "de-CH";
+  const fmtCfg = { locale, timezone: tz };
   const start = new Date(event.startAt);
-
-  const weekdayShort = new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    timeZone: tz,
-  }).format(start);
-  const day = new Intl.DateTimeFormat(locale, { day: "numeric", timeZone: tz }).format(start);
-  const monthShort = new Intl.DateTimeFormat(locale, {
-    month: "short",
-    timeZone: tz,
-  }).format(start);
 
   const publicationLabel = resolveClubEventPublicationPresentationLabel(event);
   const sceModel = resolveSceClubEventPresentation({
@@ -148,28 +140,13 @@ export default function VeranstaltungListRow({
         VERANSTALTUNGEN_ROW_DESKTOP_GRID,
       )}
     >
-      <div
-        className={cn(
-          "flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center",
-          VERANSTALTUNGEN_ROW_DATE_CELL,
-        )}
-        aria-hidden
-        data-testid="veranstaltung-row-date-block"
-        data-sce-activity-date-block="date-only"
-      >
-        <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {weekdayShort}
-        </span>
-        <span
-          className="text-xl font-bold leading-none text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {day}
-        </span>
-        <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
-          {monthShort}
-        </span>
-      </div>
+      <SceDateTile
+        value={start}
+        fmtCfg={fmtCfg}
+        className={VERANSTALTUNGEN_ROW_DATE_CELL}
+        testId="veranstaltung-row-date-block"
+        decorative
+      />
 
       <div
         className={cn("relative z-[1] min-w-0", VERANSTALTUNGEN_ROW_IDENTITY_CELL)}

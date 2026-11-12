@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMeetings } from "@/lib/meetings/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { getTenantContextFromSession } from "@/lib/tenants/context";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import VereinsleitungMeetingsGroupedList from "@/components/admin/vereinsleitung/VereinsleitungMeetingsGroupedList";
 import { PageShell } from "@/components/ui/page";
@@ -14,6 +15,9 @@ export default async function VereinsleitungMeetingsPage() {
   if (!session?.user) redirect("/login");
 
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
+  const tenantContext = await getTenantContextFromSession(session.user?.activeTenantId);
+  const locale = "de-CH";
+  const timezone = tenantContext?.timezone ?? "Europe/Zurich";
   const meetings = await getMeetings(actor);
   const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
 
@@ -33,7 +37,12 @@ export default async function VereinsleitungMeetingsPage() {
         emptyHeading="Keine zugänglichen Sitzungen"
         emptyDescription="Noch keine Sitzungen erfasst oder keine für dich sichtbaren Einträge."
       >
-        <VereinsleitungMeetingsGroupedList meetings={meetings} canManage={canManage} />
+        <VereinsleitungMeetingsGroupedList
+          meetings={meetings}
+          canManage={canManage}
+          locale={locale}
+          timezone={timezone}
+        />
       </ListPagePattern>
     </PageShell>
   );

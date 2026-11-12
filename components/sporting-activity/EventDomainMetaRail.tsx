@@ -1,5 +1,8 @@
+import { SceDateTile } from "@/components/design-system/date";
+import { formatSceDateTileParts } from "@/lib/design-system/sce-date-tile";
 import { cn } from "@/lib/cn";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
+import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 export type EventDomainMetaRailProps = {
   domainLabel: string;
@@ -10,6 +13,8 @@ export type EventDomainMetaRailProps = {
     day: string;
     monthShort: string;
   };
+  dateValue?: Date;
+  fmtCfg?: TenantFormatConfig;
   density?: "compact" | "management";
   className?: string;
 };
@@ -22,6 +27,8 @@ export function EventDomainMetaRail({
   startTimeLabel,
   endTimeLabel,
   dateStack,
+  dateValue,
+  fmtCfg = { locale: "de-CH", timezone: "Europe/Zurich" },
   density = "management",
   className,
 }: EventDomainMetaRailProps) {
@@ -30,23 +37,33 @@ export function EventDomainMetaRail({
     endLabel: endTimeLabel,
   });
 
+  if (dateValue) {
+    const parts = dateStack
+      ? { ...dateStack, accessibleLabel: formatSceDateTileParts(dateValue, fmtCfg).accessibleLabel }
+      : undefined;
+    return (
+      <SceDateTile
+        value={dateValue}
+        fmtCfg={fmtCfg}
+        className={className}
+        testId="event-domain-meta-rail"
+        parts={parts}
+      />
+    );
+  }
+
   if (dateStack) {
     return (
-      <div
-        className={cn(
-          "flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center",
-          className,
-        )}
-        data-testid="event-domain-meta-rail"
-      >
-        <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {dateStack.weekdayShort}
-        </span>
-        <span className="text-xl font-bold leading-none text-[var(--foreground)]">{dateStack.day}</span>
-        <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
-          {dateStack.monthShort}
-        </span>
-      </div>
+      <SceDateTile
+        value={new Date(`${dateStack.day}.${dateStack.monthShort}`)}
+        fmtCfg={fmtCfg}
+        className={className}
+        testId="event-domain-meta-rail"
+        parts={{
+          ...dateStack,
+          accessibleLabel: `${dateStack.weekdayShort} ${dateStack.day} ${dateStack.monthShort}`,
+        }}
+      />
     );
   }
 

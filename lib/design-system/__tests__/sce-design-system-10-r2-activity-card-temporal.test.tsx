@@ -84,8 +84,10 @@ describe("SCE-DESIGN-SYSTEM-10-R2 — activity card temporal consistency", () =>
 
   it("Turniere management date block remains date-only (reference contract)", () => {
     const row = readSrc("components/admin/tournamentcenter/TurniereManagementRow.tsx");
+    expect(row).toContain("SceDateTile");
+    expect(row).toContain('testId="turniere-row-date-block"');
     const dateBlockRegion = row.slice(
-      row.indexOf('data-testid="turniere-row-date-block"'),
+      row.indexOf('testId="turniere-row-date-block"'),
       row.indexOf("turniere-row-identity"),
     );
     expect(dateBlockRegion).not.toContain("timeLabel");
@@ -94,9 +96,25 @@ describe("SCE-DESIGN-SYSTEM-10-R2 — activity card temporal consistency", () =>
 
   it("Veranstaltung list row source does not render time inside date block", () => {
     const src = readSrc("components/admin/veranstaltungen/VeranstaltungListRow.tsx");
-    expect(src).toContain('data-sce-activity-date-block="date-only"');
+    expect(src).toContain("SceDateTile");
     expect(src).not.toContain("veranstaltung-row-date-time");
     expect(src).not.toContain("formatClubEventTimingLabel");
+    expect(readSrc("components/design-system/date/SceDateTile.tsx")).toContain(
+      'data-sce-activity-date-block="date-only"',
+    );
+  });
+
+  it("DATE-01R1: match reference layout uses canonical date tile in meta column", () => {
+    const refLayout = readSrc("components/sporting-activity/SceMatchFixtureReferenceLayout.tsx");
+    expect(refLayout).toContain("SceDateTile");
+    expect(refLayout).toContain('testId="sce-match-reference-date"');
+    expect(refLayout).not.toContain("formatFixtureDateLine");
+  });
+
+  it("DATE-01R1: Vereinsleitung meetings overview uses SceDateTile", () => {
+    const list = readSrc("components/admin/vereinsleitung/VereinsleitungMeetingsList.tsx");
+    expect(list).toContain("SceDateTile");
+    expect(list).toContain("vereinsleitung-meeting-date-");
   });
 
   it("preserves match home/away grammar and activity semantic colours", () => {
