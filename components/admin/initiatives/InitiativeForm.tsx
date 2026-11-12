@@ -12,7 +12,6 @@ import VisibilityScopeSelect, {
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
-import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 type InitiativeFormProps = {
   mode: "create" | "edit";
