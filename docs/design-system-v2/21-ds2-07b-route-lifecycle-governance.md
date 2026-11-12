@@ -15,11 +15,11 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 276 |
+| Page entries | 277 |
 | Authenticated renderable pages | 221 |
 | Authenticated visual pages (completion denominator) | 218 |
 | Authenticated redirect aliases | 15 |
-| Public renderable pages | 39 |
+| Public renderable pages | 40 |
 | Public redirect aliases | 1 |
 | Route handlers | 634 |
 | Special Next.js framework files | 40 |
@@ -47,7 +47,7 @@ Architectural canonical adoption: **218 / 218 (100%)**.
 | IN_PROGRESS | 0 |
 | IMPLEMENTED | 218 |
 | VERIFIED | 0 |
-| EXCEPTION | 58 |
+| EXCEPTION | 59 |
 
 Verified authenticated visual pages: **0 / 218 (0%)**.
 
@@ -71,7 +71,7 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 
 | Id | Routes |
 | --- | ---: |
-| SCE-DS2-07B-EX-PREVIEW | 14 |
+| SCE-DS2-07B-EX-PREVIEW | 15 |
 | SCE-DS2-07B-EX-PRINT | 3 |
 | SCE-DS2-07B-EX-PUBLIC | 25 |
 | SCE-DS2-07B-EX-REDIRECT | 16 |

@@ -8560,6 +8560,37 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/sce-preview/date-tile",
+    "routeKey": "/sce-preview/date-tile",
+    "sourceFile": "app/sce-preview/date-tile/page.tsx",
+    "inheritedLayouts": [
+      "app/sce-preview/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "design-preview",
+    "authenticationScope": "PUBLIC",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+    "exceptionRationale": "Internal design specimen. Public preview follows specimen rules and is not an authenticated workspace page.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/sce-preview/match-card",
     "routeKey": "/sce-preview/match-card",
     "sourceFile": "app/sce-preview/match-card/page.tsx",
@@ -8933,11 +8964,11 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 276,
+  "pageCount": 277,
   "authenticatedRenderableCount": 221,
   "authenticatedVisualCount": 218,
   "authenticatedRedirectCount": 15,
-  "publicRenderableCount": 39,
+  "publicRenderableCount": 40,
   "publicRedirectCount": 1,
   "routeHandlerCount": 634,
   "frameworkFileCount": 40,
@@ -8952,7 +8983,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "IN_PROGRESS": 0,
     "IMPLEMENTED": 218,
     "VERIFIED": 0,
-    "EXCEPTION": 58
+    "EXCEPTION": 59
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
@@ -8962,7 +8993,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "exceptionsById": {
     "SCE-DS2-07B-EX-REDIRECT": 16,
     "SCE-DS2-07B-EX-PUBLIC": 25,
-    "SCE-DS2-07B-EX-PREVIEW": 14,
+    "SCE-DS2-07B-EX-PREVIEW": 15,
     "SCE-DS2-07B-EX-PRINT": 3
   },
   "outstandingByPackage": {
