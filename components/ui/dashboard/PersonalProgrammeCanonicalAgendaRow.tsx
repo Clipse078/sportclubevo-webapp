@@ -7,12 +7,14 @@ import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard"
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
 import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
+import { SceMeetingCard } from "@/components/sporting-activity/SceMeetingCard";
 import { cn } from "@/lib/cn";
 import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import {
   isSceClubEventPresentationModel,
   isSceMatchPresentationModel,
+  isSceMeetingPresentationModel,
   isSceTrainingPresentationModel,
   isSceTournamentPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
@@ -105,6 +107,20 @@ function CanonicalAgendaBody({
         listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-club-event-${item.id}`}
+      />
+    );
+  }
+
+  if (isSceMeetingPresentationModel(model)) {
+    return (
+      <SceMeetingCard
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        linkToDetail={false}
+        surface="list-row"
+        className={LIST_ROW_CARD_CLASS}
+        testId={`personal-programme-meeting-${item.id}`}
       />
     );
   }

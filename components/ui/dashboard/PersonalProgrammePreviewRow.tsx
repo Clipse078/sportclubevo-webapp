@@ -14,8 +14,8 @@ export type PersonalProgrammePreviewRowProps = {
 };
 
 /**
- * Dashboard Mein Programm preview row — canonical Sce* cards for sporting programme;
- * meetings and degraded rows keep the compact legacy agenda path.
+ * Dashboard Mein Programm preview row — canonical programme cards when available;
+ * legacy compact agenda only for degraded rows without presentation.
  */
 export function PersonalProgrammePreviewRow({
   item,
@@ -24,7 +24,7 @@ export function PersonalProgrammePreviewRow({
   highlighted = false,
   className,
 }: PersonalProgrammePreviewRowProps) {
-  if (item.sourceType === "MEETING" || !item.canonicalPresentation) {
+  if (!item.canonicalPresentation) {
     return (
       <PersonalProgrammeAgendaRow
         item={item}

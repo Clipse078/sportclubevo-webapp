@@ -147,11 +147,18 @@ export type SceClubEventPresentationModel = SceActivityPresentationBase & {
   audience?: SceClubEventAudiencePresentation;
 };
 
+export type SceMeetingPresentationModel = SceActivityPresentationBase & {
+  kind: "MEETING";
+  meetingTitle: string;
+  organisationalContext?: string;
+};
+
 export type SceActivityPresentationModel =
   | SceMatchPresentationModel
   | SceTrainingPresentationModel
   | SceTournamentPresentationModel
-  | SceClubEventPresentationModel;
+  | SceClubEventPresentationModel
+  | SceMeetingPresentationModel;
 
 export function isSceActivityPresentationModel(
   value: unknown,
@@ -162,7 +169,8 @@ export function isSceActivityPresentationModel(
     kind === "MATCH" ||
     kind === "TRAINING" ||
     kind === "TOURNAMENT" ||
-    kind === "CLUB_EVENT"
+    kind === "CLUB_EVENT" ||
+    kind === "MEETING"
   );
 }
 
@@ -176,4 +184,10 @@ export function isSceClubEventPresentationModel(
   value: SceActivityPresentationModel,
 ): value is SceClubEventPresentationModel {
   return value.kind === "CLUB_EVENT";
+}
+
+export function isSceMeetingPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceMeetingPresentationModel {
+  return value.kind === "MEETING";
 }

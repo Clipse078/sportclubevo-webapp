@@ -44,7 +44,7 @@ describe("SCE-ACTIVITY-CREATE-01J R5.1 — programme card visual family", () => 
       "ProgrammeSceActivityCard",
     );
     expect(readRelative("components/admin/mein-programm/PersonalProgrammeListeView.tsx")).toContain(
-      "PersonalProgrammeCanonicalAgendaRow",
+      "PersonalProgrammePreviewRow",
     );
   });
 

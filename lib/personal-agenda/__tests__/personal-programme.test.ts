@@ -363,26 +363,50 @@ describe("DASHBOARD-02 — personal programme", () => {
     it("includes participant meetings with authorization", async () => {
       vi.mocked(prisma.meeting.findMany)
         .mockResolvedValueOnce([meetingRow] as never)
+        .mockResolvedValueOnce([] as never)
         .mockResolvedValueOnce([] as never);
 
       const items = await loadMeetingProgrammeItems(adapterCtx(buildContext()));
       expect(items).toHaveLength(1);
       expect(items[0].contextLabel).toBe("Meeting · Teilnehmer");
+      expect(items[0].canonicalPresentation?.kind).toBe("MEETING");
     });
 
     it("includes organizer meetings", async () => {
       vi.mocked(prisma.meeting.findMany)
         .mockResolvedValueOnce([] as never)
-        .mockResolvedValueOnce([{ ...meetingRow, createdByUserId: "user-a" }] as never);
+        .mockResolvedValueOnce([{ ...meetingRow, createdByUserId: "user-a" }] as never)
+        .mockResolvedValueOnce([] as never);
 
       const items = await loadMeetingProgrammeItems(adapterCtx(buildContext()));
       expect(items[0].contextLabel).toBe("Meeting · Organisator");
+    });
+
+    it("includes participants matched by linked personId", async () => {
+      vi.mocked(prisma.meeting.findMany)
+        .mockResolvedValueOnce([meetingRow] as never)
+        .mockResolvedValueOnce([] as never)
+        .mockResolvedValueOnce([] as never);
+
+      await loadMeetingProgrammeItems(adapterCtx(buildContext()));
+      expect(prisma.meeting.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            participants: expect.objectContaining({
+              some: expect.objectContaining({
+                OR: [{ userId: "user-a" }, { personId: "person-a" }],
+              }),
+            }),
+          }),
+        }),
+      );
     });
 
     it("excludes meetings when visibility authorization fails", async () => {
       vi.mocked(canSeeMeeting).mockReturnValue(false);
       vi.mocked(prisma.meeting.findMany)
         .mockResolvedValueOnce([meetingRow] as never)
+        .mockResolvedValueOnce([] as never)
         .mockResolvedValueOnce([] as never);
 
       const items = await loadMeetingProgrammeItems(adapterCtx(buildContext()));
@@ -419,7 +443,8 @@ describe("DASHBOARD-02 — personal programme", () => {
       };
       vi.mocked(prisma.meeting.findMany)
         .mockResolvedValueOnce([row] as never)
-        .mockResolvedValueOnce([row] as never);
+        .mockResolvedValueOnce([row] as never)
+        .mockResolvedValueOnce([] as never);
 
       const items = await loadMeetingProgrammeItems(adapterCtx(buildContext()));
       expect(items).toHaveLength(1);

@@ -54,9 +54,9 @@ export const SCE_ACTIVITY_REFERENCE_LAYOUT = {
   trainingReferenceTimeClass:
     "font-mono text-sm font-semibold tabular-nums whitespace-nowrap text-[var(--sce-color-text-primary)]",
   trainingReferenceActivityCellClass:
-    "flex min-w-0 items-center gap-2 overflow-hidden",
+    "flex min-w-0 items-center gap-2",
   trainingReferenceTitleClass: cn(
-    "min-w-0 truncate text-[0.9375rem] font-semibold leading-snug",
+    "min-w-0 line-clamp-3 break-words text-[0.9375rem] font-semibold leading-snug",
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   ),
   trainingReferenceMetaClass: cn(

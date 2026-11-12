@@ -87,11 +87,12 @@ describe("SCE-ACTIVITY-CREATE-01J R3 — Dashboard Mein Programm preview", () =>
     expect(canonical).toContain("SceMatchCard");
     expect(canonical).toContain("SceTournamentCard");
     expect(canonical).toContain("SceClubEventCard");
+    expect(canonical).toContain("SceMeetingCard");
   });
 
-  it("retains legacy agenda path only for meetings and missing canonical presentation", () => {
+  it("retains legacy agenda path only for rows missing canonical presentation", () => {
     const previewRow = readRelative("components/ui/dashboard/PersonalProgrammePreviewRow.tsx");
-    expect(previewRow).toContain('item.sourceType === "MEETING"');
+    expect(previewRow).not.toContain('item.sourceType === "MEETING"');
     expect(previewRow).toContain("!item.canonicalPresentation");
     expect(previewRow).toContain("PersonalProgrammeAgendaRow");
   });

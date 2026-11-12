@@ -143,7 +143,7 @@ export function PersonalProgrammeAgendaRow({
                 />
               ) : (
                 <>
-                  <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+                  <p className="line-clamp-3 break-words text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
                     {displayTitle}
                   </p>
                   {typeLabel && !activityKindForTypePill ? (
