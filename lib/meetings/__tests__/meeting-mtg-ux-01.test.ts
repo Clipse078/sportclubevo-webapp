@@ -31,6 +31,12 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     );
   });
 
+  it("dismisses secondary actions menu on outside press and Escape", () => {
+    const statusBar = readSrc("components/admin/meetings/workspace/MeetingWorkspaceStatusBar.tsx");
+    expect(statusBar).toContain('addEventListener("mousedown"');
+    expect(statusBar).toContain('event.key === "Escape"');
+  });
+
   it("uses progressive disclosure for participants and decisions", () => {
     const sections = readSrc("components/admin/meetings/workspace/MeetingWorkspaceSections.tsx");
     expect(sections).toContain("meeting-participants-add-toggle");

@@ -83,8 +83,10 @@ describe("SCE-CD-02R9R1 meeting approval UI", () => {
 
   it("wires protocol and decision approval sections in workspace", () => {
     const workspace = readSrc("components/admin/meetings/workspace/MeetingWorkspace.tsx");
-    expect(workspace).toContain("MeetingProtocolApprovalSection");
+    const details = readSrc("components/admin/meetings/workspace/MeetingWorkspaceDetailsSection.tsx");
     expect(workspace).toContain("MeetingDecisionsSection");
+    expect(workspace).toContain("MeetingWorkspaceDetailsSection");
+    expect(details).toContain("MeetingProtocolApprovalSection");
     const sections = readSrc("components/admin/meetings/workspace/MeetingWorkspaceSections.tsx");
     expect(sections).toContain("MeetingDecisionApprovalPanel");
     const protocol = readSrc("components/admin/meetings/approval/MeetingProtocolApprovalSection.tsx");
