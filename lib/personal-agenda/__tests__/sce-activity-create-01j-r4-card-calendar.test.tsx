@@ -48,7 +48,7 @@ function readRelative(relativePath: string): string {
 describe("SCE-ACTIVITY-CREATE-01J R4A — three-row programme card contract", () => {
   it("TRAINING operational list row: row1 identity+crest, row2 team, row3 time+location", () => {
     const model = createSceTrainingCardFixtureSession({
-      trainingTitle: "Training",
+      trainingTitle: "Techniktraining",
       team: { name: "Junioren B1" },
       tenantClub: buildClubIdentity({
         displayName: "FC Allschwil",
@@ -74,7 +74,7 @@ describe("SCE-ACTIVITY-CREATE-01J R4A — three-row programme card contract", ()
 
     const root = screen.getByTestId("sce-training-list-row-primary-identity");
     expect(root).toBeTruthy();
-    expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Training");
+    expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Techniktraining");
     expect(screen.getByTestId("sce-training-team")).toHaveTextContent("Junioren B1");
     expect(screen.getByTestId("sce-training-list-row-time")).toBeTruthy();
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Im Brüel/i);

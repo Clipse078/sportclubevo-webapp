@@ -27,6 +27,26 @@ import { schedulePersonalDashboardReadModelRebuild } from "./invalidate";
 import { rebuildPersonalDashboardReadModel } from "./rebuild";
 import type { PersonalDashboardReadModelPayloadV1 } from "./types";
 
+function personalProgrammeItemHasLegacyEnglishMeetingLabel(
+  item: PersonalDashboardReadModelPayloadV1["programme"]["items"][number],
+): boolean {
+  if (item.sourceType !== "MEETING") return false;
+  const label = item.typeLabel?.trim().toLowerCase();
+  if (label === "meeting" || label === "meeting · teilnehmer") return true;
+  const canonical = item.canonicalPresentation;
+  if (
+    canonical &&
+    typeof canonical === "object" &&
+    "kind" in canonical &&
+    canonical.kind === "MEETING" &&
+    "typeLabel" in canonical
+  ) {
+    const canonicalLabel = String(canonical.typeLabel).trim().toLowerCase();
+    return canonicalLabel === "meeting";
+  }
+  return false;
+}
+
 export function personalDashboardPayloadNeedsPresentationRefresh(
   payload: PersonalDashboardReadModelPayloadV1,
 ): boolean {
@@ -34,7 +54,8 @@ export function personalDashboardPayloadNeedsPresentationRefresh(
     payload.v < PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION ||
     payload.programme.items.some(
       (item) => !item.activityPresentation && !item.canonicalPresentation,
-    )
+    ) ||
+    payload.programme.items.some(personalProgrammeItemHasLegacyEnglishMeetingLabel)
   );
 }
 

@@ -9,16 +9,10 @@ import {
 } from "@/lib/calendar/sce-calendar-engine/calendar-micro-semantics";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { sortProgrammeItems } from "./programme-sort";
+import { programmeActivityKindGermanLabel } from "@/lib/personal-agenda/programme-activity-german-labels";
 import type { ProgrammeActivityKind, ProgrammeItem } from "./types";
 
 export const PROGRAMME_CALENDAR_VISIBLE_ENTRIES = 2;
-
-const KIND_TYPE_LABEL: Record<ProgrammeActivityKind, string> = {
-  TRAINING: "TRAINING",
-  MATCH: "SPIEL",
-  TOURNAMENT: "TURNIER",
-  CLUB_EVENT: "VERANSTALTUNG",
-};
 
 export type ProgrammeCalendarMicroEntryKind = ProgrammeActivityKind | "TASK";
 
@@ -72,7 +66,7 @@ export function buildProgrammeCalendarMicroEntry(
     endAt: item.endsAt,
     fmtCfg,
   });
-  const typeLabel = KIND_TYPE_LABEL[item.kind];
+  const typeLabel = programmeActivityKindGermanLabel(item.kind);
   const { identityLabel, locationLabel, visualIdentity, accessibleIdentityPhrase } =
     resolveProgrammeCalendarMicroSemantics(item);
   const accessibleLabel = buildCalendarMicroAccessibleLabel({

@@ -51,12 +51,17 @@ export const SCE_ACTIVITY_REFERENCE_LAYOUT = {
   kickoffIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--sce-color-text-secondary)]",
   trainingReferenceRowClass:
     "sce-activity-horizontal-operational-row sce-activity-dashboard-programme-row flex min-w-0 w-full flex-col gap-2 md:grid md:grid-cols-[minmax(5.5rem,8.5rem)_minmax(5.5rem,7.75rem)_minmax(0,1.05fr)_minmax(0,1.35fr)_minmax(0,1fr)] md:items-center md:gap-x-3 lg:gap-x-4",
+  /** Programme personal agenda — date tile is external; omit date column. */
+  programmePersonalContentRowClass:
+    "sce-activity-programme-personal-row flex min-w-0 w-full flex-col gap-2 sm:grid sm:grid-cols-[minmax(5.5rem,7.75rem)_minmax(0,1.05fr)_minmax(0,1.35fr)_minmax(0,1fr)] sm:items-center sm:gap-x-3 lg:gap-x-4",
+  programmePersonalAgendaShellClass:
+    "flex min-w-0 w-full items-stretch gap-3 sm:gap-4",
   trainingReferenceTimeClass:
     "font-mono text-sm font-semibold tabular-nums whitespace-nowrap text-[var(--sce-color-text-primary)]",
   trainingReferenceActivityCellClass:
-    "flex min-w-0 items-center gap-2 overflow-hidden",
+    "flex min-w-0 items-center gap-2",
   trainingReferenceTitleClass: cn(
-    "min-w-0 truncate text-[0.9375rem] font-semibold leading-snug",
+    "min-w-0 line-clamp-3 break-words text-[0.9375rem] font-semibold leading-snug",
     SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
   ),
   trainingReferenceMetaClass: cn(

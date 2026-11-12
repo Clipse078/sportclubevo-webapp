@@ -52,7 +52,7 @@ import {
 
 export type SceTournamentCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceTournamentListRowPresentation = "default" | "operational";
+export type SceTournamentListRowPresentation = "default" | "operational" | "programme-personal";
 
 export type SceTournamentCardProps = {
   model: SceTournamentPresentationModel;
@@ -459,7 +459,9 @@ function SceTournamentListRowIdentityContent({
     Boolean(organiser) &&
     organiser.localeCompare(model.tournamentTitle.trim(), "de-CH", { sensitivity: "accent" }) === 0;
 
-  const operational = listRowPresentation === "operational";
+  const operational =
+    listRowPresentation === "operational" || listRowPresentation === "programme-personal";
+  const omitDateColumn = listRowPresentation === "programme-personal";
 
   if (operational && fmtCfg) {
     const timeLabel = formatSessionTimeOnly(model, fmtCfg);
@@ -473,11 +475,18 @@ function SceTournamentListRowIdentityContent({
 
     return (
       <div
-        className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
+        className={cn(
+          "min-w-0 w-full max-w-full",
+          omitDateColumn
+            ? SCE_ACTIVITY_REFERENCE_LAYOUT.programmePersonalContentRowClass
+            : SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass,
+        )}
         data-sce-tournament-density={density}
         data-sce-tournament-list-row-identity
-        data-sce-tournament-list-row-presentation="operational"
-        data-sce-programme-card-contract="reference-row"
+        data-sce-tournament-list-row-presentation={listRowPresentation}
+        data-sce-programme-card-contract={
+          omitDateColumn ? "programme-personal" : "reference-row"
+        }
         data-sce-activity-card-layout="horizontal-full-width"
       >
         {showExceptionalStatus ? (
@@ -485,12 +494,14 @@ function SceTournamentListRowIdentityContent({
             <SceTournamentCardStatus status={status} />
           </div>
         ) : null}
-        <p
-          className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
-          data-testid="sce-tournament-list-row-date"
-        >
-          {dateLabel}
-        </p>
+        {!omitDateColumn ? (
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
+            data-testid="sce-tournament-list-row-date"
+          >
+            {dateLabel}
+          </p>
+        ) : null}
         {timeLabel ? (
           <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-tournament-list-row-time">
             <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />

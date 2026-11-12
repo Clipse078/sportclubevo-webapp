@@ -3,6 +3,8 @@
  */
 
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
+import { resolveProgrammeActivityDisplayTypeLabel } from "@/lib/personal-agenda/programme-activity-german-labels";
+import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
 
 export function isTodayMatchCard(item: TodayScheduleItem): boolean {
   return item.eventType === "MATCH" && !!item.matchPresentation;
@@ -12,8 +14,19 @@ export function isTodayTournamentCard(item: TodayScheduleItem): boolean {
   return item.eventType === "TOURNAMENT";
 }
 
-export function formatTodayEventTypeBadge(typeLabel: string): string {
-  return typeLabel.trim().toUpperCase();
+export function formatTodayEventTypeBadge(
+  typeLabel: string,
+  options?: {
+    sourceType?: PersonalProgrammeSourceType | null;
+    semanticType?: string | null;
+  },
+): string {
+  const resolved = resolveProgrammeActivityDisplayTypeLabel({
+    typeLabel,
+    sourceType: options?.sourceType ?? undefined,
+    semanticType: options?.semanticType ?? undefined,
+  });
+  return resolved.trim().toUpperCase();
 }
 
 export function buildTodayMatchMetaLine(input: {

@@ -6,7 +6,8 @@ import { CalendarDays } from "lucide-react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { buildProgrammeFeedGroups } from "@/lib/personal-agenda/programme-feed-groups";
-import { PersonalProgrammeCanonicalAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow";
+import { buildProgrammeItemTimeLabelById } from "@/lib/personal-agenda/build-programme-item-time-labels";
+import { PersonalProgrammePreviewRow } from "@/components/ui/dashboard/PersonalProgrammePreviewRow";
 import { DashboardEmptyState } from "@/components/ui/dashboard/DashboardEmptyState";
 type Props = {
   items: PersonalProgrammeItem[];
@@ -35,6 +36,11 @@ export default function PersonalProgrammeListeView({
         locale,
       }),
     [items, timeZone, locale],
+  );
+
+  const timeLabelById = useMemo(
+    () => buildProgrammeItemTimeLabelById(items, fmtCfg),
+    [items, fmtCfg],
   );
 
   if (!supported) {
@@ -89,10 +95,10 @@ export default function PersonalProgrammeListeView({
                   className="min-w-0 list-none"
                   data-testid={`personal-programme-liste-row-${item.id}`}
                 >
-                  <PersonalProgrammeCanonicalAgendaRow
+                  <PersonalProgrammePreviewRow
                     item={item}
-                    fmtCfg={fmtCfg}
-                    density="STANDARD"
+                    timeLabel={timeLabelById[item.id] ?? "—"}
+                    highlighted={false}
                   />
                 </li>
               ))}

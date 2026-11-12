@@ -224,7 +224,7 @@ export function buildCalendarEventBlockLines(
       return { primary, secondary };
     }
     case "MEETING": {
-      const primary = item.title.trim() || item.typeLabel || "Meeting";
+      const primary = item.title.trim() || item.typeLabel || "Sitzung";
       const secondary = meetingContextLine(item);
       return { primary, secondary };
     }

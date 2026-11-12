@@ -46,7 +46,11 @@ import {
 
 export type SceTrainingCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceTrainingListRowPresentation = "default" | "operational" | "dashboard-agenda";
+export type SceTrainingListRowPresentation =
+  | "default"
+  | "operational"
+  | "dashboard-agenda"
+  | "programme-personal";
 
 export type SceTrainingCardProps = {
   model: SceTrainingPresentationModel;
@@ -350,12 +354,15 @@ function SceTrainingListRowOperationalContent({
   density,
   fmtCfg,
   showStatus,
+  listRowPresentation = "operational",
 }: {
   model: SceTrainingPresentationModel;
   density: SceActivityPresentationDensity;
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
+  listRowPresentation?: SceTrainingListRowPresentation;
 }) {
+  const omitDateColumn = listRowPresentation === "programme-personal";
   const teamName = model.team?.name?.trim();
   const rawTitle = model.trainingTitle.trim();
   const title = rawTitle || teamName || model.typeLabel;
@@ -386,12 +393,19 @@ function SceTrainingListRowOperationalContent({
 
   return (
     <div
-      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
+      className={cn(
+        "min-w-0 w-full max-w-full",
+        omitDateColumn
+          ? SCE_ACTIVITY_REFERENCE_LAYOUT.programmePersonalContentRowClass
+          : SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass,
+      )}
       data-sce-training-density={density}
       data-sce-training-list-row-identity
-      data-sce-training-list-row-presentation="operational"
-      data-sce-programme-card-contract="reference-row"
-      data-sce-training-reference-row="operational"
+      data-sce-training-list-row-presentation={listRowPresentation}
+      data-sce-programme-card-contract={
+        omitDateColumn ? "programme-personal" : "reference-row"
+      }
+      data-sce-training-reference-row={omitDateColumn ? "programme-personal" : "operational"}
       data-sce-activity-card-layout="horizontal-full-width"
     >
       <span className="sr-only">{model.typeLabel}</span>
@@ -400,9 +414,14 @@ function SceTrainingListRowOperationalContent({
           <SceTrainingCardStatus status={status} />
         </div>
       ) : null}
-      <p className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceDateClass} data-testid="sce-training-list-row-date">
-        {dateLabel}
-      </p>
+      {!omitDateColumn ? (
+        <p
+          className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceDateClass}
+          data-testid="sce-training-list-row-date"
+        >
+          {dateLabel}
+        </p>
+      ) : null}
       {timeLabel ? (
         <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-training-list-row-time">
           <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
@@ -753,19 +772,17 @@ export function SceTrainingCard({
 
   if (listRow) {
     content =
-      listRowPresentation === "operational" ? (
+      listRowPresentation === "operational" ||
+      listRowPresentation === "programme-personal" ||
+      listRowPresentation === "dashboard-agenda" ? (
         <SceTrainingListRowOperationalContent
           model={model}
           density={density}
           fmtCfg={fmtCfg}
           showStatus={showStatus}
-        />
-      ) : listRowPresentation === "dashboard-agenda" ? (
-        <SceTrainingDashboardAgendaListRowContent
-          model={model}
-          density={density}
-          fmtCfg={fmtCfg}
-          showStatus={showStatus}
+          listRowPresentation={
+            listRowPresentation === "dashboard-agenda" ? "operational" : listRowPresentation
+          }
         />
       ) : (
         <SceTrainingListRowIdentityContent model={model} density={density} />

@@ -27,6 +27,7 @@ export function CalendarMonthLegend({
       { sourceType: "MATCH" as const, label: t("legendMatch") },
       { sourceType: "TOURNAMENT" as const, label: t("legendTournament") },
       { sourceType: "EVENT" as const, label: t("legendEvent") },
+      { sourceType: "MEETING" as const, label: t("legendMeeting") },
     ] satisfies readonly SceCalendarLegendEntry[]);
 
   return (

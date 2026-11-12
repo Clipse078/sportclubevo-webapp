@@ -2,6 +2,7 @@ import type { SportingActivityPresentation } from "@/lib/sporting-activity-prese
 import {
   isSceClubEventPresentationModel,
   isSceMatchPresentationModel,
+  isSceMeetingPresentationModel,
   isSceTrainingPresentationModel,
   isSceTournamentPresentationModel,
   type SceActivityPresentationModel,
@@ -114,6 +115,25 @@ export function resolveLegacySportingActivityPresentationFromSce(
         organiserExternalClubId: externalAssociationIdAsString(model.organiser.externalAssociationId),
       },
       location: { ...model.location },
+      status: normalizePresentationStatus(
+        typeof model.status?.domain === "string" ? model.status.domain : undefined,
+      ),
+    };
+  }
+
+  if (isSceMeetingPresentationModel(model)) {
+    return {
+      identity: {
+        resourceKey: model.resourceKey,
+        title: model.meetingTitle,
+        typeLabel: model.typeLabel,
+        activityKind: "EVENT",
+      },
+      schedule: { ...model.schedule },
+      location: { ...model.location },
+      context: model.organisationalContext
+        ? { organiser: model.organisationalContext }
+        : undefined,
       status: normalizePresentationStatus(
         typeof model.status?.domain === "string" ? model.status.domain : undefined,
       ),

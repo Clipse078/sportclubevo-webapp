@@ -37,6 +37,12 @@ describe("SCE-DASHBOARD-V3-03 — today event card presentation", () => {
       expect(formatTodayEventTypeBadge("Spiel")).toBe("SPIEL");
       expect(formatTodayEventTypeBadge(" Turnier ")).toBe("TURNIER");
     });
+
+    it("maps legacy English meeting labels to German before uppercasing (SCE-DASH-UX-01R2)", () => {
+      expect(formatTodayEventTypeBadge("Meeting")).toBe("SITZUNG");
+      expect(formatTodayEventTypeBadge("MEETING")).toBe("SITZUNG");
+      expect(formatTodayEventTypeBadge("Meeting", { sourceType: "MEETING" })).toBe("SITZUNG");
+    });
   });
 
   describe("buildTodayMatchMetaLine", () => {

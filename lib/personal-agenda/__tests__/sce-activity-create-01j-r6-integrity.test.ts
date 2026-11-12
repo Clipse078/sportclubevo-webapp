@@ -127,9 +127,12 @@ describe("SCE-ACTIVITY-CREATE-01J-R6 integrity", () => {
   });
 
   describe("Legacy 01J debt classification", () => {
-    it("keeps meeting fallback row — distinct from sporting Sce* cards", () => {
+    it("keeps degraded agenda fallback for rows without canonical presentation", () => {
       expect(read("components/ui/dashboard/PersonalProgrammeAgendaRow.tsx")).toContain(
         "PersonalProgrammeAgendaRow",
+      );
+      expect(read("components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow.tsx")).toContain(
+        "SceMeetingCard",
       );
     });
 

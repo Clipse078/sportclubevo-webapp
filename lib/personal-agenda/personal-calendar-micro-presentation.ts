@@ -11,14 +11,15 @@ import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/per
 import { sortNormalizedCalendarItems } from "@/lib/personal-agenda/calendar-item-sort";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { PROGRAMME_CALENDAR_VISIBLE_ENTRIES } from "@/lib/programme-engine/programme-calendar-presentation";
-
-const TASK_TYPE_LABEL = "AUFGABE";
+import { resolveProgrammeActivityDisplayTypeLabel } from "@/lib/personal-agenda/programme-activity-german-labels";
 
 function resolvePersonalMicroTypeLabel(item: NormalizedCalendarItem): string {
-  if (item.semanticType === "TASK") {
-    return TASK_TYPE_LABEL;
-  }
-  return item.typeLabel?.trim().toUpperCase() || item.semanticType;
+  const sourceType = mapCalendarSemanticTypeToProgrammeSource(item.semanticType);
+  return resolveProgrammeActivityDisplayTypeLabel({
+    semanticType: item.semanticType,
+    sourceType: sourceType ?? undefined,
+    typeLabel: item.typeLabel,
+  });
 }
 
 function resolvePersonalMicroTimeLabel(
@@ -40,7 +41,6 @@ export function buildPersonalCalendarMicroEntry(
   timeLabelById: Record<string, string>,
   options: { tenantDisplayNames?: string[] } = {},
 ): ProgrammeCalendarMicroEntry {
-  const sourceType = mapCalendarSemanticTypeToProgrammeSource(item.semanticType);
   const palette = getCalendarItemPresentation(item.semanticType);
   const typeLabel = resolvePersonalMicroTypeLabel(item);
   const timeLabel = resolvePersonalMicroTimeLabel(item, fmtCfg);
