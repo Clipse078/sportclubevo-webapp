@@ -88,7 +88,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
     });
     const entry = buildProgrammeCalendarMicroEntry(programmeTrainingItem(presentation), FMT);
 
-    expect(entry.typeLabel).toBe("TRAINING");
+    expect(entry.typeLabel).toBe("Training");
     expect(entry.timeLabel).toMatch(/18:45/);
     expect(entry.identityLabel).toBe("FC Allschwil Junioren B1");
     expect(entry.locationLabel).toBe("Kunstrasen 2 B");
@@ -197,7 +197,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
     );
 
     for (const entry of [programmeEntry, personalEntry]) {
-      expect(countSubstringInVisible(entry, "TRAINING")).toBe(1);
+      expect(countSubstringInVisible(entry, "Training")).toBe(1);
       expect(countSubstringInVisible(entry, "FC Allschwil Junioren B1")).toBe(1);
       expect(countSubstringInVisible(entry, "Kunstrasen 2 B")).toBe(1);
       expect(visibleValues(entry).join(" ")).not.toMatch(/Kunstrasen 2\s+Kunstrasen 2 B/);
@@ -223,7 +223,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
       },
       FMT,
     );
-    expect(programmeEntry.typeLabel).toBe("SPIEL");
+    expect(programmeEntry.typeLabel).toBe("Spiel");
     expect(programmeEntry.identityLabel).toBe("FC Therwil");
     expect(programmeEntry.locationLabel).toBeTruthy();
     expect(countSubstringInVisible(programmeEntry, programmeEntry.locationLabel!)).toBe(1);
@@ -313,7 +313,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
       FMT,
       {},
     );
-    expect(task.typeLabel).toBe("AUFGABE");
+    expect(task.typeLabel).toBe("Aufgabe");
     expect(task.timeLabel).toBe("Fällig");
     expect(task.identityLabel).toBe("Test");
     expect(task.locationLabel).toBeUndefined();

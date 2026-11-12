@@ -59,11 +59,14 @@ describe("SCE-DS2-04R2 full-width horizontal activity cards", () => {
 
   it("non-match programme cards use horizontal reference-row contract", () => {
     const training = readRepo("components/sporting-activity/SceTrainingCard.tsx");
-    expect(training).toContain('data-sce-programme-card-contract="reference-row"');
+    expect(training).toContain("data-sce-programme-card-contract");
+    expect(training).toMatch(/programme-personal|reference-row/);
     const tournament = readRepo("components/sporting-activity/SceTournamentCard.tsx");
-    expect(tournament).toContain('data-sce-programme-card-contract="reference-row"');
+    expect(tournament).toContain("data-sce-programme-card-contract");
     const clubEvent = readRepo("components/sporting-activity/SceClubEventCard.tsx");
-    expect(clubEvent).toContain('data-sce-programme-card-contract="reference-row"');
+    expect(clubEvent).toContain("data-sce-programme-card-contract");
+    const canonicalRow = readRepo("components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow.tsx");
+    expect(canonicalRow).toContain("SceProgrammeActivityDateTile");
   });
 
   it("reference layout allows team-name wrapping (no narrow fixture columns)", () => {

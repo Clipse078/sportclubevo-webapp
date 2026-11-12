@@ -139,6 +139,7 @@ export default function PersonalKalenderMonthWorkspace({
       { sourceType: "MATCH", label: t("legendMatch") },
       { sourceType: "TOURNAMENT", label: t("legendTournament") },
       { sourceType: "EVENT", label: t("legendEvent") },
+      { sourceType: "MEETING", label: t("legendMeeting") },
     ];
     const hasTasks = Object.values(itemsByDayKey).some((items) =>
       items.some((item) => item.semanticType === "TASK"),

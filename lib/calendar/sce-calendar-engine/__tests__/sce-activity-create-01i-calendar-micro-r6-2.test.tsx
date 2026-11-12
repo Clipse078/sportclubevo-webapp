@@ -121,7 +121,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.2 — identity-first MICRO hierarchy", () =
     const link = container.querySelector("a");
     expect(link).toBeTruthy();
     const children = Array.from(link!.children);
-    expect(children[0].textContent).toBe("TRAINING");
+    expect(children[0].textContent).toBe("Training");
     expect(children[1].getAttribute("data-testid")).toBe("sce-calendar-micro-identity");
     expect(children[2].getAttribute("data-testid")).toBe("sce-calendar-micro-time");
     expect(children[3].getAttribute("data-testid")).toBe("sce-calendar-micro-location");
@@ -143,12 +143,12 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.2 — identity-first MICRO hierarchy", () =
 
   it("visible semantic values follow identity-first order", () => {
     const values = visibleCalendarMicroSemanticValues({
-      typeLabel: "SPIEL",
+      typeLabel: "Spiel",
       identityLabel: "FC Concordia Basel b",
       timeLabel: "15:00",
       locationLabel: "Sportanlagen St. Jakob",
     });
-    expect(values).toEqual(["SPIEL", "FC Concordia Basel b", "15:00", "Sportanlagen St. Jakob"]);
+    expect(values).toEqual(["Spiel", "FC Concordia Basel b", "15:00", "Sportanlagen St. Jakob"]);
   });
 
   it("training MICRO: crest + team, then time, then compact location", () => {
@@ -183,7 +183,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.2 — identity-first MICRO hierarchy", () =
       },
       FMT,
     );
-    expect(entry.typeLabel).toBe("TRAINING");
+    expect(entry.typeLabel).toBe("Training");
     expect(entry.identityLabel).toBe("Junioren B1");
     expect(entry.visualIdentity?.kind).toBe("CLUB_CREST");
     expect(entry.locationLabel).toBe("Kunstrasen 2 B");

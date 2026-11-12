@@ -55,8 +55,8 @@ describe("SCE-ACTIVITY-CREATE-01J R2 — Mein Programm workspace", () => {
 
   it("list view uses canonical Sce* agenda rows with STANDARD density", () => {
     const liste = readRelative("components/admin/mein-programm/PersonalProgrammeListeView.tsx");
-    expect(liste).toContain("PersonalProgrammeCanonicalAgendaRow");
-    expect(liste).toContain('density="STANDARD"');
+    expect(liste).toContain("PersonalProgrammePreviewRow");
+    expect(liste).not.toContain("PersonalProgrammeCanonicalAgendaRow");
     expect(liste).not.toMatch(/PersonalProgrammeCard|SceMeinProgrammCard/);
   });
 

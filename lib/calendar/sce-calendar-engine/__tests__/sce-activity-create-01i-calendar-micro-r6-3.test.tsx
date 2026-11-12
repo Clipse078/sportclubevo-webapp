@@ -190,12 +190,12 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.3 — canonical MICRO time range", () => {
   it("accessible time phrase uses «bis» for ranges", () => {
     expect(formatCalendarMicroAccessibleTimePhrase("18:45–20:15")).toBe("18:45 bis 20:15");
     const label = buildCalendarMicroAccessibleLabel({
-      typeLabel: "TRAINING",
+      typeLabel: "Training",
       identityLabel: "FC Allschwil Junioren B1",
       timeLabel: "18:45–20:15",
       locationLabel: "Kunstrasen 2 B",
     });
-    expect(label).toBe("TRAINING, FC Allschwil Junioren B1, 18:45 bis 20:15, Kunstrasen 2 B");
+    expect(label).toBe("Training, FC Allschwil Junioren B1, 18:45 bis 20:15, Kunstrasen 2 B");
   });
 
   it("TRAINING: programme MICRO shows occurrence start–end", () => {
@@ -435,14 +435,14 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.3 — canonical MICRO time range", () => {
     const link = container.querySelector("a");
     expect(link).toBeTruthy();
     const children = Array.from(link!.children);
-    expect(children[0].textContent).toBe("TRAINING");
+    expect(children[0].textContent).toBe("Training");
     expect(children[1].getAttribute("data-testid")).toBe("sce-calendar-micro-identity");
     expect(children[2].getAttribute("data-testid")).toBe("sce-calendar-micro-time");
     expect(children[3].getAttribute("data-testid")).toBe("sce-calendar-micro-location");
     expect(container.querySelector('[data-testid="sce-calendar-micro-time"] svg')).toBeTruthy();
     expect(container.querySelector('[data-testid="sce-calendar-micro-location"] svg')).toBeTruthy();
     expect(visibleCalendarMicroSemanticValues(entry)).toEqual([
-      "TRAINING",
+      "Training",
       "FC Allschwil Junioren B1",
       "18:45–20:15",
       "Kunstrasen 2 B",

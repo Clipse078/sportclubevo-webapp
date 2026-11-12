@@ -54,7 +54,7 @@ import {
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 
-export type SceClubEventListRowPresentation = "default" | "operational";
+export type SceClubEventListRowPresentation = "default" | "operational" | "programme-personal";
 
 export type SceClubEventCardSurface =
   | "standalone"
@@ -436,7 +436,9 @@ function SceClubEventListRowIdentityContent({
       (status.semantic === "cancelled" || status.semantic === "warning"),
   );
 
-  const operational = listRowPresentation === "operational";
+  const operational =
+    listRowPresentation === "operational" || listRowPresentation === "programme-personal";
+  const omitDateColumn = listRowPresentation === "programme-personal";
   const audienceLabel = model.audience?.primaryLabel?.trim()
     ? formatSceClubEventAudienceCompactLabel(model.audience)
     : undefined;
@@ -446,11 +448,18 @@ function SceClubEventListRowIdentityContent({
 
     return (
       <div
-        className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass)}
+        className={cn(
+          "min-w-0 w-full max-w-full",
+          omitDateColumn
+            ? SCE_ACTIVITY_REFERENCE_LAYOUT.programmePersonalContentRowClass
+            : SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass,
+        )}
         data-sce-club-event-density={density}
         data-sce-club-event-list-row-identity
-        data-sce-club-event-list-row-presentation="operational"
-        data-sce-programme-card-contract="reference-row"
+        data-sce-club-event-list-row-presentation={listRowPresentation}
+        data-sce-programme-card-contract={
+          omitDateColumn ? "programme-personal" : "reference-row"
+        }
         data-sce-activity-card-layout="horizontal-full-width"
       >
         {showExceptionalStatus && status?.label ? (
@@ -458,12 +467,14 @@ function SceClubEventListRowIdentityContent({
             <SceClubEventCardStatus status={status} />
           </div>
         ) : null}
-        <p
-          className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
-          data-testid="sce-club-event-list-row-date"
-        >
-          {dateLabel}
-        </p>
+        {!omitDateColumn ? (
+          <p
+            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
+            data-testid="sce-club-event-list-row-date"
+          >
+            {dateLabel}
+          </p>
+        ) : null}
         {timeLabel ? (
           <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-club-event-list-row-time">
             <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden />

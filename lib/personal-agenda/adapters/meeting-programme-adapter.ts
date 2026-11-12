@@ -113,9 +113,9 @@ function meetingRowToProgrammeItem(
     venue: meeting.location?.trim() || undefined,
     status,
     deepLink: `/vereinsleitung/meetings/${meeting.slug}`,
-    typeLabel: "Meeting",
+    typeLabel: "Sitzung",
     eventType: "MEETING",
-    ariaLabel: `Meeting: ${meeting.title}`,
+    ariaLabel: `Sitzung: ${meeting.title}`,
     canonicalPresentation,
   };
 }

@@ -79,9 +79,9 @@ describe("SCE-DASH-UX-01 — meeting presentation normalization", () => {
       sourceType: "MEETING",
       startsAt: new Date("2026-11-15T17:00:00.000Z"),
       title: model.meetingTitle,
-      typeLabel: "Meeting",
+      typeLabel: "Sitzung",
       deepLink: model.route.consumeHref!,
-      ariaLabel: "Meeting: Test Sitzung",
+      ariaLabel: "Sitzung: Test Sitzung",
       canonicalPresentation: model,
     };
 
@@ -175,9 +175,9 @@ describe("SCE-DASH-UX-01 — programme title wrapping", () => {
       sourceType: "MEETING",
       startsAt: new Date(model.schedule.startAt),
       title: "Test Sitzung",
-      typeLabel: "Meeting",
+      typeLabel: "Sitzung",
       deepLink: "/vereinsleitung/meetings/sitzung",
-      ariaLabel: "Meeting",
+      ariaLabel: "Sitzung",
       canonicalPresentation: model,
     };
 
