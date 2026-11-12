@@ -1,13 +1,15 @@
-import type { MeetingListItem } from "@/lib/meetings/queries";
+type MeetingListSortable = {
+  meetingDate: Date | string;
+};
 
-function meetingTimeMs(meeting: Pick<MeetingListItem, "meetingDate">): number {
+function meetingTimeMs(meeting: MeetingListSortable): number {
   return new Date(meeting.meetingDate).getTime();
 }
 
 /**
  * Upcoming meetings (meetingDate >= now), nearest first; then past meetings, most recent first.
  */
-export function sortMeetingsForList<T extends Pick<MeetingListItem, "meetingDate">>(
+export function sortMeetingsForList<T extends MeetingListSortable>(
   meetings: T[],
   now: Date = new Date(),
 ): T[] {
