@@ -2,6 +2,10 @@ import "server-only";
 
 import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  collectEligibleProgressLeafUnits,
+  computeInitiativeProgressFromUnits,
+} from "@/lib/tasks/task-hierarchy-progress";
 
 export type InitiativeProgressSnapshot = {
   progress: number;
@@ -13,6 +17,9 @@ export type InitiativeProgressSnapshot = {
 /**
  * Canonical initiative progress from linked Aufgaben (direct INITIATIVE context
  * and MEETING_DECISION contexts tied to this Vorhaben via Traktanden).
+ *
+ * SCE-TASK-01: parents with subtasks contribute their eligible children as leaf
+ * units; parents are not double-counted.
  */
 export async function computeInitiativeProgressSnapshot(
   tenantId: string,
@@ -50,21 +57,19 @@ export async function computeInitiativeProgressSnapshot(
       OR: contextFilters,
       status: { not: TaskStatus.CANCELLED },
     },
-    select: { id: true, status: true },
+    select: { id: true, status: true, parentTaskId: true },
   });
 
-  const byId = new Map<string, TaskStatus>();
-  for (const task of tasks) {
-    byId.set(task.id, task.status);
-  }
+  const leafUnits = collectEligibleProgressLeafUnits(tasks);
+  const rolled = computeInitiativeProgressFromUnits(leafUnits);
+  const taskIds = leafUnits.map((u) => u.id);
 
-  const taskIds = [...byId.keys()];
-  const eligibleCount = taskIds.length;
-  const completedCount = [...byId.values()].filter((s) => s === TaskStatus.DONE).length;
-  const progress =
-    eligibleCount === 0 ? 0 : Math.round((completedCount / eligibleCount) * 100);
-
-  return { progress, completedCount, eligibleCount, taskIds };
+  return {
+    progress: rolled.percent,
+    completedCount: rolled.completedCount,
+    eligibleCount: rolled.totalCount,
+    taskIds,
+  };
 }
 
 export async function syncInitiativeStoredProgress(

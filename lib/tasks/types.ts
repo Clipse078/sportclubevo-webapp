@@ -106,6 +106,8 @@ export type UpdateTaskInput = {
   priority?: TaskPriority;
   dueAt?: Date | null;
   status?: TaskStatus;
+  /** SCE-TASK-01 — convert a subtask back to a standalone Aufgabe when authorized. */
+  detachFromParent?: boolean;
 } & TaskReminderMutationInput & {
   contextType?: TaskContextType | null;
   contextId?: string | null;
