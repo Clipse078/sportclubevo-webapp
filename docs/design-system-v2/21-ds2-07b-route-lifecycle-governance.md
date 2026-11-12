@@ -21,7 +21,7 @@ Authenticated browser coverage for this package: **none**.
 | Authenticated redirect aliases | 15 |
 | Public renderable pages | 39 |
 | Public redirect aliases | 1 |
-| Route handlers | 630 |
+| Route handlers | 632 |
 | Special Next.js framework files | 40 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.

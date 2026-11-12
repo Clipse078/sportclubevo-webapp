@@ -391,6 +391,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/processes/route.ts",
+    "urlPattern": "/api/club-development/processes",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-directory/clubs/[clubId]/logo/route.ts",
     "urlPattern": "/api/club-directory/clubs/[clubId]/logo",
     "audience": "API"
@@ -1317,6 +1323,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/infoboards/route.ts",
     "urlPattern": "/api/infoboards",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/initiatives/[id]/approval/route.ts",
+    "urlPattern": "/api/initiatives/[id]/approval",
     "audience": "API"
   },
   {

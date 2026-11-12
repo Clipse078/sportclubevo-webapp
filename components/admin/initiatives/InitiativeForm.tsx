@@ -11,6 +11,7 @@ import VisibilityScopeSelect, {
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 type InitiativeFormProps = {
   mode: "create" | "edit";
@@ -303,14 +304,17 @@ export default function InitiativeForm({
       {mode === "create" ? (
         <section className={sectionClass}>
           <h3 className={sectionTitleClass}>Freigabe (optional)</h3>
-          <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
+            <SwitchThumb
+              id="initiative-create-approval-required"
               checked={approvalRequired}
-              onChange={(e) => setApprovalRequired(e.target.checked)}
+              onChange={setApprovalRequired}
+              aria-label="Freigabe vor Veröffentlichung erforderlich"
             />
-            Freigabe vor Veröffentlichung erforderlich
-          </label>
+            <label htmlFor="initiative-create-approval-required" className="cursor-pointer">
+              Freigabe vor Veröffentlichung erforderlich
+            </label>
+          </div>
           {approvalRequired ? (
             <div className="mt-4 space-y-3">
               <div>
