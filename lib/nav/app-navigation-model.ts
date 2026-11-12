@@ -78,18 +78,32 @@ export function isSingleHubNavigationDomain(domain: NavigationDomain): boolean {
   );
 }
 
+/** Canonical nav-config keys for legacy / matrix aliases (e.g. meetings → Sitzungen child). */
+const CLUB_NAV_KEY_ALIASES: Record<string, string> = {
+  meetings: "club-entwicklung-sitzungen",
+};
+
 function resolveNavKeyHrefInDomain(
   domain: NavigationDomain,
   navKey: string,
 ): { href: string; carrySeason?: boolean; itemKey: string } | null {
-  const topLevel = domain.destinations.find((dest) => dest.key === navKey);
+  const canonicalKey = CLUB_NAV_KEY_ALIASES[navKey] ?? navKey;
+  const topLevel = domain.destinations.find((dest) => dest.key === canonicalKey);
   if (topLevel) {
-    return { href: topLevel.href, carrySeason: topLevel.carrySeason, itemKey: topLevel.key };
+    return {
+      href: topLevel.href,
+      carrySeason: topLevel.carrySeason,
+      itemKey: navKey in CLUB_NAV_KEY_ALIASES ? navKey : topLevel.key,
+    };
   }
   for (const dest of domain.destinations) {
-    const child = dest.children?.find((c) => c.key === navKey);
+    const child = dest.children?.find((c) => c.key === canonicalKey);
     if (child) {
-      return { href: child.href, carrySeason: dest.carrySeason, itemKey: child.key };
+      return {
+        href: child.href,
+        carrySeason: dest.carrySeason,
+        itemKey: navKey in CLUB_NAV_KEY_ALIASES ? navKey : child.key,
+      };
     }
   }
   return null;
@@ -113,10 +127,9 @@ function resolveHeaderItemsFromL2Groups(domain: NavigationDomain): DomainSeconda
     if (authorizedKeys.length === 0) continue;
 
     const representativeKey =
-      authorizedKeys.find((key) => domain.destinations.some((dest) => dest.key === key)) ??
-      authorizedKeys[0]!;
-    const resolved = resolveNavKeyHrefInDomain(domain, representativeKey);
-    if (!resolved) continue;
+      authorizedKeys.find((key) => resolveNavKeyHrefInDomain(domain, key) !== null) ?? null;
+    if (!representativeKey) continue;
+    const resolved = resolveNavKeyHrefInDomain(domain, representativeKey)!;
 
     items.push({
       key: resolved.itemKey,

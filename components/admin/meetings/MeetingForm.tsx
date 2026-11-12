@@ -9,6 +9,8 @@ import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
+import MeetingParticipantMultiPicker from "@/components/admin/meetings/MeetingParticipantMultiPicker";
+import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
 
 type MeetingFormProps = {
@@ -22,13 +24,14 @@ type MeetingFormProps = {
     description?: string;
     meetingDate?: string;
     location?: string;
-    attendeeCount?: string;
+    plannedDurationMin?: string;
     status?: string;
     visibilityScope?: VisibilityScopeValue;
     visibleOrgUnitRefs?: string[];
     visibleRoleRefs?: string[];
     visibleUserRefs?: string[];
     visibleTargetGroupRefs?: string[];
+    visibilityHint?: string | null;
   };
 };
 
@@ -52,10 +55,11 @@ export default function MeetingForm({
   const [description, setDescription] = useState(defaultValues?.description ?? "");
   const [meetingDate, setMeetingDate] = useState(defaultValues?.meetingDate ?? "");
   const [location, setLocation] = useState(defaultValues?.location ?? "");
-  const [attendeeCount, setAttendeeCount] = useState(defaultValues?.attendeeCount ?? "");
+  const [plannedDurationMin, setPlannedDurationMin] = useState(defaultValues?.plannedDurationMin ?? "");
   const [status, setStatus] = useState(defaultValues?.status ?? "PLANNED");
+  const [participantPersonIds, setParticipantPersonIds] = useState<string[]>([]);
   const [visibilityScope, setVisibilityScope] = useState<VisibilityScopeValue>(
-    defaultValues?.visibilityScope ?? "ORGANISATION",
+    defaultValues?.visibilityScope ?? "RESTRICTED",
   );
   const [visibleOrgUnitRefs, setVisibleOrgUnitRefs] = useState<string[]>(
     defaultValues?.visibleOrgUnitRefs ?? [],
@@ -80,8 +84,9 @@ export default function MeetingForm({
       description,
       meetingDate,
       location,
-      attendeeCount,
+      plannedDurationMin,
       status,
+      participantPersonIds,
       visibilityScope,
       visibleOrgUnitRefs,
       visibleRoleRefs,
@@ -93,8 +98,9 @@ export default function MeetingForm({
       description,
       meetingDate,
       location,
-      attendeeCount,
+      plannedDurationMin,
       status,
+      participantPersonIds,
       visibilityScope,
       visibleOrgUnitRefs,
       visibleRoleRefs,
@@ -118,6 +124,20 @@ export default function MeetingForm({
       return;
     }
 
+    if (visibilityScope === "RESTRICTED") {
+      const allowlistCount =
+        visibleOrgUnitRefs.length +
+        visibleRoleRefs.length +
+        visibleUserRefs.length +
+        visibleTargetGroupRefs.length;
+      if (allowlistCount === 0) {
+        setError(
+          "Bei eingeschränkter Sichtbarkeit bitte mindestens eine Org.-Einheit, Rolle oder Person auswählen.",
+        );
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -125,13 +145,14 @@ export default function MeetingForm({
         description: description.trim() || null,
         meetingDate,
         location: location.trim() || null,
-        attendeeCount: attendeeCount ? Number(attendeeCount) : null,
+        plannedDurationMin: plannedDurationMin ? Number(plannedDurationMin) : null,
         status,
         visibilityScope,
         visibleOrgUnitRefs: visibilityScope === "RESTRICTED" ? visibleOrgUnitRefs : [],
         visibleRoleRefs: visibilityScope === "RESTRICTED" ? visibleRoleRefs : [],
         visibleUserRefs: visibilityScope === "RESTRICTED" ? visibleUserRefs : [],
         visibleTargetGroupRefs: visibilityScope === "RESTRICTED" ? visibleTargetGroupRefs : [],
+        participantPersonIds: mode === "create" ? participantPersonIds : undefined,
       };
 
       const url = mode === "edit" ? `/api/meetings/${meetingId}` : "/api/meetings";
@@ -156,7 +177,11 @@ export default function MeetingForm({
         onSuccess(slug);
         return;
       }
-      router.push("/vereinsleitung/meetings?status=saved");
+      if (slug && mode === "create") {
+        router.push(`/vereinsleitung/meetings/${slug}`);
+      } else {
+        router.push("/vereinsleitung/meetings?status=saved");
+      }
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
@@ -176,17 +201,16 @@ export default function MeetingForm({
   } = sceFormSurfaceClasses(layout);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error ? (
         <div className={errorClass} role="alert">
           {error}
         </div>
       ) : null}
 
-      <section className={sectionClass}>
-        <h3 className={sectionTitleClass}>Grunddaten</h3>
-
-        <div className="grid gap-4 md:grid-cols-2">
+      <section className={sectionClass} data-testid="meeting-form-core">
+        <h3 className={sectionTitleClass}>Sitzung</h3>
+        <div className="grid gap-3 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Titel *</label>
             <input
@@ -198,18 +222,6 @@ export default function MeetingForm({
               required
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className={labelClass}>Beschreibung</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kurze Beschreibung des Meetings…"
-              rows={3}
-              className={fieldClass}
-            />
-          </div>
-
           <div>
             <label className={labelClass}>Datum & Uhrzeit *</label>
             <input
@@ -220,22 +232,6 @@ export default function MeetingForm({
               required
             />
           </div>
-
-          <div>
-            <label className={labelClass}>Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className={fieldClass}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div>
             <label className={labelClass}>Ort</label>
             <input
@@ -246,40 +242,86 @@ export default function MeetingForm({
               className={fieldClass}
             />
           </div>
-
-          <div>
-            <label className={labelClass}>Teilnehmeranzahl</label>
-            <input
-              type="number"
-              min={0}
-              value={attendeeCount}
-              onChange={(e) => setAttendeeCount(e.target.value)}
-              placeholder="z.B. 5"
+          <div className="md:col-span-2">
+            <label className={labelClass}>Beschreibung</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Kurze Beschreibung der Sitzung…"
+              rows={2}
               className={fieldClass}
             />
           </div>
+          <div>
+            <label className={labelClass}>Geplante Dauer (Minuten)</label>
+            <input
+              type="number"
+              min={1}
+              value={plannedDurationMin}
+              onChange={(e) => setPlannedDurationMin(e.target.value)}
+              placeholder="z.B. 90"
+              className={fieldClass}
+            />
+          </div>
+          {mode === "create" ? (
+            <div className="md:col-span-2">
+              <MeetingParticipantMultiPicker
+                selectedPersonIds={participantPersonIds}
+                onSelectedPersonIdsChange={setParticipantPersonIds}
+              />
+              <p className="mt-1.5 text-[12px] text-[var(--muted)]">
+                Auswahl erfasst Teilnehmer für die Sitzung — Einladungen werden separat vorbereitet, nicht automatisch
+                versendet.
+              </p>
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <section className={sectionClass}>
-        <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
-        <p className="mb-5 text-[12px] text-[var(--muted)]">
-          Wer kann dieses Meeting sehen? Wähle sorgfältig — Privat und Eingeschränkt
-          verbergen diesen Eintrag für nicht berechtigte Benutzer.
-        </p>
-        <VisibilityScopeSelect value={visibilityScope} onChange={setVisibilityScope} />
-        <AllowlistPanel
-          visibilityScope={visibilityScope}
-          visibleOrgUnitRefs={visibleOrgUnitRefs}
-          visibleRoleRefs={visibleRoleRefs}
-          visibleUserRefs={visibleUserRefs}
-          visibleTargetGroupRefs={visibleTargetGroupRefs}
-          onOrgUnitsChange={setVisibleOrgUnitRefs}
-          onRolesChange={setVisibleRoleRefs}
-          onUsersChange={setVisibleUserRefs}
-          onTargetGroupsChange={setVisibleTargetGroupRefs}
-        />
-      </section>
+      <SceExpandablePanel
+        defaultOpen={false}
+        summary={<span className="text-sm font-semibold text-[var(--foreground)]">Erweiterte Einstellungen</span>}
+      >
+        <div className="space-y-5">
+          <div>
+            <label className={labelClass}>Sitzungsstatus (Lebenszyklus)</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={fieldClass}>
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[12px] text-[var(--muted)]">
+              Der Freigabe-Workflow für Protokoll und Beschlüsse ist davon getrennt und wird nur bei Bedarf angezeigt.
+            </p>
+          </div>
+          <div>
+            <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
+            <p className="mb-3 text-[12px] text-[var(--muted)]">
+              Wer kann diese Sitzung in der Übersicht sehen? «Eingeschränkt» zeigt den Eintrag nur für berechtigte
+              Personen — nicht automatisch für den ganzen Verein. Teilnehmerauswahl steuert nicht die Sichtbarkeit.
+            </p>
+            {defaultValues?.visibilityHint ? (
+              <p className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-[12px] text-[var(--text-2)]">
+                {defaultValues.visibilityHint}
+              </p>
+            ) : null}
+            <VisibilityScopeSelect value={visibilityScope} onChange={setVisibilityScope} />
+            <AllowlistPanel
+              visibilityScope={visibilityScope}
+              visibleOrgUnitRefs={visibleOrgUnitRefs}
+              visibleRoleRefs={visibleRoleRefs}
+              visibleUserRefs={visibleUserRefs}
+              visibleTargetGroupRefs={visibleTargetGroupRefs}
+              onOrgUnitsChange={setVisibleOrgUnitRefs}
+              onRolesChange={setVisibleRoleRefs}
+              onUsersChange={setVisibleUserRefs}
+              onTargetGroupsChange={setVisibleTargetGroupRefs}
+            />
+          </div>
+        </div>
+      </SceExpandablePanel>
 
       <div className="flex items-center justify-between gap-4">
         <button
@@ -292,7 +334,7 @@ export default function MeetingForm({
         </button>
         <button type="submit" disabled={loading} className={submitButtonClass}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {mode === "create" ? "Meeting erstellen" : "Änderungen speichern"}
+          {mode === "create" ? "Sitzung erstellen" : "Änderungen speichern"}
         </button>
       </div>
     </form>

@@ -5,6 +5,7 @@ import { MeetingDecisionStatus } from "@prisma/client";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 
 async function requireSession() {
   const session = await auth();
@@ -24,7 +25,15 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   const decisions = await prisma.meetingDecision.findMany({
     where: { meetingId: id },
     orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-    select: { id: true, title: true, description: true, status: true, owner: true, orderIndex: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      owner: true,
+      ownerPersonId: true,
+      orderIndex: true,
+    },
   });
   return NextResponse.json({ decisions });
 }
@@ -41,9 +50,27 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (!title) return NextResponse.json({ error: "Titel ist erforderlich." }, { status: 400 });
   const validStatuses = Object.values(MeetingDecisionStatus);
   const status: MeetingDecisionStatus = validStatuses.includes(body?.status) ? body.status : MeetingDecisionStatus.CONFIRMED;
+  let owner = body?.owner?.trim() || null;
+  let ownerPersonId: string | null = body?.ownerPersonId?.trim() || null;
+  if (ownerPersonId && actor.tenantId) {
+    const snap = await resolveMeetingPersonSnapshot(actor.tenantId, ownerPersonId);
+    if (!snap) return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+    owner = snap.displayName;
+    ownerPersonId = snap.personId;
+  }
+
   try {
     const decision = await prisma.meetingDecision.create({
-      data: { meetingId: id, title, description: body?.description?.trim() || null, status, owner: body?.owner?.trim() || null, orderIndex: body?.orderIndex ?? 0, createdByUserId: actor.userId },
+      data: {
+        meetingId: id,
+        title,
+        description: body?.description?.trim() || null,
+        status,
+        owner,
+        ownerPersonId,
+        orderIndex: body?.orderIndex ?? 0,
+        createdByUserId: actor.userId,
+      },
       select: { id: true, title: true, status: true },
     });
     void logAuditEvent({ actorUserId: actor.userId, module: "meetings", entityId: id, action: "DECISION_CREATE", after: { decisionId: decision.id, title: decision.title } });

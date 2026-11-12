@@ -31,7 +31,8 @@ export default async function EditMeetingPage({ params }: PageProps) {
     description: meeting.description ?? "",
     meetingDate: new Date(meeting.meetingDate).toISOString().slice(0, 16),
     location: meeting.location ?? "",
-    attendeeCount: meeting.attendeeCount != null ? String(meeting.attendeeCount) : "",
+    plannedDurationMin:
+      meeting.plannedDurationMin != null ? String(meeting.plannedDurationMin) : "",
     status: meeting.status,
     visibilityScope: meeting.visibilityScope as VisibilityScopeValue,
     visibleOrgUnitRefs: parseStringArray(meeting.visibleOrgUnitRefs),
@@ -42,18 +43,18 @@ export default async function EditMeetingPage({ params }: PageProps) {
   return (
     <PageShell fullWidth>
       <FormPagePattern
-        eyebrow="Meetings"
-        title="Meeting bearbeiten"
+        eyebrow="Sitzungen"
+        title="Sitzung bearbeiten"
         description={`Bearbeite: ${meeting.title}`}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Meetings", href: "/vereinsleitung/meetings" },
+          { label: "Sitzungen", href: "/vereinsleitung/meetings" },
           { label: meeting.title, href: `/vereinsleitung/meetings/${slug}` },
           { label: "Bearbeiten" },
         ]}
       >
         <ClubDevelopmentFormWorkflowShell>
-          <MeetingForm mode="edit" meetingId={meeting.id} defaultValues={defaultValues} />
+          <MeetingForm mode="edit" layout="page" meetingId={meeting.id} defaultValues={defaultValues} />
         </ClubDevelopmentFormWorkflowShell>
       </FormPagePattern>
     </PageShell>

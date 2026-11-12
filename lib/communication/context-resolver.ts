@@ -24,9 +24,22 @@
  *   at delivery time (not in the resolver, which operates on source entities).
  */
 
-import { prisma } from "@/lib/db/prisma";
+import type { ActorContext } from "@/lib/visibility/actor-context";
+import { getMeetingById } from "@/lib/meetings/queries";
+import { getTargetById } from "@/lib/targets/queries";
+import { getInitiativeById } from "@/lib/initiatives/queries";
+import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 
 type ContextMap = Record<string, string>;
+
+const STRATEGIC_MODULE_KEYS = new Set([
+  "meetings",
+  "meeting",
+  "targets",
+  "target",
+  "initiatives",
+  "initiative",
+]);
 
 function formatSwissDate(date: Date | null | undefined): string {
   if (!date) return "";
@@ -47,12 +60,12 @@ function formatSwissTime(date: Date | null | undefined): string {
   }).format(new Date(date));
 }
 
-async function resolveMeetingContext(entityId: string, tenantId: string): Promise<ContextMap> {
-  const meeting = await prisma.meeting.findFirst({
-    where: { id: entityId, tenantId },
-    select: { title: true, meetingDate: true, location: true, description: true, attendeeCount: true },
-  });
-  if (!meeting) return {};
+function meetingFieldsFromRow(meeting: {
+  title: string;
+  meetingDate: Date;
+  location: string | null;
+  description: string | null;
+}): ContextMap {
   return {
     "meeting.title": meeting.title,
     "meeting.date": formatSwissDate(meeting.meetingDate),
@@ -62,11 +75,14 @@ async function resolveMeetingContext(entityId: string, tenantId: string): Promis
   };
 }
 
-async function resolveTargetContext(entityId: string, tenantId: string): Promise<ContextMap> {
-  const target = await prisma.target.findFirst({
-    where: { id: entityId, tenantId },
-    select: { title: true, description: true, category: true, periodLabel: true, period: true },
-  });
+async function resolveMeetingContext(entityId: string, actor: ActorContext): Promise<ContextMap> {
+  const meeting = await getMeetingById(entityId, actor);
+  if (!meeting) return {};
+  return meetingFieldsFromRow(meeting);
+}
+
+async function resolveTargetContext(entityId: string, actor: ActorContext): Promise<ContextMap> {
+  const target = await getTargetById(entityId, actor);
   if (!target) return {};
   const CATEGORY_LABELS: Record<string, string> = {
     SPORTLICHE_ENTWICKLUNG: "Sportliche Entwicklung",
@@ -84,11 +100,8 @@ async function resolveTargetContext(entityId: string, tenantId: string): Promise
   };
 }
 
-async function resolveInitiativeContext(entityId: string, tenantId: string): Promise<ContextMap> {
-  const initiative = await prisma.initiative.findFirst({
-    where: { id: entityId, tenantId },
-    select: { title: true, summary: true, owner: true, status: true, progress: true, dueDate: true },
-  });
+async function resolveInitiativeContext(entityId: string, actor: ActorContext): Promise<ContextMap> {
+  const initiative = await getInitiativeById(entityId, actor);
   if (!initiative) return {};
   const STATUS_LABELS: Record<string, string> = {
     PLANNED: "Geplant", IN_PROGRESS: "In Arbeit", ON_TRACK: "On Track",
@@ -114,18 +127,25 @@ async function resolveInitiativeContext(entityId: string, tenantId: string): Pro
 export async function resolveContext(
   moduleKey: string,
   entityId: string,
-  tenantId: string,
+  actor: ActorContext,
 ): Promise<ContextMap> {
+  if (!actor.tenantId) return {};
+
+  if (STRATEGIC_MODULE_KEYS.has(moduleKey)) {
+    const vlOk = await userHasVereinsleitungWorkspaceAccess(actor.userId, actor.tenantId);
+    if (!vlOk) return {};
+  }
+
   switch (moduleKey) {
     case "meetings":
     case "meeting":
-      return resolveMeetingContext(entityId, tenantId);
+      return resolveMeetingContext(entityId, actor);
     case "targets":
     case "target":
-      return resolveTargetContext(entityId, tenantId);
+      return resolveTargetContext(entityId, actor);
     case "initiatives":
     case "initiative":
-      return resolveInitiativeContext(entityId, tenantId);
+      return resolveInitiativeContext(entityId, actor);
     default:
       return {};
   }

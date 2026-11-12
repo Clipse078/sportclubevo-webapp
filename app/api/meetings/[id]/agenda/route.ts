@@ -5,6 +5,9 @@ import { MeetingAgendaItemStatus } from "@prisma/client";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
+import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
+import { resolveMeetingAgendaInitiativeLink } from "@/lib/meetings/meeting-initiative-link";
+import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 
 async function requireSession() {
   const session = await auth();
@@ -26,7 +29,19 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   const items = await prisma.meetingAgendaItem.findMany({
     where: { meetingId: id },
     orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-    select: { id: true, title: true, notes: true, owner: true, durationMin: true, orderIndex: true, status: true },
+    select: {
+      id: true,
+      title: true,
+      notes: true,
+      owner: true,
+      ownerPersonId: true,
+      durationMin: true,
+      initiativeId: true,
+      orderIndex: true,
+      status: true,
+      sourceAgendaItemId: true,
+      initiative: { select: { id: true, slug: true, title: true, status: true } },
+    },
   });
   return NextResponse.json({ items });
 }
@@ -48,14 +63,37 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   const status: MeetingAgendaItemStatus = validStatuses.includes(body?.status)
     ? body.status : MeetingAgendaItemStatus.OPEN;
 
+  let owner = body?.owner?.trim() || null;
+  let ownerPersonId: string | null = body?.ownerPersonId?.trim() || null;
+  if (ownerPersonId && actor.tenantId) {
+    const snap = await resolveMeetingPersonSnapshot(actor.tenantId, ownerPersonId);
+    if (!snap) return NextResponse.json({ error: "Person nicht gefunden." }, { status: 400 });
+    owner = snap.displayName;
+    ownerPersonId = snap.personId;
+  }
+
+  let initiativeId: string | null = null;
+  try {
+    const link = await resolveMeetingAgendaInitiativeLink(actor, body?.initiativeId);
+    initiativeId = link.initiativeId;
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Ungültiges Vorhaben." }, { status: 400 });
+  }
+
+  const sourceAgendaItemId =
+    typeof body?.sourceAgendaItemId === "string" ? body.sourceAgendaItemId.trim() || null : null;
+
   try {
     const item = await prisma.meetingAgendaItem.create({
       data: {
         meetingId: id,
         title,
         notes: body?.notes?.trim() || null,
-        owner: body?.owner?.trim() || null,
-        durationMin: body?.durationMin ? Number(body.durationMin) : null,
+        owner,
+        ownerPersonId,
+        durationMin: normalizeAgendaDurationMin(body?.durationMin),
+        initiativeId,
+        sourceAgendaItemId,
         orderIndex: body?.orderIndex ?? 0,
         status,
         createdByUserId: actor.userId,

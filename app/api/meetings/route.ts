@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { MeetingStatus, VisibilityScope } from "@prisma/client";
+import { MeetingStatus } from "@prisma/client";
 import { getMeetings } from "@/lib/meetings/queries";
+import { createMeetingParticipantsFromPersonIds } from "@/lib/meetings/meeting-participant-create";
+import { resolveMeetingVisibilityOnCreate } from "@/lib/meetings/meeting-visibility-payload";
+import { meetingAllowlistsForPrisma } from "@/lib/meetings/meeting-visibility";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 
@@ -54,10 +57,11 @@ export async function POST(request: NextRequest) {
       ? (body.status as MeetingStatus)
       : MeetingStatus.PLANNED;
 
-    const validScopes = Object.values(VisibilityScope);
-    const visibilityScope: VisibilityScope = validScopes.includes(body?.visibilityScope as VisibilityScope)
-      ? (body.visibilityScope as VisibilityScope)
-      : VisibilityScope.ORGANISATION;
+    const visibilityResolved = await resolveMeetingVisibilityOnCreate(tenantId, body);
+    if (!visibilityResolved.ok) {
+      return NextResponse.json({ error: visibilityResolved.error }, { status: 400 });
+    }
+    const { visibilityScope, allowlists } = visibilityResolved.payload;
 
     const created = await prisma.meeting.create({
       data: {
@@ -67,17 +71,23 @@ export async function POST(request: NextRequest) {
         description: body?.description?.trim() || null,
         meetingDate,
         location: body?.location?.trim() || null,
-        attendeeCount: body?.attendeeCount ? Number(body.attendeeCount) : null,
+        attendeeCount: null,
+        plannedDurationMin:
+          body?.plannedDurationMin !== undefined && body?.plannedDurationMin !== null && body?.plannedDurationMin !== ""
+            ? Math.max(0, Math.trunc(Number(body.plannedDurationMin))) || null
+            : null,
         status,
         visibilityScope,
         createdByUserId: actor.userId,
-        visibleOrgUnitRefs: Array.isArray(body?.visibleOrgUnitRefs) ? body.visibleOrgUnitRefs : undefined,
-        visibleRoleRefs: Array.isArray(body?.visibleRoleRefs) ? body.visibleRoleRefs : undefined,
-        visibleUserRefs: Array.isArray(body?.visibleUserRefs) ? body.visibleUserRefs : undefined,
-        // Phase D: target group refs for resolved-member visibility
-        visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs) ? body.visibleTargetGroupRefs : undefined,
+        ...meetingAllowlistsForPrisma(allowlists),
       },
       select: { id: true, slug: true, title: true },
+    });
+
+    await createMeetingParticipantsFromPersonIds({
+      tenantId,
+      meetingId: created.id,
+      personIds: body?.participantPersonIds,
     });
 
     return NextResponse.json({ meeting: created }, { status: 201 });

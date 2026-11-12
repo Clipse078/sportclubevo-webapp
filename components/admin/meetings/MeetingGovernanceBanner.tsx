@@ -1,13 +1,8 @@
 /**
- * Governance banner shown on meeting detail pages when the Meeting record
- * exists in the DB. Displays review stage, reviewer stamp, and stage actions.
- *
- * When the slug is not in the DB (legacy mock slug), this component is not
- * rendered — existing mock detail behavior is preserved with zero regression.
+ * Freigabe / Prüfung — nur für Governance (reviewStage), getrennt vom Sitzungs-Lebenszyklus.
  */
 
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { ShieldCheck } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import MeetingStageActions from "@/components/admin/meetings/MeetingStageActions";
 import type { ReviewWorkflowStage } from "@prisma/client";
@@ -30,16 +25,24 @@ function formatSwissDate(date: Date) {
   }).format(new Date(date));
 }
 
+export function meetingShowsGovernanceBanner(meeting: MeetingGovernanceBannerProps["meeting"]): boolean {
+  if (meeting.requiresFourEyeReview) return true;
+  return meeting.reviewStage !== "DRAFT";
+}
+
 export default function MeetingGovernanceBanner({ meeting }: MeetingGovernanceBannerProps) {
+  if (!meetingShowsGovernanceBanner(meeting)) return null;
+
   return (
-    <section className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)]/60 px-5 py-4 shadow-[0_6px_20px_rgba(15,23,42,0.04)]">
+    <section
+      className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)]/60 px-5 py-4 shadow-[0_6px_20px_rgba(15,23,42,0.04)]"
+      data-testid="meeting-governance-banner"
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-[var(--muted)]">
             <ProductDomainSceIcon name="roles-access" size={16} />
-            <span className="text-[12px] font-semibold uppercase tracking-[0.1em]">
-              Governance
-            </span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.1em]">Freigabe & Prüfung</span>
           </div>
 
           <ReviewStageBadge stage={meeting.reviewStage} />
@@ -52,14 +55,15 @@ export default function MeetingGovernanceBanner({ meeting }: MeetingGovernanceBa
           ) : null}
 
           {meeting.reviewedAt ? (
-            <span className="text-[11px] text-[var(--muted)]">
-              Geprüft {formatSwissDate(meeting.reviewedAt)}
-            </span>
+            <span className="text-[11px] text-[var(--muted)]">Geprüft {formatSwissDate(meeting.reviewedAt)}</span>
           ) : null}
         </div>
 
         <MeetingStageActions meetingId={meeting.id} currentStage={meeting.reviewStage} />
       </div>
+      <p className="mt-2 text-[12px] text-[var(--muted)]">
+        Freigabe betrifft Protokoll und Beschlüsse — nicht Terminplanung oder Teilnehmerauswahl.
+      </p>
     </section>
   );
 }

@@ -17,6 +17,11 @@
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildVisibilityWhere, applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
+import { enrichMeetingSubEntitiesWithPersonLabels } from "@/lib/meetings/enrich-meeting-sub-entities";
+import { sortMeetingsForList } from "@/lib/meetings/meeting-list-sort";
+import type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
+
+export type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
 
 const MEETING_LIST_SELECT = {
   id: true,
@@ -26,7 +31,15 @@ const MEETING_LIST_SELECT = {
   meetingDate: true,
   location: true,
   attendeeCount: true,
+  plannedDurationMin: true,
   status: true,
+  conductedAt: true,
+  closedAt: true,
+  protocolApprovalRequired: true,
+  protocolApprovalRule: true,
+  protocolApproverPersonIds: true,
+  protocolContentRevision: true,
+  lastReopenReason: true,
   reviewStage: true,
   requiresFourEyeReview: true,
   visibilityScope: true,
@@ -52,7 +65,8 @@ export async function getMeetings(actor: ActorContext) {
     orderBy: { meetingDate: "desc" },
     select: MEETING_LIST_SELECT,
   });
-  return applyVisibilityFilter(rows, actor);
+  const visible = applyVisibilityFilter(rows, actor);
+  return sortMeetingsForList(visible);
 }
 
 const MEETING_DETAIL_SELECT = {
@@ -105,33 +119,65 @@ export function canSeeMeeting(
   return canSeeEntity(meeting as Parameters<typeof canSeeEntity>[0], actor);
 }
 
-export async function getMeetingSubEntities(meetingId: string) {
+export async function getMeetingSubEntities(
+  meetingId: string,
+  tenantId?: string | null,
+): Promise<MeetingSubEntities> {
   const [agendaItems, decisions, actions, participants] = await Promise.all([
     prisma.meetingAgendaItem.findMany({
       where: { meetingId },
       orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-      select: { id: true, title: true, notes: true, owner: true, durationMin: true, orderIndex: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        notes: true,
+        owner: true,
+        ownerPersonId: true,
+        durationMin: true,
+        initiativeId: true,
+        orderIndex: true,
+        status: true,
+        sourceAgendaItemId: true,
+        initiative: { select: { id: true, slug: true, title: true, status: true } },
+      },
     }),
     prisma.meetingDecision.findMany({
       where: { meetingId },
       orderBy: [{ orderIndex: "asc" }, { createdAt: "asc" }],
-      select: { id: true, title: true, description: true, status: true, owner: true, orderIndex: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        owner: true,
+        ownerPersonId: true,
+        orderIndex: true,
+        sourceAgendaItemId: true,
+        approvalRequired: true,
+        approvalRule: true,
+        approverPersonIds: true,
+        approvalStatus: true,
+        approvalContentRevision: true,
+      },
     }),
     prisma.meetingAction.findMany({
       where: { meetingId },
       orderBy: { createdAt: "asc" },
-      select: { id: true, title: true, owner: true, dueDate: true, status: true },
+      select: { id: true, title: true, owner: true, ownerPersonId: true, dueDate: true, status: true },
     }),
     prisma.meetingParticipant.findMany({
       where: { meetingId },
       orderBy: { createdAt: "asc" },
-      select: { id: true, name: true, role: true, status: true, userId: true },
+      select: { id: true, name: true, role: true, status: true, userId: true, personId: true },
     }),
   ]);
-  return { agendaItems, decisions, actions, participants };
+  const base: MeetingSubEntities = { agendaItems, decisions, actions, participants };
+  if (tenantId) {
+    return enrichMeetingSubEntitiesWithPersonLabels(tenantId, base);
+  }
+  return base;
 }
 
-export type MeetingSubEntities = Awaited<ReturnType<typeof getMeetingSubEntities>>;
 export type MeetingListItem = Awaited<ReturnType<typeof getMeetings>>[number];
 export type MeetingDetail = Awaited<ReturnType<typeof getMeetingBySlug>>;
 

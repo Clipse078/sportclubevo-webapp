@@ -76,6 +76,14 @@ export const SCE_DESIGN_SYSTEM_EXCEPTION_REGISTRY: SceDesignSystemGovernanceExce
     reason: "Wochenplaner planner entry — operational planning surface, not generic modal-first CRUD.",
   },
   {
+    id: "SCE-DS-EX-DOM-006",
+    category: "DOMAIN_SPECIFIC_CANONICAL",
+    scope: "app/(admin)/vereinsleitung/meetings/new/",
+    reason:
+      "Meetings 2.0 create — canonical full-page MeetingForm workspace entry (SCE-CD-02); list CTA uses data-sce-create-flow=page.",
+    reviewNote: "Modal composer retired in SCE-CD-02R2; deep-link /new shares page layout.",
+  },
+  {
     id: "SCE-DS-EX-ARCH-002",
     category: "EXPLICIT_ARCHITECTURE_EXCEPTION",
     scope: "components/admin/layout/GlobalNavDrawer.tsx",

@@ -387,5 +387,5 @@ export const SCE_DESIGN_SYSTEM_10_REPRESENTATIVE_ADOPTION = {
   BILLING_API_ERRORS: "Actionable 500 copy",
   FACILITIES_CREATE: "CreateFacilityComposerDialog modal-first",
   ORG_BUILDER_CANVAS: "OrgUnitBuilderWorkspace canvas-primary + list fallback",
-  VEREINSLEITUNG_DARK_CREATE: "Modal-first Ziel/Initiative/Meeting + dark Vereinsziele",
+  VEREINSLEITUNG_DARK_CREATE: "Modal-first Ziel/Initiative + dark Vereinsziele; Meeting page create (SCE-CD-02)",
 } as const;

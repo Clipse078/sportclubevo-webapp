@@ -83,7 +83,7 @@ New and redesigned flows should prefer surfaces in this order — not every tier
 | Hub | Full-page list/KPI (demo) | `app/(admin)/vereinsleitung/club-entwicklung/page.tsx` — `DEMO_PROCESSES`, not persisted |
 | Ziele | Modal-first + deep link | `CreateTargetComposerDialog` → `TargetNewPageClient layout=composer` |
 | Initiativen | Modal-first + deep link | `CreateInitiativeComposerDialog` → `InitiativeForm layout=composer` |
-| Meetings | Modal-first + deep link | `CreateMeetingComposerDialog` |
+| Meetings | Full-page create (SCE-CD-02R1+) + deep link | `CreateMeetingTrigger` → `MeetingForm` layout=page |
 | Prozesse | Demo list; disabled create | `/vereinsleitung/prozesse` — “Demnächst”; no composer until persistence |
 
 **Club Development 2.0 implication:** Reuse existing composer forms for **persisted** entities; add workspace shell + dirty guard. **Do not** expose modal create for Processes until save path exists — do **not** introduce a second modal system.

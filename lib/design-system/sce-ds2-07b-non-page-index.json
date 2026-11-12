@@ -1507,6 +1507,18 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/carry-forward/route.ts",
+    "urlPattern": "/api/meetings/[id]/carry-forward",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/decisions/[decisionId]/approval/route.ts",
+    "urlPattern": "/api/meetings/[id]/decisions/[decisionId]/approval",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/meetings/[id]/decisions/[decisionId]/route.ts",
     "urlPattern": "/api/meetings/[id]/decisions/[decisionId]",
     "audience": "API"
@@ -1515,6 +1527,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/meetings/[id]/decisions/route.ts",
     "urlPattern": "/api/meetings/[id]/decisions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/lifecycle/route.ts",
+    "urlPattern": "/api/meetings/[id]/lifecycle",
     "audience": "API"
   },
   {
@@ -1533,6 +1551,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/meetings/[id]/permanent/route.ts",
     "urlPattern": "/api/meetings/[id]/permanent",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/protocol-approval/route.ts",
+    "urlPattern": "/api/meetings/[id]/protocol-approval",
     "audience": "API"
   },
   {
