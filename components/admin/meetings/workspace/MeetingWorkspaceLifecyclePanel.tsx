@@ -96,19 +96,6 @@ export default function MeetingWorkspaceLifecyclePanel({
               Als durchgeführt markieren
             </button>
           ) : null}
-          {meeting.status === "PLANNED" &&
-          meeting.protocolApprovalRequired &&
-          meeting.reviewStage === "DRAFT" ? (
-            <button
-              type="button"
-              disabled={loading !== null}
-              onClick={() => callLifecycle("submit_protocol")}
-              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] font-semibold text-amber-800"
-              data-testid="meeting-submit-protocol"
-            >
-              Zur Freigabe einreichen
-            </button>
-          ) : null}
           {meeting.status === "PLANNED" ? (
             <button
               type="button"

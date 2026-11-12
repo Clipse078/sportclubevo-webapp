@@ -3,6 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMeetingBySlug, getMeetingSubEntities } from "@/lib/meetings/queries";
+import { getMeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
+import { resolvePersonIdForUser } from "@/lib/meetings/meeting-person-payload";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
@@ -35,6 +37,23 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const subEntities = dbMeeting
     ? await getMeetingSubEntities(dbMeeting.id, actor.tenantId)
     : null;
+
+  const actorPersonId =
+    actor.tenantId && session.user?.id
+      ? await resolvePersonIdForUser(actor.tenantId, session.user.id)
+      : null;
+
+  const approvalWorkspaceData =
+    dbMeeting && actor.tenantId && subEntities
+      ? await getMeetingApprovalWorkspaceData({
+          tenantId: actor.tenantId,
+          meetingId: dbMeeting.id,
+          protocolApproverPersonIds: dbMeeting.protocolApproverPersonIds,
+          decisionApproverIdsByDecisionId: Object.fromEntries(
+            subEntities.decisions.map((d) => [d.id, d.approverPersonIds]),
+          ),
+        })
+      : null;
 
   // Resolve permanent-delete authority for delete button visibility
   const tenantId = session.user?.activeTenantId;
@@ -93,6 +112,8 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         subEntities={subEntities}
         meetingSlug={slug}
         canManage={canManage}
+        actorPersonId={actorPersonId}
+        approvalWorkspaceData={approvalWorkspaceData}
         relatedTasksPanel={
           dbMeeting ? (
             <ContextRelatedTasksPanel contextType="MEETING" contextId={dbMeeting.id} />

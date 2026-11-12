@@ -14,6 +14,10 @@ import {
   resolveMeetingPersonSnapshot,
   resolvePersonIdForUser,
 } from "@/lib/meetings/meeting-person-payload";
+import {
+  canConfigureProtocolApproval,
+  validateApprovalConfig,
+} from "@/lib/meetings/meeting-approval-presentation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -26,6 +30,31 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const guard = await requireMeetingAccess({ actor, id, access: "write" });
   if (!guard.ok) return guard.response;
 
+  const existing = await prisma.meeting.findFirst({
+    where: { id, tenantId: tenantId! },
+    select: {
+      status: true,
+      reviewStage: true,
+      protocolApprovalRequired: true,
+      protocolApprovalRule: true,
+      protocolApproverPersonIds: true,
+    },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Sitzung nicht gefunden." }, { status: 404 });
+  }
+  if (
+    !canConfigureProtocolApproval({
+      status: existing.status,
+      reviewStage: existing.reviewStage,
+    })
+  ) {
+    return NextResponse.json(
+      { error: "Protokoll-Freigabe kann nach Einreichung nicht mehr konfiguriert werden." },
+      { status: 403 },
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const protocolApprovalRequired =
     typeof body?.protocolApprovalRequired === "boolean" ? body.protocolApprovalRequired : undefined;
@@ -37,15 +66,31 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   let protocolApproverPersonIds: string[] | undefined;
   if (Array.isArray(body?.protocolApproverPersonIds)) {
     const validated: string[] = [];
+    const seen = new Set<string>();
     for (const rawId of body.protocolApproverPersonIds) {
       if (typeof rawId !== "string" || !rawId.trim()) continue;
       const snap = await resolveMeetingPersonSnapshot(tenantId!, rawId.trim());
       if (!snap) {
         return NextResponse.json({ error: "Ungültige Person in Prüferliste." }, { status: 400 });
       }
+      if (seen.has(snap.personId)) continue;
+      seen.add(snap.personId);
       validated.push(snap.personId);
     }
     protocolApproverPersonIds = validated;
+  }
+
+  const nextRequired = protocolApprovalRequired ?? existing.protocolApprovalRequired;
+  const nextApproverIds = protocolApproverPersonIds ??
+    (Array.isArray(existing.protocolApproverPersonIds)
+      ? (existing.protocolApproverPersonIds as string[])
+      : []);
+  const configError = validateApprovalConfig({
+    approvalRequired: nextRequired,
+    approverPersonIds: nextApproverIds,
+  });
+  if (configError) {
+    return NextResponse.json({ error: configError }, { status: 400 });
   }
 
   const updated = await prisma.meeting.update({

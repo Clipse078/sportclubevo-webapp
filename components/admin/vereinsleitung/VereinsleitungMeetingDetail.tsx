@@ -6,6 +6,7 @@ import VereinsleitungMeetingParticipantsCard from "@/components/admin/vereinslei
 import MeetingWorkspace from "@/components/admin/meetings/workspace/MeetingWorkspace";
 import type { ReactNode } from "react";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
+import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 
 /**
  * TODO: Cross-Module Linking
@@ -20,6 +21,8 @@ type VereinsleitungMeetingDetailProps = {
   relatedTasksPanel?: ReactNode;
   meetingSlug?: string;
   canManage?: boolean;
+  actorPersonId?: string | null;
+  approvalWorkspaceData?: MeetingApprovalWorkspaceData | null;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -28,15 +31,19 @@ export default function VereinsleitungMeetingDetail({
   relatedTasksPanel,
   meetingSlug,
   canManage = false,
+  actorPersonId = null,
+  approvalWorkspaceData = null,
 }: VereinsleitungMeetingDetailProps) {
   const isDbBacked = Boolean(dbMeeting);
 
-  if (dbMeeting && subEntities && meetingSlug) {
+  if (dbMeeting && subEntities && meetingSlug && approvalWorkspaceData) {
     return (
       <MeetingWorkspace
         meeting={dbMeeting}
         slug={meetingSlug}
         canManage={canManage}
+        actorPersonId={actorPersonId}
+        approvalWorkspaceData={approvalWorkspaceData}
         initialSubEntities={subEntities}
         relatedTasksPanel={relatedTasksPanel}
       />

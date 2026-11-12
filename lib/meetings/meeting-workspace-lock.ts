@@ -32,3 +32,9 @@ export function canEditMeetingDocumentation(ctx: MeetingWorkspaceLockContext): b
 export function canConfigureMeetingApprovals(ctx: MeetingWorkspaceLockContext): boolean {
   return canEditMeetingDocumentation(ctx);
 }
+
+/** Approval votes stay permitted when the meeting is closed but Beschluss Freigabe is pending. */
+export function canActOnMeetingApprovals(ctx: MeetingWorkspaceLockContext): boolean {
+  if (isMeetingCancelled(ctx.status)) return false;
+  return true;
+}

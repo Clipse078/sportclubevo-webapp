@@ -64,10 +64,14 @@ export async function recordDecisionApprovalVote(input: {
       approverPersonIds: true,
       approvalContentRevision: true,
       approvedContentHash: true,
+      approvalStatus: true,
     },
   });
   if (!decision || !decision.approvalRequired) {
     throw new Error("APPROVAL_NOT_REQUIRED");
+  }
+  if (decision.approvalStatus !== "PENDING") {
+    throw new Error("NOT_AWAITING_APPROVAL");
   }
 
   const pool = parsePersonIds(decision.approverPersonIds);

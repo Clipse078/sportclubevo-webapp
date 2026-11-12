@@ -22,6 +22,10 @@ import {
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
+import type { MeetingStatus } from "@prisma/client";
+import MeetingDecisionApprovalPanel from "@/components/admin/meetings/approval/MeetingDecisionApprovalPanel";
+import { meetingApprovalAggregateStatusLabel } from "@/lib/meetings/meeting-approval-presentation";
 import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
 import {
   workspaceGhostButtonClass,
@@ -517,10 +521,19 @@ export function MeetingParticipantsSection({
 
 export function MeetingDecisionsSection({
   meetingId,
+  meetingStatus,
   canManage,
+  documentationEditable,
+  actorPersonId,
+  approvalWorkspaceData,
   items,
   onItemsChange,
-}: SectionProps<Decision>) {
+}: SectionProps<Decision> & {
+  meetingStatus: MeetingStatus;
+  documentationEditable: boolean;
+  actorPersonId: string | null;
+  approvalWorkspaceData: MeetingApprovalWorkspaceData;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -552,25 +565,32 @@ export function MeetingDecisionsSection({
     <SectionShell title="Beschlüsse" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
       <ErrorBanner message={error} />
       {items.map((d) => (
-        <div key={d.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <div key={d.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-3">
           <p className="font-semibold text-[var(--foreground)]">{d.title}</p>
           {d.description ? <p className="mt-1 text-sm text-[var(--text-2)]">{d.description}</p> : null}
           {d.owner ? <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {d.owner}</p> : null}
-          {d.approvalRequired ? (
-            <p className="mt-1 text-[11px] font-medium text-[var(--muted)]" data-testid={`decision-approval-status-${d.id}`}>
-              Freigabe:{" "}
-              {{
-                NOT_REQUIRED: "Nicht erforderlich",
-                PENDING: "Ausstehend",
-                APPROVED: "Genehmigt",
-                CHANGES_REQUESTED: "Änderungen angefordert",
-                REJECTED: "Abgelehnt",
-              }[d.approvalStatus] ?? d.approvalStatus}
-            </p>
-          ) : null}
+          <p
+            className="text-[11px] font-medium text-[var(--muted)]"
+            data-testid={`decision-approval-status-${d.id}`}
+          >
+            {d.approvalRequired
+              ? `Freigabe: ${meetingApprovalAggregateStatusLabel(d.approvalStatus)}`
+              : "Freigabe: Nicht erforderlich"}
+          </p>
+          <MeetingDecisionApprovalPanel
+            meetingId={meetingId}
+            meetingStatus={meetingStatus}
+            decision={d}
+            canManage={canManage}
+            actorPersonId={actorPersonId}
+            approvalData={approvalWorkspaceData}
+            onDecisionUpdated={(updated) => {
+              onItemsChange(items.map((row) => (row.id === d.id ? { ...row, ...updated } : row)));
+            }}
+          />
         </div>
       ))}
-      {canManage ? (
+      {documentationEditable ? (
         <div className="space-y-3 border-t border-[var(--border)] pt-4">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
           <MeetingWorkspacePeopleField

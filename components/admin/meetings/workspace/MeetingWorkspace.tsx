@@ -6,6 +6,8 @@ import {
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
 import MeetingWorkspaceLifecyclePanel from "@/components/admin/meetings/workspace/MeetingWorkspaceLifecyclePanel";
+import MeetingProtocolApprovalSection from "@/components/admin/meetings/approval/MeetingProtocolApprovalSection";
+import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import { canEditMeetingDocumentation } from "@/lib/meetings/meeting-workspace-lock";
 import {
   MeetingActionsSection,
@@ -19,6 +21,8 @@ type MeetingWorkspaceProps = {
   meeting: MeetingLiveData;
   slug: string;
   canManage: boolean;
+  actorPersonId: string | null;
+  approvalWorkspaceData: MeetingApprovalWorkspaceData;
   initialSubEntities: MeetingSubEntities;
   relatedTasksPanel?: ReactNode;
 };
@@ -27,6 +31,8 @@ export default function MeetingWorkspace({
   meeting,
   slug,
   canManage,
+  actorPersonId,
+  approvalWorkspaceData,
   initialSubEntities,
   relatedTasksPanel,
 }: MeetingWorkspaceProps) {
@@ -52,6 +58,12 @@ export default function MeetingWorkspace({
           participantCount={participants.length}
           agendaCount={agendaItems.length}
         />
+        <MeetingProtocolApprovalSection
+          meeting={meeting}
+          canManage={canManage}
+          actorPersonId={actorPersonId}
+          approvalData={approvalWorkspaceData}
+        />
         <MeetingWorkspaceHeader
           meeting={meeting}
           slug={slug}
@@ -75,7 +87,11 @@ export default function MeetingWorkspace({
             />
             <MeetingDecisionsSection
               meetingId={meeting.id}
-              canManage={effectiveCanManage}
+              meetingStatus={meeting.status}
+              canManage={canManage}
+              documentationEditable={effectiveCanManage}
+              actorPersonId={actorPersonId}
+              approvalWorkspaceData={approvalWorkspaceData}
               items={decisions}
               onItemsChange={setDecisions}
             />
