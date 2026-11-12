@@ -7040,6 +7040,38 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/vereinsleitung/meetings/[slug]/protokoll",
+    "routeKey": "/vereinsleitung/meetings/[slug]/protokoll",
+    "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/protokoll/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "SCE-CD-02R9",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": true,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/vereinsleitung/meetings/[slug]",
     "routeKey": "/vereinsleitung/meetings/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",

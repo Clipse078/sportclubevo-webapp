@@ -18,6 +18,14 @@
 - **Agenda duration:** optional `durationMin` per item + meeting `plannedDurationMin` with non-blocking overrun hint
 - **Initiative linking:** optional `initiativeId` on agenda items with visibility-gated API validation
 
+### SCE-CD-02R9 (closure, optional approvals & historical records)
+
+- **Lifecycle:** explicit conduct / close / reopen; past meetings stay open until closed (not date-driven).
+- **Protocol approval:** optional approvers + ALL/ONE/MAJORITY rules; `reviewStage` mapped to Protokollentwurf / Zur Freigabe / Genehmigt (distinct from Abgeschlossen).
+- **Beschluss approval:** per-decision optional approval with durable votes and material-change invalidation.
+- **Overview:** grouped list (upcoming, past open, completed, cancelled); printable protocol at `/vereinsleitung/meetings/[slug]/protokoll`.
+- **Migration:** `20261112100000_sce_cd_02r9_meeting_closure_approvals`
+
 ### SCE-CD-02R6 (STAGE migration recovery & unsaved UX)
 
 - **STAGE schema:** `20261111220000_sce_cd_02r5_meeting_carry_forward` on shared FC Allschwil STAGE Neon (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`) via guarded `db:migrate:deploy-if-enabled` — not `db push`.

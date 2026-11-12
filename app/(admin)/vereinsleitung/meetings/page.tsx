@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getMeetings } from "@/lib/meetings/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
-import VereinsleitungMeetingsList from "@/components/admin/vereinsleitung/VereinsleitungMeetingsList";
+import VereinsleitungMeetingsGroupedList from "@/components/admin/vereinsleitung/VereinsleitungMeetingsGroupedList";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 
@@ -22,7 +22,7 @@ export default async function VereinsleitungMeetingsPage() {
       <ListPagePattern
         eyebrow="Sitzungen"
         title="Sitzungen"
-        description="Kommende Sitzungen zuerst (nächste Termine oben), danach vergangene Sitzungen."
+        description="Kommende, offene, abgeschlossene und abgesagte Sitzungen — vergangene Termine bleiben offen, bis sie explizit abgeschlossen werden."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Sitzungen" },
@@ -33,7 +33,7 @@ export default async function VereinsleitungMeetingsPage() {
         emptyHeading="Keine zugänglichen Sitzungen"
         emptyDescription="Noch keine Sitzungen erfasst oder keine für dich sichtbaren Einträge."
       >
-        <VereinsleitungMeetingsList meetings={meetings} canManage={canManage} />
+        <VereinsleitungMeetingsGroupedList meetings={meetings} canManage={canManage} />
       </ListPagePattern>
     </PageShell>
   );

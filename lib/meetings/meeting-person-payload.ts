@@ -47,3 +47,36 @@ export async function resolveMeetingPersonSnapshot(
     userId,
   };
 }
+
+/** Best-effort link from session user to tenant Person (email match). */
+export async function resolvePersonIdForUser(
+  tenantId: string,
+  userId: string,
+): Promise<string | null> {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, isActive: true },
+    select: { email: true },
+  });
+  if (!user?.email?.trim()) return null;
+  const person = await prisma.person.findFirst({
+    where: {
+      tenantId,
+      isActive: true,
+      email: { equals: user.email.trim(), mode: "insensitive" },
+    },
+    select: { id: true },
+  });
+  return person?.id ?? null;
+}
+
+export async function assertApproverActsAsSelf(input: {
+  tenantId: string;
+  actorUserId: string;
+  actorPersonId: string | null;
+  approverPersonId: string;
+}): Promise<void> {
+  if (input.actorPersonId === input.approverPersonId) return;
+  const snap = await resolveMeetingPersonSnapshot(input.tenantId, input.approverPersonId);
+  if (snap?.userId === input.actorUserId) return;
+  throw new Error("APPROVER_IDENTITY_MISMATCH");
+}

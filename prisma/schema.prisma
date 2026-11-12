@@ -533,6 +533,35 @@ enum MeetingStatus {
   CANCELLED
 }
 
+/// SCE-CD-02R9 — quorum rule for optional Beschluss / protocol approvals.
+enum MeetingApprovalRule {
+  ALL
+  ONE
+  MAJORITY
+}
+
+enum MeetingApprovalDecisionKind {
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum MeetingApprovalAggregateStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
+  REJECTED
+}
+
+enum MeetingLifecycleEventKind {
+  CONDUCTED
+  PROTOCOL_SUBMITTED
+  CLOSED
+  REOPENED
+  CANCELLED
+}
+
 enum MeetingAgendaItemStatus {
   OPEN
   DISCUSSED
@@ -1216,6 +1245,9 @@ model Tenant {
   // TRAINING-CORE-01: canonical recurring training series
   trainingSeries                   TrainingSeries[]
   meetings                         Meeting[]
+  meetingDecisionApprovalVotes     MeetingDecisionApprovalVote[]
+  meetingProtocolApprovalVotes     MeetingProtocolApprovalVote[]
+  meetingLifecycleEvents           MeetingLifecycleEvent[]
   initiatives                      Initiative[]
   targets                          Target[]
   tasks                            Task[]
@@ -3175,6 +3207,21 @@ model Meeting {
   plannedDurationMin Int?
   status        MeetingStatus @default(PLANNED)
 
+  // SCE-CD-02R9 — operational lifecycle (distinct from reviewStage / protocol approval)
+  conductedAt           DateTime?
+  conductedByUserId     String?
+  closedAt              DateTime?
+  closedByUserId        String?
+  lastReopenReason      String?
+  protocolContentRevision Int @default(1)
+
+  /// Optional formal protocol approval (reviewStage tracks workflow; votes in MeetingProtocolApprovalVote).
+  protocolApprovalRequired   Boolean             @default(false)
+  protocolApprovalRule       MeetingApprovalRule @default(ALL)
+  /// String[] person IDs — tenant-scoped approvers for protocol when protocolApprovalRequired.
+  protocolApproverPersonIds  Json?
+  protocolApprovedContentHash String?
+
   // Governance — consistent with Target governance pattern
   reviewStage           ReviewWorkflowStage @default(DRAFT)
   requiresFourEyeReview Boolean             @default(false)
@@ -3200,6 +3247,8 @@ model Meeting {
   decisions    MeetingDecision[]
   actions      MeetingAction[]
   participants MeetingParticipant[]
+  protocolApprovalVotes MeetingProtocolApprovalVote[]
+  lifecycleEvents       MeetingLifecycleEvent[]
   tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([tenantId, slug])
@@ -4233,6 +4282,7 @@ model MeetingAgendaItem {
   initiative       Initiative?        @relation("MeetingAgendaInitiativeLink", fields: [initiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   sourceAgendaItem MeetingAgendaItem? @relation("MeetingAgendaCarryForward", fields: [sourceAgendaItemId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   carriedCopies    MeetingAgendaItem[] @relation("MeetingAgendaCarryForward")
+  linkedDecisions  MeetingDecision[]   @relation("MeetingDecisionSourceAgenda")
 
   @@index([meetingId, orderIndex])
   @@index([initiativeId])
@@ -4247,15 +4297,84 @@ model MeetingDecision {
   status          MeetingDecisionStatus @default(CONFIRMED)
   owner           String?
   ownerPersonId   String?
+  /// SCE-CD-02R9 — originating Traktandum (optional).
+  sourceAgendaItemId String?
   orderIndex      Int                   @default(0)
   linkedRefs      Json?
   createdByUserId String?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
-  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  approvalRequired       Boolean                       @default(false)
+  approvalRule           MeetingApprovalRule           @default(ALL)
+  approverPersonIds      Json?
+  approvalStatus         MeetingApprovalAggregateStatus @default(NOT_REQUIRED)
+  approvalContentRevision Int                          @default(1)
+  approvedContentHash    String?
+
+  meeting          Meeting              @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sourceAgendaItem MeetingAgendaItem?   @relation("MeetingDecisionSourceAgenda", fields: [sourceAgendaItemId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  approvalVotes    MeetingDecisionApprovalVote[]
 
   @@index([meetingId, orderIndex])
+  @@index([sourceAgendaItemId])
+}
+
+/// Immutable approver vote on an individual Beschluss (SCE-CD-02R9).
+model MeetingDecisionApprovalVote {
+  id                String                      @id @default(cuid())
+  tenantId          String
+  decisionId        String
+  approverPersonId  String
+  decision          MeetingApprovalDecisionKind
+  comment           String?
+  decidedByUserId   String
+  decidedAt         DateTime                    @default(now())
+  /// Idempotency / concurrency — last write wins per approver; stored for audit.
+  clientRequestId   String?
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meetingDecision MeetingDecision @relation(fields: [decisionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([decisionId, approverPersonId])
+  @@index([tenantId, decisionId])
+}
+
+/// Immutable approver vote on meeting protocol (SCE-CD-02R9).
+model MeetingProtocolApprovalVote {
+  id                String                      @id @default(cuid())
+  tenantId          String
+  meetingId         String
+  approverPersonId  String
+  decision          MeetingApprovalDecisionKind
+  comment           String?
+  decidedByUserId   String
+  decidedAt         DateTime                    @default(now())
+  clientRequestId   String?
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([meetingId, approverPersonId])
+  @@index([tenantId, meetingId])
+}
+
+/// Durable lifecycle audit trail (reopen, close, conducted…) — SCE-CD-02R9.
+model MeetingLifecycleEvent {
+  id           String                    @id @default(cuid())
+  tenantId     String
+  meetingId    String
+  kind         MeetingLifecycleEventKind
+  actorUserId  String
+  reason       String?
+  metadata     Json?
+  createdAt    DateTime                  @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, meetingId, createdAt])
+  @@index([meetingId, kind])
 }
 
 model MeetingAction {

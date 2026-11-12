@@ -2,6 +2,8 @@ import type {
   InitiativeStatus,
   MeetingActionStatus,
   MeetingAgendaItemStatus,
+  MeetingApprovalAggregateStatus,
+  MeetingApprovalRule,
   MeetingDecisionStatus,
   MeetingParticipantStatus,
 } from "@prisma/client";
@@ -33,6 +35,12 @@ export type MeetingSubEntities = {
     owner: string | null;
     ownerPersonId: string | null;
     orderIndex: number;
+    sourceAgendaItemId: string | null;
+    approvalRequired: boolean;
+    approvalRule: MeetingApprovalRule;
+    approverPersonIds: unknown;
+    approvalStatus: MeetingApprovalAggregateStatus;
+    approvalContentRevision: number;
   }>;
   actions: Array<{
     id: string;

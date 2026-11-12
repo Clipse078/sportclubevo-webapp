@@ -11,8 +11,8 @@ const base = {
 };
 
 describe("meeting lifecycle (SCE-CD-02R3)", () => {
-  it("labels empty planned meetings as Entwurf", () => {
-    expect(getMeetingLifecyclePresentation(base).lifecycleLabel).toBe("Entwurf");
+  it("labels empty planned meetings as Geplant", () => {
+    expect(getMeetingLifecyclePresentation(base).lifecycleLabel).toBe("Geplant");
   });
 
   it("suggests adding participants first", () => {

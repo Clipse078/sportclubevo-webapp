@@ -5,6 +5,8 @@ import {
   MeetingWorkspaceDirtyStateSync,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
+import MeetingWorkspaceLifecyclePanel from "@/components/admin/meetings/workspace/MeetingWorkspaceLifecyclePanel";
+import { canEditMeetingDocumentation } from "@/lib/meetings/meeting-workspace-lock";
 import {
   MeetingActionsSection,
   MeetingAgendaSection,
@@ -33,15 +35,27 @@ export default function MeetingWorkspace({
   const [decisions, setDecisions] = useState(initialSubEntities.decisions);
   const [actions, setActions] = useState(initialSubEntities.actions);
   const [isDirty, setIsDirty] = useState(false);
+  const documentationEditable = canEditMeetingDocumentation({
+    status: meeting.status,
+    reviewStage: meeting.reviewStage,
+    protocolApprovalRequired: meeting.protocolApprovalRequired,
+  });
+  const effectiveCanManage = canManage && documentationEditable;
 
   return (
     <>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
       <div className="space-y-5" data-testid="meeting-workspace">
+        <MeetingWorkspaceLifecyclePanel
+          meeting={meeting}
+          canManage={canManage}
+          participantCount={participants.length}
+          agendaCount={agendaItems.length}
+        />
         <MeetingWorkspaceHeader
           meeting={meeting}
           slug={slug}
-          canManage={canManage}
+          canManage={effectiveCanManage}
           agendaCount={agendaItems.length}
           participantCount={participants.length}
           decisionCount={decisions.length}
@@ -54,20 +68,20 @@ export default function MeetingWorkspace({
             <MeetingAgendaSection
               meetingId={meeting.id}
               meetingPlannedDurationMin={meeting.plannedDurationMin}
-              canManage={canManage}
+              canManage={effectiveCanManage}
               items={agendaItems}
               onItemsChange={setAgendaItems}
               onDirtyChange={setIsDirty}
             />
             <MeetingDecisionsSection
               meetingId={meeting.id}
-              canManage={canManage}
+              canManage={effectiveCanManage}
               items={decisions}
               onItemsChange={setDecisions}
             />
             <MeetingActionsSection
               meetingId={meeting.id}
-              canManage={canManage}
+              canManage={effectiveCanManage}
               items={actions}
               onItemsChange={setActions}
             />
@@ -75,7 +89,7 @@ export default function MeetingWorkspace({
           <div className="space-y-5">
             <MeetingParticipantsSection
               meetingId={meeting.id}
-              canManage={canManage}
+              canManage={effectiveCanManage}
               items={participants}
               onItemsChange={setParticipants}
               onDirtyChange={setIsDirty}

@@ -15,6 +15,10 @@ const STATUS_CLASS: Record<string, string> = {
   Durchgeführt: "border-indigo-200 bg-indigo-50 text-indigo-800",
   Abgeschlossen: "border-emerald-200 bg-emerald-50 text-emerald-800",
   Abgesagt: "border-slate-200 bg-slate-100 text-[var(--text-2)]",
+  "Protokollentwurf": "border-slate-200 bg-slate-50 text-slate-700",
+  "Zur Freigabe": "border-amber-200 bg-amber-50 text-amber-800",
+  "Änderungen angefordert": "border-rose-200 bg-rose-50 text-rose-800",
+  Genehmigt: "border-emerald-200 bg-emerald-50 text-emerald-800",
 };
 
 function formatSwissDate(date: Date) {
@@ -64,6 +68,9 @@ export default function MeetingWorkspaceHeader({
     decisionCount,
     actionCount,
     hasInvitedParticipants,
+    conductedAt: meeting.conductedAt,
+    reviewStage: meeting.reviewStage,
+    protocolApprovalRequired: meeting.protocolApprovalRequired,
   });
 
   const primary = getMeetingPrimaryAction({
