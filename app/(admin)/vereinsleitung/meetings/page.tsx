@@ -3,6 +3,7 @@ import CreateMeetingTrigger from "@/components/admin/meetings/CreateMeetingTrigg
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMeetings } from "@/lib/meetings/queries";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import VereinsleitungMeetingsList from "@/components/admin/vereinsleitung/VereinsleitungMeetingsList";
 import { PageShell } from "@/components/ui/page";
@@ -14,13 +15,14 @@ export default async function VereinsleitungMeetingsPage() {
 
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
   const meetings = await getMeetings(actor);
+  const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
 
   return (
     <PageShell fullWidth>
       <ListPagePattern
         eyebrow="Sitzungen"
         title="Sitzungen"
-        description="Übersicht aller Sitzungen – absteigend vom neuesten zum ältesten Eintrag."
+        description="Kommende Sitzungen zuerst (nächste Termine oben), danach vergangene Sitzungen."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Sitzungen" },
@@ -31,7 +33,7 @@ export default async function VereinsleitungMeetingsPage() {
         emptyHeading="Keine zugänglichen Sitzungen"
         emptyDescription="Noch keine Sitzungen erfasst oder keine für dich sichtbaren Einträge."
       >
-        <VereinsleitungMeetingsList meetings={meetings} />
+        <VereinsleitungMeetingsList meetings={meetings} canManage={canManage} />
       </ListPagePattern>
     </PageShell>
   );

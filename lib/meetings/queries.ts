@@ -18,6 +18,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildVisibilityWhere, applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
 import { enrichMeetingSubEntitiesWithPersonLabels } from "@/lib/meetings/enrich-meeting-sub-entities";
+import { sortMeetingsForList } from "@/lib/meetings/meeting-list-sort";
 import type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
 
 export type { MeetingSubEntities } from "@/lib/meetings/meeting-sub-entities-types";
@@ -57,7 +58,8 @@ export async function getMeetings(actor: ActorContext) {
     orderBy: { meetingDate: "desc" },
     select: MEETING_LIST_SELECT,
   });
-  return applyVisibilityFilter(rows, actor);
+  const visible = applyVisibilityFilter(rows, actor);
+  return sortMeetingsForList(visible);
 }
 
 const MEETING_DETAIL_SELECT = {
