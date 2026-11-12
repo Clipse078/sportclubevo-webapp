@@ -12,6 +12,7 @@ import {
   type PersonalMeetingProjectionActor,
 } from "../meeting-projection-access";
 import { resolveMeetingPersonalRole, type MeetingPersonalRole } from "../meeting-personal-relevance";
+import { PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL } from "@/lib/personal-agenda/programme-activity-german-labels";
 import { programmeResourceKey, type PersonalProgrammeItem } from "../personal-programme-types";
 import { normalizeMeetingProgrammeStatus } from "../programme-status";
 
@@ -113,9 +114,9 @@ function meetingRowToProgrammeItem(
     venue: meeting.location?.trim() || undefined,
     status,
     deepLink: `/vereinsleitung/meetings/${meeting.slug}`,
-    typeLabel: "Sitzung",
+    typeLabel: PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL.MEETING,
     eventType: "MEETING",
-    ariaLabel: `Sitzung: ${meeting.title}`,
+    ariaLabel: `${PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL.MEETING}: ${meeting.title}`,
     canonicalPresentation,
   };
 }

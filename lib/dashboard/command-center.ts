@@ -24,6 +24,7 @@ import {
 import { loadMatchEventPoliciesByEventId } from "@/lib/website/public-matches-identity";
 import { SFV_PROVIDER } from "@/lib/integrations/sfv/season-bridge";
 import { loadTournamentLogoResolutionContext } from "@/lib/tournaments/logo-resolution-context";
+import { PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL } from "@/lib/personal-agenda/programme-activity-german-labels";
 import {
   buildCommandCenterMatchPresentation,
   buildCommandCenterParticipantDressingRoomAllocations,
@@ -674,7 +675,7 @@ export async function getCommandCenterData(args: {
         key: `meeting-${meeting.id}`,
         sortAt: meeting.meetingDate,
         timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
-        typeLabel: "Meeting",
+        typeLabel: PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL.MEETING,
         eventType: "MEETING" as const,
         title: meeting.title,
         meta: formatTodayEventVenueMeta(meetingVenue),

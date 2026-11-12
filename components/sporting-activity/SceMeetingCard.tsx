@@ -16,6 +16,7 @@ import type {
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
 import { sceActivityListRowTypePillClass } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { resolveProgrammeActivityDisplayTypeLabel } from "@/lib/personal-agenda/programme-activity-german-labels";
 
 export type SceMeetingListRowPresentation = "default" | "operational" | "programme-personal";
 
@@ -35,6 +36,13 @@ export type SceMeetingCardProps = {
 
 function resolveMeetingLocationLine(model: SceMeetingPresentationModel): string | undefined {
   return formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })?.trim() || undefined;
+}
+
+function resolveMeetingTypeLabel(model: SceMeetingPresentationModel): string {
+  return resolveProgrammeActivityDisplayTypeLabel({
+    semanticType: "MEETING",
+    typeLabel: model.typeLabel,
+  });
 }
 
 function MeetingOperationalListRow({
@@ -118,7 +126,7 @@ function MeetingOperationalListRow({
           )}
           data-activity-type-pill="meeting"
         >
-          {model.typeLabel}
+          {resolveMeetingTypeLabel(model)}
         </span>
         <p
           className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceTitleClass}
@@ -149,7 +157,9 @@ function MeetingOperationalListRow({
 }
 
 export function buildMeetingAccessibleLabel(model: SceMeetingPresentationModel): string {
-  const parts = [model.typeLabel, model.meetingTitle, model.organisationalContext].filter(Boolean);
+  const parts = [resolveMeetingTypeLabel(model), model.meetingTitle, model.organisationalContext].filter(
+    Boolean,
+  );
   return parts.join(" — ");
 }
 

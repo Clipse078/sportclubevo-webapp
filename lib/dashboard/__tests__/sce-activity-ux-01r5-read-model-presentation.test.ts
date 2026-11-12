@@ -36,6 +36,46 @@ describe("SCE-ACTIVITY-UX-01R5 — personal dashboard presentation refresh", () 
     vi.clearAllMocks();
   });
 
+  it("detects cached meeting rows with legacy English typeLabel", () => {
+    const cachedMeeting = {
+      v: PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION,
+      scopeHints: {
+        participationNavCapable: true,
+        requirementRecipientCapable: false,
+        hasLinkedPerson: true,
+        hasActiveTenantMembership: true,
+      },
+      programme: {
+        supported: true,
+        items: [
+          {
+            id: "meeting:m-1",
+            sourceType: "MEETING" as const,
+            startsAt: new Date("2026-11-17T18:00:00.000Z"),
+            title: "Vorstandssitzung",
+            typeLabel: "Meeting",
+            ariaLabel: "Meeting",
+            canonicalPresentation: {
+              kind: "MEETING",
+              typeLabel: "Meeting",
+              meetingTitle: "Vorstandssitzung",
+            },
+          },
+        ],
+      },
+      personalWork: {
+        attentionItems: [],
+        attentionTotalCount: 0,
+        viewAllHref: null,
+        operationalSourcesDegraded: false,
+        taskCount: 0,
+        taskPreview: [],
+      },
+    };
+
+    expect(personalDashboardPayloadNeedsPresentationRefresh(cachedMeeting)).toBe(true);
+  });
+
   it("detects legacy payloads missing activityPresentation", () => {
     const legacy = {
       v: 1 as const,

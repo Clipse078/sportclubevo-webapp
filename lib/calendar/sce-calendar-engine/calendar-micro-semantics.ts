@@ -290,7 +290,7 @@ function resolveNormalizedMicroIdentity(item: NormalizedCalendarItem): string {
     case "TASK":
       return resolveNormalizedTaskIdentity(item);
     case "MEETING":
-      return item.title.trim() || item.typeLabel || "Meeting";
+      return item.title.trim() || item.typeLabel || "Sitzung";
     default:
       return item.title.trim() || item.typeLabel;
   }

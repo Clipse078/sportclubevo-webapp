@@ -46,7 +46,7 @@ function resolveTypeLabelForItem(item: PersonalProgrammeItem): string | undefine
     )?.typeLabel;
   }
   if (item.typeLabel) {
-    return formatTodayEventTypeBadge(item.typeLabel);
+    return formatTodayEventTypeBadge(item.typeLabel, { sourceType: item.sourceType });
   }
   return undefined;
 }

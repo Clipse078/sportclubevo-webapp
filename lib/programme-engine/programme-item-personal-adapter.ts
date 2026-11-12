@@ -8,6 +8,10 @@ import type {
 } from "@/lib/personal-agenda/personal-programme-types";
 import type { EventType } from "@prisma/client";
 import { resolveLegacySportingActivityPresentationFromSce } from "@/lib/sporting-activity-presentation/canonical/adapters/to-legacy-presentation";
+import {
+  personalProgrammeSourceGermanLabel,
+  resolveProgrammeActivityDisplayTypeLabel,
+} from "@/lib/personal-agenda/programme-activity-german-labels";
 import type { ProgrammeActivityKind, ProgrammeItem } from "./types";
 
 function programmeKindToSourceType(kind: ProgrammeActivityKind): PersonalProgrammeSourceType {
@@ -62,7 +66,12 @@ export function programmeItemToPersonalProgrammeItem(
   const contextLabel = item.teamId
     ? resolveTeamEventContextLabel(context, item.teamId)
     : undefined;
-  const typeLabel = item.presentation.typeLabel?.trim() || sourceType;
+  const typeLabel = item.presentation.typeLabel?.trim()
+    ? resolveProgrammeActivityDisplayTypeLabel({
+        typeLabel: item.presentation.typeLabel,
+        sourceType,
+      })
+    : personalProgrammeSourceGermanLabel(sourceType);
   const title = semantics.identityLabel.trim() || typeLabel;
   const venue = semantics.locationLabel;
 
