@@ -4,6 +4,7 @@
  * Shared date/time formatting for Tournament Center list rows.
  */
 
+import { formatSceDateTileParts } from "@/lib/design-system/sce-date-tile";
 import { getTournamentEffectiveEndAt } from "./operational-state";
 
 export type TournamentDatePresentation = {
@@ -22,26 +23,10 @@ export function formatTournamentDatePresentation(
   const start = new Date(startAt);
   const end = endAt ? new Date(endAt) : getTournamentEffectiveEndAt({ startAt, endAt });
 
-  const weekdayShort = new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    timeZone,
-  })
-    .format(start)
-    .replace(/\.$/, "")
-    .toUpperCase();
-
-  const day = new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    timeZone,
-  }).format(start);
-
-  const monthShort = new Intl.DateTimeFormat(locale, {
-    month: "short",
-    timeZone,
-  })
-    .format(start)
-    .replace(/\.$/, "")
-    .toUpperCase();
+  const { weekdayShort, day, monthShort } = formatSceDateTileParts(start, {
+    locale,
+    timezone: timeZone,
+  });
 
   const timeFmt = new Intl.DateTimeFormat(locale, {
     hour: "2-digit",

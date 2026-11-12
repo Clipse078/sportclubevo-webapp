@@ -9,7 +9,7 @@ import {
   resolveTournamentPublicationPresentation,
   resolveTournamentStatusPresentation,
 } from "@/lib/tournaments/management-view";
-import { formatTournamentDatePresentation } from "@/lib/tournaments/presentation";
+import { SceDateTile } from "@/components/design-system/date";
 import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
 import { resolveSceTournamentPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/tournament";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
@@ -154,12 +154,7 @@ export default function TurniereManagementRow({
   compact = false,
   variant = "upcoming",
 }: Props) {
-  const dateParts = formatTournamentDatePresentation(
-    tournament.startAt,
-    tournament.endAt,
-    locale,
-    timezone,
-  );
+  const fmtCfg = { locale, timezone };
   const status = resolveTournamentStatusPresentation(tournament, assessment);
   const publication = resolveTournamentPublicationPresentation(tournament);
   const sceTournamentPresentation = resolveSceTournamentPresentation({
@@ -208,27 +203,13 @@ export default function TurniereManagementRow({
         <span className="sr-only">Turnier {tournament.title} öffnen</span>
       </Link>
 
-      <div
-        className={cn(
-          "pointer-events-none flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center",
-          TURNIERE_ROW_DATE_CELL,
-        )}
-        aria-hidden
-        data-testid="turniere-row-date-block"
-      >
-        <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {dateParts.weekdayShort}
-        </span>
-        <span
-          className="text-xl font-bold leading-none text-[var(--foreground)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {dateParts.day}
-        </span>
-        <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
-          {dateParts.monthShort}
-        </span>
-      </div>
+      <SceDateTile
+        value={new Date(tournament.startAt)}
+        fmtCfg={fmtCfg}
+        className={cn("pointer-events-none", TURNIERE_ROW_DATE_CELL)}
+        testId="turniere-row-date-block"
+        decorative
+      />
 
       <div
         className={cn("pointer-events-none relative z-[1] min-w-0", TURNIERE_ROW_IDENTITY_CELL)}

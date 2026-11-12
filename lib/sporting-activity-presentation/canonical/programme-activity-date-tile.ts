@@ -1,24 +1,22 @@
+import {
+  formatSceDateTileParts,
+  type SceDateTileParts,
+} from "@/lib/design-system/sce-date-tile";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
-export type ProgrammeActivityDateTileParts = {
-  weekdayShort: string;
-  day: string;
-  monthShort: string;
-};
+export type ProgrammeActivityDateTileParts = Pick<
+  SceDateTileParts,
+  "weekdayShort" | "day" | "monthShort"
+>;
 
 export function formatProgrammeActivityDateTileParts(
   startAt: Date,
   fmtCfg: TenantFormatConfig,
 ): ProgrammeActivityDateTileParts {
-  const locale = fmtCfg.locale ?? "de-CH";
-  const timezone = fmtCfg.timezone ?? "Europe/Zurich";
+  const parts = formatSceDateTileParts(startAt, fmtCfg);
   return {
-    weekdayShort: new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
-      startAt,
-    ),
-    day: new Intl.DateTimeFormat(locale, { day: "numeric", timeZone: timezone }).format(startAt),
-    monthShort: new Intl.DateTimeFormat(locale, { month: "short", timeZone: timezone }).format(
-      startAt,
-    ),
+    weekdayShort: parts.weekdayShort,
+    day: parts.day,
+    monthShort: parts.monthShort,
   };
 }

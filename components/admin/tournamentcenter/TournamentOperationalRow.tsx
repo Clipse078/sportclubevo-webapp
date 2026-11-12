@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { CircleAlert, MapPin, CheckCircle2 } from "lucide-react";
+import { CircleAlert, CheckCircle2 } from "lucide-react";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { TournamentOperationalAssessment } from "@/lib/tournaments/operational-state";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import { SceDateTile } from "@/components/design-system/date";
 import {
   formatTournamentDatePresentation,
   TOURNAMENT_STATUS_LABELS,
@@ -73,20 +74,18 @@ export default function TournamentOperationalRow({
       className="relative grid gap-3 px-4 py-3 transition hover:bg-[var(--surface-2)] sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-4 lg:px-5"
     >
       {!compactDate ? (
-        <div
-          className="flex w-[3.25rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center"
-          aria-hidden
-        >
-          <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {dateParts.weekdayShort}
-          </span>
-          <span className="text-lg font-bold leading-none text-[var(--foreground)]" style={{ fontFamily: "var(--font-display)" }}>
-            {dateParts.day}
-          </span>
-          <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
-            {dateParts.monthShort}
-          </span>
-          <span className="mt-1 text-[0.65rem] font-medium tabular-nums text-[var(--foreground)]">
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <SceDateTile
+            value={new Date(tournament.startAt)}
+            fmtCfg={{ locale, timezone }}
+            size="compact"
+            testId="tournamentcenter-row-date-block"
+            decorative
+          />
+          <span
+            className="text-[0.65rem] font-medium tabular-nums text-[var(--foreground)]"
+            data-testid="tournamentcenter-row-date-time"
+          >
             {dateParts.timeLabel}
           </span>
         </div>
