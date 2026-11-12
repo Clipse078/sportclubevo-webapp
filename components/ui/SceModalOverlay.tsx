@@ -19,6 +19,8 @@ import {
   SCE_OVERLAY_ROOT,
   SCE_OVERLAY_ROOT_ELEVATED,
 } from "@/lib/shell/responsive-layout";
+import { SCE_DS2_WHITE_EDITION } from "@/lib/design-system/sce-foundation-contract";
+import { resolveSceModalOverlayThemeAttribute } from "@/lib/ui/sce-modal-overlay-theme";
 
 export type SceModalOverlayProps = {
   open: boolean;
@@ -85,6 +87,8 @@ export function SceModalOverlay({
 
   if (!open || !portalTarget) return null;
 
+  const overlayTheme = resolveSceModalOverlayThemeAttribute();
+
   function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
       onBackdropClick?.();
@@ -101,6 +105,9 @@ export function SceModalOverlay({
       data-state="open"
       data-testid={testId}
       data-stack-layer={stackLayer}
+      {...(overlayTheme
+        ? { [SCE_DS2_WHITE_EDITION.themeDataAttribute]: overlayTheme }
+        : {})}
     >
       <div
         className="sce-modal-overlay-interaction-layer sce-modal-overlay-backdrop"

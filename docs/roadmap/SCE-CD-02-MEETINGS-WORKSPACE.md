@@ -18,6 +18,11 @@
 - **Agenda duration:** optional `durationMin` per item + meeting `plannedDurationMin` with non-blocking overrun hint
 - **Initiative linking:** optional `initiativeId` on agenda items with visibility-gated API validation
 
+### SCE-CD-02R6 (STAGE migration recovery & unsaved UX)
+
+- **STAGE schema:** `20261111220000_sce_cd_02r5_meeting_carry_forward` on shared FC Allschwil STAGE Neon (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`) via guarded `db:migrate:deploy-if-enabled` — not `db push`.
+- **Unsaved prompt:** `SceUnsavedChangesDialog` — compact DS 2.0 white dialog (theme inherited on portalled overlay), canonical copy, two actions only.
+
 ### SCE-CD-02R2 (UAT readiness)
 
 - **Navigation:** Club-Betrieb header resolves to operational **Helfereinsätze** (`/dashboard/helfereinsaetze`), not Sitzungen/Meetings or Material demo

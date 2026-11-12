@@ -14,10 +14,11 @@ export type SceUnsavedChangesDialogProps = {
 
 const DEFAULT_TITLE = "Ungespeicherte Änderungen";
 const DEFAULT_DESCRIPTION =
-  "Deine Eingaben wurden noch nicht gespeichert. Möchtest du den Vorgang wirklich abbrechen?";
+  "Deine Änderungen wurden noch nicht gespeichert. Möchtest du die Seite wirklich verlassen?";
 
 /**
- * Canonical three-outcome unsaved prompt: continue editing, discard, or dismiss (backdrop/Escape).
+ * Canonical unsaved prompt for composer / full-page workflows (SCE-UX-01B).
+ * Light DS 2.0 compact dialog — continue editing or discard; backdrop/Escape = continue.
  */
 export function SceUnsavedChangesDialog({
   open,
@@ -32,40 +33,29 @@ export function SceUnsavedChangesDialog({
       onClose={onContinueEditing}
       title={title}
       description={description}
-      size="md"
-      stackLayer="elevated"
+      size="sm"
       footer={
         <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onContinueEditing}
-            data-testid="sce-unsaved-continue"
-          >
-            Weiter bearbeiten
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onContinueEditing}
-            data-testid="sce-unsaved-cancel"
-          >
-            Abbrechen
-          </Button>
           <Button
             type="button"
             variant="danger"
             onClick={onDiscard}
             data-testid="sce-unsaved-discard"
+            data-sce-action-hierarchy="DESTRUCTIVE"
           >
             Änderungen verwerfen
           </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onContinueEditing}
+            data-testid="sce-unsaved-continue"
+            data-sce-action-hierarchy="PRIMARY"
+          >
+            Weiter bearbeiten
+          </Button>
         </div>
       }
-    >
-      <p className="text-sm text-[var(--text-2)]" data-sce-unsaved-changes-body>
-        Du kannst weiter bearbeiten, den Dialog schließen oder deine Eingaben verwerfen.
-      </p>
-    </Dialog>
+    />
   );
 }
