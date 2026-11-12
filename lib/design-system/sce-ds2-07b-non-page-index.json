@@ -1525,6 +1525,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/decisions/[decisionId]/tasks/route.ts",
+    "urlPattern": "/api/meetings/[id]/decisions/[decisionId]/tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/meetings/[id]/decisions/route.ts",
     "urlPattern": "/api/meetings/[id]/decisions",
     "audience": "API"
