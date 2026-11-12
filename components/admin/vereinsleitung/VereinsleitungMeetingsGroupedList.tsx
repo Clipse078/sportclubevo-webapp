@@ -20,9 +20,16 @@ const CATEGORY_ORDER: MeetingListCategory[] = [
 type Props = {
   meetings: MeetingListItem[];
   canManage?: boolean;
+  locale?: string;
+  timezone?: string;
 };
 
-export default function VereinsleitungMeetingsGroupedList({ meetings, canManage }: Props) {
+export default function VereinsleitungMeetingsGroupedList({
+  meetings,
+  canManage,
+  locale,
+  timezone,
+}: Props) {
   const groups = groupMeetingsByCategory(meetings);
 
   return (
@@ -36,7 +43,12 @@ export default function VereinsleitungMeetingsGroupedList({ meetings, canManage 
               {MEETING_LIST_CATEGORY_LABELS[key]}
               <span className="ml-2 text-[var(--muted)]">({items.length})</span>
             </h2>
-            <VereinsleitungMeetingsList meetings={items} canManage={canManage} />
+            <VereinsleitungMeetingsList
+              meetings={items}
+              canManage={canManage}
+              locale={locale}
+              timezone={timezone}
+            />
           </section>
         );
       })}

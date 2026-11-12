@@ -51,6 +51,10 @@ describe("VereinsleitungMeetingsList", () => {
     render(<VereinsleitungMeetingsList meetings={[baseMeeting()]} canManage />);
 
     const card = screen.getByTestId("vereinsleitung-meeting-card-vorstand-juni");
+    expect(within(card).getByTestId("vereinsleitung-meeting-date-vorstand-juni")).toBeTruthy();
+    expect(
+      within(card).getByTestId("vereinsleitung-meeting-date-vorstand-juni-day").textContent,
+    ).toBe("20");
     const link = within(card).getByTestId("vereinsleitung-meeting-card-link");
     expect(link).toHaveAttribute("href", "/vereinsleitung/meetings/vorstand-juni");
     expect(within(card).getByTestId("vereinsleitung-meeting-card-title")).toHaveTextContent(
