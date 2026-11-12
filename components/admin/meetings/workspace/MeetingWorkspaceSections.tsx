@@ -505,6 +505,7 @@ export function MeetingParticipantsSection({
   const [pending, startTransition] = useTransition();
   const [selectedPerson, setSelectedPerson] = useState<PersonPickerResult | null>(null);
   const [role, setRole] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   function addParticipant() {
     if (!selectedPerson) return;
@@ -559,6 +560,19 @@ export function MeetingParticipantsSection({
       title="Teilnehmer"
       icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
       count={items.length > 0 ? present : undefined}
+      action={
+        canManage ? (
+          <button
+            type="button"
+            className={workspaceGhostButtonClass}
+            onClick={() => setShowAddForm((v) => !v)}
+            data-testid="meeting-participants-add-toggle"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="ml-1">Teilnehmer hinzufügen</span>
+          </button>
+        ) : null
+      }
     >
       <ErrorBanner message={error} />
       {items.length === 0 ? (
@@ -590,8 +604,8 @@ export function MeetingParticipantsSection({
           ))}
         </ul>
       )}
-      {canManage ? (
-        <div className="flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4">
+      {canManage && showAddForm ? (
+        <div className="flex flex-wrap items-end gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <div className="min-w-[220px] flex-1">
             <MeetingWorkspacePeopleField
               label="Teilnehmer/in"
@@ -601,8 +615,19 @@ export function MeetingParticipantsSection({
             />
           </div>
           <input className={workspaceInputClass} value={role} onChange={(e) => setRole(e.target.value)} placeholder="Rolle (optional)" />
+          <button
+            type="button"
+            className={workspaceGhostButtonClass}
+            onClick={() => {
+              setShowAddForm(false);
+              setSelectedPerson(null);
+              setRole("");
+            }}
+          >
+            Abbrechen
+          </button>
           <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !selectedPerson} onClick={addParticipant}>
-            Hinzufügen
+            Speichern
           </button>
         </div>
       ) : null}
@@ -633,6 +658,7 @@ export function MeetingDecisionsSection({
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   function addDecision() {
     const trimmed = title.trim();
@@ -650,6 +676,7 @@ export function MeetingDecisionsSection({
         if (res.ok) onItemsChange(data.decisions);
         setTitle("");
         setOwnerPerson(null);
+        setShowCreateForm(false);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Fehler");
       }
@@ -657,7 +684,24 @@ export function MeetingDecisionsSection({
   }
 
   return (
-    <SectionShell title="Beschlüsse" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
+    <SectionShell
+      title="Beschlüsse"
+      icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
+      count={items.length}
+      action={
+        documentationEditable ? (
+          <button
+            type="button"
+            className={workspaceGhostButtonClass}
+            onClick={() => setShowCreateForm((v) => !v)}
+            data-testid="meeting-decision-create-toggle"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="ml-1">Beschluss erfassen</span>
+          </button>
+        ) : null
+      }
+    >
       <ErrorBanner message={error} />
       {items.map((d) => (
         <MeetingDecisionCard
@@ -681,8 +725,8 @@ export function MeetingDecisionsSection({
           }}
         />
       ))}
-      {documentationEditable ? (
-        <div className="space-y-3 border-t border-[var(--border)] pt-4">
+      {documentationEditable && showCreateForm ? (
+        <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
           <MeetingWorkspacePeopleField
             label="Verantwortliche/r (optional)"
@@ -690,9 +734,22 @@ export function MeetingDecisionsSection({
             onSelect={setOwnerPerson}
             onClear={() => setOwnerPerson(null)}
           />
-          <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addDecision}>
-            Erfassen
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={workspaceGhostButtonClass}
+              onClick={() => {
+                setShowCreateForm(false);
+                setTitle("");
+                setOwnerPerson(null);
+              }}
+            >
+              Abbrechen
+            </button>
+            <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addDecision}>
+              Speichern
+            </button>
+          </div>
         </div>
       ) : null}
     </SectionShell>
@@ -726,6 +783,7 @@ function MeetingDecisionCard({
 }) {
   const [pending, startTransition] = useTransition();
   const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
+  const [editingDetails, setEditingDetails] = useState(false);
   const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
 
   function saveAgendaLink(nextId: string) {
@@ -742,37 +800,30 @@ function MeetingDecisionCard({
     });
   }
 
+  const summaryMeta = [
+    linkedAgenda?.title ? `Traktandum: ${linkedAgenda.title}` : null,
+    decision.owner ? decision.owner : null,
+    decision.approvalRequired
+      ? meetingApprovalAggregateStatusLabel(decision.approvalStatus)
+      : "Freigabe nicht erforderlich",
+  ].filter(Boolean);
+
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-3">
-      <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+    <SceExpandablePanel
+      defaultOpen={false}
+      testId={`meeting-decision-${decision.id}`}
+      summary={
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+          {summaryMeta.length ? (
+            <p className="text-xs text-[var(--text-2)]">{summaryMeta.join(" · ")}</p>
+          ) : null}
+        </div>
+      }
+    >
       {decision.description ? (
-        <p className="mt-1 text-sm text-[var(--text-2)]">{decision.description}</p>
+        <p className="text-sm text-[var(--text-2)]">{decision.description}</p>
       ) : null}
-      {decision.owner ? (
-        <p className="mt-1 text-xs text-[var(--text-2)]">Verantwortlich: {decision.owner}</p>
-      ) : null}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Zugehöriges Traktandum</label>
-        {documentationEditable ? (
-          <select
-            className={workspaceInputClass}
-            value={sourceAgendaItemId}
-            disabled={pending}
-            onChange={(e) => saveAgendaLink(e.target.value)}
-          >
-            <option value="">Kein Traktandum</option>
-            {agendaItems.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title}
-              </option>
-            ))}
-          </select>
-        ) : linkedAgenda ? (
-          <p className="text-sm text-[var(--text-2)]">{linkedAgenda.title}</p>
-        ) : (
-          <p className="text-sm italic text-[var(--muted)]">Kein Traktandum verknüpft</p>
-        )}
-      </div>
       <p
         className="text-[11px] font-medium text-[var(--muted)]"
         data-testid={`decision-approval-status-${decision.id}`}
@@ -781,6 +832,37 @@ function MeetingDecisionCard({
           ? `Freigabe: ${meetingApprovalAggregateStatusLabel(decision.approvalStatus)}`
           : "Freigabe: Nicht erforderlich"}
       </p>
+      {editingDetails || documentationEditable ? (
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Zugehöriges Traktandum</label>
+          {documentationEditable ? (
+            <select
+              className={workspaceInputClass}
+              value={sourceAgendaItemId}
+              disabled={pending}
+              onChange={(e) => saveAgendaLink(e.target.value)}
+            >
+              <option value="">Kein Traktandum</option>
+              {agendaItems.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.title}
+                </option>
+              ))}
+            </select>
+          ) : linkedAgenda ? (
+            <p className="text-sm text-[var(--text-2)]">{linkedAgenda.title}</p>
+          ) : (
+            <p className="text-sm italic text-[var(--muted)]">Kein Traktandum verknüpft</p>
+          )}
+        </div>
+      ) : linkedAgenda ? (
+        <p className="text-sm text-[var(--text-2)]">{linkedAgenda.title}</p>
+      ) : null}
+      {documentationEditable && !editingDetails ? (
+        <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditingDetails(true)}>
+          Bearbeiten
+        </button>
+      ) : null}
       <MeetingDecisionApprovalPanel
         meetingId={meetingId}
         meetingStatus={meetingStatus}
@@ -797,7 +879,7 @@ function MeetingDecisionCard({
         decisionTitle={decision.title}
         canManage={documentationEditable}
       />
-    </div>
+    </SceExpandablePanel>
   );
 }
 
@@ -811,6 +893,7 @@ export function MeetingActionsSection({
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   function addAction() {
     const trimmed = title.trim();
@@ -827,6 +910,7 @@ export function MeetingActionsSection({
         if (res.ok) onItemsChange(data.actions);
         setTitle("");
         setOwnerPerson(null);
+        setShowCreateForm(false);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Fehler");
       }
@@ -834,7 +918,24 @@ export function MeetingActionsSection({
   }
 
   return (
-    <SectionShell title="Massnahmen" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
+    <SectionShell
+      title="Massnahmen"
+      icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
+      count={items.length}
+      action={
+        canManage ? (
+          <button
+            type="button"
+            className={workspaceGhostButtonClass}
+            onClick={() => setShowCreateForm((v) => !v)}
+            data-testid="meeting-action-create-toggle"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="ml-1">Massnahme erfassen</span>
+          </button>
+        ) : null
+      }
+    >
       <ErrorBanner message={error} />
       {items.map((a) => (
         <div key={a.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
@@ -842,8 +943,8 @@ export function MeetingActionsSection({
           {a.owner ? <p className="text-xs text-[var(--text-2)]">{a.owner}</p> : null}
         </div>
       ))}
-      {canManage ? (
-        <div className="space-y-3 border-t border-[var(--border)] pt-4">
+      {canManage && showCreateForm ? (
+        <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Massnahme" />
           <MeetingWorkspacePeopleField
             label="Verantwortliche/r (optional)"
@@ -851,11 +952,37 @@ export function MeetingActionsSection({
             onSelect={setOwnerPerson}
             onClear={() => setOwnerPerson(null)}
           />
-          <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addAction}>
-            Erfassen
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={workspaceGhostButtonClass}
+              onClick={() => {
+                setShowCreateForm(false);
+                setTitle("");
+                setOwnerPerson(null);
+              }}
+            >
+              Abbrechen
+            </button>
+            <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={addAction}>
+              Speichern
+            </button>
+          </div>
         </div>
       ) : null}
     </SectionShell>
+  );
+}
+
+export function MeetingTasksSection({ relatedTasksPanel }: { relatedTasksPanel: ReactNode }) {
+  return (
+    <section
+      id="meeting-section-aufgaben"
+      className={workspacePanelClass}
+      data-testid="meeting-section-aufgaben"
+    >
+      <h3 className="text-base font-semibold text-[var(--foreground)]">Aufgaben</h3>
+      <div className="mt-3 min-w-0">{relatedTasksPanel}</div>
+    </section>
   );
 }

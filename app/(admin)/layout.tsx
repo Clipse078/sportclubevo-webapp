@@ -2,7 +2,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
-import StageEnvironmentBanner from "@/components/admin/deployment/StageEnvironmentBanner";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
 import ImpersonationSafetyChrome from "@/components/admin/layout/ImpersonationSafetyChrome";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -121,7 +120,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     >
       <div className="sce-authenticated-sticky-shell-chrome">
         <div className="sce-authenticated-safety-chrome-stack">
-          <StageEnvironmentBanner />
           <ImpersonationSafetyChrome
             initialState={{
               isImpersonating: Boolean(session.user.isImpersonating),
