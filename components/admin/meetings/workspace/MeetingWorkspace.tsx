@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { SceComposerDirtyCloseProvider } from "@/components/sce/composer/SceComposerDirtyCloseContext";
+import { useState, type ReactNode } from "react";
+import {
+  MeetingWorkspaceDirtyStateSync,
+} from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
 import {
   MeetingActionsSection,
@@ -19,19 +21,6 @@ type MeetingWorkspaceProps = {
   relatedTasksPanel?: ReactNode;
 };
 
-function MeetingWorkspaceBeforeUnload({ isDirty }: { isDirty: boolean }) {
-  useEffect(() => {
-    if (!isDirty) return;
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
-  return null;
-}
-
 export default function MeetingWorkspace({
   meeting,
   slug,
@@ -46,8 +35,8 @@ export default function MeetingWorkspace({
   const [isDirty, setIsDirty] = useState(false);
 
   return (
-    <SceComposerDirtyCloseProvider>
-      <MeetingWorkspaceBeforeUnload isDirty={isDirty} />
+    <>
+      <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
       <div className="space-y-5" data-testid="meeting-workspace">
         <MeetingWorkspaceHeader
           meeting={meeting}
@@ -95,6 +84,6 @@ export default function MeetingWorkspace({
           </div>
         </div>
       </div>
-    </SceComposerDirtyCloseProvider>
+    </>
   );
 }

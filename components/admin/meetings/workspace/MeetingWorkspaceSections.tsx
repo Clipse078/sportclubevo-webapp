@@ -19,6 +19,7 @@ import {
   agendaExceedsMeetingPlannedTime,
   sumAgendaPlannedMinutes,
 } from "@/lib/meetings/agenda-duration";
+import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
@@ -263,25 +264,34 @@ function AgendaItemRow({
       : null,
   );
 
-  const durationLabel =
-    item.durationMin && item.durationMin > 0 ? ` · ${item.durationMin} min` : "";
+  const collapsedMetadata = buildAgendaItemCollapsedMetadata(item);
 
   return (
     <SceExpandablePanel
       defaultOpen={false}
+      testId={`meeting-agenda-item-${item.id}`}
       summary={
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-xs font-semibold text-[#0b4aa2]">
-            {index}
-          </span>
-          <span className="font-medium">
-            {item.title}
-            {durationLabel}
-          </span>
-          {initiativeFromItem ? (
-            <span className="text-xs text-[var(--text-2)]">↗ {initiativeFromItem.title}</span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-xs font-semibold text-[#0b4aa2]">
+              {index}
+            </span>
+            <span className="min-w-0 flex-1 font-medium text-[var(--foreground)] break-words">
+              {item.title}
+            </span>
+            {initiativeFromItem ? (
+              <span className="shrink-0 text-xs text-[var(--text-2)]">↗ {initiativeFromItem.title}</span>
+            ) : null}
+          </div>
+          {collapsedMetadata.length > 0 ? (
+            <p
+              className="min-w-0 break-words pl-9 text-xs font-normal text-[var(--text-2)]"
+              data-testid={`meeting-agenda-item-${item.id}-summary-meta`}
+            >
+              {collapsedMetadata.join(" · ")}
+            </p>
           ) : null}
-        </span>
+        </div>
       }
     >
       {canManage ? (
