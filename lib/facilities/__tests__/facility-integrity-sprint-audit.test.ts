@@ -29,6 +29,12 @@ describe("FACILITY-INTEGRITY sprint audit — operation wiring", () => {
     expect(read("lib/facilities/display-helpers.ts")).toContain("getEventAllocationDisplayForTenant");
   });
 
+  it("documents Hauptfeld/Hauptplatz read-only findings artifact", () => {
+    const doc = read("docs/planning/FACILITY-INTEGRITY-SPRINT-HAUPTFELD-HAUPTPLATZ-FINDINGS.md");
+    expect(doc).toContain("B — LEGACY + CANONICAL");
+    expect(doc).toContain("LEGACY_CANONICAL_MAIN_PITCH_PAIR");
+  });
+
   it("consumers resolve allocation by facilityResourceId", () => {
     expect(read("lib/planning-hub/facility-groups.ts")).toMatch(/facilityResourceId|FacilityResource/);
     expect(read("lib/publishing/presentation/allocation-display-resolver.ts")).toContain("pitchCode");
