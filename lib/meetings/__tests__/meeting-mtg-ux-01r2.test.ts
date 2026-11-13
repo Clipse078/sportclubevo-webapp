@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   formatMeetingWorkspaceTabLabel,
@@ -28,6 +30,16 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
     const config = buildMeetingWorkspaceTabNavigationConfig(counts);
     expect(config.tabs.find((t) => t.key === "traktanden")?.label).toBe("Traktanden (3)");
     expect(config.tabs.every((t) => t.count === undefined)).toBe(true);
+  });
+
+  it("meeting Aufgaben uses inline collapsible create card", () => {
+    const panel = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx"),
+      "utf8",
+    );
+    expect(panel).toContain("MeetingContextualTaskInlineCreateCard");
+    expect(panel).toContain("meeting-open-inline-task-create");
+    expect(panel).not.toMatch(/import ContextualTaskCreateDialog/);
   });
 
   it("surfaces conduct as single header primary when prerequisites met", () => {

@@ -20,12 +20,12 @@ describe("SCE-CD-02R5 meetings UX", () => {
     expect(peoplePicker).not.toContain("SceInlineSinglePersonPicker");
   });
 
-  it("uses focused dialog task creation for meeting Aufgaben panel", () => {
+  it("uses inline collapsible task creation for meeting Aufgaben panel", () => {
     expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).toContain(
-      "ContextualTaskCreateDialog",
+      "MeetingContextualTaskInlineCreateCard",
     );
-    expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).not.toContain(
-      "ContextualTaskInlineCreateForm",
+    expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).not.toMatch(
+      /import ContextualTaskCreateDialog/,
     );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx")).toContain(
       "MeetingTaskCreateScrollLink",

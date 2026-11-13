@@ -22,12 +22,12 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     expect(header).not.toContain("formatSwissDate");
   });
 
-  it("opens contextual task creation in a dialog for meetings", () => {
+  it("opens contextual task creation inline for meetings", () => {
     const panel = readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx");
-    expect(panel).toContain("ContextualTaskCreateDialog");
-    expect(panel).not.toContain("ContextualTaskInlineCreateForm");
+    expect(panel).toContain("MeetingContextualTaskInlineCreateCard");
+    expect(panel).not.toMatch(/import ContextualTaskCreateDialog/);
     expect(readSrc("components/admin/meetings/workspace/MeetingTaskCreateScrollLink.tsx")).toContain(
-      "meeting-open-task-create-dialog",
+      "meeting-open-inline-task-create",
     );
   });
 

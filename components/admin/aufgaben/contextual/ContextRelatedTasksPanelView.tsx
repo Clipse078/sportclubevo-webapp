@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { ContextRelatedTaskSummaryDto } from "@/lib/tasks/context-related-task-types";
 import {
@@ -11,7 +11,10 @@ import {
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import type { TaskContextType } from "@prisma/client";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
-import ContextualTaskCreateDialog from "./ContextualTaskCreateDialog";
+import ContextualTaskCreateTrigger from "./ContextualTaskCreateTrigger";
+import MeetingContextualTaskInlineCreateCard, {
+  type MeetingContextualTaskInlineCreateCardHandle,
+} from "./MeetingContextualTaskInlineCreateCard";
 import { useTranslations } from "next-intl";
 
 type CreateProps = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange">;
@@ -59,13 +62,22 @@ export default function ContextRelatedTasksPanelView({
   locale,
 }: Props) {
   const tWork = useTranslations("PlanningEditor.operational.work");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [inlineCreateExpanded, setInlineCreateExpanded] = useState(false);
+  const inlineCreateRef = useRef<MeetingContextualTaskInlineCreateCardHandle>(null);
   const isMeetingContext = contextType === "MEETING";
+
+  const openInlineCreate = useCallback(() => {
+    setInlineCreateExpanded(true);
+    window.requestAnimationFrame(() => {
+      inlineCreateRef.current?.scrollIntoView();
+      inlineCreateRef.current?.focusTitle();
+    });
+  }, []);
 
   useEffect(() => {
     if (!isMeetingContext || !canCreate) return;
     function handleOpen() {
-      setDialogOpen(true);
+      openInlineCreate();
     }
     window.addEventListener("meeting-open-inline-task-create", handleOpen);
     window.addEventListener("meeting-open-task-create-dialog", handleOpen);
@@ -73,7 +85,7 @@ export default function ContextRelatedTasksPanelView({
       window.removeEventListener("meeting-open-inline-task-create", handleOpen);
       window.removeEventListener("meeting-open-task-create-dialog", handleOpen);
     };
-  }, [canCreate, isMeetingContext]);
+  }, [canCreate, isMeetingContext, openInlineCreate]);
 
   return (
     <section
@@ -93,20 +105,36 @@ export default function ContextRelatedTasksPanelView({
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-semibold text-[#0b4aa2] hover:bg-[var(--surface-2)]"
-            onClick={() => setDialogOpen(true)}
-            data-testid="context-related-tasks-create-dialog-trigger"
+            onClick={() => {
+              if (!inlineCreateExpanded) {
+                openInlineCreate();
+              } else {
+                setInlineCreateExpanded(false);
+              }
+            }}
+            aria-expanded={inlineCreateExpanded}
+            aria-controls="meeting-contextual-task-create-panel"
+            data-testid="context-related-tasks-inline-toggle"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {tWork("createTask")}
           </button>
+        ) : canCreate && createDialogProps ? (
+          <ContextualTaskCreateTrigger
+            variant="button"
+            label={tWork("createTask")}
+            className="!min-h-8 !px-2.5 !py-1 text-xs"
+            {...createDialogProps}
+          />
         ) : null}
       </div>
 
       {canCreate && createDialogProps && isMeetingContext ? (
-        <ContextualTaskCreateDialog
+        <MeetingContextualTaskInlineCreateCard
+          ref={inlineCreateRef}
+          expanded={inlineCreateExpanded}
+          onExpandedChange={setInlineCreateExpanded}
           {...createDialogProps}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
         />
       ) : null}
 
