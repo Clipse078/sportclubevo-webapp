@@ -198,6 +198,8 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
   it("defines canonical match result foreground token", () => {
     const css = readFileSync(join(repoRoot, "app/globals.css"), "utf8");
     expect(css).toContain("--sce-match-result-foreground:");
+    expect(css).toContain("--sce-match-result-foreground-winner:");
+    expect(css).toContain("--sce-match-result-foreground-loser:");
     const scale = readFileSync(
       join(repoRoot, "lib/sporting-activity-presentation/canonical/match-card-rich-density.ts"),
       "utf8",

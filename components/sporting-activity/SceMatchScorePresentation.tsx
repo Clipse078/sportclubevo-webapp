@@ -11,6 +11,13 @@ import type {
   SceActivityPresentationDensity,
   SceMatchPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
+import {
+  resolveMatchScoreSideEmphasis,
+  resolveNumericMatchScore,
+  sceMatchScoreBoxClassName,
+  sceMatchScoreInlineEmphasisClass,
+  sceMatchScoreSeparatorEmphasisClass,
+} from "@/lib/sporting-activity-presentation/canonical/match-score-outcome-styling";
 
 function resolveScores(model: SceMatchPresentationModel): {
   home: string | null;
@@ -77,8 +84,24 @@ export function SceMatchScorePresentation({
   const centerScale = isSceMatchRichCardDensity(density)
     ? sceMatchCenterTypographyScale(density)
     : sceMatchCenterTypographyScale("STANDARD");
+  const numericScoresFromModel =
+    model.result != null
+      ? resolveNumericMatchScore(model.result.scoreHome, model.result.scoreAway)
+      : null;
+  const numericScores =
+    numericScoresFromModel ??
+    (scores.home != null && scores.away != null
+      ? resolveNumericMatchScore(Number(scores.home), Number(scores.away))
+      : null);
 
   if (scores.combinedLabel && scores.home != null && scores.away != null) {
+    const homeEmphasis = numericScores
+      ? resolveMatchScoreSideEmphasis(numericScores, "home")
+      : "neutral";
+    const awayEmphasis = numericScores
+      ? resolveMatchScoreSideEmphasis(numericScores, "away")
+      : "neutral";
+
     if (presentation === "legacy-inline") {
       return (
         <span
@@ -87,7 +110,23 @@ export function SceMatchScorePresentation({
           data-sce-match-center
           aria-label={`Ergebnis ${scores.combinedLabel}`}
         >
-          {scores.combinedLabel}
+          <span
+            className={sceMatchScoreInlineEmphasisClass(homeEmphasis)}
+            data-sce-match-score-emphasis={homeEmphasis}
+            data-testid="sce-match-score-home"
+          >
+            {scores.home}
+          </span>
+          <span className="text-[var(--sce-match-result-foreground)] opacity-80" aria-hidden>
+            :
+          </span>
+          <span
+            className={sceMatchScoreInlineEmphasisClass(awayEmphasis)}
+            data-sce-match-score-emphasis={awayEmphasis}
+            data-testid="sce-match-score-away"
+          >
+            {scores.away}
+          </span>
         </span>
       );
     }
@@ -99,13 +138,24 @@ export function SceMatchScorePresentation({
         data-sce-match-center
         aria-label={`Ergebnis ${scores.combinedLabel}`}
       >
-        <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.scoreBoxClass} data-testid="sce-match-score-home">
+        <span
+          className={sceMatchScoreBoxClassName(homeEmphasis)}
+          data-sce-match-score-emphasis={homeEmphasis}
+          data-testid="sce-match-score-home"
+        >
           {scores.home}
         </span>
-        <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.scoreSeparatorClass} aria-hidden>
+        <span
+          className={sceMatchScoreSeparatorEmphasisClass(homeEmphasis)}
+          aria-hidden
+        >
           :
         </span>
-        <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.scoreBoxClass} data-testid="sce-match-score-away">
+        <span
+          className={sceMatchScoreBoxClassName(awayEmphasis)}
+          data-sce-match-score-emphasis={awayEmphasis}
+          data-testid="sce-match-score-away"
+        >
           {scores.away}
         </span>
       </div>

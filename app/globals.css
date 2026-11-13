@@ -88,8 +88,18 @@
   --sce-activity-card-shadow-hover: var(--shadow-md);
   --sce-activity-card-team-context-foreground: color-mix(in srgb, var(--sce-info) 88%, var(--foreground) 12%);
   --sce-activity-card-location-foreground: color-mix(in srgb, var(--sce-info) 55%, var(--text-2) 45%);
-  /* Warm ivory — canonical completed/live score foreground (invariant win/loss/draw) */
+  /* Warm ivory — canonical completed/live score baseline; SCE-MATCH-UX-01 outcome variants */
   --sce-match-result-foreground: rgb(248 242 228);
+  --sce-match-result-foreground-winner: color-mix(
+    in srgb,
+    var(--sce-match-result-foreground) 72%,
+    var(--foreground) 28%
+  );
+  --sce-match-result-foreground-loser: color-mix(
+    in srgb,
+    var(--sce-match-result-foreground) 58%,
+    var(--muted) 42%
+  );
 
   --sce-surface-border-subtle:  rgb(255 255 255 / 6%);
   --sce-surface-border:         var(--border);
@@ -588,6 +598,16 @@
   --sce-icon-muted:     #57606a;
 
   --sce-match-result-foreground: #0f172a;
+  --sce-match-result-foreground-winner: color-mix(
+    in srgb,
+    var(--sce-match-result-foreground) 88%,
+    #020617 12%
+  );
+  --sce-match-result-foreground-loser: color-mix(
+    in srgb,
+    var(--sce-match-result-foreground) 52%,
+    var(--muted) 48%
+  );
 
   --sce-surface-shadow: var(--shadow-sm);
   --sce-surface-shadow-elevated: var(--shadow-md);
