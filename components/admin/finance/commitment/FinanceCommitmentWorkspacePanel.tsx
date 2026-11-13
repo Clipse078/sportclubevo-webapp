@@ -889,6 +889,10 @@ export function FinanceCommitmentWorkspacePanel({
               setDetailMenuOpen(false);
               setDeleteOpen(true);
             }}
+            financeYearId={selectedYearId}
+            onSupplierBillEvidenceChanged={() => {
+              if (detailId) void openDetail(detailId);
+            }}
             mode="workspace"
           />
         ) : null}
