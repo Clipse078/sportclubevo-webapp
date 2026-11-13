@@ -3085,3 +3085,13 @@ html[data-sidebar-collapsed="1"] {
     --sce-sidebar-effective-width: 0px;
   }
 }
+
+@media print {
+  .sce-protocol-document,
+  .sce-print-document-canvas {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
