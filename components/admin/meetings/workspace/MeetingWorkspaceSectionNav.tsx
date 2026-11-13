@@ -16,8 +16,7 @@ type Props = {
   counts: {
     traktanden: number;
     beschluesse: number;
-    massnahmen: number;
-    aufgaben: number;
+    pendenzenOpen: number;
     teilnehmer: number;
   };
   activeTab: MeetingWorkspaceTabId;

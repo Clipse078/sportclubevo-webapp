@@ -11,17 +11,14 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
   const counts = {
     traktanden: 3,
     beschluesse: 1,
-    massnahmen: 1,
-    aufgaben: 0,
+    pendenzenOpen: 2,
     teilnehmer: 2,
   };
 
-  it("formats tab labels with parenthetical counts and dual Massnahmen/Aufgaben", () => {
+  it("formats tab labels with unified Pendenzen open count", () => {
     expect(formatMeetingWorkspaceTabLabel("traktanden", counts)).toBe("Traktanden (3)");
     expect(formatMeetingWorkspaceTabLabel("beschluesse", counts)).toBe("Beschlüsse (1)");
-    expect(formatMeetingWorkspaceTabLabel("massnahmen", counts)).toBe(
-      "Massnahmen (1) · Aufgaben (0)",
-    );
+    expect(formatMeetingWorkspaceTabLabel("pendenzen", counts)).toBe("Pendenzen (2)");
     expect(formatMeetingWorkspaceTabLabel("teilnehmer", counts)).toBe("Teilnehmer (2)");
     expect(formatMeetingWorkspaceTabLabel("details", counts)).toBe("Sitzungsdetails");
   });

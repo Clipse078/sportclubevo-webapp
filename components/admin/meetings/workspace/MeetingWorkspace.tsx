@@ -18,6 +18,9 @@ import {
   MeetingParticipantsSection,
   MeetingTasksSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
+import MeetingPendenzenPanel from "@/components/admin/meetings/workspace/MeetingPendenzenPanel";
+import { countOpenPendenzen, mergeMeetingPendenzen } from "@/lib/meetings/meeting-pendenzen";
+import { MEETING_ACTION_STATUS_LABEL } from "@/lib/meetings/meeting-protocol-labels";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
 import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
@@ -40,8 +43,9 @@ const SECTION_TO_TAB: Record<string, MeetingWorkspaceTabId> = {
   "meeting-section-traktanden": "traktanden",
   "meeting-section-beschlüsse": "beschluesse",
   "meeting-section-teilnehmer": "teilnehmer",
-  "meeting-section-massnahmen": "massnahmen",
-  "meeting-section-aufgaben": "massnahmen",
+  "meeting-section-pendenzen": "pendenzen",
+  "meeting-section-massnahmen": "pendenzen",
+  "meeting-section-aufgaben": "pendenzen",
 };
 
 export default function MeetingWorkspace({
@@ -64,6 +68,7 @@ export default function MeetingWorkspace({
   const [isDirty, setIsDirty] = useState(false);
   const [activeTab, setActiveTab] = useState<MeetingWorkspaceTabId>("traktanden");
   const [aufgabenCount, setAufgabenCount] = useState(initialAufgabenCount);
+  const [pendenzenRefresh, setPendenzenRefresh] = useState(0);
 
   useEffect(() => {
     setAufgabenCount(initialAufgabenCount);
@@ -95,6 +100,28 @@ export default function MeetingWorkspace({
   }, []);
 
   const pendingDecisionApprovals = countDecisionsAwaitingReview(decisions);
+
+  const openPendenzenCount = countOpenPendenzen(
+    mergeMeetingPendenzen({
+      meeting: {
+        id: meeting.id,
+        title: meeting.title,
+        slug,
+        meetingDate: meeting.meetingDate,
+      },
+      actions: actions.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        expectedOutcome: a.expectedOutcome,
+        owner: a.owner,
+        dueDate: a.dueDate,
+        status: a.status,
+        statusLabel: MEETING_ACTION_STATUS_LABEL[a.status],
+      })),
+      tasks: [],
+    }),
+  );
 
   return (
     <>
@@ -130,8 +157,7 @@ export default function MeetingWorkspace({
           counts={{
             traktanden: agendaItems.length,
             beschluesse: decisions.length,
-            massnahmen: actions.length,
-            aufgaben: aufgabenCount,
+            pendenzenOpen: openPendenzenCount + aufgabenCount,
             teilnehmer: participants.length,
           }}
           activeTab={activeTab}
@@ -163,13 +189,17 @@ export default function MeetingWorkspace({
               onItemsChange={setDecisions}
             />
           ) : null}
-          {activeTab === "massnahmen" ? (
+          {activeTab === "pendenzen" ? (
             <div className="space-y-4">
+              <MeetingPendenzenPanel meetingId={meeting.id} refreshToken={pendenzenRefresh} />
               <MeetingActionsSection
                 meetingId={meeting.id}
                 canManage={effectiveCanManage}
                 items={actions}
-                onItemsChange={setActions}
+                onItemsChange={(next) => {
+                  setActions(next);
+                  setPendenzenRefresh((n) => n + 1);
+                }}
               />
               {relatedTasksPanel ? (
                 <MeetingTasksSection relatedTasksPanel={relatedTasksPanel} />

@@ -2,12 +2,12 @@
  * SCE-CD-02R5 — eligible unresolved topics from prior meetings + idempotent apply.
  */
 
-import { MeetingAgendaItemStatus, TaskContextType, TaskStatus } from "@prisma/client";
+import { MeetingActionStatus, MeetingAgendaItemStatus, TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { applyVisibilityFilter, buildVisibilityWhere } from "@/lib/visibility/visibility-filter";
 
-export type CarryForwardSourceType = "AGENDA_OPEN" | "TASK_OPEN";
+export type CarryForwardSourceType = "AGENDA_OPEN" | "TASK_OPEN" | "ACTION_OPEN";
 
 export type CarryForwardEligibleItem = {
   key: string;
@@ -20,6 +20,7 @@ export type CarryForwardEligibleItem = {
   ownerLabel: string | null;
   sourceAgendaItemId?: string;
   sourceTaskId?: string;
+  sourceActionId?: string;
 };
 
 const AGENDA_STATUS_LABEL: Record<MeetingAgendaItemStatus, string> = {
@@ -73,7 +74,7 @@ export async function listCarryForwardEligibleItems(
 
   const meetingById = new Map(meetings.map((m) => [m.id, m]));
 
-  const [openAgenda, existingCopies, openTasks] = await Promise.all([
+  const [openAgenda, existingCopies, openTasks, openActions] = await Promise.all([
     prisma.meetingAgendaItem.findMany({
       where: {
         meetingId: { in: meetingIds },
@@ -117,6 +118,22 @@ export async function listCarryForwardEligibleItems(
       orderBy: { updatedAt: "desc" },
       take: 100,
     }),
+    prisma.meetingAction.findMany({
+      where: {
+        meetingId: { in: meetingIds },
+        status: { in: [MeetingActionStatus.OPEN, MeetingActionStatus.IN_PROGRESS] },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        owner: true,
+        ownerPersonId: true,
+        meetingId: true,
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    }),
   ]);
 
   const alreadyAgendaSources = new Set(
@@ -153,6 +170,29 @@ export async function listCarryForwardEligibleItems(
   });
   const onTargetIds = new Set(tasksAlreadyOnTarget.map((t) => t.id));
 
+  const ACTION_STATUS_LABEL: Record<MeetingActionStatus, string> = {
+    OPEN: "Offen",
+    IN_PROGRESS: "In Bearbeitung",
+    DONE: "Erledigt",
+    CANCELLED: "Abgebrochen",
+  };
+
+  for (const action of openActions) {
+    const meeting = meetingById.get(action.meetingId);
+    if (!meeting) continue;
+    items.push({
+      key: `action:${action.id}`,
+      sourceType: "ACTION_OPEN",
+      title: action.title,
+      sourceMeetingId: meeting.id,
+      sourceMeetingTitle: meeting.title,
+      sourceMeetingDate: meeting.meetingDate.toISOString(),
+      statusLabel: ACTION_STATUS_LABEL[action.status],
+      ownerLabel: action.owner,
+      sourceActionId: action.id,
+    });
+  }
+
   for (const task of openTasks) {
     if (onTargetIds.has(task.id)) continue;
     const meeting = task.contextId ? meetingById.get(task.contextId) : undefined;
@@ -181,6 +221,7 @@ export type CarryForwardSelection = {
   sourceType: CarryForwardSourceType;
   sourceAgendaItemId?: string;
   sourceTaskId?: string;
+  sourceActionId?: string;
 };
 
 export async function applyCarryForwardSelections(input: {
@@ -280,6 +321,54 @@ export async function applyCarryForwardSelections(input: {
         },
       });
       tasksLinked += 1;
+    }
+
+    if (sel.sourceType === "ACTION_OPEN" && sel.sourceActionId) {
+      const source = await prisma.meetingAction.findFirst({
+        where: { id: sel.sourceActionId },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          meeting: { select: { tenantId: true, title: true } },
+        },
+      });
+      if (
+        !source ||
+        source.meeting.tenantId !== tenantId ||
+        (source.status !== MeetingActionStatus.OPEN && source.status !== MeetingActionStatus.IN_PROGRESS)
+      ) {
+        skipped += 1;
+        continue;
+      }
+
+      const marker = `[pendenz-ref:MeetingAction/${source.id}]`;
+      const existingReview = await prisma.meetingAgendaItem.findFirst({
+        where: {
+          meetingId: input.targetMeetingId,
+          notes: { contains: marker },
+        },
+        select: { id: true },
+      });
+      if (existingReview) {
+        skipped += 1;
+        continue;
+      }
+
+      const reviewTitle = `Nachverfolgung Massnahme: ${source.title}`;
+      const reviewNotes = `${marker}\nUrsprung: ${source.meeting.title}\nKeine Duplikation — bearbeiten Sie die Massnahme im Ursprungsmeeting.`;
+
+      await prisma.meetingAgendaItem.create({
+        data: {
+          meetingId: input.targetMeetingId,
+          title: reviewTitle,
+          notes: reviewNotes,
+          orderIndex: nextIndex++,
+          status: MeetingAgendaItemStatus.OPEN,
+          createdByUserId: input.actor.userId,
+        },
+      });
+      agendaCreated += 1;
     }
   }
 

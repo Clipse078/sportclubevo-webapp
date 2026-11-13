@@ -19,6 +19,8 @@ export function buildMeetingWorkspaceStatusSummary(input: {
   decisions: MeetingSubEntities["decisions"];
   actions: MeetingSubEntities["actions"];
   hasInvitedParticipants: boolean;
+  openPendenzenCount?: number;
+  overduePendenzenCount?: number;
 }): MeetingWorkspaceStatusSummary {
   const lifecycle = getMeetingLifecyclePresentation({
     status: input.meeting.status ?? "PLANNED",
@@ -53,6 +55,10 @@ export function buildMeetingWorkspaceStatusSummary(input: {
   let attentionLine: string | null = null;
   if (lifecycle.showPastDocumentationHint) {
     attentionLine = "Sitzung liegt in der Vergangenheit — Protokoll vervollständigen.";
+  } else if ((input.overduePendenzenCount ?? 0) > 0) {
+    attentionLine = `${input.overduePendenzenCount} überfällige Pendenz/Pendenzen — prüfen unter Pendenzen.`;
+  } else if ((input.openPendenzenCount ?? 0) > 0) {
+    attentionLine = `${input.openPendenzenCount} offene Pendenz/Pendenzen.`;
   } else if (pendingDecisions.length > 0) {
     attentionLine = `${pendingDecisions.length} Beschluss/Beschlüsse warten auf Freigabe.`;
   }

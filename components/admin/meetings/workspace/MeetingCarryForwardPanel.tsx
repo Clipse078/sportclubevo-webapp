@@ -74,6 +74,7 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
           sourceType: p.sourceType as CarryForwardSourceType,
           sourceAgendaItemId: p.sourceAgendaItemId,
           sourceTaskId: p.sourceTaskId,
+          sourceActionId: p.sourceActionId,
         }));
         const res = await fetch(`/api/meetings/${meetingId}/carry-forward`, {
           method: "POST",
