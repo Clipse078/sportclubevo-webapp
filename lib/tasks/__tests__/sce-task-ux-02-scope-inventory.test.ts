@@ -61,4 +61,20 @@ describe("SCE-TASK-UX-02 scope inventory — no modal task create at runtime", (
     const workspaceInspector = read("components/admin/workspace/inspector/WorkspaceDocumentInspectorView.tsx");
     expect(workspaceInspector).toContain("ContextualTaskCreateTrigger");
   });
+
+  it("Aufgaben workspace quick create uses inline collapsible cards, not task dialogs", () => {
+    for (const file of [
+      "components/admin/aufgaben/MeineAufgabenQuickCreateDialog.tsx",
+      "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
+      "components/admin/aufgaben/AufgabenWorkspaceCreateChooser.tsx",
+    ]) {
+      const src = read(file);
+      expect(src).not.toContain("AufgabenFormDialogShell");
+      expect(src).not.toContain("<Dialog");
+    }
+    expect(read("components/admin/aufgaben/AufgabenWorkspaceCreateChooser.tsx")).toContain(
+      "aufgaben-workspace-create-flow",
+    );
+    expect(read("app/(admin)/dashboard/aufgaben/page.tsx")).toContain("{meineCreateChooser}");
+  });
 });

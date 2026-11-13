@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { cn } from "@/lib/cn";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
-import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskContextType } from "@prisma/client";
 import type { TaskContextPresentation } from "@/lib/tasks/context-resolution";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
@@ -65,11 +63,7 @@ export default function AufgabenNeuClient({
         }}
         density="dense"
       >
-        <div
-          className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[40vh] w-full")}
-          data-testid="task-workspace-create"
-        >
-          <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+        <div className="mx-auto w-full max-w-3xl" data-testid="task-workspace-create">
             {contextual ? (
               <ContextualTaskInlineCreateCard
                 expanded={contextualExpanded}
@@ -99,7 +93,6 @@ export default function AufgabenNeuClient({
                 defaultExpanded
               />
             )}
-          </div>
         </div>
       </SceWorkspaceChrome>
     </div>
