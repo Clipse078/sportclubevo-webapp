@@ -43,7 +43,7 @@ export const SCE_ACTIVITY_REFERENCE_LAYOUT = {
   programmeMatchCrestBoundsClass: "h-11 w-11 sm:h-12 sm:w-12",
   scoreBoxGridClass: "inline-flex items-center gap-1.5 sm:gap-2",
   scoreBoxClass:
-    "sce-match-score-box inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-[var(--sce-color-border-strong)] bg-[var(--sce-color-surface-standard)] px-1.5 text-lg font-bold tabular-nums leading-none text-[var(--sce-match-result-foreground)] shadow-sm sm:h-10 sm:min-w-[2.5rem] sm:text-xl",
+    "sce-match-score-box inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-[var(--sce-color-border-strong)] bg-[var(--sce-color-surface-standard)] px-1.5 text-lg font-bold tabular-nums leading-none shadow-sm sm:h-10 sm:min-w-[2.5rem] sm:text-xl",
   scoreSeparatorClass:
     "text-sm font-semibold tabular-nums text-[var(--sce-match-result-foreground)]",
   kickoffBoxClass:
