@@ -10,6 +10,7 @@ import { TaskDeadlineFields } from "../TaskReminderFields";
 import TaskDescriptionFormField from "../TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "../TaskPeopleMultiPicker";
 import TaskPriorityField from "../TaskPriorityField";
+import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -29,7 +30,7 @@ type Props = {
   fieldsKey: number;
   onSubmit: FormEventHandler<HTMLFormElement>;
   testIdPrefix: string;
-  peoplePickerHost?: "overlay" | "embedded";
+  peoplePickerHost?: SceListSelectorPanelHost;
   titleInputClassName?: string;
   showContextBanner?: boolean;
 };
@@ -51,7 +52,7 @@ export default function ContextualTaskCreateFormBody({
   fieldsKey,
   onSubmit,
   testIdPrefix,
-  peoplePickerHost = "overlay",
+  peoplePickerHost = "sheet",
   titleInputClassName,
   showContextBanner = true,
 }: Props) {

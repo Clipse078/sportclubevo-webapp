@@ -87,6 +87,7 @@ export default function ContextualTaskCreateDialog({
         fieldsKey={fieldsKey}
         onSubmit={onSubmit}
         testIdPrefix="contextual-task-create-dialog"
+        peoplePickerHost="sheet"
       />
     </Dialog>
   );
