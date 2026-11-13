@@ -12,7 +12,7 @@ type Props = {
 export default function AuthLayout({ children }: Props) {
   return (
     <div
-      className="sce-theme-white min-h-screen bg-[var(--background)] text-[var(--foreground)]"
+      className="sce-theme-white min-h-screen w-full bg-white text-[var(--foreground)]"
       data-sce-theme={SCE_DS2_WHITE_EDITION.themeValue}
     >
       {children}

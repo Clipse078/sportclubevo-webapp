@@ -19,4 +19,19 @@ describe("SCE login DS2 white-first auth shell", () => {
     expect(login).toContain("sportclubevo_logo.png");
     expect(login).not.toContain("sportclubevo_logo_alt.png");
   });
+
+  it("uses benefit-led German product messaging on login", () => {
+    const login = read("components/auth/LoginForm.tsx");
+    expect(login).toContain("Dein Verein.");
+    expect(login).toContain("Gemeinsam organisiert.");
+    expect(login).toContain("koordiniere Aufgaben");
+    expect(login).not.toContain("Betriebssystem");
+  });
+
+  it("pins white canvas on auth layout and login shell", () => {
+    const layout = read("app/(auth)/layout.tsx");
+    expect(layout).toContain("bg-white");
+    const login = read("components/auth/LoginForm.tsx");
+    expect(login).toContain("bg-white");
+  });
 });
