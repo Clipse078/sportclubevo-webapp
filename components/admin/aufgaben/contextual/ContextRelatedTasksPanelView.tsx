@@ -14,6 +14,9 @@ import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDial
 import ContextualTaskInlineCreateCard, {
   type ContextualTaskInlineCreateCardHandle,
 } from "./ContextualTaskInlineCreateCard";
+import MeetingContextualTaskInlineCreateCard, {
+  type MeetingContextualTaskInlineCreateCardHandle,
+} from "./MeetingContextualTaskInlineCreateCard";
 import { useTranslations } from "next-intl";
 import {
   CONTEXTUAL_TASK_INLINE_CREATE_EVENT,
@@ -31,6 +34,8 @@ type Props = {
   canCreate: boolean;
   createDialogProps: CreateProps | null;
   locale: string;
+  /** Pendenzen tab: inline create only — no duplicate Aufgaben list/heading. */
+  pendenzenEmbed?: boolean;
 };
 
 function formatDue(iso: string | null, locale: string): string {
@@ -63,10 +68,13 @@ export default function ContextRelatedTasksPanelView({
   canCreate,
   createDialogProps,
   locale,
+  pendenzenEmbed = false,
 }: Props) {
   const tWork = useTranslations("PlanningEditor.operational.work");
   const [inlineCreateExpanded, setInlineCreateExpanded] = useState(false);
-  const inlineCreateRef = useRef<ContextualTaskInlineCreateCardHandle>(null);
+  const inlineCreateRef = useRef<
+    ContextualTaskInlineCreateCardHandle | MeetingContextualTaskInlineCreateCardHandle
+  >(null);
   const isMeetingContext = contextType === "MEETING";
 
   const openInlineCreate = useCallback(() => {
@@ -99,6 +107,22 @@ export default function ContextRelatedTasksPanelView({
       window.removeEventListener("meeting-open-task-create-dialog", handleOpen);
     };
   }, [canCreate, contextId, isMeetingContext, openInlineCreate]);
+
+  if (pendenzenEmbed && isMeetingContext) {
+    return (
+      <div className="min-w-0" data-testid="context-related-tasks-pendenzen-embed">
+        {canCreate && createDialogProps ? (
+          <MeetingContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            onCreated={() => window.dispatchEvent(new CustomEvent("meeting-pendenzen-refresh"))}
+            {...createDialogProps}
+          />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <section
@@ -136,13 +160,22 @@ export default function ContextRelatedTasksPanelView({
       </div>
 
       {canCreate && createDialogProps ? (
-        <ContextualTaskInlineCreateCard
-          ref={inlineCreateRef}
-          expanded={inlineCreateExpanded}
-          onExpandedChange={setInlineCreateExpanded}
-          panelDomId="context-related-task-inline-create-panel"
-          {...createDialogProps}
-        />
+        isMeetingContext ? (
+          <MeetingContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            {...createDialogProps}
+          />
+        ) : (
+          <ContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            panelDomId="context-related-task-inline-create-panel"
+            {...createDialogProps}
+          />
+        )
       ) : null}
 
       {tasks.length === 0 ? (

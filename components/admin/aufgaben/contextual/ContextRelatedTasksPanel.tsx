@@ -9,6 +9,7 @@ type Props = {
   contextId: string;
   locale?: string;
   timeZone?: string;
+  pendenzenEmbed?: boolean;
 };
 
 export default async function ContextRelatedTasksPanel({
@@ -16,6 +17,7 @@ export default async function ContextRelatedTasksPanel({
   contextId,
   locale = "de-CH",
   timeZone = "Europe/Zurich",
+  pendenzenEmbed = false,
 }: Props) {
   const ctx = await getTaskServiceContext();
   if (!ctx) return null;
@@ -50,6 +52,7 @@ export default async function ContextRelatedTasksPanel({
       canCreate={panel.canCreate}
       createDialogProps={createDialogProps}
       locale={locale}
+      pendenzenEmbed={pendenzenEmbed}
     />
   );
 }

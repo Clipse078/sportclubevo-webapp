@@ -55,7 +55,9 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
     if (canManage) void load();
   }, [canManage, load]);
 
-  function toggle(key: string) {
+  function toggle(item: CarryForwardEligibleItem) {
+    if (item.sourceType === "ACTION_OPEN") return;
+    const key = item.key;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -65,7 +67,9 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
   }
 
   function applySelected() {
-    const picks = items.filter((i) => selected.has(i.key));
+    const picks = items.filter(
+      (i) => selected.has(i.key) && i.sourceType !== "ACTION_OPEN",
+    );
     if (picks.length === 0) return;
     setError(null);
     startTransition(async () => {
@@ -74,6 +78,7 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
           sourceType: p.sourceType as CarryForwardSourceType,
           sourceAgendaItemId: p.sourceAgendaItemId,
           sourceTaskId: p.sourceTaskId,
+          sourceActionId: p.sourceActionId,
         }));
         const res = await fetch(`/api/meetings/${meetingId}/carry-forward`, {
           method: "POST",
@@ -125,14 +130,19 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
                   <SwitchThumb
                     id={`carry-fwd-${item.key}`}
                     checked={selected.has(item.key)}
-                    onChange={() => toggle(item.key)}
+                    onChange={() => toggle(item)}
+                    disabled={item.sourceType === "ACTION_OPEN"}
                     aria-label={`${item.title} zur Übernahme auswählen`}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium text-[var(--foreground)]">{item.title}</span>
                     <span className="mt-0.5 block text-xs text-[var(--text-2)]">
                       {item.sourceMeetingTitle} · {formatMeetingDate(item.sourceMeetingDate)} · {item.statusLabel}
-                      {item.sourceType === "TASK_OPEN" ? " · Aufgabe" : " · Traktandum"}
+                      {item.sourceType === "TASK_OPEN"
+                        ? " · Aufgabe"
+                        : item.sourceType === "ACTION_OPEN"
+                          ? " · Massnahme (nur Anzeige)"
+                          : " · Traktandum"}
                     </span>
                     {item.ownerLabel ? (
                       <span className="block text-xs text-[var(--muted)]">Verantwortlich: {item.ownerLabel}</span>
@@ -158,8 +168,10 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
           </button>
         </div>
         <p className="text-[11px] text-[var(--muted)]">
-          Beschlüsse werden in diesem Paket nicht automatisch zurückgestellt. Offene Traktanden werden verknüpft
-          kopiert; offene Aufgaben werden dem Sitzungskontext zugeordnet (ohne Duplikat).
+          Wählen Sie explizit die Quellpunkte aus sichtbaren Vorsitzungen. Beschlüsse werden nicht automatisch
+          zurückgestellt. Offene Traktanden werden verknüpft kopiert; offene Aufgaben werden diesem Sitzungskontext
+          zugeordnet (ohne Duplikat). Offene Massnahmen früherer Sitzungen erscheinen hier nur zur Orientierung und
+          werden nicht automatisch übernommen.
         </p>
       </div>
     </SceExpandablePanel>

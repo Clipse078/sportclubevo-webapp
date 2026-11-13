@@ -27,7 +27,8 @@ type VereinsleitungMeetingDetailProps = {
   actorPersonId?: string | null;
   approvalWorkspaceData?: MeetingApprovalWorkspaceData | null;
   canDelete?: boolean;
-  initialAufgabenCount?: number;
+  initialPendenzenOpenCount?: number;
+  initialPendenzenOverdueCount?: number;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -41,7 +42,8 @@ export default function VereinsleitungMeetingDetail({
   actorPersonId = null,
   approvalWorkspaceData = null,
   canDelete = false,
-  initialAufgabenCount = 0,
+  initialPendenzenOpenCount = 0,
+  initialPendenzenOverdueCount = 0,
 }: VereinsleitungMeetingDetailProps) {
   const isDbBacked = Boolean(dbMeeting);
 
@@ -58,7 +60,8 @@ export default function VereinsleitungMeetingDetail({
         fmtCfg={fmtCfg}
         relatedTasksPanel={relatedTasksPanel}
         canDelete={canDelete}
-        initialAufgabenCount={initialAufgabenCount}
+        initialPendenzenOpenCount={initialPendenzenOpenCount}
+        initialPendenzenOverdueCount={initialPendenzenOverdueCount}
       />
     );
   }

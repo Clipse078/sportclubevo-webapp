@@ -9,7 +9,7 @@ type Props = {
 export default function MeetingTaskCreateScrollLink({ label }: Props) {
   function openInlineTaskCreate() {
     window.dispatchEvent(
-      new CustomEvent("meeting-workspace-navigate-tab", { detail: { tab: "massnahmen" } }),
+      new CustomEvent("meeting-workspace-navigate-tab", { detail: { tab: "pendenzen" } }),
     );
     window.dispatchEvent(new CustomEvent("meeting-open-inline-task-create"));
   }

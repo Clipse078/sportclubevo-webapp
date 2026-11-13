@@ -11,17 +11,14 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
   const counts = {
     traktanden: 3,
     beschluesse: 1,
-    massnahmen: 1,
-    aufgaben: 0,
+    pendenzenOpen: 2,
     teilnehmer: 2,
   };
 
-  it("formats tab labels with parenthetical counts and dual Massnahmen/Aufgaben", () => {
+  it("formats tab labels with unified Pendenzen open count", () => {
     expect(formatMeetingWorkspaceTabLabel("traktanden", counts)).toBe("Traktanden (3)");
     expect(formatMeetingWorkspaceTabLabel("beschluesse", counts)).toBe("Beschlüsse (1)");
-    expect(formatMeetingWorkspaceTabLabel("massnahmen", counts)).toBe(
-      "Massnahmen (1) · Aufgaben (0)",
-    );
+    expect(formatMeetingWorkspaceTabLabel("pendenzen", counts)).toBe("Pendenzen (2)");
     expect(formatMeetingWorkspaceTabLabel("teilnehmer", counts)).toBe("Teilnehmer (2)");
     expect(formatMeetingWorkspaceTabLabel("details", counts)).toBe("Sitzungsdetails");
   });
@@ -30,6 +27,26 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
     const config = buildMeetingWorkspaceTabNavigationConfig(counts);
     expect(config.tabs.find((t) => t.key === "traktanden")?.label).toBe("Traktanden (3)");
     expect(config.tabs.every((t) => t.count === undefined)).toBe(true);
+  });
+
+  it("Pendenzen tab uses one canonical panel without duplicate section headings", () => {
+    const workspace = readFileSync(
+      join(process.cwd(), "components/admin/meetings/workspace/MeetingWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).not.toContain("MeetingActionsSection");
+    const panel = readFileSync(
+      join(process.cwd(), "components/admin/meetings/workspace/MeetingPendenzenPanel.tsx"),
+      "utf8",
+    );
+    expect(panel).toContain('data-testid="meeting-section-pendenzen"');
+    expect(panel).not.toContain("Aufgaben (");
+    expect(panel).toContain("Massnahme erfassen");
+    const tasksView = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx"),
+      "utf8",
+    );
+    expect(tasksView).toContain("pendenzenEmbed");
   });
 
   it("meeting Aufgaben uses inline collapsible create card", () => {

@@ -29,4 +29,9 @@ describe("SCE-CD-02R5 carry-forward contracts", () => {
     expect(readSrc("lib/meetings/meeting-carry-forward.ts")).toContain("sourceAgendaItemId");
     expect(readSrc("lib/meetings/meeting-carry-forward.ts")).toContain("alreadyAgendaSources");
   });
+
+  it("does not persist Massnahme links in agenda notes", () => {
+    expect(readSrc("lib/meetings/meeting-carry-forward.ts")).not.toContain("pendenz-ref");
+    expect(readSrc("lib/meetings/meeting-carry-forward.ts")).toContain("MeetingCommitmentReview");
+  });
 });

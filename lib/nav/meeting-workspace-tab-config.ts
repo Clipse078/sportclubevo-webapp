@@ -3,14 +3,14 @@ import type { ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 export type MeetingWorkspaceTabId =
   | "traktanden"
   | "beschluesse"
-  | "massnahmen"
+  | "pendenzen"
   | "teilnehmer"
   | "details";
 
 const TAB_LABELS: Record<MeetingWorkspaceTabId, string> = {
   traktanden: "Traktanden",
   beschluesse: "Beschlüsse",
-  massnahmen: "Massnahmen",
+  pendenzen: "Pendenzen",
   teilnehmer: "Teilnehmer",
   details: "Sitzungsdetails",
 };
@@ -25,31 +25,28 @@ export function formatMeetingWorkspaceTabLabel(
   counts: {
     traktanden: number;
     beschluesse: number;
-    massnahmen: number;
-    aufgaben: number;
+    pendenzenOpen: number;
     teilnehmer: number;
   },
 ): string {
   if (tabId === "details") return TAB_LABELS.details;
-  if (tabId === "massnahmen") {
-    return `${TAB_LABELS.massnahmen} (${counts.massnahmen}) · Aufgaben (${counts.aufgaben})`;
+  if (tabId === "pendenzen") {
+    return tabLabelWithCount(TAB_LABELS.pendenzen, counts.pendenzenOpen);
   }
   const key = tabId as keyof typeof counts;
-  if (key === "aufgaben") return TAB_LABELS.massnahmen;
   return tabLabelWithCount(TAB_LABELS[tabId], counts[key]);
 }
 
 export function buildMeetingWorkspaceTabNavigationConfig(counts: {
   traktanden: number;
   beschluesse: number;
-  massnahmen: number;
-  aufgaben: number;
+  pendenzenOpen: number;
   teilnehmer: number;
 }): ContextTabNavigationConfig<MeetingWorkspaceTabId> {
   const tabIds: MeetingWorkspaceTabId[] = [
     "traktanden",
     "beschluesse",
-    "massnahmen",
+    "pendenzen",
     "teilnehmer",
     "details",
   ];
