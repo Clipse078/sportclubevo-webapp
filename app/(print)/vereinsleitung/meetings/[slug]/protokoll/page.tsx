@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getMeetingBySlug, getMeetingSubEntities } from "@/lib/meetings/queries";
+import { loadMeetingProtocolDocumentModel } from "@/lib/meetings/load-meeting-protocol-print.server";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import MeetingProtocolPrintView from "@/components/admin/meetings/workspace/MeetingProtocolPrintView";
 
@@ -16,6 +17,13 @@ export default async function MeetingProtocolPrintPage({ params }: Props) {
   if (!meeting) notFound();
 
   const subEntities = await getMeetingSubEntities(meeting.id, actor.tenantId);
+  const model = await loadMeetingProtocolDocumentModel({
+    actor,
+    meeting,
+    subEntities,
+    exportedAt: new Date(),
+  });
+  if (!model) notFound();
 
-  return <MeetingProtocolPrintView meeting={meeting} subEntities={subEntities} />;
+  return <MeetingProtocolPrintView model={model} />;
 }

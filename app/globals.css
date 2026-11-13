@@ -3087,11 +3087,25 @@ html[data-sidebar-collapsed="1"] {
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 16mm;
+  }
+
   .sce-protocol-document,
   .sce-print-document-canvas {
     background: #ffffff !important;
     color: #0f172a !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .sce-protocol-document table thead {
+    display: table-header-group;
+  }
+
+  .sce-protocol-document h2,
+  .sce-protocol-document h3 {
+    break-after: avoid-page;
   }
 }

@@ -32,11 +32,21 @@ describe("SCE-CD-03R4 — discoverable protocol print (UAT)", () => {
     expect(meetingProtocolPrintDraftHint("PLANNED")).toMatch(/Entwurf/i);
   });
 
-  it("includes decision rationale and action outcome in print view", () => {
+  it("renders full protocol document sections in print view", () => {
     const printView = readSrc("components/admin/meetings/workspace/MeetingProtocolPrintView.tsx");
-    expect(printView).toContain("Begründung:");
-    expect(printView).toContain("Ziel:");
-    expect(printView).toContain("d.rationale");
-    expect(printView).toContain("a.expectedOutcome");
+    expect(printView).toContain("model.documentLabel");
+    expect(printView).toContain("Traktandenübersicht");
+    expect(printView).toContain("Traktanden im Detail");
+    expect(printView).toContain("Teilnehmende");
+    expect(printView).toContain("Massnahmenübersicht");
+    expect(printView).toContain("Begründung");
+    expect(printView).toContain("Erwartetes Ergebnis / Ziel");
+    expect(printView).toContain("protocol-draft-banner");
+  });
+
+  it("loads document model on print route", () => {
+    const page = readSrc("app/(print)/vereinsleitung/meetings/[slug]/protokoll/page.tsx");
+    expect(page).toContain("loadMeetingProtocolDocumentModel");
+    expect(page).toContain("model={model}");
   });
 });

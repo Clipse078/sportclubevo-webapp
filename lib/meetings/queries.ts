@@ -138,7 +138,16 @@ export async function getMeetingSubEntities(
         orderIndex: true,
         status: true,
         sourceAgendaItemId: true,
-        initiative: { select: { id: true, slug: true, title: true, status: true } },
+        initiative: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            summary: true,
+            description: true,
+            status: true,
+          },
+        },
       },
     }),
     prisma.meetingDecision.findMany({
@@ -159,6 +168,7 @@ export async function getMeetingSubEntities(
         approverPersonIds: true,
         approvalStatus: true,
         approvalContentRevision: true,
+        linkedRefs: true,
       },
     }),
     prisma.meetingAction.findMany({
@@ -173,6 +183,7 @@ export async function getMeetingSubEntities(
         ownerPersonId: true,
         dueDate: true,
         status: true,
+        linkedRefs: true,
       },
     }),
     prisma.meetingParticipant.findMany({
