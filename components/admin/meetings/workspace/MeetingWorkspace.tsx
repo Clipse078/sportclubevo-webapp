@@ -80,6 +80,73 @@ export default function MeetingWorkspace({
     setPendenzenOverdueCount(initialPendenzenOverdueCount);
   }, [initialPendenzenOpenCount, initialPendenzenOverdueCount]);
 
+  const applyPendenzenSnapshot = useCallback(
+    (data: {
+      openCount: number;
+      overdueCount: number;
+      items: Array<{
+        sourceKind: PendenzListItem["sourceKind"];
+        sourceId: string;
+        title: string;
+        description: string | null;
+        deadline: string | null;
+        status: PendenzListItem["status"];
+        statusLabel: string;
+        ownerLabel: string | null;
+        contextReference: string | null;
+        meetingDate: string;
+      }>;
+    }) => {
+      setPendenzenOpenCount(data.openCount);
+      setPendenzenOverdueCount(data.overdueCount);
+      setPendenzenTaskRows(
+        data.items
+          .filter((i) => i.sourceKind === "AUFGABE")
+          .map((i) => ({
+            dedupeKey: `aufgabe:${i.sourceId}`,
+            sourceKind: "AUFGABE" as const,
+            sourceId: i.sourceId,
+            title: i.title,
+            description: i.description,
+            expectedOutcome: null,
+            ownerLabel: i.ownerLabel,
+            deadline: i.deadline ? new Date(i.deadline) : null,
+            status: i.status,
+            statusLabel: i.statusLabel,
+            isOverdue: false,
+            isTerminal: false,
+            meetingId: meeting.id,
+            meetingTitle: meeting.title,
+            meetingSlug: slug,
+            meetingDate: meeting.meetingDate,
+            contextReference: i.contextReference,
+          })),
+      );
+    },
+    [meeting.id, meeting.meetingDate, meeting.title, slug],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/meetings/${meeting.id}/pendenzen`);
+        const data = await res.json();
+        if (cancelled || !res.ok) return;
+        applyPendenzenSnapshot({
+          openCount: typeof data.openCount === "number" ? data.openCount : 0,
+          overdueCount: typeof data.overdueCount === "number" ? data.overdueCount : 0,
+          items: Array.isArray(data.items) ? data.items : [],
+        });
+      } catch {
+        // keep SSR counts
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyPendenzenSnapshot, meeting.id, pendenzenRefresh]);
+
   const documentationEditable = canEditMeetingDocumentation({
     status: meeting.status,
     reviewStage: meeting.reviewStage,
@@ -140,14 +207,8 @@ export default function MeetingWorkspace({
     [actions, meeting, pendenzenTaskRows, slug],
   );
 
-  const displayPendenzenOpenCount =
-    pendenzenTaskRows.length > 0
-      ? countOpenPendenzen(mergedPendenzenForBadge)
-      : pendenzenOpenCount;
-  const displayPendenzenOverdueCount =
-    pendenzenTaskRows.length > 0
-      ? countOverduePendenzen(mergedPendenzenForBadge)
-      : pendenzenOverdueCount;
+  const displayPendenzenOpenCount = countOpenPendenzen(mergedPendenzenForBadge);
+  const displayPendenzenOverdueCount = countOverduePendenzen(mergedPendenzenForBadge);
 
   return (
     <>
@@ -223,9 +284,22 @@ export default function MeetingWorkspace({
                 meetingId={meeting.id}
                 refreshToken={pendenzenRefresh}
                 onSnapshot={(snapshot) => {
-                  setPendenzenOpenCount(snapshot.openCount);
-                  setPendenzenOverdueCount(snapshot.overdueCount);
-                  setPendenzenTaskRows(snapshot.items.filter((i) => i.sourceKind === "AUFGABE"));
+                  applyPendenzenSnapshot({
+                    openCount: snapshot.openCount,
+                    overdueCount: snapshot.overdueCount,
+                    items: snapshot.items.map((i) => ({
+                      sourceKind: i.sourceKind,
+                      sourceId: i.sourceId,
+                      title: i.title,
+                      description: i.description,
+                      deadline: i.deadline?.toISOString() ?? null,
+                      status: i.status,
+                      statusLabel: i.statusLabel,
+                      ownerLabel: i.ownerLabel,
+                      contextReference: i.contextReference,
+                      meetingDate: i.meetingDate.toISOString(),
+                    })),
+                  });
                 }}
               />
               <MeetingActionsSection
