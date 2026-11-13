@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 /** Re-enable login if hard navigation never completes (slow/failed dashboard load). */
 const POST_LOGIN_STALL_MS = 20_000;
 
-const CANONICAL_LOGO_SRC = "/images/branding/sportclubevo_logo_alt.png";
+const CANONICAL_LOGO_SRC = "/images/branding/sportclubevo_logo.png";
 const LOGO_ASPECT = 864 / 174;
 
 function ScePlatformWordmark({

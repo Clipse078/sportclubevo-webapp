@@ -2735,7 +2735,7 @@ html[data-sidebar-collapsed="1"] {
 .sce-login-input {
   width: 100%;
   height: 2.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--sce-login-input-bg);
   color: var(--foreground);
@@ -2754,7 +2754,7 @@ html[data-sidebar-collapsed="1"] {
 }
 
 .sce-login-input:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-strong);
   background-color: var(--sce-login-input-bg-hover);
 }
 
@@ -2783,7 +2783,7 @@ html[data-sidebar-collapsed="1"] {
 }
 
 .sce-login-input:-webkit-autofill:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-strong);
   background-color: var(--sce-login-input-bg-hover) !important;
   -webkit-box-shadow: 0 0 0 1000px var(--sce-login-input-bg-hover) inset !important;
   box-shadow: 0 0 0 1000px var(--sce-login-input-bg-hover) inset !important;
