@@ -13,11 +13,15 @@ import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/Verei
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import MeetingTaskCreateScrollLink from "@/components/admin/meetings/workspace/MeetingTaskCreateScrollLink";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
-import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
-import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
+import { TaskContextType } from "@prisma/client";
+import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { countTasksForContext } from "@/lib/tasks/count-tasks-for-context";
+import { DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY, DEFAULT_ENTITY_RELATED_TASK_STATUSES } from "@/lib/tasks/context-related-defaults";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getTranslations } from "next-intl/server";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 type MeetingDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -70,9 +74,28 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const pageTitle = dbMeeting?.title ?? "Sitzung";
   const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
   const tWork = await getTranslations("PlanningEditor.operational.work");
+  const tenant = await getActiveTenant();
+  const fmtCfg: TenantFormatConfig = {
+    locale: tenant?.locale ?? "de-CH",
+    timezone: tenant?.timezone ?? "Europe/Zurich",
+  };
+  const taskPanelLocale = fmtCfg.locale ?? "de-CH";
+  const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
+
+  let meetingAufgabenCount = 0;
+  if (dbMeeting) {
+    const taskCtx = await getTaskServiceContext();
+    if (taskCtx) {
+      meetingAufgabenCount = await countTasksForContext(taskCtx, TaskContextType.MEETING, dbMeeting.id, {
+        rootsOnly: DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY,
+        statuses: DEFAULT_ENTITY_RELATED_TASK_STATUSES,
+      });
+    }
+  }
 
   const detailPage = (
     <DetailPagePattern
+      className={dbMeeting ? "[&_h1]:sr-only" : undefined}
       eyebrow="Vereinsleitung"
       title={pageTitle}
       breadcrumbs={[
@@ -85,12 +108,6 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           {dbMeeting && canManage ? (
             <MeetingTaskCreateScrollLink label={tWork("createTask")} />
           ) : null}
-          {canDelete && dbMeeting ? (
-            <MeetingDeleteButton
-              meetingId={dbMeeting.id}
-              meetingTitle={dbMeeting.title}
-            />
-          ) : null}
           <Link
             href="/vereinsleitung/meetings"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-transparent px-3.5 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
@@ -101,22 +118,26 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           </Link>
         </div>
       }
-      summary={
-        dbMeeting ? (
-          <MeetingGovernanceBanner meeting={dbMeeting} />
-        ) : undefined
-      }
     >
       <VereinsleitungMeetingDetail
         dbMeeting={dbMeeting}
         subEntities={subEntities}
         meetingSlug={slug}
+        meetingTitle={pageTitle}
+        fmtCfg={fmtCfg}
         canManage={canManage}
         actorPersonId={actorPersonId}
         approvalWorkspaceData={approvalWorkspaceData}
+        canDelete={canDelete}
+        initialAufgabenCount={meetingAufgabenCount}
         relatedTasksPanel={
           dbMeeting ? (
-            <ContextRelatedTasksPanel contextType="MEETING" contextId={dbMeeting.id} />
+            <ContextRelatedTasksPanel
+              contextType="MEETING"
+              contextId={dbMeeting.id}
+              locale={taskPanelLocale}
+              timeZone={taskPanelTimeZone}
+            />
           ) : null
         }
       />

@@ -125,8 +125,8 @@ describe("AUFGABEN-06G7R1 contracts", () => {
   });
 
   it("C28 — entity-linked contextual task creation uses canonical create action", () => {
-    const dialog = read("components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx");
-    expect(dialog).toContain("createContextualAufgabeAction");
+    const formHook = read("components/admin/aufgaben/contextual/useContextualTaskCreateForm.ts");
+    expect(formHook).toContain("createContextualAufgabeAction");
   });
 
   it("C29–C30 — NULL creator and person resolution labels", () => {

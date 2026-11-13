@@ -29,6 +29,8 @@ export type MeetingPrimaryAction = {
   label: string;
   description: string;
   targetSectionId: string | null;
+  /** When set, the header primary button runs this lifecycle PATCH action instead of navigation. */
+  lifecycleAction?: "conduct" | "close" | "reopen";
 };
 
 function isPastMeeting(meetingDate: Date): boolean {
@@ -135,6 +137,15 @@ export function getMeetingLifecyclePresentation(
 }
 
 export function getMeetingPrimaryAction(input: MeetingLifecycleContext): MeetingPrimaryAction {
+  if (input.status === "PLANNED" && !input.conductedAt && input.participantCount > 0 && input.agendaCount > 0) {
+    return {
+      label: "Als durchgeführt markieren",
+      description: "Sitzung als durchgeführt kennzeichnen und Protokollbearbeitung fortsetzen.",
+      targetSectionId: null,
+      lifecycleAction: "conduct",
+    };
+  }
+
   if (input.status === "CANCELLED") {
     return {
       label: "Sitzung archiviert",

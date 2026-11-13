@@ -5,6 +5,7 @@ import VereinsleitungMeetingInfoCard from "@/components/admin/vereinsleitung/Ver
 import VereinsleitungMeetingParticipantsCard from "@/components/admin/vereinsleitung/VereinsleitungMeetingParticipantsCard";
 import MeetingWorkspace from "@/components/admin/meetings/workspace/MeetingWorkspace";
 import type { ReactNode } from "react";
+import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 
@@ -20,9 +21,13 @@ type VereinsleitungMeetingDetailProps = {
   subEntities?: MeetingSubEntities | null;
   relatedTasksPanel?: ReactNode;
   meetingSlug?: string;
+  meetingTitle?: string;
+  fmtCfg?: TenantFormatConfig;
   canManage?: boolean;
   actorPersonId?: string | null;
   approvalWorkspaceData?: MeetingApprovalWorkspaceData | null;
+  canDelete?: boolean;
+  initialAufgabenCount?: number;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -30,22 +35,30 @@ export default function VereinsleitungMeetingDetail({
   subEntities,
   relatedTasksPanel,
   meetingSlug,
+  meetingTitle,
+  fmtCfg,
   canManage = false,
   actorPersonId = null,
   approvalWorkspaceData = null,
+  canDelete = false,
+  initialAufgabenCount = 0,
 }: VereinsleitungMeetingDetailProps) {
   const isDbBacked = Boolean(dbMeeting);
 
-  if (dbMeeting && subEntities && meetingSlug && approvalWorkspaceData) {
+  if (dbMeeting && subEntities && meetingSlug && approvalWorkspaceData && fmtCfg) {
     return (
       <MeetingWorkspace
+        title={meetingTitle ?? dbMeeting.title}
         meeting={dbMeeting}
         slug={meetingSlug}
         canManage={canManage}
         actorPersonId={actorPersonId}
         approvalWorkspaceData={approvalWorkspaceData}
         initialSubEntities={subEntities}
+        fmtCfg={fmtCfg}
         relatedTasksPanel={relatedTasksPanel}
+        canDelete={canDelete}
+        initialAufgabenCount={initialAufgabenCount}
       />
     );
   }

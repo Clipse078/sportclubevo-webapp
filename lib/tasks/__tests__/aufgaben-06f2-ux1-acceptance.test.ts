@@ -75,8 +75,10 @@ describe("AUFGABEN-06F2-UX1 acceptance", () => {
     expect(orgFields).toContain("ORG_UNIT");
     expect(orgFields).toContain("ASSIGNEES_ONLY");
     expect(orgFields).toContain("CLUB");
+    const formHook = read("components/admin/aufgaben/contextual/useContextualTaskCreateForm.ts");
+    expect(formHook).toContain("createContextualAufgabeAction");
     const dialogSrc = read("components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx");
-    expect(dialogSrc).toContain("createContextualAufgabeAction");
+    expect(dialogSrc).toContain("useContextualTaskCreateForm");
     expect(dialogSrc).not.toContain("parentTaskId");
   });
 
