@@ -11,10 +11,9 @@ import {
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import type { TaskContextType } from "@prisma/client";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
-import ContextualTaskCreateTrigger from "./ContextualTaskCreateTrigger";
-import MeetingContextualTaskInlineCreateCard, {
-  type MeetingContextualTaskInlineCreateCardHandle,
-} from "./MeetingContextualTaskInlineCreateCard";
+import ContextualTaskInlineCreateCard, {
+  type ContextualTaskInlineCreateCardHandle,
+} from "./ContextualTaskInlineCreateCard";
 import { useTranslations } from "next-intl";
 
 type CreateProps = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange">;
@@ -63,7 +62,7 @@ export default function ContextRelatedTasksPanelView({
 }: Props) {
   const tWork = useTranslations("PlanningEditor.operational.work");
   const [inlineCreateExpanded, setInlineCreateExpanded] = useState(false);
-  const inlineCreateRef = useRef<MeetingContextualTaskInlineCreateCardHandle>(null);
+  const inlineCreateRef = useRef<ContextualTaskInlineCreateCardHandle>(null);
   const isMeetingContext = contextType === "MEETING";
 
   const openInlineCreate = useCallback(() => {
@@ -101,7 +100,7 @@ export default function ContextRelatedTasksPanelView({
         <h3 className="text-sm font-semibold text-[var(--foreground)]">
           {isMeetingContext ? "Aufgaben" : `Aufgaben · ${actionableCount}`}
         </h3>
-        {canCreate && createDialogProps && isMeetingContext ? (
+        {canCreate && createDialogProps ? (
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-semibold text-[#0b4aa2] hover:bg-[var(--surface-2)]"
@@ -113,27 +112,21 @@ export default function ContextRelatedTasksPanelView({
               }
             }}
             aria-expanded={inlineCreateExpanded}
-            aria-controls="meeting-contextual-task-create-panel"
+            aria-controls="context-related-task-inline-create-panel"
             data-testid="context-related-tasks-inline-toggle"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {tWork("createTask")}
           </button>
-        ) : canCreate && createDialogProps ? (
-          <ContextualTaskCreateTrigger
-            variant="button"
-            label={tWork("createTask")}
-            className="!min-h-8 !px-2.5 !py-1 text-xs"
-            {...createDialogProps}
-          />
         ) : null}
       </div>
 
-      {canCreate && createDialogProps && isMeetingContext ? (
-        <MeetingContextualTaskInlineCreateCard
+      {canCreate && createDialogProps ? (
+        <ContextualTaskInlineCreateCard
           ref={inlineCreateRef}
           expanded={inlineCreateExpanded}
           onExpandedChange={setInlineCreateExpanded}
+          panelDomId="context-related-task-inline-create-panel"
           {...createDialogProps}
         />
       ) : null}

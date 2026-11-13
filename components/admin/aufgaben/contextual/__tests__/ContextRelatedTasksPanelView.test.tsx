@@ -8,12 +8,12 @@ import { render, screen } from "@testing-library/react";
 import { TaskContextType } from "@prisma/client";
 import ContextRelatedTasksPanelView from "../ContextRelatedTasksPanelView";
 
-vi.mock("../ContextualTaskCreateTrigger", () => ({
-  default: ({ label }: { label: string }) => (
-    <button type="button" data-testid="contextual-task-create-trigger">
-      {label}
-    </button>
-  ),
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => (key === "createTask" ? "Aufgabe erstellen" : key),
+}));
+
+vi.mock("../ContextualTaskInlineCreateCard", () => ({
+  default: () => <div data-testid="contextual-task-inline-create-card" />,
 }));
 
 const baseProps = {
@@ -40,7 +40,7 @@ describe("ContextRelatedTasksPanelView empty states", () => {
       <ContextRelatedTasksPanelView {...baseProps} canCreate actionableCount={0} />,
     );
     expect(screen.getByTestId("context-related-tasks-empty")).toBeInTheDocument();
-    expect(screen.getAllByTestId("contextual-task-create-trigger")).toHaveLength(1);
+    expect(screen.getByTestId("context-related-tasks-inline-toggle")).toBeInTheDocument();
     expect(screen.getByText(/Aufgaben · 0/)).toBeInTheDocument();
   });
 
@@ -54,7 +54,7 @@ describe("ContextRelatedTasksPanelView empty states", () => {
       />,
     );
     expect(screen.getByTestId("context-related-tasks-empty")).toBeInTheDocument();
-    expect(screen.queryByTestId("contextual-task-create-trigger")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("context-related-tasks-inline-toggle")).not.toBeInTheDocument();
   });
 
   it("U2 visible tasks still expose only one header create CTA", () => {
@@ -75,7 +75,7 @@ describe("ContextRelatedTasksPanelView empty states", () => {
         ]}
       />,
     );
-    expect(screen.getAllByTestId("contextual-task-create-trigger")).toHaveLength(1);
+    expect(screen.getAllByTestId("context-related-tasks-inline-toggle")).toHaveLength(1);
   });
 
   it("visible tasks render rows linked to canonical workspace", () => {
