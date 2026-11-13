@@ -97,7 +97,7 @@ function meetingRowToProgrammeItem(
     slug: meeting.slug,
     title: meeting.title,
     meetingDate: meeting.meetingDate,
-    location: meeting.location,
+    location: meeting.location ? formatMeetingLocationDisplay(meeting.location) : meeting.location,
     contextLabel,
     status,
     plannedDurationMin: meeting.plannedDurationMin,
