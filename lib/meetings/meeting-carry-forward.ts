@@ -42,6 +42,7 @@ export async function listCarryForwardEligibleItems(
   });
   if (!target) return [];
 
+  // Scope: permission-visible prior meetings only (max 50). Series/committee narrowing is migration-dependent (Meeting.seriesId).
   const visibleMeetings = await prisma.meeting.findMany({
     where: {
       tenantId,
@@ -321,54 +322,12 @@ export async function applyCarryForwardSelections(input: {
         },
       });
       tasksLinked += 1;
+      continue;
     }
 
-    if (sel.sourceType === "ACTION_OPEN" && sel.sourceActionId) {
-      const source = await prisma.meetingAction.findFirst({
-        where: { id: sel.sourceActionId },
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          meeting: { select: { tenantId: true, title: true } },
-        },
-      });
-      if (
-        !source ||
-        source.meeting.tenantId !== tenantId ||
-        (source.status !== MeetingActionStatus.OPEN && source.status !== MeetingActionStatus.IN_PROGRESS)
-      ) {
-        skipped += 1;
-        continue;
-      }
-
-      const marker = `[pendenz-ref:MeetingAction/${source.id}]`;
-      const existingReview = await prisma.meetingAgendaItem.findFirst({
-        where: {
-          meetingId: input.targetMeetingId,
-          notes: { contains: marker },
-        },
-        select: { id: true },
-      });
-      if (existingReview) {
-        skipped += 1;
-        continue;
-      }
-
-      const reviewTitle = `Nachverfolgung Massnahme: ${source.title}`;
-      const reviewNotes = `${marker}\nUrsprung: ${source.meeting.title}\nKeine Duplikation — bearbeiten Sie die Massnahme im Ursprungsmeeting.`;
-
-      await prisma.meetingAgendaItem.create({
-        data: {
-          meetingId: input.targetMeetingId,
-          title: reviewTitle,
-          notes: reviewNotes,
-          orderIndex: nextIndex++,
-          status: MeetingAgendaItemStatus.OPEN,
-          createdByUserId: input.actor.userId,
-        },
-      });
-      agendaCreated += 1;
+    if (sel.sourceType === "ACTION_OPEN") {
+      // Migration-dependent: durable cross-meeting Massnahme review uses MeetingCommitmentReview (see SCE-MTG-PEND-01-SCHEMA-GAPS).
+      skipped += 1;
     }
   }
 

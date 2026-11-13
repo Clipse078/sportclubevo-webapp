@@ -1,0 +1,26 @@
+// SCE-MTG-PEND-01 — proposal only (not applied). Additive migration for durable cross-meeting Pendenz review.
+
+enum MeetingCommitmentSourceKind {
+  MASSNAHME
+  AUFGABE
+}
+
+model MeetingCommitmentReview {
+  id               String                       @id @default(cuid())
+  tenantId         String
+  targetMeetingId  String
+  sourceKind       MeetingCommitmentSourceKind
+  sourceActionId   String?
+  sourceTaskId     String?
+  reviewOutcome    String?
+  createdAt        DateTime                     @default(now())
+  createdByUserId  String?
+
+  targetMeeting Meeting @relation(fields: [targetMeetingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, targetMeetingId])
+  @@index([sourceActionId])
+  @@index([sourceTaskId])
+  @@unique([targetMeetingId, sourceKind, sourceActionId])
+  @@unique([targetMeetingId, sourceKind, sourceTaskId])
+}

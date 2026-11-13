@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import {
   MeetingWorkspaceDirtyStateSync,
@@ -19,7 +19,8 @@ import {
   MeetingTasksSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import MeetingPendenzenPanel from "@/components/admin/meetings/workspace/MeetingPendenzenPanel";
-import { countOpenPendenzen, mergeMeetingPendenzen } from "@/lib/meetings/meeting-pendenzen";
+import type { PendenzListItem } from "@/lib/meetings/meeting-pendenzen";
+import { countOpenPendenzen, countOverduePendenzen, mergeMeetingPendenzen } from "@/lib/meetings/meeting-pendenzen";
 import { MEETING_ACTION_STATUS_LABEL } from "@/lib/meetings/meeting-protocol-labels";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
 import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
@@ -35,7 +36,8 @@ type MeetingWorkspaceProps = {
   initialSubEntities: MeetingSubEntities;
   fmtCfg: TenantFormatConfig;
   relatedTasksPanel?: ReactNode;
-  initialAufgabenCount?: number;
+  initialPendenzenOpenCount?: number;
+  initialPendenzenOverdueCount?: number;
   canDelete?: boolean;
 };
 
@@ -58,7 +60,8 @@ export default function MeetingWorkspace({
   initialSubEntities,
   fmtCfg,
   relatedTasksPanel,
-  initialAufgabenCount = 0,
+  initialPendenzenOpenCount = 0,
+  initialPendenzenOverdueCount = 0,
   canDelete = false,
 }: MeetingWorkspaceProps) {
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
@@ -67,12 +70,15 @@ export default function MeetingWorkspace({
   const [actions, setActions] = useState(initialSubEntities.actions);
   const [isDirty, setIsDirty] = useState(false);
   const [activeTab, setActiveTab] = useState<MeetingWorkspaceTabId>("traktanden");
-  const [aufgabenCount, setAufgabenCount] = useState(initialAufgabenCount);
+  const [pendenzenTaskRows, setPendenzenTaskRows] = useState<PendenzListItem[]>([]);
+  const [pendenzenOpenCount, setPendenzenOpenCount] = useState(initialPendenzenOpenCount);
+  const [pendenzenOverdueCount, setPendenzenOverdueCount] = useState(initialPendenzenOverdueCount);
   const [pendenzenRefresh, setPendenzenRefresh] = useState(0);
 
   useEffect(() => {
-    setAufgabenCount(initialAufgabenCount);
-  }, [initialAufgabenCount]);
+    setPendenzenOpenCount(initialPendenzenOpenCount);
+    setPendenzenOverdueCount(initialPendenzenOverdueCount);
+  }, [initialPendenzenOpenCount, initialPendenzenOverdueCount]);
 
   const documentationEditable = canEditMeetingDocumentation({
     status: meeting.status,
@@ -101,27 +107,47 @@ export default function MeetingWorkspace({
 
   const pendingDecisionApprovals = countDecisionsAwaitingReview(decisions);
 
-  const openPendenzenCount = countOpenPendenzen(
-    mergeMeetingPendenzen({
-      meeting: {
-        id: meeting.id,
-        title: meeting.title,
-        slug,
-        meetingDate: meeting.meetingDate,
-      },
-      actions: actions.map((a) => ({
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        expectedOutcome: a.expectedOutcome,
-        owner: a.owner,
-        dueDate: a.dueDate,
-        status: a.status,
-        statusLabel: MEETING_ACTION_STATUS_LABEL[a.status],
-      })),
-      tasks: [],
-    }),
+  const mergedPendenzenForBadge = useMemo(
+    () =>
+      mergeMeetingPendenzen({
+        meeting: {
+          id: meeting.id,
+          title: meeting.title,
+          slug,
+          meetingDate: meeting.meetingDate,
+        },
+        actions: actions.map((a) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          expectedOutcome: a.expectedOutcome,
+          owner: a.owner,
+          dueDate: a.dueDate,
+          status: a.status,
+          statusLabel: MEETING_ACTION_STATUS_LABEL[a.status],
+        })),
+        tasks: pendenzenTaskRows.map((row) => ({
+          id: row.sourceId,
+          title: row.title,
+          description: row.description,
+          dueAt: row.deadline,
+          status: row.status as import("@prisma/client").TaskStatus,
+          statusLabel: row.statusLabel,
+          assigneeLabels: row.ownerLabel ? row.ownerLabel.split(", ") : [],
+          contextReference: row.contextReference,
+        })),
+      }),
+    [actions, meeting, pendenzenTaskRows, slug],
   );
+
+  const displayPendenzenOpenCount =
+    pendenzenTaskRows.length > 0
+      ? countOpenPendenzen(mergedPendenzenForBadge)
+      : pendenzenOpenCount;
+  const displayPendenzenOverdueCount =
+    pendenzenTaskRows.length > 0
+      ? countOverduePendenzen(mergedPendenzenForBadge)
+      : pendenzenOverdueCount;
 
   return (
     <>
@@ -151,13 +177,15 @@ export default function MeetingWorkspace({
           decisions={decisions}
           actions={actions}
           slug={slug}
+          openPendenzenCount={displayPendenzenOpenCount}
+          overduePendenzenCount={displayPendenzenOverdueCount}
         />
 
         <MeetingWorkspaceSectionNav
           counts={{
             traktanden: agendaItems.length,
             beschluesse: decisions.length,
-            pendenzenOpen: openPendenzenCount + aufgabenCount,
+            pendenzenOpen: displayPendenzenOpenCount,
             teilnehmer: participants.length,
           }}
           activeTab={activeTab}
@@ -191,7 +219,15 @@ export default function MeetingWorkspace({
           ) : null}
           {activeTab === "pendenzen" ? (
             <div className="space-y-4">
-              <MeetingPendenzenPanel meetingId={meeting.id} refreshToken={pendenzenRefresh} />
+              <MeetingPendenzenPanel
+                meetingId={meeting.id}
+                refreshToken={pendenzenRefresh}
+                onSnapshot={(snapshot) => {
+                  setPendenzenOpenCount(snapshot.openCount);
+                  setPendenzenOverdueCount(snapshot.overdueCount);
+                  setPendenzenTaskRows(snapshot.items.filter((i) => i.sourceKind === "AUFGABE"));
+                }}
+              />
               <MeetingActionsSection
                 meetingId={meeting.id}
                 canManage={effectiveCanManage}

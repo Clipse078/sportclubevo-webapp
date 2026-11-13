@@ -13,10 +13,8 @@ import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/Verei
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import MeetingTaskCreateScrollLink from "@/components/admin/meetings/workspace/MeetingTaskCreateScrollLink";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
-import { TaskContextType } from "@prisma/client";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
-import { countTasksForContext } from "@/lib/tasks/count-tasks-for-context";
-import { DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY, DEFAULT_ENTITY_RELATED_TASK_STATUSES } from "@/lib/tasks/context-related-defaults";
+import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getTranslations } from "next-intl/server";
@@ -82,15 +80,21 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const taskPanelLocale = fmtCfg.locale ?? "de-CH";
   const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
 
-  let meetingAufgabenCount = 0;
+  let initialPendenzenOpenCount = 0;
+  let initialPendenzenOverdueCount = 0;
   if (dbMeeting) {
     const taskCtx = await getTaskServiceContext();
-    if (taskCtx) {
-      meetingAufgabenCount = await countTasksForContext(taskCtx, TaskContextType.MEETING, dbMeeting.id, {
-        rootsOnly: DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY,
-        statuses: DEFAULT_ENTITY_RELATED_TASK_STATUSES,
-      });
-    }
+    const snapshot = await loadMeetingPendenzenSnapshot({
+      meeting: {
+        id: dbMeeting.id,
+        title: dbMeeting.title,
+        slug: dbMeeting.slug,
+        meetingDate: dbMeeting.meetingDate,
+      },
+      taskCtx,
+    });
+    initialPendenzenOpenCount = snapshot.openCount;
+    initialPendenzenOverdueCount = snapshot.overdueCount;
   }
 
   const detailPage = (
@@ -129,7 +133,8 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         actorPersonId={actorPersonId}
         approvalWorkspaceData={approvalWorkspaceData}
         canDelete={canDelete}
-        initialAufgabenCount={meetingAufgabenCount}
+        initialPendenzenOpenCount={initialPendenzenOpenCount}
+        initialPendenzenOverdueCount={initialPendenzenOverdueCount}
         relatedTasksPanel={
           dbMeeting ? (
             <ContextRelatedTasksPanel

@@ -14,6 +14,11 @@ type SerializedPendenz = Omit<PendenzListItem, "meetingDate" | "deadline"> & {
 type Props = {
   meetingId: string;
   refreshToken?: number;
+  onSnapshot?: (snapshot: {
+    openCount: number;
+    overdueCount: number;
+    items: PendenzListItem[];
+  }) => void;
 };
 
 function formatDate(iso: string | null): string {
@@ -76,7 +81,7 @@ function PendenzRow({ item }: { item: PendenzListItem }) {
   );
 }
 
-export default function MeetingPendenzenPanel({ meetingId, refreshToken = 0 }: Props) {
+export default function MeetingPendenzenPanel({ meetingId, refreshToken = 0, onSnapshot }: Props) {
   const [items, setItems] = useState<SerializedPendenz[]>([]);
   const [filter, setFilter] = useState<PendenzListFilter>("open");
   const [loading, setLoading] = useState(true);
@@ -89,14 +94,24 @@ export default function MeetingPendenzenPanel({ meetingId, refreshToken = 0 }: P
       const res = await fetch(`/api/meetings/${meetingId}/pendenzen`);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Laden fehlgeschlagen");
-      setItems(Array.isArray(data.items) ? data.items : []);
+      const nextItems = Array.isArray(data.items) ? data.items : [];
+      setItems(nextItems);
+      onSnapshot?.({
+        openCount: typeof data.openCount === "number" ? data.openCount : 0,
+        overdueCount: typeof data.overdueCount === "number" ? data.overdueCount : 0,
+        items: nextItems.map((i: SerializedPendenz) => ({
+          ...i,
+          meetingDate: new Date(i.meetingDate),
+          deadline: i.deadline ? new Date(i.deadline) : null,
+        })),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fehler");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [meetingId]);
+  }, [meetingId, onSnapshot]);
 
   useEffect(() => {
     void load();

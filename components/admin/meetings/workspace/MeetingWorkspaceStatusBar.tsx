@@ -23,6 +23,8 @@ type Props = {
   decisions: MeetingSubEntities["decisions"];
   actions: MeetingSubEntities["actions"];
   slug: string;
+  openPendenzenCount?: number;
+  overduePendenzenCount?: number;
 };
 
 export default function MeetingWorkspaceStatusBar({
@@ -34,6 +36,8 @@ export default function MeetingWorkspaceStatusBar({
   decisions,
   actions,
   slug,
+  openPendenzenCount = 0,
+  overduePendenzenCount = 0,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -69,6 +73,8 @@ export default function MeetingWorkspaceStatusBar({
     decisions,
     actions,
     hasInvitedParticipants: participants.some((p) => p.status === "INVITED"),
+    openPendenzenCount,
+    overduePendenzenCount,
   });
 
   async function callLifecycle(action: string, extra?: Record<string, unknown>) {

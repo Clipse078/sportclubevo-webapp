@@ -3,6 +3,13 @@
  */
 
 import type { MeetingActionStatus, TaskStatus } from "@prisma/client";
+import type { ListTasksForContextOptions } from "@/lib/tasks/context-related-task-types";
+
+/** Same permission intersection as related tasks; includes subtasks (separate dedupe keys). */
+export const PENDENZ_TASK_LIST_OPTIONS: ListTasksForContextOptions = {
+  limit: 50,
+  rootsOnly: false,
+};
 
 export type PendenzSourceKind = "MASSNAHME" | "AUFGABE";
 
@@ -49,6 +56,10 @@ export function dedupePendenzKeys(items: PendenzListItem[]): string[] {
 
 export function countOpenPendenzen(items: PendenzListItem[]): number {
   return dedupePendenzKeys(items.filter((i) => !i.isTerminal)).length;
+}
+
+export function countOverduePendenzen(items: PendenzListItem[]): number {
+  return dedupePendenzKeys(items.filter((i) => !i.isTerminal && i.isOverdue)).length;
 }
 
 export function filterPendenzen(items: PendenzListItem[], filter: PendenzListFilter): PendenzListItem[] {

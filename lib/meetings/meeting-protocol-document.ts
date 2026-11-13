@@ -31,6 +31,12 @@ import {
 } from "@/lib/meetings/meeting-protocol-labels";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { sanitizeMeetingAgendaNotesForDisplay } from "@/lib/meetings/meeting-agenda-notes-sanitize";
+import {
+  countOpenPendenzen,
+  mergeMeetingPendenzen,
+  type PendenzListItem,
+} from "@/lib/meetings/meeting-pendenzen";
 
 export type MeetingProtocolTaskRow = {
   id: string;
@@ -39,6 +45,8 @@ export type MeetingProtocolTaskRow = {
   status: TaskStatus;
   statusLabel: string;
   dueAtLabel: string | null;
+  /** Raw instant for Pendenzen merge (overdue); display uses dueAtLabel. */
+  dueAtInstant: Date | null;
   assigneeLabels: string[];
   contextReference: string | null;
 };
@@ -352,50 +360,100 @@ function buildAttendanceRows(
     }));
 }
 
+function mapPendenzRowToProtocol(row: PendenzListItem, cfg: TenantFormatConfig): MeetingProtocolPendenzRow {
+  const summary =
+    row.expectedOutcome?.trim() ||
+    row.description?.trim()?.slice(0, 160) ||
+    null;
+  return {
+    sourceKind: row.sourceKind,
+    title: row.title,
+    ownerLabel: row.ownerLabel ?? PROTOCOL_NOT_RECORDED,
+    dueDateLabel: formatOptionalDate(row.deadline, cfg) ?? PROTOCOL_NOT_RECORDED,
+    statusLabel: row.statusLabel,
+    sourceMeetingLabel: row.contextReference,
+    compactSummary: summary,
+  };
+}
+
 function buildReferencedPendenzenForProtocol(
+  meeting: MeetingLiveData,
   actions: MeetingSubEntities["actions"],
   tasks: MeetingProtocolTaskRow[],
   cfg: TenantFormatConfig,
 ): MeetingProtocolPendenzRow[] {
-  const terminalAction = new Set(["DONE", "CANCELLED"]);
-  const terminalTask = new Set<TaskStatus>(["DONE", "CANCELLED"]);
-  const rows: MeetingProtocolPendenzRow[] = actions
-    .filter((a) => !terminalAction.has(a.status))
-    .map((action) => {
-      const owner = resolveStoredPersonDisplayName({
+  const merged = mergeMeetingPendenzen({
+    meeting: {
+      id: meeting.id,
+      title: meeting.title,
+      slug: meeting.slug,
+      meetingDate: meeting.meetingDate,
+    },
+    actions: actions.map((action) => ({
+      id: action.id,
+      title: action.title,
+      description: action.description,
+      expectedOutcome: action.expectedOutcome,
+      owner: resolveStoredPersonDisplayName({
         name: action.owner,
         personId: action.ownerPersonId,
-      });
-      const summary =
-        action.expectedOutcome?.trim() ||
-        action.description?.trim()?.slice(0, 160) ||
-        null;
-      return {
-        sourceKind: "MASSNAHME" as const,
-        title: action.title,
-        ownerLabel: owner ?? PROTOCOL_NOT_RECORDED,
-        dueDateLabel: formatOptionalDate(action.dueDate, cfg) ?? PROTOCOL_NOT_RECORDED,
-        statusLabel: MEETING_ACTION_STATUS_LABEL[action.status],
-        sourceMeetingLabel: null,
-        compactSummary: summary,
-      };
-    });
-
-  for (const task of tasks) {
-    if (terminalTask.has(task.status)) continue;
-    rows.push({
-      sourceKind: "AUFGABE",
+      }),
+      dueDate: action.dueDate,
+      status: action.status,
+      statusLabel: MEETING_ACTION_STATUS_LABEL[action.status],
+    })),
+    tasks: tasks.map((task) => ({
+      id: task.id,
       title: task.title,
-      ownerLabel:
-        task.assigneeLabels.length > 0 ? task.assigneeLabels.join(", ") : PROTOCOL_NOT_RECORDED,
-      dueDateLabel: task.dueAtLabel ?? PROTOCOL_NOT_RECORDED,
+      description: task.description,
+      dueAt: task.dueAtInstant,
+      status: task.status,
       statusLabel: task.statusLabel,
-      sourceMeetingLabel: task.contextReference,
-      compactSummary: task.description?.trim()?.slice(0, 160) ?? null,
-    });
-  }
+      assigneeLabels: task.assigneeLabels,
+      contextReference: task.contextReference,
+    })),
+  });
 
-  return rows;
+  return merged.filter((row) => !row.isTerminal).map((row) => mapPendenzRowToProtocol(row, cfg));
+}
+
+export function countOpenPendenzenForProtocol(
+  meeting: MeetingLiveData,
+  actions: MeetingSubEntities["actions"],
+  tasks: MeetingProtocolTaskRow[],
+): number {
+  const merged = mergeMeetingPendenzen({
+    meeting: {
+      id: meeting.id,
+      title: meeting.title,
+      slug: meeting.slug,
+      meetingDate: meeting.meetingDate,
+    },
+    actions: actions.map((action) => ({
+      id: action.id,
+      title: action.title,
+      description: action.description,
+      expectedOutcome: action.expectedOutcome,
+      owner: resolveStoredPersonDisplayName({
+        name: action.owner,
+        personId: action.ownerPersonId,
+      }),
+      dueDate: action.dueDate,
+      status: action.status,
+      statusLabel: MEETING_ACTION_STATUS_LABEL[action.status],
+    })),
+    tasks: tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      dueAt: task.dueAtInstant,
+      status: task.status,
+      statusLabel: task.statusLabel,
+      assigneeLabels: task.assigneeLabels,
+      contextReference: task.contextReference,
+    })),
+  });
+  return countOpenPendenzen(merged);
 }
 
 function buildProtocolApprovalFootnote(meeting: MeetingLiveData): string | null {
@@ -470,7 +528,7 @@ export function buildMeetingProtocolDocument(
       orderNumber,
       title: item.title,
       backgroundText: resolveAgendaBackground(item),
-      protocolNotes: item.notes?.trim() || null,
+      protocolNotes: sanitizeMeetingAgendaNotesForDisplay(item.notes),
       presenterLabel: resolveStoredPersonDisplayName({
         name: item.owner,
         personId: item.ownerPersonId,
@@ -532,7 +590,7 @@ export function buildMeetingProtocolDocument(
     showLiveTaskStateNotice: allMeetingTasks.length > 0,
     secondaryFooter: "SportClubEvo",
     tenantFooterLine: `${input.tenant.name} · Sitzungsprotokoll`,
-    referencedPendenzen: buildReferencedPendenzenForProtocol(subEntities.actions, allMeetingTasks, cfg),
+    referencedPendenzen: buildReferencedPendenzenForProtocol(meeting, subEntities.actions, allMeetingTasks, cfg),
   };
 }
 
@@ -554,6 +612,7 @@ export function mapContextTaskToProtocolRow(task: {
     status: task.status,
     statusLabel: TASK_STATUS_LABELS[task.status],
     dueAtLabel: task.dueAt ? task.dueAt : null,
+    dueAtInstant: task.dueAt ? new Date(task.dueAt) : null,
     assigneeLabels,
     contextReference: task.contextReference ?? null,
   };

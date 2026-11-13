@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   countOpenPendenzen,
+  countOverduePendenzen,
   dedupePendenzKeys,
   filterPendenzen,
   mergeMeetingPendenzen,
@@ -67,6 +68,7 @@ describe("meeting-pendenzen", () => {
     });
     expect(rows[0]?.isOverdue).toBe(true);
     expect(filterPendenzen(rows, "open")).toHaveLength(1);
+    expect(countOverduePendenzen(rows)).toBe(1);
   });
 
   it("excludes terminal statuses from open filter", () => {
