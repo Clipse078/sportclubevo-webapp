@@ -42,6 +42,9 @@ describe("SCE-CD-01R1 Vereinsleitung nav visibility", () => {
       "club-entwicklung-ziele",
       "club-entwicklung-sitzungen",
       "club-entwicklung-vorhaben",
+      "club-entwicklung-strategie",
+      "club-entwicklung-initiativen-backlog",
+      "club-entwicklung-sprints",
       "club-entwicklung-prozesse",
     ]);
   });
