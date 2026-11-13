@@ -227,14 +227,10 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
       expect(row.querySelector('[data-sce-planning-hub-liste-column="IDENTITY"]')).toBeNull();
       expect(row.querySelector('[data-sce-planning-hub-liste-column="LOCATION"]')).toBeNull();
       expect(row.querySelector('[data-sce-planning-hub-liste-column="STATUS"]')).toBeNull();
-      const isMatch =
-        row.getAttribute("data-sce-planning-hub-liste-activity-kind") === "MATCH";
-      if (isMatch) {
-        expect(row.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]')).toBeNull();
-        expect(row.querySelector("[data-sce-planning-hub-liste-menu-anchor]")).toBeTruthy();
-      } else {
-        expect(row.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]')).toBeTruthy();
-      }
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]')).toBeNull();
+      const menuAnchor = row.querySelector("[data-sce-planning-hub-liste-menu-anchor]");
+      expect(menuAnchor).toBeTruthy();
+      expect(menuAnchor?.className).toMatch(/absolute/);
     }
   });
 

@@ -28,6 +28,12 @@ import {
   SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 import { PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY } from "@/lib/planning-hub/planning-hub-liste-match-geometry";
+import {
+  PLANNING_HUB_LISTE_MEASURED_ROW_CLASS,
+  PLANNING_HUB_LISTE_MENU_ANCHOR_CLASS,
+  PLANNING_HUB_LISTE_ROW_INTERACTION_SHELL_CLASS,
+  PLANNING_HUB_LISTE_SUMMARY_MENU_CLEARANCE_CLASS,
+} from "@/lib/planning-hub/planning-hub-liste-expansion-layout";
 import PlanningHubListeOperationalPanel from "./PlanningHubListeOperationalPanel";
 import { PlanningHubListeOperationalReadinessPill } from "./PlanningHubListeOperationalReadinessPill";
 
@@ -107,7 +113,7 @@ export default function PlanningHubListeActivityRow({
       className="flex min-w-0 w-full flex-col gap-2.5"
       data-testid={`planning-hub-liste-match-card-${item.id}`}
     >
-      <div className="min-w-0 w-full max-md:pr-8">
+      <div className={PLANNING_HUB_LISTE_SUMMARY_MENU_CLEARANCE_CLASS}>
         <PlanningHubListeSceActivityCard
           item={item}
           fmtCfg={fmtCfg}
@@ -119,7 +125,13 @@ export default function PlanningHubListeActivityRow({
       <PlannerOperationalIssueSummary item={item} />
     </div>
   ) : (
-    <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass} data-sce-planning-hub-liste-leading-date>
+    <div
+      className={cn(
+        SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass,
+        PLANNING_HUB_LISTE_SUMMARY_MENU_CLEARANCE_CLASS,
+      )}
+      data-sce-planning-hub-liste-leading-date
+    >
       <SceProgrammeActivityDateTile
         startAt={new Date(item.canonicalStartAt ?? item.startAt)}
         fmtCfg={fmtCfg}
@@ -176,33 +188,10 @@ export default function PlanningHubListeActivityRow({
           : {})}
       >
         <div
-          className={cn(
-            "flex min-w-0 w-full items-stretch gap-1",
-            usesMatchcenterListComposition && "relative",
-          )}
+          className={cn("flex min-w-0 w-full items-stretch", PLANNING_HUB_LISTE_ROW_INTERACTION_SHELL_CLASS)}
         >
-          {usesMatchcenterListComposition ? (
-            <div
-              className="absolute right-2 top-2 z-[2] sm:right-3 sm:top-3"
-              data-sce-planning-hub-liste-menu-anchor
-            >
-              <PlanningHubListeRowMenu
-                item={item}
-                permissionContext={permissionContext}
-                canEditItem={canEditItem}
-                plannerEditAccess={plannerEditAccess}
-                alternativePlanActive={alternativePlanActive}
-                onMenuAction={(action) => onMenuAction(item, action)}
-                onReviewConflict={() => onReviewConflictForItem(item)}
-              />
-            </div>
-          ) : null}
-
           <div
-            className={cn(
-              "min-w-0",
-              usesMatchcenterListComposition ? "w-full flex-1 self-stretch" : "flex-1 self-stretch",
-            )}
+            className={PLANNING_HUB_LISTE_MEASURED_ROW_CLASS}
             data-sce-planning-hub-liste-measured-row
           >
             <PlanningHubActivityDetailSurface
@@ -261,23 +250,17 @@ export default function PlanningHubListeActivityRow({
             </PlanningHubActivityDetailSurface>
           </div>
 
-          {!usesMatchcenterListComposition ? (
-            <div
-              className="flex shrink-0 items-start justify-end self-stretch pt-2 pr-0.5 sm:pt-2.5 sm:pr-1"
-              data-sce-planning-hub-liste-column="ACTIONS"
-              data-sce-planning-hub-liste-menu-anchor
-            >
-              <PlanningHubListeRowMenu
-                item={item}
-                permissionContext={permissionContext}
-                canEditItem={canEditItem}
-                plannerEditAccess={plannerEditAccess}
-                alternativePlanActive={alternativePlanActive}
-                onMenuAction={(action) => onMenuAction(item, action)}
-                onReviewConflict={() => onReviewConflictForItem(item)}
-              />
-            </div>
-          ) : null}
+          <div className={PLANNING_HUB_LISTE_MENU_ANCHOR_CLASS} data-sce-planning-hub-liste-menu-anchor>
+            <PlanningHubListeRowMenu
+              item={item}
+              permissionContext={permissionContext}
+              canEditItem={canEditItem}
+              plannerEditAccess={plannerEditAccess}
+              alternativePlanActive={alternativePlanActive}
+              onMenuAction={(action) => onMenuAction(item, action)}
+              onReviewConflict={() => onReviewConflictForItem(item)}
+            />
+          </div>
         </div>
       </SceProgrammeActivityCardShell>
     </li>

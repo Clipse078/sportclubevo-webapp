@@ -517,7 +517,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
     const rowSource = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
     const matchRowSource = read("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
     expect(rowSource).toContain("PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY");
-    expect(rowSource).toContain("min-w-0 w-full max-md:pr-8");
+    expect(rowSource).toContain("PLANNING_HUB_LISTE_SUMMARY_MENU_CLEARANCE_CLASS");
     expect(matchRowSource).toContain("min-w-0 w-full max-md:pr-8");
   });
 
