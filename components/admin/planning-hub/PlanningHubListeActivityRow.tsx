@@ -171,6 +171,7 @@ export default function PlanningHubListeActivityRow({
         {...(usesMatchcenterListComposition
           ? {
               [SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR]: SCE_ACTIVITY_CARD_FULL_WIDTH_LAYOUT_MARKER,
+              "data-sce-matchcenter-composition": "collapsible-card-operations-below",
             }
           : {})}
       >

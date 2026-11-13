@@ -38,7 +38,8 @@ export class PlanningHubListeOperationalPanelErrorBoundary extends Component<Pro
         >
           <p className="text-sm font-medium text-amber-950">Betriebsbereich konnte nicht geladen werden</p>
           <p className="mt-1 text-xs text-amber-900/90">
-            Die Karte bleibt nutzbar. Details stehen in der Browser-Konsole.
+            Die Karte bleibt nutzbar. Bitte schliessen Sie die Ansicht und öffnen Sie den Betriebsbereich erneut —
+            oder laden Sie die Seite neu, wenn das Problem bleibt.
           </p>
           <button
             type="button"

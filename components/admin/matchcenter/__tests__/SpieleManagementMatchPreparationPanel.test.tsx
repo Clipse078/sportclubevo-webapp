@@ -197,6 +197,11 @@ describe("SCE-DS2-04R4 — SpieleManagementMatchPreparationPanel", () => {
     expect(screen.queryByTestId("matchcenter-inline-pitch-match-home-1-kind-icon")).not.toBeInTheDocument();
     expect(screen.getByText("Heimkabine")).toBeInTheDocument();
     expect(screen.getByText("Gastkabine")).toBeInTheDocument();
+    const pitch = screen.getByTestId("matchcenter-inline-pitch-match-home-1");
+    const homeDressing = screen.getByTestId("matchcenter-inline-dressing-match-home-1-subject-home");
+    const awayDressing = screen.getByTestId("matchcenter-inline-dressing-match-home-1-subject-away");
+    expect(homeDressing.parentElement).toBe(pitch.parentElement);
+    expect(awayDressing.parentElement).toBe(pitch.parentElement);
   });
 
   it("persists pitch assignment via PATCH and refreshes on success", async () => {

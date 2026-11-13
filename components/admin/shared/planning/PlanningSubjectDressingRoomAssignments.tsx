@@ -138,7 +138,12 @@ export function PlanningSubjectDressingRoomAssignments({
   );
 
   if (embeddedInGroup) {
-    return <div data-testid={testId}>{rows}</div>;
+    return (
+      <>
+        <span className="sr-only" data-testid={testId} />
+        {rows}
+      </>
+    );
   }
 
   return (

@@ -68,6 +68,8 @@ export default function PlanningHubListeSceActivityCard({
           <SceMatchCard
             model={resolveSceMatchPresentationFromWeekplannerMatch(item, {
               timezone: fmtCfg.timezone ?? "Europe/Zurich",
+              tenantClubName,
+              tenantLogoUrl,
             })}
             density={density}
             fmtCfg={fmtCfg}

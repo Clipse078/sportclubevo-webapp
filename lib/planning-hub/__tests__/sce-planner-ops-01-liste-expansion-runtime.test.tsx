@@ -8,6 +8,8 @@ import { PlanningHubListeOperationalPanelErrorBoundary } from "@/components/admi
 import { weekplannerMatchPublicationVisibilityFixture } from "@/lib/weekplanner/match-item-fixtures";
 import type { WeekplannerMatchItem, WeekplannerTrainingItem } from "@/lib/weekplanner/types";
 import { weekplannerMatchToMatchcenterSummary } from "@/lib/planning-hub/weekplanner-match-matchcenter-bridge";
+import { reviveWeekplannerItemFromTransport } from "@/lib/planning-hub/manipulation-transport";
+import { PlanningHubPlannerWeekProvider, usePlanningHubPlannerWeek } from "@/components/admin/planning-hub/PlanningHubPlannerWeekContext";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -166,6 +168,36 @@ describe("SCE-PLANNER-OPS-01 Liste expansion runtime", () => {
     expect(screen.getByTestId("matchcenter-inline-dressing-e1")).toBeInTheDocument();
   });
 
+  it("renders training preparation when canonical instants arrive as ISO strings (RSC transport)", () => {
+    const rawTraining = trainingItem();
+    const transported = {
+      ...rawTraining,
+      startAt: rawTraining.startAt.toISOString(),
+      endAt: rawTraining.endAt.toISOString(),
+      canonicalStartAt: rawTraining.canonicalStartAt.toISOString(),
+      canonicalEndAt: rawTraining.canonicalEndAt.toISOString(),
+    } as unknown as WeekplannerTrainingItem;
+
+    render(
+      <PlanningHubListeOperationalPanel
+        item={transported}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        focus={null}
+        facilityGroupsByAllocationGroup={{ PITCH_HALL: PITCH_GROUPS, DRESSING_ROOM: DRESSING_GROUPS }}
+        plannerEditAccess={{
+          canManageTrainings: true,
+          canManageEvents: true,
+          canManageAllocations: true,
+        }}
+        alternativePlanActive={false}
+        onSaved={() => {}}
+      />,
+    );
+
+    expect(screen.getByTestId("planning-hub-liste-training-resources-train-1")).toBeInTheDocument();
+  });
+
   it("groups training pitch and garderobe rows in one resource block", () => {
     render(
       <PlanningHubListeOperationalPanel
@@ -202,5 +234,64 @@ describe("SCE-PLANNER-OPS-01 Liste expansion runtime", () => {
 
     expect(screen.getByTestId("planning-hub-liste-operational-error-train-1")).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Betriebsbereich konnte nicht geladen werden");
+    expect(screen.getByRole("alert")).toHaveTextContent("Bitte schliessen Sie die Ansicht");
+    expect(screen.queryByText(/Browser-Konsole/i)).not.toBeInTheDocument();
+  });
+
+  it("provider + panel composition tolerates ISO week transport for match and training", () => {
+    function WeekProbe({ item }: { item: WeekplannerTrainingItem }) {
+      const ctx = usePlanningHubPlannerWeek();
+      const weekItem = ctx?.week.days[0]?.items[0];
+      if (!weekItem || weekItem.type !== "TRAINING") return null;
+      return (
+        <PlanningHubListeOperationalPanel
+          item={weekItem}
+          locale="de-CH"
+          timezone="Europe/Zurich"
+          focus={null}
+          facilityGroupsByAllocationGroup={{ PITCH_HALL: PITCH_GROUPS, DRESSING_ROOM: DRESSING_GROUPS }}
+          plannerEditAccess={{
+            canManageTrainings: true,
+            canManageEvents: true,
+            canManageAllocations: true,
+          }}
+          alternativePlanActive={false}
+          onSaved={() => {}}
+        />
+      );
+    }
+
+    const isoStart = "2026-08-10T16:00:00.000Z";
+    const isoEnd = "2026-08-10T17:30:00.000Z";
+    const transported = reviveWeekplannerItemFromTransport(trainingItem());
+    const week = {
+      param: "2026-33",
+      previousParam: "2026-32",
+      nextParam: "2026-34",
+      weekNumberLabel: "KW 33",
+      rangeLabel: "range",
+      days: [
+        {
+          dayKey: "2026-08-10",
+          items: [
+            {
+              ...transported,
+              startAt: isoStart,
+              endAt: isoEnd,
+              canonicalStartAt: isoStart,
+              canonicalEndAt: isoEnd,
+            } as unknown as WeekplannerTrainingItem,
+          ],
+        },
+      ],
+    };
+
+    render(
+      <PlanningHubPlannerWeekProvider serverWeek={week} timezone="Europe/Zurich">
+        <WeekProbe item={trainingItem()} />
+      </PlanningHubPlannerWeekProvider>,
+    );
+
+    expect(screen.getByTestId("planning-hub-liste-training-resources-train-1")).toBeInTheDocument();
   });
 });

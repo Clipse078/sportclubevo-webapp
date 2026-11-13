@@ -141,6 +141,10 @@ export type WeekplannerMatchSideIdentity = {
   displayName: string;
   logoUrl: string | null;
   isOwnTeam: boolean;
+  canonicalTeamId?: string | null;
+  canonicalTeamName?: string | null;
+  canonicalTeamShortName?: string | null;
+  externalLogoUrl?: string | null;
 };
 
 export type WeekplannerMatchItem = WeekplannerItemBase & {
@@ -163,6 +167,11 @@ export type WeekplannerMatchItem = WeekplannerItemBase & {
   awayDressingRoomAllocations: WeekplannerResourceRef[];
   /** Persisted publication flags from Event — populated by weekplanner queries for Liste match prep. */
   publicationVisibility?: MatchcenterVisibility;
+  /** Canonical match metadata from Matchcenter query (Liste / Matchcenter card parity). */
+  competitionLabel?: string | null;
+  venueLabel?: string | null;
+  kickoffKnown?: boolean;
+  matchStatus?: string;
 };
 
 export type WeekplannerTournamentItem = WeekplannerItemBase & {

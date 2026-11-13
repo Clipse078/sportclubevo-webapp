@@ -86,7 +86,9 @@ describe("PlanningHubActivityDetailSurface", () => {
 
     const user = userEvent.setup();
     await user.hover(screen.getByRole("button", { name: "Card" }));
-    expect(await screen.findByTestId("planning-hub-activity-detail")).toBeInTheDocument();
+    const detail = await screen.findByTestId("planning-hub-activity-detail");
+    expect(detail).toBeInTheDocument();
+    expect(detail).toHaveAttribute("data-sce-theme", "white");
   });
 
   it("shows Planungsstatus with specific incomplete items on focus/hover (R5.5)", async () => {

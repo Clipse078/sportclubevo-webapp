@@ -22,19 +22,24 @@ const UNRESOLVED_MATCH_VISIBILITY: MatchcenterVisibility = {
   teamPageVisible: false,
 };
 
-const EMPTY_SIDE = {
-  providerTeamId: null,
-  providerTeamName: null,
-  canonicalTeamId: null,
-  canonicalTeamName: null,
-  displayName: "",
-  resolution: "RESOLVED" as const,
-  isOwnTeam: false,
-};
+function mapWeekplannerMatchSide(side: WeekplannerMatchItem["homeSide"]) {
+  return {
+    providerTeamId: null,
+    providerTeamName: null,
+    canonicalTeamId: side.canonicalTeamId ?? null,
+    canonicalTeamName: side.canonicalTeamName ?? null,
+    canonicalTeamShortName: side.canonicalTeamShortName ?? null,
+    displayName: side.displayName,
+    resolution: "RESOLVED" as const,
+    isOwnTeam: side.isOwnTeam,
+    externalLogoUrl: side.externalLogoUrl ?? null,
+  };
+}
 
 export function weekplannerMatchToMatchcenterSummary(item: WeekplannerMatchItem): MatchcenterMatchSummary {
-  const startAt = coercePlanningInstant(item.canonicalStartAt, "canonicalStartAt");
-  const endAt = coercePlanningInstant(item.canonicalEndAt ?? item.endAt, "canonicalEndAt");
+  const startAt = coercePlanningInstant(item.startAt, "startAt");
+  const endAt = coercePlanningInstant(item.endAt, "endAt");
+  const canonicalEndAt = coercePlanningInstant(item.canonicalEndAt, "canonicalEndAt");
   const operationalEndAt = endAt;
 
   return {
@@ -46,29 +51,21 @@ export function weekplannerMatchToMatchcenterSummary(item: WeekplannerMatchItem)
     type: "MATCH",
     title: item.title,
     description: null,
-    status: "SCHEDULED",
+    status: item.matchStatus ?? "SCHEDULED",
     startAt,
-    kickoffKnown: true,
+    kickoffKnown: item.kickoffKnown ?? true,
     endAt,
     operationalEndAtOverride: null,
     operationalEndAt,
-    location: null,
-    competitionLabel: null,
+    location: item.venueLabel?.trim() || null,
+    competitionLabel: item.competitionLabel?.trim() || null,
     homeAway: item.homeAway,
     resultLabel: null,
     intermediateResultLabel: null,
     scoreHome: null,
     scoreAway: null,
-    home: {
-      ...EMPTY_SIDE,
-      displayName: item.homeSide.displayName,
-      isOwnTeam: item.homeSide.isOwnTeam,
-    },
-    away: {
-      ...EMPTY_SIDE,
-      displayName: item.awaySide.displayName,
-      isOwnTeam: item.awaySide.isOwnTeam,
-    },
+    home: mapWeekplannerMatchSide(item.homeSide),
+    away: mapWeekplannerMatchSide(item.awaySide),
     source: {
       eventSource: item.eventSource,
       externalSource: null,

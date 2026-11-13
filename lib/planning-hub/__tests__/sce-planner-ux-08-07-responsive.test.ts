@@ -44,6 +44,8 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
     expect(surface).toContain("PlannerOperationalStatusSection");
     expect(surface).not.toContain("ring-[var(--sce-primary)]");
     expect(surface).toContain("suppressActivityTypeHeader");
+    expect(surface).toContain("data-sce-theme");
+    expect(surface).toContain("PLANNER_ACTIVITY_DETAIL_POPOVER_CLASS");
   });
 
   it("aggregate cluster summary uses Aktivitäten for mixed types", () => {

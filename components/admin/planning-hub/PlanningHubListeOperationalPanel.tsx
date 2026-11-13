@@ -46,6 +46,8 @@ import {
   localToUtcIso,
 } from "@/lib/weekplanner/weekplanner-editor-time";
 import { useRouter } from "next/navigation";
+import { reviveWeekplannerItemFromTransport } from "@/lib/planning-hub/manipulation-transport";
+import { weekplannerItemPlanningWindow } from "@/lib/planning-hub/weekplanner-item-planning-window";
 
 export type PlanningHubListeOperationalFocus = PlanningHubListeMenuAction | null;
 
@@ -98,8 +100,7 @@ function TrainingOperationalPanel({
     [item.dressingRoomAllocations],
   );
 
-  const startAt = item.canonicalStartAt.toISOString();
-  const endAt = item.canonicalEndAt.toISOString();
+  const { startAt, endAt } = weekplannerItemPlanningWindow(item);
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
     enabled: true,
     startAt,
@@ -304,8 +305,7 @@ function TournamentOperationalPanel({
     !!plannerEditAccess &&
     (canDomainManagePlannerItem(item, plannerEditAccess) ||
       canOperationalManagePlannerItem(item, plannerEditAccess));
-  const startAt = item.canonicalStartAt.toISOString();
-  const endAt = item.canonicalEndAt.toISOString();
+  const { startAt, endAt } = weekplannerItemPlanningWindow(item);
   const { dressingRoomAvailability } = useFacilityAvailability({
     enabled: true,
     startAt,
@@ -370,8 +370,7 @@ function TournamentPitchAssignmentRow({
     () => new Set(item.pitchAllocations.map((r) => r.facilityResourceId)),
     [item.pitchAllocations],
   );
-  const startAt = item.canonicalStartAt.toISOString();
-  const endAt = item.canonicalEndAt.toISOString();
+  const { startAt, endAt } = weekplannerItemPlanningWindow(item);
   const { pitchAvailability } = useFacilityAvailability({
     enabled: true,
     startAt,
@@ -473,13 +472,14 @@ function VeranstaltungOperationalPanel({
     };
   }, [item.eventId]);
 
+  const planningWindow = useMemo(() => weekplannerItemPlanningWindow(item), [item]);
   const startAt = useMemo(
-    () => localToUtcIso(date, startTime, timezone) ?? item.canonicalStartAt.toISOString(),
-    [date, startTime, timezone, item.canonicalStartAt],
+    () => localToUtcIso(date, startTime, timezone) ?? planningWindow.startAt,
+    [date, startTime, timezone, planningWindow.startAt],
   );
   const endAt = useMemo(
-    () => localToUtcIso(date, endTime, timezone) ?? item.canonicalEndAt.toISOString(),
-    [date, endTime, timezone, item.canonicalEndAt],
+    () => localToUtcIso(date, endTime, timezone) ?? planningWindow.endAt,
+    [date, endTime, timezone, planningWindow.endAt],
   );
 
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
@@ -614,7 +614,8 @@ function DetailsModuleLink({ item }: { item: WeekplannerItem }) {
 }
 
 export default function PlanningHubListeOperationalPanel(props: Props) {
-  const { item, focus, alternativePlanActive } = props;
+  const { focus, alternativePlanActive } = props;
+  const item = useMemo(() => reviveWeekplannerItemFromTransport(props.item), [props.item]);
 
   if (alternativePlanActive) {
     return (

@@ -106,4 +106,50 @@ describe("weekplanner RSC date transport revival", () => {
     expect(summary.startAt.toISOString()).toBe("2026-08-10T16:30:00.000Z");
     expect(summary.operationalEndAt?.toISOString()).toBe("2026-08-10T18:00:00.000Z");
   });
+
+  it("weekplannerMatchToMatchcenterSummary maps Liste metadata for card parity", () => {
+    const summary = weekplannerMatchToMatchcenterSummary({
+      id: "match:e1",
+      tenantId: "t1",
+      type: "MATCH",
+      startAt: new Date("2026-08-10T16:30:00.000Z"),
+      endAt: new Date("2026-08-10T18:00:00.000Z"),
+      canonicalStartAt: new Date("2026-08-10T16:30:00.000Z"),
+      canonicalEndAt: new Date("2026-08-10T18:00:00.000Z"),
+      timeOverridden: false,
+      title: "Test",
+      teamNames: ["E1"],
+      opponentName: "Away",
+      eventSource: "MANUAL",
+      homeSide: {
+        displayName: "FC E1",
+        logoUrl: null,
+        isOwnTeam: true,
+        canonicalTeamShortName: "E1",
+      },
+      awaySide: { displayName: "Away", logoUrl: null, isOwnTeam: false },
+      homeAway: "HOME",
+      eventId: "e1",
+      teamSeasonId: "ts-1",
+      pitchAllocations: [],
+      dressingRoomAllocations: [],
+      canonicalPitchAllocations: [],
+      canonicalDressingRoomAllocations: [],
+      pitchOverridden: false,
+      dressingRoomOverridden: false,
+      awayDressingRoomAllocations: [],
+      conflicts: [],
+      dressingRoomOccupancyMode: "DEFAULT",
+      dressingRoomOccupancyBeforeMinutes: null,
+      dressingRoomOccupancyAfterMinutes: null,
+      dressingRoomResolvedBeforeMinutes: 0,
+      dressingRoomResolvedAfterMinutes: 0,
+      competitionLabel: "Meisterschaft",
+      venueLabel: "Im Brüel",
+    });
+
+    expect(summary.competitionLabel).toBe("Meisterschaft");
+    expect(summary.location).toBe("Im Brüel");
+    expect(summary.home.canonicalTeamShortName).toBe("E1");
+  });
 });
