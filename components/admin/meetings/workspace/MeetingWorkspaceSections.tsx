@@ -20,6 +20,7 @@ import {
   sumAgendaPlannedMinutes,
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
+import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
@@ -153,6 +154,7 @@ export function MeetingAgendaSection({
   }
 
   const agendaTotalMin = useMemo(() => sumAgendaPlannedMinutes(items), [items]);
+  const agendaDisplayOrder = useMemo(() => buildCanonicalAgendaDisplayOrderMap(items), [items]);
   const exceedsPlanned = agendaExceedsMeetingPlannedTime({
     agendaTotalMin,
     meetingPlannedDurationMin,
@@ -188,10 +190,10 @@ export function MeetingAgendaSection({
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-2)]">Noch keine Traktanden — erfasse den Ablauf der Sitzung.</p>
       ) : (
-        items.map((item, idx) => (
+        items.map((item) => (
           <AgendaItemRow
             key={item.id}
-            index={idx + 1}
+            index={agendaDisplayOrder.get(item.id) ?? 0}
             item={item}
             canManage={canManage}
             pending={pending}

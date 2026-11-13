@@ -17,6 +17,7 @@ import {
   protocolReviewStageStatusLabel,
 } from "@/lib/meetings/meeting-approval-presentation";
 import { MEETING_AGENDA_ITEM_STATUS_LABEL } from "@/lib/meetings/agenda-item-presentation";
+import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { resolveStoredPersonDisplayName } from "@/lib/meetings/meeting-person-display";
 import { parseMeetingLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
 import { decodeMeetingLocationForProtocol } from "@/lib/meetings/meeting-protocol-location";
@@ -96,6 +97,12 @@ export type MeetingProtocolAttendanceGroup = {
   entries: Array<{ name: string; role: string | null }>;
 };
 
+export type MeetingProtocolAttendanceRow = {
+  name: string;
+  roleLabel: string;
+  attendanceLabel: string;
+};
+
 export type MeetingProtocolDocumentModel = {
   tenantName: string;
   tenantLogoUrl: string | null;
@@ -107,6 +114,7 @@ export type MeetingProtocolDocumentModel = {
   exportGeneratedAtLabel: string;
   metadataRows: MeetingProtocolMetadataRow[];
   attendanceGroups: MeetingProtocolAttendanceGroup[];
+  attendanceRows: MeetingProtocolAttendanceRow[];
   agendaOverview: Array<{ orderNumber: number; title: string }>;
   agendaItems: MeetingProtocolDocumentAgendaItem[];
   unlinkedDecisions: MeetingProtocolDocumentDecision[];
@@ -128,6 +136,19 @@ export type MeetingProtocolDocumentModel = {
   protocolApprovalFootnote: string | null;
   showLiveTaskStateNotice: boolean;
   secondaryFooter: string;
+  tenantFooterLine: string;
+  showHeaderApprovalState: boolean;
+  referencedPendenzen: MeetingProtocolPendenzRow[];
+};
+
+export type MeetingProtocolPendenzRow = {
+  sourceKind: "MASSNAHME" | "AUFGABE";
+  title: string;
+  ownerLabel: string;
+  dueDateLabel: string;
+  statusLabel: string;
+  sourceMeetingLabel: string | null;
+  compactSummary: string | null;
 };
 
 export type BuildMeetingProtocolDocumentInput = {
@@ -289,8 +310,8 @@ function resolveDraftBanner(status: MeetingStatus): string | null {
 }
 
 function resolveApprovalStateLabel(meeting: MeetingLiveData): string {
-  if (meeting.status === "PLANNED") {
-    return "Protokollentwurf (Sitzung nicht abgeschlossen)";
+  if (meeting.status === "PLANNED" || meeting.status === "CANCELLED") {
+    return "";
   }
   if (!meeting.protocolApprovalRequired) {
     return "Protokollfreigabe nicht erforderlich";
@@ -310,6 +331,71 @@ function buildAttendanceGroups(
       }));
     return { heading, entries };
   }).filter((group) => group.entries.length > 0);
+}
+
+function buildAttendanceRows(
+  participants: MeetingSubEntities["participants"],
+): MeetingProtocolAttendanceRow[] {
+  const order: Array<keyof typeof MEETING_PARTICIPANT_STATUS_LABEL> = [
+    "PRESENT",
+    "EXCUSED",
+    "ABSENT",
+    "INVITED",
+  ];
+
+  return [...participants]
+    .sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status))
+    .map((p) => ({
+      name: p.name.trim() || PROTOCOL_NOT_RECORDED,
+      roleLabel: p.role?.trim() || PROTOCOL_NOT_RECORDED,
+      attendanceLabel: MEETING_PARTICIPANT_STATUS_LABEL[p.status],
+    }));
+}
+
+function buildReferencedPendenzenForProtocol(
+  actions: MeetingSubEntities["actions"],
+  tasks: MeetingProtocolTaskRow[],
+  cfg: TenantFormatConfig,
+): MeetingProtocolPendenzRow[] {
+  const terminalAction = new Set(["DONE", "CANCELLED"]);
+  const terminalTask = new Set<TaskStatus>(["DONE", "CANCELLED"]);
+  const rows: MeetingProtocolPendenzRow[] = actions
+    .filter((a) => !terminalAction.has(a.status))
+    .map((action) => {
+      const owner = resolveStoredPersonDisplayName({
+        name: action.owner,
+        personId: action.ownerPersonId,
+      });
+      const summary =
+        action.expectedOutcome?.trim() ||
+        action.description?.trim()?.slice(0, 160) ||
+        null;
+      return {
+        sourceKind: "MASSNAHME" as const,
+        title: action.title,
+        ownerLabel: owner ?? PROTOCOL_NOT_RECORDED,
+        dueDateLabel: formatOptionalDate(action.dueDate, cfg) ?? PROTOCOL_NOT_RECORDED,
+        statusLabel: MEETING_ACTION_STATUS_LABEL[action.status],
+        sourceMeetingLabel: null,
+        compactSummary: summary,
+      };
+    });
+
+  for (const task of tasks) {
+    if (terminalTask.has(task.status)) continue;
+    rows.push({
+      sourceKind: "AUFGABE",
+      title: task.title,
+      ownerLabel:
+        task.assigneeLabels.length > 0 ? task.assigneeLabels.join(", ") : PROTOCOL_NOT_RECORDED,
+      dueDateLabel: task.dueAtLabel ?? PROTOCOL_NOT_RECORDED,
+      statusLabel: task.statusLabel,
+      sourceMeetingLabel: task.contextReference,
+      compactSummary: task.description?.trim()?.slice(0, 160) ?? null,
+    });
+  }
+
+  return rows;
 }
 
 function buildProtocolApprovalFootnote(meeting: MeetingLiveData): string | null {
@@ -364,8 +450,10 @@ export function buildMeetingProtocolDocument(
     }
   }
 
-  const agendaItems: MeetingProtocolDocumentAgendaItem[] = subEntities.agendaItems.map((item, index) => {
-    const orderNumber = item.orderIndex > 0 ? item.orderIndex : index + 1;
+  const displayOrderByAgendaId = buildCanonicalAgendaDisplayOrderMap(subEntities.agendaItems);
+
+  const agendaItems: MeetingProtocolDocumentAgendaItem[] = subEntities.agendaItems.map((item) => {
+    const orderNumber = displayOrderByAgendaId.get(item.id) ?? 0;
     const itemDecisions = decisionsByAgenda.get(item.id) ?? [];
     const itemActions = actionsByAgenda.get(item.id) ?? [];
 
@@ -419,9 +507,11 @@ export function buildMeetingProtocolDocument(
     meetingTitle: meeting.title,
     draftBanner: resolveDraftBanner(meeting.status),
     approvalStateLabel: resolveApprovalStateLabel(meeting),
+    showHeaderApprovalState: resolveApprovalStateLabel(meeting).length > 0,
     exportGeneratedAtLabel: formatDateTimeCompact(input.exportedAt, cfg),
     metadataRows: buildMetadataRows(meeting, cfg),
     attendanceGroups: buildAttendanceGroups(subEntities.participants),
+    attendanceRows: buildAttendanceRows(subEntities.participants),
     agendaOverview: agendaItems.map((item) => ({
       orderNumber: item.orderNumber,
       title: item.title,
@@ -441,6 +531,8 @@ export function buildMeetingProtocolDocument(
     protocolApprovalFootnote: buildProtocolApprovalFootnote(meeting),
     showLiveTaskStateNotice: allMeetingTasks.length > 0,
     secondaryFooter: "SportClubEvo",
+    tenantFooterLine: `${input.tenant.name} · Sitzungsprotokoll`,
+    referencedPendenzen: buildReferencedPendenzenForProtocol(subEntities.actions, allMeetingTasks, cfg),
   };
 }
 

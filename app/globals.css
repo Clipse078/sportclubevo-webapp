@@ -3108,4 +3108,8 @@ html[data-sidebar-collapsed="1"] {
   .sce-protocol-document h3 {
     break-after: avoid-page;
   }
+
+  .sce-protocol-document .protocol-page-footer::after {
+    content: " · Seite " counter(page);
+  }
 }
