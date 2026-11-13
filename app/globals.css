@@ -2755,7 +2755,7 @@ html[data-sidebar-collapsed="1"] {
 .sce-login-input {
   width: 100%;
   height: 2.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--sce-login-input-bg);
   color: var(--foreground);
@@ -2774,7 +2774,7 @@ html[data-sidebar-collapsed="1"] {
 }
 
 .sce-login-input:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-strong);
   background-color: var(--sce-login-input-bg-hover);
 }
 
@@ -2803,7 +2803,7 @@ html[data-sidebar-collapsed="1"] {
 }
 
 .sce-login-input:-webkit-autofill:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-strong);
   background-color: var(--sce-login-input-bg-hover) !important;
   -webkit-box-shadow: 0 0 0 1000px var(--sce-login-input-bg-hover) inset !important;
   box-shadow: 0 0 0 1000px var(--sce-login-input-bg-hover) inset !important;
@@ -3103,5 +3103,20 @@ html[data-sidebar-collapsed="1"] {
   :root {
     --sidebar-width: 0px;
     --sce-sidebar-effective-width: 0px;
+  }
+}
+
+/* Auth canvas — prevent dark :root body bleed at viewport edges */
+body:has(.sce-theme-white) {
+  background-color: #ffffff;
+}
+
+@media print {
+  .sce-protocol-document,
+  .sce-print-document-canvas {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
