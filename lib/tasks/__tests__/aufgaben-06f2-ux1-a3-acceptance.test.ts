@@ -408,7 +408,7 @@ describe("AUFGABEN-06F2-UX1-A3 acceptance", () => {
   describe("UI parity — assignees & priority", () => {
     it("assignee picker adoption (contextual, full, quick, workspace, subtask, series)", () => {
       for (const file of [
-        "components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx",
+        "components/admin/aufgaben/contextual/ContextualTaskInlineCreateCard.tsx",
         "components/admin/aufgaben/AufgabenFullCreateClient.tsx",
         "components/admin/aufgaben/AufgabenFullCreateCollapsibleCard.tsx",
         "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
@@ -427,7 +427,7 @@ describe("AUFGABEN-06F2-UX1-A3 acceptance", () => {
 
     it("priority field adoption on create surfaces", () => {
       for (const file of [
-        "components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx",
+        "components/admin/aufgaben/contextual/ContextualTaskInlineCreateCard.tsx",
         "components/admin/aufgaben/AufgabenFullCreateClient.tsx",
         "components/admin/aufgaben/AufgabenFullCreateCollapsibleCard.tsx",
         "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
