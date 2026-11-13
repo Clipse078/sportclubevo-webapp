@@ -24,6 +24,8 @@ export type MeetingSubEntities = {
       id: string;
       slug: string;
       title: string;
+      summary: string | null;
+      description: string | null;
       status: InitiativeStatus;
     } | null;
   }>;
@@ -31,6 +33,7 @@ export type MeetingSubEntities = {
     id: string;
     title: string;
     description: string | null;
+    rationale: string | null;
     status: MeetingDecisionStatus;
     owner: string | null;
     ownerPersonId: string | null;
@@ -41,14 +44,18 @@ export type MeetingSubEntities = {
     approverPersonIds: unknown;
     approvalStatus: MeetingApprovalAggregateStatus;
     approvalContentRevision: number;
+    linkedRefs: unknown;
   }>;
   actions: Array<{
     id: string;
     title: string;
+    description: string | null;
+    expectedOutcome: string | null;
     owner: string | null;
     ownerPersonId: string | null;
     dueDate: Date | null;
     status: MeetingActionStatus;
+    linkedRefs: unknown;
   }>;
   participants: Array<{
     id: string;

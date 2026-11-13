@@ -1,0 +1,54 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import {
+  meetingProtocolPrintDraftHint,
+  meetingProtocolPrintPath,
+  meetingProtocolPrintUnavailableReason,
+} from "../meeting-protocol-print";
+
+function readSrc(relative: string) {
+  return readFileSync(join(process.cwd(), relative), "utf8");
+}
+
+describe("SCE-CD-03R4 — discoverable protocol print (UAT)", () => {
+  it("exposes canonical print path per meeting slug", () => {
+    expect(meetingProtocolPrintPath("test-sitzung-ii")).toBe(
+      "/vereinsleitung/meetings/test-sitzung-ii/protokoll",
+    );
+  });
+
+  it("keeps print in workspace secondary menu for planned and completed meetings", () => {
+    const statusBar = readSrc("components/admin/meetings/workspace/MeetingWorkspaceStatusBar.tsx");
+    expect(statusBar).toContain("Protokoll drucken");
+    expect(statusBar).toContain("meeting-print-protocol");
+    expect(statusBar).toContain("meetingProtocolPrintPath");
+    expect(statusBar).not.toMatch(/meeting\.status === "COMPLETED"\s*\?\s*\(/);
+  });
+
+  it("explains when print is unavailable instead of hiding the action", () => {
+    expect(meetingProtocolPrintUnavailableReason("CANCELLED")).toMatch(/abgesagte/i);
+    expect(meetingProtocolPrintUnavailableReason("PLANNED")).toBeNull();
+    expect(meetingProtocolPrintDraftHint("PLANNED")).toMatch(/Entwurf/i);
+  });
+
+  it("renders full protocol document sections in print view", () => {
+    const printView = readSrc("components/admin/meetings/workspace/MeetingProtocolPrintView.tsx");
+    expect(printView).toContain("model.documentLabel");
+    expect(printView).toContain("Traktandenübersicht");
+    expect(printView).toContain("Traktanden im Detail");
+    expect(printView).toContain("Teilnehmende");
+    expect(printView).toContain("Pendenzenübersicht");
+    expect(printView).not.toContain("Massnahmenübersicht");
+    expect(printView).not.toContain("schema-persistent");
+    expect(printView).toContain("Begründung");
+    expect(printView).toContain("Erwartetes Ergebnis / Ziel");
+    expect(printView).toContain("protocol-draft-banner");
+  });
+
+  it("loads document model on print route", () => {
+    const page = readSrc("app/(print)/vereinsleitung/meetings/[slug]/protokoll/page.tsx");
+    expect(page).toContain("loadMeetingProtocolDocumentModel");
+    expect(page).toContain("model={model}");
+  });
+});

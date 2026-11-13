@@ -8,6 +8,11 @@ import type { MeetingLiveData } from "@/lib/meetings/queries";
 import { buildMeetingWorkspaceStatusSummary } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
+import {
+  meetingProtocolPrintDraftHint,
+  meetingProtocolPrintPath,
+  meetingProtocolPrintUnavailableReason,
+} from "@/lib/meetings/meeting-protocol-print";
 
 type Props = {
   meeting: MeetingLiveData;
@@ -139,17 +144,29 @@ export default function MeetingWorkspaceStatusBar({
                     {loading === "close" ? "Wird geschlossen…" : "Sitzung abschliessen"}
                   </button>
                 ) : null}
-                {meeting.status === "COMPLETED" ? (
+                {meetingProtocolPrintUnavailableReason(meeting.status) ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled
+                    title={meetingProtocolPrintUnavailableReason(meeting.status) ?? undefined}
+                    className="block w-full cursor-not-allowed px-3 py-2 text-left text-sm text-[var(--muted)]"
+                    data-testid="meeting-print-protocol-unavailable"
+                  >
+                    Protokoll drucken
+                  </button>
+                ) : (
                   <Link
-                    href={`/vereinsleitung/meetings/${slug}/protokoll`}
+                    href={meetingProtocolPrintPath(slug)}
                     role="menuitem"
                     className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                     onClick={() => setMenuOpen(false)}
                     data-testid="meeting-print-protocol"
+                    title={meetingProtocolPrintDraftHint(meeting.status) ?? undefined}
                   >
                     Protokoll drucken
                   </Link>
-                ) : null}
+                )}
                 {canDelete ? (
                   <>
                     <MenuDivider />

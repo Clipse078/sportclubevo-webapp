@@ -59,6 +59,7 @@ export async function recordDecisionApprovalVote(input: {
       id: true,
       title: true,
       description: true,
+      rationale: true,
       approvalRequired: true,
       approvalRule: true,
       approverPersonIds: true,
@@ -125,6 +126,7 @@ export async function recordDecisionApprovalVote(input: {
   const contentHash = hashMeetingDecisionContent({
     title: decision.title,
     description: decision.description,
+    rationale: decision.rationale,
     revision: decision.approvalContentRevision,
   });
 
@@ -143,6 +145,7 @@ export function shouldInvalidateDecisionApproval(input: {
   approvedContentHash: string | null;
   title: string;
   description: string | null;
+  rationale: string | null;
   approvalContentRevision: number;
   approvalRequired: boolean;
   fieldsChanged: boolean;
@@ -152,6 +155,7 @@ export function shouldInvalidateDecisionApproval(input: {
   const current = hashMeetingDecisionContent({
     title: input.title,
     description: input.description,
+    rationale: input.rationale,
     revision: input.approvalContentRevision,
   });
   return materialContentChanged(input.approvedContentHash, current);

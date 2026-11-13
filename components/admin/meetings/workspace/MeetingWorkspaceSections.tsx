@@ -20,6 +20,7 @@ import {
   sumAgendaPlannedMinutes,
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
+import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
@@ -153,6 +154,7 @@ export function MeetingAgendaSection({
   }
 
   const agendaTotalMin = useMemo(() => sumAgendaPlannedMinutes(items), [items]);
+  const agendaDisplayOrder = useMemo(() => buildCanonicalAgendaDisplayOrderMap(items), [items]);
   const exceedsPlanned = agendaExceedsMeetingPlannedTime({
     agendaTotalMin,
     meetingPlannedDurationMin,
@@ -188,10 +190,10 @@ export function MeetingAgendaSection({
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-2)]">Noch keine Traktanden — erfasse den Ablauf der Sitzung.</p>
       ) : (
-        items.map((item, idx) => (
+        items.map((item) => (
           <AgendaItemRow
             key={item.id}
-            index={idx + 1}
+            index={agendaDisplayOrder.get(item.id) ?? 0}
             item={item}
             canManage={canManage}
             pending={pending}
@@ -640,6 +642,7 @@ export function MeetingDecisionsSection({
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [rationale, setRationale] = useState("");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -651,6 +654,7 @@ export function MeetingDecisionsSection({
         await meetingWorkspaceApi.decisions.create(meetingId, {
           title: trimmed,
           description: description.trim() || null,
+          rationale: rationale.trim() || null,
           status: "CONFIRMED",
           ownerPersonId: ownerPerson?.id ?? null,
           owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
@@ -660,6 +664,7 @@ export function MeetingDecisionsSection({
         if (res.ok) onItemsChange(data.decisions);
         setTitle("");
         setDescription("");
+        setRationale("");
         setOwnerPerson(null);
         setShowCreateForm(false);
       } catch (e) {
@@ -712,13 +717,23 @@ export function MeetingDecisionsSection({
         <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
           <label className="block space-y-1">
-            <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung (optional)</span>
+            <span className="text-xs font-semibold text-[var(--muted)]">Beschlusswortlaut (optional)</span>
             <textarea
               className={workspaceInputClass}
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Was genau wurde beschlossen?"
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Begründung (optional)</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={3}
+              value={rationale}
+              onChange={(e) => setRationale(e.target.value)}
+              placeholder="Warum wurde so entschieden?"
             />
           </label>
           <MeetingWorkspacePeopleField
@@ -735,6 +750,7 @@ export function MeetingDecisionsSection({
                 setShowCreateForm(false);
                 setTitle("");
                 setDescription("");
+                setRationale("");
                 setOwnerPerson(null);
               }}
             >
@@ -779,6 +795,7 @@ function MeetingDecisionCard({
   const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
   const [editingDetails, setEditingDetails] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(decision.description ?? "");
+  const [rationaleDraft, setRationaleDraft] = useState(decision.rationale ?? "");
   const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
 
   function saveAgendaLink(nextId: string) {
@@ -812,8 +829,12 @@ function MeetingDecisionCard({
       try {
         await meetingWorkspaceApi.decisions.update(meetingId, decision.id, {
           description: descriptionDraft.trim() || null,
+          rationale: rationaleDraft.trim() || null,
         });
-        onDecisionUpdated({ description: descriptionDraft.trim() || null });
+        onDecisionUpdated({
+          description: descriptionDraft.trim() || null,
+          rationale: rationaleDraft.trim() || null,
+        });
         setEditingDetails(false);
       } catch {
         // no-op
@@ -838,21 +859,48 @@ function MeetingDecisionCard({
       }
     >
       {documentationEditable && editingDetails ? (
-        <label className="block space-y-1">
-          <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung</span>
-          <textarea
-            className={workspaceInputClass}
-            rows={4}
-            value={descriptionDraft}
-            onChange={(e) => setDescriptionDraft(e.target.value)}
-            placeholder="Was genau wurde beschlossen?"
-          />
-        </label>
-      ) : decision.description ? (
-        <p className="text-sm text-[var(--text-2)] whitespace-pre-wrap">{decision.description}</p>
-      ) : documentationEditable ? (
-        <p className="text-sm italic text-[var(--muted)]">Noch keine Beschreibung erfasst.</p>
-      ) : null}
+        <div className="space-y-3">
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Beschlusswortlaut</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={4}
+              value={descriptionDraft}
+              onChange={(e) => setDescriptionDraft(e.target.value)}
+              placeholder="Was genau wurde beschlossen?"
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Begründung</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={4}
+              value={rationaleDraft}
+              onChange={(e) => setRationaleDraft(e.target.value)}
+              placeholder="Warum wurde so entschieden?"
+            />
+          </label>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {decision.description ? (
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold text-[var(--muted)]">Beschlusswortlaut</p>
+              <p className="text-sm text-[var(--text-2)] whitespace-pre-wrap">{decision.description}</p>
+            </div>
+          ) : documentationEditable ? (
+            <p className="text-sm italic text-[var(--muted)]">Noch kein Beschlusswortlaut erfasst.</p>
+          ) : null}
+          {decision.rationale ? (
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold text-[var(--muted)]">Begründung</p>
+              <p className="text-sm text-[var(--text-2)] whitespace-pre-wrap">{decision.rationale}</p>
+            </div>
+          ) : documentationEditable && !editingDetails ? (
+            <p className="text-sm italic text-[var(--muted)]">Noch keine Begründung erfasst.</p>
+          ) : null}
+        </div>
+      )}
       <p
         className="text-[11px] font-medium text-[var(--muted)]"
         data-testid={`decision-approval-status-${decision.id}`}
@@ -899,6 +947,7 @@ function MeetingDecisionCard({
                 className={workspaceGhostButtonClass}
                 onClick={() => {
                   setDescriptionDraft(decision.description ?? "");
+                  setRationaleDraft(decision.rationale ?? "");
                   setEditingDetails(false);
                 }}
               >
@@ -912,7 +961,7 @@ function MeetingDecisionCard({
               onClick={() => setEditingDetails(true)}
               data-testid={`meeting-decision-edit-details-${decision.id}`}
             >
-              Beschreibung bearbeiten
+              Dokumentation bearbeiten
             </button>
           )}
         </div>
@@ -959,8 +1008,11 @@ function MeetingActionRow({
 }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
+  const [editingDocs, setEditingDocs] = useState(false);
   const [title, setTitle] = useState(action.title);
   const [status, setStatus] = useState(action.status);
+  const [descriptionDraft, setDescriptionDraft] = useState(action.description ?? "");
+  const [expectedOutcomeDraft, setExpectedOutcomeDraft] = useState(action.expectedOutcome ?? "");
   const [dueDate, setDueDate] = useState(
     action.dueDate ? new Date(action.dueDate).toISOString().slice(0, 10) : "",
   );
@@ -1003,6 +1055,10 @@ function MeetingActionRow({
     });
   }
 
+  const descriptionPreview = action.description?.trim()
+    ? action.description.trim().split(/\n/)[0]?.slice(0, 120)
+    : null;
+
   const meta = [
     action.owner,
     action.dueDate
@@ -1011,6 +1067,24 @@ function MeetingActionRow({
     MEETING_ACTION_STATUS_LABELS[action.status],
   ].filter(Boolean);
 
+  function saveDocumentation() {
+    startTransition(async () => {
+      try {
+        await meetingWorkspaceApi.actions.update(meetingId, action.id, {
+          description: descriptionDraft.trim() || null,
+          expectedOutcome: expectedOutcomeDraft.trim() || null,
+        });
+        onUpdated({
+          description: descriptionDraft.trim() || null,
+          expectedOutcome: expectedOutcomeDraft.trim() || null,
+        });
+        setEditingDocs(false);
+      } catch {
+        // no-op
+      }
+    });
+  }
+
   return (
     <SceExpandablePanel
       defaultOpen={false}
@@ -1018,7 +1092,10 @@ function MeetingActionRow({
       summary={
         <div className="min-w-0 space-y-0.5">
           <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
-          {meta.length ? <p className="text-xs text-[var(--text-2)]">{meta.join(" · ")}</p> : null}
+          {descriptionPreview ? (
+            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+          ) : null}
+          {meta.length ? <p className="text-xs text-[var(--muted)]">{meta.join(" · ")}</p> : null}
         </div>
       }
     >
@@ -1069,13 +1146,86 @@ function MeetingActionRow({
           </div>
         </div>
       ) : (
-        <div className="space-y-2 text-sm text-[var(--text-2)]">
+        <div className="space-y-3 text-sm text-[var(--text-2)]">
           <p>Status: {MEETING_ACTION_STATUS_LABELS[action.status]}</p>
           {action.owner ? <p>Verantwortlich: {action.owner}</p> : null}
+          {canManage && editingDocs ? (
+            <div className="space-y-3">
+              <label className="block space-y-1">
+                <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung</span>
+                <textarea
+                  className={workspaceInputClass}
+                  rows={3}
+                  value={descriptionDraft}
+                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                  placeholder="Was ist die Massnahme?"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs font-semibold text-[var(--muted)]">Erwartetes Ergebnis</span>
+                <textarea
+                  className={workspaceInputClass}
+                  rows={3}
+                  value={expectedOutcomeDraft}
+                  onChange={(e) => setExpectedOutcomeDraft(e.target.value)}
+                  placeholder="Woran erkennen wir den Erfolg?"
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={workspacePrimaryButtonClass} disabled={pending} onClick={saveDocumentation}>
+                  Speichern
+                </button>
+                <button
+                  type="button"
+                  className={workspaceGhostButtonClass}
+                  onClick={() => {
+                    setDescriptionDraft(action.description ?? "");
+                    setExpectedOutcomeDraft(action.expectedOutcome ?? "");
+                    setEditingDocs(false);
+                  }}
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {action.description ? (
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-[var(--muted)]">Beschreibung</p>
+                  <p className="whitespace-pre-wrap">{action.description}</p>
+                </div>
+              ) : canManage ? (
+                <p className="italic text-[var(--muted)]">Noch keine Beschreibung erfasst.</p>
+              ) : null}
+              {action.expectedOutcome ? (
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-[var(--muted)]">Erwartetes Ergebnis</p>
+                  <p className="whitespace-pre-wrap">{action.expectedOutcome}</p>
+                </div>
+              ) : canManage ? (
+                <p className="italic text-[var(--muted)]">Noch kein erwartetes Ergebnis erfasst.</p>
+              ) : null}
+            </div>
+          )}
           {canManage ? (
-            <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(true)}>
-              Bearbeiten
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {editingDocs ? null : (
+                <>
+                  <button
+                    type="button"
+                    className={workspaceGhostButtonClass}
+                    onClick={() => setEditingDocs(true)}
+                    data-testid={`meeting-action-edit-docs-${action.id}`}
+                  >
+                    Dokumentation bearbeiten
+                  </button>
+                  <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(true)}>
+                    Stammdaten bearbeiten
+                  </button>
+                </>
+              )}
+            </div>
           ) : null}
         </div>
       )}
@@ -1092,6 +1242,8 @@ export function MeetingActionsSection({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [expectedOutcome, setExpectedOutcome] = useState("");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -1102,6 +1254,8 @@ export function MeetingActionsSection({
       try {
         await meetingWorkspaceApi.actions.create(meetingId, {
           title: trimmed,
+          description: description.trim() || null,
+          expectedOutcome: expectedOutcome.trim() || null,
           ownerPersonId: ownerPerson?.id ?? null,
           owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
         });
@@ -1109,6 +1263,8 @@ export function MeetingActionsSection({
         const data = await res.json();
         if (res.ok) onItemsChange(data.actions);
         setTitle("");
+        setDescription("");
+        setExpectedOutcome("");
         setOwnerPerson(null);
         setShowCreateForm(false);
       } catch (e) {
@@ -1154,6 +1310,26 @@ export function MeetingActionsSection({
       {canManage && showCreateForm ? (
         <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Massnahme" />
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung (optional)</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Was ist die Massnahme?"
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Erwartetes Ergebnis (optional)</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={2}
+              value={expectedOutcome}
+              onChange={(e) => setExpectedOutcome(e.target.value)}
+              placeholder="Woran erkennen wir den Erfolg?"
+            />
+          </label>
           <MeetingWorkspacePeopleField
             label="Verantwortliche/r (optional)"
             selected={ownerPerson}
@@ -1167,6 +1343,8 @@ export function MeetingActionsSection({
               onClick={() => {
                 setShowCreateForm(false);
                 setTitle("");
+                setDescription("");
+                setExpectedOutcome("");
                 setOwnerPerson(null);
               }}
             >
