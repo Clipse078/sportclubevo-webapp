@@ -7,7 +7,7 @@
 | **Implementation PR** | #971 `cursor/sce-fin-07e-supplier-bill-link-df59` — **external-reference linking only** |
 | **Predecessor on STAGE** | FIN-07A–07D implemented |
 
-This document is the **single canonical proposal**. PR #971 must **not** add a second copy; it carries code plus `docs/finance/SCE-FINANCE-07E-EXTERNAL-REFERENCE-LINKING.md` (implementation note).
+This document is the **single canonical proposal**. PR #971 must not add a second copy; it carries code plus `docs/finance/SCE-FINANCE-07E-EXTERNAL-REFERENCE-LINKING.md` (implementation note).
 
 ---
 
