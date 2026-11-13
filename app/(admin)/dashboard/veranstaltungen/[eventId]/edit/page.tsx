@@ -219,6 +219,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
                 label={tWork("createTask")}
                 locale={locale}
                 timeZone={timeZone}
+                activation="inlinePanel"
               />
             </>
           }

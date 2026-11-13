@@ -116,7 +116,7 @@ describe("SCE-DESIGN-SYSTEM-10 R4 — Aufgaben workspace convergence", () => {
     );
   });
 
-  it("R4.1 — Aufgaben create dialogs use canonical scrollable modal shell", () => {
+  it("R4.1 — Aufgaben task quick create uses inline collapsible shell", () => {
     const shell = readSrc("components/admin/aufgaben/AufgabenFormDialogShell.tsx");
     expect(shell).toContain("Dialog");
     expect(readSrc("components/ui/Dialog.tsx")).toContain("SceModalOverlay");
@@ -128,9 +128,9 @@ describe("SCE-DESIGN-SYSTEM-10 R4 — Aufgaben workspace convergence", () => {
       "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
     ]) {
       const src = readSrc(file);
-      expect(src).toContain("AufgabenFormDialogShell");
+      expect(src).toContain("AufgabenQuickCreateCollapsibleShell");
+      expect(src).not.toContain("AufgabenFormDialogShell");
       expect(src).not.toContain("fixed inset-0 z-50");
-      expect(src).not.toMatch(/pt-\[12vh\]/);
     }
   });
 

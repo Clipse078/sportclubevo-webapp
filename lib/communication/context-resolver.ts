@@ -29,6 +29,7 @@ import { getMeetingById } from "@/lib/meetings/queries";
 import { getTargetById } from "@/lib/targets/queries";
 import { getInitiativeById } from "@/lib/initiatives/queries";
 import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 
 type ContextMap = Record<string, string>;
 
@@ -70,7 +71,7 @@ function meetingFieldsFromRow(meeting: {
     "meeting.title": meeting.title,
     "meeting.date": formatSwissDate(meeting.meetingDate),
     "meeting.time": formatSwissTime(meeting.meetingDate),
-    "meeting.location": meeting.location ?? "",
+    "meeting.location": meeting.location ? formatMeetingLocationDisplay(meeting.location) : "",
     "meeting.description": meeting.description ?? "",
   };
 }

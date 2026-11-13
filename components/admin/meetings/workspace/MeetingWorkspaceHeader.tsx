@@ -12,6 +12,10 @@ import {
   getMeetingPrimaryAction,
 } from "@/lib/meetings/meeting-lifecycle";
 import { protocolReviewStageStatusLabel } from "@/lib/meetings/meeting-approval-presentation";
+import {
+  formatMeetingPresenceLabel,
+  parseMeetingLocation,
+} from "@/lib/meetings/meeting-presence-location";
 
 type Props = {
   title: string;
@@ -53,6 +57,8 @@ export default function MeetingWorkspaceHeader({
   const router = useRouter();
   const [lifecycleLoading, setLifecycleLoading] = useState(false);
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
+  const presence = parseMeetingLocation(meeting.location);
+  const presenceLabel = formatMeetingPresenceLabel(presence);
 
   const lifecycle = getMeetingLifecyclePresentation({
     status: meeting.status ?? "PLANNED",
@@ -150,9 +156,22 @@ export default function MeetingWorkspaceHeader({
           </div>
 
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-2)]">
-            <li className="inline-flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
-              {meeting.location ?? "Kein Ort angegeben"}
+            <li className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
+                {presenceLabel}
+              </span>
+              {presence.onlineUrl ? (
+                <a
+                  href={presence.onlineUrl}
+                  className="font-semibold text-[#0b4aa2] underline-offset-2 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="meeting-online-link"
+                >
+                  Online beitreten
+                </a>
+              ) : null}
             </li>
             <li className="inline-flex items-center gap-1">
               <Users className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />

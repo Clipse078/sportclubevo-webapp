@@ -2,6 +2,7 @@ import type { TaskContextType } from "@prisma/client";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
 import ContextualTaskCreateTrigger, {
+  type ContextualTaskCreateTriggerActivation,
   type ContextualTaskCreateTriggerVariant,
 } from "./ContextualTaskCreateTrigger";
 
@@ -13,6 +14,7 @@ type Props = {
   timeZone?: string;
   className?: string;
   label?: string;
+  activation?: ContextualTaskCreateTriggerActivation;
 };
 
 export default async function ContextualTaskCreateTriggerServer({
@@ -23,6 +25,7 @@ export default async function ContextualTaskCreateTriggerServer({
   timeZone = "Europe/Zurich",
   className,
   label,
+  activation,
 }: Props) {
   const ctx = await getTaskServiceContext();
   if (!ctx) return null;
@@ -41,6 +44,7 @@ export default async function ContextualTaskCreateTriggerServer({
       orgUnitOptions={view.orgUnitOptions}
       timeZone={view.timeZone}
       tenantWideVisibility={view.tenantWideVisibility}
+      activation={activation}
     />
   );
 }

@@ -231,6 +231,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
               contextId={person.id}
               variant="button"
               label={tWork("createTask")}
+              activation="inlinePanel"
             />
             {canManage ? (
               <Link

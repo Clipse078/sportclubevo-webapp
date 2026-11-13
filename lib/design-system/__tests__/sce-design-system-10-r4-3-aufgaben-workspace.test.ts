@@ -55,7 +55,7 @@ describe("SCE-DESIGN-SYSTEM-10 R4.3 — Aufgaben PO UAT corrections", () => {
       "AufgabenPersonalActionTypeLegend",
     );
     expect(readSrc("components/admin/aufgaben/AufgabenWorkspaceCreateChooser.tsx")).toContain(
-      "requestAnimationFrame",
+      "aufgaben-workspace-create-flow",
     );
   });
 

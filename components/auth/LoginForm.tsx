@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 /** Re-enable login if hard navigation never completes (slow/failed dashboard load). */
 const POST_LOGIN_STALL_MS = 20_000;
 
-const CANONICAL_LOGO_SRC = "/images/branding/sportclubevo_logo_alt.png";
+const CANONICAL_LOGO_SRC = "/images/branding/sportclubevo_logo.png";
 const LOGO_ASPECT = 864 / 174;
 
 function ScePlatformWordmark({
@@ -102,7 +102,7 @@ export default function LoginForm() {
   }
 
   return (
-    <main className="sce-login relative flex min-h-screen bg-[var(--background)]">
+    <main className="sce-login relative flex min-h-screen w-full bg-white">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -139,14 +139,13 @@ export default function LoginForm() {
           <div className="flex flex-1 flex-col justify-center py-16">
             <div className="max-w-[26rem]">
               <h1 className="sce-login-headline text-[2.125rem] font-bold tracking-[-0.03em] text-[var(--foreground)] xl:text-[2.375rem]">
-                Das Betriebssystem
+                Dein Verein.
                 <br />
-                für moderne
-                <br />
-                Sportvereine.
+                Gemeinsam organisiert.
               </h1>
               <p className="mt-6 max-w-[22rem] text-[0.9375rem] leading-[1.65] text-[var(--text-2)]">
-                Teams, Events, News und Kommunikation — professionell verwaltet an einem Ort.
+                Plane den Vereinsalltag, koordiniere Aufgaben und behalte Entscheidungen, Ressourcen
+                und Finanzen im Blick.
               </p>
             </div>
           </div>

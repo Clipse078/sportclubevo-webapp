@@ -55,6 +55,14 @@ export {
   withSceMatchContextBadges,
 } from "./match-context-badges";
 
+export {
+  resolveMatchScoreSideEmphasis,
+  resolveNumericMatchScore,
+  sceMatchScoreBoxClassName,
+  sceMatchScoreInlineEmphasisClass,
+  type MatchScoreSideEmphasis,
+} from "./match-score-outcome-styling";
+
 export { resolveSceMatchLifecycleStatus } from "./match-lifecycle-status";
 
 export { buildSceActivityRoute, parseActivityIdFromResourceKey } from "./route";

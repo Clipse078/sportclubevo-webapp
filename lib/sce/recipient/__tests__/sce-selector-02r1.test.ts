@@ -53,9 +53,11 @@ describe("SCE-SELECTOR-02R1 contract matrix", () => {
     expect(builder).not.toContain("SelectorAddPanel");
   });
 
-  it("task assignee UI uses PERSON discovery with linked user metadata", () => {
+  it("task assignee UI uses inline TASK_ASSIGNMENT discover search", () => {
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(picker).toContain('sourceTypes={["PERSON"]}');
-    expect(picker).toContain("linkedUserId");
+    const inline = read("components/sce/list-selector/SceInlineTaskAssigneeMultiPicker.tsx");
+    expect(picker).toContain("SceInlineTaskAssigneeMultiPicker");
+    expect(inline).toContain("linkedUserId");
+    expect(inline).toContain("sources=PERSON");
   });
 });

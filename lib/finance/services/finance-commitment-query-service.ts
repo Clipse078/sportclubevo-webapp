@@ -7,6 +7,10 @@ import {
   canViewFinanceCommitments,
   requireFinanceCommitmentFoundationView,
 } from "@/lib/finance/commitment/finance-commitment-authorization";
+import {
+  listSupplierBillEvidenceForCommitment,
+  type FinanceSupplierBillEvidenceLinkRecord,
+} from "@/lib/finance/services/finance-commitment-supplier-bill-evidence-service";
 import { FinanceDomainError } from "@/lib/finance/errors";
 import { resolveFinanceCommitmentSelectedYearId } from "@/lib/finance/commitment/resolve-finance-commitment-selected-year";
 import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configuration-service";
@@ -106,6 +110,8 @@ export type FinanceCommitmentDetailRecord = FinanceCommitmentListItem & {
   canReject: boolean;
   approvalDecisionHistory: FinanceCommitmentApprovalDecisionRecord[];
   approvalExplanation: FinanceCommitmentApprovalExplanation | null;
+  supplierBillEvidenceLinks: FinanceSupplierBillEvidenceLinkRecord[];
+  canLinkSupplierBillEvidence: boolean;
 };
 
 export type FinanceCommitmentApprovalInboxSnapshot = {
@@ -461,6 +467,14 @@ export async function getFinanceCommitmentDetail(
       approvalPolicyCurrencySnapshot: row.approvalPolicyCurrencySnapshot,
     });
 
+  const supplierBillEvidenceLinks = await listSupplierBillEvidenceForCommitment(
+    db as never,
+    ctx,
+    row.id,
+  );
+  const canLinkSupplierBillEvidence =
+    canManageFinanceCommitments(ctx) && row.lifecycleStatus !== "CANCELLED";
+
   if (row.lifecycleStatus === "DRAFT") {
     const policy = await resolveEffectiveFinanceCommitmentApprovalPolicy(db as never, ctx);
     const preview = evaluateFinanceCommitmentApprovalRequirement({
@@ -504,6 +518,8 @@ export async function getFinanceCommitmentDetail(
       decidedByDisplayName: decisionActorName.get(d.decidedByUserId) ?? null,
     })),
     approvalExplanation,
+    supplierBillEvidenceLinks,
+    canLinkSupplierBillEvidence,
   };
 }
 

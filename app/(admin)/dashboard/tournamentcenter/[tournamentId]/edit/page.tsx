@@ -209,6 +209,7 @@ export default async function TournamentEditPage({ params }: Props) {
               variant="menuItem"
               locale={locale}
               timeZone={timeZone}
+              activation="inlinePanel"
             />
           }
           relatedTasksPanel={

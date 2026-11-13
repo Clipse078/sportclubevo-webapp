@@ -78,9 +78,9 @@ describe("SCE-SELECTOR-02R2", () => {
     expect(recipient).not.toContain("discoverSceSelectorItems");
   });
 
-  it("task picker uses PERSON source only (never USER category)", () => {
-    const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(picker).toContain('sourceTypes={["PERSON"]}');
-    expect(picker).not.toContain('"USER"');
+  it("task picker uses TASK_ASSIGNMENT PERSON discover (never USER category)", () => {
+    const inline = read("components/sce/list-selector/SceInlineTaskAssigneeMultiPicker.tsx");
+    expect(inline).toContain("sources=PERSON");
+    expect(inline).not.toContain('"USER"');
   });
 });

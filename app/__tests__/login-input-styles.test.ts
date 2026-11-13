@@ -5,13 +5,18 @@ import { describe, expect, it } from "vitest";
 const GLOBALS_CSS = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
 
 describe("SCE login input styles", () => {
-  it("defines dark login surface tokens scoped to .sce-login", () => {
+  it("defines login surface tokens scoped to .sce-login", () => {
     expect(GLOBALS_CSS).toMatch(/\.sce-login\s*\{[^}]*--sce-login-input-bg:/s);
     expect(GLOBALS_CSS).toMatch(/--sce-login-input-bg-hover:/);
     expect(GLOBALS_CSS).toMatch(/--sce-login-input-bg-focus:/);
   });
 
-  it("keeps warm-white text and dark caret on base login inputs", () => {
+  it("uses restrained DS2 borders on login inputs", () => {
+    expect(GLOBALS_CSS).toMatch(/\.sce-login-input\s*\{[^}]*border:\s*1px solid var\(--border\)/s);
+    expect(GLOBALS_CSS).toMatch(/\.sce-login-input:hover\s*\{[^}]*border-color:\s*var\(--border-strong\)/s);
+  });
+
+  it("keeps readable text and dark caret on base login inputs", () => {
     expect(GLOBALS_CSS).toMatch(/\.sce-login-input\s*\{[^}]*color:\s*var\(--foreground\)/s);
     expect(GLOBALS_CSS).toMatch(/\.sce-login-input\s*\{[^}]*caret-color:\s*var\(--foreground\)/s);
   });
