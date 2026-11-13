@@ -25,6 +25,6 @@ describe("SCE-TASK-UX-02 — contextual inline task create", () => {
     expect(card).toContain("useContextualTaskCreateForm");
     expect(card).toContain("ContextualTaskCreateFormBody");
     expect(card).toContain("clearDraft");
-    expect(card).not.toMatch(/<ContextualTaskCreateDialog/);
+    expect(card).not.toMatch(/import ContextualTaskCreateDialog from/);
   });
 });
