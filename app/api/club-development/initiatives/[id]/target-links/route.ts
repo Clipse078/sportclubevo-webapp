@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  InitiativeMilestoneTenantError,
+  InitiativeTargetLinkError,
   linkInitiativeTarget,
   listInitiativeTargetLinks,
   unlinkInitiativeTarget,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const link = await linkInitiativeTarget(access.context.tenantId, id, targetId);
     return NextResponse.json({ link }, { status: 201 });
   } catch (err) {
-    if (err instanceof InitiativeMilestoneTenantError) {
+    if (err instanceof InitiativeTargetLinkError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
     throw err;
@@ -77,7 +77,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     await unlinkInitiativeTarget(access.context.tenantId, id, targetId);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    if (err instanceof InitiativeMilestoneTenantError) {
+    if (err instanceof InitiativeTargetLinkError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
     throw err;

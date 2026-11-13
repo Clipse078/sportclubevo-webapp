@@ -5552,6 +5552,29 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
+    "urlPattern": "/vereinsleitung/initiativen/backlog",
+    "sourceFile": "app/(admin)/vereinsleitung/initiativen/backlog/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
     "urlPattern": "/vereinsleitung/initiativen/new",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/new/page.tsx",
     "module": "vereinsleitung",
@@ -5845,6 +5868,98 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
+    "urlPattern": "/vereinsleitung/sprints",
+    "sourceFile": "app/(admin)/vereinsleitung/sprints/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/vereinsleitung/sprints/[slug]",
+    "sourceFile": "app/(admin)/vereinsleitung/sprints/[slug]/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "detail",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/vereinsleitung/sprints/[slug]/board",
+    "sourceFile": "app/(admin)/vereinsleitung/sprints/[slug]/board/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/vereinsleitung/strategie",
+    "sourceFile": "app/(admin)/vereinsleitung/strategie/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
     "urlPattern": "/vereinsleitung/targets",
     "sourceFile": "app/(admin)/vereinsleitung/targets/page.tsx",
     "module": "vereinsleitung",
@@ -6096,12 +6211,12 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-13T20:30:19.258Z",
-  "totalCanonicalRoutes": 218,
+  "generatedAt": "2026-11-13T22:05:12.793Z",
+  "totalCanonicalRoutes": 223,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 218,
+  "pendingAuthenticatedVisualCount": 223,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 218,
+  "automatedChecksPassedCount": 223,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
@@ -6121,6 +6236,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 218,
+  "entriesScanned": 223,
   "defects": []
 };

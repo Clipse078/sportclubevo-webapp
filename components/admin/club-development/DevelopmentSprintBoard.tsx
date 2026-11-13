@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { TaskStatus } from "@prisma/client";
+import { TaskPriority, TaskStatus } from "@prisma/client";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
-import { getTaskPriorityVisual } from "@/lib/tasks/task-priority-visual";
+import { taskPriorityVisual } from "@/lib/tasks/task-priority-visual";
 
 type BoardCard = {
   taskId: string;
@@ -147,7 +147,7 @@ function BoardCardView({
   pending: boolean;
   onMove: (taskId: string, status: TaskStatus) => void;
 }) {
-  const priorityVisual = getTaskPriorityVisual(card.priority as Parameters<typeof getTaskPriorityVisual>[0]);
+  const priorityVisual = taskPriorityVisual(card.priority as TaskPriority);
   const due = formatDue(card.dueAt);
   const actions = COLUMN_ACTIONS[columnKey];
 
