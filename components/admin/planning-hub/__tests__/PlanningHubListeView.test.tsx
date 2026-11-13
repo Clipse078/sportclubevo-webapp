@@ -91,8 +91,7 @@ describe("PlanningHubListeView", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={onOpen}
-        onItemEditPlanning={vi.fn()}
+        onToggleExpand={onOpen}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -116,8 +115,7 @@ describe("PlanningHubListeView", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
-        onItemEditPlanning={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -140,8 +138,7 @@ describe("PlanningHubListeView", () => {
         }}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
-        onItemEditPlanning={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => false}
         permissionContext={{ ...permissionContext, canManageTrainings: false }}
@@ -164,8 +161,7 @@ describe("PlanningHubListeView", () => {
         }}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
-        onItemEditPlanning={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => false}
         permissionContext={{ ...permissionContext, canManageTrainings: false }}

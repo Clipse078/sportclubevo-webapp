@@ -32,6 +32,7 @@ export type PlanningMatchDressingRoomAssignmentsProps = {
   onSelectAway: (code: string) => void | Promise<void>;
   onDeselectHome?: (code: string) => void | Promise<void>;
   onDeselectAway?: (code: string) => void | Promise<void>;
+  embeddedInGroup?: boolean;
   testId?: string;
 };
 
@@ -50,6 +51,7 @@ export function PlanningMatchDressingRoomAssignments({
   onSelectAway,
   onDeselectHome,
   onDeselectAway,
+  embeddedInGroup = false,
   testId = "match-dressing-room-assignments",
 }: PlanningMatchDressingRoomAssignmentsProps) {
   const availabilityBySubjectId = useMemo(() => {
@@ -120,6 +122,7 @@ export function PlanningMatchDressingRoomAssignments({
         if (subjectId === "home" && onDeselectHome) return onDeselectHome(resourceId);
         if (subjectId === "away" && onDeselectAway) return onDeselectAway(resourceId);
       }}
+      embeddedInGroup={embeddedInGroup}
       testId={testId}
     />
   );

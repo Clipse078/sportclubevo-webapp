@@ -16,6 +16,7 @@ type Props = {
   item: WeekplannerItem;
   locale: string;
   timezone: string;
+  presentation?: "modal" | "inline";
   resourceCategory: PlanningHubUrlState["resourceCategory"];
   planningResourceGroups?: readonly PlanningResourceGroup[];
   onClose: () => void;
@@ -31,6 +32,7 @@ export default function PlanningHubActivityScheduleEditDialog({
   item,
   locale,
   timezone,
+  presentation = "modal",
   resourceCategory,
   planningResourceGroups,
   onClose,
@@ -100,6 +102,7 @@ export default function PlanningHubActivityScheduleEditDialog({
   return (
     <PlanningHubManipulationModalShell
       testId="planning-hub-activity-schedule-edit"
+      presentation={presentation}
       onClose={onClose}
       initialFocusRef={firstFieldRef}
       header={

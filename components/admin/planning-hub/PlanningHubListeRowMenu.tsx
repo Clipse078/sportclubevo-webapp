@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ClipboardList,
-  Clock3,
-  DoorOpen,
-  ExternalLink,
-  MoreHorizontal,
-  ShieldAlert,
-} from "lucide-react";
+import { Clock3, DoorOpen, ExternalLink, MoreHorizontal, Pencil, ShieldAlert } from "lucide-react";
 import { SoccerPitchLineIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import {
   RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
@@ -16,8 +9,12 @@ import {
 } from "@/components/admin/shared/planning/resource-card-selection-style";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
-import { deriveConflictResolutionCapabilities } from "@/lib/planning-hub/conflict-resolution";
+import {
+  derivePlanningHubListeMenuCapabilities,
+  type PlanningHubListeMenuAction,
+} from "@/lib/planning-hub/liste-operational-menu";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
+import type { PlannerCanonicalEditAccess } from "@/lib/planning-hub/planner-canonical-edit-access";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 
@@ -35,8 +32,9 @@ type PlanningHubListeRowMenuProps = {
     canViewEvents?: boolean;
   };
   canEditItem: boolean;
-  onOpenItem: () => void;
-  onEditPlanning: () => void;
+  plannerEditAccess: PlannerCanonicalEditAccess | null;
+  alternativePlanActive: boolean;
+  onMenuAction: (action: PlanningHubListeMenuAction) => void;
   onReviewConflict: () => void;
 };
 
@@ -97,8 +95,9 @@ export default function PlanningHubListeRowMenu({
   item,
   permissionContext,
   canEditItem,
-  onOpenItem,
-  onEditPlanning,
+  plannerEditAccess,
+  alternativePlanActive,
+  onMenuAction,
   onReviewConflict,
 }: PlanningHubListeRowMenuProps) {
   const [open, setOpen] = useState(false);
@@ -114,20 +113,37 @@ export default function PlanningHubListeRowMenu({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  const caps = deriveConflictResolutionCapabilities(item, permissionContext, {
-    canEditActivity: canEditItem,
+  const caps = derivePlanningHubListeMenuCapabilities({
+    item,
+    permissionContext,
+    canEditItem,
+    manipulationEnabled: manipulation?.enabled ?? false,
+    plannerEditAccess,
+    alternativePlanActive,
   });
-  const hasConflict = item.conflicts.length > 0;
-  const pitchId = item.pitchAllocations[0]?.facilityResourceId;
-  const dressingId = item.dressingRoomAllocations[0]?.facilityResourceId;
 
-  const showSchedule = caps.canMoveActivityTime && manipulation?.enabled;
-  const showPitch =
-    caps.canChangePrimaryResource && manipulation?.enabled && pitchId;
-  const showDressing =
-    caps.canChangeSupportingResource && manipulation?.enabled && dressingId;
-  const showPlanningEdit = canEditItem && caps.canEditActivity;
-  const showConflict = hasConflict;
+  function openPitchAction() {
+    if (caps.pitchUsesManipulation && caps.pitchResourceId) {
+      manipulation?.openResourceEditorForConflict(item, caps.pitchResourceId, "pitch");
+      onMenuAction("pitch");
+      return;
+    }
+    onMenuAction("pitch");
+  }
+
+  function openDressingAction() {
+    if (caps.dressingUsesManipulation && caps.dressingResourceId) {
+      manipulation?.openResourceEditorForConflict(item, caps.dressingResourceId, "dressing");
+      onMenuAction("dressing");
+      return;
+    }
+    onMenuAction("dressing");
+  }
+
+  function openScheduleAction() {
+    manipulation?.openActivityScheduleEditor(item);
+    onMenuAction("schedule");
+  }
 
   return (
     <>
@@ -163,31 +179,34 @@ export default function PlanningHubListeRowMenu({
         className="w-[min(100vw-2rem,16rem)] p-1.5"
         aria-label="Planungsaktionen"
       >
-        {caps.canOpenActivity ? (
+        {caps.showDetails ? (
           <MenuButton
-            label="Öffnen"
+            label="Details öffnen"
             tone="neutral"
             icon={<ExternalLink className="h-4 w-4" />}
-            testId={`planning-hub-liste-action-open-${item.id}`}
+            testId={`planning-hub-liste-action-details-${item.id}`}
             onClick={() => {
               setOpen(false);
-              onOpenItem();
+              onMenuAction("details");
             }}
           />
         ) : null}
-        {showPlanningEdit ? (
+        {caps.showEdit ? (
           <MenuButton
-            label="Planung ändern"
+            label={caps.editMenuLabel}
             tone="planning"
-            icon={<ClipboardList className="h-4 w-4" />}
-            testId={`planning-hub-liste-action-plan-${item.id}`}
+            icon={<Pencil className="h-4 w-4" />}
+            testId={`planning-hub-liste-action-edit-${item.id}`}
             onClick={() => {
               setOpen(false);
-              onEditPlanning();
+              onMenuAction("edit");
             }}
           />
         ) : null}
-        {showSchedule ? (
+        {caps.showEdit === false && caps.editBlockedReason ? (
+          <p className="px-3 py-2 text-[11px] leading-snug text-[var(--text-2)]">{caps.editBlockedReason}</p>
+        ) : null}
+        {caps.showSchedule ? (
           <MenuButton
             label="Termin ändern"
             tone="schedule"
@@ -195,35 +214,35 @@ export default function PlanningHubListeRowMenu({
             testId={`planning-hub-liste-action-schedule-${item.id}`}
             onClick={() => {
               setOpen(false);
-              manipulation?.openActivityScheduleEditor(item);
+              openScheduleAction();
             }}
           />
         ) : null}
-        {showPitch ? (
+        {caps.showPitch ? (
           <MenuButton
-            label="Spielfeld ändern"
+            label={caps.pitchLabel}
             tone="pitch"
             icon={<SoccerPitchLineIcon className={cn("h-4 w-4", RESOURCE_SEMANTIC_PITCH_ICON_CLASS)} />}
             testId={`planning-hub-liste-action-pitch-${item.id}`}
             onClick={() => {
               setOpen(false);
-              manipulation?.openResourceEditorForConflict(item, pitchId!, "pitch");
+              openPitchAction();
             }}
           />
         ) : null}
-        {showDressing ? (
+        {caps.showDressing ? (
           <MenuButton
-            label="Garderobe ändern"
+            label={caps.dressingLabel}
             tone="dressing"
             icon={<DoorOpen className={cn("h-4 w-4", RESOURCE_SEMANTIC_DRESSING_ICON_CLASS)} />}
             testId={`planning-hub-liste-action-dressing-${item.id}`}
             onClick={() => {
               setOpen(false);
-              manipulation?.openResourceEditorForConflict(item, dressingId!, "dressing");
+              openDressingAction();
             }}
           />
         ) : null}
-        {showConflict ? (
+        {caps.showConflict ? (
           <MenuButton
             label="Konflikt prüfen"
             tone="conflict"

@@ -41,6 +41,8 @@
  * Standardplan.
  */
 
+import type { MatchcenterVisibility } from "@/lib/matchcenter/types";
+
 export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 
 /** The two allocation groups a WeekplannerPlan may override — see prisma/schema.prisma#WeekplannerAllocationGroup. */
@@ -139,6 +141,10 @@ export type WeekplannerMatchSideIdentity = {
   displayName: string;
   logoUrl: string | null;
   isOwnTeam: boolean;
+  canonicalTeamId?: string | null;
+  canonicalTeamName?: string | null;
+  canonicalTeamShortName?: string | null;
+  externalLogoUrl?: string | null;
 };
 
 export type WeekplannerMatchItem = WeekplannerItemBase & {
@@ -159,6 +165,13 @@ export type WeekplannerMatchItem = WeekplannerItemBase & {
    * product spec). Always the Standardplan/legacy value.
    */
   awayDressingRoomAllocations: WeekplannerResourceRef[];
+  /** Persisted publication flags from Event — populated by weekplanner queries for Liste match prep. */
+  publicationVisibility?: MatchcenterVisibility;
+  /** Canonical match metadata from Matchcenter query (Liste / Matchcenter card parity). */
+  competitionLabel?: string | null;
+  venueLabel?: string | null;
+  kickoffKnown?: boolean;
+  matchStatus?: string;
 };
 
 export type WeekplannerTournamentItem = WeekplannerItemBase & {

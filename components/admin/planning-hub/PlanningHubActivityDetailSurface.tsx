@@ -25,6 +25,11 @@ import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePil
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import PlannerOperationalStatusSection from "./PlannerOperationalStatusSection";
+import {
+  PLANNER_ACTIVITY_DETAIL_POPOVER_CLASS,
+  PLANNER_PORTAL_WHITE_THEME_ATTR,
+  PLANNER_PORTAL_WHITE_THEME_VALUE,
+} from "@/lib/planning-hub/planner-floating-surface";
 
 type PlanningHubActivityDetailSurfaceProps = {
   item?: WeekplannerItem;
@@ -129,7 +134,8 @@ export default function PlanningHubActivityDetailSurface({
               style={floatingStyles}
               id={detailId}
               data-testid="planning-hub-activity-detail"
-              className="z-[80] max-w-[min(100vw-1.5rem,18rem)] rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-2.5 text-left shadow-[var(--shadow-lg)]"
+              className={PLANNER_ACTIVITY_DETAIL_POPOVER_CLASS}
+              {...{ [PLANNER_PORTAL_WHITE_THEME_ATTR]: PLANNER_PORTAL_WHITE_THEME_VALUE }}
               {...getFloatingProps({
                 "aria-label": `${model.title}, ${model.typeLabel}`,
               })}

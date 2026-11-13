@@ -104,6 +104,14 @@ function matchItem(overrides: Partial<WeekplannerMatchItem> = {}): WeekplannerMa
     pitchOverridden: false,
     dressingRoomOverridden: false,
     awayDressingRoomAllocations: [],
+    publicationVisibility: {
+      websiteVisible: false,
+      infoboardVisible: false,
+      homepageVisible: false,
+      wochenplanVisible: true,
+      trainingsplanVisible: false,
+      teamPageVisible: false,
+    },
     conflicts: [],
     ...overrides,
   };

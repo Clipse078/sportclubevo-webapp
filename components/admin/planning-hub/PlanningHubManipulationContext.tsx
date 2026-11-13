@@ -174,6 +174,32 @@ export type PlanningHubManipulationContextValue = {
     category: PlanningHubUrlState["resourceCategory"],
   ) => void;
   openActivityScheduleEditorForConflict: (item: WeekplannerItem) => void;
+  /** SCE-PLANNER-OPS-01 — Liste renders these inline instead of portalled modals. */
+  manipulationEditorPresentation: "modal" | "inline";
+  inlineResourceEdit: null | {
+    item: WeekplannerItem;
+    segmentId: string;
+    resourceId: string;
+    resourceCategory: PlanningHubUrlState["resourceCategory"];
+    resourceOptions: WeekplannerResourceRef[];
+    planningResourceGroups: ReturnType<typeof buildPlanningResourceGroupsFromFacilityGroups>;
+    facilityGroups: FacilityGroup[];
+    allItems: readonly WeekplannerItem[];
+    evaluateConflicts: (
+      draft: SchedulerDraftChange,
+      targetRef: WeekplannerResourceRef | null,
+    ) => ManipulationConflictPreview;
+  };
+  inlineScheduleEdit: WeekplannerItem | null;
+  inlineScheduleResourceCategory: PlanningHubUrlState["resourceCategory"];
+  inlineSchedulePlanningResourceGroups: ReturnType<typeof buildPlanningResourceGroupsFromFacilityGroups>;
+  closeInlineResourceEdit: () => void;
+  closeInlineScheduleEdit: () => void;
+  submitEditorDraft: (draft: SchedulerDraftChange) => void;
+  applyEditorDraft: (draft: SchedulerDraftChange) => Promise<void>;
+  editorApplySaving: boolean;
+  editorApplyError: string | null;
+  evaluateScheduleConflicts: (draft: SchedulerDraftChange) => ManipulationConflictPreview;
 };
 
 export const PlanningHubManipulationContext =
@@ -199,6 +225,7 @@ type ProviderProps = {
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
   resourceRows?: { resourceId: string; ref: WeekplannerResourceRef }[];
   onManipulationApplied?: (draft: SchedulerDraftChange) => void;
+  manipulationEditorPresentation?: "modal" | "inline";
   children: ReactNode;
 };
 
@@ -218,6 +245,7 @@ export function PlanningHubManipulationProvider({
   overridesByKey = {},
   resourceRows = [],
   onManipulationApplied,
+  manipulationEditorPresentation = "modal",
   children,
 }: ProviderProps) {
   const router = useRouter();
@@ -1021,6 +1049,46 @@ export function PlanningHubManipulationProvider({
     await applyConfirmationDraft(confirmationDraft);
   }, [confirmationDraft, applyConfirmationDraft]);
 
+  const inlineResourceEdit = useMemo(() => {
+    if (manipulationEditorPresentation !== "inline" || !editTarget) return null;
+    return {
+      item: editTarget.item,
+      segmentId: editTarget.segmentId,
+      resourceId: editTarget.resourceId,
+      resourceCategory: effectiveResourceCategory,
+      resourceOptions: resourceOptionsForCategory,
+      planningResourceGroups,
+      facilityGroups: facilityGroupsForEditCategory,
+      allItems,
+      evaluateConflicts: (draft: SchedulerDraftChange, targetRef: WeekplannerResourceRef | null) =>
+        evaluateManipulationConflicts(allItems, draft, targetRef, effectiveResourceCategory),
+    };
+  }, [
+    manipulationEditorPresentation,
+    editTarget,
+    effectiveResourceCategory,
+    resourceOptionsForCategory,
+    planningResourceGroups,
+    facilityGroupsForEditCategory,
+    allItems,
+  ]);
+
+  const closeInlineResourceEdit = useCallback(() => {
+    setEditTarget(null);
+    setManipulationCategoryOverride(null);
+  }, []);
+
+  const closeInlineScheduleEdit = useCallback(() => {
+    setScheduleEditItem(null);
+    setManipulationCategoryOverride(null);
+  }, []);
+
+  const evaluateScheduleConflicts = useCallback(
+    (draft: SchedulerDraftChange) =>
+      evaluateManipulationConflicts(allItems, draft, null, urlState.resourceCategory),
+    [allItems, urlState.resourceCategory],
+  );
+
   const value: PlanningHubManipulationContextValue = {
     enabled,
     isDragging: pointerSession !== null,
@@ -1040,12 +1108,24 @@ export function PlanningHubManipulationProvider({
     openActivityScheduleEditor,
     openResourceEditorForConflict,
     openActivityScheduleEditorForConflict,
+    manipulationEditorPresentation,
+    inlineResourceEdit,
+    inlineScheduleEdit: manipulationEditorPresentation === "inline" ? scheduleEditItem : null,
+    inlineScheduleResourceCategory: urlState.resourceCategory,
+    inlineSchedulePlanningResourceGroups: planningResourceGroups,
+    closeInlineResourceEdit,
+    closeInlineScheduleEdit,
+    submitEditorDraft,
+    applyEditorDraft: applyConfirmationDraft,
+    editorApplySaving: confirmSaving,
+    editorApplyError: confirmError,
+    evaluateScheduleConflicts,
   };
 
   return (
     <PlanningHubManipulationContext.Provider value={value}>
       {children}
-      {scheduleEditItem && (
+      {scheduleEditItem && manipulationEditorPresentation === "modal" && (
         <PlanningHubActivityScheduleEditDialog
           item={scheduleEditItem}
           locale={locale}
@@ -1063,7 +1143,7 @@ export function PlanningHubManipulationProvider({
           resolveResourceRef={resolveResourceRef}
         />
       )}
-      {editTarget && (
+      {editTarget && manipulationEditorPresentation === "modal" && (
         <PlanningHubManipulationEditDialog
           item={editTarget.item}
           segmentId={editTarget.segmentId}

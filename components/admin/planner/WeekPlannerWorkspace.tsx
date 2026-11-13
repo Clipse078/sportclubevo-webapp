@@ -61,6 +61,9 @@ import {
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
+import type { PlanningHubListeMenuAction } from "@/lib/planning-hub/liste-operational-menu";
+import type { PlanningHubListeInlineSession } from "@/components/admin/planning-hub/PlanningHubListeInlineEditorHost";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 type OverrideEditingContext = {
   planId: string;
@@ -192,6 +195,7 @@ function WeekPlannerWorkspaceBody({
 
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
+  const [listeInlineSession, setListeInlineSession] = useState<PlanningHubListeInlineSession>(null);
   const canEdit = !!canonicalEditing;
 
   const itemsById = new Map(
@@ -239,7 +243,18 @@ function WeekPlannerWorkspaceBody({
     return canOpenPlannerCanonicalEditor(item, access);
   }
 
+  function handleListeToggleExpand(item: WeekplannerItem) {
+    setListeInlineSession((current) => {
+      if (current?.itemId === item.id) return null;
+      return { itemId: item.id, focus: null };
+    });
+  }
+
   function handleItemActivate(item: WeekplannerItem) {
+    if (urlState.perspective === "liste") {
+      handleListeToggleExpand(item);
+      return;
+    }
     if (item.type === "VERANSTALTUNG" && activePlanId && overrideEditing) {
       handleItemOpen(item);
       return;
@@ -251,6 +266,18 @@ function WeekPlannerWorkspaceBody({
     if (isStandardplan && canEdit) {
       handleEdit(item);
     }
+  }
+
+  function handleListeMenuAction(item: WeekplannerItem, action: PlanningHubListeMenuAction) {
+    if (action === "conflict") {
+      handleReviewConflictForItem(item);
+      return;
+    }
+    setListeInlineSession({ itemId: item.id, focus: action });
+  }
+
+  function handleListeInlineSaved() {
+    router.refresh();
   }
 
   const resolvedUrlState = { ...urlState, week: week.param };
@@ -383,6 +410,7 @@ function WeekPlannerWorkspaceBody({
         overridesByKey={overrideEditing?.overridesByKey}
         resourceRows={resourceRowsForManipulation}
         onManipulationApplied={handleManipulationApplied}
+        manipulationEditorPresentation={urlState.perspective === "liste" ? "inline" : "modal"}
       >
         {node}
       </PlanningHubManipulationProvider>
@@ -436,16 +464,19 @@ function WeekPlannerWorkspaceBody({
         tenantClubName={tenantClubName}
         tenantLogoUrl={tenantLogoUrl}
         activeAlternativePlanName={activeAlternativePlanName}
-        onItemOpen={handleItemActivate}
-        onItemEditPlanning={(item) => {
-          if (activePlanId && overrideEditing) {
-            handleOperationalEdit(item);
-            return;
-          }
-          handleEdit(item);
-        }}
+        onToggleExpand={handleListeToggleExpand}
+        expandedItemId={listeInlineSession?.itemId ?? null}
         onReviewConflictForItem={handleReviewConflictForItem}
         canEditItem={canEditPlannerItem}
+        inlineSession={listeInlineSession}
+        onMenuAction={handleListeMenuAction}
+        onInlineSaved={handleListeInlineSaved}
+        facilityGroupsByAllocationGroup={
+          manipulationFacilityGroups ?? { PITCH_HALL: [], DRESSING_ROOM: [] }
+        }
+        tenantDressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
+        plannerEditAccess={plannerEditAccess()}
+        alternativePlanActive={!isStandardplan}
         permissionContext={{
           canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
           canManageEvents: canonicalEditing?.canManageEvents ?? false,
@@ -480,7 +511,7 @@ function WeekPlannerWorkspaceBody({
         </>,
       )}
 
-      {canonicalEditing && (
+      {canonicalEditing && urlState.perspective !== "liste" && (
         <WeekplannerPlanningSheet
           item={editingItem}
           facilityGroupsByAllocationGroup={
@@ -525,8 +556,10 @@ function WeekPlannerWorkspaceWithReconciledWeek(props: WeekPlannerWorkspaceProps
 
 export default function WeekPlannerWorkspace(props: WeekPlannerWorkspaceProps) {
   return (
-    <PlanningHubPlannerWeekProvider serverWeek={props.week} timezone={props.timezone ?? "Europe/Zurich"}>
-      <WeekPlannerWorkspaceWithReconciledWeek {...props} />
-    </PlanningHubPlannerWeekProvider>
+    <ToastProvider>
+      <PlanningHubPlannerWeekProvider serverWeek={props.week} timezone={props.timezone ?? "Europe/Zurich"}>
+        <WeekPlannerWorkspaceWithReconciledWeek {...props} />
+      </PlanningHubPlannerWeekProvider>
+    </ToastProvider>
   );
 }

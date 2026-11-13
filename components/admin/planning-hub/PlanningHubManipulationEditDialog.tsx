@@ -27,6 +27,7 @@ type Props = {
   resourceId: string;
   locale: string;
   timezone: string;
+  presentation?: "modal" | "inline";
   resourceCategory: PlanningHubUrlState["resourceCategory"];
   resourceOptions: WeekplannerResourceRef[];
   planningResourceGroups?: readonly PlanningResourceGroup[];
@@ -49,6 +50,7 @@ export default function PlanningHubManipulationEditDialog({
   resourceId,
   locale,
   timezone,
+  presentation = "modal",
   resourceCategory,
   resourceOptions,
   planningResourceGroups,
@@ -180,6 +182,7 @@ export default function PlanningHubManipulationEditDialog({
   return (
     <PlanningHubManipulationModalShell
       testId="planning-hub-manipulation-edit"
+      presentation={presentation}
       onClose={onClose}
       initialFocusRef={firstFieldRef}
       panelClassName={cn(SCE_DIALOG_VARIANT_FORM, "max-w-[min(42rem,var(--sce-dialog-form-max-width))]")}

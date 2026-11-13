@@ -32,6 +32,8 @@ export type PlanningSubjectDressingRoomAssignmentsProps = {
   disabled?: boolean;
   onSelectResource: (subjectId: string, resourceId: string) => void | Promise<void>;
   onDeselectResource?: (subjectId: string, resourceId: string) => void | Promise<void>;
+  /** When set, rows render inside a parent `PlanningOperationalResourceGroup` (no nested list frame). */
+  embeddedInGroup?: boolean;
   testId?: string;
 };
 
@@ -50,6 +52,7 @@ export function PlanningSubjectDressingRoomAssignments({
   disabled = false,
   onSelectResource,
   onDeselectResource,
+  embeddedInGroup = false,
   testId = "planning-dressing-room-assignments",
 }: PlanningSubjectDressingRoomAssignmentsProps) {
   const t = useTranslations("PlanningResources");
@@ -77,10 +80,9 @@ export function PlanningSubjectDressingRoomAssignments({
     );
   }
 
-  return (
-    <div className="space-y-2" data-testid={testId}>
-      <PlanningResourceAssignmentList testId={`${testId}-list`}>
-        {subjects.map((subject) => {
+  const rows = (
+    <>
+      {subjects.map((subject) => {
           const assigned = primaryAllocation(subject);
           const isOpen = openSubjectId === subject.id;
           const selectedIds = new Set(subject.dressingRoomAllocations.map((a) => a.facilityResourceId));
@@ -132,7 +134,21 @@ export function PlanningSubjectDressingRoomAssignments({
             />
           );
         })}
-      </PlanningResourceAssignmentList>
+    </>
+  );
+
+  if (embeddedInGroup) {
+    return (
+      <>
+        <span className="sr-only" data-testid={testId} />
+        {rows}
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-2" data-testid={testId}>
+      <PlanningResourceAssignmentList testId={`${testId}-list`}>{rows}</PlanningResourceAssignmentList>
 
       {!canManage ? (
         <p className="sr-only">{t("unassignedDressingRoom")}</p>

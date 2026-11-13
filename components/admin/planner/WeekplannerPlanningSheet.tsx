@@ -25,7 +25,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
 import {
-  WeekplannerActivityEditorSheet,
+  WeekplannerActivityEditorFrame,
+  type WeekplannerEditorPresentation,
   WeekplannerActivityIdentityCard,
   WeekplannerDateTimeFields,
   WeekplannerEditorError,
@@ -35,6 +36,7 @@ import {
 } from "@/components/admin/planner/WeekplannerActivityEditorShell";
 import { WeekplannerTournamentParticipantDressingSection } from "@/components/admin/planner/WeekplannerTournamentParticipantDressingSection";
 import VeranstaltungFacilityAllocationEditor from "@/components/admin/veranstaltungen/VeranstaltungFacilityAllocationEditor";
+import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
@@ -83,6 +85,7 @@ type SheetProps = {
   domainEditAccess?: WeekplannerPlanningDomainEditAccess;
   onClose: () => void;
   onSaved: () => void;
+  presentation?: WeekplannerEditorPresentation;
 };
 
 const FULL_DOMAIN_EDIT: WeekplannerPlanningDomainEditAccess = {
@@ -98,6 +101,7 @@ function TrainingEditorContent({
   timezone,
   tenantDressingRoomOccupancyPresets,
   domainEditAccess,
+  presentation,
   onClose,
   onSaved,
 }: {
@@ -106,6 +110,7 @@ function TrainingEditorContent({
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   domainEditAccess: WeekplannerPlanningDomainEditAccess;
+  presentation: WeekplannerEditorPresentation;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -227,7 +232,9 @@ function TrainingEditorContent({
   }
 
   return (
-    <WeekplannerActivityEditorSheet
+    <WeekplannerActivityEditorFrame
+      presentation={presentation}
+      inlineTestId={`weekplanner-liste-inline-edit-${item.id}`}
       description={item.title}
       onClose={onClose}
       footer={
@@ -314,7 +321,7 @@ function TrainingEditorContent({
           )}
         </div>
       </div>
-    </WeekplannerActivityEditorSheet>
+    </WeekplannerActivityEditorFrame>
   );
 }
 
@@ -326,6 +333,7 @@ function MatchEditorContent({
   timezone,
   tenantDressingRoomOccupancyPresets,
   domainEditAccess,
+  presentation,
   onClose,
   onSaved,
 }: {
@@ -334,6 +342,7 @@ function MatchEditorContent({
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   domainEditAccess: WeekplannerPlanningDomainEditAccess;
+  presentation: WeekplannerEditorPresentation;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -457,7 +466,9 @@ function MatchEditorContent({
   const matchTitle = `${item.homeSide.displayName} vs. ${item.awaySide.displayName}`;
 
   return (
-    <WeekplannerActivityEditorSheet
+    <WeekplannerActivityEditorFrame
+      presentation={presentation}
+      inlineTestId={`weekplanner-liste-inline-edit-${item.id}`}
       description={matchTitle}
       onClose={onClose}
       footer={
@@ -580,7 +591,7 @@ function MatchEditorContent({
           />
         )}
       </div>
-    </WeekplannerActivityEditorSheet>
+    </WeekplannerActivityEditorFrame>
   );
 }
 
@@ -592,6 +603,7 @@ function TournamentEditorContent({
   timezone,
   tenantDressingRoomOccupancyPresets,
   domainEditAccess,
+  presentation,
   onClose,
   onSaved,
 }: {
@@ -600,6 +612,7 @@ function TournamentEditorContent({
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   domainEditAccess: WeekplannerPlanningDomainEditAccess;
+  presentation: WeekplannerEditorPresentation;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -687,7 +700,9 @@ function TournamentEditorContent({
   }
 
   return (
-    <WeekplannerActivityEditorSheet
+    <WeekplannerActivityEditorFrame
+      presentation={presentation}
+      inlineTestId={`weekplanner-liste-inline-edit-${item.id}`}
       description={item.title}
       onClose={onClose}
       footer={
@@ -762,7 +777,7 @@ function TournamentEditorContent({
             />
           )}
       </div>
-    </WeekplannerActivityEditorSheet>
+    </WeekplannerActivityEditorFrame>
   );
 }
 
@@ -771,6 +786,7 @@ function VeranstaltungEditorContent({
   facilityGroupsByAllocationGroup,
   timezone,
   tenantDressingRoomOccupancyPresets,
+  presentation,
   onClose,
   onSaved,
 }: {
@@ -778,6 +794,7 @@ function VeranstaltungEditorContent({
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  presentation: WeekplannerEditorPresentation;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -869,7 +886,9 @@ function VeranstaltungEditorContent({
   }
 
   return (
-    <WeekplannerActivityEditorSheet
+    <WeekplannerActivityEditorFrame
+      presentation={presentation}
+      inlineTestId={`weekplanner-liste-inline-edit-${item.id}`}
       description={item.title}
       onClose={onClose}
       footer={
@@ -884,6 +903,14 @@ function VeranstaltungEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <p className="text-xs leading-relaxed text-[var(--text-2)]" data-testid="weekplanner-veranstaltung-scope-note">
+          Planungskontext: Termin und Einrichtungszuweisungen für diese Veranstaltung. Titel, Beschreibung und
+          weitere Stammdaten bearbeiten Sie im{" "}
+          <Link href={getVeranstaltungHref(item.eventId)} className="font-semibold text-[var(--sce-primary)] hover:underline">
+            Veranstaltungsbereich
+          </Link>
+          .
+        </p>
         <PlannerOperationalStatusSection
           item={item}
           locale="de-CH"
@@ -918,7 +945,7 @@ function VeranstaltungEditorContent({
         )}
 
       </div>
-    </WeekplannerActivityEditorSheet>
+    </WeekplannerActivityEditorFrame>
   );
 }
 
@@ -936,21 +963,27 @@ export function WeekplannerPlanningSheet({
   timezone,
   tenantDressingRoomOccupancyPresets,
   domainEditAccess = FULL_DOMAIN_EDIT,
+  presentation = "sheet",
   onClose,
   onSaved,
 }: SheetProps) {
   if (!item) return null;
 
+  const shared = {
+    facilityGroupsByAllocationGroup,
+    timezone,
+    tenantDressingRoomOccupancyPresets,
+    presentation,
+    onClose,
+    onSaved,
+  };
+
   if (item.type === "TRAINING") {
     return (
       <TrainingEditorContent
         item={item}
-        facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
-        timezone={timezone}
-        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        {...shared}
         domainEditAccess={domainEditAccess}
-        onClose={onClose}
-        onSaved={onSaved}
       />
     );
   }
@@ -959,12 +992,8 @@ export function WeekplannerPlanningSheet({
     return (
       <MatchEditorContent
         item={item}
-        facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
-        timezone={timezone}
-        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        {...shared}
         domainEditAccess={domainEditAccess}
-        onClose={onClose}
-        onSaved={onSaved}
       />
     );
   }
@@ -973,27 +1002,14 @@ export function WeekplannerPlanningSheet({
     return (
       <TournamentEditorContent
         item={item}
-        facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
-        timezone={timezone}
-        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        {...shared}
         domainEditAccess={domainEditAccess}
-        onClose={onClose}
-        onSaved={onSaved}
       />
     );
   }
 
   if (item.type === "VERANSTALTUNG") {
-    return (
-      <VeranstaltungEditorContent
-        item={item}
-        facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
-        timezone={timezone}
-        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
-        onClose={onClose}
-        onSaved={onSaved}
-      />
-    );
+    return <VeranstaltungEditorContent item={item} {...shared} />;
   }
 
   return null;

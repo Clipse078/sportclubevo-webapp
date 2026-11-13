@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CheckCircle2, CircleAlert, Loader2 } from "lucide-react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { PlanningOperationalResourceGroup } from "@/components/admin/shared/planning/PlanningOperationalResourceGroup";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import {
   assessMatchOperationalState,
@@ -24,8 +25,10 @@ import {
 } from "@/lib/matchcenter/facility-groups-for-match-pickers";
 import { useMatchOperationalInlinePatch } from "@/lib/matchcenter/use-match-operational-inline-patch";
 import { cn } from "@/lib/cn";
-import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
+import { OperationalDensePanelShell } from "@/components/admin/shared/planning/OperationalDensePanelShell";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
+
+export type MatchPublicationVisibilityState = "ready" | "loading" | "unavailable";
 
 export type SpieleManagementMatchPreparationPanelProps = {
   match: MatchcenterMatchSummary;
@@ -34,6 +37,8 @@ export type SpieleManagementMatchPreparationPanelProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   canManageOperationalAllocations: boolean;
   canManagePublication: boolean;
+  /** When not ready, Infoboard control stays disabled and does not assume a default. */
+  publicationVisibilityState?: MatchPublicationVisibilityState;
   onLiveMatchChange?: (match: MatchcenterMatchSummary) => void;
 };
 
@@ -51,35 +56,15 @@ function PreparationPanelShell({
   isSaving?: boolean;
 }) {
   return (
-    <div
-      className={cn("min-w-0 overflow-hidden", SCE_SURFACE_DENSE_PANEL, "px-3 py-2.5")}
-      data-testid="matchcenter-open-points-panel"
+    <OperationalDensePanelShell
+      openPointsLabel={openPointsLabel}
+      isSaving={isSaving}
+      testId="matchcenter-open-points-panel"
       onPointerDown={stopAccordionToggle}
       onClick={stopAccordionToggle}
     >
-      {openPointsLabel ? (
-        <p className="text-xs font-semibold text-[var(--foreground)]" data-testid="matchcenter-open-points-label">
-          {openPointsLabel}
-        </p>
-      ) : null}
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <p
-          className={cn(
-            "text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]",
-            openPointsLabel ? undefined : "mt-0",
-          )}
-        >
-          Spielvorbereitung
-        </p>
-        {isSaving ? (
-          <span className="inline-flex items-center gap-1 text-[0.625rem] text-[var(--muted)]" aria-live="polite">
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-            Speichern…
-          </span>
-        ) : null}
-      </div>
       {children}
-    </div>
+    </OperationalDensePanelShell>
   );
 }
 
@@ -144,17 +129,38 @@ function SpieleManagementMatchPreparationEditable({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
   canManagePublication,
+  publicationVisibilityState = "ready",
   onLiveMatchChange,
 }: SpieleManagementMatchPreparationPanelProps) {
   const tResources = useTranslations("PlanningResources");
   const { patchField, isFieldPending, isSaving } = useMatchOperationalInlinePatch(match.id);
+  const publicationReady = publicationVisibilityState === "ready";
 
   const [draft, setDraft] = useState(() => ({
     pitchCode: match.operational.pitchCode?.trim() ?? "",
     homeDressingRoomCode: match.operational.homeDressingRoomCode?.trim() ?? "",
     awayDressingRoomCode: match.operational.awayDressingRoomCode?.trim() ?? "",
-    infoboardVisible: match.visibility.infoboardVisible,
+    infoboardVisible: publicationReady ? match.visibility.infoboardVisible : false,
   }));
+
+  useEffect(() => {
+    if (!publicationReady || isSaving) return;
+    setDraft((prev) => ({
+      ...prev,
+      pitchCode: match.operational.pitchCode?.trim() ?? "",
+      homeDressingRoomCode: match.operational.homeDressingRoomCode?.trim() ?? "",
+      awayDressingRoomCode: match.operational.awayDressingRoomCode?.trim() ?? "",
+      infoboardVisible: match.visibility.infoboardVisible,
+    }));
+  }, [
+    publicationReady,
+    isSaving,
+    match.id,
+    match.operational.pitchCode,
+    match.operational.homeDressingRoomCode,
+    match.operational.awayDressingRoomCode,
+    match.visibility.infoboardVisible,
+  ]);
 
   const pitchGroupsByCode = useMemo(
     () => facilityGroupsWithCodeAsId(pitchHallFacilityGroups),
@@ -220,7 +226,16 @@ function SpieleManagementMatchPreparationEditable({
     [draft.pitchCode, pitchGroupsByCode],
   );
 
-  const canEditInfoboard = canManagePublication && isMatchOperationallyActionable(match);
+  const canEditInfoboard =
+    publicationReady && canManagePublication && isMatchOperationallyActionable(match);
+  const infoboardStatusLabel =
+    publicationVisibilityState === "loading"
+      ? "Publikationsstatus wird geladen…"
+      : publicationVisibilityState === "unavailable"
+        ? "Publikationsstatus nicht verfügbar"
+        : draft.infoboardVisible
+          ? "Für Vereins-Infoboard freigegeben"
+          : "Noch nicht für Infoboard freigegeben";
 
   const applyField = useCallback(
     async <K extends keyof typeof draft>(
@@ -244,59 +259,62 @@ function SpieleManagementMatchPreparationEditable({
   return (
     <PreparationPanelShell openPointsLabel={openPointsLabel} isSaving={isSaving}>
       <div className="mt-2 space-y-3" data-testid={`matchcenter-inline-preparation-${match.id}`}>
-        <PlanningSingleResourceAssignment
-          kind="pitch_hall"
-          subjectLabel="Spielfeld"
-          showSubjectLabel
-          resourceName={pitchResourceName}
-          unassignedLabel={tResources("unassignedPitchHall")}
-          facilityGroups={pitchGroupsByCode}
-          selectedResourceIds={draft.pitchCode ? new Set([draft.pitchCode]) : new Set()}
-          onSelect={async (code) => {
-            const previous = draft.pitchCode;
-            await applyField("pitchCode", "pitchCode", code, previous);
-          }}
-          onDeselect={async () => {
-            const previous = draft.pitchCode;
-            await applyField("pitchCode", "pitchCode", "", previous);
-          }}
-          availabilityByResourceId={pitchAvailability}
-          canManage
-          disabled={isFieldPending("pitchCode")}
-          testId={`matchcenter-inline-pitch-${match.id}`}
-        />
+        <PlanningOperationalResourceGroup testId={`matchcenter-inline-resources-${match.id}`}>
+          <PlanningSingleResourceAssignment
+            kind="pitch_hall"
+            subjectLabel="Spielfeld"
+            suppressKindIcon
+            resourceName={pitchResourceName}
+            unassignedLabel={tResources("unassignedPitchHall")}
+            facilityGroups={pitchGroupsByCode}
+            selectedResourceIds={draft.pitchCode ? new Set([draft.pitchCode]) : new Set()}
+            onSelect={async (code) => {
+              const previous = draft.pitchCode;
+              await applyField("pitchCode", "pitchCode", code, previous);
+            }}
+            onDeselect={async () => {
+              const previous = draft.pitchCode;
+              await applyField("pitchCode", "pitchCode", "", previous);
+            }}
+            availabilityByResourceId={pitchAvailability}
+            canManage
+            disabled={isFieldPending("pitchCode")}
+            testId={`matchcenter-inline-pitch-${match.id}`}
+          />
 
-        <PlanningMatchDressingRoomAssignments
-          homeLabel="Heimkabine"
-          awayLabel="Gastkabine"
-          homeCode={draft.homeDressingRoomCode}
-          awayCode={draft.awayDressingRoomCode}
-          homeDisplayName={homeDisplayName}
-          awayDisplayName={awayDisplayName}
-          canManage
-          disabled={
-            isFieldPending("homeDressingRoomCode") || isFieldPending("awayDressingRoomCode")
-          }
-          facilityGroups={dressingRoomGroupsByCode}
-          dressingRoomAvailability={dressingRoomAvailability}
-          onSelectHome={async (code) => {
-            const previous = draft.homeDressingRoomCode;
-            await applyField("homeDressingRoomCode", "homeDressingRoomCode", code, previous);
-          }}
-          onSelectAway={async (code) => {
-            const previous = draft.awayDressingRoomCode;
-            await applyField("awayDressingRoomCode", "awayDressingRoomCode", code, previous);
-          }}
-          onDeselectHome={async () => {
-            const previous = draft.homeDressingRoomCode;
-            await applyField("homeDressingRoomCode", "homeDressingRoomCode", "", previous);
-          }}
-          onDeselectAway={async () => {
-            const previous = draft.awayDressingRoomCode;
-            await applyField("awayDressingRoomCode", "awayDressingRoomCode", "", previous);
-          }}
-          testId={`matchcenter-inline-dressing-${match.id}`}
-        />
+          <PlanningMatchDressingRoomAssignments
+            homeLabel="Heimkabine"
+            awayLabel="Gastkabine"
+            homeCode={draft.homeDressingRoomCode}
+            awayCode={draft.awayDressingRoomCode}
+            homeDisplayName={homeDisplayName}
+            awayDisplayName={awayDisplayName}
+            canManage
+            embeddedInGroup
+            disabled={
+              isFieldPending("homeDressingRoomCode") || isFieldPending("awayDressingRoomCode")
+            }
+            facilityGroups={dressingRoomGroupsByCode}
+            dressingRoomAvailability={dressingRoomAvailability}
+            onSelectHome={async (code) => {
+              const previous = draft.homeDressingRoomCode;
+              await applyField("homeDressingRoomCode", "homeDressingRoomCode", code, previous);
+            }}
+            onSelectAway={async (code) => {
+              const previous = draft.awayDressingRoomCode;
+              await applyField("awayDressingRoomCode", "awayDressingRoomCode", code, previous);
+            }}
+            onDeselectHome={async () => {
+              const previous = draft.homeDressingRoomCode;
+              await applyField("homeDressingRoomCode", "homeDressingRoomCode", "", previous);
+            }}
+            onDeselectAway={async () => {
+              const previous = draft.awayDressingRoomCode;
+              await applyField("awayDressingRoomCode", "awayDressingRoomCode", "", previous);
+            }}
+            testId={`matchcenter-inline-dressing-${match.id}`}
+          />
+        </PlanningOperationalResourceGroup>
 
         <div
           className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/80 px-3 py-2"
@@ -304,10 +322,8 @@ function SpieleManagementMatchPreparationEditable({
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-[var(--foreground)]">Infoboard</p>
-            <p className="text-xs text-[var(--muted)]">
-              {draft.infoboardVisible
-                ? "Für Vereins-Infoboard freigegeben"
-                : "Noch nicht für Infoboard freigegeben"}
+            <p className="text-xs text-[var(--muted)]" data-testid={`matchcenter-inline-infoboard-status-${match.id}`}>
+              {infoboardStatusLabel}
             </p>
           </div>
           <button
