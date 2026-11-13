@@ -80,7 +80,7 @@ describe("SpieleManagementFilterRail", () => {
     );
     expect(screen.getByTestId("spiele-competition-filter")).toBeInTheDocument();
     expect(screen.getByTestId("spiele-venue-filter")).toBeInTheDocument();
-    expect(screen.getByTestId("matchcenter-team-filter-trigger")).toHaveTextContent("Alle Teams");
+    expect(screen.queryByTestId("matchcenter-team-filter-trigger")).toBeNull();
   });
 
   it("toggles home/away quick filter links", async () => {

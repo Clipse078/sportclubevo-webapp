@@ -22,7 +22,13 @@ export type SpieleStatusMaskKey = "anstehend" | "offen" | "bereit" | "abgesagt";
 
 export type MatchcenterHrefParams = {
   tab: MatchcenterTab;
-  month: string;
+  /**
+   * Resultate: query month (required for stable URLs — caller supplies default).
+   * Spielplanung: explicit list month filter; omit/null = Alle Monate.
+   */
+  month?: string | null;
+  /** Spielplanung mini-calendar month (`cal` query param) — independent of list filter. */
+  calendarMonth?: string | null;
   actionFilter: MatchcenterActionFilter;
   wochenplanFilter: MatchcenterWochenplanFilter;
   teamFilter?: string | null;
@@ -117,7 +123,22 @@ export function buildMatchcenterHref(
 ): string {
   const search = new URLSearchParams();
   search.set("tab", params.tab.toLowerCase());
-  search.set("month", params.month);
+
+  if (params.tab === "RESULTATE") {
+    if (params.month?.trim()) {
+      search.set("month", params.month.trim());
+    }
+  } else if (params.month?.trim()) {
+    search.set("month", params.month.trim());
+  }
+
+  if (params.tab === "RESULTATE" && params.calendarMonth?.trim()) {
+    search.set("cal", params.calendarMonth.trim());
+  }
+
+  if (params.tab === "SPIELPLANUNG" && params.calendarMonth?.trim()) {
+    search.set("cal", params.calendarMonth.trim());
+  }
 
   if (params.tab === "SPIELPLANUNG") {
     const mask = params.statusMask ?? null;

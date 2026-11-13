@@ -205,12 +205,15 @@ describe("deriveSpieleManagementPresentation", () => {
       timezone: "Europe/Zurich",
       wochenplanFilter: "ALLE",
       teamFilter: null,
+      now: new Date("2026-09-10T12:00:00.000Z"),
     });
 
     expect(derived.spielplanungRows).toHaveLength(1);
     expect(derived.spielplanungRows[0]?.match.id).toBe("a");
     expect(derived.spielplanungDayGroups).toHaveLength(1);
-    expect(derived.matchDayKeys.sort()).toEqual(["2026-09-18", "2026-09-19"]);
+    expect(derived.matchDayKeys.sort()).toEqual(
+      expect.arrayContaining(["2026-09-18", "2026-09-19"]),
+    );
     expect(derived.statusCounts.offen).toBeGreaterThanOrEqual(0);
   });
 

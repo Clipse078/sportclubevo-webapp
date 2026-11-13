@@ -145,7 +145,9 @@ function renderOverview(
       wochenplanFilter={props.wochenplanFilter ?? "ALLE"}
       teamFilter={props.teamFilter ?? null}
       teamOptions={props.teamOptions ?? DEFAULT_TEAM_OPTIONS}
-      monthWindow={DEFAULT_MONTH_WINDOW}
+      calendarMonthWindow={DEFAULT_MONTH_WINDOW}
+      resultateMonthParam="2026-08"
+      spielplanungListMonthFilter={null}
       canManage={props.canManage ?? false}
     />,
   );
@@ -181,11 +183,11 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
 
     expect(screen.getByTestId("month-activity-grid-previous")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-07&status=offen&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&cal=2026-07&status=offen&filter=offen",
     );
     expect(screen.getByTestId("month-activity-grid-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&cal=2026-09&status=offen&filter=offen",
     );
   });
 
@@ -624,10 +626,11 @@ describe("MatchcenterOverview — team filter", () => {
     const user = userEvent.setup();
     renderOverview([createMatch()]);
 
-    await user.selectOptions(screen.getByTestId("matchcenter-team-filter-trigger"), "team-2");
+    await user.click(screen.getByTestId("matchcenter-team-filter-trigger"));
+    await user.click(screen.getByTestId("matchcenter-team-filter-option-team-2"));
 
-    expect(vi.mocked(window.location.assign)).toHaveBeenCalledWith(
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-08&filter=alle&team=team-2",
+    expect(push).toHaveBeenCalledWith(
+      "/dashboard/matchcenter?tab=spielplanung&cal=2026-08&filter=alle&team=team-2",
     );
   });
 
@@ -709,7 +712,7 @@ describe("MatchcenterOverview — team filter", () => {
 
     expect(screen.getByTestId("month-activity-grid-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen&team=team-2",
+      "/dashboard/matchcenter?tab=spielplanung&cal=2026-09&status=offen&filter=offen&team=team-2",
     );
   });
 });

@@ -212,28 +212,30 @@ export default function SpieleManagementFilterRail(props: Props) {
           </ul>
         </div>
 
-        <label className="block space-y-1">
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Teams
-          </span>
-          <select
-            className="fca-input w-full text-sm"
-            value={teamSelectValue}
-            onChange={(event) => {
-              const key = event.target.value;
-              navigate(props.teamHrefByValue[key] ?? props.teamHrefByValue[""]!);
-            }}
-            aria-label="Team filtern"
-            data-testid="matchcenter-team-filter-trigger"
-          >
-            <option value="">Alle Teams</option>
-            {props.teamOptions.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {props.tab === "RESULTATE" ? (
+          <label className="block space-y-1">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Teams
+            </span>
+            <select
+              className="fca-input w-full text-sm"
+              value={teamSelectValue}
+              onChange={(event) => {
+                const key = event.target.value;
+                navigate(props.teamHrefByValue[key] ?? props.teamHrefByValue[""]!);
+              }}
+              aria-label="Team filtern"
+              data-testid="matchcenter-team-filter-trigger"
+            >
+              <option value="">Alle Teams</option>
+              {props.teamOptions.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <label className="block space-y-1">
           <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">

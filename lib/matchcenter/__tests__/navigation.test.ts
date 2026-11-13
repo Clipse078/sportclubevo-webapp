@@ -52,6 +52,20 @@ describe("buildMatchcenterHref", () => {
     expect(href).toContain("tab=resultate");
   });
 
+  it("omits month on Spielplanung when Alle and uses cal for calendar month", () => {
+    const href = buildMatchcenterHref("/dashboard/matchcenter", {
+      tab: "SPIELPLANUNG",
+      month: null,
+      calendarMonth: "2026-11",
+      actionFilter: "ALLE",
+      wochenplanFilter: "ALLE",
+      teamFilter: null,
+    });
+
+    expect(href).not.toContain("month=");
+    expect(href).toContain("cal=2026-11");
+  });
+
   it("includes search and sort when set", () => {
     const href = buildMatchcenterHref("/dashboard/matchcenter", {
       tab: "SPIELPLANUNG",

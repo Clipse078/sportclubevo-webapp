@@ -8,14 +8,14 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { MatchcenterRowViewModel } from "@/lib/matchcenter/view-model";
 import {
   formatSpieleDayGroupHeadingLong,
-  type SpieleDayGroup,
+  type SpieleMonthGroup,
 } from "@/lib/matchcenter/management-view";
 import SpieleManagementMatchRow from "./SpieleManagementMatchRow";
 import { cn } from "@/lib/cn";
 import { sceActivityCardListContainerProps } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 
 type Props = {
-  dayGroups: SpieleDayGroup<MatchcenterRowViewModel>[];
+  monthGroups: SpieleMonthGroup<MatchcenterRowViewModel>[];
   locale: string;
   timezone: string;
   tenantLogoUrl?: string | null;
@@ -28,7 +28,7 @@ type Props = {
 };
 
 export default function SpieleManagementUpcomingList({
-  dayGroups,
+  monthGroups,
   locale,
   timezone,
   tenantLogoUrl = null,
@@ -45,7 +45,7 @@ export default function SpieleManagementUpcomingList({
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const rows = dayGroups.flatMap((group) => group.rows);
+  const rows = monthGroups.flatMap((month) => month.dayGroups.flatMap((group) => group.rows));
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -174,54 +174,70 @@ export default function SpieleManagementUpcomingList({
         </div>
       ) : null}
 
-      <div className="space-y-6" data-testid="matchcenter-spielplanung-list">
-        {dayGroups.map((group) => {
-          const heading = formatSpieleDayGroupHeadingLong(
-            group.rows[0]!.match.startAt,
-            locale,
-            timezone,
-          );
-          const count = group.rows.length;
-          return (
-            <section key={group.dayKey} className="space-y-2" data-testid={`spiele-day-group-${group.dayKey}`}>
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                  {heading}
-                </h2>
-                <p
-                  className="text-[0.6875rem] tabular-nums text-[var(--muted)]"
-                  data-testid={`spiele-day-count-${group.dayKey}`}
-                >
-                  {count} {count === 1 ? "Spiel" : "Spiele"}
-                </p>
-              </div>
-              <div
-                {...sceActivityCardListContainerProps()}
-                data-testid={`spiele-day-grid-${group.dayKey}`}
-              >
-                {group.rows.map((row) => (
-                  <SpieleManagementMatchRow
-                    key={row.match.id}
-                    match={row.match}
-                    assessment={row.assessment}
-                    locale={locale}
-                    timezone={timezone}
-                    tenantLogoUrl={tenantLogoUrl}
-                    tenantClubName={tenantClubName}
-                    canManage={canManage}
-                    canManageOperationalAllocations={canManageOperationalAllocations}
-                    pitchHallFacilityGroups={pitchHallFacilityGroups}
-                    dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-                    compact={compact}
-                    isSelecting={isSelecting}
-                    isSelected={selectedIds.has(row.match.id)}
-                    onToggleSelect={toggleSelection}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+      <div className="space-y-8" data-testid="matchcenter-spielplanung-list">
+        {monthGroups.map((monthGroup) => (
+          <section
+            key={monthGroup.monthParam}
+            className="space-y-5"
+            data-testid={`spiele-month-group-${monthGroup.monthParam}`}
+          >
+            <h2
+              className="text-sm font-bold uppercase tracking-wide text-[var(--foreground)]"
+              data-testid={`spiele-month-heading-${monthGroup.monthParam}`}
+            >
+              {monthGroup.label}
+            </h2>
+            <div className="space-y-6">
+              {monthGroup.dayGroups.map((group) => {
+                const heading = formatSpieleDayGroupHeadingLong(
+                  group.rows[0]!.match.startAt,
+                  locale,
+                  timezone,
+                );
+                const count = group.rows.length;
+                return (
+                  <div key={group.dayKey} className="space-y-2" data-testid={`spiele-day-group-${group.dayKey}`}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                        {heading}
+                      </h3>
+                      <p
+                        className="text-[0.6875rem] tabular-nums text-[var(--muted)]"
+                        data-testid={`spiele-day-count-${group.dayKey}`}
+                      >
+                        {count} {count === 1 ? "Spiel" : "Spiele"}
+                      </p>
+                    </div>
+                    <div
+                      {...sceActivityCardListContainerProps()}
+                      data-testid={`spiele-day-grid-${group.dayKey}`}
+                    >
+                      {group.rows.map((row) => (
+                        <SpieleManagementMatchRow
+                          key={row.match.id}
+                          match={row.match}
+                          assessment={row.assessment}
+                          locale={locale}
+                          timezone={timezone}
+                          tenantLogoUrl={tenantLogoUrl}
+                          tenantClubName={tenantClubName}
+                          canManage={canManage}
+                          canManageOperationalAllocations={canManageOperationalAllocations}
+                          pitchHallFacilityGroups={pitchHallFacilityGroups}
+                          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                          compact={compact}
+                          isSelecting={isSelecting}
+                          isSelected={selectedIds.has(row.match.id)}
+                          onToggleSelect={toggleSelection}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
