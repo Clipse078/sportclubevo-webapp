@@ -6,7 +6,7 @@ import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
 import { buildTaskManagementHref, resolveTaskManagementQuery } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks } from "@/lib/tasks/visibility";
 import type { TaskContextType } from "@prisma/client";
-import AufgabenFullCreateClient from "@/components/admin/aufgaben/AufgabenFullCreateClient";
+import AufgabenNeuClient from "@/components/admin/aufgaben/AufgabenNeuClient";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
 import { prisma } from "@/lib/db/prisma";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
@@ -61,17 +61,31 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
   const initialTitle = sp.originLabel?.trim() || sp.title?.trim() || "";
   const originMeetingSlug = sp.meetingSlug?.trim() || null;
 
+  const contextual =
+    contextualView && initialContextType && initialContextId
+      ? {
+          contextType: initialContextType,
+          contextId: initialContextId,
+          presentation: contextualView.presentation,
+          orgUnitOptions: contextualView.orgUnitOptions,
+          timeZone: contextualView.timeZone,
+          tenantWideVisibility: contextualView.tenantWideVisibility,
+        }
+      : null;
+
   return (
-    <AufgabenFullCreateClient
-      orgUnitOptions={orgUnitOptions}
-      timeZone={timeZone}
+    <AufgabenNeuClient
       backHref={backHref}
-      initialContextType={initialContextType}
-      initialContextId={initialContextId}
-      initialContextLabel={contextualView?.presentation?.title ?? null}
-      initialContextSecondary={contextualView?.presentation?.subtitle ?? null}
       initialTitle={initialTitle}
       originMeetingSlug={originMeetingSlug}
+      contextual={contextual}
+      fullCreate={{
+        orgUnitOptions,
+        timeZone,
+        initialContextType,
+        initialContextId,
+        initialContextLabel: contextualView?.presentation?.title ?? null,
+      }}
     />
   );
 }

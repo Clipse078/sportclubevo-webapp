@@ -15,10 +15,11 @@ function read(rel: string): string {
 }
 
 describe("AUFGABEN-06F2-UX1 acceptance", () => {
-  it("U1/U2 shared panel has single header create CTA", () => {
+  it("U1/U2 shared panel has single inline create CTA (no modal)", () => {
     const src = read("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx");
-    const triggerCount = (src.match(/<ContextualTaskCreateTrigger/g) ?? []).length;
-    expect(triggerCount).toBe(1);
+    expect(src).toContain("ContextualTaskInlineCreateCard");
+    expect(src).not.toContain("ContextualTaskCreateTrigger");
+    expect(src).toContain("context-related-tasks-inline-toggle");
     expect(src).toContain("Noch keine offenen Aufgaben");
   });
 

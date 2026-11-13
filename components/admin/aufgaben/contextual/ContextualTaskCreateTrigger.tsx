@@ -7,14 +7,19 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
 import { buildContextualTaskCreateHref } from "@/lib/tasks/task-create-navigation";
+import { dispatchContextualTaskInlineCreate } from "@/lib/tasks/contextual-task-inline-create-bus";
 
 export type ContextualTaskCreateTriggerVariant = "button" | "menuItem" | "icon" | "toolbar";
+
+export type ContextualTaskCreateTriggerActivation = "navigate" | "inlinePanel";
 
 type Props = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange"> & {
   variant: ContextualTaskCreateTriggerVariant;
   className?: string;
   label?: string;
   createHrefExtras?: Record<string, string | undefined>;
+  /** When a contextual Aufgaben panel is on the same page, open inline create instead of navigating away. */
+  activation?: ContextualTaskCreateTriggerActivation;
 };
 
 export default function ContextualTaskCreateTrigger({
@@ -24,13 +29,13 @@ export default function ContextualTaskCreateTrigger({
   contextType,
   contextId,
   createHrefExtras,
+  activation = "navigate",
 }: Props) {
+  void contextType;
   const createHref = buildContextualTaskCreateHref(contextType, contextId, createHrefExtras);
   const sharedTestId = "contextual-task-create-trigger";
 
-  let trigger = null as ReactNode;
-
-  const linkClass =
+  const controlClass =
     variant === "button"
       ? cn("fca-button-primary inline-flex items-center gap-1.5 text-sm", className)
       : variant === "toolbar"
@@ -48,24 +53,42 @@ export default function ContextualTaskCreateTrigger({
               className,
             );
 
-  trigger = (
+  const content =
+    variant === "icon" ? (
+      <ProductDomainSceIcon name="tasks" size={16} className="h-4 w-4" />
+    ) : (
+      <>
+        <Plus className={cn("h-4 w-4", variant === "toolbar" ? "text-emerald-400" : "")} aria-hidden />
+        {label}
+      </>
+    );
+
+  if (activation === "inlinePanel") {
+    return (
+      <button
+        type="button"
+        className={controlClass}
+        data-testid={sharedTestId}
+        role={variant === "menuItem" ? "menuitem" : undefined}
+        aria-label={variant === "icon" ? label : undefined}
+        onClick={() => dispatchContextualTaskInlineCreate(contextId)}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  const trigger = (
     <Link
       href={createHref}
-      className={linkClass}
+      className={controlClass}
       data-testid={sharedTestId}
       role={variant === "menuItem" ? "menuitem" : undefined}
       aria-label={variant === "icon" ? label : undefined}
     >
-      {variant === "icon" ? (
-        <ProductDomainSceIcon name="tasks" size={16} className="h-4 w-4" />
-      ) : (
-        <>
-          <Plus className={cn("h-4 w-4", variant === "toolbar" ? "text-emerald-400" : "")} aria-hidden />
-          {label}
-        </>
-      )}
+      {content}
     </Link>
-  );
+  ) as ReactNode;
 
   return trigger;
 }

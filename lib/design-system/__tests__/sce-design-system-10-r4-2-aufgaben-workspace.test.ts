@@ -51,7 +51,7 @@ describe("SCE-DESIGN-SYSTEM-10 R4.2 — unified Aufgaben workspace", () => {
     expect(chooser).toContain("aufgaben-create-choice-aufgabe");
     expect(chooser).toContain("aufgaben-create-choice-anforderung");
     expect(chooser).not.toMatch(/Teilnahme/);
-    expect(chooser).toContain("requestAnimationFrame");
+    expect(chooser).toContain("aufgaben-workspace-create-flow");
   });
 
   it("wires chooser to canonical task and requirement modals without nested default", () => {

@@ -22,7 +22,10 @@ describe("SCE-CD-02R5 meetings UX", () => {
 
   it("uses inline collapsible task creation for meeting Aufgaben panel", () => {
     expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).toContain(
-      "MeetingContextualTaskInlineCreateCard",
+      "ContextualTaskInlineCreateCard",
+    );
+    expect(readSrc("components/admin/aufgaben/contextual/MeetingContextualTaskInlineCreateCard.tsx")).toContain(
+      "ContextualTaskInlineCreateCard",
     );
     expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).not.toMatch(
       /import ContextualTaskCreateDialog/,
