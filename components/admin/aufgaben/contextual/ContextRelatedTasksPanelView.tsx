@@ -15,6 +15,10 @@ import ContextualTaskInlineCreateCard, {
   type ContextualTaskInlineCreateCardHandle,
 } from "./ContextualTaskInlineCreateCard";
 import { useTranslations } from "next-intl";
+import {
+  CONTEXTUAL_TASK_INLINE_CREATE_EVENT,
+  type ContextualTaskInlineCreateEventDetail,
+} from "@/lib/tasks/contextual-task-inline-create-bus";
 
 type CreateProps = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange">;
 
@@ -74,17 +78,27 @@ export default function ContextRelatedTasksPanelView({
   }, []);
 
   useEffect(() => {
-    if (!isMeetingContext || !canCreate) return;
-    function handleOpen() {
+    if (!canCreate) return;
+    function handleOpen(event: Event) {
+      if (event.type === CONTEXTUAL_TASK_INLINE_CREATE_EVENT) {
+        const detail = (event as CustomEvent<ContextualTaskInlineCreateEventDetail>).detail;
+        if (detail?.contextId !== contextId) {
+          return;
+        }
+      }
       openInlineCreate();
     }
-    window.addEventListener("meeting-open-inline-task-create", handleOpen);
-    window.addEventListener("meeting-open-task-create-dialog", handleOpen);
+    window.addEventListener(CONTEXTUAL_TASK_INLINE_CREATE_EVENT, handleOpen);
+    if (isMeetingContext) {
+      window.addEventListener("meeting-open-inline-task-create", handleOpen);
+      window.addEventListener("meeting-open-task-create-dialog", handleOpen);
+    }
     return () => {
+      window.removeEventListener(CONTEXTUAL_TASK_INLINE_CREATE_EVENT, handleOpen);
       window.removeEventListener("meeting-open-inline-task-create", handleOpen);
       window.removeEventListener("meeting-open-task-create-dialog", handleOpen);
     };
-  }, [canCreate, isMeetingContext, openInlineCreate]);
+  }, [canCreate, contextId, isMeetingContext, openInlineCreate]);
 
   return (
     <section

@@ -80,6 +80,7 @@ export default function MatchcenterDetail({
             variant="menuItem"
             locale={locale}
             timeZone={timezone}
+            activation="inlinePanel"
           />
         }
         relatedTasksPanel={
