@@ -33,6 +33,8 @@ type Props = {
   footer?: ReactNode;
   /** Applied to the dialog panel wrapper. */
   panelClassName?: string;
+  /** SCE-PLANNER-OPS-01 — render in-row without portalled overlay (Liste). */
+  presentation?: "modal" | "inline";
 };
 
 /**
@@ -47,7 +49,44 @@ export default function PlanningHubManipulationModalShell({
   children,
   footer,
   panelClassName,
+  presentation = "modal",
 }: Props) {
+  const panel = (
+    <div
+      role={presentation === "modal" ? "dialog" : "region"}
+      aria-modal={presentation === "modal" ? true : undefined}
+      data-testid={`${testId}-modal-panel`}
+      className={cn(PLANNING_HUB_MANIPULATION_MODAL_PANEL, SCE_DIALOG_VARIANT_COMPACT, panelClassName)}
+    >
+      {header !== undefined && header !== null && (
+        <div data-testid={`${testId}-modal-header`} className={PLANNING_HUB_MANIPULATION_MODAL_HEADER}>
+          {header}
+        </div>
+      )}
+      <div data-testid={`${testId}-modal-body`} className={PLANNING_HUB_MANIPULATION_MODAL_BODY}>
+        {children}
+      </div>
+      {footer !== undefined && footer !== null && (
+        <div data-testid={`${testId}-modal-footer`} className={PLANNING_HUB_MANIPULATION_MODAL_FOOTER}>
+          {footer}
+        </div>
+      )}
+    </div>
+  );
+
+  if (presentation === "inline") {
+    return (
+      <div
+        data-testid={testId}
+        data-sce-planning-hub-liste-inline-manipulation
+        className="mt-2 min-w-0"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {panel}
+      </div>
+    );
+  }
+
   return (
     <SceModalOverlay
       open
@@ -56,32 +95,7 @@ export default function PlanningHubManipulationModalShell({
       testId={testId}
       initialFocusRef={initialFocusRef}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        data-testid={`${testId}-modal-panel`}
-        className={cn(PLANNING_HUB_MANIPULATION_MODAL_PANEL, SCE_DIALOG_VARIANT_COMPACT, panelClassName)}
-      >
-        {header !== undefined && header !== null && (
-          <div
-            data-testid={`${testId}-modal-header`}
-            className={PLANNING_HUB_MANIPULATION_MODAL_HEADER}
-          >
-            {header}
-          </div>
-        )}
-        <div data-testid={`${testId}-modal-body`} className={PLANNING_HUB_MANIPULATION_MODAL_BODY}>
-          {children}
-        </div>
-        {footer !== undefined && footer !== null && (
-          <div
-            data-testid={`${testId}-modal-footer`}
-            className={PLANNING_HUB_MANIPULATION_MODAL_FOOTER}
-          >
-            {footer}
-          </div>
-        )}
-      </div>
+      {panel}
     </SceModalOverlay>
   );
 }

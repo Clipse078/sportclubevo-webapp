@@ -61,6 +61,8 @@ import {
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
+import type { PlanningHubListeMenuAction } from "@/lib/planning-hub/liste-operational-menu";
+import type { PlanningHubListeInlineSession } from "@/components/admin/planning-hub/PlanningHubListeInlineEditorHost";
 
 type OverrideEditingContext = {
   planId: string;
@@ -192,6 +194,7 @@ function WeekPlannerWorkspaceBody({
 
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
+  const [listeInlineSession, setListeInlineSession] = useState<PlanningHubListeInlineSession>(null);
   const canEdit = !!canonicalEditing;
 
   const itemsById = new Map(
@@ -240,6 +243,10 @@ function WeekPlannerWorkspaceBody({
   }
 
   function handleItemActivate(item: WeekplannerItem) {
+    if (urlState.perspective === "liste") {
+      setListeInlineSession({ itemId: item.id, mode: "details" });
+      return;
+    }
     if (item.type === "VERANSTALTUNG" && activePlanId && overrideEditing) {
       handleItemOpen(item);
       return;
@@ -251,6 +258,19 @@ function WeekPlannerWorkspaceBody({
     if (isStandardplan && canEdit) {
       handleEdit(item);
     }
+  }
+
+  function handleListeMenuAction(item: WeekplannerItem, action: PlanningHubListeMenuAction) {
+    setListeInlineSession({ itemId: item.id, mode: action });
+  }
+
+  function closeListeInlineSession() {
+    setListeInlineSession(null);
+  }
+
+  function handleListeInlineSaved() {
+    closeListeInlineSession();
+    router.refresh();
   }
 
   const resolvedUrlState = { ...urlState, week: week.param };
@@ -383,6 +403,7 @@ function WeekPlannerWorkspaceBody({
         overridesByKey={overrideEditing?.overridesByKey}
         resourceRows={resourceRowsForManipulation}
         onManipulationApplied={handleManipulationApplied}
+        manipulationEditorPresentation={urlState.perspective === "liste" ? "inline" : "modal"}
       >
         {node}
       </PlanningHubManipulationProvider>
@@ -437,15 +458,18 @@ function WeekPlannerWorkspaceBody({
         tenantLogoUrl={tenantLogoUrl}
         activeAlternativePlanName={activeAlternativePlanName}
         onItemOpen={handleItemActivate}
-        onItemEditPlanning={(item) => {
-          if (activePlanId && overrideEditing) {
-            handleOperationalEdit(item);
-            return;
-          }
-          handleEdit(item);
-        }}
         onReviewConflictForItem={handleReviewConflictForItem}
         canEditItem={canEditPlannerItem}
+        inlineSession={listeInlineSession}
+        onMenuAction={handleListeMenuAction}
+        onCloseInline={closeListeInlineSession}
+        onInlineSaved={handleListeInlineSaved}
+        facilityGroupsByAllocationGroup={
+          manipulationFacilityGroups ?? { PITCH_HALL: [], DRESSING_ROOM: [] }
+        }
+        tenantDressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
+        plannerEditAccess={plannerEditAccess()}
+        alternativePlanActive={!isStandardplan}
         permissionContext={{
           canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
           canManageEvents: canonicalEditing?.canManageEvents ?? false,
@@ -480,7 +504,7 @@ function WeekPlannerWorkspaceBody({
         </>,
       )}
 
-      {canonicalEditing && (
+      {canonicalEditing && urlState.perspective !== "liste" && (
         <WeekplannerPlanningSheet
           item={editingItem}
           facilityGroupsByAllocationGroup={

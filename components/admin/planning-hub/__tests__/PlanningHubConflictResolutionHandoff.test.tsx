@@ -129,6 +129,18 @@ function mockManipulation(
     openActivityScheduleEditor: vi.fn(),
     openResourceEditorForConflict: vi.fn(),
     openActivityScheduleEditorForConflict: vi.fn(),
+    manipulationEditorPresentation: "modal",
+    inlineResourceEdit: null,
+    inlineScheduleEdit: null,
+    inlineScheduleResourceCategory: "pitch",
+    inlineSchedulePlanningResourceGroups: [],
+    closeInlineResourceEdit: vi.fn(),
+    closeInlineScheduleEdit: vi.fn(),
+    submitEditorDraft: vi.fn(),
+    applyEditorDraft: vi.fn().mockResolvedValue(undefined),
+    editorApplySaving: false,
+    editorApplyError: null,
+    evaluateScheduleConflicts: vi.fn(),
     ...overrides,
   };
 }

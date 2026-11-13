@@ -14,6 +14,18 @@ vi.mock("../PlanningHubManipulationContext", () => ({
     enabled: true,
     openActivityScheduleEditor: vi.fn(),
     openResourceEditorForConflict: vi.fn(),
+    manipulationEditorPresentation: "inline",
+    inlineResourceEdit: null,
+    inlineScheduleEdit: null,
+    inlineScheduleResourceCategory: "pitch",
+    inlineSchedulePlanningResourceGroups: [],
+    closeInlineResourceEdit: vi.fn(),
+    closeInlineScheduleEdit: vi.fn(),
+    submitEditorDraft: vi.fn(),
+    applyEditorDraft: vi.fn(),
+    editorApplySaving: false,
+    editorApplyError: null,
+    evaluateScheduleConflicts: vi.fn(),
   }),
 }));
 
@@ -70,8 +82,13 @@ function renderMenu(canEditItem = true, permissions = permissionContext) {
       item={item}
       permissionContext={permissions}
       canEditItem={canEditItem}
-      onOpenItem={vi.fn()}
-      onEditPlanning={vi.fn()}
+      plannerEditAccess={{
+        canManageTrainings: true,
+        canManageEvents: false,
+        canManageAllocations: true,
+      }}
+      alternativePlanActive={false}
+      onMenuAction={vi.fn()}
       onReviewConflict={vi.fn()}
     />,
   );
@@ -84,11 +101,13 @@ describe("PlanningHubListeRowMenu", () => {
 
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-training:1"));
 
-    expect(screen.getByTestId("planning-hub-liste-action-open-training:1")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-liste-action-plan-training:1")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-liste-action-details-training:1")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-liste-action-edit-training:1")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-liste-action-schedule-training:1")).toBeInTheDocument();
 
-    const panel = screen.getByTestId("planning-hub-liste-action-open-training:1").closest("[role='dialog']");
+    const panel = screen
+      .getByTestId("planning-hub-liste-action-details-training:1")
+      .closest("[role='dialog']");
     expect(panel).toBeTruthy();
     expect(panel?.className).not.toMatch(/overflow-y-auto/);
   });
@@ -103,7 +122,7 @@ describe("PlanningHubListeRowMenu", () => {
 
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-training:1"));
 
-    expect(screen.queryByTestId("planning-hub-liste-action-plan-training:1")).not.toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-liste-action-open-training:1")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-liste-action-edit-training:1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-liste-action-details-training:1")).toBeInTheDocument();
   });
 });

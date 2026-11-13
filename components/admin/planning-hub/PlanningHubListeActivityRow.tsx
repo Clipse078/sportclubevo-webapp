@@ -8,6 +8,14 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
+import PlanningHubListeInlineEditorHost, {
+  type PlanningHubListeInlineSession,
+  toDomainEditAccess,
+} from "./PlanningHubListeInlineEditorHost";
+import type { PlanningHubListeMenuAction } from "@/lib/planning-hub/liste-operational-menu";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import type { PlannerCanonicalEditAccess } from "@/lib/planning-hub/planner-canonical-edit-access";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import PlanningHubListeSceActivityCard from "./PlanningHubListeSceActivityCard";
 import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
@@ -28,9 +36,16 @@ type PlanningHubListeActivityRowProps = {
   tenantLogoUrl?: string | null;
   activeAlternativePlanName?: string | null;
   onItemOpen: (item: WeekplannerItem) => void;
-  onItemEditPlanning: (item: WeekplannerItem) => void;
   onReviewConflictForItem: (item: WeekplannerItem) => void;
   canEditItem: boolean;
+  inlineSession: PlanningHubListeInlineSession;
+  onMenuAction: (item: WeekplannerItem, action: PlanningHubListeMenuAction) => void;
+  onCloseInline: () => void;
+  onInlineSaved: () => void;
+  facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  plannerEditAccess: PlannerCanonicalEditAccess | null;
+  alternativePlanActive: boolean;
   permissionContext: Pick<
     ManipulationPermissionContext,
     | "canManageTrainings"
@@ -55,9 +70,16 @@ export default function PlanningHubListeActivityRow({
   tenantLogoUrl,
   activeAlternativePlanName,
   onItemOpen,
-  onItemEditPlanning,
   onReviewConflictForItem,
   canEditItem,
+  inlineSession,
+  onMenuAction,
+  onCloseInline,
+  onInlineSaved,
+  facilityGroupsByAllocationGroup,
+  tenantDressingRoomOccupancyPresets,
+  plannerEditAccess,
+  alternativePlanActive,
   permissionContext,
 }: PlanningHubListeActivityRowProps) {
   const semantic = activityVisualStyle(item.type);
@@ -99,8 +121,9 @@ export default function PlanningHubListeActivityRow({
                 item={item}
                 permissionContext={permissionContext}
                 canEditItem={canEditItem}
-                onOpenItem={() => onItemOpen(item)}
-                onEditPlanning={() => onItemEditPlanning(item)}
+                plannerEditAccess={plannerEditAccess}
+                alternativePlanActive={alternativePlanActive}
+                onMenuAction={(action) => onMenuAction(item, action)}
                 onReviewConflict={() => onReviewConflictForItem(item)}
               />
             </div>
@@ -192,13 +215,26 @@ export default function PlanningHubListeActivityRow({
                 item={item}
                 permissionContext={permissionContext}
                 canEditItem={canEditItem}
-                onOpenItem={() => onItemOpen(item)}
-                onEditPlanning={() => onItemEditPlanning(item)}
+                plannerEditAccess={plannerEditAccess}
+                alternativePlanActive={alternativePlanActive}
+                onMenuAction={(action) => onMenuAction(item, action)}
                 onReviewConflict={() => onReviewConflictForItem(item)}
               />
             </div>
           ) : null}
         </div>
+        <PlanningHubListeInlineEditorHost
+          item={item}
+          session={inlineSession}
+          locale={locale}
+          timezone={timezone}
+          facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
+          tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+          domainEditAccess={toDomainEditAccess(plannerEditAccess)}
+          alternativePlanActive={alternativePlanActive}
+          onClose={onCloseInline}
+          onSaved={onInlineSaved}
+        />
       </SceProgrammeActivityCardShell>
     </li>
   );

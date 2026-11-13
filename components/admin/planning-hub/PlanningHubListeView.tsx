@@ -10,8 +10,13 @@ import {
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
+import type { PlannerCanonicalEditAccess } from "@/lib/planning-hub/planner-canonical-edit-access";
+import type { PlanningHubListeMenuAction } from "@/lib/planning-hub/liste-operational-menu";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import PlanningHubFilteredEmptyState from "./PlanningHubFilteredEmptyState";
 import PlanningHubListeActivityRow from "./PlanningHubListeActivityRow";
+import type { PlanningHubListeInlineSession } from "./PlanningHubListeInlineEditorHost";
 
 type PlanningHubListeViewProps = {
   week: WeekplannerWeek;
@@ -22,9 +27,16 @@ type PlanningHubListeViewProps = {
   tenantLogoUrl?: string | null;
   activeAlternativePlanName?: string | null;
   onItemOpen: (item: WeekplannerItem) => void;
-  onItemEditPlanning: (item: WeekplannerItem) => void;
   onReviewConflictForItem: (item: WeekplannerItem) => void;
   canEditItem: (item: WeekplannerItem) => boolean;
+  inlineSession?: PlanningHubListeInlineSession;
+  onMenuAction?: (item: WeekplannerItem, action: PlanningHubListeMenuAction) => void;
+  onCloseInline?: () => void;
+  onInlineSaved?: () => void;
+  facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  plannerEditAccess?: PlannerCanonicalEditAccess | null;
+  alternativePlanActive?: boolean;
   permissionContext: Pick<
     ManipulationPermissionContext,
     | "canManageTrainings"
@@ -47,9 +59,16 @@ export default function PlanningHubListeView({
   tenantLogoUrl,
   activeAlternativePlanName = null,
   onItemOpen,
-  onItemEditPlanning,
   onReviewConflictForItem,
   canEditItem,
+  inlineSession = null,
+  onMenuAction = () => {},
+  onCloseInline = () => {},
+  onInlineSaved = () => {},
+  facilityGroupsByAllocationGroup = { PITCH_HALL: [], DRESSING_ROOM: [] },
+  tenantDressingRoomOccupancyPresets,
+  plannerEditAccess = null,
+  alternativePlanActive = false,
   permissionContext,
 }: PlanningHubListeViewProps) {
   const filtered = useMemo(
@@ -119,9 +138,18 @@ export default function PlanningHubListeView({
                   tenantLogoUrl={tenantLogoUrl}
                   activeAlternativePlanName={activeAlternativePlanName}
                   onItemOpen={onItemOpen}
-                  onItemEditPlanning={onItemEditPlanning}
                   onReviewConflictForItem={onReviewConflictForItem}
                   canEditItem={canEditItem(item)}
+                  inlineSession={
+                    inlineSession?.itemId === item.id ? inlineSession : null
+                  }
+                  onMenuAction={onMenuAction}
+                  onCloseInline={onCloseInline}
+                  onInlineSaved={onInlineSaved}
+                  facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
+                  tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+                  plannerEditAccess={plannerEditAccess}
+                  alternativePlanActive={alternativePlanActive}
                   permissionContext={permissionContext}
                 />
               ))}

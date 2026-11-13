@@ -231,6 +231,13 @@ export function WeekplannerDateTimeFields({
   );
 }
 
+export type WeekplannerEditorPresentation = "sheet" | "inline";
+
+const WOCHENPLANNER_INLINE_FRAME_CLASS = [
+  "mt-2 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)]",
+  "shadow-sm",
+].join(" ");
+
 export function WeekplannerActivityEditorSheet({
   description,
   onClose,
@@ -253,6 +260,88 @@ export function WeekplannerActivityEditorSheet({
     >
       {children}
     </Sheet>
+  );
+}
+
+/** SCE-PLANNER-OPS-01 — same editor body as the sheet, embedded in Liste rows (no overlay). */
+export function WeekplannerActivityEditorInlineFrame({
+  description,
+  onClose,
+  footer,
+  children,
+  testId = "weekplanner-activity-editor-inline",
+}: {
+  description?: string;
+  onClose: () => void;
+  footer: React.ReactNode;
+  children: React.ReactNode;
+  testId?: string;
+}) {
+  return (
+    <section
+      data-testid={testId}
+      data-sce-planning-hub-liste-inline-editor
+      className={WOCHENPLANNER_INLINE_FRAME_CLASS}
+      aria-label={WOCHENPLANNER_EDITOR_SHEET_TITLE}
+    >
+      <div className="flex items-start justify-between gap-2 border-b border-[var(--border)] px-3 py-2.5 sm:px-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--foreground)]">{WOCHENPLANNER_EDITOR_SHEET_TITLE}</p>
+          {description ? (
+            <p className="mt-0.5 truncate text-xs text-[var(--text-2)]">{description}</p>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose();
+          }}
+          className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+          data-testid={`${testId}-close`}
+        >
+          Schließen
+        </button>
+      </div>
+      <div className="max-h-[min(70vh,28rem)] overflow-y-auto overscroll-contain px-3 py-3 sm:px-4">{children}</div>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-3 py-2.5 sm:px-4">
+        {footer}
+      </div>
+    </section>
+  );
+}
+
+export function WeekplannerActivityEditorFrame({
+  presentation,
+  description,
+  onClose,
+  footer,
+  children,
+  inlineTestId,
+}: {
+  presentation: WeekplannerEditorPresentation;
+  description?: string;
+  onClose: () => void;
+  footer: React.ReactNode;
+  children: React.ReactNode;
+  inlineTestId?: string;
+}) {
+  if (presentation === "inline") {
+    return (
+      <WeekplannerActivityEditorInlineFrame
+        description={description}
+        onClose={onClose}
+        footer={footer}
+        testId={inlineTestId}
+      >
+        {children}
+      </WeekplannerActivityEditorInlineFrame>
+    );
+  }
+  return (
+    <WeekplannerActivityEditorSheet description={description} onClose={onClose} footer={footer}>
+      {children}
+    </WeekplannerActivityEditorSheet>
   );
 }
 
