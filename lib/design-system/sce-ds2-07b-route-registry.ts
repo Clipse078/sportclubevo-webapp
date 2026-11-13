@@ -7592,6 +7592,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/forgot-password",
     "sourceFile": "app/(auth)/forgot-password/page.tsx",
     "inheritedLayouts": [
+      "app/(auth)/layout.tsx",
       "app/layout.tsx"
     ],
     "module": "auth",
@@ -7622,6 +7623,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/login",
     "sourceFile": "app/(auth)/login/page.tsx",
     "inheritedLayouts": [
+      "app/(auth)/layout.tsx",
       "app/layout.tsx"
     ],
     "module": "auth",
@@ -7652,6 +7654,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKey": "/reset-password",
     "sourceFile": "app/(auth)/reset-password/page.tsx",
     "inheritedLayouts": [
+      "app/(auth)/layout.tsx",
       "app/layout.tsx"
     ],
     "module": "auth",
@@ -8971,7 +8974,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
   "routeHandlerCount": 634,
-  "frameworkFileCount": 40,
+  "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 218,
     "PARTIAL": 0,
