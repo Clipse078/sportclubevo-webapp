@@ -193,7 +193,7 @@ export default function PlanningHubListeRowMenu({
         ) : null}
         {caps.showEdit ? (
           <MenuButton
-            label="Bearbeiten"
+            label={caps.editMenuLabel}
             tone="planning"
             icon={<Pencil className="h-4 w-4" />}
             testId={`planning-hub-liste-action-edit-${item.id}`}

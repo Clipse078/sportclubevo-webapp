@@ -35,6 +35,7 @@ export type PlanningHubListeMenuCapabilities = {
   dressingResourceId: string | null;
   pitchUsesManipulation: boolean;
   dressingUsesManipulation: boolean;
+  editMenuLabel: string;
 };
 
 function actorFromCtx(
@@ -115,19 +116,31 @@ export function derivePlanningHubListeMenuCapabilities(options: {
   const pitchUsesManipulation = pitchAllocated && manipulationEnabled && permissionContext.isStandardplan;
   const dressingUsesManipulation = dressingAllocated && manipulationEnabled && permissionContext.isStandardplan;
 
+  const editMenuLabel =
+    item.type === "VERANSTALTUNG" && showEdit ? "Ressourcen & Termin" : "Bearbeiten";
+
+  const editBlockedReason = (() => {
+    if (!canEditItem) return null;
+    if (alternativePlanActive && !showEdit) {
+      return "Betriebsplan-Overrides bearbeiten Sie im Betriebsplan-Editor — nicht inline in der Liste.";
+    }
+    if (!showEdit && item.type === "VERANSTALTUNG") {
+      return "Veranstaltungs-Stammdaten bearbeiten Sie im Veranstaltungsbereich. Hier nur Zuweisen/Ändern nutzen.";
+    }
+    return null;
+  })();
+
   return {
     showDetails,
-    showEdit: showEdit || (alternativePlanActive && canEditItem),
+    showEdit,
     showPitch,
     showDressing,
     showSchedule,
     showConflict,
     pitchLabel: pitchAllocated ? "Spielfeld ändern" : "Spielfeld zuweisen",
     dressingLabel: dressingAllocated ? "Garderobe ändern" : "Garderobe zuweisen",
-    editBlockedReason:
-      !showEdit && canEditItem && item.type === "VERANSTALTUNG"
-        ? "Veranstaltungen öffnen Sie im Veranstaltungsbereich."
-        : null,
+    editBlockedReason,
+    editMenuLabel,
     scheduleBlockedReason: caps.activityTimeBlockedReason,
     pitchResourceId,
     dressingResourceId,

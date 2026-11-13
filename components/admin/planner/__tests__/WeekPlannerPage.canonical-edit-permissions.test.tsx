@@ -146,6 +146,14 @@ const TOURNAMENT_ITEM = {
 
 const ALL_ITEMS = [TRAINING_ITEM, MATCH_ITEM, TOURNAMENT_ITEM];
 
+async function openListeBearbeiten(
+  user: ReturnType<typeof userEvent.setup>,
+  itemId: string,
+) {
+  await user.click(screen.getByTestId(`planning-hub-liste-row-menu-${itemId}`));
+  await user.click(screen.getByTestId(`planning-hub-liste-action-edit-${itemId}`));
+}
+
 describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
   it("TRAININGS_MANAGE only: Training opens editor, Match/Tournament do not", async () => {
     const user = userEvent.setup();
@@ -165,6 +173,10 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     );
 
     await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(await screen.findByTestId("planning-hub-liste-inline-details-train-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
+
+    await openListeBearbeiten(user, "train-1");
     expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Abbrechen" }));
@@ -195,7 +207,7 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     await user.click(screen.getByTestId("weekplanner-item-training"));
     expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
 
-    await user.click(screen.getByTestId("weekplanner-item-match"));
+    await openListeBearbeiten(user, "match-1");
     expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
   });
 
@@ -216,12 +228,8 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       />,
     );
 
-    for (const testId of [
-      "weekplanner-item-training",
-      "weekplanner-item-match",
-      "weekplanner-item-tournament",
-    ]) {
-      await user.click(screen.getByTestId(testId));
+    for (const itemId of ["train-1", "match-1", "tournament-1"]) {
+      await openListeBearbeiten(user, itemId);
       expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Abbrechen" }));
     }
@@ -248,7 +256,7 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     );
 
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-match-1"));
-    await user.click(screen.getByTestId("planning-hub-liste-action-plan-match-1"));
+    await user.click(screen.getByTestId("planning-hub-liste-action-pitch-match-1"));
     expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
     expect(screen.getByTestId("wochenplaner-canonical-match-pitch")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-match-canonical-end")).toBeNull();
@@ -267,6 +275,7 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     );
 
     await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(await screen.findByTestId("planning-hub-liste-inline-details-train-1")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
   });
 
@@ -294,6 +303,10 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     );
 
     await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(await screen.findByTestId("planning-hub-liste-inline-details-train-1")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
+    await user.click(screen.getByTestId("planning-hub-liste-row-menu-train-1"));
+    expect(screen.queryByTestId("planning-hub-liste-action-edit-train-1")).toBeNull();
+    expect(screen.getByText(/Betriebsplan-Editor/)).toBeInTheDocument();
   });
 });

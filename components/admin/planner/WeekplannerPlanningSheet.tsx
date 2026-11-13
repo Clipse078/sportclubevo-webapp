@@ -36,6 +36,7 @@ import {
 } from "@/components/admin/planner/WeekplannerActivityEditorShell";
 import { WeekplannerTournamentParticipantDressingSection } from "@/components/admin/planner/WeekplannerTournamentParticipantDressingSection";
 import VeranstaltungFacilityAllocationEditor from "@/components/admin/veranstaltungen/VeranstaltungFacilityAllocationEditor";
+import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
@@ -902,6 +903,14 @@ function VeranstaltungEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <p className="text-xs leading-relaxed text-[var(--text-2)]" data-testid="weekplanner-veranstaltung-scope-note">
+          Planungskontext: Termin und Einrichtungszuweisungen für diese Veranstaltung. Titel, Beschreibung und
+          weitere Stammdaten bearbeiten Sie im{" "}
+          <Link href={getVeranstaltungHref(item.eventId)} className="font-semibold text-[var(--sce-primary)] hover:underline">
+            Veranstaltungsbereich
+          </Link>
+          .
+        </p>
         <PlannerOperationalStatusSection
           item={item}
           locale="de-CH"

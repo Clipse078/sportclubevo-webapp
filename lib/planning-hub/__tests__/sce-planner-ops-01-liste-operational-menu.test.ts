@@ -92,4 +92,90 @@ describe("SCE-PLANNER-OPS-01 liste operational menu", () => {
     expect(caps.pitchLabel).toBe("Spielfeld ändern");
     expect(caps.pitchUsesManipulation).toBe(true);
   });
+
+  it("does not offer Bearbeiten on alternative plan; explains gap in menu", () => {
+    const caps = derivePlanningHubListeMenuCapabilities({
+      item: training,
+      permissionContext: {
+        canManageTrainings: true,
+        canManageEvents: false,
+        canManageAllocations: true,
+        isStandardplan: false,
+        alternativePlanId: "plan-alt",
+      },
+      canEditItem: true,
+      manipulationEnabled: true,
+      plannerEditAccess: {
+        canManageTrainings: true,
+        canManageEvents: false,
+        canManageAllocations: true,
+      },
+      alternativePlanActive: true,
+    });
+    expect(caps.showEdit).toBe(false);
+    expect(caps.editBlockedReason).toMatch(/Betriebsplan-Editor/);
+    expect(caps.showPitch).toBe(true);
+  });
+
+  it("labels Veranstaltung edit as resource/time scope when domain manage is allowed", () => {
+    const veranstaltung = {
+      ...training,
+      id: "event:ev1",
+      type: "VERANSTALTUNG" as const,
+      eventId: "ev1",
+      trainingSessionId: undefined,
+      trainingSeriesId: undefined,
+    };
+    const caps = derivePlanningHubListeMenuCapabilities({
+      item: veranstaltung,
+      permissionContext: {
+        canManageTrainings: false,
+        canManageEvents: true,
+        canManageAllocations: true,
+        isStandardplan: true,
+        alternativePlanId: null,
+      },
+      canEditItem: true,
+      manipulationEnabled: true,
+      plannerEditAccess: {
+        canManageTrainings: false,
+        canManageEvents: true,
+        canManageAllocations: true,
+      },
+      alternativePlanActive: false,
+    });
+    expect(caps.showEdit).toBe(true);
+    expect(caps.editMenuLabel).toBe("Ressourcen & Termin");
+  });
+
+  it("blocks Veranstaltung Bearbeiten for allocation-only actors", () => {
+    const veranstaltung = {
+      ...training,
+      id: "event:ev1",
+      type: "VERANSTALTUNG" as const,
+      eventId: "ev1",
+      trainingSessionId: undefined,
+      trainingSeriesId: undefined,
+    };
+    const caps = derivePlanningHubListeMenuCapabilities({
+      item: veranstaltung,
+      permissionContext: {
+        canManageTrainings: false,
+        canManageEvents: false,
+        canManageAllocations: true,
+        isStandardplan: true,
+        alternativePlanId: null,
+      },
+      canEditItem: true,
+      manipulationEnabled: true,
+      plannerEditAccess: {
+        canManageTrainings: false,
+        canManageEvents: false,
+        canManageAllocations: true,
+      },
+      alternativePlanActive: false,
+    });
+    expect(caps.showEdit).toBe(false);
+    expect(caps.editBlockedReason).toMatch(/Veranstaltungsbereich/);
+  });
 });

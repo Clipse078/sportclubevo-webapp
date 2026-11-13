@@ -88,22 +88,7 @@ export default function PlanningHubListeInlineEditorHost({
 
   if (session.mode === "edit") {
     if (alternativePlanActive) {
-      return (
-        <div
-          className="mt-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-3 text-sm text-amber-900"
-          data-testid={`planning-hub-liste-inline-operational-gap-${item.id}`}
-        >
-          <p className="font-semibold">Betriebsplan bearbeiten</p>
-          <p className="mt-1 text-xs leading-relaxed">
-            Plan-Overrides im Wochenplaner-Modus öffnen sich vorerst im Betriebsplan-Editor
-            (kein zweites Datenmodell). Inline-Overrides für alternative Pläne folgen in einem
-            separaten Schritt.
-          </p>
-          <button type="button" className="mt-2 text-xs font-semibold underline" onClick={onClose}>
-            Schließen
-          </button>
-        </div>
-      );
+      return null;
     }
     return (
       <WeekplannerPlanningSheet

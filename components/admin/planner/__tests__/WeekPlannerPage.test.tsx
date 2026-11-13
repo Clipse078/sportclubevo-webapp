@@ -53,6 +53,12 @@ const LISTE_URL = {
   resourceCategory: "pitch" as const,
 };
 
+const KALENDER_URL = {
+  ...LISTE_URL,
+  perspective: "kalender" as const,
+  week: "2026-08-10",
+};
+
 function emptyDay(dayKey: string): WeekplannerDay {
   return { dayKey, items: [] };
 }
@@ -252,7 +258,7 @@ describe("WeekPlannerPage — alternative plan operational sheet", () => {
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
-        urlState={LISTE_URL}
+        urlState={KALENDER_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -262,7 +268,11 @@ describe("WeekPlannerPage — alternative plan operational sheet", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("weekplanner-item-training"));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Training, FC Allschwil E2/i,
+      }),
+    );
     expect(await screen.findByTestId("weekplanner-operational-editor")).toBeInTheDocument();
   });
 });
@@ -282,7 +292,7 @@ describe("WeekPlannerPage — override editing per activity type", () => {
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
-        urlState={LISTE_URL}
+        urlState={KALENDER_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -292,7 +302,11 @@ describe("WeekPlannerPage — override editing per activity type", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("weekplanner-item-training"));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Training, FC Allschwil E2/i,
+      }),
+    );
     expect(await screen.findByTestId("weekplanner-operational-editor")).toBeInTheDocument();
   });
 });
@@ -317,7 +331,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D effective time drives availability
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
-        urlState={LISTE_URL}
+        urlState={KALENDER_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -327,7 +341,11 @@ describe("WeekPlannerPage — WEEKPLANNER-01D effective time drives availability
       />,
     );
 
-    await user.click(screen.getByTestId("weekplanner-item-training"));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Training, FC Allschwil E2/i,
+      }),
+    );
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(

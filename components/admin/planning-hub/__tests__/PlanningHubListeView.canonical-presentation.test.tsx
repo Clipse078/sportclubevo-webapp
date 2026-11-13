@@ -303,7 +303,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     await user.click(screen.getByTestId("weekplanner-item-training"));
     expect(onOpen).toHaveBeenCalledTimes(1);
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-training:1"));
-    expect(screen.getByTestId("planning-hub-liste-action-open-training:1")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-liste-action-details-training:1")).toBeInTheDocument();
   });
 
   it("uses transparent crest pipeline — no circular avatar wrapper on resolvable logos", () => {
