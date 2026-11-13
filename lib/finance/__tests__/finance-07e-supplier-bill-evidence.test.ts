@@ -9,6 +9,7 @@ import {
 import { FINANCE_SUPPLIER_BILL_EVIDENCE_SCOPE } from "@/lib/finance/commitment/finance-supplier-bill-evidence-contract";
 import {
   commitmentCtx,
+  commitmentTenantB,
   commitmentYearId,
   createCommitmentMockStore,
   makeCommitmentMockDb,
@@ -87,6 +88,32 @@ describe("FIN-07E supplier bill evidence links (existing schema)", () => {
         { commitmentId: created.id, externalReference: "X-1" },
       ),
     ).rejects.toMatchObject({ code: "FINANCE_FORBIDDEN" });
+  });
+
+  it("denies cross-tenant link and list", async () => {
+    const store = createCommitmentMockStore();
+    const db = makeCommitmentMockDb(store);
+    const created = await createFinanceCommitment(db as never, commitmentCtx(), {
+      financeYearId: commitmentYearId,
+      title: "Tenant A",
+      amountMinor: 100,
+      currency: "CHF",
+      commitmentDate: "2026-01-01",
+    });
+    await expect(
+      linkSupplierBillExternalReferenceToCommitment(
+        db as never,
+        commitmentCtx({ tenantId: commitmentTenantB }),
+        { commitmentId: created.id, externalReference: "X-tenant" },
+      ),
+    ).rejects.toMatchObject({ code: "FINANCE_NOT_FOUND" });
+    await expect(
+      listSupplierBillEvidenceForCommitment(
+        db as never,
+        commitmentCtx({ tenantId: commitmentTenantB }),
+        created.id,
+      ),
+    ).rejects.toMatchObject({ code: "FINANCE_NOT_FOUND" });
   });
 
   it("rejects duplicate tenant-wide supplier bill reference", async () => {
