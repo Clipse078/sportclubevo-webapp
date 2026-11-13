@@ -142,6 +142,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
               contextId={dbMeeting.id}
               locale={taskPanelLocale}
               timeZone={taskPanelTimeZone}
+              pendenzenEmbed
             />
           ) : null
         }

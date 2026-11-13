@@ -29,6 +29,26 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
     expect(config.tabs.every((t) => t.count === undefined)).toBe(true);
   });
 
+  it("Pendenzen tab uses one canonical panel without duplicate section headings", () => {
+    const workspace = readFileSync(
+      join(process.cwd(), "components/admin/meetings/workspace/MeetingWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).not.toContain("MeetingActionsSection");
+    const panel = readFileSync(
+      join(process.cwd(), "components/admin/meetings/workspace/MeetingPendenzenPanel.tsx"),
+      "utf8",
+    );
+    expect(panel).toContain('data-testid="meeting-section-pendenzen"');
+    expect(panel).not.toContain("Aufgaben (");
+    expect(panel).toContain("Massnahme erfassen");
+    const tasksView = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx"),
+      "utf8",
+    );
+    expect(tasksView).toContain("pendenzenEmbed");
+  });
+
   it("meeting Aufgaben uses inline collapsible create card", () => {
     const panel = readFileSync(
       join(process.cwd(), "components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx"),

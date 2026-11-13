@@ -993,7 +993,7 @@ const MEETING_ACTION_STATUS_LABELS: Record<MeetingActionStatus, string> = {
   CANCELLED: "Abgebrochen",
 };
 
-function MeetingActionRow({
+export function MeetingActionRow({
   action,
   meetingId,
   canManage,

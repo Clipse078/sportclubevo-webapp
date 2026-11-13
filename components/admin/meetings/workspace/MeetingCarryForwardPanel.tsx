@@ -168,10 +168,10 @@ export function MeetingCarryForwardPanel({ meetingId, canManage, onApplied }: Pr
           </button>
         </div>
         <p className="text-[11px] text-[var(--muted)]">
-          Beschlüsse werden in diesem Paket nicht automatisch zurückgestellt. Offene Traktanden werden verknüpft
-          kopiert; offene Aufgaben werden dem Sitzungskontext zugeordnet (ohne Duplikat). Offene Massnahmen aus
-          früheren Sitzungen sind hier nur zur Vorbereitung sichtbar — dauerhafte Nachverfolgung erfordert die
-          Migration «MeetingCommitmentReview» (SCE-MTG-PEND-01-SCHEMA-GAPS).
+          Wählen Sie explizit die Quellpunkte aus sichtbaren Vorsitzungen. Beschlüsse werden nicht automatisch
+          zurückgestellt. Offene Traktanden werden verknüpft kopiert; offene Aufgaben werden diesem Sitzungskontext
+          zugeordnet (ohne Duplikat). Offene Massnahmen früherer Sitzungen erscheinen hier nur zur Orientierung und
+          werden nicht automatisch übernommen.
         </p>
       </div>
     </SceExpandablePanel>

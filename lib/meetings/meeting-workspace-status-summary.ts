@@ -2,6 +2,7 @@ import {
   meetingApprovalAggregateStatusLabel,
   protocolReviewStageStatusLabel,
 } from "@/lib/meetings/meeting-approval-presentation";
+import { formatOpenPendenzenCountLabel } from "@/lib/meetings/meeting-pendenzen";
 import { getMeetingLifecyclePresentation } from "@/lib/meetings/meeting-lifecycle";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 
@@ -58,7 +59,7 @@ export function buildMeetingWorkspaceStatusSummary(input: {
   } else if ((input.overduePendenzenCount ?? 0) > 0) {
     attentionLine = `${input.overduePendenzenCount} überfällige Pendenz/Pendenzen — prüfen unter Pendenzen.`;
   } else if ((input.openPendenzenCount ?? 0) > 0) {
-    attentionLine = `${input.openPendenzenCount} offene Pendenz/Pendenzen.`;
+    attentionLine = `${formatOpenPendenzenCountLabel(input.openPendenzenCount ?? 0)}.`;
   } else if (pendingDecisions.length > 0) {
     attentionLine = `${pendingDecisions.length} Beschluss/Beschlüsse warten auf Freigabe.`;
   }

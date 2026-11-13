@@ -1,42 +1,73 @@
 "use client";
 
-import { useCallback, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import {
   SCE_CONTEXT_TABS_NAV_CLASS,
   sceContextTabClassName,
 } from "@/lib/design-system/sce-context-tabs-foundation";
+import { SceContextTabProvider, useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import {
   buildMeetingWorkspaceTabNavigationConfig,
   meetingWorkspaceSectionDomId,
   type MeetingWorkspaceTabId,
 } from "@/lib/nav/meeting-workspace-tab-config";
 
-type Props = {
-  counts: {
-    traktanden: number;
-    beschluesse: number;
-    pendenzenOpen: number;
-    teilnehmer: number;
-  };
-  activeTab: MeetingWorkspaceTabId;
-  onTabChange: (tab: MeetingWorkspaceTabId) => void;
-  children: ReactNode;
+type Counts = {
+  traktanden: number;
+  beschluesse: number;
+  pendenzenOpen: number;
+  teilnehmer: number;
 };
 
-export default function MeetingWorkspaceSectionNav({
+type Props = {
+  counts: Counts;
+  children: (activeTab: MeetingWorkspaceTabId) => ReactNode;
+};
+
+const LEGACY_SECTION_TO_TAB: Record<string, MeetingWorkspaceTabId> = {
+  "meeting-section-traktanden": "traktanden",
+  "meeting-section-beschlüsse": "beschluesse",
+  "meeting-section-teilnehmer": "teilnehmer",
+  "meeting-section-pendenzen": "pendenzen",
+  "meeting-section-massnahmen": "pendenzen",
+  "meeting-section-aufgaben": "pendenzen",
+};
+
+function MeetingWorkspaceSectionNavInner({
   counts,
-  activeTab,
-  onTabChange,
   children,
 }: Props) {
-  const config = buildMeetingWorkspaceTabNavigationConfig(counts);
+  const { activeTab, navigateToTab, config } = useContextDetailTab<MeetingWorkspaceTabId>();
+
+  useEffect(() => {
+    function onNavigateTab(event: Event) {
+      const detail = (event as CustomEvent<{ tab?: MeetingWorkspaceTabId }>).detail;
+      if (detail?.tab) {
+        navigateToTab(detail.tab, { skipDirtyConfirm: true });
+      }
+    }
+    function onHashSection() {
+      const hash = window.location.hash.replace(/^#/, "");
+      const tab = LEGACY_SECTION_TO_TAB[hash];
+      if (tab) {
+        navigateToTab(tab, { skipDirtyConfirm: true });
+      }
+    }
+    window.addEventListener("meeting-workspace-navigate-tab", onNavigateTab);
+    window.addEventListener("hashchange", onHashSection);
+    onHashSection();
+    return () => {
+      window.removeEventListener("meeting-workspace-navigate-tab", onNavigateTab);
+      window.removeEventListener("hashchange", onHashSection);
+    };
+  }, [navigateToTab]);
 
   const activate = useCallback(
     (tab: MeetingWorkspaceTabId) => {
-      onTabChange(tab);
+      navigateToTab(tab);
     },
-    [onTabChange],
+    [navigateToTab],
   );
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -92,8 +123,21 @@ export default function MeetingWorkspaceSectionNav({
         className="mt-4 focus:outline-none"
         data-testid={`meeting-workspace-panel-${activeTab}`}
       >
-        {children}
+        {children(activeTab)}
       </div>
     </section>
+  );
+}
+
+export default function MeetingWorkspaceSectionNav(props: Props) {
+  const config = useMemo(
+    () => buildMeetingWorkspaceTabNavigationConfig(props.counts),
+    [props.counts],
+  );
+
+  return (
+    <SceContextTabProvider config={config}>
+      <MeetingWorkspaceSectionNavInner {...props} />
+    </SceContextTabProvider>
   );
 }

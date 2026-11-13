@@ -4,6 +4,7 @@ import {
   countOverduePendenzen,
   dedupePendenzKeys,
   filterPendenzen,
+  formatOpenPendenzenCountLabel,
   mergeMeetingPendenzen,
 } from "@/lib/meetings/meeting-pendenzen";
 import { MeetingActionStatus, TaskStatus } from "@prisma/client";
@@ -16,6 +17,12 @@ const meeting = {
 };
 
 describe("meeting-pendenzen", () => {
+  it("formats singular and plural open count labels", () => {
+    expect(formatOpenPendenzenCountLabel(0)).toBe("Keine offenen Pendenzen");
+    expect(formatOpenPendenzenCountLabel(1)).toBe("1 offene Pendenz");
+    expect(formatOpenPendenzenCountLabel(2)).toBe("2 offene Pendenzen");
+  });
+
   it("dedupes by source id keys", () => {
     const rows = mergeMeetingPendenzen({
       meeting,

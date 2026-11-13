@@ -67,6 +67,12 @@ export function filterPendenzen(items: PendenzListItem[], filter: PendenzListFil
   return items.filter((i) => !i.isTerminal);
 }
 
+export function formatOpenPendenzenCountLabel(count: number): string {
+  if (count <= 0) return "Keine offenen Pendenzen";
+  if (count === 1) return "1 offene Pendenz";
+  return `${count} offene Pendenzen`;
+}
+
 export function mergeMeetingPendenzen(input: {
   meeting: { id: string; title: string; slug: string; meetingDate: Date };
   actions: Array<{

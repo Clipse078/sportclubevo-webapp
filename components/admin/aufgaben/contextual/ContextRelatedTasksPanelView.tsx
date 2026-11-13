@@ -28,6 +28,8 @@ type Props = {
   canCreate: boolean;
   createDialogProps: CreateProps | null;
   locale: string;
+  /** Pendenzen tab: inline create only — no duplicate Aufgaben list/heading. */
+  pendenzenEmbed?: boolean;
 };
 
 function formatDue(iso: string | null, locale: string): string {
@@ -60,6 +62,7 @@ export default function ContextRelatedTasksPanelView({
   canCreate,
   createDialogProps,
   locale,
+  pendenzenEmbed = false,
 }: Props) {
   const tWork = useTranslations("PlanningEditor.operational.work");
   const [inlineCreateExpanded, setInlineCreateExpanded] = useState(false);
@@ -86,6 +89,22 @@ export default function ContextRelatedTasksPanelView({
       window.removeEventListener("meeting-open-task-create-dialog", handleOpen);
     };
   }, [canCreate, isMeetingContext, openInlineCreate]);
+
+  if (pendenzenEmbed && isMeetingContext) {
+    return (
+      <div className="min-w-0" data-testid="context-related-tasks-pendenzen-embed">
+        {canCreate && createDialogProps ? (
+          <MeetingContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            onCreated={() => window.dispatchEvent(new CustomEvent("meeting-pendenzen-refresh"))}
+            {...createDialogProps}
+          />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <section

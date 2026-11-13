@@ -12,11 +12,9 @@ import MeetingWorkspaceDetailsSection from "@/components/admin/meetings/workspac
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import { canEditMeetingDocumentation } from "@/lib/meetings/meeting-workspace-lock";
 import {
-  MeetingActionsSection,
   MeetingAgendaSection,
   MeetingDecisionsSection,
   MeetingParticipantsSection,
-  MeetingTasksSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import MeetingPendenzenPanel from "@/components/admin/meetings/workspace/MeetingPendenzenPanel";
 import type { PendenzListItem } from "@/lib/meetings/meeting-pendenzen";
@@ -69,7 +67,6 @@ export default function MeetingWorkspace({
   const [decisions, setDecisions] = useState(initialSubEntities.decisions);
   const [actions, setActions] = useState(initialSubEntities.actions);
   const [isDirty, setIsDirty] = useState(false);
-  const [activeTab, setActiveTab] = useState<MeetingWorkspaceTabId>("traktanden");
   const [pendenzenTaskRows, setPendenzenTaskRows] = useState<PendenzListItem[]>([]);
   const [pendenzenOpenCount, setPendenzenOpenCount] = useState(initialPendenzenOpenCount);
   const [pendenzenOverdueCount, setPendenzenOverdueCount] = useState(initialPendenzenOverdueCount);
@@ -157,19 +154,10 @@ export default function MeetingWorkspace({
   const navigateToSection = useCallback((sectionId: string) => {
     const tab = SECTION_TO_TAB[sectionId];
     if (tab) {
-      setActiveTab(tab);
+      window.dispatchEvent(
+        new CustomEvent("meeting-workspace-navigate-tab", { detail: { tab } }),
+      );
     }
-  }, []);
-
-  useEffect(() => {
-    function onNavigateTab(event: Event) {
-      const detail = (event as CustomEvent<{ tab?: MeetingWorkspaceTabId }>).detail;
-      if (detail?.tab) {
-        setActiveTab(detail.tab);
-      }
-    }
-    window.addEventListener("meeting-workspace-navigate-tab", onNavigateTab);
-    return () => window.removeEventListener("meeting-workspace-navigate-tab", onNavigateTab);
   }, []);
 
   const pendingDecisionApprovals = countDecisionsAwaitingReview(decisions);
@@ -249,92 +237,90 @@ export default function MeetingWorkspace({
             pendenzenOpen: displayPendenzenOpenCount,
             teilnehmer: participants.length,
           }}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
         >
-          {activeTab === "traktanden" ? (
-            <MeetingAgendaSection
-              meetingId={meeting.id}
-              meetingPlannedDurationMin={meeting.plannedDurationMin}
-              canManage={effectiveCanManage}
-              items={agendaItems}
-              decisions={decisions}
-              onItemsChange={setAgendaItems}
-              onDecisionsChange={setDecisions}
-              onDirtyChange={setIsDirty}
-            />
-          ) : null}
-          {activeTab === "beschluesse" ? (
-            <MeetingDecisionsSection
-              meetingId={meeting.id}
-              meetingSlug={slug}
-              meetingStatus={meeting.status}
-              canManage={canManage}
-              documentationEditable={effectiveCanManage}
-              actorPersonId={actorPersonId}
-              approvalWorkspaceData={approvalWorkspaceData}
-              agendaItems={agendaItems}
-              items={decisions}
-              onItemsChange={setDecisions}
-            />
-          ) : null}
-          {activeTab === "pendenzen" ? (
-            <div className="space-y-4">
-              <MeetingPendenzenPanel
-                meetingId={meeting.id}
-                refreshToken={pendenzenRefresh}
-                onSnapshot={(snapshot) => {
-                  applyPendenzenSnapshot({
-                    openCount: snapshot.openCount,
-                    overdueCount: snapshot.overdueCount,
-                    items: snapshot.items.map((i) => ({
-                      sourceKind: i.sourceKind,
-                      sourceId: i.sourceId,
-                      title: i.title,
-                      description: i.description,
-                      deadline: i.deadline?.toISOString() ?? null,
-                      status: i.status,
-                      statusLabel: i.statusLabel,
-                      ownerLabel: i.ownerLabel,
-                      contextReference: i.contextReference,
-                      meetingDate: i.meetingDate.toISOString(),
-                    })),
-                  });
-                }}
-              />
-              <MeetingActionsSection
-                meetingId={meeting.id}
-                canManage={effectiveCanManage}
-                items={actions}
-                onItemsChange={(next) => {
-                  setActions(next);
-                  setPendenzenRefresh((n) => n + 1);
-                }}
-              />
-              {relatedTasksPanel ? (
-                <MeetingTasksSection relatedTasksPanel={relatedTasksPanel} />
+          {(activeTab) => (
+            <>
+              {activeTab === "traktanden" ? (
+                <MeetingAgendaSection
+                  meetingId={meeting.id}
+                  meetingPlannedDurationMin={meeting.plannedDurationMin}
+                  canManage={effectiveCanManage}
+                  items={agendaItems}
+                  decisions={decisions}
+                  onItemsChange={setAgendaItems}
+                  onDecisionsChange={setDecisions}
+                  onDirtyChange={setIsDirty}
+                />
               ) : null}
-            </div>
-          ) : null}
-          {activeTab === "teilnehmer" ? (
-            <MeetingParticipantsSection
-              meetingId={meeting.id}
-              canManage={effectiveCanManage}
-              items={participants}
-              onItemsChange={setParticipants}
-              onDirtyChange={setIsDirty}
-            />
-          ) : null}
-          {activeTab === "details" ? (
-            <MeetingWorkspaceDetailsSection
-              meeting={meeting}
-              slug={slug}
-              canManage={canManage}
-              actorPersonId={actorPersonId}
-              approvalWorkspaceData={approvalWorkspaceData}
-              fmtCfg={fmtCfg}
-            />
-          ) : null}
+              {activeTab === "beschluesse" ? (
+                <MeetingDecisionsSection
+                  meetingId={meeting.id}
+                  meetingSlug={slug}
+                  meetingStatus={meeting.status}
+                  canManage={canManage}
+                  documentationEditable={effectiveCanManage}
+                  actorPersonId={actorPersonId}
+                  approvalWorkspaceData={approvalWorkspaceData}
+                  agendaItems={agendaItems}
+                  items={decisions}
+                  onItemsChange={setDecisions}
+                />
+              ) : null}
+              {activeTab === "pendenzen" ? (
+                <MeetingPendenzenPanel
+                  meetingId={meeting.id}
+                  meetingTitle={meeting.title}
+                  meetingSlug={slug}
+                  meetingDate={meeting.meetingDate}
+                  canManage={effectiveCanManage}
+                  actions={actions}
+                  onActionsChange={(next) => {
+                    setActions(next);
+                    setPendenzenRefresh((n) => n + 1);
+                  }}
+                  relatedTasksCreateSlot={relatedTasksPanel}
+                  refreshToken={pendenzenRefresh}
+                  onSnapshot={(snapshot) => {
+                    applyPendenzenSnapshot({
+                      openCount: snapshot.openCount,
+                      overdueCount: snapshot.overdueCount,
+                      items: snapshot.items.map((i) => ({
+                        sourceKind: i.sourceKind,
+                        sourceId: i.sourceId,
+                        title: i.title,
+                        description: i.description,
+                        deadline: i.deadline?.toISOString() ?? null,
+                        status: i.status,
+                        statusLabel: i.statusLabel,
+                        ownerLabel: i.ownerLabel,
+                        contextReference: i.contextReference,
+                        meetingDate: i.meetingDate.toISOString(),
+                      })),
+                    });
+                  }}
+                />
+              ) : null}
+              {activeTab === "teilnehmer" ? (
+                <MeetingParticipantsSection
+                  meetingId={meeting.id}
+                  canManage={effectiveCanManage}
+                  items={participants}
+                  onItemsChange={setParticipants}
+                  onDirtyChange={setIsDirty}
+                />
+              ) : null}
+              {activeTab === "details" ? (
+                <MeetingWorkspaceDetailsSection
+                  meeting={meeting}
+                  slug={slug}
+                  canManage={canManage}
+                  actorPersonId={actorPersonId}
+                  approvalWorkspaceData={approvalWorkspaceData}
+                  fmtCfg={fmtCfg}
+                />
+              ) : null}
+            </>
+          )}
         </MeetingWorkspaceSectionNav>
       </div>
     </>
