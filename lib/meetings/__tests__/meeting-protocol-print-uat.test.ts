@@ -38,7 +38,9 @@ describe("SCE-CD-03R4 — discoverable protocol print (UAT)", () => {
     expect(printView).toContain("Traktandenübersicht");
     expect(printView).toContain("Traktanden im Detail");
     expect(printView).toContain("Teilnehmende");
-    expect(printView).toContain("Massnahmenübersicht");
+    expect(printView).toContain("Pendenzenübersicht");
+    expect(printView).not.toContain("Massnahmenübersicht");
+    expect(printView).not.toContain("schema-persistent");
     expect(printView).toContain("Begründung");
     expect(printView).toContain("Erwartetes Ergebnis / Ziel");
     expect(printView).toContain("protocol-draft-banner");

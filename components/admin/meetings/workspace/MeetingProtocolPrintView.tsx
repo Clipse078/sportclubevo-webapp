@@ -36,6 +36,10 @@ function SubHeading({ children }: { children: ReactNode }) {
   return <h3 className="mt-3 text-base font-semibold text-slate-900 print:break-after-avoid">{children}</h3>;
 }
 
+const PROTOCOL_TABLE_HEAD_CLASS =
+  "border-b-2 border-slate-300 bg-sky-50 text-[10px] uppercase text-slate-800";
+const PROTOCOL_TH_CLASS = "py-1.5 pr-3 font-semibold text-slate-900";
+
 function FieldBlock({
   label,
   children,
@@ -192,12 +196,11 @@ export default function MeetingProtocolPrintView({ model }: Props) {
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-slate-900">{model.tenantName}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <p className="text-xl font-bold tracking-tight text-slate-900 print:text-[16pt]">{model.tenantName}</p>
+            <p className="mt-0.5 text-sm font-semibold uppercase tracking-wide text-slate-700">
               <span style={accentStyle}>{model.documentLabel}</span>
-              <span className="text-slate-400"> · </span>
-              <span className="font-bold normal-case text-slate-900">{model.meetingTitle}</span>
             </p>
+            <p className="mt-1 text-lg font-bold text-slate-900 print:text-[13pt]">{model.meetingTitle}</p>
             {model.draftBanner ? (
               <p
                 className="mt-2 inline-block rounded border px-2 py-1 text-xs font-semibold text-amber-900"
@@ -243,10 +246,10 @@ export default function MeetingProtocolPrintView({ model }: Props) {
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[420px] border-collapse text-left text-sm">
               <thead className="print:table-header-group">
-                <tr className="border-b border-slate-300 text-[10px] uppercase text-slate-600">
-                  <th className="py-1.5 pr-3 font-semibold">Name</th>
-                  <th className="py-1.5 pr-3 font-semibold">Rolle</th>
-                  <th className="py-1.5 font-semibold">Anwesenheit / Einladung</th>
+                <tr className={PROTOCOL_TABLE_HEAD_CLASS}>
+                  <th className={PROTOCOL_TH_CLASS}>Name</th>
+                  <th className={PROTOCOL_TH_CLASS}>Rolle</th>
+                  <th className={`${PROTOCOL_TH_CLASS} pr-0`}>Anwesenheit / Einladung</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,83 +348,21 @@ export default function MeetingProtocolPrintView({ model }: Props) {
         </section>
       ) : null}
 
-      {model.actionOverviewTable.length > 0 ? (
-        <section data-testid="protocol-action-overview">
-          <SectionHeading index={nextSection()} accentColor={model.tenantAccentColor}>
-            Massnahmenübersicht
-          </SectionHeading>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse text-left text-sm">
-              <thead className="print:table-header-group">
-                <tr className="border-b-2 border-slate-300 text-[10px] uppercase text-slate-600">
-                  <th className="py-1.5 pr-3 font-semibold text-slate-800">Massnahme</th>
-                  <th className="py-1.5 pr-3 font-semibold text-slate-800">Verantwortlich</th>
-                  <th className="py-1.5 pr-3 font-semibold text-slate-800">Termin</th>
-                  <th className="py-1.5 font-semibold text-slate-800">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {model.actionOverviewTable.map((row, index) => (
-                  <tr key={index} className="border-b border-slate-200">
-                    <td className="py-1.5 pr-3 align-top text-slate-900">{row.title}</td>
-                    <td className="py-1.5 pr-3 align-top text-slate-800">{row.ownerLabel}</td>
-                    <td className="py-1.5 pr-3 align-top text-slate-800">{row.dueDateLabel}</td>
-                    <td className="py-1.5 align-top text-slate-800">{row.statusLabel}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : null}
-
-      {model.meetingTasks.length > 0 ? (
-        <section data-testid="protocol-tasks">
-          <SectionHeading index={nextSection()} accentColor={model.tenantAccentColor}>
-            Verknüpfte Aufgaben
-          </SectionHeading>
-          <p className="mt-1 text-xs font-medium text-slate-600">
-            Aktueller Aufgabenstand zum Exportzeitpunkt ({model.exportGeneratedAtLabel})
-          </p>
-          <ul className="mt-2 space-y-2">
-            {model.meetingTasks.map((task) => (
-              <li key={task.id} className="border-l-2 border-slate-300 pl-3 text-sm print:break-inside-avoid">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Aufgabe</p>
-                <p className="font-medium text-slate-900">{task.title}</p>
-                {task.contextReference ? (
-                  <p className="text-xs text-slate-500">{task.contextReference}</p>
-                ) : null}
-                <p className="mt-0.5 text-xs text-slate-600">
-                  Status: {task.statusLabel}
-                  {task.dueAtLabel ? ` · Fällig: ${task.dueAtLabel}` : ""}
-                  {task.assigneeLabels.length > 0
-                    ? ` · Zuständig: ${task.assigneeLabels.join(", ")}`
-                    : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
       {model.referencedPendenzen.length > 0 ? (
         <section data-testid="protocol-pendenzen">
           <SectionHeading index={nextSection()} accentColor={model.tenantAccentColor}>
-            Offene Pendenzen dieser Sitzung
+            Pendenzenübersicht
           </SectionHeading>
-          <p className="mt-1 text-xs text-slate-600">
-            Live-Status zum Exportzeitpunkt; ältere Sitzungs-Pendenzen ohne schema-persistentes Review erscheinen nur,
-            wenn sie dieser Sitzung zugeordnet sind.
-          </p>
+          <p className="mt-1 text-xs font-medium text-slate-700">{model.pendenzenOverviewFootnote}</p>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[480px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b-2 border-slate-300 text-[10px] uppercase text-slate-600">
-                  <th className="py-1.5 pr-3 font-semibold">Titel</th>
-                  <th className="py-1.5 pr-3 font-semibold">Quelle</th>
-                  <th className="py-1.5 pr-3 font-semibold">Verantwortlich</th>
-                  <th className="py-1.5 pr-3 font-semibold">Termin</th>
-                  <th className="py-1.5 font-semibold">Status</th>
+              <thead className="print:table-header-group">
+                <tr className={PROTOCOL_TABLE_HEAD_CLASS}>
+                  <th className={PROTOCOL_TH_CLASS}>Titel</th>
+                  <th className={PROTOCOL_TH_CLASS}>Quelle</th>
+                  <th className={PROTOCOL_TH_CLASS}>Verantwortlich</th>
+                  <th className={PROTOCOL_TH_CLASS}>Termin</th>
+                  <th className={`${PROTOCOL_TH_CLASS} pr-0`}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -430,10 +371,10 @@ export default function MeetingProtocolPrintView({ model }: Props) {
                     <td className="py-1.5 pr-3 align-top">
                       <span className="font-medium text-slate-900">{row.title}</span>
                       {row.compactSummary ? (
-                        <p className="mt-0.5 text-xs text-slate-500">{row.compactSummary}</p>
+                        <p className="mt-0.5 text-xs text-slate-600">{row.compactSummary}</p>
                       ) : null}
                     </td>
-                    <td className="py-1.5 pr-3 align-top text-slate-800">{row.sourceKind}</td>
+                    <td className="py-1.5 pr-3 align-top text-slate-800">{row.sourceTypeLabel}</td>
                     <td className="py-1.5 pr-3 align-top text-slate-800">{row.ownerLabel}</td>
                     <td className="py-1.5 pr-3 align-top text-slate-800">{row.dueDateLabel}</td>
                     <td className="py-1.5 align-top text-slate-800">{row.statusLabel}</td>
