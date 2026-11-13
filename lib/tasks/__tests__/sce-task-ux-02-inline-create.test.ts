@@ -17,7 +17,7 @@ describe("SCE-TASK-UX-02 — contextual inline task create", () => {
   it("meeting workspace keeps meeting-specific inline card wrapper", () => {
     const wrapper = read("components/admin/aufgaben/contextual/MeetingContextualTaskInlineCreateCard.tsx");
     expect(wrapper).toContain("ContextualTaskInlineCreateCard");
-    expect(wrapper).toContain("meeting-contextual-task-inline-create-card");
+    expect(wrapper).toContain('cardTestId="meeting-contextual-task-inline-create-card"');
   });
 
   it("inline create reuses canonical form hook and body", () => {
