@@ -12,6 +12,7 @@ import TaskPeopleMultiPicker from "../TaskPeopleMultiPicker";
 import TaskPriorityField from "../TaskPriorityField";
 import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 import { cn } from "@/lib/cn";
+import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 
 type Props = {
   formId: string;
