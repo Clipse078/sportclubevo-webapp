@@ -10,7 +10,6 @@ import { TaskDeadlineFields } from "../TaskReminderFields";
 import TaskDescriptionFormField from "../TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "../TaskPeopleMultiPicker";
 import TaskPriorityField from "../TaskPriorityField";
-import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -30,7 +29,6 @@ type Props = {
   fieldsKey: number;
   onSubmit: FormEventHandler<HTMLFormElement>;
   testIdPrefix: string;
-  peoplePickerHost?: SceListSelectorPanelHost;
   titleInputClassName?: string;
   showContextBanner?: boolean;
 };
@@ -52,7 +50,6 @@ export default function ContextualTaskCreateFormBody({
   fieldsKey,
   onSubmit,
   testIdPrefix,
-  peoplePickerHost = "sheet",
   titleInputClassName,
   showContextBanner = true,
 }: Props) {
@@ -120,7 +117,6 @@ export default function ContextualTaskCreateFormBody({
             onSelectedIdsChange={onAssigneeUserIdsChange}
             disabled={pending}
             testIdPrefix={`${testIdPrefix}-assignees`}
-            panelHost={peoplePickerHost}
           />
           <label className="block space-y-1">
             <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>

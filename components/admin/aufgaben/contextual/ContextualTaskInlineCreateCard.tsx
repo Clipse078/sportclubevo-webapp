@@ -150,7 +150,6 @@ const ContextualTaskInlineCreateCard = forwardRef<ContextualTaskInlineCreateCard
             fieldsKey={fieldsKey}
             onSubmit={onSubmit}
             testIdPrefix="contextual-task-inline-create"
-            peoplePickerHost="embedded"
             showContextBanner
           />
           <div className="mt-4 flex flex-wrap gap-2">

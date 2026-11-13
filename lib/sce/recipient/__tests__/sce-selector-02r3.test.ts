@@ -114,8 +114,10 @@ describe("SCE-SELECTOR-02R3", () => {
 
   it("TaskPeopleMultiPicker and RequirementAudienceBuilder stay on SCE engine with expected config", () => {
     const taskPicker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(taskPicker).toContain('authContext="TASK_ASSIGNMENT"');
-    expect(taskPicker).toContain('sourceTypes={["PERSON"]}');
+    expect(taskPicker).toContain("SceInlineTaskAssigneeMultiPicker");
+    const inlinePicker = read("components/sce/list-selector/SceInlineTaskAssigneeMultiPicker.tsx");
+    expect(inlinePicker).toContain("authContext=TASK_ASSIGNMENT");
+    expect(inlinePicker).toContain("sources=PERSON");
 
     const requirement = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
     expect(requirement).toContain("SceRecipientSelector");
