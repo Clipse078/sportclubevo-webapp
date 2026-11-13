@@ -25,7 +25,8 @@ type MatchcenterTeamFilterProps = {
   teamFilter: string | null;
   basePath: string;
   tab: MatchcenterTab;
-  month: string;
+  month?: string | null;
+  calendarMonth?: string | null;
   actionFilter: MatchcenterActionFilter;
   wochenplanFilter: MatchcenterWochenplanFilter;
   urlSearch?: string | null;
@@ -45,7 +46,8 @@ export default function MatchcenterTeamFilter({
   teamFilter,
   basePath,
   tab,
-  month,
+  month = null,
+  calendarMonth = null,
   actionFilter,
   wochenplanFilter,
   urlSearch = null,
@@ -73,7 +75,8 @@ export default function MatchcenterTeamFilter({
   function hrefForTeam(nextTeamFilter: string | null) {
     return buildMatchcenterHref(basePath, {
       tab,
-      month,
+      month: month ?? null,
+      calendarMonth,
       actionFilter,
       wochenplanFilter,
       teamFilter: nextTeamFilter,

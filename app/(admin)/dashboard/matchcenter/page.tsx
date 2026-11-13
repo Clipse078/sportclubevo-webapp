@@ -6,8 +6,20 @@ import { prisma } from "@/lib/db/prisma";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import {
   listMatchcenterMatches,
+  listMatchcenterMatchesPage,
+  listMatchcenterScheduleAnchors,
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
+import {
+  deriveSpielplanMonthChipsFromAnchors,
+  mergeMatchcenterMatchesById,
+  normalizeSpielplanungListMonthFilter,
+  resolveMatchcenterCalendarMonthParam,
+  resolveMatchcenterSpielplanScheduleScope,
+  resolveMatchcenterSpielplanungQueryWindow,
+  toSpielplanungPaginationState,
+  type MatchcenterSeasonScope,
+} from "@/lib/matchcenter/spielplan-schedule-scope";
 import {
   formatMonthLabel,
   MATCHCENTER_DEFAULT_TIMEZONE,
@@ -61,6 +73,9 @@ type MatchcenterPageProps = {
     competition?: string;
     venue?: string;
     status?: string;
+    cal?: string;
+    scopeFrom?: string;
+    scopeTo?: string;
   }>;
 };
 
@@ -95,14 +110,22 @@ export default async function MatchcenterPage({
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
   const canManageOperationalAllocations = canManageOperationalResourceAssignments(session);
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
-  const resolvedMonth = resolveMatchcenterMonthWindow({
+  const spielplanungListMonthFilter = normalizeSpielplanungListMonthFilter(params.month);
+
+  const resultateMonth = resolveMatchcenterMonthWindow({
     monthParam: params.month,
     timeZone: timezone,
   });
 
-  // Current month param for the "Heute" navigation shortcut.
-  // Computed separately from the selected month so navigating to a past/future
-  // month still shows the correct "go back to today" target.
+  const calendarMonthParam = resolveMatchcenterCalendarMonthParam({
+    calendarMonthParam: params.cal,
+    timeZone: timezone,
+  });
+  const calendarMonth = resolveMatchcenterMonthWindow({
+    monthParam: calendarMonthParam,
+    timeZone: timezone,
+  });
+
   const currentMonthWindow = resolveMatchcenterMonthWindow({ timeZone: timezone });
   const currentMonthParam = currentMonthWindow.param;
 
@@ -117,36 +140,100 @@ export default async function MatchcenterPage({
   const matchcenterDatabase =
     prisma as unknown as MatchcenterQueryDatabase;
 
-  // Month-scoped server-side query (MATCHCENTER-UX-01 §13): avoids loading
-  // the full season — only the selected month's window is fetched, for
-  // both Spielplanung and Resultate (they share one month filter).
+  const activeSeasonRow = await prisma.season.findFirst({
+    where: { isActive: true },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+    },
+  });
+  const activeSeason: MatchcenterSeasonScope | null = activeSeasonRow
+    ? {
+        id: activeSeasonRow.id,
+        name: activeSeasonRow.name,
+        startDate: activeSeasonRow.startDate,
+        endDate: activeSeasonRow.endDate,
+      }
+    : null;
+
+  const scheduleScope = resolveMatchcenterSpielplanScheduleScope({
+    timeZone: timezone,
+    season: activeSeason,
+    scopeFromParam: params.scopeFrom,
+    scopeToParam: params.scopeTo,
+  });
+
+  const spielplanungQuery = resolveMatchcenterSpielplanungQueryWindow({
+    scope: scheduleScope,
+    skip: 0,
+  });
+
   const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
   const inlinePreparationFacilitiesPromise = canManageOperationalAllocations
     ? loadSpieleInlinePreparationFacilityGroups(tenantId)
   : null;
 
-  const [matches, tenantTeams, tenantClubCrestUrl, inlinePreparationFacilities] = await Promise.all([
-    listMatchcenterMatches(matchcenterDatabase, {
-      tenantId,
-      from: resolvedMonth.from,
-      to: resolvedMonth.to,
-      matchOperationalPolicy,
-    }),
-    getTeamsListDataCached(tenantId),
-    getTenantClubCrestUrlCached(tenantId),
-    inlinePreparationFacilitiesPromise ?? Promise.resolve(null),
-  ]);
+  const [
+    spielplanPage,
+    scheduleAnchors,
+    resultateMonthMatches,
+    tenantTeams,
+    tenantClubCrestUrl,
+    inlinePreparationFacilities,
+  ] = await Promise.all([
+      listMatchcenterMatchesPage(matchcenterDatabase, {
+        tenantId,
+        from: spielplanungQuery.from,
+        to: spielplanungQuery.to,
+        limit: spielplanungQuery.limit,
+        skip: spielplanungQuery.skip,
+        enforceMaxWindow: spielplanungQuery.enforceMaxWindow,
+        matchOperationalPolicy,
+      }),
+      listMatchcenterScheduleAnchors(matchcenterDatabase, {
+        tenantId,
+        from: spielplanungQuery.from,
+        to: spielplanungQuery.to,
+        enforceMaxWindow: spielplanungQuery.enforceMaxWindow,
+      }),
+      listMatchcenterMatches(matchcenterDatabase, {
+        tenantId,
+        from: resultateMonth.from,
+        to: resultateMonth.to,
+        matchOperationalPolicy,
+      }),
+      getTeamsListDataCached(tenantId),
+      getTenantClubCrestUrlCached(tenantId),
+      inlinePreparationFacilitiesPromise ?? Promise.resolve(null),
+    ]);
+
+  const upcomingMatches = spielplanPage.items;
+  const matches = mergeMatchcenterMatchesById(upcomingMatches, resultateMonthMatches);
+  const spielplanMonthChipsFromScope = deriveSpielplanMonthChipsFromAnchors(
+    scheduleAnchors,
+    locale,
+    timezone,
+  );
+  const spielplanungPagination = toSpielplanungPaginationState({
+    total: spielplanPage.total,
+    hasMore: spielplanPage.hasMore,
+    loadedCount: upcomingMatches.length,
+    limit: spielplanPage.limit,
+  });
+
   perfTimer?.mark("match-loader-teams");
   const activeTeams = tenantTeams.filter((team) => team.isActive);
   const validTeamIds = new Set(activeTeams.map((team) => team.id));
   const teamFilter = normalizeMatchcenterTeamFilter(params.team, validTeamIds);
   const teamOptions = toMatchcenterTeamOptions(activeTeams);
 
-  const monthWindow = {
-    param: resolvedMonth.param,
-    label: formatMonthLabel(resolvedMonth, locale, timezone),
-    previousParam: resolvedMonth.previousParam,
-    nextParam: resolvedMonth.nextParam,
+  const calendarMonthWindow = {
+    param: calendarMonth.param,
+    label: formatMonthLabel(calendarMonth, locale, timezone),
+    previousParam: calendarMonth.previousParam,
+    nextParam: calendarMonth.nextParam,
   };
 
   if (perfTimer) {
@@ -207,7 +294,17 @@ export default async function MatchcenterPage({
           wochenplanFilter={wochenplanFilter}
           teamFilter={teamFilter}
           teamOptions={teamOptions}
-          monthWindow={monthWindow}
+          calendarMonthWindow={calendarMonthWindow}
+          resultateMonthParam={resultateMonth.param}
+          spielplanungListMonthFilter={spielplanungListMonthFilter}
+          spielplanMatches={upcomingMatches}
+          resultateMonthMatches={resultateMonthMatches}
+          spielplanungPagination={spielplanungPagination}
+          spielplanMonthChipsFromScope={spielplanMonthChipsFromScope}
+          scheduleScopeLabel={scheduleScope.label}
+          scheduleScopeSource={scheduleScope.source}
+          scopeFrom={params.scopeFrom ?? null}
+          scopeTo={params.scopeTo ?? null}
           timezone={timezone}
           locale={locale}
           canManage={canManage}

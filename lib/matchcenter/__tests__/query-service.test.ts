@@ -20,6 +20,7 @@ import * as matchExternalCrestResolution from "@/lib/sporting-data/match-externa
 import {
   getMatchcenterMatchDetail,
   listMatchcenterMatches,
+  listMatchcenterMatchesPage,
   MATCHCENTER_DEFAULT_LIMIT,
 } from "../query-service";
 import type {
@@ -114,15 +115,43 @@ function createDatabase(input?: {
   list?: ReturnType<typeof createEvent>[];
   detail?: ReturnType<typeof createEvent> | null;
 }) {
+  const list = input?.list ?? [];
   return {
     event: {
-      findMany: vi.fn().mockResolvedValue(input?.list ?? []),
+      findMany: vi.fn().mockResolvedValue(list),
       findFirst: vi.fn().mockResolvedValue(input?.detail ?? null),
+      count: vi.fn().mockResolvedValue(list.length),
     },
   } satisfies MatchcenterQueryDatabase;
 }
 
 describe("Matchcenter query service", () => {
+  it("listMatchcenterMatchesPage returns hasMore from total count", async () => {
+    const rows = [createEvent({ id: "event-1" }), createEvent({ id: "event-2" })];
+    const database = createDatabase({ list: rows });
+    database.event.findMany = vi
+      .fn()
+      .mockImplementation(async (args: { take?: number; skip?: number }) => {
+        const start = args.skip ?? 0;
+        const end = start + (args.take ?? rows.length);
+        return rows.slice(start, end);
+      });
+    database.event.count = vi.fn().mockResolvedValue(rows.length);
+
+    const page = await listMatchcenterMatchesPage(database, {
+      tenantId: "tenant-1",
+      from: new Date("2026-01-01T00:00:00.000Z"),
+      to: new Date("2026-12-31T23:59:59.000Z"),
+      limit: 1,
+      skip: 0,
+      enforceMaxWindow: false,
+    });
+
+    expect(page.items).toHaveLength(1);
+    expect(page.total).toBe(2);
+    expect(page.hasMore).toBe(true);
+  });
+
   it("creates a tenant-scoped, match-only, bounded list query", async () => {
     const database = createDatabase();
 

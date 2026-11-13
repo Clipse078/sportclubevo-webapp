@@ -28,6 +28,8 @@ import SpieleManagementUpcomingList from "./SpieleManagementUpcomingList";
 import SpieleManagementResultRow from "./SpieleManagementResultRow";
 import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
 import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
+import SpieleManagementSpielplanPanel from "./SpieleManagementSpielplanPanel";
+import type { SpielplanMonthChip, SpielplanungPaginationState } from "@/lib/matchcenter/spielplan-schedule-scope";
 import SpieleManagementFilterRail from "./SpieleManagementFilterRail";
 import { cn } from "@/lib/cn";
 import { sceActivityCardListContainerProps } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
@@ -51,7 +53,20 @@ type Props = {
   wochenplanFilter: MatchcenterWochenplanFilter;
   teamFilter: string | null;
   teamOptions: MatchcenterTeamOption[];
-  monthWindow: MatchcenterMonthWindowLike;
+  /** Mini-calendar navigation month (`cal` URL param). */
+  calendarMonthWindow: MatchcenterMonthWindowLike;
+  /** Resultate tab query month (always set). */
+  resultateMonthParam: string;
+  /** Spielplanung list filter month (null = Alle). */
+  spielplanungListMonthFilter?: string | null;
+  spielplanMatches?: MatchcenterMatchSummary[];
+  resultateMonthMatches?: MatchcenterMatchSummary[];
+  spielplanungPagination?: SpielplanungPaginationState;
+  spielplanMonthChipsFromScope?: SpielplanMonthChip[];
+  scheduleScopeLabel?: string;
+  scheduleScopeSource?: string;
+  scopeFrom?: string | null;
+  scopeTo?: string | null;
   basePath?: string;
   timezone?: string;
   locale?: string;
@@ -94,7 +109,8 @@ function buildHref(
   basePath: string,
   params: {
     tab: MatchcenterTab;
-    month: string;
+    month?: string | null;
+    calendarMonth?: string | null;
     actionFilter: MatchcenterActionFilter;
     wochenplanFilter: MatchcenterWochenplanFilter;
     teamFilter: string | null;
@@ -128,7 +144,22 @@ export default function SpieleManagementWorkspace({
   wochenplanFilter,
   teamFilter,
   teamOptions,
-  monthWindow,
+  calendarMonthWindow,
+  resultateMonthParam,
+  spielplanungListMonthFilter = null,
+  spielplanMatches = [],
+  resultateMonthMatches = [],
+  spielplanungPagination = {
+    total: 0,
+    hasMore: false,
+    loadedCount: 0,
+    limit: 100,
+  },
+  spielplanMonthChipsFromScope = [],
+  scheduleScopeLabel = "",
+  scheduleScopeSource = "season",
+  scopeFrom = null,
+  scopeTo = null,
   basePath = "/dashboard/matchcenter",
   timezone = "Europe/Zurich",
   locale = "de-CH",
@@ -165,6 +196,8 @@ export default function SpieleManagementWorkspace({
     viewModel,
     spielplanungRows,
     spielplanungDayGroups,
+    spielplanungMonthGroups,
+    spielplanMonthChips,
     resultateMatches,
     resultateGroups,
     competitionOptions,
@@ -183,33 +216,22 @@ export default function SpieleManagementWorkspace({
     timezone,
     wochenplanFilter,
     teamFilter,
+    spielplanungListMonthFilter,
+    calendarMonthParam: calendarMonthWindow.param,
   });
-
-  const todayHref = currentMonthParam
-    ? buildHref(basePath, {
-        tab,
-        month: currentMonthParam,
-        actionFilter,
-        wochenplanFilter,
-        teamFilter,
-        search: searchQuery,
-        sort: sortParam,
-        homeAwayFilter,
-        listView,
-        competitionFilter,
-        venueFilter,
-        statusMask,
-      })
-    : undefined;
 
   const wochenplanerHref = buildSpieleManagementWochenplanerHref({ timezone });
   const kalenderPlannerHref = buildSpieleManagementWochenplanerHref({
     timezone,
   });
 
+  const listMonthForHref =
+    tab === "SPIELPLANUNG" ? spielplanungListMonthFilter : resultateMonthParam;
+
   const navParams = {
     tab,
-    month: monthWindow.param,
+    month: listMonthForHref,
+    calendarMonth: calendarMonthWindow.param,
     actionFilter,
     wochenplanFilter,
     teamFilter,
@@ -222,6 +244,13 @@ export default function SpieleManagementWorkspace({
     statusMask,
   };
 
+  const todayHref = currentMonthParam
+    ? buildHref(basePath, {
+        ...navParams,
+        calendarMonth: currentMonthParam,
+      })
+    : undefined;
+
   const summaryMetrics =
     tab === "SPIELPLANUNG"
       ? [
@@ -230,7 +259,7 @@ export default function SpieleManagementWorkspace({
             label: "Anstehend",
             value: viewModel.kpis.anstehend,
             tone: "default" as const,
-            hint: "im ausgewählten Monat",
+            hint: spielplanungListMonthFilter ? "im gefilterten Monat" : "im Spielplan",
             "data-testid": "matchcenter-kpi-anstehend",
           },
           {
@@ -287,7 +316,8 @@ export default function SpieleManagementWorkspace({
 
   const resetHref = buildHref(basePath, {
     tab,
-    month: monthWindow.param,
+    month: tab === "SPIELPLANUNG" ? null : resultateMonthParam,
+    calendarMonth: calendarMonthWindow.param,
     actionFilter: "ALLE",
     wochenplanFilter: "ALLE",
     teamFilter: null,
@@ -421,6 +451,7 @@ export default function SpieleManagementWorkspace({
           const href = buildHref(basePath, {
             ...navParams,
             tab: isResultate ? "RESULTATE" : "SPIELPLANUNG",
+            month: isResultate ? resultateMonthParam : spielplanungListMonthFilter,
           });
 
           return (
@@ -481,7 +512,9 @@ export default function SpieleManagementWorkspace({
                 <p className="mt-1 text-sm text-[var(--muted)]">
                   {hasSearch
                     ? "Passe Suche oder Filter an."
-                    : "Für den ausgewählten Monat gibt es keine anstehenden Spiele."}
+                    : spielplanungListMonthFilter
+                      ? "Für den gefilterten Monat gibt es keine anstehenden Spiele."
+                      : "Keine anstehenden Spiele im geladenen Spielplan."}
                 </p>
                 {canManage && !hasSearch ? (
                   <Link
@@ -494,8 +527,27 @@ export default function SpieleManagementWorkspace({
                 ) : null}
               </div>
             ) : (
-              <SpieleManagementUpcomingList
-                dayGroups={spielplanungDayGroups}
+              <SpieleManagementSpielplanPanel
+                basePath={basePath}
+                spielplanMatches={spielplanMatches}
+                resultateMonthMatches={resultateMonthMatches}
+                pagination={spielplanungPagination}
+                scheduleScopeLabel={scheduleScopeLabel}
+                scheduleScopeSource={scheduleScopeSource}
+                scopeFrom={scopeFrom}
+                scopeTo={scopeTo}
+                tab={tab}
+                actionFilter={actionFilter}
+                wochenplanFilter={wochenplanFilter}
+                teamFilter={teamFilter}
+                teamOptions={teamOptions}
+                spielplanungListMonthFilter={spielplanungListMonthFilter}
+                calendarMonthParam={calendarMonthWindow.param}
+                spielplanMonthChipsFromScope={
+                  spielplanMonthChipsFromScope.length > 0
+                    ? spielplanMonthChipsFromScope
+                    : spielplanMonthChips
+                }
                 locale={locale}
                 timezone={timezone}
                 tenantLogoUrl={tenantLogoUrl}
@@ -504,7 +556,13 @@ export default function SpieleManagementWorkspace({
                 canManageOperationalAllocations={canManageOperationalAllocations}
                 pitchHallFacilityGroups={pitchHallFacilityGroups}
                 dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-                compact={listView === "KOMPAKT"}
+                searchQuery={searchQuery}
+                sortParam={sortParam}
+                homeAwayFilter={homeAwayFilter}
+                listView={listView}
+                competitionFilter={competitionFilter}
+                venueFilter={venueFilter}
+                statusMask={statusMask}
               />
             )
           ) : filteredEmpty ? (
@@ -550,23 +608,23 @@ export default function SpieleManagementWorkspace({
           data-testid="spiele-management-rail"
         >
           <SpieleManagementMonthCalendar
-            monthParam={monthWindow.param}
+            monthParam={calendarMonthWindow.param}
             timezone={timezone}
             matchDayKeys={matchDayKeys}
             todayHref={todayHref}
             previousMonthHref={buildHref(basePath, {
               ...navParams,
-              month: monthWindow.previousParam,
+              calendarMonth: calendarMonthWindow.previousParam,
             })}
             nextMonthHref={buildHref(basePath, {
               ...navParams,
-              month: monthWindow.nextParam,
+              calendarMonth: calendarMonthWindow.nextParam,
             })}
           />
           <SpieleManagementFilterRail
             tab={tab}
             basePath={basePath}
-            month={monthWindow.param}
+            month={tab === "RESULTATE" ? resultateMonthParam : spielplanungListMonthFilter ?? ""}
             actionFilter={actionFilter}
             wochenplanFilter={wochenplanFilter}
             searchValue={searchQuery}

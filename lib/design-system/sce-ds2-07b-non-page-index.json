@@ -1453,6 +1453,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/matchcenter/spielplanung/matches/route.ts",
+    "urlPattern": "/api/matchcenter/spielplanung/matches",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/matchcenter/team-mappings/route.ts",
     "urlPattern": "/api/matchcenter/team-mappings",
     "audience": "API"

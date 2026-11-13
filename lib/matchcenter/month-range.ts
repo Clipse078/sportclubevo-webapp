@@ -191,6 +191,26 @@ export function resolveMatchcenterMonthWindow(input: {
   };
 }
 
+/** Parses `YYYY-MM-DD` to the start of that calendar day in `timeZone`. */
+export function startOfZonedIsoDate(
+  isoDate: string,
+  timeZone: string = MATCHCENTER_DEFAULT_TIMEZONE,
+): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  return zonedWallTimeToUtc(year, month, day, 0, 0, 0, timeZone);
+}
+
 /** Human-readable "August 2026"-style label for a resolved month window. */
 export function formatMonthLabel(
   yearMonth: MatchcenterYearMonth,

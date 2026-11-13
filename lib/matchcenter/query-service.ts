@@ -23,13 +23,23 @@ import type {
   MatchcenterTeamReference,
 } from "./types";
 
-const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+import {
+  MATCHCENTER_DEFAULT_FUTURE_DAYS,
+  MATCHCENTER_DEFAULT_LIMIT,
+  MATCHCENTER_DEFAULT_PAST_DAYS,
+  MATCHCENTER_MAX_LIMIT,
+  MATCHCENTER_MAX_WINDOW_DAYS,
+} from "./query-limits";
 
-export const MATCHCENTER_DEFAULT_PAST_DAYS = 30;
-export const MATCHCENTER_DEFAULT_FUTURE_DAYS = 180;
-export const MATCHCENTER_DEFAULT_LIMIT = 250;
-export const MATCHCENTER_MAX_LIMIT = 500;
-export const MATCHCENTER_MAX_WINDOW_DAYS = 366;
+export {
+  MATCHCENTER_DEFAULT_FUTURE_DAYS,
+  MATCHCENTER_DEFAULT_LIMIT,
+  MATCHCENTER_DEFAULT_PAST_DAYS,
+  MATCHCENTER_MAX_LIMIT,
+  MATCHCENTER_MAX_WINDOW_DAYS,
+} from "./query-limits";
+
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 interface MatchcenterTeamRecord {
   id: string;
@@ -152,7 +162,21 @@ interface MatchcenterEventRecord {
 interface MatchcenterEventDelegate {
   findMany(args: object): Promise<MatchcenterEventRecord[]>;
   findFirst(args: object): Promise<MatchcenterEventRecord | null>;
+  count(args: object): Promise<number>;
 }
+
+export type MatchcenterListPageResult = {
+  items: MatchcenterMatchSummary[];
+  total: number;
+  hasMore: boolean;
+  skip: number;
+  limit: number;
+};
+
+export type MatchcenterScheduleAnchor = {
+  id: string;
+  startAt: Date;
+};
 
 export interface MatchcenterQueryDatabase {
   event: MatchcenterEventDelegate;
@@ -235,6 +259,8 @@ function resolveListWindow(input: MatchcenterListInput): {
   from: Date;
   to: Date;
   limit: number;
+  skip: number;
+  enforceMaxWindow: boolean;
 } {
   const now = input.now ?? new Date();
   const from =
@@ -250,6 +276,8 @@ function resolveListWindow(input: MatchcenterListInput): {
         MATCHCENTER_DEFAULT_FUTURE_DAYS * DAY_IN_MILLISECONDS,
     );
   const limit = input.limit ?? MATCHCENTER_DEFAULT_LIMIT;
+  const skip = input.skip ?? 0;
+  const enforceMaxWindow = input.enforceMaxWindow !== false;
 
   if (
     Number.isNaN(from.getTime()) ||
@@ -267,7 +295,7 @@ function resolveListWindow(input: MatchcenterListInput): {
   const windowDays =
     (to.getTime() - from.getTime()) / DAY_IN_MILLISECONDS;
 
-  if (windowDays > MATCHCENTER_MAX_WINDOW_DAYS) {
+  if (enforceMaxWindow && windowDays > MATCHCENTER_MAX_WINDOW_DAYS) {
     throw new Error(
       `Matchcenter date range cannot exceed ${MATCHCENTER_MAX_WINDOW_DAYS} days.`,
     );
@@ -283,10 +311,30 @@ function resolveListWindow(input: MatchcenterListInput): {
     );
   }
 
+  if (!Number.isInteger(skip) || skip < 0) {
+    throw new Error("Matchcenter skip must be a non-negative integer.");
+  }
+
   return {
     from,
     to,
     limit,
+    skip,
+    enforceMaxWindow,
+  };
+}
+
+function buildMatchListWhere(
+  tenantId: string,
+  window: { from: Date; to: Date },
+): Record<string, unknown> {
+  return {
+    tenantId,
+    type: "MATCH",
+    startAt: {
+      gte: window.from,
+      lte: window.to,
+    },
   };
 }
 
@@ -654,14 +702,39 @@ function toDetail(
   };
 }
 
-export async function listMatchcenterMatches(
+export async function countMatchcenterMatches(
   database: MatchcenterQueryDatabase,
   input: MatchcenterListInput,
-): Promise<MatchcenterMatchSummary[]> {
-  const tenantId = requireIdentifier(
-    input.tenantId,
-    "tenantId",
-  );
+): Promise<number> {
+  const tenantId = requireIdentifier(input.tenantId, "tenantId");
+  const window = resolveListWindow(input);
+  return database.event.count({
+    where: buildMatchListWhere(tenantId, window),
+  });
+}
+
+export async function listMatchcenterScheduleAnchors(
+  database: MatchcenterQueryDatabase,
+  input: MatchcenterListInput,
+): Promise<MatchcenterScheduleAnchor[]> {
+  const tenantId = requireIdentifier(input.tenantId, "tenantId");
+  const window = resolveListWindow(input);
+  const rows = await database.event.findMany({
+    where: buildMatchListWhere(tenantId, window),
+    select: {
+      id: true,
+      startAt: true,
+    },
+    orderBy: [{ startAt: "asc" }, { id: "asc" }],
+  });
+  return rows;
+}
+
+export async function listMatchcenterMatchesPage(
+  database: MatchcenterQueryDatabase,
+  input: MatchcenterListInput,
+): Promise<MatchcenterListPageResult> {
+  const tenantId = requireIdentifier(input.tenantId, "tenantId");
   const window = resolveListWindow(input);
 
   const policyPromise =
@@ -670,28 +743,18 @@ export async function listMatchcenterMatches(
       : (input.matchOperationalPolicyPromise ??
         Promise.resolve(input.matchOperationalPolicy));
 
-  const [events, matchOperationalPolicy] = await Promise.all([
+  const where = buildMatchListWhere(tenantId, window);
+
+  const [events, matchOperationalPolicy, total] = await Promise.all([
     database.event.findMany({
-      where: {
-        tenantId,
-        type: "MATCH",
-        startAt: {
-          gte: window.from,
-          lte: window.to,
-        },
-      },
+      where,
       include: matchcenterRelations,
-      orderBy: [
-        {
-          startAt: "asc",
-        },
-        {
-          id: "asc",
-        },
-      ],
+      orderBy: [{ startAt: "asc" }, { id: "asc" }],
+      skip: window.skip,
       take: window.limit,
     }),
     policyPromise,
+    database.event.count({ where }),
   ]);
 
   const crestContext =
@@ -702,9 +765,25 @@ export async function listMatchcenterMatches(
         })
       : EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT;
 
-  return events.map((event) =>
+  const items = events.map((event) =>
     toSummary(event, matchOperationalPolicy, crestContext),
   );
+
+  return {
+    items,
+    total,
+    hasMore: window.skip + items.length < total,
+    skip: window.skip,
+    limit: window.limit,
+  };
+}
+
+export async function listMatchcenterMatches(
+  database: MatchcenterQueryDatabase,
+  input: MatchcenterListInput,
+): Promise<MatchcenterMatchSummary[]> {
+  const page = await listMatchcenterMatchesPage(database, input);
+  return page.items;
 }
 
 export async function getMatchcenterMatchDetail(

@@ -64,11 +64,11 @@ describe("SPIELE-UX-01B — server render gate", () => {
       teamFilter: null,
     });
     expect(derived.matchDayKeys).toEqual([]);
-    expect(derived.spielplanungDayGroups).toEqual([]);
+    expect(derived.spielplanungMonthGroups).toEqual([]);
   });
 
   it("SpieleManagementWorkspace server-renders without client helper invocation", () => {
-    const monthWindow = {
+    const calendarMonthWindow = {
       param: "2026-09",
       label: "September 2026",
       previousParam: "2026-08",
@@ -83,7 +83,9 @@ describe("SPIELE-UX-01B — server render gate", () => {
         wochenplanFilter="ALLE"
         teamFilter={null}
         teamOptions={[]}
-        monthWindow={monthWindow}
+        calendarMonthWindow={calendarMonthWindow}
+        resultateMonthParam="2026-09"
+        spielplanungListMonthFilter={null}
         currentMonthParam="2026-09"
       />,
     );

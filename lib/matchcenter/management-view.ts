@@ -16,6 +16,16 @@ import { isMatchLive } from "./match-lifecycle";
 import { resolveMatchcenterCompactSideName } from "./team-display";
 import type { SpieleHomeAwayFilter, SpieleStatusMaskKey } from "./navigation";
 import {
+  collectSpielplanungMonthParamsFromRows,
+  deriveSpielplanMonthChips,
+  filterSpielplanungRowsByListMonth,
+  filterMatchSummariesToCalendarMonth,
+  monthParamFromDate,
+  type SpielplanMonthChip,
+} from "./spielplan-schedule-scope";
+
+export type { SpielplanMonthChip };
+import {
   buildMatchcenterViewModel,
   type MatchcenterRowViewModel,
   type MatchcenterTab,
@@ -114,6 +124,63 @@ export type SpieleDayGroup<T> = {
   label: string;
   rows: T[];
 };
+
+export type SpieleMonthGroup<T> = {
+  monthParam: string;
+  label: string;
+  dayGroups: SpieleDayGroup<T>[];
+};
+
+export function formatSpielplanMonthSectionHeading(
+  monthParam: string,
+  locale: string,
+  timezone: string,
+): string {
+  const [year, month] = monthParam.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year!, month! - 1, 15, 12));
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: timezone,
+  })
+    .format(parsed)
+    .toUpperCase();
+}
+
+export function groupSpielplanungRowsByMonth(
+  rows: readonly MatchcenterRowViewModel[],
+  locale: string,
+  timezone: string,
+  now?: Date,
+): SpieleMonthGroup<MatchcenterRowViewModel>[] {
+  const monthOrder = collectSpielplanungMonthParamsFromRows(rows, timezone);
+  const byMonth = new Map<string, MatchcenterRowViewModel[]>();
+
+  for (const row of rows) {
+    const monthKey = monthParamFromDate(row.match.startAt, timezone);
+
+    if (!byMonth.has(monthKey)) {
+      byMonth.set(monthKey, []);
+    }
+    byMonth.get(monthKey)!.push(row);
+  }
+
+  const orderedKeys =
+    monthOrder.length > 0 ? monthOrder : [...byMonth.keys()].sort();
+
+  return orderedKeys
+    .filter((key) => byMonth.has(key))
+    .map((monthParam) => ({
+      monthParam,
+      label: formatSpielplanMonthSectionHeading(monthParam, locale, timezone),
+      dayGroups: groupSpielplanungRowsByDay(
+        byMonth.get(monthParam)!,
+        locale,
+        timezone,
+        now,
+      ),
+    }));
+}
 
 /** Target-style date group heading, e.g. "FR, 18. SEPTEMBER 2026". */
 export function formatSpieleDayGroupHeadingLong(
@@ -690,6 +757,12 @@ export type SpieleManagementDerivationInput = {
   timezone: string;
   wochenplanFilter: MatchcenterWochenplanFilter;
   teamFilter: string | null;
+  /** Spielplanung explicit month list filter (null = Alle). */
+  spielplanungListMonthFilter?: string | null;
+  /** Mini-calendar month — dots scoped to this month only. */
+  calendarMonthParam?: string | null;
+  /** When set, month chips reflect the full schedule scope (not only loaded rows). */
+  spielplanMonthChipsOverride?: SpielplanMonthChip[];
   now?: Date;
 };
 
@@ -698,12 +771,14 @@ export type SpieleManagementDerivation = {
   cancelledRows: MatchcenterRowViewModel[];
   spielplanungRows: MatchcenterRowViewModel[];
   spielplanungDayGroups: SpieleDayGroup<MatchcenterRowViewModel>[];
+  spielplanungMonthGroups: SpieleMonthGroup<MatchcenterRowViewModel>[];
   resultateMatches: MatchcenterMatchSummary[];
   resultateGroups: SpieleDayGroup<MatchcenterMatchSummary>[];
   competitionOptions: string[];
   venueOptions: string[];
   statusCounts: Record<SpieleStatusMaskKey, number>;
   matchDayKeys: string[];
+  spielplanMonthChips: SpielplanMonthChip[];
 };
 
 /**
@@ -726,6 +801,9 @@ export function deriveSpieleManagementPresentation(
     timezone,
     wochenplanFilter,
     teamFilter,
+    spielplanungListMonthFilter = null,
+    calendarMonthParam = null,
+    spielplanMonthChipsOverride = undefined,
     now,
   } = input;
 
@@ -742,20 +820,31 @@ export function deriveSpieleManagementPresentation(
       ? sortSpielplanungRows([...baseSpielplanung, ...cancelledRows], sort)
       : sortSpielplanungRows(baseSpielplanung, sort);
 
-  const spielplanungRows = sortSpielplanungRows(
-    filterSpielplanungRowsByVenue(
-      filterSpielplanungRowsByCompetition(
-        filterSpielplanungRowsByHomeAway(
-          filterSpielplanungRowsByStatusMask(
-            filterSpielplanungRowsBySearch(withCancelled, searchQuery),
-            statusMask,
-            now,
-          ),
-          homeAwayFilter,
+  const spielplanungRowsUnsorted = filterSpielplanungRowsByVenue(
+    filterSpielplanungRowsByCompetition(
+      filterSpielplanungRowsByHomeAway(
+        filterSpielplanungRowsByStatusMask(
+          filterSpielplanungRowsBySearch(withCancelled, searchQuery),
+          statusMask,
+          now,
         ),
-        competitionFilter,
+        homeAwayFilter,
       ),
-      venueFilter,
+      competitionFilter,
+    ),
+    venueFilter,
+  );
+
+  const spielplanungRowsForChips = sortSpielplanungRows(spielplanungRowsUnsorted, sort);
+  const spielplanMonthChips =
+    spielplanMonthChipsOverride ??
+    deriveSpielplanMonthChips(spielplanungRowsForChips, locale, timezone);
+
+  const spielplanungRows = sortSpielplanungRows(
+    filterSpielplanungRowsByListMonth(
+      spielplanungRowsUnsorted,
+      spielplanungListMonthFilter,
+      timezone,
     ),
     sort,
   );
@@ -765,8 +854,16 @@ export function deriveSpieleManagementPresentation(
     sort,
   );
 
+  const calendarScopedUpcoming = filterMatchSummariesToCalendarMonth(
+    [
+      ...viewModel.spielplanung.map((row) => row.match),
+      ...cancelledRows.map((row) => row.match),
+    ],
+    calendarMonthParam ?? "",
+    timezone,
+  );
   const matchDayKeys = collectMatchDayKeys(
-    [...viewModel.spielplanung, ...cancelledRows].map((row) => row.match.startAt),
+    calendarScopedUpcoming.map((match) => match.startAt),
     timezone,
   );
 
@@ -780,11 +877,18 @@ export function deriveSpieleManagementPresentation(
       timezone,
       now,
     ),
+    spielplanungMonthGroups: groupSpielplanungRowsByMonth(
+      spielplanungRows,
+      locale,
+      timezone,
+      now,
+    ),
     resultateMatches,
     resultateGroups: groupResultateByDay(resultateMatches, locale, timezone, now),
     competitionOptions: deriveSpieleCompetitionOptions(viewModel.spielplanung),
     venueOptions: deriveSpieleVenueOptions(viewModel.spielplanung),
     statusCounts: countSpieleStatusBuckets(viewModel.spielplanung, cancelledRows.length, now),
     matchDayKeys,
+    spielplanMonthChips,
   };
 }

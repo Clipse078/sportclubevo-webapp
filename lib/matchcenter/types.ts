@@ -155,6 +155,10 @@ export interface MatchcenterListInput {
   from?: Date;
   to?: Date;
   limit?: number;
+  /** Offset for stable-key pagination (startAt asc, id asc). */
+  skip?: number;
+  /** When false, allows season-scale windows beyond MATCHCENTER_MAX_WINDOW_DAYS. */
+  enforceMaxWindow?: boolean;
   now?: Date;
   /** When omitted, platform fallback duration applies for operational resolution. */
   matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
