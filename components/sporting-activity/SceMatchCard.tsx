@@ -53,7 +53,11 @@ import { SceTeamName } from "@/components/design-system/typography";
 import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceMatchListRowPresentation = "default" | "programme-fixture" | "dashboard-opponent";
+export type SceMatchListRowPresentation =
+  | "default"
+  | "programme-fixture"
+  | "programme-personal"
+  | "dashboard-opponent";
 
 export type SceMatchCardProps = {
   model: SceMatchPresentationModel;
@@ -482,7 +486,9 @@ function SceMatchListRowIdentityContent({
       : tenantSide?.label === "Auswärts"
         ? "Auswärtsspiel"
         : tenantSide?.label;
-  const programmeFixture = listRowPresentation === "programme-fixture";
+  const programmeFixture =
+    listRowPresentation === "programme-fixture" || listRowPresentation === "programme-personal";
+  const externalReferenceDateTile = listRowPresentation === "programme-personal";
   const lifecycle = model.matchLifecycle ?? model.status;
   const showCancelledStatus =
     lifecycle?.semantic === "cancelled" ||
@@ -512,6 +518,7 @@ function SceMatchListRowIdentityContent({
           fixtureLabel={buildFixtureAccessibleLabel(model)}
           showStatus={showCancelledStatus}
           teamContextLabel={teamContextLabel}
+          showDateTile={!externalReferenceDateTile}
         />
       </div>
     );

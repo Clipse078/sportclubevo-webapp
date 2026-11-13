@@ -32,6 +32,8 @@ export type SceMatchFixtureReferenceLayoutProps = {
   trailingMeta?: ReactNode;
   showTypePill?: boolean;
   forceCompetitionLine?: boolean;
+  /** When false, date tile is omitted (caller renders external {@link SceDateTile}). */
+  showDateTile?: boolean;
 };
 
 function ReferenceFixtureSide({
@@ -111,6 +113,7 @@ export function SceMatchFixtureReferenceLayout({
   trailingMeta,
   showTypePill = false,
   forceCompetitionLine = false,
+  showDateTile = true,
 }: SceMatchFixtureReferenceLayoutProps) {
   const startAt = new Date(model.schedule.startAt);
   const showCrests = isSceActivityDimensionVisible(density, "crests");
@@ -129,15 +132,47 @@ export function SceMatchFixtureReferenceLayout({
       />
     );
 
-  return (
+  const showCompetitionLine =
+    Boolean(model.competition?.label) &&
+    (forceCompetitionLine ||
+      !teamContextLabel ||
+      !teamContextLabel.includes(model.competition!.label!));
+
+  const fixtureBand = (
     <div
-      className={SCE_ACTIVITY_REFERENCE_LAYOUT.rootClass}
-      data-sce-match-reference-layout
-      data-sce-programme-card-contract="reference-split"
-      data-sce-activity-card-layout="horizontal-full-width"
+      className={SCE_ACTIVITY_REFERENCE_LAYOUT.fixtureGridClass}
+      data-testid="sce-match-fixture"
+      data-sce-match-region="fixture"
+      data-sce-match-programme-fixture={showDateTile ? "reference-split" : "planner-liste"}
+      aria-label={fixtureLabel}
     >
-      <aside
-        className={SCE_ACTIVITY_REFERENCE_LAYOUT.metaColumnClass}
+      <ReferenceFixtureSide side="home" identity={model.fixture.home} showCrests={showCrests} />
+      <div
+        className="flex min-w-[3.25rem] items-center justify-center px-0.5 sm:min-w-[3.5rem]"
+        data-sce-match-center
+        data-sce-match-region="center"
+      >
+        {centerNode}
+      </div>
+      <ReferenceFixtureSide side="away" identity={model.fixture.away} showCrests={showCrests} />
+    </div>
+  );
+
+  const hasReferenceMeta =
+    showDateTile ||
+    showTypePill ||
+    Boolean(teamContextLabel) ||
+    showCompetitionLine ||
+    Boolean(locationLine) ||
+    (showStatus && Boolean(lifecycle?.label)) ||
+    Boolean(trailingMeta);
+
+  const secondaryMeta = hasReferenceMeta ? (
+      <div
+        className={cn(
+          "flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1",
+          showDateTile ? "flex-col items-stretch gap-1" : SCE_ACTIVITY_REFERENCE_LAYOUT.plannerListeMatchMetaRowClass,
+        )}
         data-sce-match-region="reference-meta"
         data-sce-activity-card-region="schedule"
       >
@@ -146,13 +181,15 @@ export function SceMatchFixtureReferenceLayout({
             <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
           </div>
         ) : null}
-        <SceDateTile
-          value={startAt}
-          fmtCfg={fmtCfg}
-          size="compact"
-          testId="sce-match-reference-date"
-          decorative
-        />
+        {showDateTile ? (
+          <SceDateTile
+            value={startAt}
+            fmtCfg={fmtCfg}
+            size="compact"
+            testId="sce-match-reference-date"
+            decorative
+          />
+        ) : null}
         {teamContextLabel ? (
           <p
             className={SCE_ACTIVITY_REFERENCE_LAYOUT.teamContextClass}
@@ -161,12 +198,9 @@ export function SceMatchFixtureReferenceLayout({
             {teamContextLabel}
           </p>
         ) : null}
-        {model.competition?.label &&
-        (forceCompetitionLine ||
-          !teamContextLabel ||
-          !teamContextLabel.includes(model.competition.label)) ? (
+        {showCompetitionLine ? (
           <p className={SCE_ACTIVITY_REFERENCE_LAYOUT.metaLineClass} data-testid="sce-match-competition">
-            {model.competition.label}
+            {model.competition!.label}
           </p>
         ) : null}
         {locationLine ? (
@@ -179,48 +213,53 @@ export function SceMatchFixtureReferenceLayout({
             data-sce-match-region="location"
           >
             <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="min-w-0 line-clamp-2">{locationLine}</span>
+            <span className="min-w-0 line-clamp-2 break-words">{locationLine}</span>
           </p>
         ) : null}
         {showStatus && lifecycle?.label ? (
-          <div className="pt-0.5" data-sce-match-region="status">
+          <div className={showDateTile ? "pt-0.5" : undefined} data-sce-match-region="status">
             <SceMatchCardStatus status={lifecycle} testId="sce-match-status" />
           </div>
         ) : null}
         {trailingMeta ? (
-          <div className="flex flex-wrap items-center gap-1 pt-0.5" data-sce-match-region="context">
+          <div className="flex flex-wrap items-center gap-1" data-sce-match-region="context">
             {trailingMeta}
           </div>
         ) : null}
+      </div>
+    ) : null;
+
+  if (!showDateTile) {
+    return (
+      <div
+        className={SCE_ACTIVITY_REFERENCE_LAYOUT.plannerListeMatchRootClass}
+        data-sce-match-reference-layout
+        data-sce-programme-card-contract="reference-row"
+        data-sce-activity-card-layout="horizontal-full-width"
+        data-sce-planner-liste-match-row
+      >
+        <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>{fixtureBand}</div>
+        {secondaryMeta}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={SCE_ACTIVITY_REFERENCE_LAYOUT.rootClass}
+      data-sce-match-reference-layout
+      data-sce-programme-card-contract="reference-split"
+      data-sce-activity-card-layout="horizontal-full-width"
+    >
+      <aside
+        className={SCE_ACTIVITY_REFERENCE_LAYOUT.metaColumnClass}
+        data-sce-match-region="reference-meta"
+        data-sce-activity-card-region="schedule"
+      >
+        {secondaryMeta}
       </aside>
 
-      <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>
-        <div
-          className={SCE_ACTIVITY_REFERENCE_LAYOUT.fixtureGridClass}
-          data-testid="sce-match-fixture"
-          data-sce-match-region="fixture"
-          data-sce-match-programme-fixture="reference-split"
-          aria-label={fixtureLabel}
-        >
-          <ReferenceFixtureSide
-            side="home"
-            identity={model.fixture.home}
-            showCrests={showCrests}
-          />
-          <div
-            className="flex items-center justify-center px-0.5"
-            data-sce-match-center
-            data-sce-match-region="center"
-          >
-            {centerNode}
-          </div>
-          <ReferenceFixtureSide
-            side="away"
-            identity={model.fixture.away}
-            showCrests={showCrests}
-          />
-        </div>
-      </div>
+      <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>{fixtureBand}</div>
     </div>
   );
 }

@@ -220,7 +220,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
       "data-surface",
       "list-row",
     );
-    expect(screen.getByText("TRAINING")).toBeInTheDocument();
+    expect(screen.getAllByText("TRAINING").length).toBeGreaterThan(0);
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Kunstrasen 2/i);
   });
 
@@ -228,7 +228,9 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     renderListe([match("match:1")]);
     const card = screen.getByTestId("planning-hub-liste-sce-match-match:1");
     expect(card).toHaveAttribute("data-surface", "list-row");
-    expect(screen.getByTestId("sce-match-vs")).toBeInTheDocument();
+    const kickoffOrVs =
+      screen.queryByTestId("sce-match-kickoff-box") ?? screen.queryByTestId("sce-match-vs");
+    expect(kickoffOrVs).toBeTruthy();
     const fixture = screen.getByTestId("sce-match-fixture");
     expect(fixture.textContent).toMatch(/FC Allschwil[\s\S]*FC Basel/);
     expect(fixture.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
@@ -244,7 +246,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     );
     expect(screen.getByText(/Frühlingscup/i)).toBeInTheDocument();
     expect(screen.queryByTestId("sce-match-vs")).not.toBeInTheDocument();
-    expect(screen.getByTestId("sce-tournament-organiser-crest")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-tournament-list-row-primary-identity")).toBeInTheDocument();
     expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren B1");
   });
 

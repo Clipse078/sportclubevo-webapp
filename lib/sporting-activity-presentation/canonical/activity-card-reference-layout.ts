@@ -56,6 +56,13 @@ export const SCE_ACTIVITY_REFERENCE_LAYOUT = {
     "sce-activity-programme-personal-row flex min-w-0 w-full flex-col gap-2 sm:grid sm:grid-cols-[minmax(5.5rem,7.75rem)_minmax(0,1.05fr)_minmax(0,1.35fr)_minmax(0,1fr)] sm:items-center sm:gap-x-3 lg:gap-x-4",
   programmePersonalAgendaShellClass:
     "flex min-w-0 w-full items-stretch gap-3 sm:gap-4",
+  planningHubListeRowShellClass:
+    "flex min-w-0 w-full items-start gap-3 sm:items-stretch sm:gap-4",
+  plannerListeMatchRootClass: "flex min-w-0 w-full max-w-full flex-col gap-2",
+  plannerListeMatchMetaRowClass: cn(
+    "text-[0.8125rem] leading-snug",
+    SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+  ),
   trainingReferenceTimeClass:
     "font-mono text-sm font-semibold tabular-nums whitespace-nowrap text-[var(--sce-color-text-primary)]",
   trainingReferenceActivityCellClass:

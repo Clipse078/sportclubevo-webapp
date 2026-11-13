@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
+import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
 import {
   formatSceActivityLocationHierarchy,
   isSceActivityDimensionVisible,
@@ -426,7 +427,7 @@ function SceClubEventListRowIdentityContent({
 }) {
   const timeLabel = fmtCfg ? formatSceClubEventTimeLabel(model, fmtCfg) : undefined;
   const locationLine =
-    listRowPresentation === "operational"
+    listRowPresentation === "operational" || listRowPresentation === "programme-personal"
       ? resolveClubEventLocationLine(model, density)
       : undefined;
   const status = model.status;
@@ -444,7 +445,7 @@ function SceClubEventListRowIdentityContent({
     : undefined;
 
   if (operational && fmtCfg) {
-    const dateLabel = formatSceClubEventDateLine(model, fmtCfg);
+    const scheduleStartAt = new Date(model.schedule.startAt);
 
     return (
       <div
@@ -468,12 +469,12 @@ function SceClubEventListRowIdentityContent({
           </div>
         ) : null}
         {!omitDateColumn ? (
-          <p
-            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
-            data-testid="sce-club-event-list-row-date"
-          >
-            {dateLabel}
-          </p>
+          <SceProgrammeActivityDateTile
+            startAt={scheduleStartAt}
+            fmtCfg={fmtCfg}
+            testId="sce-club-event-list-row-date"
+            className="shrink-0"
+          />
         ) : null}
         {timeLabel ? (
           <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-club-event-list-row-time">

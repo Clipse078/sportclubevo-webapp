@@ -249,8 +249,8 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
     );
 
     const card = screen.getByTestId("planning-hub-liste-sce-match-match:1");
-    expect(within(card).queryByTestId("sce-match-location")).not.toBeInTheDocument();
-    expect(screen.getAllByTestId("sce-match-list-row-location")).toHaveLength(1);
+    expect(within(card).getByTestId("sce-match-location")).toBeInTheDocument();
+    expect(screen.getAllByTestId("sce-match-location")).toHaveLength(1);
   });
 
   it("hides visible HEIM/AUSWÄRTS in list-row while preserving home/away in the presentation model", () => {
@@ -339,7 +339,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
       />,
     );
 
-    expect(screen.getByTestId("sce-tournament-organiser-crest")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-tournament-list-row-primary-identity")).toBeInTheDocument();
     expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren F3");
     expect(screen.getByTestId("sce-tournament-title")).toHaveTextContent("PlayMore Turnier");
     expect(screen.queryByTestId("sce-match-vs")).not.toBeInTheDocument();

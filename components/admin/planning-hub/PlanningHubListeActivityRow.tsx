@@ -9,6 +9,8 @@ import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/Sc
 import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
 import PlanningHubListeSceActivityCard from "./PlanningHubListeSceActivityCard";
+import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
+import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import PlannerOperationalIssueSummary from "./PlannerOperationalIssueSummary";
 import WeekplannerListeOverrideIndicator from "./WeekplannerListeOverrideIndicator";
 
@@ -38,8 +40,8 @@ type PlanningHubListeActivityRowProps = {
 };
 
 const LISTE_CARD_DETAIL_GEOMETRY = {
-  blockWidthPx: 480,
-  blockHeightPx: 96,
+  blockWidthPx: 1120,
+  blockHeightPx: 120,
   compact: false,
 } as const;
 
@@ -94,14 +96,26 @@ export default function PlanningHubListeActivityRow({
                 )}
                 {...referenceProps}
               >
-                <PlanningHubListeSceActivityCard
-                  item={item}
-                  fmtCfg={fmtCfg}
-                  density="STANDARD"
-                  tenantClubName={tenantClubName}
-                  tenantLogoUrl={tenantLogoUrl}
-                  issueSummary={<PlannerOperationalIssueSummary item={item} />}
-                />
+                <div
+                  className={SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass}
+                  data-sce-planning-hub-liste-leading-date
+                >
+                  <SceProgrammeActivityDateTile
+                    startAt={new Date(item.canonicalStartAt ?? item.startAt)}
+                    fmtCfg={fmtCfg}
+                    testId={`planning-hub-liste-date-tile-${item.id}`}
+                  />
+                  <div className="min-w-0 flex-1 self-stretch">
+                    <PlanningHubListeSceActivityCard
+                      item={item}
+                      fmtCfg={fmtCfg}
+                      density="STANDARD"
+                      tenantClubName={tenantClubName}
+                      tenantLogoUrl={tenantLogoUrl}
+                      issueSummary={<PlannerOperationalIssueSummary item={item} />}
+                    />
+                  </div>
+                </div>
                 {activeAlternativePlanName ? (
                   <WeekplannerListeOverrideIndicator
                     item={item}

@@ -58,7 +58,7 @@ export default function PlanningHubListeSceActivityCard({
             linkToDetail={false}
             showStatus={false}
             surface="list-row"
-            listRowPresentation="operational"
+            listRowPresentation="programme-personal"
             className={LIST_ROW_CARD_CLASS}
             testId={testId}
           />
@@ -73,7 +73,7 @@ export default function PlanningHubListeSceActivityCard({
             fmtCfg={fmtCfg}
             linkToDetail={false}
             surface="list-row"
-            listRowPresentation="programme-fixture"
+            listRowPresentation="programme-personal"
             className={LIST_ROW_CARD_CLASS}
             testId={testId}
           />
@@ -87,7 +87,7 @@ export default function PlanningHubListeSceActivityCard({
             linkToDetail={false}
             showStatus={false}
             surface="list-row"
-            listRowPresentation="operational"
+            listRowPresentation="programme-personal"
             className={LIST_ROW_CARD_CLASS}
             testId={testId}
           />
@@ -104,7 +104,7 @@ export default function PlanningHubListeSceActivityCard({
             linkToDetail={false}
             showStatus={false}
             surface="list-row"
-            listRowPresentation="operational"
+            listRowPresentation="programme-personal"
             className={LIST_ROW_CARD_CLASS}
             testId={testId}
           />
