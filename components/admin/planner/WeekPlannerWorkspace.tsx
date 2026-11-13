@@ -242,9 +242,16 @@ function WeekPlannerWorkspaceBody({
     return canOpenPlannerCanonicalEditor(item, access);
   }
 
+  function handleListeToggleExpand(item: WeekplannerItem) {
+    setListeInlineSession((current) => {
+      if (current?.itemId === item.id) return null;
+      return { itemId: item.id, focus: null };
+    });
+  }
+
   function handleItemActivate(item: WeekplannerItem) {
     if (urlState.perspective === "liste") {
-      setListeInlineSession({ itemId: item.id, mode: "details" });
+      handleListeToggleExpand(item);
       return;
     }
     if (item.type === "VERANSTALTUNG" && activePlanId && overrideEditing) {
@@ -261,15 +268,14 @@ function WeekPlannerWorkspaceBody({
   }
 
   function handleListeMenuAction(item: WeekplannerItem, action: PlanningHubListeMenuAction) {
-    setListeInlineSession({ itemId: item.id, mode: action });
-  }
-
-  function closeListeInlineSession() {
-    setListeInlineSession(null);
+    if (action === "conflict") {
+      handleReviewConflictForItem(item);
+      return;
+    }
+    setListeInlineSession({ itemId: item.id, focus: action });
   }
 
   function handleListeInlineSaved() {
-    closeListeInlineSession();
     router.refresh();
   }
 
@@ -457,12 +463,12 @@ function WeekPlannerWorkspaceBody({
         tenantClubName={tenantClubName}
         tenantLogoUrl={tenantLogoUrl}
         activeAlternativePlanName={activeAlternativePlanName}
-        onItemOpen={handleItemActivate}
+        onToggleExpand={handleListeToggleExpand}
+        expandedItemId={listeInlineSession?.itemId ?? null}
         onReviewConflictForItem={handleReviewConflictForItem}
         canEditItem={canEditPlannerItem}
         inlineSession={listeInlineSession}
         onMenuAction={handleListeMenuAction}
-        onCloseInline={closeListeInlineSession}
         onInlineSaved={handleListeInlineSaved}
         facilityGroupsByAllocationGroup={
           manipulationFacilityGroups ?? { PITCH_HALL: [], DRESSING_ROOM: [] }

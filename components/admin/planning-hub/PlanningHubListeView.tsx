@@ -26,12 +26,12 @@ type PlanningHubListeViewProps = {
   tenantClubName?: string | null;
   tenantLogoUrl?: string | null;
   activeAlternativePlanName?: string | null;
-  onItemOpen: (item: WeekplannerItem) => void;
+  onToggleExpand: (item: WeekplannerItem) => void;
+  expandedItemId?: string | null;
   onReviewConflictForItem: (item: WeekplannerItem) => void;
   canEditItem: (item: WeekplannerItem) => boolean;
   inlineSession?: PlanningHubListeInlineSession;
   onMenuAction?: (item: WeekplannerItem, action: PlanningHubListeMenuAction) => void;
-  onCloseInline?: () => void;
   onInlineSaved?: () => void;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
@@ -58,12 +58,12 @@ export default function PlanningHubListeView({
   tenantClubName,
   tenantLogoUrl,
   activeAlternativePlanName = null,
-  onItemOpen,
+  onToggleExpand,
+  expandedItemId = null,
   onReviewConflictForItem,
   canEditItem,
   inlineSession = null,
   onMenuAction = () => {},
-  onCloseInline = () => {},
   onInlineSaved = () => {},
   facilityGroupsByAllocationGroup = { PITCH_HALL: [], DRESSING_ROOM: [] },
   tenantDressingRoomOccupancyPresets,
@@ -137,14 +137,12 @@ export default function PlanningHubListeView({
                   tenantClubName={tenantClubName}
                   tenantLogoUrl={tenantLogoUrl}
                   activeAlternativePlanName={activeAlternativePlanName}
-                  onItemOpen={onItemOpen}
+                  onToggleExpand={onToggleExpand}
+                  expanded={expandedItemId === item.id}
                   onReviewConflictForItem={onReviewConflictForItem}
                   canEditItem={canEditItem(item)}
-                  inlineSession={
-                    inlineSession?.itemId === item.id ? inlineSession : null
-                  }
+                  inlineSession={inlineSession?.itemId === item.id ? inlineSession : null}
                   onMenuAction={onMenuAction}
-                  onCloseInline={onCloseInline}
                   onInlineSaved={onInlineSaved}
                   facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
                   tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}

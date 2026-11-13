@@ -209,7 +209,7 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -245,7 +245,7 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -265,7 +265,7 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -289,7 +289,7 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -310,7 +310,7 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}

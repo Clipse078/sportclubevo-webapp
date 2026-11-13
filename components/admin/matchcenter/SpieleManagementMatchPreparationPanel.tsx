@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CheckCircle2, CircleAlert, Loader2 } from "lucide-react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
@@ -24,7 +24,7 @@ import {
 } from "@/lib/matchcenter/facility-groups-for-match-pickers";
 import { useMatchOperationalInlinePatch } from "@/lib/matchcenter/use-match-operational-inline-patch";
 import { cn } from "@/lib/cn";
-import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
+import { OperationalDensePanelShell } from "@/components/admin/shared/planning/OperationalDensePanelShell";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 
 export type SpieleManagementMatchPreparationPanelProps = {
@@ -51,35 +51,15 @@ function PreparationPanelShell({
   isSaving?: boolean;
 }) {
   return (
-    <div
-      className={cn("min-w-0 overflow-hidden", SCE_SURFACE_DENSE_PANEL, "px-3 py-2.5")}
-      data-testid="matchcenter-open-points-panel"
+    <OperationalDensePanelShell
+      openPointsLabel={openPointsLabel}
+      isSaving={isSaving}
+      testId="matchcenter-open-points-panel"
       onPointerDown={stopAccordionToggle}
       onClick={stopAccordionToggle}
     >
-      {openPointsLabel ? (
-        <p className="text-xs font-semibold text-[var(--foreground)]" data-testid="matchcenter-open-points-label">
-          {openPointsLabel}
-        </p>
-      ) : null}
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <p
-          className={cn(
-            "text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]",
-            openPointsLabel ? undefined : "mt-0",
-          )}
-        >
-          Spielvorbereitung
-        </p>
-        {isSaving ? (
-          <span className="inline-flex items-center gap-1 text-[0.625rem] text-[var(--muted)]" aria-live="polite">
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-            Speichern…
-          </span>
-        ) : null}
-      </div>
       {children}
-    </div>
+    </OperationalDensePanelShell>
   );
 }
 

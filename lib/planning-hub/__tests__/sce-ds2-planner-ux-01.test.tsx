@@ -255,7 +255,7 @@ describe("SCE-DS2-PLANNER-UX-01 — planner list date tiles", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -344,7 +344,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -392,7 +392,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -423,7 +423,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -457,7 +457,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -495,7 +495,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -539,7 +539,7 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}

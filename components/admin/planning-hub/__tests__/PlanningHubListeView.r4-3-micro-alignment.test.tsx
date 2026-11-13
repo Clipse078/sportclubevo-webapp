@@ -213,7 +213,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -246,7 +246,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -266,7 +266,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -308,7 +308,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -334,7 +334,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
@@ -355,7 +355,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}

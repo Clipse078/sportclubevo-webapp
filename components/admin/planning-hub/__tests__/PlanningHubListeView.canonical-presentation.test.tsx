@@ -205,7 +205,7 @@ const renderListe = (items: WeekplannerWeek["days"][0]["items"]) =>
       locale="de-CH"
       timezone="Europe/Zurich"
       tenantClubName="FC Allschwil"
-      onItemOpen={vi.fn()}
+      onToggleExpand={vi.fn()}
       onReviewConflictForItem={vi.fn()}
       canEditItem={() => true}
       permissionContext={permissionContext}
@@ -293,7 +293,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
         locale="de-CH"
         timezone="Europe/Zurich"
         tenantClubName="FC Allschwil"
-        onItemOpen={onOpen}
+        onToggleExpand={onOpen}
         onReviewConflictForItem={vi.fn()}
         canEditItem={() => true}
         permissionContext={permissionContext}
