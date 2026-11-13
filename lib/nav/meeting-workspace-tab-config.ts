@@ -10,15 +10,40 @@ export type MeetingWorkspaceTabId =
 const TAB_LABELS: Record<MeetingWorkspaceTabId, string> = {
   traktanden: "Traktanden",
   beschluesse: "Beschlüsse",
-  massnahmen: "Massnahmen & Aufgaben",
+  massnahmen: "Massnahmen",
   teilnehmer: "Teilnehmer",
   details: "Sitzungsdetails",
 };
+
+function tabLabelWithCount(base: string, count: number | undefined): string {
+  if (count === undefined) return base;
+  return `${base} (${count})`;
+}
+
+export function formatMeetingWorkspaceTabLabel(
+  tabId: MeetingWorkspaceTabId,
+  counts: {
+    traktanden: number;
+    beschluesse: number;
+    massnahmen: number;
+    aufgaben: number;
+    teilnehmer: number;
+  },
+): string {
+  if (tabId === "details") return TAB_LABELS.details;
+  if (tabId === "massnahmen") {
+    return `${TAB_LABELS.massnahmen} (${counts.massnahmen}) · Aufgaben (${counts.aufgaben})`;
+  }
+  const key = tabId as keyof typeof counts;
+  if (key === "aufgaben") return TAB_LABELS.massnahmen;
+  return tabLabelWithCount(TAB_LABELS[tabId], counts[key]);
+}
 
 export function buildMeetingWorkspaceTabNavigationConfig(counts: {
   traktanden: number;
   beschluesse: number;
   massnahmen: number;
+  aufgaben: number;
   teilnehmer: number;
 }): ContextTabNavigationConfig<MeetingWorkspaceTabId> {
   const tabIds: MeetingWorkspaceTabId[] = [
@@ -38,14 +63,9 @@ export function buildMeetingWorkspaceTabNavigationConfig(counts: {
     ) as ContextTabNavigationConfig<MeetingWorkspaceTabId>["tabRoutes"],
     tabs: tabIds.map((key) => ({
       key,
-      label: TAB_LABELS[key],
+      label: formatMeetingWorkspaceTabLabel(key, counts),
       placement: "primary" as const,
-      count:
-        key === "details"
-          ? undefined
-          : counts[key as keyof typeof counts] > 0
-            ? counts[key as keyof typeof counts]
-            : undefined,
+      count: undefined,
     })),
   };
 }

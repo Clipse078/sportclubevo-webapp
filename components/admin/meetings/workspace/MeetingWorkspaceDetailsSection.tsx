@@ -8,7 +8,6 @@ import type { MeetingLiveData } from "@/lib/meetings/queries";
 import MeetingProtocolApprovalSection from "@/components/admin/meetings/approval/MeetingProtocolApprovalSection";
 import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
-import { workspacePanelClass } from "./meetingWorkspaceFieldClasses";
 
 function formatTime(date: Date, timeZone: string) {
   return new Intl.DateTimeFormat("de-CH", {
@@ -37,7 +36,7 @@ export default function MeetingWorkspaceDetailsSection({
 }: Props) {
   return (
     <div className="space-y-4" data-testid="meeting-section-sitzungsdetails">
-      <section className={workspacePanelClass}>
+      <section className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h3 className="text-base font-semibold text-[var(--foreground)]">Sitzungsdetails</h3>
           {canManage ? (

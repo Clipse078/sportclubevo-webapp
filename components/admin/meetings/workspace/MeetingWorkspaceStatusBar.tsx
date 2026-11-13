@@ -7,10 +7,12 @@ import { Loader2, MoreHorizontal } from "lucide-react";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
 import { buildMeetingWorkspaceStatusSummary } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
 
 type Props = {
   meeting: MeetingLiveData;
   canManage: boolean;
+  canDelete?: boolean;
   participants: MeetingSubEntities["participants"];
   agendaItems: MeetingSubEntities["agendaItems"];
   decisions: MeetingSubEntities["decisions"];
@@ -21,6 +23,7 @@ type Props = {
 export default function MeetingWorkspaceStatusBar({
   meeting,
   canManage,
+  canDelete = false,
   participants,
   agendaItems,
   decisions,
@@ -88,42 +91,18 @@ export default function MeetingWorkspaceStatusBar({
 
   return (
     <section
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
+      className="flex flex-col gap-2 border-y border-[var(--border)] py-3"
       data-testid="meeting-workspace-status-bar"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <dl className="flex min-w-0 flex-1 flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--text-2)]">
-          <div>
-            <dt className="sr-only">Sitzungsstatus</dt>
-            <dd>
-              <span className="font-semibold text-[var(--foreground)]">Status: </span>
-              {summary.lifecycleLabel}
-            </dd>
-          </div>
-          <div>
-            <dt className="sr-only">Protokollfreigabe</dt>
-            <dd>{summary.protocolLine}</dd>
-          </div>
-          <div>
-            <dt className="sr-only">Beschlüsse</dt>
-            <dd>{summary.decisionsLine}</dd>
-          </div>
-        </dl>
+      {summary.attentionLine ? (
+        <p className="text-xs text-amber-800" role="status" data-testid="meeting-attention-hint">
+          {summary.attentionLine}
+        </p>
+      ) : null}
 
-        {canManage ? (
-          <div ref={menuRef} className="relative flex shrink-0 items-center gap-2">
-            {meeting.status === "PLANNED" && !meeting.conductedAt ? (
-              <button
-                type="button"
-                disabled={loading !== null}
-                onClick={() => callLifecycle("conduct")}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b4aa2] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#093d87] disabled:opacity-50"
-                data-testid="meeting-mark-conducted"
-              >
-                {loading === "conduct" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                Als durchgeführt markieren
-              </button>
-            ) : null}
+      {canManage ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div ref={menuRef} className="relative">
             <button
               type="button"
               className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-2)]"
@@ -157,7 +136,7 @@ export default function MeetingWorkspaceStatusBar({
                     onClick={() => callLifecycle("close")}
                     data-testid="meeting-close"
                   >
-                    Sitzung abschliessen
+                    {loading === "close" ? "Wird geschlossen…" : "Sitzung abschliessen"}
                   </button>
                 ) : null}
                 {meeting.status === "COMPLETED" ? (
@@ -171,20 +150,27 @@ export default function MeetingWorkspaceStatusBar({
                     Protokoll drucken
                   </Link>
                 ) : null}
+                {canDelete ? (
+                  <>
+                    <MenuDivider />
+                    <div className="px-1 py-1" role="none">
+                      <MeetingDeleteButton
+                        meetingId={meeting.id}
+                        meetingTitle={meeting.title}
+                        presentation="menu"
+                        onMenuAction={() => setMenuOpen(false)}
+                      />
+                    </div>
+                  </>
+                ) : null}
               </div>
             ) : null}
           </div>
-        ) : null}
-      </div>
-
-      {summary.attentionLine ? (
-        <p className="mt-2 text-xs text-amber-800" role="status" data-testid="meeting-attention-hint">
-          {summary.attentionLine}
-        </p>
+        </div>
       ) : null}
 
       {meeting.status === "COMPLETED" && canManage ? (
-        <div className="mt-3 space-y-2 border-t border-[var(--border)] pt-3" data-testid="meeting-lifecycle-panel">
+        <div className="space-y-2 border-t border-[var(--border)] pt-3" data-testid="meeting-lifecycle-panel">
           <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="reopen-reason">
             Wieder öffnen (Begründung erforderlich)
           </label>
@@ -202,12 +188,17 @@ export default function MeetingWorkspaceStatusBar({
             className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 disabled:opacity-50"
             data-testid="meeting-reopen"
           >
+            {loading === "reopen" ? <Loader2 className="inline h-3.5 w-3.5 animate-spin" /> : null}
             Wieder öffnen
           </button>
         </div>
       ) : null}
 
-      {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
+      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
     </section>
   );
+}
+
+function MenuDivider() {
+  return <div className="my-1 border-t border-[var(--border)]" role="separator" />;
 }

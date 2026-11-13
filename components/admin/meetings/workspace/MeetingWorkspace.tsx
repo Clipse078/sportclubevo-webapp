@@ -19,6 +19,7 @@ import {
   MeetingTasksSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
+import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 
 type MeetingWorkspaceProps = {
@@ -31,6 +32,8 @@ type MeetingWorkspaceProps = {
   initialSubEntities: MeetingSubEntities;
   fmtCfg: TenantFormatConfig;
   relatedTasksPanel?: ReactNode;
+  initialAufgabenCount?: number;
+  canDelete?: boolean;
 };
 
 const SECTION_TO_TAB: Record<string, MeetingWorkspaceTabId> = {
@@ -51,6 +54,8 @@ export default function MeetingWorkspace({
   initialSubEntities,
   fmtCfg,
   relatedTasksPanel,
+  initialAufgabenCount = 0,
+  canDelete = false,
 }: MeetingWorkspaceProps) {
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const [participants, setParticipants] = useState(initialSubEntities.participants);
@@ -58,6 +63,11 @@ export default function MeetingWorkspace({
   const [actions, setActions] = useState(initialSubEntities.actions);
   const [isDirty, setIsDirty] = useState(false);
   const [activeTab, setActiveTab] = useState<MeetingWorkspaceTabId>("traktanden");
+  const [aufgabenCount, setAufgabenCount] = useState(initialAufgabenCount);
+
+  useEffect(() => {
+    setAufgabenCount(initialAufgabenCount);
+  }, [initialAufgabenCount]);
 
   const documentationEditable = canEditMeetingDocumentation({
     status: meeting.status,
@@ -84,7 +94,7 @@ export default function MeetingWorkspace({
     return () => window.removeEventListener("meeting-workspace-navigate-tab", onNavigateTab);
   }, []);
 
-  const massnahmenCount = actions.length;
+  const pendingDecisionApprovals = countDecisionsAwaitingReview(decisions);
 
   return (
     <>
@@ -100,6 +110,7 @@ export default function MeetingWorkspace({
           participantCount={participants.length}
           decisionCount={decisions.length}
           actionCount={actions.length}
+          pendingDecisionApprovals={pendingDecisionApprovals}
           hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
           onNavigateToSection={navigateToSection}
         />
@@ -107,6 +118,7 @@ export default function MeetingWorkspace({
         <MeetingWorkspaceStatusBar
           meeting={meeting}
           canManage={canManage}
+          canDelete={canDelete}
           participants={participants}
           agendaItems={agendaItems}
           decisions={decisions}
@@ -118,7 +130,8 @@ export default function MeetingWorkspace({
           counts={{
             traktanden: agendaItems.length,
             beschluesse: decisions.length,
-            massnahmen: massnahmenCount,
+            massnahmen: actions.length,
+            aufgaben: aufgabenCount,
             teilnehmer: participants.length,
           }}
           activeTab={activeTab}

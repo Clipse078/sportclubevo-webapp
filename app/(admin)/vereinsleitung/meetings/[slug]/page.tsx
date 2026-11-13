@@ -13,7 +13,10 @@ import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/Verei
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import MeetingTaskCreateScrollLink from "@/components/admin/meetings/workspace/MeetingTaskCreateScrollLink";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
-import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
+import { TaskContextType } from "@prisma/client";
+import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { countTasksForContext } from "@/lib/tasks/count-tasks-for-context";
+import { DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY, DEFAULT_ENTITY_RELATED_TASK_STATUSES } from "@/lib/tasks/context-related-defaults";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getTranslations } from "next-intl/server";
@@ -79,6 +82,17 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const taskPanelLocale = fmtCfg.locale ?? "de-CH";
   const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
 
+  let meetingAufgabenCount = 0;
+  if (dbMeeting) {
+    const taskCtx = await getTaskServiceContext();
+    if (taskCtx) {
+      meetingAufgabenCount = await countTasksForContext(taskCtx, TaskContextType.MEETING, dbMeeting.id, {
+        rootsOnly: DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY,
+        statuses: DEFAULT_ENTITY_RELATED_TASK_STATUSES,
+      });
+    }
+  }
+
   const detailPage = (
     <DetailPagePattern
       className={dbMeeting ? "[&_h1]:sr-only" : undefined}
@@ -93,12 +107,6 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         <div className="flex items-center gap-2">
           {dbMeeting && canManage ? (
             <MeetingTaskCreateScrollLink label={tWork("createTask")} />
-          ) : null}
-          {canDelete && dbMeeting ? (
-            <MeetingDeleteButton
-              meetingId={dbMeeting.id}
-              meetingTitle={dbMeeting.title}
-            />
           ) : null}
           <Link
             href="/vereinsleitung/meetings"
@@ -120,6 +128,8 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         canManage={canManage}
         actorPersonId={actorPersonId}
         approvalWorkspaceData={approvalWorkspaceData}
+        canDelete={canDelete}
+        initialAufgabenCount={meetingAufgabenCount}
         relatedTasksPanel={
           dbMeeting ? (
             <ContextRelatedTasksPanel

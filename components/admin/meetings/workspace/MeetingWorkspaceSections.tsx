@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
-import { ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import {
   MeetingInitiativeLinkSelect,
@@ -23,7 +23,7 @@ import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-pre
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
-import type { MeetingStatus } from "@prisma/client";
+import type { MeetingActionStatus, MeetingStatus } from "@prisma/client";
 import MeetingDecisionApprovalPanel from "@/components/admin/meetings/approval/MeetingDecisionApprovalPanel";
 import { meetingApprovalAggregateStatusLabel } from "@/lib/meetings/meeting-approval-presentation";
 import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
@@ -32,6 +32,7 @@ import {
   workspaceInputClass,
   workspacePanelClass,
   workspacePrimaryButtonClass,
+  workspaceSectionHeaderClass,
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 
@@ -63,37 +64,22 @@ function ErrorBanner({ message }: { message: string | null }) {
 
 function SectionShell({
   title,
-  icon,
-  count,
   children,
   action,
 }: {
   title: string;
-  icon: ReactNode;
-  count?: number;
+  icon?: ReactNode;
   children: ReactNode;
   action?: ReactNode;
 }) {
   const sectionId = meetingSectionDomId(title);
   return (
-    <section
-      id={sectionId}
-      className={workspacePanelClass}
-      data-testid={sectionId}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">{title}</h3>
-          {count !== undefined ? (
-            <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[11px] font-semibold text-[var(--text-2)]">
-              {count}
-            </span>
-          ) : null}
-        </div>
+    <section id={sectionId} className={workspacePanelClass} data-testid={sectionId}>
+      <div className={workspaceSectionHeaderClass}>
+        <h3 className="text-base font-semibold text-[var(--foreground)]">{title}</h3>
         {action}
       </div>
-      <div className="mt-5 space-y-3">{children}</div>
+      <div className="space-y-3">{children}</div>
     </section>
   );
 }
@@ -173,7 +159,7 @@ export function MeetingAgendaSection({
   });
 
   return (
-    <SectionShell title="Traktanden" icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />} count={items.length}>
+    <SectionShell title="Traktanden">
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">
         <span>
           Geplante Traktandenzeit: <strong className="text-[var(--foreground)]">{agendaTotalMin} min</strong>
@@ -553,13 +539,9 @@ export function MeetingParticipantsSection({
     });
   }
 
-  const present = items.filter((p) => p.status === "PRESENT").length;
-
   return (
     <SectionShell
       title="Teilnehmer"
-      icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
-      count={items.length > 0 ? present : undefined}
       action={
         canManage ? (
           <button
@@ -657,6 +639,7 @@ export function MeetingDecisionsSection({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -667,6 +650,7 @@ export function MeetingDecisionsSection({
       try {
         await meetingWorkspaceApi.decisions.create(meetingId, {
           title: trimmed,
+          description: description.trim() || null,
           status: "CONFIRMED",
           ownerPersonId: ownerPerson?.id ?? null,
           owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
@@ -675,6 +659,7 @@ export function MeetingDecisionsSection({
         const data = await res.json();
         if (res.ok) onItemsChange(data.decisions);
         setTitle("");
+        setDescription("");
         setOwnerPerson(null);
         setShowCreateForm(false);
       } catch (e) {
@@ -686,8 +671,6 @@ export function MeetingDecisionsSection({
   return (
     <SectionShell
       title="Beschlüsse"
-      icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
-      count={items.length}
       action={
         documentationEditable ? (
           <button
@@ -728,6 +711,16 @@ export function MeetingDecisionsSection({
       {documentationEditable && showCreateForm ? (
         <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beschlusstitel" />
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung (optional)</span>
+            <textarea
+              className={workspaceInputClass}
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Was genau wurde beschlossen?"
+            />
+          </label>
           <MeetingWorkspacePeopleField
             label="Verantwortliche/r (optional)"
             selected={ownerPerson}
@@ -741,6 +734,7 @@ export function MeetingDecisionsSection({
               onClick={() => {
                 setShowCreateForm(false);
                 setTitle("");
+                setDescription("");
                 setOwnerPerson(null);
               }}
             >
@@ -784,6 +778,7 @@ function MeetingDecisionCard({
   const [pending, startTransition] = useTransition();
   const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
   const [editingDetails, setEditingDetails] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(decision.description ?? "");
   const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
 
   function saveAgendaLink(nextId: string) {
@@ -800,6 +795,10 @@ function MeetingDecisionCard({
     });
   }
 
+  const descriptionPreview = decision.description?.trim()
+    ? decision.description.trim().split(/\n/)[0]?.slice(0, 120)
+    : null;
+
   const summaryMeta = [
     linkedAgenda?.title ? `Traktandum: ${linkedAgenda.title}` : null,
     decision.owner ? decision.owner : null,
@@ -808,6 +807,20 @@ function MeetingDecisionCard({
       : "Freigabe nicht erforderlich",
   ].filter(Boolean);
 
+  function saveDescription() {
+    startTransition(async () => {
+      try {
+        await meetingWorkspaceApi.decisions.update(meetingId, decision.id, {
+          description: descriptionDraft.trim() || null,
+        });
+        onDecisionUpdated({ description: descriptionDraft.trim() || null });
+        setEditingDetails(false);
+      } catch {
+        // no-op
+      }
+    });
+  }
+
   return (
     <SceExpandablePanel
       defaultOpen={false}
@@ -815,14 +828,30 @@ function MeetingDecisionCard({
       summary={
         <div className="min-w-0 space-y-0.5">
           <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+          {descriptionPreview ? (
+            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+          ) : null}
           {summaryMeta.length ? (
-            <p className="text-xs text-[var(--text-2)]">{summaryMeta.join(" · ")}</p>
+            <p className="text-xs text-[var(--muted)]">{summaryMeta.join(" · ")}</p>
           ) : null}
         </div>
       }
     >
-      {decision.description ? (
-        <p className="text-sm text-[var(--text-2)]">{decision.description}</p>
+      {documentationEditable && editingDetails ? (
+        <label className="block space-y-1">
+          <span className="text-xs font-semibold text-[var(--muted)]">Beschreibung</span>
+          <textarea
+            className={workspaceInputClass}
+            rows={4}
+            value={descriptionDraft}
+            onChange={(e) => setDescriptionDraft(e.target.value)}
+            placeholder="Was genau wurde beschlossen?"
+          />
+        </label>
+      ) : decision.description ? (
+        <p className="text-sm text-[var(--text-2)] whitespace-pre-wrap">{decision.description}</p>
+      ) : documentationEditable ? (
+        <p className="text-sm italic text-[var(--muted)]">Noch keine Beschreibung erfasst.</p>
       ) : null}
       <p
         className="text-[11px] font-medium text-[var(--muted)]"
@@ -858,10 +887,35 @@ function MeetingDecisionCard({
       ) : linkedAgenda ? (
         <p className="text-sm text-[var(--text-2)]">{linkedAgenda.title}</p>
       ) : null}
-      {documentationEditable && !editingDetails ? (
-        <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditingDetails(true)}>
-          Bearbeiten
-        </button>
+      {documentationEditable ? (
+        <div className="flex flex-wrap gap-2">
+          {editingDetails ? (
+            <>
+              <button type="button" className={workspacePrimaryButtonClass} disabled={pending} onClick={saveDescription}>
+                Speichern
+              </button>
+              <button
+                type="button"
+                className={workspaceGhostButtonClass}
+                onClick={() => {
+                  setDescriptionDraft(decision.description ?? "");
+                  setEditingDetails(false);
+                }}
+              >
+                Abbrechen
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className={workspaceGhostButtonClass}
+              onClick={() => setEditingDetails(true)}
+              data-testid={`meeting-decision-edit-details-${decision.id}`}
+            >
+              Beschreibung bearbeiten
+            </button>
+          )}
+        </div>
       ) : null}
       <MeetingDecisionApprovalPanel
         meetingId={meetingId}
@@ -879,6 +933,152 @@ function MeetingDecisionCard({
         decisionTitle={decision.title}
         canManage={documentationEditable}
       />
+    </SceExpandablePanel>
+  );
+}
+
+const MEETING_ACTION_STATUS_LABELS: Record<MeetingActionStatus, string> = {
+  OPEN: "Offen",
+  IN_PROGRESS: "In Arbeit",
+  DONE: "Erledigt",
+  CANCELLED: "Abgebrochen",
+};
+
+function MeetingActionRow({
+  action,
+  meetingId,
+  canManage,
+  onUpdated,
+  onRemoved,
+}: {
+  action: MeetingAction;
+  meetingId: string;
+  canManage: boolean;
+  onUpdated: (patch: Partial<MeetingAction>) => void;
+  onRemoved: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(action.title);
+  const [status, setStatus] = useState(action.status);
+  const [dueDate, setDueDate] = useState(
+    action.dueDate ? new Date(action.dueDate).toISOString().slice(0, 10) : "",
+  );
+  const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
+    personPickerFromIds(action.ownerPersonId, action.owner),
+  );
+
+  function save() {
+    startTransition(async () => {
+      try {
+        await meetingWorkspaceApi.actions.update(meetingId, action.id, {
+          title: title.trim(),
+          status,
+          dueDate: dueDate || null,
+          ownerPersonId: ownerPerson?.id ?? null,
+          owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
+        });
+        onUpdated({
+          title: title.trim(),
+          status,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          owner: ownerPerson ? personDisplayLabel(ownerPerson) : null,
+          ownerPersonId: ownerPerson?.id ?? null,
+        });
+        setEditing(false);
+      } catch {
+        // no-op
+      }
+    });
+  }
+
+  function remove() {
+    startTransition(async () => {
+      try {
+        await meetingWorkspaceApi.actions.remove(meetingId, action.id);
+        onRemoved();
+      } catch {
+        // no-op
+      }
+    });
+  }
+
+  const meta = [
+    action.owner,
+    action.dueDate
+      ? `Fällig ${new Intl.DateTimeFormat("de-CH").format(new Date(action.dueDate))}`
+      : null,
+    MEETING_ACTION_STATUS_LABELS[action.status],
+  ].filter(Boolean);
+
+  return (
+    <SceExpandablePanel
+      defaultOpen={false}
+      testId={`meeting-action-${action.id}`}
+      summary={
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
+          {meta.length ? <p className="text-xs text-[var(--text-2)]">{meta.join(" · ")}</p> : null}
+        </div>
+      }
+    >
+      {canManage && editing ? (
+        <div className="space-y-3">
+          <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <MeetingWorkspacePeopleField
+            label="Verantwortliche/r"
+            selected={ownerPerson}
+            onSelect={setOwnerPerson}
+            onClear={() => setOwnerPerson(null)}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
+              Status
+              <select
+                className={workspaceInputClass}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as MeetingActionStatus)}
+              >
+                {(Object.keys(MEETING_ACTION_STATUS_LABELS) as MeetingActionStatus[]).map((key) => (
+                  <option key={key} value={key}>
+                    {MEETING_ACTION_STATUS_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
+              Fälligkeitsdatum
+              <input
+                type="date"
+                className={workspaceInputClass}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className={workspacePrimaryButtonClass} disabled={pending || !title.trim()} onClick={save}>
+              Speichern
+            </button>
+            <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(false)}>
+              Abbrechen
+            </button>
+            <button type="button" className={workspaceGhostButtonClass} disabled={pending} onClick={remove}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2 text-sm text-[var(--text-2)]">
+          <p>Status: {MEETING_ACTION_STATUS_LABELS[action.status]}</p>
+          {action.owner ? <p>Verantwortlich: {action.owner}</p> : null}
+          {canManage ? (
+            <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(true)}>
+              Bearbeiten
+            </button>
+          ) : null}
+        </div>
+      )}
     </SceExpandablePanel>
   );
 }
@@ -920,8 +1120,6 @@ export function MeetingActionsSection({
   return (
     <SectionShell
       title="Massnahmen"
-      icon={<ChevronDown className="h-4 w-4 text-[#0b4aa2]" />}
-      count={items.length}
       action={
         canManage ? (
           <button
@@ -937,12 +1135,22 @@ export function MeetingActionsSection({
       }
     >
       <ErrorBanner message={error} />
-      {items.map((a) => (
-        <div key={a.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-          <p className="font-semibold text-[var(--foreground)]">{a.title}</p>
-          {a.owner ? <p className="text-xs text-[var(--text-2)]">{a.owner}</p> : null}
-        </div>
-      ))}
+      {items.length === 0 ? (
+        <p className="text-sm text-[var(--text-2)]">Noch keine Massnahmen erfasst.</p>
+      ) : (
+        items.map((a) => (
+          <MeetingActionRow
+            key={a.id}
+            action={a}
+            meetingId={meetingId}
+            canManage={canManage}
+            onUpdated={(updated) => {
+              onItemsChange(items.map((row) => (row.id === a.id ? { ...row, ...updated } : row)));
+            }}
+            onRemoved={() => onItemsChange(items.filter((row) => row.id !== a.id))}
+          />
+        ))
+      )}
       {canManage && showCreateForm ? (
         <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">
           <input className={workspaceInputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Massnahme" />
@@ -976,13 +1184,11 @@ export function MeetingActionsSection({
 
 export function MeetingTasksSection({ relatedTasksPanel }: { relatedTasksPanel: ReactNode }) {
   return (
-    <section
-      id="meeting-section-aufgaben"
-      className={workspacePanelClass}
-      data-testid="meeting-section-aufgaben"
-    >
-      <h3 className="text-base font-semibold text-[var(--foreground)]">Aufgaben</h3>
-      <div className="mt-3 min-w-0">{relatedTasksPanel}</div>
+    <section id="meeting-section-aufgaben" className={workspacePanelClass} data-testid="meeting-section-aufgaben">
+      <h3 className="border-b border-[var(--border)] pb-3 text-base font-semibold text-[var(--foreground)]">
+        Aufgaben
+      </h3>
+      <div className="min-w-0">{relatedTasksPanel}</div>
     </section>
   );
 }

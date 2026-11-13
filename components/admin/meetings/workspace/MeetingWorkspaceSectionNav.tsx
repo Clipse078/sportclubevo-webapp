@@ -17,6 +17,7 @@ type Props = {
     traktanden: number;
     beschluesse: number;
     massnahmen: number;
+    aufgaben: number;
     teilnehmer: number;
   };
   activeTab: MeetingWorkspaceTabId;
@@ -66,10 +67,7 @@ export default function MeetingWorkspaceSectionNav({
       >
         {config.tabs.map((tab) => {
           const isActive = tab.key === activeTab;
-          const label =
-            tab.count != null && tab.count !== ""
-              ? `${tab.label} ${tab.count}`
-              : tab.label;
+          const label = tab.label;
           return (
             <button
               key={tab.key}

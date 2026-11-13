@@ -35,6 +35,13 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     const statusBar = readSrc("components/admin/meetings/workspace/MeetingWorkspaceStatusBar.tsx");
     expect(statusBar).toContain('addEventListener("mousedown"');
     expect(statusBar).toContain('event.key === "Escape"');
+    expect(statusBar).not.toContain("meeting-mark-conducted");
+    expect(statusBar).toContain('presentation="menu"');
+  });
+
+  it("keeps destructive delete out of page header actions", () => {
+    const page = readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
+    expect(page).not.toContain("MeetingDeleteButton");
   });
 
   it("uses progressive disclosure for participants and decisions", () => {

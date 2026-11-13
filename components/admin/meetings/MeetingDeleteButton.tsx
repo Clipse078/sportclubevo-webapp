@@ -16,6 +16,8 @@ type MeetingDeletionImpact = {
 type MeetingDeleteButtonProps = {
   meetingId: string;
   meetingTitle: string;
+  presentation?: "button" | "menu";
+  onMenuAction?: () => void;
 };
 
 /**
@@ -29,6 +31,8 @@ type MeetingDeleteButtonProps = {
 export default function MeetingDeleteButton({
   meetingId,
   meetingTitle,
+  presentation = "button",
+  onMenuAction,
 }: MeetingDeleteButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,6 +42,7 @@ export default function MeetingDeleteButton({
   const [impact, setImpact] = useState<MeetingDeletionImpact | null>(null);
 
   async function openConfirmation() {
+    onMenuAction?.();
     setOpen(true);
     setError(null);
     setImpact(null);
@@ -93,14 +98,21 @@ export default function MeetingDeleteButton({
     (impact?.actions ?? 0) +
     (impact?.participants ?? 0);
 
+  const triggerClass =
+    presentation === "menu"
+      ? "flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50"
+      : "inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-3.5 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50";
+
   return (
     <>
       <button
         type="button"
+        role={presentation === "menu" ? "menuitem" : undefined}
         onClick={openConfirmation}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-3.5 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+        className={triggerClass}
+        data-testid="meeting-delete-trigger"
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
         Endgültig löschen
       </button>
 

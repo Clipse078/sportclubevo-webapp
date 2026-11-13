@@ -87,7 +87,7 @@ export default function ContextRelatedTasksPanelView({
     >
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">
-          {isMeetingContext ? `Verknüpfte Aufgaben · ${actionableCount}` : `Aufgaben · ${actionableCount}`}
+          {isMeetingContext ? "Aufgaben" : `Aufgaben · ${actionableCount}`}
         </h3>
         {canCreate && createDialogProps && isMeetingContext ? (
           <button
