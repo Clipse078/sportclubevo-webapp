@@ -6,7 +6,6 @@ import {
   SceInlineTaskAssigneeMultiPicker,
   type SceInlineTaskAssigneeChip,
 } from "@/components/sce/list-selector/SceInlineTaskAssigneeMultiPicker";
-import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
 
 type Props = {
   label: string;
@@ -22,8 +21,6 @@ type Props = {
   omitHiddenField?: boolean;
   allowAdd?: boolean;
   form?: string;
-  /** @deprecated Inline search replaces sheet/embedded selector panels. */
-  panelHost?: SceListSelectorPanelHost;
 };
 
 function formatName(firstName: string, lastName: string, displayName?: string): string {
@@ -44,10 +41,8 @@ export default function TaskPeopleMultiPicker({
   allowAdd = true,
   form,
   addButtonLabel: _addButtonLabel,
-  panelHost: _panelHost,
 }: Props) {
   void _addButtonLabel;
-  void _panelHost;
   const [addedKnown, setAddedKnown] = useState<Record<string, TaskAssigneeOption>>({});
 
   const effectiveKnown = useMemo(() => {
