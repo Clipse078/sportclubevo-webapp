@@ -7,9 +7,15 @@ import { createHash } from "node:crypto";
 export function hashMeetingDecisionContent(input: {
   title: string;
   description: string | null;
+  rationale: string | null;
   revision: number;
 }): string {
-  const payload = `${input.revision}\n${input.title}\n${input.description ?? ""}`;
+  const payload = [
+    String(input.revision),
+    input.title,
+    input.description ?? "",
+    input.rationale ?? "",
+  ].join("\n");
   return createHash("sha256").update(payload, "utf8").digest("hex");
 }
 

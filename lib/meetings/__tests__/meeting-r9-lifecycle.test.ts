@@ -119,8 +119,8 @@ describe("SCE-CD-02R9 meeting lifecycle", () => {
   });
 
   it("content hash changes when title changes (revision invalidation signal)", () => {
-    const a = hashMeetingDecisionContent({ title: "A", description: null, revision: 1 });
-    const b = hashMeetingDecisionContent({ title: "B", description: null, revision: 1 });
+    const a = hashMeetingDecisionContent({ title: "A", description: null, rationale: null, revision: 1 });
+    const b = hashMeetingDecisionContent({ title: "B", description: null, rationale: null, revision: 1 });
     expect(a).not.toBe(b);
   });
 });

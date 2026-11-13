@@ -31,6 +31,7 @@ export type MeetingSubEntities = {
     id: string;
     title: string;
     description: string | null;
+    rationale: string | null;
     status: MeetingDecisionStatus;
     owner: string | null;
     ownerPersonId: string | null;
@@ -45,6 +46,8 @@ export type MeetingSubEntities = {
   actions: Array<{
     id: string;
     title: string;
+    description: string | null;
+    expectedOutcome: string | null;
     owner: string | null;
     ownerPersonId: string | null;
     dueDate: Date | null;

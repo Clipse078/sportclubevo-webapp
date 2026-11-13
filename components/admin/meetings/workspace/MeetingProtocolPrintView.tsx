@@ -64,6 +64,11 @@ export default function MeetingProtocolPrintView({ meeting, subEntities }: Props
             <li key={d.id}>
               <span className="font-medium">{d.title}</span>
               {d.description ? <p className="text-slate-600">{d.description}</p> : null}
+              {d.rationale ? (
+                <p className="text-xs text-slate-500">
+                  <span className="font-medium">Begründung:</span> {d.rationale}
+                </p>
+              ) : null}
               {d.approvalRequired ? (
                 <p className="text-xs text-slate-500">Freigabe: {d.approvalStatus}</p>
               ) : null}
@@ -76,9 +81,15 @@ export default function MeetingProtocolPrintView({ meeting, subEntities }: Props
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Massnahmen</h2>
         <ul className="mt-2 list-disc pl-5 text-sm">
           {subEntities.actions.map((a) => (
-            <li key={a.id}>
-              {a.title}
+            <li key={a.id} className="mb-2">
+              <span className="font-medium">{a.title}</span>
               {a.owner ? ` — ${a.owner}` : ""}
+              {a.description ? <p className="text-slate-600">{a.description}</p> : null}
+              {a.expectedOutcome ? (
+                <p className="text-xs text-slate-500">
+                  <span className="font-medium">Ziel:</span> {a.expectedOutcome}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

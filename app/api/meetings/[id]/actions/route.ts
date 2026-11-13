@@ -6,6 +6,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import { parseOptionalMeetingDocumentationText } from "@/lib/meetings/meeting-documentation-text";
 
 async function requireSession() {
   const session = await auth();
@@ -25,7 +26,16 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   const actions = await prisma.meetingAction.findMany({
     where: { meetingId: id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, title: true, owner: true, ownerPersonId: true, dueDate: true, status: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      expectedOutcome: true,
+      owner: true,
+      ownerPersonId: true,
+      dueDate: true,
+      status: true,
+    },
   });
   return NextResponse.json({ actions });
 }
@@ -51,11 +61,22 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     ownerPersonId = snap.personId;
   }
 
+  const parsedDescription = parseOptionalMeetingDocumentationText(body?.description);
+  if (!parsedDescription.ok) {
+    return NextResponse.json({ error: parsedDescription.error }, { status: 400 });
+  }
+  const parsedExpectedOutcome = parseOptionalMeetingDocumentationText(body?.expectedOutcome);
+  if (!parsedExpectedOutcome.ok) {
+    return NextResponse.json({ error: parsedExpectedOutcome.error }, { status: 400 });
+  }
+
   try {
     const action = await prisma.meetingAction.create({
       data: {
         meetingId: id,
         title,
+        description: body?.description !== undefined ? parsedDescription.value : null,
+        expectedOutcome: body?.expectedOutcome !== undefined ? parsedExpectedOutcome.value : null,
         owner,
         ownerPersonId,
         dueDate: body?.dueDate ? new Date(body.dueDate) : null,

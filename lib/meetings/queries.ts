@@ -148,6 +148,7 @@ export async function getMeetingSubEntities(
         id: true,
         title: true,
         description: true,
+        rationale: true,
         status: true,
         owner: true,
         ownerPersonId: true,
@@ -163,7 +164,16 @@ export async function getMeetingSubEntities(
     prisma.meetingAction.findMany({
       where: { meetingId },
       orderBy: { createdAt: "asc" },
-      select: { id: true, title: true, owner: true, ownerPersonId: true, dueDate: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        expectedOutcome: true,
+        owner: true,
+        ownerPersonId: true,
+        dueDate: true,
+        status: true,
+      },
     }),
     prisma.meetingParticipant.findMany({
       where: { meetingId },

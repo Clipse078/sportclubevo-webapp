@@ -7,6 +7,7 @@ import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 import { resolveMeetingDecisionAgendaLink } from "@/lib/meetings/meeting-decision-agenda-link";
+import { parseOptionalMeetingDocumentationText } from "@/lib/meetings/meeting-documentation-text";
 
 async function requireSession() {
   const session = await auth();
@@ -30,6 +31,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       id: true,
       title: true,
       description: true,
+      rationale: true,
       status: true,
       owner: true,
       ownerPersonId: true,
@@ -76,12 +78,22 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     );
   }
 
+  const parsedDescription = parseOptionalMeetingDocumentationText(body?.description);
+  if (!parsedDescription.ok) {
+    return NextResponse.json({ error: parsedDescription.error }, { status: 400 });
+  }
+  const parsedRationale = parseOptionalMeetingDocumentationText(body?.rationale);
+  if (!parsedRationale.ok) {
+    return NextResponse.json({ error: parsedRationale.error }, { status: 400 });
+  }
+
   try {
     const decision = await prisma.meetingDecision.create({
       data: {
         meetingId: id,
         title,
-        description: body?.description?.trim() || null,
+        description: body?.description !== undefined ? parsedDescription.value : null,
+        rationale: body?.rationale !== undefined ? parsedRationale.value : null,
         status,
         owner,
         ownerPersonId,

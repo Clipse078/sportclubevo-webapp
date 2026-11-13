@@ -7,6 +7,7 @@ import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingDecisionAgendaLink } from "@/lib/meetings/meeting-decision-agenda-link";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import { parseOptionalMeetingDocumentationText } from "@/lib/meetings/meeting-documentation-text";
 
 async function requireSession() {
   const session = await auth();
@@ -29,6 +30,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       id: true,
       title: true,
       description: true,
+      rationale: true,
       approvalRequired: true,
       approvalContentRevision: true,
       approvedContentHash: true,
@@ -57,10 +59,24 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const body = await req.json().catch(() => ({}));
   const validStatuses = Object.values(MeetingDecisionStatus);
   const nextTitle = body?.title !== undefined ? String(body.title).trim() : existing.title;
-  const nextDescription =
-    body?.description !== undefined ? body.description?.trim() || null : existing.description;
+
+  let nextDescription = existing.description;
+  if (body?.description !== undefined) {
+    const parsed = parseOptionalMeetingDocumentationText(body.description);
+    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    nextDescription = parsed.value;
+  }
+  let nextRationale = existing.rationale;
+  if (body?.rationale !== undefined) {
+    const parsed = parseOptionalMeetingDocumentationText(body.rationale);
+    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    nextRationale = parsed.value;
+  }
+
   const fieldsChanged =
-    nextTitle !== existing.title || nextDescription !== existing.description;
+    nextTitle !== existing.title ||
+    nextDescription !== existing.description ||
+    nextRationale !== existing.rationale;
 
   const { shouldInvalidateDecisionApproval } = await import(
     "@/lib/meetings/meeting-decision-approval-service"
@@ -69,6 +85,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     approvedContentHash: existing.approvedContentHash,
     title: nextTitle,
     description: nextDescription,
+    rationale: nextRationale,
     approvalContentRevision: existing.approvalContentRevision,
     approvalRequired: existing.approvalRequired,
     fieldsChanged,
@@ -92,7 +109,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   const patch: Record<string, unknown> = {
     title: body?.title?.trim() || undefined,
-    description: body?.description !== undefined ? body.description?.trim() || null : undefined,
+    description: body?.description !== undefined ? nextDescription : undefined,
+    rationale: body?.rationale !== undefined ? nextRationale : undefined,
     status: validStatuses.includes(body?.status) ? body.status : undefined,
     orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
     ...(nextSourceAgendaItemId !== undefined ? { sourceAgendaItemId: nextSourceAgendaItemId } : {}),
