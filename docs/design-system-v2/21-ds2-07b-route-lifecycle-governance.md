@@ -15,13 +15,13 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 277 |
-| Authenticated renderable pages | 221 |
-| Authenticated visual pages (completion denominator) | 218 |
+| Page entries | 282 |
+| Authenticated renderable pages | 226 |
+| Authenticated visual pages (completion denominator) | 223 |
 | Authenticated redirect aliases | 15 |
 | Public renderable pages | 40 |
 | Public redirect aliases | 1 |
-| Route handlers | 636 |
+| Route handlers | 647 |
 | Special Next.js framework files | 41 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -32,12 +32,12 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 218 |
+| CANONICAL | 223 |
 | PARTIAL | 0 |
 | LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **218 / 218 (100%)**.
+Architectural canonical adoption: **223 / 223 (100%)**.
 
 ## Verification
 
@@ -45,11 +45,11 @@ Architectural canonical adoption: **218 / 218 (100%)**.
 | --- | ---: |
 | NOT_STARTED | 0 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 218 |
+| IMPLEMENTED | 223 |
 | VERIFIED | 0 |
 | EXCEPTION | 59 |
 
-Verified authenticated visual pages: **0 / 218 (0%)**.
+Verified authenticated visual pages: **0 / 223 (0%)**.
 
 `IMPLEMENTED` means canonical workspace architecture is present. `VERIFIED` additionally requires recorded visual, accessibility, functional, and responsive evidence.
 
@@ -63,7 +63,7 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
 | DS2-07F | 0 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 218 | Authenticated visual/accessibility verification and closure |
+| DS2-07G | 223 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -317,6 +317,7 @@ None.
 | `/vereinsleitung/initiativen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/page.tsx` |
 | `/vereinsleitung/initiativen/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx` |
 | `/vereinsleitung/initiativen/[slug]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/[slug]/edit/page.tsx` |
+| `/vereinsleitung/initiativen/backlog` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/backlog/page.tsx` |
 | `/vereinsleitung/initiativen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/initiativen/new/page.tsx` |
 | `/vereinsleitung/kpis` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/kpis/page.tsx` |
 | `/vereinsleitung/material` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/material/page.tsx` |
@@ -328,6 +329,10 @@ None.
 | `/vereinsleitung/prozesse/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/prozesse/[slug]/page.tsx` |
 | `/vereinsleitung/prozesse/[slug]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/prozesse/[slug]/edit/page.tsx` |
 | `/vereinsleitung/prozesse/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/prozesse/new/page.tsx` |
+| `/vereinsleitung/sprints` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/sprints/page.tsx` |
+| `/vereinsleitung/sprints/[slug]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/sprints/[slug]/page.tsx` |
+| `/vereinsleitung/sprints/[slug]/board` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/sprints/[slug]/board/page.tsx` |
+| `/vereinsleitung/strategie` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/strategie/page.tsx` |
 | `/vereinsleitung/targets` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/page.tsx` |
 | `/vereinsleitung/targets/[id]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/[id]/page.tsx` |
 | `/vereinsleitung/targets/[id]/edit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx` |

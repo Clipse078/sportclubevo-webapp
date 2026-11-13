@@ -397,6 +397,30 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/[id]/milestones/[milestoneId]/route.ts",
+    "urlPattern": "/api/club-development/initiatives/[id]/milestones/[milestoneId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/[id]/milestones/route.ts",
+    "urlPattern": "/api/club-development/initiatives/[id]/milestones",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/[id]/target-links/route.ts",
+    "urlPattern": "/api/club-development/initiatives/[id]/target-links",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/backlog/route.ts",
+    "urlPattern": "/api/club-development/initiatives/backlog",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/processes/[id]/approval/route.ts",
     "urlPattern": "/api/club-development/processes/[id]/approval",
     "audience": "API"
@@ -411,6 +435,48 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/processes/route.ts",
     "urlPattern": "/api/club-development/processes",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/board/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/board",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/board/tasks/[taskId]/status/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/board/tasks/[taskId]/status",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/close/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/close",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/tasks/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/route.ts",
+    "urlPattern": "/api/club-development/sprints",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/strategy-overview/route.ts",
+    "urlPattern": "/api/club-development/strategy-overview",
     "audience": "API"
   },
   {

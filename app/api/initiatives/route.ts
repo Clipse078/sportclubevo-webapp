@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { InitiativeStatus, VisibilityScope } from "@prisma/client";
+import { InitiativeDisposition, InitiativeStatus, VisibilityScope } from "@prisma/client";
 import { getInitiatives } from "@/lib/initiatives/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
@@ -110,6 +110,14 @@ export async function POST(request: NextRequest) {
         visibilityScope: Object.values(VisibilityScope).includes(body?.visibilityScope as VisibilityScope)
           ? (body.visibilityScope as VisibilityScope)
           : VisibilityScope.ORGANISATION,
+        expectedOutcome: body?.expectedOutcome?.trim() || null,
+        backlogPriority:
+          typeof body?.backlogPriority === "number" && Number.isFinite(body.backlogPriority)
+            ? Math.trunc(body.backlogPriority)
+            : 0,
+        disposition: Object.values(InitiativeDisposition).includes(body?.disposition as InitiativeDisposition)
+          ? (body.disposition as InitiativeDisposition)
+          : InitiativeDisposition.NONE,
       },
       select: { id: true, slug: true, title: true },
     });
