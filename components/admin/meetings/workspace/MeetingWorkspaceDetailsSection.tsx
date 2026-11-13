@@ -8,6 +8,7 @@ import type { MeetingLiveData } from "@/lib/meetings/queries";
 import MeetingProtocolApprovalSection from "@/components/admin/meetings/approval/MeetingProtocolApprovalSection";
 import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 
 function formatTime(date: Date, timeZone: string) {
   return new Intl.DateTimeFormat("de-CH", {
@@ -88,7 +89,9 @@ function MeetingDetailsGrid({
         </div>
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">Ort</dt>
-          <dd className="font-medium text-[var(--foreground)]">{meeting.location ?? "—"}</dd>
+          <dd className="font-medium text-[var(--foreground)]">
+            {meeting.location ? formatMeetingLocationDisplay(meeting.location) : "—"}
+          </dd>
         </div>
         {meeting.plannedDurationMin ? (
           <div>

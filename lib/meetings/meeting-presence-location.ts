@@ -75,3 +75,24 @@ export function formatMeetingPresenceLabel(fields: MeetingPresenceFields): strin
   }
   return fields.onsiteLabel?.trim() || "Kein Ort angegeben";
 }
+
+/** Human-readable Ort line for lists, details, and template variables. */
+export function formatMeetingLocationDisplay(raw: string | null | undefined): string {
+  return formatMeetingPresenceLabel(parseMeetingLocation(raw));
+}
+
+/** Print / PDF header line; includes online URL when stored in the codec. */
+export function formatMeetingLocationPrint(raw: string | null | undefined): string | null {
+  if (!raw?.trim()) {
+    return null;
+  }
+  const fields = parseMeetingLocation(raw);
+  const label = formatMeetingPresenceLabel(fields);
+  if (fields.onlineUrl && (fields.format === "ONLINE" || fields.format === "HYBRID")) {
+    return `${label} — ${fields.onlineUrl}`;
+  }
+  if (label === "Kein Ort angegeben") {
+    return null;
+  }
+  return label;
+}

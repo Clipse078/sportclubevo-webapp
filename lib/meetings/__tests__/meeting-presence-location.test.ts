@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatMeetingLocationDisplay,
+  formatMeetingLocationPrint,
   formatMeetingPresenceLabel,
   parseMeetingLocation,
   serializeMeetingLocation,
@@ -31,5 +33,13 @@ describe("SCE-MTG-ONLINE-01 meeting presence location codec", () => {
     expect(stored).toContain("[[sce-mtg-presence:v1]]");
     expect(parseMeetingLocation(stored)).toEqual(fields);
     expect(formatMeetingPresenceLabel(fields)).toContain("Hybrid");
+    expect(formatMeetingLocationDisplay(stored)).toContain("Hybrid");
+    const printed = formatMeetingLocationPrint(stored);
+    expect(printed).toContain("teams.microsoft.com");
+  });
+
+  it("prints plain onsite without marker leakage", () => {
+    expect(formatMeetingLocationDisplay("Sitzungszimmer")).toBe("Sitzungszimmer");
+    expect(formatMeetingLocationPrint("Sitzungszimmer")).toBe("Sitzungszimmer");
   });
 });
