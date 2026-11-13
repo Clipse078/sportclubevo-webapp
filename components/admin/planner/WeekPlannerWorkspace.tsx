@@ -63,6 +63,7 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import type { PlanningHubListeMenuAction } from "@/lib/planning-hub/liste-operational-menu";
 import type { PlanningHubListeInlineSession } from "@/components/admin/planning-hub/PlanningHubListeInlineEditorHost";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 type OverrideEditingContext = {
   planId: string;
@@ -555,8 +556,10 @@ function WeekPlannerWorkspaceWithReconciledWeek(props: WeekPlannerWorkspaceProps
 
 export default function WeekPlannerWorkspace(props: WeekPlannerWorkspaceProps) {
   return (
-    <PlanningHubPlannerWeekProvider serverWeek={props.week} timezone={props.timezone ?? "Europe/Zurich"}>
-      <WeekPlannerWorkspaceWithReconciledWeek {...props} />
-    </PlanningHubPlannerWeekProvider>
+    <ToastProvider>
+      <PlanningHubPlannerWeekProvider serverWeek={props.week} timezone={props.timezone ?? "Europe/Zurich"}>
+        <WeekPlannerWorkspaceWithReconciledWeek {...props} />
+      </PlanningHubPlannerWeekProvider>
+    </ToastProvider>
   );
 }

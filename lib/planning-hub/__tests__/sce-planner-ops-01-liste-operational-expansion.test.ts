@@ -40,4 +40,10 @@ describe("SCE-PLANNER-OPS-01 Matchcenter-style Liste operational expansion", () 
     expect(host).not.toContain("<WeekplannerPlanningSheet");
     expect(host).toContain("PlanningHubListeInlineSession");
   });
+
+  it("week planner workspace mounts ToastProvider for Liste training allocation hooks", () => {
+    const workspace = read("components/admin/planner/WeekPlannerWorkspace.tsx");
+    expect(workspace).toContain("ToastProvider");
+    expect(workspace).toMatch(/<ToastProvider>[\s\S]*PlanningHubPlannerWeekProvider/);
+  });
 });
