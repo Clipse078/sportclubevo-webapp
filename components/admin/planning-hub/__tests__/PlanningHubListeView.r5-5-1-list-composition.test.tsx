@@ -226,7 +226,16 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
       expect(row.className).toMatch(/\bw-full\b/);
       expect(row.getAttribute("data-sce-programme-activity-card-shell")).not.toBeNull();
       expect(row.parentElement?.querySelectorAll("[data-sce-programme-activity-card-shell]").length).toBe(1);
-      expect(row.querySelector("[data-sce-planning-hub-liste-leading-date]")).toBeTruthy();
+      const isMatch =
+        row.getAttribute("data-sce-planning-hub-liste-activity-kind") === "MATCH";
+      if (isMatch) {
+        expect(row.querySelector("[data-sce-planning-hub-liste-leading-date]")).toBeNull();
+        expect(
+          row.querySelector('[data-sce-match-programme-fixture="reference-split"]'),
+        ).toBeTruthy();
+      } else {
+        expect(row.querySelector("[data-sce-planning-hub-liste-leading-date]")).toBeTruthy();
+      }
     }
   });
 

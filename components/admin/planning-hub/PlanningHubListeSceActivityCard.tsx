@@ -73,7 +73,7 @@ export default function PlanningHubListeSceActivityCard({
             fmtCfg={fmtCfg}
             linkToDetail={false}
             surface="list-row"
-            listRowPresentation="programme-personal"
+            listRowPresentation="programme-fixture"
             className={LIST_ROW_CARD_CLASS}
             testId={testId}
           />

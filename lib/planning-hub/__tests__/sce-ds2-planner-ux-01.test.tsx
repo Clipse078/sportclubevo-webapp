@@ -1,16 +1,19 @@
 /**
  * @vitest-environment jsdom
- * SCE-DS2-PLANNER-UX-01 — Wochenplaner canonical date tiles + list card alignment.
+ * SCE-DS2-PLANNER-UX-01 — Wochenplaner match list parity with Matchcenter.
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
+import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { resolveSceMatchCardFixture } from "@/components/sporting-activity/__fixtures__/sce-match-card-fixtures";
 import { formatListOperationalDayHeading } from "@/lib/planning-hub/list-operational";
+import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
+import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter/types";
 import type {
   WeekplannerMatchItem,
   WeekplannerTrainingItem,
@@ -132,8 +135,83 @@ const permissionContext = {
   canViewEvents: true,
 };
 
+function mcSide(overrides: Partial<MatchcenterSide> = {}): MatchcenterSide {
+  const displayName = overrides.displayName ?? "FC Allschwil";
+  return {
+    providerTeamId: 1,
+    providerTeamName: displayName,
+    canonicalTeamId: "team-1",
+    canonicalTeamName: displayName,
+    displayName,
+    resolution: "RESOLVED",
+    isOwnTeam: true,
+    ...overrides,
+  };
+}
+
+function matchcenterSummary(
+  overrides: Partial<MatchcenterMatchSummary> = {},
+): MatchcenterMatchSummary {
+  return {
+    id: "mc-1",
+    tenantId: "t1",
+    teamId: "team-1",
+    seasonId: "s1",
+    type: "MATCH",
+    title: "Spiel",
+    description: null,
+    status: "SCHEDULED",
+    startAt: new Date("2026-10-05T18:15:00.000Z"),
+    endAt: new Date("2026-10-05T20:15:00.000Z"),
+    operationalEndAtOverride: null,
+    operationalEndAt: new Date("2026-10-05T20:15:00.000Z"),
+    location: "Kunstrasen 2",
+    competitionLabel: "Meisterschaft",
+    homeAway: "HOME",
+    resultLabel: null,
+    intermediateResultLabel: null,
+    scoreHome: null,
+    scoreAway: null,
+    home: mcSide({ displayName: "FC Allschwil Sportverein Junioren", isOwnTeam: true }),
+    away: mcSide({
+      displayName: "FC Langenthal Spielvereinigung Oberaargau",
+      isOwnTeam: false,
+    }),
+    source: {
+      eventSource: "MANUAL",
+      externalSource: null,
+      externalSourceId: null,
+      provider: null,
+      externalMatchId: null,
+      externalSeasonId: null,
+      matchNumber: null,
+    },
+    synchronization: {
+      eventLastSyncedAt: null,
+      mappingLastSyncedAt: null,
+      detailSyncedAt: null,
+      providerMatchState: null,
+      providerMatchStateName: null,
+    },
+    operational: {
+      pitchCode: "KR2",
+      homeDressingRoomCode: null,
+      awayDressingRoomCode: null,
+      meetingTime: null,
+      remarks: null,
+    },
+    visibility: {
+      websiteVisible: true,
+      infoboardVisible: false,
+      homepageVisible: false,
+      wochenplanVisible: true,
+    },
+    ...overrides,
+  };
+}
+
 describe("SCE-DS2-PLANNER-UX-01 — planner list date tiles", () => {
-  it("liste row shell renders leading SceDateTile per activity type", () => {
+  it("liste row shell renders leading SceDateTile for non-match activities", () => {
     const { container } = render(
       <PlanningHubListeView
         week={week([training("training:1"), matchWithLongNames("match:1")])}
@@ -160,12 +238,10 @@ describe("SCE-DS2-PLANNER-UX-01 — planner list date tiles", () => {
     );
 
     const leadingDateRows = container.querySelectorAll("[data-sce-planning-hub-liste-leading-date]");
-    expect(leadingDateRows.length).toBe(2);
-    const dateTiles = container.querySelectorAll('[data-testid^="planning-hub-liste-date-tile-"]');
-    expect(dateTiles.length).toBe(2);
+    expect(leadingDateRows.length).toBe(1);
+    const externalDateTiles = container.querySelectorAll('[data-testid^="planning-hub-liste-date-tile-"]');
+    expect(externalDateTiles.length).toBe(1);
     expect(container.querySelectorAll('[data-testid="sce-programme-date-tile-day"]').length).toBeGreaterThan(0);
-    expect(screen.queryByTestId("sce-match-reference-date")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("sce-training-list-row-date")).not.toBeInTheDocument();
   });
 
   it("uses tenant timezone for list day headings near midnight UTC", () => {
@@ -194,31 +270,148 @@ describe("SCE-DS2-PLANNER-UX-01 — planner list date tiles", () => {
         density="STANDARD"
         fmtCfg={FMT}
         surface="list-row"
-        listRowPresentation="programme-personal"
+        listRowPresentation="programme-fixture"
         linkToDetail={false}
       />,
     );
 
     expect(container.innerHTML).not.toContain("break-all");
-    expect(container.querySelector('[data-sce-match-programme-fixture="planner-liste"]')).toBeTruthy();
+    expect(container.querySelector('[data-sce-match-programme-fixture="reference-split"]')).toBeTruthy();
     const homeName = container.querySelector('[data-sce-match-region="home-name"]');
     expect(homeName?.textContent).toContain("FC Langenthal");
   });
 
-  it("wiring: PlanningHubListeActivityRow uses canonical date tile shell", () => {
+  it("wiring: match rows use programme-fixture like Matchcenter", () => {
     const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
-    expect(row).toContain("SceProgrammeActivityDateTile");
-    expect(row).toContain("planningHubListeRowShellClass");
+    expect(row).toContain("usesMatchcenterListComposition");
     const card = read("components/admin/planning-hub/PlanningHubListeSceActivityCard.tsx");
-    expect(card).toContain("programme-personal");
+    expect(card).toContain('listRowPresentation="programme-fixture"');
+    const matchRow = read("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
+    expect(matchRow).toContain('listRowPresentation="programme-fixture"');
   });
 
-  it("activity cards use SceProgrammeActivityDateTile on operational date columns", () => {
-    const training = read("components/sporting-activity/SceTrainingCard.tsx");
-    expect(training).toContain("SceProgrammeActivityDateTile");
-    expect(training).not.toMatch(/trainingReferenceDateClass[\s\S]*formatFixtureDateLine/);
+  it("activity cards use SceProgrammeActivityDateTile on training operational date columns", () => {
+    const trainingCard = read("components/sporting-activity/SceTrainingCard.tsx");
+    expect(trainingCard).toContain("SceProgrammeActivityDateTile");
+    expect(trainingCard).not.toMatch(/trainingReferenceDateClass[\s\S]*formatFixtureDateLine/);
     const fixture = read("components/sporting-activity/SceMatchFixtureReferenceLayout.tsx");
     expect(fixture).toContain("showDateTile");
-    expect(fixture).toContain("plannerListeMatchRootClass");
+    expect(fixture).toContain("reference-split");
+  });
+});
+
+describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
+  it("planner and Matchcenter match list rows share reference-split fixture presentation", () => {
+    const { container: plannerContainer } = render(
+      <PlanningHubListeView
+        week={week([matchWithLongNames("match:1")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const mc = matchcenterSummary();
+    const { container: mcContainer } = render(
+      <SpieleManagementMatchRow
+        match={mc}
+        assessment={assessMatchOperationalState(mc)}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        canManage={false}
+      />,
+    );
+
+    const plannerFixture = plannerContainer.querySelector('[data-testid="sce-match-fixture"]');
+    const mcFixture = mcContainer.querySelector('[data-testid="sce-match-fixture"]');
+    expect(plannerFixture).toHaveAttribute("data-sce-match-programme-fixture", "reference-split");
+    expect(mcFixture).toHaveAttribute("data-sce-match-programme-fixture", "reference-split");
+
+    expect(plannerFixture?.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
+    expect(plannerFixture?.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
+    expect(mcFixture?.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
+    expect(mcFixture?.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
+  });
+
+  it("match list row has exactly one canonical date tile (reference meta column)", () => {
+    render(
+      <PlanningHubListeView
+        week={week([matchWithLongNames("match:1")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const row = screen.getByTestId("planning-hub-liste-row-match:1");
+    expect(within(row).getByTestId("sce-match-reference-date")).toBeInTheDocument();
+    expect(within(row).queryByTestId("planning-hub-liste-date-tile-match:1")).not.toBeInTheDocument();
+    expect(within(row).getAllByTestId("sce-match-reference-date")).toHaveLength(1);
+  });
+
+  it("exposes planner row menu in Matchcenter-aligned absolute anchor", () => {
+    render(
+      <PlanningHubListeView
+        week={week([matchWithLongNames("match:1")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const row = screen.getByTestId("planning-hub-liste-row-match:1");
+    const menu = within(row).getByTestId("planning-hub-liste-row-menu-match:1");
+    const anchor = menu.closest("[data-sce-planning-hub-liste-menu-anchor]");
+    expect(anchor?.className).toMatch(/absolute/);
+    expect(anchor?.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]')).toBeNull();
   });
 });

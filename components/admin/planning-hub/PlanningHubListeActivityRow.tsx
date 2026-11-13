@@ -61,6 +61,7 @@ export default function PlanningHubListeActivityRow({
 }: PlanningHubListeActivityRowProps) {
   const semantic = activityVisualStyle(item.type);
   const fmtCfg = { locale, timezone };
+  const usesMatchcenterListComposition = item.type === "MATCH";
 
   return (
     <li className="min-w-0 list-none">
@@ -77,7 +78,28 @@ export default function PlanningHubListeActivityRow({
         data-sce-planning-hub-liste-activity-kind={item.type}
         data-sce-planning-hub-liste-full-width-contract="canonical-shell"
       >
-        <div className="flex min-w-0 items-stretch gap-1">
+        <div
+          className={cn(
+            "flex min-w-0 items-stretch gap-1",
+            usesMatchcenterListComposition && "relative",
+          )}
+        >
+          {usesMatchcenterListComposition ? (
+            <div
+              className="absolute right-2 top-2 z-[2] sm:right-3 sm:top-3"
+              data-sce-planning-hub-liste-menu-anchor
+            >
+              <PlanningHubListeRowMenu
+                item={item}
+                permissionContext={permissionContext}
+                canEditItem={canEditItem}
+                onOpenItem={() => onItemOpen(item)}
+                onEditPlanning={() => onItemEditPlanning(item)}
+                onReviewConflict={() => onReviewConflictForItem(item)}
+              />
+            </div>
+          ) : null}
+
           <PlanningHubActivityDetailSurface
             item={item}
             locale={locale}
@@ -96,16 +118,8 @@ export default function PlanningHubListeActivityRow({
                 )}
                 {...referenceProps}
               >
-                <div
-                  className={SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass}
-                  data-sce-planning-hub-liste-leading-date
-                >
-                  <SceProgrammeActivityDateTile
-                    startAt={new Date(item.canonicalStartAt ?? item.startAt)}
-                    fmtCfg={fmtCfg}
-                    testId={`planning-hub-liste-date-tile-${item.id}`}
-                  />
-                  <div className="min-w-0 flex-1 self-stretch">
+                {usesMatchcenterListComposition ? (
+                  <div className="min-w-0 w-full max-md:pr-8">
                     <PlanningHubListeSceActivityCard
                       item={item}
                       fmtCfg={fmtCfg}
@@ -115,7 +129,28 @@ export default function PlanningHubListeActivityRow({
                       issueSummary={<PlannerOperationalIssueSummary item={item} />}
                     />
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className={SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass}
+                    data-sce-planning-hub-liste-leading-date
+                  >
+                    <SceProgrammeActivityDateTile
+                      startAt={new Date(item.canonicalStartAt ?? item.startAt)}
+                      fmtCfg={fmtCfg}
+                      testId={`planning-hub-liste-date-tile-${item.id}`}
+                    />
+                    <div className="min-w-0 flex-1 self-stretch">
+                      <PlanningHubListeSceActivityCard
+                        item={item}
+                        fmtCfg={fmtCfg}
+                        density="STANDARD"
+                        tenantClubName={tenantClubName}
+                        tenantLogoUrl={tenantLogoUrl}
+                        issueSummary={<PlannerOperationalIssueSummary item={item} />}
+                      />
+                    </div>
+                  </div>
+                )}
                 {activeAlternativePlanName ? (
                   <WeekplannerListeOverrideIndicator
                     item={item}
@@ -128,20 +163,22 @@ export default function PlanningHubListeActivityRow({
             )}
           </PlanningHubActivityDetailSurface>
 
-          <div
-            className="flex shrink-0 items-start justify-end self-stretch pt-2 pr-0.5 sm:pt-2.5 sm:pr-1"
-            data-sce-planning-hub-liste-column="ACTIONS"
-            data-sce-planning-hub-liste-menu-anchor
-          >
-            <PlanningHubListeRowMenu
-              item={item}
-              permissionContext={permissionContext}
-              canEditItem={canEditItem}
-              onOpenItem={() => onItemOpen(item)}
-              onEditPlanning={() => onItemEditPlanning(item)}
-              onReviewConflict={() => onReviewConflictForItem(item)}
-            />
-          </div>
+          {!usesMatchcenterListComposition ? (
+            <div
+              className="flex shrink-0 items-start justify-end self-stretch pt-2 pr-0.5 sm:pt-2.5 sm:pr-1"
+              data-sce-planning-hub-liste-column="ACTIONS"
+              data-sce-planning-hub-liste-menu-anchor
+            >
+              <PlanningHubListeRowMenu
+                item={item}
+                permissionContext={permissionContext}
+                canEditItem={canEditItem}
+                onOpenItem={() => onItemOpen(item)}
+                onEditPlanning={() => onItemEditPlanning(item)}
+                onReviewConflict={() => onReviewConflictForItem(item)}
+              />
+            </div>
+          ) : null}
         </div>
       </SceProgrammeActivityCardShell>
     </li>
