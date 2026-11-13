@@ -19,7 +19,8 @@ describe("SCE-FIN-07 sprint preparation", () => {
     expect(fin07e).toContain("attachments");
     expect(fin07e).toContain("Audit-preserving unlink");
     expect(fin07e).toContain("PR #971");
-    expect(fin07e).toContain("must not add a second copy");
+    expect(fin07e).toContain("not add a second copy");
+    expect(fin07e).toContain("SCE-FINANCE-07E-EXTERNAL-REFERENCE-LINKING.md");
     expect(read("docs/roadmap/SCE-TOURNAMENT-PLANNER-SPRINT-STATUS.md")).toContain("#872");
   });
 
