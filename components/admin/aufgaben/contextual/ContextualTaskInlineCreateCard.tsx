@@ -4,7 +4,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
 import ContextualTaskCreateFormBody from "./ContextualTaskCreateFormBody";
-import { useContextualTaskCreateForm } from "./useContextualTaskCreateForm";
+import {
+  useContextualTaskCreateForm,
+  type ContextualTaskCreateSuccessMode,
+} from "./useContextualTaskCreateForm";
 import {
   workspaceGhostButtonClass,
   workspacePrimaryButtonClass,
@@ -19,6 +22,8 @@ type Props = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange"> & {
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   onCreated?: () => void;
+  successMode?: ContextualTaskCreateSuccessMode;
+  initialTitle?: string;
   panelDomId?: string;
   formDomId?: string;
   cardTestId?: string;
@@ -37,6 +42,8 @@ const ContextualTaskInlineCreateCard = forwardRef<ContextualTaskInlineCreateCard
       orgUnitOptions,
       timeZone,
       tenantWideVisibility,
+      successMode = "refresh",
+      initialTitle,
       panelDomId = "contextual-task-create-panel",
       formDomId = "contextual-task-create-form",
       cardTestId = "contextual-task-inline-create-card",
@@ -62,7 +69,8 @@ const ContextualTaskInlineCreateCard = forwardRef<ContextualTaskInlineCreateCard
     } = useContextualTaskCreateForm({
       contextType,
       contextId,
-      successMode: "refresh",
+      successMode,
+      initialTitle,
       onCreated: () => {
         onCreated?.();
         onExpandedChange(false);

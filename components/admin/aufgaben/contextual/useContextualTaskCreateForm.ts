@@ -13,6 +13,7 @@ export type UseContextualTaskCreateFormOptions = {
   contextId: string;
   successMode?: ContextualTaskCreateSuccessMode;
   onCreated?: () => void;
+  initialTitle?: string;
 };
 
 export function useContextualTaskCreateForm({
@@ -20,10 +21,11 @@ export function useContextualTaskCreateForm({
   contextId,
   successMode = "refresh",
   onCreated,
+  initialTitle = "",
 }: UseContextualTaskCreateFormOptions) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [pending, startTransition] = useTransition();
   const [assigneeUserIds, setAssigneeUserIds] = useState<string[]>([]);
   const [fieldsKey, setFieldsKey] = useState(0);

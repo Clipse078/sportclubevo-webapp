@@ -45,13 +45,20 @@ describe("SCE-TASK-UX-02 scope inventory — no modal task create at runtime", (
     }
   });
 
-  it("documents navigation-only exceptions (no co-located inline panel)", () => {
+  it("/dashboard/aufgaben/neu hosts collapsible contextual or full create cards", () => {
+    const neuPage = read("app/(admin)/dashboard/aufgaben/neu/page.tsx");
+    expect(neuPage).toContain("AufgabenNeuClient");
+    const neuClient = read("components/admin/aufgaben/AufgabenNeuClient.tsx");
+    expect(neuClient).toContain("ContextualTaskInlineCreateCard");
+    expect(neuClient).toContain("AufgabenFullCreateCollapsibleCard");
+    expect(neuClient).not.toContain("ContextualTaskCreateDialog");
+    expect(neuClient).not.toContain("AufgabenFullCreateClient");
+  });
+
+  it("toolbar/inspector triggers navigate to neu with context query params", () => {
+    const nav = read("lib/tasks/task-create-navigation.ts");
+    expect(nav).toContain("/dashboard/aufgaben/neu");
     const workspaceInspector = read("components/admin/workspace/inspector/WorkspaceDocumentInspectorView.tsx");
     expect(workspaceInspector).toContain("ContextualTaskCreateTrigger");
-    expect(workspaceInspector).not.toContain('activation="inlinePanel"');
-
-    const neuPage = read("app/(admin)/dashboard/aufgaben/neu/page.tsx");
-    expect(neuPage).toContain("AufgabenFullCreateClient");
-    expect(neuPage).not.toContain("ContextualTaskInlineCreateCard");
   });
 });

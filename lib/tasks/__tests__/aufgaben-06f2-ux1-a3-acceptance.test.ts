@@ -410,6 +410,7 @@ describe("AUFGABEN-06F2-UX1-A3 acceptance", () => {
       for (const file of [
         "components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx",
         "components/admin/aufgaben/AufgabenFullCreateClient.tsx",
+        "components/admin/aufgaben/AufgabenFullCreateCollapsibleCard.tsx",
         "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
         "components/admin/aufgaben/MeineAufgabenQuickCreateDialog.tsx",
         "components/admin/aufgaben/TaskWorkspace.tsx",
@@ -428,6 +429,7 @@ describe("AUFGABEN-06F2-UX1-A3 acceptance", () => {
       for (const file of [
         "components/admin/aufgaben/contextual/ContextualTaskCreateDialog.tsx",
         "components/admin/aufgaben/AufgabenFullCreateClient.tsx",
+        "components/admin/aufgaben/AufgabenFullCreateCollapsibleCard.tsx",
         "components/admin/aufgaben/AufgabenQuickCreateDialog.tsx",
         "components/admin/aufgaben/MeineAufgabenQuickCreateDialog.tsx",
         "components/admin/aufgaben/TaskWorkspace.tsx",
