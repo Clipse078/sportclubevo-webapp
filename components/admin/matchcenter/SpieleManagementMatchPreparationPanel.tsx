@@ -27,6 +27,8 @@ import { cn } from "@/lib/cn";
 import { OperationalDensePanelShell } from "@/components/admin/shared/planning/OperationalDensePanelShell";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 
+export type MatchPublicationVisibilityState = "ready" | "loading" | "unavailable";
+
 export type SpieleManagementMatchPreparationPanelProps = {
   match: MatchcenterMatchSummary;
   assessment: MatchcenterOperationalAssessment;
@@ -34,6 +36,8 @@ export type SpieleManagementMatchPreparationPanelProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   canManageOperationalAllocations: boolean;
   canManagePublication: boolean;
+  /** When not ready, Infoboard control stays disabled and does not assume a default. */
+  publicationVisibilityState?: MatchPublicationVisibilityState;
   onLiveMatchChange?: (match: MatchcenterMatchSummary) => void;
 };
 
@@ -124,17 +128,38 @@ function SpieleManagementMatchPreparationEditable({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
   canManagePublication,
+  publicationVisibilityState = "ready",
   onLiveMatchChange,
 }: SpieleManagementMatchPreparationPanelProps) {
   const tResources = useTranslations("PlanningResources");
   const { patchField, isFieldPending, isSaving } = useMatchOperationalInlinePatch(match.id);
+  const publicationReady = publicationVisibilityState === "ready";
 
   const [draft, setDraft] = useState(() => ({
     pitchCode: match.operational.pitchCode?.trim() ?? "",
     homeDressingRoomCode: match.operational.homeDressingRoomCode?.trim() ?? "",
     awayDressingRoomCode: match.operational.awayDressingRoomCode?.trim() ?? "",
-    infoboardVisible: match.visibility.infoboardVisible,
+    infoboardVisible: publicationReady ? match.visibility.infoboardVisible : false,
   }));
+
+  useEffect(() => {
+    if (!publicationReady || isSaving) return;
+    setDraft((prev) => ({
+      ...prev,
+      pitchCode: match.operational.pitchCode?.trim() ?? "",
+      homeDressingRoomCode: match.operational.homeDressingRoomCode?.trim() ?? "",
+      awayDressingRoomCode: match.operational.awayDressingRoomCode?.trim() ?? "",
+      infoboardVisible: match.visibility.infoboardVisible,
+    }));
+  }, [
+    publicationReady,
+    isSaving,
+    match.id,
+    match.operational.pitchCode,
+    match.operational.homeDressingRoomCode,
+    match.operational.awayDressingRoomCode,
+    match.visibility.infoboardVisible,
+  ]);
 
   const pitchGroupsByCode = useMemo(
     () => facilityGroupsWithCodeAsId(pitchHallFacilityGroups),
@@ -200,7 +225,16 @@ function SpieleManagementMatchPreparationEditable({
     [draft.pitchCode, pitchGroupsByCode],
   );
 
-  const canEditInfoboard = canManagePublication && isMatchOperationallyActionable(match);
+  const canEditInfoboard =
+    publicationReady && canManagePublication && isMatchOperationallyActionable(match);
+  const infoboardStatusLabel =
+    publicationVisibilityState === "loading"
+      ? "Publikationsstatus wird geladen…"
+      : publicationVisibilityState === "unavailable"
+        ? "Publikationsstatus nicht verfügbar"
+        : draft.infoboardVisible
+          ? "Für Vereins-Infoboard freigegeben"
+          : "Noch nicht für Infoboard freigegeben";
 
   const applyField = useCallback(
     async <K extends keyof typeof draft>(
@@ -284,10 +318,8 @@ function SpieleManagementMatchPreparationEditable({
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-[var(--foreground)]">Infoboard</p>
-            <p className="text-xs text-[var(--muted)]">
-              {draft.infoboardVisible
-                ? "Für Vereins-Infoboard freigegeben"
-                : "Noch nicht für Infoboard freigegeben"}
+            <p className="text-xs text-[var(--muted)]" data-testid={`matchcenter-inline-infoboard-status-${match.id}`}>
+              {infoboardStatusLabel}
             </p>
           </div>
           <button

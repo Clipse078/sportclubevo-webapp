@@ -51,6 +51,7 @@ import {
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 import { buildClubEventApiCollaborationPayload } from "@/lib/collaboration/club-event/club-event-api-collaboration";
 import { parseClubEventOrganisationalAudienceFromApiBody } from "@/lib/events/club-event-organisational-audience-api";
+import { revalidatePlannerWeekPaths } from "@/lib/planning-hub/planner-week-revalidation";
 
 export const dynamic = "force-dynamic";
 
@@ -319,6 +320,9 @@ export async function PATCH(
       beforeSnapshot,
       cycleBaseline,
     });
+    if (scheduleTouched) {
+      revalidatePlannerWeekPaths();
+    }
     return NextResponse.json({
       event,
       ...collaborationPayload,

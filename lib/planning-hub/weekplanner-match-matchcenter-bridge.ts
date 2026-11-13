@@ -1,9 +1,9 @@
 /**
  * SCE-PLANNER-OPS-01 — minimal Weekplanner MATCH → MatchcenterMatchSummary for shared operational UI.
- * Weekplanner Liste only surfaces HOME tenant matches; fields not needed for preparation UI are stubbed.
+ * Weekplanner Liste only surfaces HOME tenant matches; publication flags come from persisted Event visibility.
  */
 
-import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
+import type { MatchcenterMatchSummary, MatchcenterVisibility } from "@/lib/matchcenter/types";
 import { assessMatchOperationalState, type MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
 import type { WeekplannerMatchItem } from "@/lib/weekplanner/types";
 
@@ -11,6 +11,15 @@ function firstCode(refs: { code: string }[]): string | null {
   const code = refs[0]?.code?.trim();
   return code || null;
 }
+
+const UNRESOLVED_MATCH_VISIBILITY: MatchcenterVisibility = {
+  websiteVisible: false,
+  infoboardVisible: false,
+  homepageVisible: false,
+  wochenplanVisible: false,
+  trainingsplanVisible: false,
+  teamPageVisible: false,
+};
 
 const EMPTY_SIDE = {
   providerTeamId: null,
@@ -80,14 +89,7 @@ export function weekplannerMatchToMatchcenterSummary(item: WeekplannerMatchItem)
       meetingTime: null,
       remarks: null,
     },
-    visibility: {
-      websiteVisible: false,
-      infoboardVisible: false,
-      homepageVisible: false,
-      wochenplanVisible: true,
-      trainingsplanVisible: false,
-      teamPageVisible: false,
-    },
+    visibility: item.publicationVisibility ?? UNRESOLVED_MATCH_VISIBILITY,
     reviewStage: "NONE",
     publishedAt: null,
     participationResponseDueAt: null,

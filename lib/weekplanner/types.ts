@@ -41,6 +41,8 @@
  * Standardplan.
  */
 
+import type { MatchcenterVisibility } from "@/lib/matchcenter/types";
+
 export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 
 /** The two allocation groups a WeekplannerPlan may override — see prisma/schema.prisma#WeekplannerAllocationGroup. */
@@ -159,6 +161,8 @@ export type WeekplannerMatchItem = WeekplannerItemBase & {
    * product spec). Always the Standardplan/legacy value.
    */
   awayDressingRoomAllocations: WeekplannerResourceRef[];
+  /** Persisted publication flags from Event — populated by weekplanner queries for Liste match prep. */
+  publicationVisibility?: MatchcenterVisibility;
 };
 
 export type WeekplannerTournamentItem = WeekplannerItemBase & {

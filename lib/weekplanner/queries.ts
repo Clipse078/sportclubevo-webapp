@@ -875,6 +875,7 @@ function mapWeekplannerHomeMatchItems(
       pitchOverridden: pitch.overridden,
       dressingRoomOverridden: dressingRoom.overridden,
       awayDressingRoomAllocations: awayRoomRef ? [awayRoomRef] : [],
+      publicationVisibility: match.visibility,
       conflicts: [],
     };
 

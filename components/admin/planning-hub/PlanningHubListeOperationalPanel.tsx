@@ -37,6 +37,8 @@ import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occ
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { listOperationalRowStatus, listOperationalStatusLabel } from "@/lib/planning-hub/list-operational";
 import { cn } from "@/lib/cn";
+import { parseClubEventScheduleFromApiBody } from "@/lib/events/club-event-api-scheduling";
+import { ClubEventScheduleError } from "@/lib/events/club-event-scheduling";
 import {
   isoToLocalTime,
   localToUtcIso,
@@ -275,6 +277,7 @@ function MatchOperationalPanel({
         dressingRoomFacilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
         canManageOperationalAllocations={canManageOperational}
         canManagePublication={canManagePublication}
+        publicationVisibilityState={item.publicationVisibility ? "ready" : "unavailable"}
       />
     </>
   );
@@ -426,10 +429,16 @@ function VeranstaltungOperationalPanel({
   timezone,
   facilityGroupsByAllocationGroup,
   tenantDressingRoomOccupancyPresets,
+  plannerEditAccess,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "VERANSTALTUNG" }>;
-} & Pick<Props, "locale" | "timezone" | "facilityGroupsByAllocationGroup" | "tenantDressingRoomOccupancyPresets" | "onSaved">) {
+} & Pick<
+  Props,
+  "locale" | "timezone" | "facilityGroupsByAllocationGroup" | "tenantDressingRoomOccupancyPresets" | "plannerEditAccess" | "onSaved"
+>) {
+  const canManage =
+    !!plannerEditAccess && canDomainManagePlannerItem(item, plannerEditAccess);
   const router = useRouter();
   const formId = `liste-veranstaltung-schedule-${item.id}`;
   const [date, setDate] = useState(initialEditorDate(item, timezone));
@@ -472,16 +481,28 @@ function VeranstaltungOperationalPanel({
   });
 
   async function saveSchedule() {
+    if (!canManage) return;
     setSaving(true);
     setError(null);
     try {
+      const schedule = parseClubEventScheduleFromApiBody(
+        {
+          allDay: item.allDay,
+          startDate: date,
+          startTime,
+          endDate: date,
+          endTime,
+        },
+        timezone,
+        { allDay: item.allDay, startAt: item.canonicalStartAt, endAt: item.canonicalEndAt },
+      );
       const res = await fetch(`/api/events/${item.eventId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          startAt,
-          endAt,
-          allDay: item.allDay,
+          startAt: schedule.startAt.toISOString(),
+          endAt: schedule.endAt?.toISOString() ?? null,
+          allDay: schedule.allDay,
         }),
       });
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -489,7 +510,11 @@ function VeranstaltungOperationalPanel({
       router.refresh();
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+      if (err instanceof ClubEventScheduleError) {
+        setError(err.message);
+      } else {
+        setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+      }
     } finally {
       setSaving(false);
     }
@@ -518,7 +543,7 @@ function VeranstaltungOperationalPanel({
         {allocations ? (
           <VeranstaltungFacilityAllocationEditor
             eventId={item.eventId}
-            canManage
+            canManage={canManage}
             initialAllocations={allocations}
             pitchHallFacilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             dressingRoomFacilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
@@ -538,7 +563,7 @@ function VeranstaltungOperationalPanel({
             <span className="text-sm font-medium text-[var(--foreground)]">Termin</span>
             <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", scheduleOpen && "rotate-180")} />
           </button>
-          {scheduleOpen ? (
+          {scheduleOpen && canManage ? (
             <div className="space-y-2 border-t border-[var(--border)]/60 px-3 py-2">
               {error ? <WeekplannerEditorError message={error} /> : null}
               <WeekplannerDateTimeFields
@@ -555,6 +580,7 @@ function VeranstaltungOperationalPanel({
                 className="fca-button-primary text-sm"
                 disabled={saving}
                 onClick={() => void saveSchedule()}
+                data-testid={`planning-hub-liste-veranstaltung-schedule-save-${item.id}`}
               >
                 Termin speichern
               </button>

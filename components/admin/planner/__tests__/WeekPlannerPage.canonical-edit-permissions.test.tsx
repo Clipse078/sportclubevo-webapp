@@ -120,6 +120,14 @@ const MATCH_ITEM = {
   eventSource: "MANUAL",
   homeSide: { displayName: "FC Allschwil 1", logoUrl: null, isOwnTeam: true },
   awaySide: { displayName: "FC Test", logoUrl: null, isOwnTeam: false },
+  publicationVisibility: {
+    websiteVisible: false,
+    infoboardVisible: true,
+    homepageVisible: false,
+    wochenplanVisible: true,
+    trainingsplanVisible: false,
+    teamPageVisible: false,
+  },
   ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
