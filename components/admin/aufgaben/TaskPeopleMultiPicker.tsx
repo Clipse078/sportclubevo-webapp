@@ -58,6 +58,7 @@ export default function TaskPeopleMultiPicker({
     for (const option of Object.values(effectiveKnown)) {
       map.set(option.userId, {
         userId: option.userId,
+        personId: option.personId ?? option.userId,
         label: formatName(option.firstName, option.lastName, option.displayName),
         description: option.email,
       });
