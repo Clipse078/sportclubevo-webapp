@@ -17,6 +17,7 @@ import GovernanceStaleCard from "@/components/admin/vereinsleitung/GovernanceSta
 import type { GovernanceOverviewData } from "@/lib/dashboard/governance-overview";
 import type { InitiativeListItem } from "@/lib/initiatives/queries";
 import type { MeetingListItem } from "@/lib/meetings/queries";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import type { TargetListItem } from "@/lib/targets/queries";
 import type { PersonalTaskDto } from "@/lib/tasks/types";
 import {
@@ -233,7 +234,7 @@ export default function ClubDevelopmentOverview({
                   <p className="text-xs text-[var(--muted)] mt-0.5 flex items-center gap-1.5">
                     <CalendarDays className="h-3.5 w-3.5" />
                     {formatSwissDate(meeting.meetingDate)}
-                    {meeting.location ? ` · ${meeting.location}` : ""}
+                    {meeting.location ? ` · ${formatMeetingLocationDisplay(meeting.location)}` : ""}
                   </p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-[var(--muted)] shrink-0" />

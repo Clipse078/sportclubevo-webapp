@@ -12,6 +12,12 @@ import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel"
 import MeetingParticipantMultiPicker from "@/components/admin/meetings/MeetingParticipantMultiPicker";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
+import {
+  parseMeetingLocation,
+  serializeMeetingLocation,
+  validateMeetingOnlineUrl,
+  type MeetingPresenceFormat,
+} from "@/lib/meetings/meeting-presence-location";
 
 type MeetingFormProps = {
   mode: "create" | "edit";
@@ -54,7 +60,10 @@ export default function MeetingForm({
   const [title, setTitle] = useState(defaultValues?.title ?? "");
   const [description, setDescription] = useState(defaultValues?.description ?? "");
   const [meetingDate, setMeetingDate] = useState(defaultValues?.meetingDate ?? "");
-  const [location, setLocation] = useState(defaultValues?.location ?? "");
+  const initialPresence = parseMeetingLocation(defaultValues?.location ?? null);
+  const [presenceFormat, setPresenceFormat] = useState<MeetingPresenceFormat>(initialPresence.format);
+  const [onsiteLocation, setOnsiteLocation] = useState(initialPresence.onsiteLabel ?? "");
+  const [onlineMeetingUrl, setOnlineMeetingUrl] = useState(initialPresence.onlineUrl ?? "");
   const [plannedDurationMin, setPlannedDurationMin] = useState(defaultValues?.plannedDurationMin ?? "");
   const [status, setStatus] = useState(defaultValues?.status ?? "PLANNED");
   const [participantPersonIds, setParticipantPersonIds] = useState<string[]>([]);
@@ -83,7 +92,9 @@ export default function MeetingForm({
       title,
       description,
       meetingDate,
-      location,
+      presenceFormat,
+      onsiteLocation,
+      onlineMeetingUrl,
       plannedDurationMin,
       status,
       participantPersonIds,
@@ -97,7 +108,9 @@ export default function MeetingForm({
       title,
       description,
       meetingDate,
-      location,
+      presenceFormat,
+      onsiteLocation,
+      onlineMeetingUrl,
       plannedDurationMin,
       status,
       participantPersonIds,
@@ -124,6 +137,19 @@ export default function MeetingForm({
       return;
     }
 
+    if (presenceFormat === "ONLINE" || presenceFormat === "HYBRID") {
+      if (!onlineMeetingUrl.trim() || !validateMeetingOnlineUrl(onlineMeetingUrl)) {
+        setError("Bitte eine gültige HTTPS-Link-URL für die Online-Teilnahme angeben.");
+        return;
+      }
+    }
+    if ((presenceFormat === "ONSITE" || presenceFormat === "HYBRID") && !onsiteLocation.trim()) {
+      if (presenceFormat === "ONSITE") {
+        setError("Bitte einen Ort angeben.");
+        return;
+      }
+    }
+
     if (visibilityScope === "RESTRICTED") {
       const allowlistCount =
         visibleOrgUnitRefs.length +
@@ -144,7 +170,11 @@ export default function MeetingForm({
         title: title.trim(),
         description: description.trim() || null,
         meetingDate,
-        location: location.trim() || null,
+        location: serializeMeetingLocation({
+          format: presenceFormat,
+          onsiteLabel: onsiteLocation.trim() || null,
+          onlineUrl: onlineMeetingUrl.trim() || null,
+        }),
         plannedDurationMin: plannedDurationMin ? Number(plannedDurationMin) : null,
         status,
         visibilityScope,
@@ -232,15 +262,46 @@ export default function MeetingForm({
               required
             />
           </div>
-          <div>
-            <label className={labelClass}>Ort</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="z.B. Clubhaus, Sitzungszimmer 1"
-              className={fieldClass}
-            />
+          <div className="md:col-span-2 space-y-3">
+            <div>
+              <label className={labelClass}>Durchführung</label>
+              <select
+                value={presenceFormat}
+                onChange={(e) => setPresenceFormat(e.target.value as MeetingPresenceFormat)}
+                className={fieldClass}
+                data-testid="meeting-presence-format"
+              >
+                <option value="ONSITE">Vor Ort</option>
+                <option value="ONLINE">Online</option>
+                <option value="HYBRID">Hybrid</option>
+              </select>
+            </div>
+            {presenceFormat !== "ONLINE" ? (
+              <div>
+                <label className={labelClass}>Ort {presenceFormat === "ONSITE" ? "*" : ""}</label>
+                <input
+                  type="text"
+                  value={onsiteLocation}
+                  onChange={(e) => setOnsiteLocation(e.target.value)}
+                  placeholder="z.B. Clubhaus, Sitzungszimmer 1"
+                  className={fieldClass}
+                  data-testid="meeting-onsite-location"
+                />
+              </div>
+            ) : null}
+            {presenceFormat !== "ONSITE" ? (
+              <div>
+                <label className={labelClass}>Online-Link (HTTPS) *</label>
+                <input
+                  type="url"
+                  value={onlineMeetingUrl}
+                  onChange={(e) => setOnlineMeetingUrl(e.target.value)}
+                  placeholder="https://…"
+                  className={fieldClass}
+                  data-testid="meeting-online-url"
+                />
+              </div>
+            ) : null}
           </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Beschreibung</label>

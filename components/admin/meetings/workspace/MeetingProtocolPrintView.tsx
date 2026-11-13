@@ -1,4 +1,5 @@
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
+import { formatMeetingLocationPrint } from "@/lib/meetings/meeting-presence-location";
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("de-CH", {
@@ -15,6 +16,8 @@ type Props = {
 };
 
 export default function MeetingProtocolPrintView({ meeting, subEntities }: Props) {
+  const locationLine = formatMeetingLocationPrint(meeting.location);
+
   return (
     <article
       className="mx-auto max-w-3xl bg-white p-8 text-[var(--foreground)] print:p-0"
@@ -24,7 +27,7 @@ export default function MeetingProtocolPrintView({ meeting, subEntities }: Props
         <h1 className="text-2xl font-semibold">{meeting.title}</h1>
         <p className="mt-1 text-sm text-slate-600">
           {formatDate(meeting.meetingDate)}
-          {meeting.location ? ` · ${meeting.location}` : null}
+          {locationLine ? ` · ${locationLine}` : null}
         </p>
         {meeting.status === "COMPLETED" && meeting.closedAt ? (
           <p className="mt-1 text-xs text-slate-500">
