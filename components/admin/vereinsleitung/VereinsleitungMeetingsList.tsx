@@ -15,6 +15,7 @@ import VisibilityScopeBadge from "@/components/admin/shared/VisibilityScopeBadge
 import { Badge } from "@/components/ui";
 import { SceDateTile } from "@/components/design-system/date";
 import type { MeetingListItem } from "@/lib/meetings/queries";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import { formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 const STATUS_LABELS: Record<MeetingListItem["status"], string> = {
@@ -115,7 +116,7 @@ export default function VereinsleitungMeetingsList({
                     {meeting.location ? (
                       <span className="inline-flex max-w-full items-center gap-1.5 text-[var(--muted)]">
                         <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                        <span className="truncate">{meeting.location}</span>
+                        <span className="truncate">{formatMeetingLocationDisplay(meeting.location)}</span>
                       </span>
                     ) : null}
                   </div>

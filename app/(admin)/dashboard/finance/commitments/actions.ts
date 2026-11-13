@@ -15,6 +15,7 @@ import {
   updateFinanceCommitment,
 } from "@/lib/finance/services/finance-commitment-service";
 import { getFinanceCommitmentDetail } from "@/lib/finance/services/finance-commitment-query-service";
+import { linkSupplierBillExternalReferenceToCommitment } from "@/lib/finance/services/finance-commitment-supplier-bill-evidence-service";
 
 export type FinanceCommitmentActionResult =
   | { ok: true; commitmentId?: string }
@@ -157,6 +158,26 @@ export async function deleteDraftFinanceCommitmentAction(input: {
 export async function loadFinanceCommitmentDetailAction(commitmentId: string) {
   const ctx = await commitmentCtx();
   return getFinanceCommitmentDetail(prisma, ctx, commitmentId);
+}
+
+export async function linkSupplierBillExternalReferenceAction(input: {
+  commitmentId: string;
+  financeYearId: string;
+  externalReference: string;
+  amountMinorSnapshot?: number | null;
+}): Promise<FinanceCommitmentActionResult & { linkId?: string }> {
+  try {
+    const ctx = await commitmentCtx();
+    const result = await linkSupplierBillExternalReferenceToCommitment(prisma, ctx, {
+      commitmentId: input.commitmentId,
+      externalReference: input.externalReference,
+      amountMinorSnapshot: input.amountMinorSnapshot,
+    });
+    revalidateCommitments(input.financeYearId);
+    return { ok: true, commitmentId: input.commitmentId, linkId: result.linkId };
+  } catch (error) {
+    return mapError(error);
+  }
 }
 
 export async function approveFinanceCommitmentAction(input: {

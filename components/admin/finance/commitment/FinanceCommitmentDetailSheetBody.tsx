@@ -20,6 +20,7 @@ import {
 } from "@/lib/finance/finance-workspace-surfaces";
 import { FinanceCommitmentApprovalExplanationText } from "@/components/admin/finance/commitment/FinanceCommitmentApprovalExplanation";
 import { resolveFinanceCommitmentDraftSubmitMessageKey } from "@/lib/finance/commitment/finance-commitment-approval-policy-presentation";
+import { FinanceCommitmentSupplierBillEvidenceSection } from "@/components/admin/finance/commitment/FinanceCommitmentSupplierBillEvidenceSection";
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
 
@@ -125,6 +126,8 @@ export type FinanceCommitmentDetailSheetBodyProps = {
   onDeleteOpen?: () => void;
   /** Inbox mode hides secondary lifecycle actions unless provided. */
   mode?: "workspace" | "inbox";
+  financeYearId?: string;
+  onSupplierBillEvidenceChanged?: () => void;
 };
 
 export function FinanceCommitmentDetailSheetBody({
@@ -147,6 +150,8 @@ export function FinanceCommitmentDetailSheetBody({
   onCancelOpen,
   onDeleteOpen,
   mode = "workspace",
+  financeYearId,
+  onSupplierBillEvidenceChanged,
 }: FinanceCommitmentDetailSheetBodyProps) {
   const basicsRows: Array<{ label: string; value: string }> = [
     { label: t("fieldCommitmentDate"), value: formatCalendarDate(detail.commitmentDateIso) },
@@ -328,6 +333,16 @@ export function FinanceCommitmentDetailSheetBody({
         t={t}
         formatCalendarDate={formatCalendarDate}
       />
+
+      {financeYearId && onSupplierBillEvidenceChanged ? (
+        <FinanceCommitmentSupplierBillEvidenceSection
+          detail={detail}
+          financeYearId={financeYearId}
+          t={t}
+          formatCalendarDate={formatCalendarDate}
+          onEvidenceChanged={onSupplierBillEvidenceChanged}
+        />
+      ) : null}
 
       {!showPrimaryDecisionActions && !showInboxDecisionActions ? (
         <div

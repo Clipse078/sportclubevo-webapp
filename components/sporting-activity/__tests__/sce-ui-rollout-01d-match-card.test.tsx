@@ -118,6 +118,38 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     expect(screen.getByTestId("sce-match-score-away")).toHaveTextContent("1");
   });
 
+  it("SCE-MATCH-UX-01 applies winner/loser emphasis and neutral draw", () => {
+    renderCard({
+      status: "COMPLETED",
+      resultLabel: "3:1",
+      scoreHome: 3,
+      scoreAway: 1,
+    });
+    expect(screen.getByTestId("sce-match-score-home")).toHaveAttribute(
+      "data-sce-match-score-emphasis",
+      "winner",
+    );
+    expect(screen.getByTestId("sce-match-score-away")).toHaveAttribute(
+      "data-sce-match-score-emphasis",
+      "loser",
+    );
+
+    renderCard({
+      status: "COMPLETED",
+      resultLabel: "0:0",
+      scoreHome: 0,
+      scoreAway: 0,
+    });
+    expect(screen.getAllByTestId("sce-match-score-home").at(-1)).toHaveAttribute(
+      "data-sce-match-score-emphasis",
+      "neutral",
+    );
+    expect(screen.getAllByTestId("sce-match-score-away").at(-1)).toHaveAttribute(
+      "data-sce-match-score-emphasis",
+      "neutral",
+    );
+  });
+
   it.each(["HERO", "STANDARD", "COMPACT"] as const)(
     "rich density %s uses reference score boxes",
     (density) => {

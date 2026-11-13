@@ -169,6 +169,12 @@
   },
   {
     "kind": "FRAMEWORK_FILE",
+    "sourceFile": "app/(auth)/layout.tsx",
+    "urlPattern": "/",
+    "audience": "FRAMEWORK"
+  },
+  {
+    "kind": "FRAMEWORK_FILE",
     "sourceFile": "app/(print)/layout.tsx",
     "urlPattern": "/",
     "audience": "FRAMEWORK"

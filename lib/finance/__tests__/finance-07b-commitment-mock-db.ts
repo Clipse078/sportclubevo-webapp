@@ -99,6 +99,7 @@ export function createCommitmentMockStore() {
       evidenceRefId: string;
       amountMinorSnapshot: number | null;
       linkedByUserId: string | null;
+      linkedAt?: Date;
     }>,
     financeCommitmentApprovalDecision: [] as Array<Record<string, unknown>>,
     auditLog: [] as Array<Record<string, unknown>>,
@@ -302,9 +303,52 @@ export function makeCommitmentMockDb(store: ReturnType<typeof createCommitmentMo
     },
     financeEconomicEvidenceLink: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
-        const row = { id: randomUUID(), ...data };
+        const row = { id: randomUUID(), linkedAt: new Date(), ...data };
         store.financeEconomicEvidenceLink.push(row as never);
         return row;
+      },
+      findMany: async ({
+        where,
+        orderBy,
+        select,
+      }: {
+        where: {
+          tenantId?: string;
+          economicObligationKey?: string;
+          evidenceKind?: string;
+          evidenceRefType?: string;
+        };
+        orderBy?: { linkedAt: "asc" | "desc" };
+        select?: Record<string, boolean>;
+      }) => {
+        let rows = store.financeEconomicEvidenceLink.filter((l) => {
+          if (where.tenantId && l.tenantId !== where.tenantId) return false;
+          if (where.economicObligationKey && l.economicObligationKey !== where.economicObligationKey)
+            return false;
+          if (where.evidenceKind && l.evidenceKind !== where.evidenceKind) return false;
+          if (where.evidenceRefType && l.evidenceRefType !== where.evidenceRefType) return false;
+          return true;
+        });
+        if (orderBy?.linkedAt === "asc") {
+          rows = [...rows].sort(
+            (a, b) =>
+              new Date((a as { linkedAt?: Date }).linkedAt ?? 0).getTime() -
+              new Date((b as { linkedAt?: Date }).linkedAt ?? 0).getTime(),
+          );
+        }
+        return rows.map((row) => {
+          if (!select) return row;
+          const out: Record<string, unknown> = {};
+          for (const key of Object.keys(select)) {
+            if (select[key]) {
+              out[key] = (row as Record<string, unknown>)[key];
+            }
+          }
+          if (select.linkedAt && !out.linkedAt) {
+            out.linkedAt = (row as { linkedAt?: Date }).linkedAt ?? new Date();
+          }
+          return out;
+        });
       },
       deleteMany: async ({
         where,

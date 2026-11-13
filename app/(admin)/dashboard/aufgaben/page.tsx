@@ -181,8 +181,8 @@ export default async function AufgabenPage({ searchParams }: Props) {
         bereich="meine"
         showMeine={showMeine}
         showVerwaltung={showVerwaltung}
-        primaryAction={meineCreateChooser}
       >
+        {meineCreateChooser}
         <PersonalActionsInbox
           items={items}
           locale={locale}
@@ -322,8 +322,8 @@ export default async function AufgabenPage({ searchParams }: Props) {
           </Link>
         ) : null
       }
-      primaryAction={verwaltungCreateChooser}
     >
+      {verwaltungCreateChooser}
       <AufgabenVerwaltungWorkspace
         typeFilter={verwaltungTypeFilter}
         showTasks={showTaskVerwaltung}

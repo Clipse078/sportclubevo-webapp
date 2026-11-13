@@ -28,8 +28,7 @@ describe("AUFGABEN-06G7 UX contracts", () => {
     expect(label).toBe("Michael Duijster");
 
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(picker).toContain("SceChipMultiSelectorField");
-    expect(picker).toContain("PERSON");
+    expect(picker).toContain("SceInlineTaskAssigneeMultiPicker");
   });
 
   it("U03 — ROLE_AUDIENCE role labels remain role names in audience builder", () => {
@@ -46,15 +45,17 @@ describe("AUFGABEN-06G7 UX contracts", () => {
     expect(list).not.toContain("PERMISSIONS.");
   });
 
-  it("U05/U06 — Aufgaben create/edit dialogs use wide form sizing contract", () => {
+  it("U05/U06 — Aufgaben quick create uses inline collapsible shell (requirements keep modal)", () => {
     expect(SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL).toContain("sce-dialog-variant-form");
     const shell = read("components/admin/aufgaben/AufgabenFormDialogShell.tsx");
     const create = read("components/admin/aufgaben/AufgabenQuickCreateDialog.tsx");
     const meine = read("components/admin/aufgaben/MeineAufgabenQuickCreateDialog.tsx");
     expect(shell).toContain('size="xl"');
     expect(shell).toContain('data-dialog-size="aufgaben-form"');
-    expect(create).toContain("AufgabenFormDialogShell");
-    expect(meine).toContain("AufgabenFormDialogShell");
+    expect(create).toContain("AufgabenQuickCreateCollapsibleShell");
+    expect(meine).toContain("AufgabenQuickCreateCollapsibleShell");
+    expect(create).not.toContain("AufgabenFormDialogShell");
+    expect(meine).not.toContain("AufgabenFormDialogShell");
   });
 
   it("U07/U08/U09 — checklist rows inline; bullets/numbered lists unchanged", () => {

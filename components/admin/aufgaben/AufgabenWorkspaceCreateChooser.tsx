@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
 import { SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS } from "@/lib/design-system/sce-form-control-micro-ux";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
@@ -82,141 +81,125 @@ export default function AufgabenWorkspaceCreateChooser({
   canManageTasks = false,
   meineQuickCreate,
 }: Props) {
-  const [chooserOpen, setChooserOpen] = useState(false);
-  const [pendingChoice, setPendingChoice] = useState<CreateChoice | null>(null);
-  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [chooserExpanded, setChooserExpanded] = useState(false);
+  const [activeChoice, setActiveChoice] = useState<CreateChoice | null>(null);
+  const [taskExpanded, setTaskExpanded] = useState(false);
   const [requirementDialogOpen, setRequirementDialogOpen] = useState(false);
-  const restoreFocusRef = useRef<HTMLButtonElement>(null);
 
   const showChooser = canCreateTask && canCreateRequirement;
   const singleTaskOnly = canCreateTask && !canCreateRequirement;
   const singleRequirementOnly = !canCreateTask && canCreateRequirement;
 
-  const openTaskAfterChooser = useCallback(() => {
-    setPendingChoice("aufgabe");
-    setChooserOpen(false);
-  }, []);
-
-  const openRequirementAfterChooser = useCallback(() => {
-    setPendingChoice("anforderung");
-    setChooserOpen(false);
-  }, []);
-
-  useEffect(() => {
-    if (!chooserOpen && pendingChoice) {
-      const id = window.requestAnimationFrame(() => {
-        if (pendingChoice === "aufgabe") setTaskDialogOpen(true);
-        if (pendingChoice === "anforderung") setRequirementDialogOpen(true);
-        setPendingChoice(null);
-      });
-      return () => window.cancelAnimationFrame(id);
-    }
-    return undefined;
-  }, [chooserOpen, pendingChoice]);
-
   if (!canCreateTask && !canCreateRequirement) return null;
 
-  function closeChooser() {
-    setChooserOpen(false);
-    restoreFocusRef.current?.focus();
+  function openChooser() {
+    if (showChooser) {
+      setChooserExpanded(true);
+      setActiveChoice(null);
+      setTaskExpanded(false);
+      return;
+    }
+    if (singleTaskOnly) {
+      setTaskExpanded(true);
+      return;
+    }
+    if (singleRequirementOnly) {
+      setRequirementDialogOpen(true);
+    }
   }
 
+  function selectAufgabe() {
+    setActiveChoice("aufgabe");
+    setTaskExpanded(true);
+    setChooserExpanded(false);
+  }
+
+  function selectAnforderung() {
+    setActiveChoice("anforderung");
+    setRequirementDialogOpen(true);
+    setChooserExpanded(false);
+  }
+
+  const meineTaskCreate =
+    variant === "meine" && meineQuickCreate ? (
+      <MeineAufgabenQuickCreateDialog
+        {...meineQuickCreate}
+        timeZone={timeZone}
+        hideTrigger
+        inlineFlow
+        expanded={taskExpanded}
+        onExpandedChange={setTaskExpanded}
+      />
+    ) : variant === "verwaltung" ? (
+      <AufgabenQuickCreateDialog
+        canCreate={canCreateTask}
+        canManage={canManageTasks}
+        assigneeOptions={assigneeOptions}
+        hideTrigger
+        inlineFlow
+        expanded={taskExpanded}
+        onExpandedChange={setTaskExpanded}
+      />
+    ) : null;
+
   return (
-    <>
-      {showChooser ? (
-        <>
-          <button
-            ref={restoreFocusRef}
-            type="button"
-            className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-            onClick={() => setChooserOpen(true)}
-            data-testid="aufgaben-workspace-create-open"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Erstellen
-          </button>
+    <div className="space-y-3" data-testid="aufgaben-workspace-create-flow">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+          onClick={openChooser}
+          data-testid="aufgaben-workspace-create-open"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Erstellen
+        </button>
+      </div>
 
-          <div data-testid="aufgaben-create-chooser-dialog">
-          <Dialog
-            open={chooserOpen}
-            onClose={closeChooser}
-            title="Was möchtest du erstellen?"
-            size="md"
-            bodyLayout="scroll"
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CreateChoiceButton
-                title="Aufgabe"
-                subtitle="Etwas erledigen"
-                description="Arbeit selbst erledigen oder einer bzw. mehreren Personen zuweisen."
-                example="z. B. Material bestellen"
-                cta="Aufgabe erstellen"
-                accentClass="border-l-[3px] border-l-[var(--sce-warning)]"
-                onSelect={openTaskAfterChooser}
-                testId="aufgaben-create-choice-aufgabe"
-              />
-              <CreateChoiceButton
-                title="Anforderung"
-                subtitle="Bestätigung einholen"
-                description="Von mehreren Personen eine individuelle Bestätigung einholen."
-                example="z. B. Trainerhandbuch bestätigen"
-                cta="Anforderung erstellen"
-                accentClass="border-l-[3px] border-l-[var(--sce-success)]"
-                onSelect={openRequirementAfterChooser}
-                testId="aufgaben-create-choice-anforderung"
-              />
-            </div>
-          </Dialog>
+      {showChooser && chooserExpanded ? (
+        <div
+          className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/50 p-4"
+          data-testid="aufgaben-create-chooser-inline"
+        >
+          <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Was möchtest du erstellen?</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CreateChoiceButton
+              title="Aufgabe"
+              subtitle="Etwas erledigen"
+              description="Arbeit selbst erledigen oder einer bzw. mehreren Personen zuweisen."
+              example="z. B. Material bestellen"
+              cta="Aufgabe erstellen"
+              accentClass="border-l-[3px] border-l-[var(--sce-warning)]"
+              onSelect={selectAufgabe}
+              testId="aufgaben-create-choice-aufgabe"
+            />
+            <CreateChoiceButton
+              title="Anforderung"
+              subtitle="Bestätigung einholen"
+              description="Von mehreren Personen eine individuelle Bestätigung einholen."
+              example="z. B. Trainerhandbuch bestätigen"
+              cta="Anforderung erstellen"
+              accentClass="border-l-[3px] border-l-[var(--sce-success)]"
+              onSelect={selectAnforderung}
+              testId="aufgaben-create-choice-anforderung"
+            />
           </div>
-        </>
-      ) : singleTaskOnly ? (
-        variant === "meine" && meineQuickCreate ? (
-          <MeineAufgabenQuickCreateDialog
-            {...meineQuickCreate}
-            timeZone={timeZone}
-            triggerLabel="Erstellen"
-            triggerTestId="aufgaben-workspace-create-open"
-          />
-        ) : (
-          <AufgabenQuickCreateDialog
-            canCreate
-            canManage={canManageTasks}
-            assigneeOptions={assigneeOptions}
-            triggerLabel="Erstellen"
-            triggerTestId="aufgaben-workspace-create-open"
-          />
-        )
-      ) : singleRequirementOnly ? (
-        <RequirementQuickCreateDialog
-          canCreate
-          timeZone={timeZone}
-          triggerLabel="Erstellen"
-          triggerTestId="aufgaben-workspace-create-open"
-        />
+          <button
+            type="button"
+            className="fca-button-secondary mt-3 text-sm"
+            onClick={() => setChooserExpanded(false)}
+            data-testid="aufgaben-create-chooser-cancel"
+          >
+            Abbrechen
+          </button>
+        </div>
       ) : null}
 
-      {showChooser && canCreateTask ? (
-        variant === "meine" && meineQuickCreate ? (
-          <MeineAufgabenQuickCreateDialog
-            {...meineQuickCreate}
-            timeZone={timeZone}
-            open={taskDialogOpen}
-            onOpenChange={setTaskDialogOpen}
-            hideTrigger
-          />
-        ) : (
-          <AufgabenQuickCreateDialog
-            canCreate
-            canManage={canManageTasks}
-            assigneeOptions={assigneeOptions}
-            open={taskDialogOpen}
-            onOpenChange={setTaskDialogOpen}
-            hideTrigger
-          />
-        )
-      ) : null}
+      {(singleTaskOnly || activeChoice === "aufgabe" || (showChooser && taskExpanded)) && canCreateTask
+        ? meineTaskCreate
+        : null}
 
-      {showChooser && canCreateRequirement ? (
+      {(singleRequirementOnly || activeChoice === "anforderung") && canCreateRequirement ? (
         <RequirementQuickCreateDialog
           canCreate
           timeZone={timeZone}
@@ -225,6 +208,6 @@ export default function AufgabenWorkspaceCreateChooser({
           hideTrigger
         />
       ) : null}
-    </>
+    </div>
   );
 }

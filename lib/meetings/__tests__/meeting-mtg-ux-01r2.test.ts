@@ -54,7 +54,7 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
       join(process.cwd(), "components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx"),
       "utf8",
     );
-    expect(panel).toContain("MeetingContextualTaskInlineCreateCard");
+    expect(panel).toContain("ContextualTaskInlineCreateCard");
     expect(panel).toContain("meeting-open-inline-task-create");
     expect(panel).not.toMatch(/import ContextualTaskCreateDialog/);
   });

@@ -46,6 +46,7 @@ import {
   formatTodayEventVenueMeta,
   type TodayEventVenuePresentation,
 } from "@/lib/dashboard/event-venue-presentation";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import {
   buildPersonalCockpitKpiStrip,
   loadPersonalAgendaItems,
@@ -668,7 +669,7 @@ export async function getCommandCenterData(args: {
     }),
     ...todayMeetings.map((meeting) => {
       const meetingVenue = buildTodayEventVenuePresentation({
-        location: meeting.location,
+        location: meeting.location ? formatMeetingLocationDisplay(meeting.location) : null,
       });
 
       return {
@@ -728,7 +729,7 @@ export async function getCommandCenterData(args: {
       dayLabel: String(meeting.meetingDate.getUTCDate()),
       monthLabel: monthLabels[meeting.meetingDate.getUTCMonth()] ?? "",
       title: meeting.title,
-      location: meeting.location ?? undefined,
+      location: meeting.location ? formatMeetingLocationDisplay(meeting.location) : undefined,
       timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
       eventType: "MEETING" as const,
     })),

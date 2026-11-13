@@ -3,12 +3,9 @@
 import { useMemo, useState } from "react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import {
-  SceChipMultiSelectorField,
-  type SceChipSelection,
-} from "@/components/sce/list-selector/SceChipMultiSelectorField";
-import type { SceListSelectorPanelHost } from "@/components/sce/list-selector/SceListSelectorPanel";
-import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
-import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
+  SceInlineTaskAssigneeMultiPicker,
+  type SceInlineTaskAssigneeChip,
+} from "@/components/sce/list-selector/SceInlineTaskAssigneeMultiPicker";
 
 type Props = {
   label: string;
@@ -24,7 +21,6 @@ type Props = {
   omitHiddenField?: boolean;
   allowAdd?: boolean;
   form?: string;
-  panelHost?: SceListSelectorPanelHost;
 };
 
 function formatName(firstName: string, lastName: string, displayName?: string): string {
@@ -37,7 +33,6 @@ export default function TaskPeopleMultiPicker({
   selectedIds,
   onSelectedIdsChange,
   disabled = false,
-  addButtonLabel = "Person hinzufügen",
   testIdPrefix = "task-people-picker",
   initialKnown = [],
   lockedUserIds = [],
@@ -45,8 +40,9 @@ export default function TaskPeopleMultiPicker({
   omitHiddenField = false,
   allowAdd = true,
   form,
-  panelHost = "sheet",
+  addButtonLabel: _addButtonLabel,
 }: Props) {
+  void _addButtonLabel;
   const [addedKnown, setAddedKnown] = useState<Record<string, TaskAssigneeOption>>({});
 
   const effectiveKnown = useMemo(() => {
@@ -57,88 +53,49 @@ export default function TaskPeopleMultiPicker({
     return { ...map, ...addedKnown };
   }, [initialKnown, addedKnown]);
 
-  const userIdToPersonId = useMemo(() => {
-    const map = new Map<string, string>();
+  const knownByUserId = useMemo(() => {
+    const map = new Map<string, SceInlineTaskAssigneeChip>();
     for (const option of Object.values(effectiveKnown)) {
-      if (option.personId) map.set(option.userId, option.personId);
+      map.set(option.userId, {
+        userId: option.userId,
+        personId: option.personId ?? option.userId,
+        label: formatName(option.firstName, option.lastName, option.displayName),
+        description: option.email,
+      });
     }
     return map;
   }, [effectiveKnown]);
 
-  const committedPickKeys = useMemo(() => {
-    const keys = new Set<string>();
-    for (const userId of selectedIds) {
-      const personId = userIdToPersonId.get(userId);
-      if (personId) keys.add(sceSelectorPickKey("PERSON", personId));
-    }
-    return keys;
-  }, [selectedIds, userIdToPersonId]);
-
-  const selectedChips: SceChipSelection[] = selectedIds.map((id) => {
-    const person = effectiveKnown[id];
-    if (!person) return { id, label: id };
-    return {
-      id,
-      label: formatName(person.firstName, person.lastName, person.displayName),
-      description: person.email,
-    };
-  });
-
   return (
-    <SceChipMultiSelectorField
+    <SceInlineTaskAssigneeMultiPicker
       label={label}
       hideLabel={hideLabel}
       fieldName={fieldName}
       form={form}
       omitHiddenField={omitHiddenField}
-      selected={selectedChips}
-      selectedIds={selectedIds}
-      onSelectedIdsChange={onSelectedIdsChange}
-      onSelectionKnown={(entries, picks) => {
+      selectedUserIds={selectedIds}
+      onSelectedUserIdsChange={onSelectedIdsChange}
+      onSelectionKnown={(entries) => {
         const next: Record<string, TaskAssigneeOption> = {};
-        entries.forEach((entry, index) => {
-          const pick = picks?.[index];
-          const userId =
-            typeof pick?.metadata?.linkedUserId === "string"
-              ? pick.metadata.linkedUserId
-              : entry.id;
-          const personId = pick?.id ?? userIdToPersonId.get(userId) ?? userId;
-          next[userId] = {
-            personId,
-            userId,
-            firstName: entry.label.split(" ")[0] ?? entry.label,
-            lastName: entry.label.split(" ").slice(1).join(" "),
+        for (const entry of entries) {
+          const parts = entry.label.split(/\s+/).filter(Boolean);
+          next[entry.userId] = {
+            personId: entry.personId,
+            userId: entry.userId,
+            firstName: parts[0] ?? entry.label,
+            lastName: parts.slice(1).join(" "),
             email: entry.description ?? "",
             displayName: entry.label,
           };
-        });
+        }
         setAddedKnown((prev) => ({ ...prev, ...next }));
       }}
-      authContext="TASK_ASSIGNMENT"
-      sourceTypes={["PERSON"]}
-      committedPickKeys={committedPickKeys}
-      mapPickToId={(pick: SceSelectorPick) => {
-        const linked = pick.metadata?.linkedUserId;
-        return typeof linked === "string" ? linked : null;
-      }}
-      mapPickToChip={(pick) => {
-        const userId =
-          typeof pick.metadata?.linkedUserId === "string" ? pick.metadata.linkedUserId : pick.id;
-        return {
-          id: userId,
-          label: pick.label,
-          description: pick.description,
-        };
-      }}
+      knownByUserId={knownByUserId}
       disabled={disabled}
-      addButtonLabel={addButtonLabel}
-      dialogTitle="Person zuweisen"
-      dialogDescription="Wähle eine oder mehrere Personen mit Benutzerkonto."
-      testIdPrefix={testIdPrefix}
-      lockedIds={lockedUserIds}
+      lockedUserIds={lockedUserIds}
       allowAdd={allowAdd}
-      searchPlaceholder="Personen suchen …"
-      panelHost={panelHost}
+      testIdPrefix={testIdPrefix}
+      placeholder="Personen suchen …"
     />
   );
 }

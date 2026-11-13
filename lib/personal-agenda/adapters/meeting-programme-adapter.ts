@@ -6,6 +6,7 @@ import {
   meetingParticipantContextLabel,
 } from "@/lib/dashboard/personal-context";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
+import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import { resolveSceMeetingPresentationFromProgramme } from "@/lib/sporting-activity-presentation/canonical/adapters/meeting-programme";
 import {
   canIncludeMeetingInPersonalProgramme,
@@ -96,7 +97,7 @@ function meetingRowToProgrammeItem(
     slug: meeting.slug,
     title: meeting.title,
     meetingDate: meeting.meetingDate,
-    location: meeting.location,
+    location: meeting.location ? formatMeetingLocationDisplay(meeting.location) : meeting.location,
     contextLabel,
     status,
     plannedDurationMin: meeting.plannedDurationMin,
@@ -111,7 +112,7 @@ function meetingRowToProgrammeItem(
       : null,
     title: meeting.title,
     contextLabel,
-    venue: meeting.location?.trim() || undefined,
+    venue: meeting.location?.trim() ? formatMeetingLocationDisplay(meeting.location) : undefined,
     status,
     deepLink: `/vereinsleitung/meetings/${meeting.slug}`,
     typeLabel: PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL.MEETING,

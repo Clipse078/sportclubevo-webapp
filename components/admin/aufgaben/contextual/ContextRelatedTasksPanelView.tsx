@@ -11,11 +11,17 @@ import {
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import type { TaskContextType } from "@prisma/client";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
-import ContextualTaskCreateTrigger from "./ContextualTaskCreateTrigger";
+import ContextualTaskInlineCreateCard, {
+  type ContextualTaskInlineCreateCardHandle,
+} from "./ContextualTaskInlineCreateCard";
 import MeetingContextualTaskInlineCreateCard, {
   type MeetingContextualTaskInlineCreateCardHandle,
 } from "./MeetingContextualTaskInlineCreateCard";
 import { useTranslations } from "next-intl";
+import {
+  CONTEXTUAL_TASK_INLINE_CREATE_EVENT,
+  type ContextualTaskInlineCreateEventDetail,
+} from "@/lib/tasks/contextual-task-inline-create-bus";
 
 type CreateProps = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange">;
 
@@ -66,7 +72,9 @@ export default function ContextRelatedTasksPanelView({
 }: Props) {
   const tWork = useTranslations("PlanningEditor.operational.work");
   const [inlineCreateExpanded, setInlineCreateExpanded] = useState(false);
-  const inlineCreateRef = useRef<MeetingContextualTaskInlineCreateCardHandle>(null);
+  const inlineCreateRef = useRef<
+    ContextualTaskInlineCreateCardHandle | MeetingContextualTaskInlineCreateCardHandle
+  >(null);
   const isMeetingContext = contextType === "MEETING";
 
   const openInlineCreate = useCallback(() => {
@@ -78,17 +86,27 @@ export default function ContextRelatedTasksPanelView({
   }, []);
 
   useEffect(() => {
-    if (!isMeetingContext || !canCreate) return;
-    function handleOpen() {
+    if (!canCreate) return;
+    function handleOpen(event: Event) {
+      if (event.type === CONTEXTUAL_TASK_INLINE_CREATE_EVENT) {
+        const detail = (event as CustomEvent<ContextualTaskInlineCreateEventDetail>).detail;
+        if (detail?.contextId !== contextId) {
+          return;
+        }
+      }
       openInlineCreate();
     }
-    window.addEventListener("meeting-open-inline-task-create", handleOpen);
-    window.addEventListener("meeting-open-task-create-dialog", handleOpen);
+    window.addEventListener(CONTEXTUAL_TASK_INLINE_CREATE_EVENT, handleOpen);
+    if (isMeetingContext) {
+      window.addEventListener("meeting-open-inline-task-create", handleOpen);
+      window.addEventListener("meeting-open-task-create-dialog", handleOpen);
+    }
     return () => {
+      window.removeEventListener(CONTEXTUAL_TASK_INLINE_CREATE_EVENT, handleOpen);
       window.removeEventListener("meeting-open-inline-task-create", handleOpen);
       window.removeEventListener("meeting-open-task-create-dialog", handleOpen);
     };
-  }, [canCreate, isMeetingContext, openInlineCreate]);
+  }, [canCreate, contextId, isMeetingContext, openInlineCreate]);
 
   if (pendenzenEmbed && isMeetingContext) {
     return (
@@ -120,7 +138,7 @@ export default function ContextRelatedTasksPanelView({
         <h3 className="text-sm font-semibold text-[var(--foreground)]">
           {isMeetingContext ? "Aufgaben" : `Aufgaben · ${actionableCount}`}
         </h3>
-        {canCreate && createDialogProps && isMeetingContext ? (
+        {canCreate && createDialogProps ? (
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-semibold text-[#0b4aa2] hover:bg-[var(--surface-2)]"
@@ -132,29 +150,32 @@ export default function ContextRelatedTasksPanelView({
               }
             }}
             aria-expanded={inlineCreateExpanded}
-            aria-controls="meeting-contextual-task-create-panel"
+            aria-controls="context-related-task-inline-create-panel"
             data-testid="context-related-tasks-inline-toggle"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {tWork("createTask")}
           </button>
-        ) : canCreate && createDialogProps ? (
-          <ContextualTaskCreateTrigger
-            variant="button"
-            label={tWork("createTask")}
-            className="!min-h-8 !px-2.5 !py-1 text-xs"
-            {...createDialogProps}
-          />
         ) : null}
       </div>
 
-      {canCreate && createDialogProps && isMeetingContext ? (
-        <MeetingContextualTaskInlineCreateCard
-          ref={inlineCreateRef}
-          expanded={inlineCreateExpanded}
-          onExpandedChange={setInlineCreateExpanded}
-          {...createDialogProps}
-        />
+      {canCreate && createDialogProps ? (
+        isMeetingContext ? (
+          <MeetingContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            {...createDialogProps}
+          />
+        ) : (
+          <ContextualTaskInlineCreateCard
+            ref={inlineCreateRef}
+            expanded={inlineCreateExpanded}
+            onExpandedChange={setInlineCreateExpanded}
+            panelDomId="context-related-task-inline-create-panel"
+            {...createDialogProps}
+          />
+        )
       ) : null}
 
       {tasks.length === 0 ? (

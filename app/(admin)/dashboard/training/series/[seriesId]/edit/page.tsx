@@ -199,6 +199,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
           variant="menuItem"
           locale="de-CH"
           timeZone={series.timezone}
+          activation="inlinePanel"
         />
       }
       relatedTasksPanel={

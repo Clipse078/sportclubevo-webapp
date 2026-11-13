@@ -205,6 +205,8 @@ const uatDetail: FinanceCommitmentDetailRecord = {
   approvalDecidedByDisplayName: null,
   approvalDecisionHistory: [],
   approvalExplanation: null,
+  supplierBillEvidenceLinks: [],
+  canLinkSupplierBillEvidence: true,
 };
 
 function renderPanelDe(
