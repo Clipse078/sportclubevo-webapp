@@ -119,13 +119,8 @@ export type MeetingProtocolDocumentModel = {
   agendaItems: MeetingProtocolDocumentAgendaItem[];
   unlinkedDecisions: MeetingProtocolDocumentDecision[];
   unlinkedActions: MeetingProtocolDocumentAction[];
-  actionOverviewTable: Array<{
-    title: string;
-    ownerLabel: string;
-    dueDateLabel: string;
-    statusLabel: string;
-  }>;
   meetingTasks: MeetingProtocolTaskRow[];
+  pendenzenOverviewFootnote: string;
   meetingDescription: string | null;
   protocolApprovalVoteRows: Array<{
     approverLabel: string;
@@ -141,8 +136,11 @@ export type MeetingProtocolDocumentModel = {
   referencedPendenzen: MeetingProtocolPendenzRow[];
 };
 
+export const MEETING_PROTOCOL_PENDENZEN_OVERVIEW_FOOTNOTE =
+  "Aktueller Stand zum Exportzeitpunkt. Enthält die dieser Sitzung zugeordneten offenen Massnahmen und Aufgaben.";
+
 export type MeetingProtocolPendenzRow = {
-  sourceKind: "MASSNAHME" | "AUFGABE";
+  sourceTypeLabel: "Massnahme" | "Aufgabe";
   title: string;
   ownerLabel: string;
   dueDateLabel: string;
@@ -371,7 +369,7 @@ function buildReferencedPendenzenForProtocol(
         action.description?.trim()?.slice(0, 160) ||
         null;
       return {
-        sourceKind: "MASSNAHME" as const,
+        sourceTypeLabel: "Massnahme" as const,
         title: action.title,
         ownerLabel: owner ?? PROTOCOL_NOT_RECORDED,
         dueDateLabel: formatOptionalDate(action.dueDate, cfg) ?? PROTOCOL_NOT_RECORDED,
@@ -384,7 +382,7 @@ function buildReferencedPendenzenForProtocol(
   for (const task of tasks) {
     if (terminalTask.has(task.status)) continue;
     rows.push({
-      sourceKind: "AUFGABE",
+      sourceTypeLabel: "Aufgabe",
       title: task.title,
       ownerLabel:
         task.assigneeLabels.length > 0 ? task.assigneeLabels.join(", ") : PROTOCOL_NOT_RECORDED,
@@ -483,13 +481,6 @@ export function buildMeetingProtocolDocument(
     };
   });
 
-  const actionOverviewTable = mappedActions.map((action) => ({
-    title: action.title,
-    ownerLabel: action.ownerLabel ?? PROTOCOL_NOT_RECORDED,
-    dueDateLabel: action.dueDateLabel ?? PROTOCOL_NOT_RECORDED,
-    statusLabel: action.statusLabel,
-  }));
-
   const allMeetingTasks = [...input.meetingTasks];
   for (const rows of Object.values(input.decisionTasksByDecisionId)) {
     for (const task of rows) {
@@ -519,8 +510,8 @@ export function buildMeetingProtocolDocument(
     agendaItems,
     unlinkedDecisions,
     unlinkedActions,
-    actionOverviewTable,
     meetingTasks: allMeetingTasks,
+    pendenzenOverviewFootnote: MEETING_PROTOCOL_PENDENZEN_OVERVIEW_FOOTNOTE,
     meetingDescription: meeting.description?.trim() || null,
     protocolApprovalVoteRows: input.protocolVotes.map((vote) => ({
       approverLabel: vote.approverLabel,

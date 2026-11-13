@@ -24,7 +24,9 @@ describe("buildMeetingProtocolDocument (SCE-CD-03R4)", () => {
     expect(model.agendaItems[1]?.protocolNotes).toContain("Diskussion");
     expect(model.agendaItems[1]?.decisions[0]?.rationale).toBe("Finanzen sind tragfähig.");
     expect(model.unlinkedActions).toHaveLength(1);
-    expect(model.actionOverviewTable).toHaveLength(2);
+    expect(model.referencedPendenzen).toHaveLength(2);
+    expect(model.referencedPendenzen.every((r) => r.sourceTypeLabel === "Massnahme")).toBe(true);
+    expect(model.pendenzenOverviewFootnote).toContain("Exportzeitpunkt");
   });
 
   it("shows planned-meeting draft banner without implying approval", () => {
