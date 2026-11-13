@@ -13,6 +13,11 @@ import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/Sce
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import PlannerOperationalIssueSummary from "./PlannerOperationalIssueSummary";
 import WeekplannerListeOverrideIndicator from "./WeekplannerListeOverrideIndicator";
+import {
+  SCE_ACTIVITY_CARD_FULL_WIDTH_LAYOUT_MARKER,
+  SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
+import { PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY } from "@/lib/planning-hub/planning-hub-liste-match-geometry";
 
 type PlanningHubListeActivityRowProps = {
   item: WeekplannerItem;
@@ -39,11 +44,7 @@ type PlanningHubListeActivityRowProps = {
   };
 };
 
-const LISTE_CARD_DETAIL_GEOMETRY = {
-  blockWidthPx: 1120,
-  blockHeightPx: 120,
-  compact: false,
-} as const;
+const LISTE_CARD_DETAIL_GEOMETRY = PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY;
 
 export default function PlanningHubListeActivityRow({
   item,
@@ -77,10 +78,15 @@ export default function PlanningHubListeActivityRow({
         data-sce-planning-hub-liste-row
         data-sce-planning-hub-liste-activity-kind={item.type}
         data-sce-planning-hub-liste-full-width-contract="canonical-shell"
+        {...(usesMatchcenterListComposition
+          ? {
+              [SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR]: SCE_ACTIVITY_CARD_FULL_WIDTH_LAYOUT_MARKER,
+            }
+          : {})}
       >
         <div
           className={cn(
-            "flex min-w-0 items-stretch gap-1",
+            "flex min-w-0 w-full items-stretch gap-1",
             usesMatchcenterListComposition && "relative",
           )}
         >
@@ -100,36 +106,48 @@ export default function PlanningHubListeActivityRow({
             </div>
           ) : null}
 
-          <PlanningHubActivityDetailSurface
-            item={item}
-            locale={locale}
-            timezone={timezone}
-            geometry={LISTE_CARD_DETAIL_GEOMETRY}
+          <div
+            className={cn(
+              "min-w-0",
+              usesMatchcenterListComposition ? "w-full flex-1 self-stretch" : "flex-1 self-stretch",
+            )}
+            data-sce-planning-hub-liste-measured-row
           >
-            {(referenceProps) => (
-              <button
-                type="button"
-                onClick={() => onItemOpen(item)}
-                data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
-                aria-label={weekplannerAccessibleName(item, locale, timezone)}
-                className={cn(
-                  "min-w-0 flex-1 self-stretch rounded-[inherit] text-left",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-inset",
-                )}
-                {...referenceProps}
-              >
-                {usesMatchcenterListComposition ? (
-                  <div className="min-w-0 w-full max-md:pr-8">
-                    <PlanningHubListeSceActivityCard
-                      item={item}
-                      fmtCfg={fmtCfg}
-                      density="STANDARD"
-                      tenantClubName={tenantClubName}
-                      tenantLogoUrl={tenantLogoUrl}
-                      issueSummary={<PlannerOperationalIssueSummary item={item} />}
-                    />
-                  </div>
-                ) : (
+            <PlanningHubActivityDetailSurface
+              item={item}
+              locale={locale}
+              timezone={timezone}
+              geometry={LISTE_CARD_DETAIL_GEOMETRY}
+            >
+              {(referenceProps) => (
+                <button
+                  type="button"
+                  onClick={() => onItemOpen(item)}
+                  data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
+                  aria-label={weekplannerAccessibleName(item, locale, timezone)}
+                  className={cn(
+                    "block w-full min-w-0 self-stretch rounded-[inherit] text-left",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-inset",
+                  )}
+                  {...referenceProps}
+                >
+                  {usesMatchcenterListComposition ? (
+                    <div
+                      className="flex min-w-0 w-full flex-col gap-2.5"
+                      data-testid={`planning-hub-liste-match-card-${item.id}`}
+                    >
+                      <div className="min-w-0 w-full max-md:pr-8">
+                        <PlanningHubListeSceActivityCard
+                          item={item}
+                          fmtCfg={fmtCfg}
+                          density="STANDARD"
+                          tenantClubName={tenantClubName}
+                          tenantLogoUrl={tenantLogoUrl}
+                        />
+                      </div>
+                      <PlannerOperationalIssueSummary item={item} />
+                    </div>
+                  ) : (
                   <div
                     className={SCE_ACTIVITY_REFERENCE_LAYOUT.planningHubListeRowShellClass}
                     data-sce-planning-hub-liste-leading-date
@@ -160,8 +178,9 @@ export default function PlanningHubListeActivityRow({
                   />
                 ) : null}
               </button>
-            )}
-          </PlanningHubActivityDetailSurface>
+              )}
+            </PlanningHubActivityDetailSurface>
+          </div>
 
           {!usesMatchcenterListComposition ? (
             <div

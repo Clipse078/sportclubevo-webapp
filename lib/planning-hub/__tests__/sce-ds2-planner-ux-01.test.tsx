@@ -19,7 +19,14 @@ import type {
   WeekplannerTrainingItem,
   WeekplannerWeek,
 } from "@/lib/weekplanner/types";
-
+import {
+  PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY,
+  planningHubListeMatchFixtureContractAtWidth,
+} from "@/lib/planning-hub/planning-hub-liste-match-geometry";
+import {
+  SCE_ACTIVITY_CARD_FULL_WIDTH_LAYOUT_MARKER,
+  SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
 const ROOT = process.cwd();
 
 function read(rel: string): string {
@@ -109,6 +116,25 @@ function matchWithLongNames(id: string): WeekplannerMatchItem {
     },
     homeAway: "HOME",
     teamSeasonId: "ts1",
+  };
+}
+
+function matchItalianaFixture(id: string): WeekplannerMatchItem {
+  return {
+    ...matchWithLongNames(id),
+    title: "1. Mannschaft",
+    teamNames: ["1. Mannschaft"],
+    opponentName: "AS Italiana",
+    homeSide: {
+      displayName: "FC Allschwil",
+      logoUrl: null,
+      isOwnTeam: true,
+    },
+    awaySide: {
+      displayName: "AS Italiana",
+      logoUrl: null,
+      isOwnTeam: false,
+    },
   };
 }
 
@@ -380,6 +406,125 @@ describe("SCE-DS2-PLANNER-UX-01 — Matchcenter composition parity", () => {
     expect(within(row).getByTestId("sce-match-reference-date")).toBeInTheDocument();
     expect(within(row).queryByTestId("planning-hub-liste-date-tile-match:1")).not.toBeInTheDocument();
     expect(within(row).getAllByTestId("sce-match-reference-date")).toHaveLength(1);
+  });
+
+  it("marks match programme shell with horizontal full-width contract", () => {
+    render(
+      <PlanningHubListeView
+        week={week([matchItalianaFixture("match:italiana")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const row = screen.getByTestId("planning-hub-liste-row-match:italiana");
+    expect(row).toHaveAttribute(
+      SCE_ACTIVITY_CARD_LIST_LAYOUT_ATTR,
+      SCE_ACTIVITY_CARD_FULL_WIDTH_LAYOUT_MARKER,
+    );
+    expect(planningHubListeMatchFixtureContractAtWidth(1280)).toBe("reference-split");
+    expect(PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY.blockWidthPx).toBe(1120);
+  });
+
+  it("renders reported 1. Mannschaft vs AS Italiana without narrow planner-liste band", () => {
+    const { container } = render(
+      <PlanningHubListeView
+        week={week([matchItalianaFixture("match:italiana")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const fixture = container.querySelector('[data-testid="sce-match-fixture"]');
+    expect(fixture).toHaveAttribute("data-sce-match-programme-fixture", "reference-split");
+    expect(fixture?.getAttribute("data-sce-match-programme-fixture")).not.toBe("planner-liste");
+    expect(container.querySelector('[data-sce-planner-liste-match-row]')).toBeNull();
+    expect(fixture?.querySelector('[data-sce-match-region="home-name"]')?.textContent).toContain(
+      "FC Allschwil",
+    );
+    expect(fixture?.querySelector('[data-sce-match-region="away-name"]')?.textContent).toContain(
+      "AS Italiana",
+    );
+    expect(container.innerHTML).not.toContain("break-all");
+  });
+
+  it("wires desktop list width through measured row + block w-full interaction surface", () => {
+    render(
+      <PlanningHubListeView
+        week={week([matchItalianaFixture("match:width")])}
+        urlState={{
+          week: "2026-W40",
+          perspective: "liste",
+          activity: "alle",
+          team: null,
+          facility: null,
+          search: "",
+          conflictsOnly: false,
+          resourceCategory: "pitch",
+          resourceFilterIds: null,
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => true}
+        permissionContext={permissionContext}
+      />,
+    );
+
+    const row = screen.getByTestId("planning-hub-liste-row-match:width");
+    const measured = row.querySelector("[data-sce-planning-hub-liste-measured-row]");
+    expect(measured?.className).toMatch(/\bw-full\b/);
+    expect(measured?.className).toMatch(/\bflex-1\b/);
+
+    const openControl = within(row).getByTestId("weekplanner-item-match");
+    expect(openControl.className).toMatch(/\bblock\b/);
+    expect(openControl.className).toMatch(/\bw-full\b/);
+
+    const matchCardHost = within(row).getByTestId("planning-hub-liste-match-card-match:width");
+    expect(matchCardHost.querySelector(".max-md\\:pr-8")).toBeTruthy();
+
+    const rowSource = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+    const matchRowSource = read("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
+    expect(rowSource).toContain("PLANNING_HUB_LISTE_MATCH_ROW_GEOMETRY");
+    expect(rowSource).toContain("min-w-0 w-full max-md:pr-8");
+    expect(matchRowSource).toContain("min-w-0 w-full max-md:pr-8");
   });
 
   it("exposes planner row menu in Matchcenter-aligned absolute anchor", () => {
