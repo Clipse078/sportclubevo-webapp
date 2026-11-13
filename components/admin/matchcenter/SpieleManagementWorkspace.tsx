@@ -28,7 +28,8 @@ import SpieleManagementUpcomingList from "./SpieleManagementUpcomingList";
 import SpieleManagementResultRow from "./SpieleManagementResultRow";
 import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
 import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
-import SpieleManagementSpielplanScheduleNav from "./SpieleManagementSpielplanScheduleNav";
+import SpieleManagementSpielplanPanel from "./SpieleManagementSpielplanPanel";
+import type { SpielplanMonthChip, SpielplanungPaginationState } from "@/lib/matchcenter/spielplan-schedule-scope";
 import SpieleManagementFilterRail from "./SpieleManagementFilterRail";
 import { cn } from "@/lib/cn";
 import { sceActivityCardListContainerProps } from "@/lib/sporting-activity-presentation/canonical/activity-card-full-width-list-contract";
@@ -58,8 +59,14 @@ type Props = {
   resultateMonthParam: string;
   /** Spielplanung list filter month (null = Alle). */
   spielplanungListMonthFilter?: string | null;
-  spielplanungListTruncated?: boolean;
-  spielplanungQueryLimit?: number;
+  spielplanMatches?: MatchcenterMatchSummary[];
+  resultateMonthMatches?: MatchcenterMatchSummary[];
+  spielplanungPagination?: SpielplanungPaginationState;
+  spielplanMonthChipsFromScope?: SpielplanMonthChip[];
+  scheduleScopeLabel?: string;
+  scheduleScopeSource?: string;
+  scopeFrom?: string | null;
+  scopeTo?: string | null;
   basePath?: string;
   timezone?: string;
   locale?: string;
@@ -140,8 +147,19 @@ export default function SpieleManagementWorkspace({
   calendarMonthWindow,
   resultateMonthParam,
   spielplanungListMonthFilter = null,
-  spielplanungListTruncated = false,
-  spielplanungQueryLimit = 500,
+  spielplanMatches = [],
+  resultateMonthMatches = [],
+  spielplanungPagination = {
+    total: 0,
+    hasMore: false,
+    loadedCount: 0,
+    limit: 100,
+  },
+  spielplanMonthChipsFromScope = [],
+  scheduleScopeLabel = "",
+  scheduleScopeSource = "season",
+  scopeFrom = null,
+  scopeTo = null,
   basePath = "/dashboard/matchcenter",
   timezone = "Europe/Zurich",
   locale = "de-CH",
@@ -509,49 +527,43 @@ export default function SpieleManagementWorkspace({
                 ) : null}
               </div>
             ) : (
-              <div className="space-y-4">
-                <SpieleManagementSpielplanScheduleNav
-                  basePath={basePath}
-                  tab={tab}
-                  teamOptions={teamOptions}
-                  teamFilter={teamFilter}
-                  spielplanungListMonthFilter={spielplanungListMonthFilter}
-                  calendarMonthParam={calendarMonthWindow.param}
-                  monthChips={spielplanMonthChips}
-                  actionFilter={actionFilter}
-                  wochenplanFilter={wochenplanFilter}
-                  searchQuery={searchQuery}
-                  sortParam={sortParam}
-                  homeAwayFilter={homeAwayFilter}
-                  listView={listView}
-                  competitionFilter={competitionFilter}
-                  venueFilter={venueFilter}
-                  statusMask={statusMask}
-                />
-                {spielplanungListTruncated ? (
-                  <p
-                    className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-900"
-                    data-testid="matchcenter-spielplan-pagination-notice"
-                  >
-                    Es werden maximal {spielplanungQueryLimit} anstehende Spiele geladen ({spielplanungRows.length}{" "}
-                    sichtbar nach Filter). Weitere
-                    Termine können in späteren Monaten vorhanden sein — nutze die Monatsfilter oder
-                    verengende Suche nicht als Ersatz für den vollständigen Abruf.
-                  </p>
-                ) : null}
-                <SpieleManagementUpcomingList
-                  monthGroups={spielplanungMonthGroups}
-                  locale={locale}
-                  timezone={timezone}
-                  tenantLogoUrl={tenantLogoUrl}
-                  tenantClubName={tenantClubName}
-                  canManage={canManage}
-                  canManageOperationalAllocations={canManageOperationalAllocations}
-                  pitchHallFacilityGroups={pitchHallFacilityGroups}
-                  dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-                  compact={listView === "KOMPAKT"}
-                />
-              </div>
+              <SpieleManagementSpielplanPanel
+                basePath={basePath}
+                spielplanMatches={spielplanMatches}
+                resultateMonthMatches={resultateMonthMatches}
+                pagination={spielplanungPagination}
+                scheduleScopeLabel={scheduleScopeLabel}
+                scheduleScopeSource={scheduleScopeSource}
+                scopeFrom={scopeFrom}
+                scopeTo={scopeTo}
+                tab={tab}
+                actionFilter={actionFilter}
+                wochenplanFilter={wochenplanFilter}
+                teamFilter={teamFilter}
+                teamOptions={teamOptions}
+                spielplanungListMonthFilter={spielplanungListMonthFilter}
+                calendarMonthParam={calendarMonthWindow.param}
+                spielplanMonthChipsFromScope={
+                  spielplanMonthChipsFromScope.length > 0
+                    ? spielplanMonthChipsFromScope
+                    : spielplanMonthChips
+                }
+                locale={locale}
+                timezone={timezone}
+                tenantLogoUrl={tenantLogoUrl}
+                tenantClubName={tenantClubName}
+                canManage={canManage}
+                canManageOperationalAllocations={canManageOperationalAllocations}
+                pitchHallFacilityGroups={pitchHallFacilityGroups}
+                dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                searchQuery={searchQuery}
+                sortParam={sortParam}
+                homeAwayFilter={homeAwayFilter}
+                listView={listView}
+                competitionFilter={competitionFilter}
+                venueFilter={venueFilter}
+                statusMask={statusMask}
+              />
             )
           ) : filteredEmpty ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-10 text-center">

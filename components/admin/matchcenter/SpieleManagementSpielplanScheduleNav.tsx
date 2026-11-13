@@ -31,6 +31,9 @@ type Props = {
   competitionFilter?: string | null;
   venueFilter?: string | null;
   statusMask?: readonly SpieleStatusMaskKey[] | null;
+  scheduleScopeSource?: string;
+  scopeFrom?: string | null;
+  scopeTo?: string | null;
 };
 
 export default function SpieleManagementSpielplanScheduleNav({
@@ -50,6 +53,9 @@ export default function SpieleManagementSpielplanScheduleNav({
   competitionFilter = null,
   venueFilter = null,
   statusMask = null,
+  scheduleScopeSource = "season",
+  scopeFrom = null,
+  scopeTo = null,
 }: Props) {
   function hrefForMonth(month: string | null) {
     return buildMatchcenterHref(basePath, {
@@ -66,8 +72,12 @@ export default function SpieleManagementSpielplanScheduleNav({
       competitionFilter,
       venueFilter,
       statusMask,
+      scopeFrom,
+      scopeTo,
     });
   }
+
+  const scopeAction = `${basePath}?tab=spielplanung`;
 
   return (
     <div
@@ -99,6 +109,41 @@ export default function SpieleManagementSpielplanScheduleNav({
           />
         </div>
       </div>
+
+      {scheduleScopeSource !== "season" ? (
+        <form
+          action={scopeAction}
+          method="get"
+          className="flex flex-wrap items-end gap-2"
+          data-testid="matchcenter-spielplan-scope-range"
+        >
+          <input type="hidden" name="tab" value="spielplanung" />
+          {calendarMonthParam ? (
+            <input type="hidden" name="cal" value={calendarMonthParam} />
+          ) : null}
+          <label className="flex flex-col gap-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Von
+            <input
+              type="date"
+              name="scopeFrom"
+              defaultValue={scopeFrom ?? ""}
+              className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal normal-case text-[var(--foreground)]"
+            />
+          </label>
+          <label className="flex flex-col gap-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+            Bis
+            <input
+              type="date"
+              name="scopeTo"
+              defaultValue={scopeTo ?? ""}
+              className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs font-normal normal-case text-[var(--foreground)]"
+            />
+          </label>
+          <button type="submit" className="fca-button-secondary h-8 px-3 text-xs">
+            Zeitraum anwenden
+          </button>
+        </form>
+      ) : null}
 
       <div className="space-y-1.5">
         <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Monat</p>

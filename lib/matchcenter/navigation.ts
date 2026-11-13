@@ -40,6 +40,9 @@ export type MatchcenterHrefParams = {
   venueFilter?: string | null;
   /** Comma-separated readiness buckets; omitted when default (all except abgesagt). */
   statusMask?: readonly SpieleStatusMaskKey[] | null;
+  /** Spielplanung schedule scope override (YYYY-MM-DD) when no active season. */
+  scopeFrom?: string | null;
+  scopeTo?: string | null;
 };
 
 const DEFAULT_STATUS_MASK: SpieleStatusMaskKey[] = [
@@ -186,6 +189,17 @@ export function buildMatchcenterHref(
   const sort = params.sort?.trim();
   if (sort && sort.toUpperCase() !== "KICKOFF_ASC") {
     search.set("sort", sort.toLowerCase());
+  }
+
+  if (params.tab === "SPIELPLANUNG") {
+    const scopeFrom = params.scopeFrom?.trim();
+    const scopeTo = params.scopeTo?.trim();
+    if (scopeFrom) {
+      search.set("scopeFrom", scopeFrom);
+    }
+    if (scopeTo) {
+      search.set("scopeTo", scopeTo);
+    }
   }
 
   return `${basePath}?${search.toString()}`;

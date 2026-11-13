@@ -1,15 +1,17 @@
 /**
  * SCE-MATCHCENTER-UX — Spielplanung list scope, month chips, and calendar split.
  *
- * Spielplanung loads all upcoming fixtures in a bounded forward window (server query).
+ * Spielplanung loads upcoming fixtures within the active season schedule scope
+ * (or an explicit date range when no canonical season exists).
  * The `month` URL param is an explicit list filter only — not the query range.
  * Mini-calendar navigation uses `cal` (calendar month) independently.
  */
 
 import {
   MATCHCENTER_DEFAULT_FUTURE_DAYS,
-  MATCHCENTER_MAX_LIMIT,
+  MATCHCENTER_SPIELPLAN_PAGE_SIZE,
 } from "./query-limits";
+import type { MatchcenterScheduleAnchor } from "./query-service";
 import type { MatchcenterRowViewModel } from "./view-model";
 import type { MatchcenterMatchSummary } from "./types";
 import {
@@ -18,15 +20,40 @@ import {
   getZonedYearMonth,
   parseMonthParam,
   resolveMatchcenterMonthWindow,
+  startOfZonedIsoDate,
   type MatchcenterYearMonth,
 } from "./month-range";
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
+export type MatchcenterSeasonScope = {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+};
+
+export type SpielplanScheduleScopeSource =
+  | "season"
+  | "explicit-range"
+  | "default-range";
+
+export type MatchcenterSpielplanScheduleScope = {
+  from: Date;
+  to: Date;
+  seasonId: string | null;
+  seasonName: string | null;
+  source: SpielplanScheduleScopeSource;
+  label: string;
+  pageSize: number;
+};
+
 export type MatchcenterSpielplanungQueryWindow = {
   from: Date;
   to: Date;
   limit: number;
+  skip: number;
+  enforceMaxWindow: boolean;
 };
 
 export type SpielplanMonthChip = {
@@ -44,32 +71,95 @@ export function normalizeSpielplanungListMonthFilter(
   return parseMonthParam(trimmed) ? trimmed : null;
 }
 
+function parseScopeDateParam(
+  value: string | null | undefined,
+  timeZone: string,
+): Date | null {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) {
+    return null;
+  }
+  return startOfZonedIsoDate(trimmed, timeZone);
+}
+
 /**
- * Forward-looking query window for Spielplanung — not derived from the list month filter.
+ * Resolves the Spielplanung schedule scope from the active season or explicit URL range.
  */
-export function resolveMatchcenterSpielplanungQueryWindow(input: {
+export function resolveMatchcenterSpielplanScheduleScope(input: {
   now?: Date;
   timeZone?: string;
-  futureDays?: number;
-  limit?: number;
-}): MatchcenterSpielplanungQueryWindow {
+  season?: MatchcenterSeasonScope | null;
+  scopeFromParam?: string | null;
+  scopeToParam?: string | null;
+  pageSize?: number;
+}): MatchcenterSpielplanScheduleScope {
   const timeZone = input.timeZone ?? "Europe/Zurich";
   const now = input.now ?? new Date();
-  const futureDays = input.futureDays ?? MATCHCENTER_DEFAULT_FUTURE_DAYS;
+  const pageSize = input.pageSize ?? MATCHCENTER_SPIELPLAN_PAGE_SIZE;
 
-  const todayYearMonth = getZonedYearMonth(now, timeZone);
-  const from = resolveMatchcenterMonthWindow({
-    monthParam: formatMonthParam(todayYearMonth),
-    now,
-    timeZone,
-  }).from;
+  const explicitFrom = parseScopeDateParam(input.scopeFromParam, timeZone);
+  const explicitTo = parseScopeDateParam(input.scopeToParam, timeZone);
 
-  const to = new Date(now.getTime() + futureDays * DAY_IN_MILLISECONDS);
+  if (input.season) {
+    const todayStart = resolveMatchcenterMonthWindow({
+      timeZone,
+      now,
+    }).from;
+
+    return {
+      from: new Date(
+        Math.max(todayStart.getTime(), input.season.startDate.getTime()),
+      ),
+      to: input.season.endDate,
+      seasonId: input.season.id,
+      seasonName: input.season.name,
+      source: explicitFrom || explicitTo ? "explicit-range" : "season",
+      label: `Saison ${input.season.name}`,
+      pageSize,
+    };
+  }
+
+  const defaultFrom = resolveMatchcenterMonthWindow({ timeZone, now }).from;
+  const defaultTo = new Date(now.getTime() + MATCHCENTER_DEFAULT_FUTURE_DAYS * DAY_IN_MILLISECONDS);
+
+  const from = explicitFrom ?? defaultFrom;
+  const to =
+    explicitTo && explicitTo > from
+      ? explicitTo
+      : defaultTo;
+
+  const source: SpielplanScheduleScopeSource = explicitFrom || explicitTo
+    ? "explicit-range"
+    : "default-range";
 
   return {
     from,
     to,
-    limit: input.limit ?? MATCHCENTER_MAX_LIMIT,
+    seasonId: null,
+    seasonName: null,
+    source,
+    label:
+      source === "explicit-range"
+        ? "Benutzerdefinierter Zeitraum"
+        : `Standard (${MATCHCENTER_DEFAULT_FUTURE_DAYS} Tage ab heute)`,
+    pageSize,
+  };
+}
+
+/**
+ * Spielplanung list query window derived from schedule scope (not the list month filter).
+ */
+export function resolveMatchcenterSpielplanungQueryWindow(input: {
+  scope: MatchcenterSpielplanScheduleScope;
+  skip?: number;
+  limit?: number;
+}): MatchcenterSpielplanungQueryWindow {
+  return {
+    from: input.scope.from,
+    to: input.scope.to,
+    limit: input.limit ?? input.scope.pageSize,
+    skip: input.skip ?? 0,
+    enforceMaxWindow: false,
   };
 }
 
@@ -138,11 +228,25 @@ export function formatSpielplanMonthChipLabel(
   return `${monthOnly} ${yearMonth.year}`;
 }
 
+export function deriveSpielplanMonthChipsFromAnchors(
+  anchors: readonly MatchcenterScheduleAnchor[],
+  locale: string,
+  timeZone: string,
+): SpielplanMonthChip[] {
+  return deriveSpielplanMonthChips(
+    anchors.map((anchor) => ({
+      match: { startAt: anchor.startAt } as MatchcenterMatchSummary,
+    })),
+    locale,
+    timeZone,
+  );
+}
+
 /**
  * Month chips for months that contain at least one row in the unfiltered upcoming set.
  */
 export function deriveSpielplanMonthChips(
-  rows: readonly MatchcenterRowViewModel[],
+  rows: readonly Pick<MatchcenterRowViewModel, "match">[],
   locale: string,
   timeZone: string,
 ): SpielplanMonthChip[] {
@@ -223,9 +327,27 @@ export function mergeMatchcenterMatchesById(
   );
 }
 
-export function isSpielplanungQueryLikelyTruncated(
-  loadedCount: number,
-  limit: number,
-): boolean {
-  return loadedCount >= limit;
+export function mergeMatchcenterMatchesPages(
+  pages: readonly MatchcenterMatchSummary[][],
+): MatchcenterMatchSummary[] {
+  if (pages.length === 0) {
+    return [];
+  }
+  return mergeMatchcenterMatchesById(pages[0]!, pages.slice(1).flat());
+}
+
+export type SpielplanungPaginationState = {
+  total: number;
+  hasMore: boolean;
+  loadedCount: number;
+  limit: number;
+};
+
+export function toSpielplanungPaginationState(input: {
+  total: number;
+  hasMore: boolean;
+  loadedCount: number;
+  limit: number;
+}): SpielplanungPaginationState {
+  return input;
 }

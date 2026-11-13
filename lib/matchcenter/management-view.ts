@@ -23,6 +23,8 @@ import {
   monthParamFromDate,
   type SpielplanMonthChip,
 } from "./spielplan-schedule-scope";
+
+export type { SpielplanMonthChip };
 import {
   buildMatchcenterViewModel,
   type MatchcenterRowViewModel,
@@ -759,6 +761,8 @@ export type SpieleManagementDerivationInput = {
   spielplanungListMonthFilter?: string | null;
   /** Mini-calendar month — dots scoped to this month only. */
   calendarMonthParam?: string | null;
+  /** When set, month chips reflect the full schedule scope (not only loaded rows). */
+  spielplanMonthChipsOverride?: SpielplanMonthChip[];
   now?: Date;
 };
 
@@ -799,6 +803,7 @@ export function deriveSpieleManagementPresentation(
     teamFilter,
     spielplanungListMonthFilter = null,
     calendarMonthParam = null,
+    spielplanMonthChipsOverride = undefined,
     now,
   } = input;
 
@@ -831,11 +836,9 @@ export function deriveSpieleManagementPresentation(
   );
 
   const spielplanungRowsForChips = sortSpielplanungRows(spielplanungRowsUnsorted, sort);
-  const spielplanMonthChips = deriveSpielplanMonthChips(
-    spielplanungRowsForChips,
-    locale,
-    timezone,
-  );
+  const spielplanMonthChips =
+    spielplanMonthChipsOverride ??
+    deriveSpielplanMonthChips(spielplanungRowsForChips, locale, timezone);
 
   const spielplanungRows = sortSpielplanungRows(
     filterSpielplanungRowsByListMonth(

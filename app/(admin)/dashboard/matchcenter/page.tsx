@@ -6,15 +6,19 @@ import { prisma } from "@/lib/db/prisma";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import {
   listMatchcenterMatches,
-  MATCHCENTER_MAX_LIMIT,
+  listMatchcenterMatchesPage,
+  listMatchcenterScheduleAnchors,
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
 import {
-  isSpielplanungQueryLikelyTruncated,
+  deriveSpielplanMonthChipsFromAnchors,
   mergeMatchcenterMatchesById,
   normalizeSpielplanungListMonthFilter,
   resolveMatchcenterCalendarMonthParam,
+  resolveMatchcenterSpielplanScheduleScope,
   resolveMatchcenterSpielplanungQueryWindow,
+  toSpielplanungPaginationState,
+  type MatchcenterSeasonScope,
 } from "@/lib/matchcenter/spielplan-schedule-scope";
 import {
   formatMonthLabel,
@@ -70,6 +74,8 @@ type MatchcenterPageProps = {
     venue?: string;
     status?: string;
     cal?: string;
+    scopeFrom?: string;
+    scopeTo?: string;
   }>;
 };
 
@@ -134,8 +140,34 @@ export default async function MatchcenterPage({
   const matchcenterDatabase =
     prisma as unknown as MatchcenterQueryDatabase;
 
-  const spielplanungQuery = resolveMatchcenterSpielplanungQueryWindow({
+  const activeSeasonRow = await prisma.season.findFirst({
+    where: { isActive: true },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+    },
+  });
+  const activeSeason: MatchcenterSeasonScope | null = activeSeasonRow
+    ? {
+        id: activeSeasonRow.id,
+        name: activeSeasonRow.name,
+        startDate: activeSeasonRow.startDate,
+        endDate: activeSeasonRow.endDate,
+      }
+    : null;
+
+  const scheduleScope = resolveMatchcenterSpielplanScheduleScope({
     timeZone: timezone,
+    season: activeSeason,
+    scopeFromParam: params.scopeFrom,
+    scopeToParam: params.scopeTo,
+  });
+
+  const spielplanungQuery = resolveMatchcenterSpielplanungQueryWindow({
+    scope: scheduleScope,
+    skip: 0,
   });
 
   const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
@@ -143,14 +175,28 @@ export default async function MatchcenterPage({
     ? loadSpieleInlinePreparationFacilityGroups(tenantId)
   : null;
 
-  const [upcomingMatches, resultateMonthMatches, tenantTeams, tenantClubCrestUrl, inlinePreparationFacilities] =
-    await Promise.all([
-      listMatchcenterMatches(matchcenterDatabase, {
+  const [
+    spielplanPage,
+    scheduleAnchors,
+    resultateMonthMatches,
+    tenantTeams,
+    tenantClubCrestUrl,
+    inlinePreparationFacilities,
+  ] = await Promise.all([
+      listMatchcenterMatchesPage(matchcenterDatabase, {
         tenantId,
         from: spielplanungQuery.from,
         to: spielplanungQuery.to,
         limit: spielplanungQuery.limit,
+        skip: spielplanungQuery.skip,
+        enforceMaxWindow: spielplanungQuery.enforceMaxWindow,
         matchOperationalPolicy,
+      }),
+      listMatchcenterScheduleAnchors(matchcenterDatabase, {
+        tenantId,
+        from: spielplanungQuery.from,
+        to: spielplanungQuery.to,
+        enforceMaxWindow: spielplanungQuery.enforceMaxWindow,
       }),
       listMatchcenterMatches(matchcenterDatabase, {
         tenantId,
@@ -163,11 +209,19 @@ export default async function MatchcenterPage({
       inlinePreparationFacilitiesPromise ?? Promise.resolve(null),
     ]);
 
+  const upcomingMatches = spielplanPage.items;
   const matches = mergeMatchcenterMatchesById(upcomingMatches, resultateMonthMatches);
-  const spielplanungListTruncated = isSpielplanungQueryLikelyTruncated(
-    upcomingMatches.length,
-    spielplanungQuery.limit,
+  const spielplanMonthChipsFromScope = deriveSpielplanMonthChipsFromAnchors(
+    scheduleAnchors,
+    locale,
+    timezone,
   );
+  const spielplanungPagination = toSpielplanungPaginationState({
+    total: spielplanPage.total,
+    hasMore: spielplanPage.hasMore,
+    loadedCount: upcomingMatches.length,
+    limit: spielplanPage.limit,
+  });
 
   perfTimer?.mark("match-loader-teams");
   const activeTeams = tenantTeams.filter((team) => team.isActive);
@@ -243,8 +297,14 @@ export default async function MatchcenterPage({
           calendarMonthWindow={calendarMonthWindow}
           resultateMonthParam={resultateMonth.param}
           spielplanungListMonthFilter={spielplanungListMonthFilter}
-          spielplanungListTruncated={spielplanungListTruncated}
-          spielplanungQueryLimit={spielplanungQuery.limit}
+          spielplanMatches={upcomingMatches}
+          resultateMonthMatches={resultateMonthMatches}
+          spielplanungPagination={spielplanungPagination}
+          spielplanMonthChipsFromScope={spielplanMonthChipsFromScope}
+          scheduleScopeLabel={scheduleScope.label}
+          scheduleScopeSource={scheduleScope.source}
+          scopeFrom={params.scopeFrom ?? null}
+          scopeTo={params.scopeTo ?? null}
           timezone={timezone}
           locale={locale}
           canManage={canManage}
