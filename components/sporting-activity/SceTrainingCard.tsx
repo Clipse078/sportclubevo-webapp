@@ -5,7 +5,11 @@ import Link from "next/link";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import { cn } from "@/lib/cn";
-import { formatFixtureDateLine, formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import {
+  formatFixtureDateLine,
+  formatFixtureTime,
+} from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
 import {
   formatSceActivityLocationHierarchy,
   isSceActivityDimensionVisible,
@@ -387,7 +391,7 @@ function SceTrainingListRowOperationalContent({
         status.domain === "cancelled"),
   );
 
-  const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+  const scheduleStartAt = new Date(model.schedule.startAt);
   const titleRedundantWithType =
     rawTitle.localeCompare(model.typeLabel, "de-CH", { sensitivity: "accent" }) === 0;
 
@@ -415,12 +419,12 @@ function SceTrainingListRowOperationalContent({
         </div>
       ) : null}
       {!omitDateColumn ? (
-        <p
-          className={SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceDateClass}
-          data-testid="sce-training-list-row-date"
-        >
-          {dateLabel}
-        </p>
+        <SceProgrammeActivityDateTile
+          startAt={scheduleStartAt}
+          fmtCfg={fmtCfg}
+          testId="sce-training-list-row-date"
+          className="shrink-0"
+        />
       ) : null}
       {timeLabel ? (
         <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-training-list-row-time">

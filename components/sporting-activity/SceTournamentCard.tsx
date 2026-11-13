@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatFixtureDateLine, formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import {
   formatSceActivityLocationHierarchy,
@@ -466,7 +467,7 @@ function SceTournamentListRowIdentityContent({
   if (operational && fmtCfg) {
     const timeLabel = formatSessionTimeOnly(model, fmtCfg);
     const locationLine = resolveTournamentLocationLine(model, density);
-    const dateLabel = formatFixtureDateLine(new Date(model.schedule.startAt), fmtCfg);
+    const scheduleStartAt = new Date(model.schedule.startAt);
     const status = model.status;
     const showExceptionalStatus =
       showStatus &&
@@ -495,12 +496,12 @@ function SceTournamentListRowIdentityContent({
           </div>
         ) : null}
         {!omitDateColumn ? (
-          <p
-            className={SCE_ACTIVITY_REFERENCE_LAYOUT.horizontalOperationalDateClass}
-            data-testid="sce-tournament-list-row-date"
-          >
-            {dateLabel}
-          </p>
+          <SceProgrammeActivityDateTile
+            startAt={scheduleStartAt}
+            fmtCfg={fmtCfg}
+            testId="sce-tournament-list-row-date"
+            className="shrink-0"
+          />
         ) : null}
         {timeLabel ? (
           <div className="flex min-w-0 items-center gap-1.5" data-testid="sce-tournament-list-row-time">

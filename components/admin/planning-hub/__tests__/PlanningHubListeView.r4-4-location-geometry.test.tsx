@@ -237,7 +237,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.4 (R6 migrated)", 
     );
 
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent("Kunstrasen 2 A");
-    expect(screen.getByTestId("sce-match-list-row-location")).toHaveTextContent("Kunstrasen 3 B");
+    expect(screen.getByTestId("sce-match-location")).toHaveTextContent("Kunstrasen 3 B");
     expect(screen.getByTestId("sce-tournament-list-row-location")).toHaveTextContent(/Kunstrasen 2 A/i);
     expect(screen.getByTestId("sce-club-event-list-row-location")).toHaveTextContent("Clubhaus");
   });
@@ -261,7 +261,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.4 (R6 migrated)", 
     const matchRow = screen.getByTestId("planning-hub-liste-row-match:1");
     const matchCard = within(matchRow).getByTestId("planning-hub-liste-sce-match-match:1");
     expect(within(matchCard).getByTestId("sce-match-fixture")).toBeInTheDocument();
-    expect(within(matchCard).getByTestId("sce-match-list-row-location")).toBeInTheDocument();
+    expect(within(matchCard).getByTestId("sce-match-location")).toBeInTheDocument();
 
     const tournamentRow = screen.getByTestId("planning-hub-liste-row-tournament:1");
     const tournamentCard = within(tournamentRow).getByTestId("planning-hub-liste-sce-tournament-tournament:1");

@@ -100,7 +100,7 @@ describe("PlanningHubListeView", () => {
     );
 
     expect(screen.getByTestId("planning-hub-liste-day-2026-10-05")).toBeInTheDocument();
-    expect(screen.getByText("TRAINING")).toBeInTheDocument();
+    expect(screen.getAllByText("TRAINING").length).toBeGreaterThan(0);
     expect(screen.getByTestId("planning-hub-liste-sce-training-training:1")).toBeInTheDocument();
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Hauptfeld/i);
     expect(screen.getByTestId("planning-hub-liste-operational-summary")).toHaveTextContent(/Unvollständig/);

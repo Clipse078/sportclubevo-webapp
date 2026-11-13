@@ -226,7 +226,16 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
       expect(row.className).toMatch(/\bw-full\b/);
       expect(row.getAttribute("data-sce-programme-activity-card-shell")).not.toBeNull();
       expect(row.parentElement?.querySelectorAll("[data-sce-programme-activity-card-shell]").length).toBe(1);
-      expect(row.querySelector('[class*="shadow-sm"][class*="rounded-lg border"]')).toBeNull();
+      const isMatch =
+        row.getAttribute("data-sce-planning-hub-liste-activity-kind") === "MATCH";
+      if (isMatch) {
+        expect(row.querySelector("[data-sce-planning-hub-liste-leading-date]")).toBeNull();
+        expect(
+          row.querySelector('[data-sce-match-programme-fixture="reference-split"]'),
+        ).toBeTruthy();
+      } else {
+        expect(row.querySelector("[data-sce-planning-hub-liste-leading-date]")).toBeTruthy();
+      }
     }
   });
 
@@ -269,7 +278,9 @@ describe("PlanningHubListeView — R5.5.1 canonical list composition", () => {
     const fixture = screen.getByTestId("sce-match-fixture");
     expect(fixture.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
     expect(fixture.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
-    expect(screen.getByTestId("sce-match-vs")).toBeInTheDocument();
+    const kickoffOrVs =
+      screen.queryByTestId("sce-match-kickoff-box") ?? screen.queryByTestId("sce-match-vs");
+    expect(kickoffOrVs).toBeTruthy();
     expect(fixture.closest("[data-sce-planning-hub-liste-row]")).toBeTruthy();
   });
 

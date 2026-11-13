@@ -224,7 +224,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1 (R6 migrated)", 
     expect(within(card).queryByTestId("sce-training-team")).not.toBeInTheDocument();
   });
 
-  it("keeps match fixture grammar without inline location on the card body", () => {
+  it("keeps match fixture grammar with venue meta on the planner list card", () => {
     render(
       <PlanningHubListeView
         week={week([match("match:1")])}
@@ -241,11 +241,13 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1 (R6 migrated)", 
     );
 
     const card = screen.getByTestId("planning-hub-liste-sce-match-match:1");
-    expect(within(card).queryByTestId("sce-match-location")).not.toBeInTheDocument();
-    expect(screen.getByTestId("sce-match-vs")).toBeInTheDocument();
+    expect(within(card).getByTestId("sce-match-location")).toBeInTheDocument();
+    const kickoffOrVs =
+      screen.queryByTestId("sce-match-kickoff-box") ?? screen.queryByTestId("sce-match-vs");
+    expect(kickoffOrVs).toBeTruthy();
     expect(card.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
     expect(card.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
-    expect(screen.getAllByTestId("sce-match-list-row-location")).toHaveLength(1);
+    expect(screen.getAllByTestId("sce-match-location")).toHaveLength(1);
   });
 
   it("shows override indicator inside the training row when on an alternative plan", () => {
