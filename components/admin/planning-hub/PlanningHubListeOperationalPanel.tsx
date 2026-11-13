@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { OperationalDensePanelShell } from "@/components/admin/shared/planning/OperationalDensePanelShell";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningOperationalResourceGroup } from "@/components/admin/shared/planning/PlanningOperationalResourceGroup";
+import { PlanningHubListeOperationalPanelErrorBoundary } from "./PlanningHubListeOperationalPanelErrorBoundary";
 import SpieleManagementMatchPreparationPanel from "@/components/admin/matchcenter/SpieleManagementMatchPreparationPanel";
 import PlannerOperationalStatusSection from "./PlannerOperationalStatusSection";
 import PlanningHubListeInlineManipulationHost from "./PlanningHubListeInlineManipulationHost";
@@ -155,46 +157,50 @@ function TrainingOperationalPanel({
         operational
       </span>
       <div className="mt-2 space-y-3">
-        <PlanningSingleResourceAssignment
-          kind="pitch_hall"
-          subjectLabel="Spielfeld"
-          resourceName={resourceLabelFromRefs(item.pitchAllocations)}
-          unassignedLabel={tResources("unassignedPitchHall")}
-          facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
-          selectedResourceIds={pitchIds}
-          onSelect={async (id) => {
-            const ok = await replaceAllocationGroup("pitch", [id]);
-            if (ok) onSaved();
-          }}
-          onDeselect={async () => {
-            const ok = await replaceAllocationGroup("pitch", []);
-            if (ok) onSaved();
-          }}
-          availabilityByResourceId={pitchAvailability}
-          canManage={canManageResources}
-          disabled={isKindPending("pitch")}
-          testId={`planning-hub-liste-training-pitch-${item.id}`}
-        />
-        <PlanningSingleResourceAssignment
-          kind="dressing_room"
-          subjectLabel="Garderobe"
-          resourceName={resourceLabelFromRefs(item.dressingRoomAllocations)}
-          unassignedLabel={tResources("unassignedDressingRoom")}
-          facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
-          selectedResourceIds={roomIds}
-          onSelect={async (id) => {
-            const ok = await replaceAllocationGroup("dressing", [id]);
-            if (ok) onSaved();
-          }}
-          onDeselect={async () => {
-            const ok = await replaceAllocationGroup("dressing", []);
-            if (ok) onSaved();
-          }}
-          availabilityByResourceId={dressingRoomAvailability}
-          canManage={canManageResources}
-          disabled={isKindPending("dressing")}
-          testId={`planning-hub-liste-training-dressing-${item.id}`}
-        />
+        <PlanningOperationalResourceGroup testId={`planning-hub-liste-training-resources-${item.id}`}>
+          <PlanningSingleResourceAssignment
+            kind="pitch_hall"
+            subjectLabel="Spielfeld"
+            suppressKindIcon
+            resourceName={resourceLabelFromRefs(item.pitchAllocations)}
+            unassignedLabel={tResources("unassignedPitchHall")}
+            facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
+            selectedResourceIds={pitchIds}
+            onSelect={async (id) => {
+              const ok = await replaceAllocationGroup("pitch", [id]);
+              if (ok) onSaved();
+            }}
+            onDeselect={async () => {
+              const ok = await replaceAllocationGroup("pitch", []);
+              if (ok) onSaved();
+            }}
+            availabilityByResourceId={pitchAvailability}
+            canManage={canManageResources}
+            disabled={isKindPending("pitch")}
+            testId={`planning-hub-liste-training-pitch-${item.id}`}
+          />
+          <PlanningSingleResourceAssignment
+            kind="dressing_room"
+            subjectLabel="Garderobe"
+            suppressKindIcon
+            resourceName={resourceLabelFromRefs(item.dressingRoomAllocations)}
+            unassignedLabel={tResources("unassignedDressingRoom")}
+            facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
+            selectedResourceIds={roomIds}
+            onSelect={async (id) => {
+              const ok = await replaceAllocationGroup("dressing", [id]);
+              if (ok) onSaved();
+            }}
+            onDeselect={async () => {
+              const ok = await replaceAllocationGroup("dressing", []);
+              if (ok) onSaved();
+            }}
+            availabilityByResourceId={dressingRoomAvailability}
+            canManage={canManageResources}
+            disabled={isKindPending("dressing")}
+            testId={`planning-hub-liste-training-dressing-${item.id}`}
+          />
+        </PlanningOperationalResourceGroup>
         {tenantDressingRoomOccupancyPresets && roomIds.size > 0 ? (
           <DressingRoomOccupancyEditor
             item={item}
@@ -406,20 +412,23 @@ function TournamentPitchAssignmentRow({
   }
 
   return (
-    <PlanningSingleResourceAssignment
-      kind="pitch_hall"
-      subjectLabel="Spielfeld"
-      resourceName={resourceLabelFromRefs(item.pitchAllocations)}
-      unassignedLabel={tResources("unassignedPitchHall")}
-      facilityGroups={facilityGroups}
-      selectedResourceIds={pitchIds}
-      onSelect={async (id) => replacePitch([id])}
-      onDeselect={async () => replacePitch([])}
-      availabilityByResourceId={pitchAvailability}
-      canManage
-      disabled={pending}
-      testId={`planning-hub-liste-tournament-pitch-${item.id}`}
-    />
+    <PlanningOperationalResourceGroup testId={`planning-hub-liste-tournament-resources-${item.id}`}>
+      <PlanningSingleResourceAssignment
+        kind="pitch_hall"
+        subjectLabel="Spielfeld"
+        suppressKindIcon
+        resourceName={resourceLabelFromRefs(item.pitchAllocations)}
+        unassignedLabel={tResources("unassignedPitchHall")}
+        facilityGroups={facilityGroups}
+        selectedResourceIds={pitchIds}
+        onSelect={async (id) => replacePitch([id])}
+        onDeselect={async () => replacePitch([])}
+        availabilityByResourceId={pitchAvailability}
+        canManage
+        disabled={pending}
+        testId={`planning-hub-liste-tournament-pitch-${item.id}`}
+      />
+    </PlanningOperationalResourceGroup>
   );
 }
 
@@ -638,19 +647,21 @@ export default function PlanningHubListeOperationalPanel(props: Props) {
         timezone={props.timezone}
         onSaved={props.onSaved}
       />
-      {item.type === "MATCH" ? (
-        <MatchOperationalPanel
-          item={item}
-          facilityGroupsByAllocationGroup={props.facilityGroupsByAllocationGroup}
-          plannerEditAccess={props.plannerEditAccess}
-        />
-      ) : item.type === "TRAINING" ? (
-        <TrainingOperationalPanel {...props} item={item} />
-      ) : item.type === "TOURNAMENT" ? (
-        <TournamentOperationalPanel {...props} item={item} />
-      ) : (
-        <VeranstaltungOperationalPanel {...props} item={item} />
-      )}
+      <PlanningHubListeOperationalPanelErrorBoundary itemId={item.id}>
+        {item.type === "MATCH" ? (
+          <MatchOperationalPanel
+            item={item}
+            facilityGroupsByAllocationGroup={props.facilityGroupsByAllocationGroup}
+            plannerEditAccess={props.plannerEditAccess}
+          />
+        ) : item.type === "TRAINING" ? (
+          <TrainingOperationalPanel {...props} item={item} />
+        ) : item.type === "TOURNAMENT" ? (
+          <TournamentOperationalPanel {...props} item={item} />
+        ) : (
+          <VeranstaltungOperationalPanel {...props} item={item} />
+        )}
+      </PlanningHubListeOperationalPanelErrorBoundary>
     </div>
   );
 }

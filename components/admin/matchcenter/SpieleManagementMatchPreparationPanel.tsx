@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { PlanningOperationalResourceGroup } from "@/components/admin/shared/planning/PlanningOperationalResourceGroup";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import {
   assessMatchOperationalState,
@@ -258,59 +259,62 @@ function SpieleManagementMatchPreparationEditable({
   return (
     <PreparationPanelShell openPointsLabel={openPointsLabel} isSaving={isSaving}>
       <div className="mt-2 space-y-3" data-testid={`matchcenter-inline-preparation-${match.id}`}>
-        <PlanningSingleResourceAssignment
-          kind="pitch_hall"
-          subjectLabel="Spielfeld"
-          showSubjectLabel
-          resourceName={pitchResourceName}
-          unassignedLabel={tResources("unassignedPitchHall")}
-          facilityGroups={pitchGroupsByCode}
-          selectedResourceIds={draft.pitchCode ? new Set([draft.pitchCode]) : new Set()}
-          onSelect={async (code) => {
-            const previous = draft.pitchCode;
-            await applyField("pitchCode", "pitchCode", code, previous);
-          }}
-          onDeselect={async () => {
-            const previous = draft.pitchCode;
-            await applyField("pitchCode", "pitchCode", "", previous);
-          }}
-          availabilityByResourceId={pitchAvailability}
-          canManage
-          disabled={isFieldPending("pitchCode")}
-          testId={`matchcenter-inline-pitch-${match.id}`}
-        />
+        <PlanningOperationalResourceGroup testId={`matchcenter-inline-resources-${match.id}`}>
+          <PlanningSingleResourceAssignment
+            kind="pitch_hall"
+            subjectLabel="Spielfeld"
+            suppressKindIcon
+            resourceName={pitchResourceName}
+            unassignedLabel={tResources("unassignedPitchHall")}
+            facilityGroups={pitchGroupsByCode}
+            selectedResourceIds={draft.pitchCode ? new Set([draft.pitchCode]) : new Set()}
+            onSelect={async (code) => {
+              const previous = draft.pitchCode;
+              await applyField("pitchCode", "pitchCode", code, previous);
+            }}
+            onDeselect={async () => {
+              const previous = draft.pitchCode;
+              await applyField("pitchCode", "pitchCode", "", previous);
+            }}
+            availabilityByResourceId={pitchAvailability}
+            canManage
+            disabled={isFieldPending("pitchCode")}
+            testId={`matchcenter-inline-pitch-${match.id}`}
+          />
 
-        <PlanningMatchDressingRoomAssignments
-          homeLabel="Heimkabine"
-          awayLabel="Gastkabine"
-          homeCode={draft.homeDressingRoomCode}
-          awayCode={draft.awayDressingRoomCode}
-          homeDisplayName={homeDisplayName}
-          awayDisplayName={awayDisplayName}
-          canManage
-          disabled={
-            isFieldPending("homeDressingRoomCode") || isFieldPending("awayDressingRoomCode")
-          }
-          facilityGroups={dressingRoomGroupsByCode}
-          dressingRoomAvailability={dressingRoomAvailability}
-          onSelectHome={async (code) => {
-            const previous = draft.homeDressingRoomCode;
-            await applyField("homeDressingRoomCode", "homeDressingRoomCode", code, previous);
-          }}
-          onSelectAway={async (code) => {
-            const previous = draft.awayDressingRoomCode;
-            await applyField("awayDressingRoomCode", "awayDressingRoomCode", code, previous);
-          }}
-          onDeselectHome={async () => {
-            const previous = draft.homeDressingRoomCode;
-            await applyField("homeDressingRoomCode", "homeDressingRoomCode", "", previous);
-          }}
-          onDeselectAway={async () => {
-            const previous = draft.awayDressingRoomCode;
-            await applyField("awayDressingRoomCode", "awayDressingRoomCode", "", previous);
-          }}
-          testId={`matchcenter-inline-dressing-${match.id}`}
-        />
+          <PlanningMatchDressingRoomAssignments
+            homeLabel="Heimkabine"
+            awayLabel="Gastkabine"
+            homeCode={draft.homeDressingRoomCode}
+            awayCode={draft.awayDressingRoomCode}
+            homeDisplayName={homeDisplayName}
+            awayDisplayName={awayDisplayName}
+            canManage
+            embeddedInGroup
+            disabled={
+              isFieldPending("homeDressingRoomCode") || isFieldPending("awayDressingRoomCode")
+            }
+            facilityGroups={dressingRoomGroupsByCode}
+            dressingRoomAvailability={dressingRoomAvailability}
+            onSelectHome={async (code) => {
+              const previous = draft.homeDressingRoomCode;
+              await applyField("homeDressingRoomCode", "homeDressingRoomCode", code, previous);
+            }}
+            onSelectAway={async (code) => {
+              const previous = draft.awayDressingRoomCode;
+              await applyField("awayDressingRoomCode", "awayDressingRoomCode", code, previous);
+            }}
+            onDeselectHome={async () => {
+              const previous = draft.homeDressingRoomCode;
+              await applyField("homeDressingRoomCode", "homeDressingRoomCode", "", previous);
+            }}
+            onDeselectAway={async () => {
+              const previous = draft.awayDressingRoomCode;
+              await applyField("awayDressingRoomCode", "awayDressingRoomCode", "", previous);
+            }}
+            testId={`matchcenter-inline-dressing-${match.id}`}
+          />
+        </PlanningOperationalResourceGroup>
 
         <div
           className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/80 px-3 py-2"

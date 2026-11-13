@@ -179,6 +179,26 @@ describe("SCE-DS2-04R4 — SpieleManagementMatchPreparationPanel", () => {
     expect(screen.queryByTestId("matchcenter-inline-pitch-match-home-1")).not.toBeInTheDocument();
   });
 
+  it("groups Spielfeld, Heimkabine and Gastkabine in one bordered resource block", () => {
+    const match = createMatch();
+    const assessment = assessMatchOperationalState(match);
+    render(
+      <SpieleManagementMatchPreparationPanel
+        match={match}
+        assessment={assessment}
+        pitchHallFacilityGroups={PITCH_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_GROUPS}
+        canManageOperationalAllocations
+        canManagePublication
+      />,
+    );
+
+    expect(screen.getByTestId("matchcenter-inline-resources-match-home-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("matchcenter-inline-pitch-match-home-1-kind-icon")).not.toBeInTheDocument();
+    expect(screen.getByText("Heimkabine")).toBeInTheDocument();
+    expect(screen.getByText("Gastkabine")).toBeInTheDocument();
+  });
+
   it("persists pitch assignment via PATCH and refreshes on success", async () => {
     const user = userEvent.setup();
     mockFetch.mockResolvedValue({

@@ -5,6 +5,7 @@
 
 import type { MatchcenterMatchSummary, MatchcenterVisibility } from "@/lib/matchcenter/types";
 import { assessMatchOperationalState, type MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
+import { coercePlanningInstant } from "@/lib/planning-hub/manipulation-transport";
 import type { WeekplannerMatchItem } from "@/lib/weekplanner/types";
 
 function firstCode(refs: { code: string }[]): string | null {
@@ -32,7 +33,9 @@ const EMPTY_SIDE = {
 };
 
 export function weekplannerMatchToMatchcenterSummary(item: WeekplannerMatchItem): MatchcenterMatchSummary {
-  const operationalEndAt = item.canonicalEndAt ?? item.endAt;
+  const startAt = coercePlanningInstant(item.canonicalStartAt, "canonicalStartAt");
+  const endAt = coercePlanningInstant(item.canonicalEndAt ?? item.endAt, "canonicalEndAt");
+  const operationalEndAt = endAt;
 
   return {
     id: item.eventId,
@@ -44,9 +47,9 @@ export function weekplannerMatchToMatchcenterSummary(item: WeekplannerMatchItem)
     title: item.title,
     description: null,
     status: "SCHEDULED",
-    startAt: item.canonicalStartAt,
+    startAt,
     kickoffKnown: true,
-    endAt: item.canonicalEndAt,
+    endAt,
     operationalEndAtOverride: null,
     operationalEndAt,
     location: null,

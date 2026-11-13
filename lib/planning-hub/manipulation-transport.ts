@@ -1,5 +1,5 @@
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
-import type { WeekplannerConflict, WeekplannerItem } from "@/lib/weekplanner/types";
+import type { WeekplannerConflict, WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 
 /** Thrown when JSON transport dates are missing or not valid ISO instants — mapped to HTTP 400. */
 export class ManipulationTransportValidationError extends Error {
@@ -9,7 +9,8 @@ export class ManipulationTransportValidationError extends Error {
   }
 }
 
-function parseRequiredInstant(value: unknown, fieldLabel: string): Date {
+/** Coerces ISO strings (RSC/JSON transport) or Date values into Date instances. */
+export function coercePlanningInstant(value: unknown, fieldLabel: string): Date {
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) {
       throw new ManipulationTransportValidationError(`${fieldLabel}: Ungültiges Datum.`);
@@ -28,7 +29,7 @@ function parseRequiredInstant(value: unknown, fieldLabel: string): Date {
 
 function parseOptionalInstant(value: unknown, fieldLabel: string): Date | undefined {
   if (value == null) return undefined;
-  return parseRequiredInstant(value, fieldLabel);
+  return coercePlanningInstant(value, fieldLabel);
 }
 
 function reviveWeekplannerConflict(raw: WeekplannerConflict): WeekplannerConflict {
@@ -48,11 +49,21 @@ function reviveWeekplannerConflict(raw: WeekplannerConflict): WeekplannerConflic
 export function reviveWeekplannerItemFromTransport(raw: WeekplannerItem): WeekplannerItem {
   return {
     ...raw,
-    startAt: parseRequiredInstant(raw.startAt, "startAt"),
-    endAt: parseRequiredInstant(raw.endAt, "endAt"),
-    canonicalStartAt: parseRequiredInstant(raw.canonicalStartAt, "canonicalStartAt"),
-    canonicalEndAt: parseRequiredInstant(raw.canonicalEndAt, "canonicalEndAt"),
+    startAt: coercePlanningInstant(raw.startAt, "startAt"),
+    endAt: coercePlanningInstant(raw.endAt, "endAt"),
+    canonicalStartAt: coercePlanningInstant(raw.canonicalStartAt, "canonicalStartAt"),
+    canonicalEndAt: coercePlanningInstant(raw.canonicalEndAt, "canonicalEndAt"),
     conflicts: (raw.conflicts ?? []).map(reviveWeekplannerConflict),
+  };
+}
+
+export function reviveWeekplannerWeekFromTransport(raw: WeekplannerWeek): WeekplannerWeek {
+  return {
+    ...raw,
+    days: raw.days.map((day) => ({
+      ...day,
+      items: reviveWeekplannerItemsFromTransport(day.items),
+    })),
   };
 }
 
@@ -76,10 +87,10 @@ type SchedulerDraftTransport = Omit<
 export function parseSchedulerDraftFromTransport(raw: SchedulerDraftTransport): SchedulerDraftChange {
   return {
     ...raw,
-    originalStart: parseRequiredInstant(raw.originalStart, "originalStart"),
-    originalEnd: parseRequiredInstant(raw.originalEnd, "originalEnd"),
-    proposedStart: parseRequiredInstant(raw.proposedStart, "proposedStart"),
-    proposedEnd: parseRequiredInstant(raw.proposedEnd, "proposedEnd"),
+    originalStart: coercePlanningInstant(raw.originalStart, "originalStart"),
+    originalEnd: coercePlanningInstant(raw.originalEnd, "originalEnd"),
+    proposedStart: coercePlanningInstant(raw.proposedStart, "proposedStart"),
+    proposedEnd: coercePlanningInstant(raw.proposedEnd, "proposedEnd"),
     item: reviveWeekplannerItemFromTransport(raw.item),
   };
 }

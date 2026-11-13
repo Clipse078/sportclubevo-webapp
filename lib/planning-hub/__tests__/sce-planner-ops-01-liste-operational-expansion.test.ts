@@ -20,6 +20,7 @@ describe("SCE-PLANNER-OPS-01 Matchcenter-style Liste operational expansion", () 
     expect(panel).toContain("SpieleManagementMatchPreparationPanel");
     expect(panel).toContain("OperationalDensePanelShell");
     expect(panel).toContain("PlanningSingleResourceAssignment");
+    expect(panel).toContain("PlanningHubListeOperationalPanelErrorBoundary");
     expect(panel).not.toContain("WeekplannerActivityIdentityCard");
     expect(panel).not.toContain("WeekplannerActivityEditorInlineFrame");
   });
@@ -27,6 +28,7 @@ describe("SCE-PLANNER-OPS-01 Matchcenter-style Liste operational expansion", () 
   it("shared dense panel shell is exported for Matchcenter and Liste", () => {
     const matchPrep = read("components/admin/matchcenter/SpieleManagementMatchPreparationPanel.tsx");
     expect(matchPrep).toContain("OperationalDensePanelShell");
+    expect(matchPrep).toContain("PlanningOperationalResourceGroup");
     expect(read("components/admin/shared/planning/OperationalDensePanelShell.tsx")).toContain(
       "SCE_SURFACE_DENSE_PANEL",
     );

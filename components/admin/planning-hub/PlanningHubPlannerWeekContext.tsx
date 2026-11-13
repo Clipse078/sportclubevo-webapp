@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { applyTrainingCancellationToPlannerWeek } from "@/lib/planning-hub/training-cancellation-reconciliation";
+import { reviveWeekplannerWeekFromTransport } from "@/lib/planning-hub/manipulation-transport";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
 
 export type PlanningHubPlannerWeekContextValue = {
@@ -42,24 +43,29 @@ export function PlanningHubPlannerWeekProvider({
   const [reconciledWeek, setReconciledWeek] = useState<WeekplannerWeek | null>(null);
   const [plannerSyncWarning, setPlannerSyncWarning] = useState<string | null>(null);
 
+  const normalizedServerWeek = useMemo(
+    () => reviveWeekplannerWeekFromTransport(serverWeek),
+    [serverWeek],
+  );
+
   useEffect(() => {
     setReconciledWeek(null);
     setPlannerSyncWarning(null);
-  }, [serverWeek]);
+  }, [normalizedServerWeek]);
 
-  const week = reconciledWeek ?? serverWeek;
+  const week = reconciledWeek ?? normalizedServerWeek;
 
   const notifyTrainingSessionCancelled = useCallback(
     (trainingSessionId: string) => {
       setReconciledWeek((current) =>
         applyTrainingCancellationToPlannerWeek(
-          current ?? serverWeek,
+          current ?? normalizedServerWeek,
           trainingSessionId,
           timezone,
         ),
       );
     },
-    [serverWeek, timezone],
+    [normalizedServerWeek, timezone],
   );
 
   const reportPlannerSyncWarning = useCallback((message: string) => {
