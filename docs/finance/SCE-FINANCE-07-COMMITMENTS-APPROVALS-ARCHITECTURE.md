@@ -4,7 +4,7 @@
 | --- | --- |
 | **Programme** | FIN-07 — Commitments & Approvals |
 | **Package** | **FIN-07A** — Commitment Domain Foundation & Approval Architecture |
-| **Status** | **FIN-07 IN PROGRESS** — **07A IMPLEMENTED / FOUNDATION REVIEW** (PR open → **STAGE**) |
+| **Status** | **FIN-07 IN PROGRESS** — **07A–07D ON STAGE** (foundation, workspace, approvals inbox, policy); **07E–07G PROPOSED / NOT STARTED** |
 | **Predecessor** | **FIN-06 COMPLETE / PO APPROVED** (closure — [`SCE-FINANCE-06H-PROGRAMME-CLOSURE.md`](./SCE-FINANCE-06H-PROGRAMME-CLOSURE.md)) |
 | **Architecture contract** | `lib/finance/commitment/finance-commitment-architecture-contract.ts` |
 | **Tests** | `lib/finance/__tests__/finance-07a-commitment-architecture.test.ts` |
@@ -147,5 +147,9 @@ Preview builds do **not** apply migrations — see [`docs/deployment/stage-previ
 | --- | --- |
 | FIN-06 | COMPLETE / PO APPROVED |
 | FIN-07 | IN PROGRESS |
-| FIN-07A | IMPLEMENTED / FOUNDATION REVIEW |
-| FIN-07B–07G | NOT STARTED |
+| FIN-07A | **SHIPPED / STAGE** (architecture + persistence) |
+| FIN-07B | **SHIPPED / STAGE** (workspace — `finance-07b-commitment-workspace.test.ts`) |
+| FIN-07C | **SHIPPED / STAGE** (approval inbox + UAT readiness tests) |
+| FIN-07D | **SHIPPED / STAGE** (approval policy + threshold) |
+| FIN-07E | **PROPOSED** — `SCE-FINANCE-07E-SUPPLIER-BILL-EVIDENCE-PROPOSAL.md` |
+| FIN-07F–07G | **DEFERRED** (forecast sync, hardening) |
