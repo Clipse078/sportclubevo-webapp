@@ -67,6 +67,19 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     expect(parseIdListFromForm("org-a, org-b")).toEqual(["org-a", "org-b"]);
   });
 
+  it("sprint close and bulk planning use German product copy", () => {
+    const detail = read("components/admin/club-development/DevelopmentSprintDetailWorkspace.tsx");
+    expect(detail).toContain("SprintBulkTaskPlanningPanel");
+    expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
+      "Aufgaben hinzufügen",
+    );
+    expect(detail).not.toContain("(KEEP)");
+    expect(detail).not.toContain("(REMOVE)");
+    expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
+      "Ohne Initiative",
+    );
+  });
+
   it("accessible light-theme errors on club-development forms", () => {
     expect(read("components/admin/club-development/ClubDevelopmentFormError.tsx")).toContain("text-rose-900");
     expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(

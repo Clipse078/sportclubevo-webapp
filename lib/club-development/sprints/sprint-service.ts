@@ -1,6 +1,6 @@
 import "server-only";
 
-import { DevelopmentSprintStatus, VisibilityScope } from "@prisma/client";
+import { DevelopmentSprintStatus, TaskStatus, VisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 
 export class SprintServiceError extends Error {
@@ -116,6 +116,21 @@ export async function addTaskToSprint(tenantId: string, sprintId: string, taskId
   });
   if (active) throw new SprintServiceError("Aufgabe ist bereits im Sprint.");
 
+  const otherSprint = await prisma.developmentSprintTaskMembership.findFirst({
+    where: {
+      tenantId,
+      taskId,
+      removedAt: null,
+      sprintId: { not: sprintId },
+    },
+    select: { sprint: { select: { title: true } } },
+  });
+  if (otherSprint) {
+    throw new SprintServiceError(
+      `Aufgabe ist bereits im Sprint „${otherSprint.sprint.title}" — Aufgaben werden nicht automatisch verschoben.`,
+    );
+  }
+
   const revived = await prisma.developmentSprintTaskMembership.findFirst({
     where: { tenantId, sprintId, taskId },
     orderBy: { addedAt: "desc" },
@@ -159,4 +174,154 @@ export async function listActiveSprintMemberships(tenantId: string, sprintId: st
     where: { tenantId, sprintId, removedAt: null },
     orderBy: { addedAt: "asc" },
   });
+}
+
+export type BulkAddTaskRejection = {
+  taskId: string;
+  code: "FORBIDDEN" | "NOT_FOUND" | "IN_TARGET_SPRINT" | "OTHER_SPRINT" | "INELIGIBLE" | "WRONG_TENANT";
+  message: string;
+};
+
+export type BulkAddTasksToSprintResult = {
+  addedCount: number;
+  addedTaskIds: string[];
+  rejected: BulkAddTaskRejection[];
+  partial: boolean;
+};
+
+async function insertSprintMembership(
+  tenantId: string,
+  sprint: { id: string; status: DevelopmentSprintStatus },
+  taskId: string,
+) {
+  const active = await prisma.developmentSprintTaskMembership.findFirst({
+    where: { tenantId, sprintId: sprint.id, taskId, removedAt: null },
+    select: { id: true },
+  });
+  if (active) return { kind: "duplicate" as const };
+
+  const other = await prisma.developmentSprintTaskMembership.findFirst({
+    where: {
+      tenantId,
+      taskId,
+      removedAt: null,
+      sprintId: { not: sprint.id },
+    },
+    select: { id: true, sprint: { select: { title: true } } },
+  });
+  if (other) {
+    return {
+      kind: "other_sprint" as const,
+      sprintTitle: other.sprint.title,
+    };
+  }
+
+  const revived = await prisma.developmentSprintTaskMembership.findFirst({
+    where: { tenantId, sprintId: sprint.id, taskId },
+    orderBy: { addedAt: "desc" },
+  });
+  if (revived?.removedAt) {
+    await prisma.developmentSprintTaskMembership.update({
+      where: { id: revived.id },
+      data: {
+        removedAt: null,
+        addedAt: new Date(),
+        addedAfterSprintStart: sprint.status === DevelopmentSprintStatus.ACTIVE,
+      },
+    });
+    return { kind: "added" as const };
+  }
+
+  await prisma.developmentSprintTaskMembership.create({
+    data: {
+      tenantId,
+      sprintId: sprint.id,
+      taskId,
+      addedAfterSprintStart: sprint.status === DevelopmentSprintStatus.ACTIVE,
+    },
+  });
+  return { kind: "added" as const };
+}
+
+export async function bulkAddTasksToSprint(
+  tenantId: string,
+  sprintId: string,
+  rawTaskIds: readonly string[],
+  validateTask: (taskId: string) => Promise<
+    | { ok: true; status: TaskStatus }
+    | { ok: false; code: BulkAddTaskRejection["code"] }
+  >,
+): Promise<BulkAddTasksToSprintResult> {
+  const sprint = await prisma.developmentSprint.findFirst({
+    where: { id: sprintId, tenantId },
+    select: { id: true, status: true },
+  });
+  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (sprint.status === DevelopmentSprintStatus.COMPLETED) {
+    throw new SprintServiceError("Abgeschlossene Sprints können nicht mehr geplant werden.");
+  }
+
+  const taskIds = [...new Set(rawTaskIds.map((id) => id.trim()).filter(Boolean))];
+  const rejected: BulkAddTaskRejection[] = [];
+  const addedTaskIds: string[] = [];
+
+  await prisma.$transaction(async () => {
+    for (const taskId of taskIds) {
+      const validation = await validateTask(taskId);
+      if (!validation.ok) {
+        rejected.push({
+          taskId,
+          code: validation.code,
+          message:
+            validation.code === "FORBIDDEN"
+              ? "Aufgabe nicht sichtbar."
+              : validation.code === "NOT_FOUND"
+                ? "Aufgabe nicht gefunden."
+                : validation.code === "IN_TARGET_SPRINT"
+                  ? "Aufgabe ist bereits im Sprint."
+                  : validation.code === "OTHER_SPRINT"
+                    ? "Aufgabe ist bereits einem anderen Sprint zugeordnet."
+                    : validation.code === "INELIGIBLE"
+                      ? "Aufgabe kann nicht mehr geplant werden."
+                      : "Aufgabe gehört nicht zu diesem Verein.",
+        });
+        continue;
+      }
+
+      if (validation.status === TaskStatus.DONE || validation.status === TaskStatus.CANCELLED) {
+        rejected.push({
+          taskId,
+          code: "INELIGIBLE",
+          message: "Abgeschlossene oder abgebrochene Aufgaben können nicht geplant werden.",
+        });
+        continue;
+      }
+
+      const inserted = await insertSprintMembership(tenantId, sprint, taskId);
+      if (inserted.kind === "duplicate") {
+        rejected.push({
+          taskId,
+          code: "IN_TARGET_SPRINT",
+          message: "Aufgabe ist bereits im Sprint.",
+        });
+        continue;
+      }
+      if (inserted.kind === "other_sprint") {
+        rejected.push({
+          taskId,
+          code: "OTHER_SPRINT",
+          message: `Aufgabe ist bereits im Sprint „${inserted.sprintTitle}".`,
+        });
+        continue;
+      }
+      addedTaskIds.push(taskId);
+    }
+  });
+
+  return {
+    addedCount: addedTaskIds.length,
+    addedTaskIds,
+    rejected,
+    partial: addedTaskIds.length > 0 && rejected.length > 0,
+  };
 }

@@ -463,8 +463,20 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/planning-candidates/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/planning-candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/sprints/[id]/route.ts",
     "urlPattern": "/api/club-development/sprints/[id]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/sprints/[id]/tasks/bulk/route.ts",
+    "urlPattern": "/api/club-development/sprints/[id]/tasks/bulk",
     "audience": "API"
   },
   {

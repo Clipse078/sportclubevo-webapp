@@ -8,6 +8,7 @@ import type { DevelopmentSprintStatus } from "@prisma/client";
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import ClubDevelopmentTaskSearchPicker from "./ClubDevelopmentTaskSearchPicker";
+import SprintBulkTaskPlanningPanel from "./SprintBulkTaskPlanningPanel";
 
 export type SprintMembershipRow = {
   membershipId: string;
@@ -218,14 +219,24 @@ export default function DevelopmentSprintDetailWorkspace({
         </ul>
 
         {canManage ? (
-          <div className="mt-4 border-t border-[var(--border)] pt-4">
-            <p className="mb-2 text-xs font-medium text-[var(--muted)]">Aufgabe zum Sprint hinzufügen</p>
-            <ClubDevelopmentTaskSearchPicker
-              excludeTaskIds={excludeTaskIds}
+          <>
+            <SprintBulkTaskPlanningPanel
+              sprintId={sprintId}
               disabled={pending}
-              onSelect={(task) => addTask(task.id)}
+              onAdded={() => {
+                void reloadMemberships();
+                router.refresh();
+              }}
             />
-          </div>
+            <div className="mt-4 border-t border-[var(--border)] pt-4">
+              <p className="mb-2 text-xs font-medium text-[var(--muted)]">Einzelne Aufgabe suchen</p>
+              <ClubDevelopmentTaskSearchPicker
+                excludeTaskIds={excludeTaskIds}
+                disabled={pending}
+                onSelect={(task) => addTask(task.id)}
+              />
+            </div>
+          </>
         ) : null}
       </section>
 
@@ -244,7 +255,7 @@ export default function DevelopmentSprintDetailWorkspace({
                 checked={unfinishedDisposition === "KEEP"}
                 onChange={() => setUnfinishedDisposition("KEEP")}
               />
-              Offene Aufgaben behalten (KEEP)
+              Offene Aufgaben im Sprint belassen
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -253,7 +264,7 @@ export default function DevelopmentSprintDetailWorkspace({
                 checked={unfinishedDisposition === "REMOVE"}
                 onChange={() => setUnfinishedDisposition("REMOVE")}
               />
-              Offene Aufgaben aus Sprint entfernen (REMOVE)
+              Offene Aufgaben aus dem Sprint entfernen
             </label>
           </fieldset>
           <div className="mt-4 flex flex-wrap items-center gap-3">
