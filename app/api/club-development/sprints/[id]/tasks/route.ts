@@ -14,6 +14,7 @@ import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 import { requireVisibleTask } from "@/lib/tasks/task-access";
 import { TaskForbiddenError, TaskNotFoundError } from "@/lib/tasks/errors";
+import { resolveReadableSprintTaskIds } from "@/lib/club-development/sprints/sprint-task-visibility";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -29,8 +30,21 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   if (!sprint) {
     return NextResponse.json({ error: "Sprint nicht gefunden." }, { status: 404 });
   }
+  const taskCtx = await buildTaskServiceContextForActor(
+    access.context.actorUserId,
+    access.context.tenantId,
+  );
+  if (!taskCtx) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const memberships = await listActiveSprintMemberships(access.context.tenantId, id);
-  return NextResponse.json({ memberships });
+  const readable = await resolveReadableSprintTaskIds(
+    taskCtx,
+    memberships.map((m) => m.taskId),
+  );
+  return NextResponse.json({
+    memberships: memberships.filter((m) => readable.has(m.taskId)),
+  });
 }
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
@@ -103,6 +117,22 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     (await req.json().catch(() => ({})))?.taskId?.trim();
   if (!taskId) {
     return NextResponse.json({ error: "taskId ist erforderlich." }, { status: 400 });
+  }
+
+  const taskCtx = await buildTaskServiceContextForActor(
+    access.context.actorUserId,
+    access.context.tenantId,
+  );
+  if (!taskCtx) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  try {
+    await requireVisibleTask(taskCtx, taskId);
+  } catch (err) {
+    if (err instanceof TaskForbiddenError || err instanceof TaskNotFoundError) {
+      return NextResponse.json({ error: "Aufgabe nicht sichtbar oder nicht gefunden." }, { status: 403 });
+    }
+    throw err;
   }
 
   try {

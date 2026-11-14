@@ -13,8 +13,17 @@ import {
   type UnfinishedTaskDisposition,
 } from "@/lib/club-development/sprints/sprint-close-types";
 import { SprintServiceError } from "@/lib/club-development/sprints/sprint-service";
+import {
+  collectCloseSnapshotTaskIds,
+  resolveAuthorizedCloseSnapshotTaskIds,
+} from "@/lib/club-development/sprints/sprint-review-snapshot-auth";
+import {
+  filterSprintCloseClientReport,
+  type SprintCloseClientReport,
+} from "@/lib/club-development/sprints/sprint-task-visibility";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -45,6 +54,27 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Sprint nicht gefunden." }, { status: 404 });
   }
 
+  const taskCtx = await buildTaskServiceContextForActor(
+    access.context.actorUserId,
+    access.context.tenantId,
+  );
+  if (!taskCtx) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const authorizedTaskCtx = taskCtx;
+
+  async function sanitizeReport(raw: SprintCloseClientReport) {
+    const snapshot = raw.snapshot;
+    const authorized =
+      snapshot && snapshot.version === 1
+        ? await resolveAuthorizedCloseSnapshotTaskIds(
+            authorizedTaskCtx,
+            collectCloseSnapshotTaskIds(snapshot),
+          )
+        : new Set<string>();
+    return filterSprintCloseClientReport(raw, authorized);
+  }
+
   const body = await req.json().catch(() => ({}));
 
   const legacyDisposition = body?.unfinishedDisposition;
@@ -55,7 +85,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         id,
         legacyDisposition,
       );
-      return NextResponse.json({ report });
+      return NextResponse.json({ report: await sanitizeReport(report) });
     } catch (err) {
       if (err instanceof SprintServiceError) {
         return NextResponse.json({ error: err.message }, { status: 400 });
@@ -109,7 +139,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       new Date(),
       typeof body?.clientRequestId === "string" ? body.clientRequestId : null,
     );
-    return NextResponse.json({ report });
+    return NextResponse.json({ report: await sanitizeReport(report) });
   } catch (err) {
     if (err instanceof SprintServiceError) {
       return NextResponse.json({ error: err.message }, { status: 400 });

@@ -51,6 +51,7 @@ export default async function DevelopmentSprintBoardPage({ params }: PageProps) 
         {tenantId ? (
           <DevelopmentSprintWorkspaceShell
             tenantId={tenantId}
+            actorUserId={session.user.id ?? ""}
             sprint={sprint}
             canManage={canManage}
             activeTab="board"

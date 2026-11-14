@@ -2,6 +2,8 @@ import "server-only";
 
 import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import type { TaskServiceContext } from "@/lib/tasks/types";
+import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
 
 export type SprintBoardColumnKey = "OPEN" | "IN_PROGRESS" | "DONE";
 
@@ -24,7 +26,11 @@ export function mapTaskStatusToBoardColumn(status: TaskStatus): SprintBoardColum
   return "OPEN";
 }
 
-export async function loadSprintBoard(tenantId: string, sprintId: string) {
+export async function loadSprintBoard(
+  taskCtx: TaskServiceContext,
+  sprintId: string,
+) {
+  const tenantId = taskCtx.tenantId;
   const memberships = await prisma.developmentSprintTaskMembership.findMany({
     where: { tenantId, sprintId, removedAt: null },
     select: { taskId: true, addedAfterSprintStart: true },
@@ -37,7 +43,7 @@ export async function loadSprintBoard(tenantId: string, sprintId: string) {
   const addedFlagByTask = new Map(memberships.map((m) => [m.taskId, m.addedAfterSprintStart]));
 
   const tasks = await prisma.task.findMany({
-    where: { tenantId, id: { in: taskIds } },
+    where: taskIdsPassingReadWhere(taskCtx, { id: { in: taskIds } }),
     select: {
       id: true,
       title: true,

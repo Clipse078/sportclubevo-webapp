@@ -3,6 +3,7 @@ import { getDevelopmentSprintById } from "@/lib/club-development/sprints/queries
 import { loadSprintBoard } from "@/lib/club-development/sprints/sprint-board";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,13 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   if (!sprint) {
     return NextResponse.json({ error: "Sprint nicht gefunden." }, { status: 404 });
   }
-  const board = await loadSprintBoard(access.context.tenantId, id);
+  const taskCtx = await buildTaskServiceContextForActor(
+    access.context.actorUserId,
+    access.context.tenantId,
+  );
+  if (!taskCtx) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const board = await loadSprintBoard(taskCtx, id);
   return NextResponse.json(board);
 }
