@@ -93,7 +93,7 @@ export default async function ProviderMappingDetailPage({ params, searchParams }
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Anbieter-Mapping"
+        eyebrow="Anbieter-Zuordnung"
         title={teamSeason.displayName}
         description={`${teamSeason.team.name} · ${teamSeason.season.name}`}
         breadcrumbs={[

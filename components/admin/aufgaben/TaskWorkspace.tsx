@@ -257,17 +257,22 @@ function TaskContextSection({
           </button>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-[var(--text-2)]">
-        {context.typeLabel}
-        {context.title ? ` · ${context.title}` : ""}
-      </p>
+      {context.href ? (
+        <Link
+          href={context.href}
+          className="sce-link-primary mt-1.5 inline-block text-sm font-medium"
+          aria-label={`${context.title ?? context.typeLabel} öffnen`}
+        >
+          {context.title ?? context.typeLabel}
+        </Link>
+      ) : (
+        <p className="mt-1.5 text-sm text-[var(--text-2)]">
+          {context.typeLabel}
+          {context.title ? ` · ${context.title}` : ""}
+        </p>
+      )}
       {context.subtitle ? (
         <p className="text-xs text-[var(--muted)]">{context.subtitle}</p>
-      ) : null}
-      {context.href ? (
-        <Link href={context.href} className="sce-link-primary mt-1 inline-block text-sm">
-          {context.title ?? context.typeLabel} öffnen →
-        </Link>
       ) : null}
     </section>
   );

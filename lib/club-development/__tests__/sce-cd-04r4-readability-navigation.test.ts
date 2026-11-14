@@ -138,4 +138,15 @@ describe("SCE-CD-04R4 dedicated task page", () => {
     expect(read("lib/tasks/task-navigation.ts")).toContain("returnTo");
     expect(read("components/admin/club-development/SprintTaskTitleLink.tsx")).toContain("returnTo");
   });
+
+  it("shows one linked context title without repeating it in the open affordance", () => {
+    const workspace = read("components/admin/aufgaben/TaskWorkspace.tsx");
+    expect(workspace).toContain('aria-label={`${context.title ?? context.typeLabel} öffnen`}');
+    expect(workspace).not.toMatch(/\{context\.title \?\? context\.typeLabel\} öffnen →/);
+  });
+
+  it("uses Anbieter-Zuordnung for provider mapping navigation", () => {
+    expect(read("lib/nav/nav-config.ts")).toContain('label: "Anbieter-Zuordnung"');
+    expect(read("lib/nav/nav-config.ts")).not.toContain("Anbieter-Mapping");
+  });
 });

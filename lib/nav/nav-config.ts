@@ -345,7 +345,7 @@ export const NAV_SECTIONS: NavSection[] = [
           },
           {
             key: "provider-mapping",
-            label: "Anbieter-Mapping",
+            label: "Anbieter-Zuordnung",
             href: "/dashboard/teams/provider-mapping",
             permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
           },

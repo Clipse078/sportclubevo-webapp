@@ -1,7 +1,7 @@
 {
   "programme": "SCE-NAV-IA-V2-01",
   "generatedFrom": "lib/nav/nav-config.ts",
-  "clubAdminPermissionCount": 125,
+  "clubAdminPermissionCount": 145,
   "destinations": [
     {
       "key": "dashboard",
@@ -255,7 +255,7 @@
       "labelV2": "Teams",
       "icon": "team",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": "organisation",
       "visibility": {
         "header": false,
@@ -274,11 +274,11 @@
     {
       "key": "provider-mapping",
       "route": "/dashboard/teams/provider-mapping",
-      "label": "Anbieter-Mapping",
-      "labelV2": "Anbieter-Mapping",
+      "label": "Anbieter-Zuordnung",
+      "labelV2": "Anbieter-Zuordnung",
       "icon": "integration",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": "organisation",
       "visibility": {
         "header": false,
@@ -323,7 +323,7 @@
       "labelV2": "Personen",
       "icon": "people",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": "organisation",
       "visibility": {
         "header": false,
@@ -369,7 +369,7 @@
       "labelV2": "Mitglieder",
       "icon": "member",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -505,7 +505,7 @@
       "labelV2": "Helfereinsätze",
       "icon": "volunteer",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1012,7 +1012,7 @@
       "labelV2": "Trainer & Mitarbeitende",
       "icon": "coach",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1021,166 +1021,6 @@
       },
       "permissionKeys": [
         "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "meetings",
-      "route": "/vereinsleitung/meetings",
-      "label": "Meetings",
-      "labelV2": "Sitzungen",
-      "icon": "committee-board",
-      "targetL1": "club",
-      "targetL2": "Club-Betrieb",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung",
-      "route": "/vereinsleitung/club-entwicklung",
-      "label": "Club Entwicklung",
-      "labelV2": "Vereinsentwicklung",
-      "icon": "insight",
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-ziele",
-      "route": "/vereinsleitung/targets",
-      "label": "Ziele",
-      "labelV2": "Ziele",
-      "icon": null,
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-initiativen",
-      "route": "/vereinsleitung/initiativen",
-      "label": "Initiativen",
-      "labelV2": "Initiativen",
-      "icon": null,
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-prozesse",
-      "route": "/vereinsleitung/prozesse",
-      "label": "Prozesse & Aufgaben",
-      "labelV2": "Prozesse & Aufgaben",
-      "icon": "workflow",
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "material",
-      "route": "/vereinsleitung/material",
-      "label": "Material & Inventar",
-      "labelV2": "Material & Inventar",
-      "icon": "material-inventory",
-      "targetL1": "club",
-      "targetL2": "Club-Betrieb",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -1189,12 +1029,12 @@
     },
     {
       "key": "finanzen",
-      "route": "/vereinsleitung/finanzen",
+      "route": "/dashboard/finance",
       "label": "Finanzen",
       "labelV2": "Finanzen",
       "icon": "finance",
       "targetL1": "club",
-      "targetL2": "Finanzen & Partnerschaften",
+      "targetL2": "Finanzen",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1202,9 +1042,7 @@
         "mobileEligible": true
       },
       "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
+        "finance.view"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -1218,7 +1056,7 @@
       "labelV2": "Sponsoring",
       "icon": "sponsor",
       "targetL1": "club",
-      "targetL2": "Finanzen & Partnerschaften",
+      "targetL2": "Sponsoring",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1263,7 +1101,7 @@
       "labelV2": "Formulare & Freigaben",
       "icon": "form",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1285,7 +1123,7 @@
       "labelV2": "Vorfälle & Disziplin",
       "icon": "discipline-incident",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1552,7 +1390,7 @@
     },
     {
       "id": "people-teams",
-      "label": "People & Teams",
+      "label": "Personen & Teams",
       "headerVisible": true,
       "keys": [
         "mitglieder",
@@ -1579,14 +1417,19 @@
       "headerVisible": true,
       "keys": [
         "club-entwicklung",
+        "club-entwicklung-uebersicht",
         "club-entwicklung-ziele",
-        "club-entwicklung-initiativen",
+        "club-entwicklung-sitzungen",
+        "club-entwicklung-vorhaben",
+        "club-entwicklung-strategie",
+        "club-entwicklung-initiativen-backlog",
+        "club-entwicklung-sprints",
         "club-entwicklung-prozesse"
       ]
     },
     {
       "id": "club-betrieb",
-      "label": "Club-Betrieb",
+      "label": "Vereinsbetrieb",
       "headerVisible": true,
       "keys": [
         "helfereinsaetze",
@@ -1605,10 +1448,17 @@
     },
     {
       "id": "finanzen",
-      "label": "Finanzen & Partnerschaften",
+      "label": "Finanzen",
       "headerVisible": true,
       "keys": [
-        "finanzen",
+        "finanzen"
+      ]
+    },
+    {
+      "id": "sponsoring",
+      "label": "Sponsoring",
+      "headerVisible": true,
+      "keys": [
         "sponsoring"
       ]
     }

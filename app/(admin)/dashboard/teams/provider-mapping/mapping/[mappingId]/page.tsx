@@ -63,7 +63,7 @@ export default async function ProviderMappingAssignPage({ params }: PageProps) {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Anbieter-Mapping"
+        eyebrow="Anbieter-Zuordnung"
         title="Anbieter-Team zuordnen"
         description={`${mapping.providerTeamName ?? `ID ${mapping.externalTeamId}`} · ${mapping.provider}`}
         breadcrumbs={[
