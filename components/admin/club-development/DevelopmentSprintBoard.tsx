@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { Loader2, Search } from "lucide-react";
+import { GripVertical, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { TaskPriority, TaskStatus } from "@prisma/client";
-import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { taskPriorityVisual } from "@/lib/tasks/task-priority-visual";
+import SprintTaskAssigneeDisplay from "./SprintTaskAssigneeDisplay";
+import SprintTaskTitleLink from "./SprintTaskTitleLink";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import {
   EMPTY_BOARD_FILTERS,
@@ -87,6 +87,23 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
 
   useEffect(() => {
     loadBoard();
+  }, [loadBoard]);
+
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") {
+        loadBoard();
+      }
+    };
+  const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) loadBoard();
+    };
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, [loadBoard]);
 
   const allCards = useMemo(() => {
@@ -325,34 +342,46 @@ function BoardCardView({
   const actions = COLUMN_ACTIONS[columnKey];
 
   return (
-    <article
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm"
-      draggable={draggable}
-      onDragStart={() => onDragStart(card.taskId)}
-      onDragEnd={onDragEnd}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <Link href={taskWorkspaceHref(card.taskId)} className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]">
-          {card.title}
-        </Link>
-        <span className="shrink-0 rounded-md bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {priorityVisual.label}
-        </span>
-      </div>
+    <article className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm">
+      <div className="flex items-start gap-2">
+        {draggable ? (
+          <button
+            type="button"
+            aria-label={`${card.title} verschieben`}
+            draggable
+            onDragStart={(event) => {
+              event.dataTransfer.setData("text/task-id", card.taskId);
+              event.dataTransfer.effectAllowed = "move";
+              onDragStart(card.taskId);
+            }}
+            onDragEnd={onDragEnd}
+            className="mt-0.5 shrink-0 cursor-grab rounded p-0.5 text-[var(--muted)] active:cursor-grabbing hover:bg-[var(--surface-2)]"
+            data-testid={`sprint-board-drag-handle-${card.taskId}`}
+          >
+            <GripVertical className="h-4 w-4" aria-hidden />
+          </button>
+        ) : (
+          <span className="w-5 shrink-0" aria-hidden />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <SprintTaskTitleLink taskId={card.taskId} title={card.title} className="min-w-0 flex-1" />
+            <span className="shrink-0 rounded-md bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              {priorityVisual.label}
+            </span>
+          </div>
       {due ? (
         <p className={`mt-1 text-xs ${overdue ? "font-medium text-red-600" : "text-[var(--muted)]"}`}>
           Fällig {due}
           {overdue ? " · überfällig" : ""}
         </p>
       ) : null}
-      {card.initiativeLabel ? (
-        <p className="mt-1 text-xs text-[var(--text-2)]">{card.initiativeLabel}</p>
-      ) : null}
-      {card.assignees.length > 0 ? (
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          {card.assignees.map((a) => a.displayName).join(", ")}
-        </p>
-      ) : null}
+          {card.initiativeLabel ? (
+            <p className="mt-1 text-xs text-[var(--text-2)]">{card.initiativeLabel}</p>
+          ) : null}
+          <SprintTaskAssigneeDisplay assignees={card.assignees} className="mt-2" compact />
+        </div>
+      </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {actions.map((action) => (
           <button

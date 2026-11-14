@@ -6,6 +6,8 @@ import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
+import SprintTaskAssigneeDisplay from "./SprintTaskAssigneeDisplay";
+import SprintTaskTitleLink from "./SprintTaskTitleLink";
 import {
   filterCatalogBySearch,
   initiativeGroupSelectionState,
@@ -413,13 +415,13 @@ function PlanningTaskRow({
         className="mt-1"
         data-testid={`sprint-planning-task-${task.id}`}
       />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-[var(--foreground)]">{task.title}</p>
+      <div className="min-w-0 flex-1 space-y-1">
+        <SprintTaskTitleLink taskId={task.id} title={task.title} className="font-medium" />
         <p className="text-xs text-[var(--muted)]">
           {task.statusLabel}
-          {task.assigneeLabels.length > 0 ? ` · ${task.assigneeLabels.join(", ")}` : ""}
           {dueLabel ? ` · Fällig ${dueLabel}` : ""}
         </p>
+        <SprintTaskAssigneeDisplay assignees={task.assignees} compact />
         {task.exclusionReason ? (
           <p className="mt-0.5 text-xs text-[var(--muted)]">{task.exclusionReason}</p>
         ) : null}

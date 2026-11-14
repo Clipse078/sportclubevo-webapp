@@ -103,6 +103,17 @@
   }
 }
 
+/* SCE-CD-04 — wider tenant identity rail on large desktops (primary nav shifts right). */
+@media (min-width: 1280px) {
+  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
+    --sce-nav-brand-rail-width: clamp(15.5rem, 12rem + 18vw, 30rem);
+  }
+
+  .sce-global-tenant-row-rail[data-tenant-layout="tenant-header-primary"] .sce-tenant-header-identity-name {
+    max-width: min(100%, calc(var(--sce-nav-brand-rail-width) - 3rem));
+  }
+}
+
 .sce-nav-spine-brand-cell {
   display: flex;
   align-items: center;

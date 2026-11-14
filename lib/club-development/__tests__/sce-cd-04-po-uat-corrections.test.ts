@@ -92,4 +92,36 @@ describe("SCE-CD-04 PO UAT corrections", () => {
       "ClubDevelopmentFormError",
     );
   });
+
+  it("sprint board cards link tasks and show assignees without card-level drag", () => {
+    const board = read("components/admin/club-development/DevelopmentSprintBoard.tsx");
+    expect(board).toContain("SprintTaskTitleLink");
+    expect(board).toContain("SprintTaskAssigneeDisplay");
+    expect(board).toContain("sprint-board-drag-handle");
+    expect(board).not.toMatch(/<article[\s\S]*draggable=\{draggable\}/);
+    expect(read("components/admin/club-development/SprintTaskAssigneeDisplay.tsx")).toContain("Verantwortlich");
+    expect(read("components/admin/club-development/SprintTaskAssigneeDisplay.tsx")).toContain("Nicht zugewiesen");
+    expect(read("components/admin/club-development/SprintTaskTitleLink.tsx")).toContain("taskWorkspaceHref");
+  });
+
+  it("sprint planning rows reuse canonical task links and assignee presentation", () => {
+    const planning = read("components/admin/club-development/DevelopmentSprintDetailWorkspace.tsx");
+    const bulk = read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx");
+    expect(planning).toContain("SprintTaskTitleLink");
+    expect(planning).toContain("SprintTaskAssigneeDisplay");
+    expect(bulk).toContain("SprintTaskTitleLink");
+    expect(bulk).toContain("SprintTaskAssigneeDisplay");
+    expect(read("lib/club-development/sprints/sprint-task-assignee.ts")).toContain(
+      "loadTaskResponsibleDisplayNamesByUserIds",
+    );
+    expect(read("lib/club-development/sprints/sprint-board.ts")).toContain("mapTaskAssigneeRowsToViewModels");
+  });
+
+  it("widens shared header tenant brand rail without shrinking nav typography", () => {
+    const css = read("app/(admin)/global-app-navigation.css");
+    expect(css).toMatch(/@media \(min-width: 1280px\)[\s\S]*--sce-nav-brand-rail-width:\s*clamp/);
+    expect(css).toContain("calc(var(--sce-nav-brand-rail-width) - 3rem)");
+    const identity = read("components/admin/layout/HeaderTenantIdentity.tsx");
+    expect(identity).not.toContain("max-w-[min(100%,18rem)]");
+  });
 });

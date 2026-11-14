@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import type { DevelopmentSprintStatus, TaskStatus } from "@prisma/client";
-import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
+import type { SprintTaskAssigneeViewModel } from "@/lib/club-development/sprints/sprint-task-assignee";
+import SprintTaskAssigneeDisplay from "./SprintTaskAssigneeDisplay";
+import SprintTaskTitleLink from "./SprintTaskTitleLink";
 import SprintBulkTaskPlanningPanel from "./SprintBulkTaskPlanningPanel";
 import SprintClosePanel from "./SprintClosePanel";
 import SprintInlineTaskCreate from "./SprintInlineTaskCreate";
@@ -15,6 +17,7 @@ export type SprintMembershipRow = {
   title: string;
   statusLabel: string;
   status: TaskStatus;
+  assignees: SprintTaskAssigneeViewModel[];
   assigneeLabels: string[];
   initiativeTitle: string | null;
   priorityLabel: string | null;
@@ -61,7 +64,7 @@ export default function DevelopmentSprintDetailWorkspace({
         taskId: string;
         title: string;
         status: TaskStatus;
-        assignees: { displayName: string }[];
+        assignees: SprintTaskAssigneeViewModel[];
         initiativeLabel: string | null;
         priority: string;
         dueAt: string | null;
@@ -87,6 +90,7 @@ export default function DevelopmentSprintDetailWorkspace({
             title: card?.title ?? "Aufgabe",
             statusLabel: card ? (STATUS_MAP[card.status] ?? card.status) : "—",
             status: card?.status ?? "OPEN",
+            assignees: card?.assignees ?? [],
             assigneeLabels: card?.assignees.map((a) => a.displayName).filter(Boolean) ?? [],
             initiativeTitle: card?.initiativeLabel ?? null,
             priorityLabel: card?.priority ?? null,
@@ -97,6 +101,23 @@ export default function DevelopmentSprintDetailWorkspace({
       );
     });
   }, [sprintId]);
+
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") {
+        reloadMemberships();
+      }
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) reloadMemberships();
+    };
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [reloadMemberships]);
 
   const removeTask = (taskId: string) => {
     setError(null);
@@ -203,21 +224,16 @@ export default function DevelopmentSprintDetailWorkspace({
 
 function SprintTaskMembershipLink({ row }: { row: SprintMembershipRow }) {
   return (
-    <div className="min-w-0 flex-1">
-      <Link
-        href={taskWorkspaceHref(row.taskId)}
-        className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
-      >
-        {row.title}
-      </Link>
+    <div className="min-w-0 flex-1 space-y-1">
+      <SprintTaskTitleLink taskId={row.taskId} title={row.title} className="font-medium text-[var(--sce-primary)] hover:underline" />
       <p className="text-xs text-[var(--muted)]">
         {row.statusLabel}
         {row.priorityLabel ? ` · ${row.priorityLabel}` : ""}
-        {row.assigneeLabels.length > 0 ? ` · ${row.assigneeLabels.join(", ")}` : ""}
         {row.initiativeTitle ? ` · ${row.initiativeTitle}` : ""}
         {row.dueLabel ? ` · Fällig ${row.dueLabel}` : ""}
         {row.addedAfterSprintStart ? " · nach Sprintstart hinzugefügt" : ""}
       </p>
+      <SprintTaskAssigneeDisplay assignees={row.assignees} compact />
     </div>
   );
 }

@@ -68,7 +68,7 @@ export default function HeaderTenantIdentity({
         className={cn(
           "min-w-0 leading-tight text-[var(--foreground)]",
           isHeaderPrimary
-            ? "sce-tenant-header-identity-name max-w-[min(100%,18rem)] truncate lg:max-w-[min(100%,22rem)]"
+            ? "sce-tenant-header-identity-name truncate"
             : cn(
                 "font-semibold tracking-[-0.01em] text-[var(--text-2)]",
                 isStacked

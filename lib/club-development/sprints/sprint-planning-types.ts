@@ -1,10 +1,13 @@
 import type { TaskStatus } from "@prisma/client";
+import type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 
 export type SprintPlanningTaskDto = {
   id: string;
   title: string;
   status: TaskStatus;
   statusLabel: string;
+  assignees: SprintTaskAssigneeViewModel[];
+  /** @deprecated use assignees */
   assigneeLabels: string[];
   dueAt: string | null;
   selectable: boolean;

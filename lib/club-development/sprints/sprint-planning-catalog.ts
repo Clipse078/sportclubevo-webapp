@@ -19,6 +19,7 @@ import {
   isSprintPlanningTaskSelectable,
   sprintPlanningExclusionMessage,
 } from "./sprint-planning-eligibility";
+import { loadSprintTaskAssigneeViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import type {
   SprintPlanningCatalogDto,
   SprintPlanningInitiativeGroupDto,
@@ -40,24 +41,28 @@ const PLANNING_TASK_SELECT = {
   createdByUserId: true,
   orgUnitId: true,
   assignees: {
-    select: { user: { select: { firstName: true, lastName: true } } },
-    take: 3,
+    select: { userId: true },
     orderBy: { assignedAt: "asc" as const },
   },
 } satisfies Prisma.TaskSelect;
 
 type PlanningTaskRow = Prisma.TaskGetPayload<{ select: typeof PLANNING_TASK_SELECT }>;
 
-function assigneeLabels(row: PlanningTaskRow): string[] {
+function assigneesForRow(
+  row: PlanningTaskRow,
+  byUserId: Map<string, SprintTaskAssigneeViewModel>,
+): SprintTaskAssigneeViewModel[] {
   return row.assignees
-    .map((a) => `${a.user.firstName} ${a.user.lastName}`.trim())
-    .filter(Boolean);
+    .map((a) => byUserId.get(a.userId))
+    .filter((a): a is SprintTaskAssigneeViewModel => Boolean(a));
 }
 
 function toPlanningTaskDto(
   row: PlanningTaskRow,
   membership: { inTarget: boolean; otherTitle: string | null },
+  byUserId: Map<string, SprintTaskAssigneeViewModel>,
 ): SprintPlanningTaskDto {
+  const assignees = assigneesForRow(row, byUserId);
   const inTargetSprint = membership.inTarget;
   const otherSprintTitle = membership.otherTitle;
   const exclusionReason = sprintPlanningExclusionMessage({
@@ -75,7 +80,8 @@ function toPlanningTaskDto(
     title: row.title,
     status: row.status,
     statusLabel: TASK_STATUS_LABELS[row.status],
-    assigneeLabels: assigneeLabels(row),
+    assignees,
+    assigneeLabels: assignees.map((a) => a.displayName),
     dueAt: row.dueAt?.toISOString() ?? null,
     selectable,
     inTargetSprint,
@@ -165,8 +171,16 @@ export async function loadSprintPlanningCatalog(
     AND: [readWhere],
   };
 
-  const initiativeGroups: SprintPlanningInitiativeGroupDto[] = [];
+  type PendingInitiativeGroup = {
+    initiativeId: string;
+    title: string;
+    slug: string;
+    deduped: PlanningTaskRow[];
+    membershipMap: Map<string, { inTarget: boolean; otherTitle: string | null }>;
+  };
+  const pendingInitiativeGroups: PendingInitiativeGroup[] = [];
   const groupedTaskIds = new Set<string>();
+  const catalogRows: PlanningTaskRow[] = [];
 
   for (const initiative of visibleInitiatives) {
     const orFilters = initiativeTaskAssociationOrFilters(initiative.id);
@@ -194,6 +208,7 @@ export async function loadSprintPlanningCatalog(
     const deduped = dedupeTasksById(rows);
     for (const row of deduped) {
       groupedTaskIds.add(row.id);
+      catalogRows.push(row);
     }
 
     const membershipMap = await loadMembershipMaps(
@@ -202,11 +217,12 @@ export async function loadSprintPlanningCatalog(
       deduped.map((r) => r.id),
     );
 
-    initiativeGroups.push({
+    pendingInitiativeGroups.push({
       initiativeId: initiative.id,
       title: initiative.title,
       slug: initiative.slug,
-      tasks: deduped.map((row) => toPlanningTaskDto(row, membershipMap.get(row.id)!)),
+      deduped,
+      membershipMap,
     });
   }
 
@@ -245,11 +261,33 @@ export async function loadSprintPlanningCatalog(
     finalStandalone.map((r) => r.id),
   );
 
+  for (const row of finalStandalone) {
+    catalogRows.push(row);
+  }
+
+  const assigneeByUserId = new Map(
+    (
+      await loadSprintTaskAssigneeViewModels(
+        tenantId,
+        catalogRows.flatMap((row) => row.assignees.map((a) => a.userId)),
+      )
+    ).map((a) => [a.userId, a] as const),
+  );
+
+  const initiativeGroups: SprintPlanningInitiativeGroupDto[] = pendingInitiativeGroups.map((group) => ({
+    initiativeId: group.initiativeId,
+    title: group.title,
+    slug: group.slug,
+    tasks: group.deduped.map((row) =>
+      toPlanningTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId),
+    ),
+  }));
+
   return {
     initiativeGroups,
     standaloneGroup: {
       tasks: finalStandalone.map((row) =>
-        toPlanningTaskDto(row, standaloneMembershipMap.get(row.id)!),
+        toPlanningTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId),
       ),
     },
   };

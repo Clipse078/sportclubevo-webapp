@@ -4,6 +4,7 @@ import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
 import type { TaskServiceContext } from "@/lib/tasks/types";
+import { loadSprintTaskAssigneeViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { listActiveSprintMemberships } from "./sprint-service";
 import { resolveReadableSprintTaskIds } from "./sprint-task-visibility";
 
@@ -13,6 +14,8 @@ export type SprintPlanningMembershipRow = {
   title: string;
   statusLabel: string;
   status: TaskStatus;
+  assignees: SprintTaskAssigneeViewModel[];
+  /** @deprecated use assignees */
   assigneeLabels: string[];
   initiativeTitle: string | null;
   priorityLabel: string | null;
@@ -53,9 +56,8 @@ export async function loadAuthorizedSprintPlanningMemberships(
       contextId: true,
       primaryInitiativeId: true,
       assignees: {
-        select: {
-          user: { select: { firstName: true, lastName: true } },
-        },
+        orderBy: { assignedAt: "asc" },
+        select: { userId: true },
       },
     },
   });
@@ -80,6 +82,15 @@ export async function loadAuthorizedSprintPlanningMemberships(
   const initiativeTitleById = new Map(initiatives.map((i) => [i.id, i.title]));
   const taskById = new Map(tasks.map((t) => [t.id, t]));
 
+  const assigneeByUserId = new Map(
+    (
+      await loadSprintTaskAssigneeViewModels(
+        tenantId,
+        tasks.flatMap((t) => t.assignees.map((a) => a.userId)),
+      )
+    ).map((a) => [a.userId, a] as const),
+  );
+
   return visibleMemberships.map((m) => {
     const task = taskById.get(m.taskId);
     const initiativeId =
@@ -92,9 +103,12 @@ export async function loadAuthorizedSprintPlanningMemberships(
       title: task?.title ?? "Aufgabe",
       statusLabel: task ? TASK_STATUS_LABELS[task.status] : "Offen",
       status: task?.status ?? TaskStatus.OPEN,
+      assignees: (task?.assignees ?? [])
+        .map((a) => assigneeByUserId.get(a.userId))
+        .filter((a): a is SprintTaskAssigneeViewModel => Boolean(a)),
       assigneeLabels: (task?.assignees ?? [])
-        .map((a) => `${a.user.firstName} ${a.user.lastName}`.trim())
-        .filter(Boolean),
+        .map((a) => assigneeByUserId.get(a.userId)?.displayName)
+        .filter((label): label is string => Boolean(label)),
       initiativeTitle: initiativeId ? initiativeTitleById.get(initiativeId) ?? null : null,
       priorityLabel: task?.priority ?? null,
       dueLabel: task?.dueAt ? DATE_FMT.format(task.dueAt) : null,

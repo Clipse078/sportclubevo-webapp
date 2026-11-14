@@ -3,7 +3,10 @@ import "server-only";
 import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TaskServiceContext } from "@/lib/tasks/types";
+import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
+
+export type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 
 export type SprintBoardColumnKey = "OPEN" | "IN_PROGRESS" | "DONE";
 
@@ -14,7 +17,7 @@ export type SprintBoardCard = {
   column: SprintBoardColumnKey;
   priority: string;
   dueAt: string | null;
-  assignees: { userId: string; displayName: string }[];
+  assignees: SprintTaskAssigneeViewModel[];
   initiativeLabel: string | null;
   initiativeId: string | null;
   addedAfterSprintStart: boolean;
@@ -54,10 +57,8 @@ export async function loadSprintBoard(
       contextId: true,
       primaryInitiativeId: true,
       assignees: {
-        select: {
-          userId: true,
-          user: { select: { firstName: true, lastName: true } },
-        },
+        orderBy: { assignedAt: "asc" },
+        select: { userId: true },
       },
     },
   });
@@ -86,6 +87,13 @@ export async function loadSprintBoard(
     DONE: [],
   };
 
+  const allAssigneeUserIds = tasks.flatMap((t) => t.assignees.map((a) => a.userId));
+  const assigneeViewByUserId = new Map(
+    (await mapTaskAssigneeRowsToViewModels(tenantId, allAssigneeUserIds.map((userId) => ({ userId })))).map(
+      (a) => [a.userId, a] as const,
+    ),
+  );
+
   for (const task of tasks) {
     const column = mapTaskStatusToBoardColumn(task.status);
     const initiativeIdForLabel =
@@ -101,10 +109,9 @@ export async function loadSprintBoard(
       column,
       priority: task.priority,
       dueAt: task.dueAt?.toISOString() ?? null,
-      assignees: task.assignees.map((a) => ({
-        userId: a.userId,
-        displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
-      })),
+      assignees: task.assignees
+        .map((a) => assigneeViewByUserId.get(a.userId))
+        .filter((a): a is SprintTaskAssigneeViewModel => Boolean(a)),
       initiativeLabel: initiative?.title ?? null,
       initiativeId: initiativeIdForLabel ?? null,
       addedAfterSprintStart: addedFlagByTask.get(task.id) ?? false,
