@@ -49,6 +49,7 @@ export function TaskDeadlineReminderEditor({
         timeZone={timeZone}
         dueAt={task.dueAt}
         disabled={disabled || pending}
+        showHeading={false}
       />
       <TaskReminderFields
         timeZone={timeZone}

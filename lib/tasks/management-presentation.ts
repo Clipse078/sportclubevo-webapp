@@ -17,30 +17,34 @@ export function taskStatusPresentation(status: TaskStatus): TaskStatusPresentati
     case "OPEN":
       return {
         label: TASK_STATUS_LABELS.OPEN,
-        className: "border-sky-500/30 bg-sky-950/25 text-sky-300",
+        className:
+          "border-[var(--sce-info-border)] bg-[var(--sce-info-light)] text-[var(--sce-color-status-info)]",
         icon: CircleDashed,
-        iconClassName: "text-sky-400",
+        iconClassName: "text-[var(--sce-color-status-info)]",
       };
     case "IN_PROGRESS":
       return {
         label: TASK_STATUS_LABELS.IN_PROGRESS,
-        className: "border-amber-500/30 bg-amber-950/25 text-amber-200",
+        className:
+          "border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] text-[var(--sce-color-status-warning)]",
         icon: LoaderCircle,
-        iconClassName: "text-amber-400",
+        iconClassName: "text-[var(--sce-color-status-warning)]",
       };
     case "DONE":
       return {
         label: TASK_STATUS_LABELS.DONE,
-        className: "border-emerald-500/30 bg-emerald-950/30 text-emerald-300",
+        className:
+          "border-[var(--sce-success-border)] bg-[var(--sce-success-light)] text-[var(--sce-color-status-success)]",
         icon: Check,
-        iconClassName: "text-emerald-400",
+        iconClassName: "text-[var(--sce-color-status-success)]",
       };
     case "CANCELLED":
       return {
         label: TASK_STATUS_LABELS.CANCELLED,
-        className: "border-red-500/30 bg-red-950/20 text-red-300",
+        className:
+          "border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] text-[var(--sce-color-status-error)]",
         icon: Ban,
-        iconClassName: "text-red-400",
+        iconClassName: "text-[var(--sce-color-status-error)]",
       };
     default:
       return {

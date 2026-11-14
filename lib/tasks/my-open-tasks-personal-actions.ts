@@ -135,6 +135,7 @@ function mapRowToPersonalTaskDto(
     completedAt: null,
     contextType: null,
     contextId: null,
+    primaryInitiativeId: null,
     parentTaskId: row.parentTaskId,
     taskSeriesId: null,
     orgUnitId: null,

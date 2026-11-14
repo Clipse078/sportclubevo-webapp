@@ -98,6 +98,7 @@ function mapTask(row: TaskRow): TaskDto {
     completedAt: row.completedAt?.toISOString() ?? null,
     contextType: row.contextType,
     contextId: row.contextId,
+    primaryInitiativeId: row.primaryInitiativeId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
     orgUnitId: row.orgUnitId,

@@ -101,7 +101,23 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     expect(board).not.toMatch(/<article[\s\S]*draggable=\{draggable\}/);
     expect(read("components/admin/club-development/SprintTaskAssigneeDisplay.tsx")).toContain("Verantwortlich");
     expect(read("components/admin/club-development/SprintTaskAssigneeDisplay.tsx")).toContain("Nicht zugewiesen");
-    expect(read("components/admin/club-development/SprintTaskTitleLink.tsx")).toContain("taskWorkspaceHref");
+    const titleLink = read("components/admin/club-development/SprintTaskTitleLink.tsx");
+    expect(titleLink).toContain("taskWorkspaceHref");
+    expect(titleLink).toContain("returnTo");
+  });
+
+  it("dedicated task route uses full page workspace without dialog shell", () => {
+    const page = read("app/(admin)/dashboard/aufgaben/[taskId]/page.tsx");
+    expect(page).not.toContain("SCE_DIALOG_WORKSPACE_PANEL");
+    expect(page).toContain('presentation="page"');
+    expect(read("components/admin/aufgaben/TaskWorkspace.tsx")).toContain("DetailPagePattern");
+    expect(read("components/admin/aufgaben/TaskWorkspace.tsx")).toContain("data-task-workspace-page-body");
+  });
+
+  it("task status badges use white-theme semantic tokens", () => {
+    const presentation = read("lib/tasks/management-presentation.ts");
+    expect(presentation).toContain("--sce-color-status-info");
+    expect(presentation).not.toContain("sky-950");
   });
 
   it("sprint planning rows reuse canonical task links and assignee presentation", () => {

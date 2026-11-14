@@ -45,6 +45,10 @@ import {
   loadTaskAccessGrantSnapshot,
   type TaskAccessGrantSnapshot,
 } from "./task-access-grants";
+import {
+  loadTaskWorkspaceAssociations,
+  type TaskWorkspaceAssociations,
+} from "./task-workspace-associations";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -73,6 +77,7 @@ function mapTask(row: TaskRow): TaskDto {
     completedAt: row.completedAt?.toISOString() ?? null,
     contextType: row.contextType,
     contextId: row.contextId,
+    primaryInitiativeId: row.primaryInitiativeId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
     orgUnitId: row.orgUnitId,
@@ -134,6 +139,7 @@ export type TaskWorkspaceBundle = {
   follow: TaskFollowStateDto;
   documentReferences: TaskDocumentReferenceDto[];
   accessGrants: TaskAccessGrantSnapshot;
+  associations: TaskWorkspaceAssociations;
 };
 
 export async function loadTaskWorkspace(
@@ -149,8 +155,18 @@ export async function loadTaskWorkspace(
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
     : Promise.resolve(null);
 
-  const [subtasks, parentTask, seriesRow, creatorUser, context, provenance, follow, documentReferences, accessGrants] =
-    await Promise.all([
+  const [
+    subtasks,
+    parentTask,
+    seriesRow,
+    creatorUser,
+    context,
+    provenance,
+    follow,
+    documentReferences,
+    accessGrants,
+    associations,
+  ] = await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
       ? loadAuthorizedParentTaskRefs(ctx, [task.parentTaskId]).then(
@@ -175,6 +191,13 @@ export async function loadTaskWorkspace(
     getTaskFollowStateForVisibleTask(ctx, visibleTask),
     listTaskDocumentReferencesForVisibleTask(ctx, visibleTask),
     loadTaskAccessGrantSnapshot(ctx.tenantId, task.id),
+    loadTaskWorkspaceAssociations(
+      ctx,
+      task.id,
+      task.primaryInitiativeId,
+      task.contextType,
+      task.contextId,
+    ),
   ]);
 
   [task] = await enrichTaskDtosWithResponsibleDisplayNames(ctx.tenantId, [task]);
@@ -250,5 +273,6 @@ export async function loadTaskWorkspace(
     follow,
     documentReferences,
     accessGrants,
+    associations,
   };
 }

@@ -10,6 +10,7 @@ export type TaskWorkspaceViewProps = {
   locale: string;
   timeZone: string;
   backHref: string;
+  returnContextLabel?: string | null;
   presentation: "page" | "modal";
   currentUserId: string;
   onClose?: () => void;

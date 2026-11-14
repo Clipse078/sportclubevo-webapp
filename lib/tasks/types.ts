@@ -40,6 +40,7 @@ export type TaskDto = {
   completedAt: string | null;
   contextType: TaskContextType | null;
   contextId: string | null;
+  primaryInitiativeId: string | null;
   parentTaskId: string | null;
   taskSeriesId: string | null;
   orgUnitId: string | null;

@@ -148,16 +148,18 @@ export function TaskDeadlineFields({
   disabled,
   dueDateName = "dueAt",
   dueTimeName = "dueTime",
+  showHeading = true,
 }: {
   timeZone: string;
   dueAt: string | null;
   disabled?: boolean;
   dueDateName?: string;
   dueTimeName?: string;
+  showHeading?: boolean;
 }) {
   return (
     <div className="space-y-1">
-      <span className="text-sm text-[var(--text-2)]">Deadline</span>
+      {showHeading ? <span className="text-sm text-[var(--text-2)]">Deadline</span> : null}
       <div className="flex gap-2">
         <input
           type="date"

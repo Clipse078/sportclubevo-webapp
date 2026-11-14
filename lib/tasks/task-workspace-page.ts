@@ -13,6 +13,8 @@ import { buildTaskManagementHref, resolveTaskManagementQuery } from "@/lib/tasks
 import { hasTaskPermission } from "@/lib/tasks/visibility";
 import { loadTaskWorkspace } from "@/lib/tasks/workspace-service";
 import { TaskForbiddenError, TaskNotFoundError } from "@/lib/tasks/errors";
+import { parseTaskWorkspaceReturnTo } from "@/lib/tasks/task-navigation";
+import { sanitizeInternalAppReturnPath } from "@/lib/navigation/safe-internal-app-return-path";
 
 export async function loadTaskWorkspacePageData(taskId: string, searchParams: Record<string, string | undefined>) {
   await requirePermission(PERMISSIONS.TASKS_VIEW);
@@ -29,9 +31,17 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
     hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
 
   const query = resolveTaskManagementQuery(searchParams, tenantWideVisibility);
-  const backHref = buildTaskManagementHref("/dashboard/aufgaben", {}, query, {
-    tenantWideVisibility,
-  });
+  const returnTo = sanitizeInternalAppReturnPath(parseTaskWorkspaceReturnTo(searchParams));
+  const backHref =
+    returnTo ??
+    buildTaskManagementHref("/dashboard/aufgaben", {}, query, {
+      tenantWideVisibility,
+    });
+  const returnContextLabel = returnTo?.includes("/vereinsleitung/sprints/")
+    ? "Zurück zum Sprint"
+    : returnTo
+      ? "Zurück"
+      : null;
 
   const locale = tenant?.locale ?? "de-CH";
   const timeZone = tenant?.timezone ?? "Europe/Zurich";
@@ -68,6 +78,7 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
       locale,
       timeZone,
       backHref,
+      returnContextLabel,
       currentUserId,
     };
   } catch (error) {
