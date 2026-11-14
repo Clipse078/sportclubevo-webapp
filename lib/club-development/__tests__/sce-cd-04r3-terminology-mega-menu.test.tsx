@@ -95,7 +95,7 @@ describe("SCE-CD-04R3 product copy anchors", () => {
 
   it("task associations section uses Umsetzungsphase labels", () => {
     const section = read("components/admin/aufgaben/TaskWorkspaceAssociationsSection.tsx");
-    expect(section).toContain("CD_TASK_WORKSPACE_COPY.currentImplementationPhase");
+    expect(section).toContain("CD_TASK_WORKSPACE_COPY.assignedImplementationPhase");
     expect(section).toContain("CD_TASK_WORKSPACE_COPY.priorImplementationPhases");
     expect(section).not.toContain("Aktuelle Sprint-Zuordnung");
   });

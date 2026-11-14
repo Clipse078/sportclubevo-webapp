@@ -266,6 +266,15 @@ export function resolveDomainNavigationPanelInitialL2Key(
   return firstWithChildren?.key ?? items[0]!.key;
 }
 
+function dedupeNavChildrenByHref(children: NavItemChild[]): NavItemChild[] {
+  const seen = new Set<string>();
+  return children.filter((child) => {
+    if (seen.has(child.href)) return false;
+    seen.add(child.href);
+    return true;
+  });
+}
+
 /** Right-column entries for hierarchical panel mode (overview + module-local children). */
 export function resolveDomainPanelRightColumnEntries(
   domain: NavigationDomain,
@@ -274,13 +283,19 @@ export function resolveDomainPanelRightColumnEntries(
   const children = resolveSecondaryNavItemModuleLocalChildren(domain, item);
   if (children.length === 0) return [];
 
-  const overview: NavItemChild = {
-    key: `${item.key}__domain-panel-overview`,
-    label: `${item.label} Übersicht`,
-    href: item.href,
-  };
+  const hasChildForHubHref = children.some((child) => child.href === item.href);
+  const entries = hasChildForHubHref
+    ? children
+    : [
+        {
+          key: `${item.key}__domain-panel-overview`,
+          label: `${item.label} Übersicht`,
+          href: item.href,
+        },
+        ...children,
+      ];
 
-  return [overview, ...children];
+  return dedupeNavChildrenByHref(entries);
 }
 
 export type ExplorerDomainModule = DomainSecondaryNavItem & {

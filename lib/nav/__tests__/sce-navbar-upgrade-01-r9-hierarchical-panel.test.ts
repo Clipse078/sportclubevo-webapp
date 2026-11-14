@@ -65,8 +65,9 @@ describe("SCE-NAVBAR-UPGRADE-01-R9 hierarchical domain panel", () => {
 
     const organisation = clubItems.find((item) => item.label === "Organisation")!;
     const l3 = resolveDomainPanelRightColumnEntries(club, organisation);
-    expect(l3[0]?.label).toBe("Organisation Übersicht");
     expect(l3.some((child) => child.key === "org-units")).toBe(true);
+    expect(new Set(l3.map((child) => child.href)).size).toBe(l3.length);
+    expect(l3.some((child) => child.label === "Organisation Übersicht")).toBe(false);
   });
 
   it("resolves active L2 focus for open panel from active route", () => {

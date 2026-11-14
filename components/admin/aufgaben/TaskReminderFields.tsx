@@ -159,7 +159,7 @@ export function TaskDeadlineFields({
 }) {
   return (
     <div className="space-y-1">
-      {showHeading ? <span className="text-sm text-[var(--text-2)]">Deadline</span> : null}
+      {showHeading ? <span className="text-sm text-[var(--text-2)]">Fällig am</span> : null}
       <div className="flex gap-2">
         <input
           type="date"

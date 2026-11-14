@@ -29,16 +29,23 @@ export const CD_INITIATIVE_COPY = {
   reviewBanner: "Prüfung & Freigabe",
 } as const;
 
+/** Canonical German labels for development sprint (Umsetzungsphase) lifecycle — presentation only. */
+export const CD_SPRINT_STATUS_LABELS = {
+  PLANNED: "Geplant",
+  ACTIVE: "Aktiv",
+  COMPLETED: "Abgeschlossen",
+} as const;
+
 export const CD_SPRINT_WORKSPACE_COPY = {
   workspaceAria: "Umsetzungsphase-Arbeitsbereich",
   tabPlanning: "Planung",
   tabTaskBoard: "Aufgabenboard",
   tabReview: "Rückblick",
   createPhase: "Umsetzungsphase erstellen",
-  startPhase: "Umsetzungsphase starten",
+  startPhase: "Phase starten",
   closePhase: "Umsetzungsphase abschließen",
-  tasksInPhase: "Aufgaben in dieser Umsetzungsphase",
-  removeFromPhase: "Aus Umsetzungsphase entfernen",
+  tasksInPhase: "Aufgaben",
+  removeFromPhase: "Aus Phase entfernen",
   taskBoardTitle: "Aufgabenboard",
   goalPlaceholder: "Ziel beschreiben …",
   noGoalRecorded: "Kein Ziel erfasst.",
@@ -84,9 +91,10 @@ export const CD_SPRINT_API_COPY = {
 
 export const CD_TASK_WORKSPACE_COPY = {
   primaryInitiative: "Primäres Vorhaben",
-  currentImplementationPhase: "Aktuelle Umsetzungsphase",
+  assignedImplementationPhase: "Zugeordnete Umsetzungsphase",
   priorImplementationPhases: "Frühere Umsetzungsphasen",
   returnToImplementationPhase: "Zurück zur Umsetzungsphase",
+  dueAt: "Fällig am",
 } as const;
 
 export const CD_TARGET_COPY = {

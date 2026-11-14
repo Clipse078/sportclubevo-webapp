@@ -11,6 +11,8 @@ import SprintBulkTaskPlanningPanel from "./SprintBulkTaskPlanningPanel";
 import SprintClosePanel from "./SprintClosePanel";
 import SprintInlineTaskCreate from "./SprintInlineTaskCreate";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { formatTaskPriorityLabel } from "@/lib/tasks/management-labels";
+import type { TaskPriority } from "@prisma/client";
 
 export type SprintMembershipRow = {
   membershipId: string;
@@ -94,7 +96,7 @@ export default function DevelopmentSprintDetailWorkspace({
             assignees: card?.assignees ?? [],
             assigneeLabels: card?.assignees.map((a) => a.displayName).filter(Boolean) ?? [],
             initiativeTitle: card?.initiativeLabel ?? null,
-            priorityLabel: card?.priority ?? null,
+            priorityLabel: formatTaskPriorityLabel(card?.priority as TaskPriority | undefined),
             dueLabel,
             addedAfterSprintStart: row.addedAfterSprintStart,
           };
@@ -141,7 +143,7 @@ export default function DevelopmentSprintDetailWorkspace({
   return (
     <div className="space-y-6" data-testid="sprint-detail-workspace">
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">Aufgaben in dieser Umsetzungsphase</h2>
+        <h2 className="text-sm font-semibold text-[var(--foreground)]">{CD_SPRINT_WORKSPACE_COPY.tasksInPhase}</h2>
         <p className="mt-1 text-xs text-[var(--muted)]">
           Geplante Aufgaben mit Status, Verantwortlichen und Vorhaben.
         </p>
@@ -166,7 +168,7 @@ export default function DevelopmentSprintDetailWorkspace({
                     disabled={pending}
                     className="rounded-md border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-red-600"
                   >
-                    Aus Umsetzungsphase entfernen
+                    {CD_SPRINT_WORKSPACE_COPY.removeFromPhase}
                   </button>
                 ) : null}
               </li>

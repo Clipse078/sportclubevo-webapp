@@ -2,7 +2,7 @@ import "server-only";
 
 import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { TASK_STATUS_LABELS, formatTaskPriorityLabel } from "@/lib/tasks/management-labels";
 import type { TaskServiceContext } from "@/lib/tasks/types";
 import { loadSprintTaskAssigneeViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { listActiveSprintMemberships } from "./sprint-service";
@@ -110,7 +110,7 @@ export async function loadAuthorizedSprintPlanningMemberships(
         .map((a) => assigneeByUserId.get(a.userId)?.displayName)
         .filter((label): label is string => Boolean(label)),
       initiativeTitle: initiativeId ? initiativeTitleById.get(initiativeId) ?? null : null,
-      priorityLabel: task?.priority ?? null,
+      priorityLabel: formatTaskPriorityLabel(task?.priority ?? null),
       dueLabel: task?.dueAt ? DATE_FMT.format(task.dueAt) : null,
       addedAfterSprintStart: m.addedAfterSprintStart,
     };

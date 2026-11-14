@@ -1,6 +1,6 @@
 import "server-only";
 
-import { TaskContextType } from "@prisma/client";
+import { DevelopmentSprintStatus, TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TaskServiceContext } from "./types";
 
@@ -9,6 +9,7 @@ export type TaskWorkspaceSprintLink = {
   slug: string;
   title: string;
   href: string;
+  status: DevelopmentSprintStatus;
   removedAt: string | null;
 };
 
@@ -44,7 +45,7 @@ export async function loadTaskWorkspaceAssociations(
     prisma.developmentSprintTaskMembership.findMany({
       where: { tenantId: ctx.tenantId, taskId },
       include: {
-        sprint: { select: { id: true, slug: true, title: true } },
+        sprint: { select: { id: true, slug: true, title: true, status: true } },
       },
       orderBy: { addedAt: "desc" },
     }),
@@ -61,6 +62,7 @@ export async function loadTaskWorkspaceAssociations(
     slug: row.sprint.slug,
     title: row.sprint.title,
     href: sprintHref(row.sprint.slug),
+    status: row.sprint.status,
     removedAt: row.removedAt?.toISOString() ?? null,
   }));
 

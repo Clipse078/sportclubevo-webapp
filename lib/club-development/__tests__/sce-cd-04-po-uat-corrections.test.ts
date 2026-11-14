@@ -72,7 +72,7 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     const closePanel = read("components/admin/club-development/SprintClosePanel.tsx");
     const nav = read("components/admin/club-development/DevelopmentSprintWorkspaceNav.tsx");
     expect(detail).toContain("SprintBulkTaskPlanningPanel");
-    expect(detail).toContain("Aus Umsetzungsphase entfernen");
+    expect(detail).toContain("CD_SPRINT_WORKSPACE_COPY.removeFromPhase");
     expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
       "Aufgaben hinzufügen",
     );

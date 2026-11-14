@@ -1,7 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { TaskWorkspaceAssociations } from "@/lib/tasks/task-workspace-associations";
-import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import {
+  CD_SPRINT_STATUS_LABELS,
+  CD_TASK_WORKSPACE_COPY,
+} from "@/lib/club-development/product-copy";
+import { Badge } from "@/components/ui";
 
 type Props = {
   associations: TaskWorkspaceAssociations;
@@ -44,13 +48,16 @@ export function TaskWorkspaceAssociationsSection({ associations }: Props) {
       ) : null}
 
       {currentSprints.length > 0 ? (
-        <AssociationBlock label={CD_TASK_WORKSPACE_COPY.currentImplementationPhase}>
-          <ul className="space-y-1">
+        <AssociationBlock label={CD_TASK_WORKSPACE_COPY.assignedImplementationPhase}>
+          <ul className="space-y-2">
             {currentSprints.map((sprint) => (
-              <li key={sprint.sprintId}>
+              <li key={sprint.sprintId} className="flex flex-wrap items-center gap-2">
                 <Link href={sprint.href} className="sce-link-primary font-medium">
                   {sprint.title}
                 </Link>
+                <Badge variant={sprint.status === "ACTIVE" ? "success" : "info"}>
+                  {CD_SPRINT_STATUS_LABELS[sprint.status]}
+                </Badge>
               </li>
             ))}
           </ul>

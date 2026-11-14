@@ -10,7 +10,7 @@ import {
   useTransition,
   type KeyboardEvent,
 } from "react";
-import type { TaskStatus } from "@prisma/client";
+import type { TaskContextType, TaskStatus } from "@prisma/client";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -62,6 +62,8 @@ import {
   storedTaskDescriptionIsEmpty,
 } from "@/lib/tasks/task-description";
 import { TaskWorkspaceAssociationsSection } from "./TaskWorkspaceAssociationsSection";
+import { taskWorkspaceContextSectionLabel } from "@/lib/tasks/task-workspace-context-section-labels";
+import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 
@@ -149,12 +151,15 @@ function InlineTitle({
 function TaskContextSection({
   taskId,
   context,
+  contextType,
   canEdit,
 }: {
   taskId: string;
   context: TaskContextPresentation | null;
+  contextType: TaskContextType | null;
   canEdit: boolean;
 }) {
+  const sectionLabel = taskWorkspaceContextSectionLabel(contextType ?? undefined);
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -165,7 +170,7 @@ function TaskContextSection({
     return (
       <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Kontext
+          {sectionLabel}
         </p>
         <form
           className="mt-2 space-y-2"
@@ -230,7 +235,7 @@ function TaskContextSection({
           className="text-sm text-[var(--sce-primary)] hover:underline"
           onClick={() => setEditing(true)}
         >
-          Kontext hinzufügen
+          {sectionLabel} hinzufügen
         </button>
       </section>
     ) : null;
@@ -240,7 +245,7 @@ function TaskContextSection({
     <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
       <div className="flex items-start justify-between gap-2">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Kontext
+          {sectionLabel}
         </p>
         {canEdit ? (
           <button
@@ -717,7 +722,12 @@ export function TaskWorkspacePanel({
         </section>
       ) : null}
 
-      <TaskContextSection taskId={task.id} context={context} canEdit={capabilities.canEditContext} />
+      <TaskContextSection
+        taskId={task.id}
+        context={context}
+        contextType={task.contextType}
+        canEdit={capabilities.canEditContext}
+      />
 
       <TaskWorkspaceAssociationsSection associations={associations} />
 
@@ -813,7 +823,7 @@ export function TaskWorkspacePanel({
         )}
       </PropertyRow>
 
-      <PropertyRow label="Deadline">
+      <PropertyRow label={CD_TASK_WORKSPACE_COPY.dueAt}>
         {capabilities.canEditDueAt ? (
           <TaskDeadlineReminderEditor
             task={task}

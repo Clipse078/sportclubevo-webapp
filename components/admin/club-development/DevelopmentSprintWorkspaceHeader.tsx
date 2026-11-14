@@ -6,18 +6,11 @@ import { useState, useTransition } from "react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import DevelopmentSprintWorkspaceNav from "./DevelopmentSprintWorkspaceNav";
 import { Badge } from "@/components/ui";
-import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
-
-const STATUS_LABELS: Record<DevelopmentSprintStatus, string> = {
-  PLANNED: "Geplant",
-  ACTIVE: "Aktiv",
-  COMPLETED: "Abgeschlossen",
-};
+import { CD_SPRINT_STATUS_LABELS, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type Props = {
   sprintId: string;
   slug: string;
-  title: string;
   goal: string | null;
   status: DevelopmentSprintStatus;
   owner: string | null;
@@ -42,7 +35,6 @@ function formatSwissDate(value: string | null) {
 export default function DevelopmentSprintWorkspaceHeader({
   sprintId,
   slug,
-  title,
   goal,
   status,
   owner,
@@ -115,8 +107,7 @@ export default function DevelopmentSprintWorkspaceHeader({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-semibold text-[var(--foreground)]">{title}</h1>
-            <Badge variant="info">{STATUS_LABELS[status]}</Badge>
+            <Badge variant="info">{CD_SPRINT_STATUS_LABELS[status]}</Badge>
           </div>
           {editingGoal ? (
             <div className="space-y-2">

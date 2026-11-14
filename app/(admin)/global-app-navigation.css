@@ -753,7 +753,7 @@
   letter-spacing: 0.03em;
 }
 
-/* SCE-DS2-05B-R5 density retained: compact uppercase L2/L3 rows */
+/* SCE-DS2-05B-R5 density retained: shared L2/L3 row layout */
 .sce-domain-nav-panel-l2-link,
 .sce-domain-nav-panel-l2-control,
 .sce-domain-nav-panel-l3-link {
@@ -767,17 +767,31 @@
   border: none;
   border-radius: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  color: color-mix(in srgb, var(--text-2) 98%, transparent);
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.sce-domain-nav-panel-l2-link,
+.sce-domain-nav-panel-l2-control {
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   line-height: 1.15;
-  color: color-mix(in srgb, var(--text-2) 98%, transparent);
-  text-decoration: none;
-  background: transparent;
-  cursor: pointer;
-  transition: color var(--transition-fast);
+}
+
+/* SCE-CD-04R4 — sentence-case destination links in column 3 */
+.sce-domain-nav-panel-l3-link {
+  font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.25;
 }
 
 [data-sce-theme="white"] .sce-domain-nav-panel-l2-link,
