@@ -3,6 +3,7 @@
 import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
 import {
@@ -310,9 +311,8 @@ function InitiativePlanningGroup({
   return (
     <section className="rounded-lg border border-[var(--border)]" data-testid={`sprint-planning-initiative-${group.initiativeId}`}>
       <div className="flex items-start gap-2 px-3 py-2">
-        <input
+        <SceCheckbox
           ref={checkboxRef}
-          type="checkbox"
           checked={state === "all"}
           disabled={group.tasks.every((t) => !t.selectable)}
           onChange={onToggleGroup}
@@ -366,9 +366,8 @@ function StandalonePlanningGroup({
   return (
     <section className="rounded-lg border border-[var(--border)]" data-testid="sprint-planning-standalone">
       <div className="flex items-start gap-2 px-3 py-2">
-        <input
+        <SceCheckbox
           ref={checkboxRef}
-          type="checkbox"
           checked={state === "all"}
           disabled={tasks.every((t) => !t.selectable)}
           onChange={onToggleGroup}
@@ -407,8 +406,7 @@ function PlanningTaskRow({
   const dueLabel = formatDueDate(task.dueAt);
   return (
     <li className="flex items-start gap-2 px-3 py-2">
-      <input
-        type="checkbox"
+      <SceCheckbox
         checked={checked}
         disabled={!task.selectable}
         onChange={onToggle}
