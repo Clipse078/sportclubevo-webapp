@@ -160,7 +160,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
   return (
     <PageShell fullWidth>
       <DetailPagePattern
-        eyebrow="Initiativen"
+        eyebrow="Vorhaben"
         title={pageTitle}
         description={dbInitiative?.summary ?? undefined}
         headerBadge={
@@ -174,7 +174,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
         }
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Initiativen", href: "/vereinsleitung/initiativen" },
+          { label: "Vorhaben", href: "/vereinsleitung/initiativen" },
           { label: pageTitle },
         ]}
         headerActions={

@@ -12,13 +12,13 @@ export default async function NewInitiativePage() {
   return (
     <PageShell fullWidth>
       <FormPagePattern
-        eyebrow="Initiativen"
-        title="Neue Initiative erstellen"
-        description="Initiative mit Verantwortlichen, Status, optionaler Freigabe und Sichtbarkeit erfassen."
+        eyebrow="Vorhaben"
+        title="Neues Vorhaben erstellen"
+        description="Vorhaben mit Verantwortlichen, Status, optionaler Freigabe und Sichtbarkeit erfassen."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Initiativen", href: "/vereinsleitung/initiativen" },
-          { label: "Neue Initiative" },
+          { label: "Vorhaben", href: "/vereinsleitung/initiativen" },
+          { label: "Neues Vorhaben" },
         ]}
       >
         <ClubDevelopmentFormWorkflowShell>
