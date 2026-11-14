@@ -5,6 +5,7 @@ import type { StrategyTargetOverview } from "@/lib/club-development/strategy-ove
 
 type StrategyOverviewPanelProps = {
   targets: StrategyTargetOverview[];
+  canManageTargets?: boolean;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -43,11 +44,16 @@ function ProgressBar({
   );
 }
 
-export default function StrategyOverviewPanel({ targets }: StrategyOverviewPanelProps) {
+export default function StrategyOverviewPanel({
+  targets,
+  canManageTargets = false,
+}: StrategyOverviewPanelProps) {
   if (targets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-10 text-center text-sm text-[var(--muted)]">
-        Keine strategischen Ziele sichtbar oder noch keine Ziele erfasst.
+        {canManageTargets
+          ? "Noch keine Ziele in der Übersicht — nutzen Sie «Strategisches Ziel erfassen»."
+          : "Keine strategischen Ziele sichtbar."}
       </div>
     );
   }

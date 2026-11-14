@@ -15,6 +15,8 @@ export default async function InitiativeBacklogPage() {
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
   const initiatives = await listInitiativeBacklog(actor);
   const canManage = actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
+  const canView =
+    canManage || actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_VIEW);
 
   const initialInitiatives = initiatives.map((row) => ({
     id: row.id,
@@ -41,12 +43,13 @@ export default async function InitiativeBacklogPage() {
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },
           { label: "Initiativen-Backlog" },
         ]}
-        isEmpty={initialInitiatives.length === 0}
         emptyIcon={<ClipboardList className="h-10 w-10" />}
-        emptyHeading="Backlog ist leer"
-        emptyDescription="Noch keine Initiativen oder keine sichtbaren Einträge."
       >
-        <InitiativeBacklogWorkspace initialInitiatives={initialInitiatives} canManage={canManage} />
+        <InitiativeBacklogWorkspace
+          initialInitiatives={initialInitiatives}
+          canManage={canManage}
+          canView={canView}
+        />
       </ListPagePattern>
     </PageShell>
   );

@@ -41,10 +41,7 @@ export default async function DevelopmentSprintsPage() {
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },
           { label: "Sprints" },
         ]}
-        isEmpty={listItems.length === 0}
         emptyIcon={<Kanban className="h-10 w-10" />}
-        emptyHeading="Keine Sprints"
-        emptyDescription="Legen Sie den ersten Entwicklungssprint an."
       >
         <div className="space-y-4">
           <DevelopmentSprintCreateCard canCreate={canManage} />

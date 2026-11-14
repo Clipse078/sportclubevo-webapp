@@ -110,7 +110,11 @@ export default function TaskOrgVisibilityEditor({
         disabled={pending}
         showSectionHeading={false}
       />
-      {error ? <p className="text-xs text-red-300">{error}</p> : null}
+      {error ? (
+        <p className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1.5 text-xs text-rose-900" role="alert">
+          {error}
+        </p>
+      ) : null}
       <div className="flex gap-2">
         <button type="submit" className="fca-button-primary text-xs" disabled={pending}>
           Speichern

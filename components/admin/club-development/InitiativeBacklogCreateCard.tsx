@@ -2,34 +2,55 @@
 
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEventHandler } from "react";
+import { useRef, useState, useTransition, type FormEventHandler } from "react";
+import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type Props = {
   defaultExpanded?: boolean;
   canCreate: boolean;
+  onCreated?: () => void;
 };
 
-export default function InitiativeBacklogCreateCard({ defaultExpanded = false, canCreate }: Props) {
+type CreateResponse = {
+  initiative?: { slug?: string };
+  error?: string;
+};
+
+export default function InitiativeBacklogCreateCard({
+  defaultExpanded = false,
+  canCreate,
+  onCreated,
+}: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const submittingRef = useRef(false);
 
   if (!canCreate) return null;
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
+    if (submittingRef.current || pending) return;
     setError(null);
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const title = String(formData.get("title") ?? "").trim();
     const summary = String(formData.get("summary") ?? "").trim();
     const expectedOutcome = String(formData.get("expectedOutcome") ?? "").trim();
     const backlogPriorityRaw = String(formData.get("backlogPriority") ?? "0").trim();
     const backlogPriority = Number.parseInt(backlogPriorityRaw, 10);
 
+    if (!title) {
+      setError("Titel ist erforderlich.");
+      return;
+    }
+
+    submittingRef.current = true;
     startTransition(async () => {
       try {
-        const res = await fetch("/api/initiatives", {
+        const result = await clubDevelopmentFetchJson<CreateResponse>("/api/initiatives", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -40,20 +61,20 @@ export default function InitiativeBacklogCreateCard({ defaultExpanded = false, c
             status: "PLANNED",
           }),
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Erstellung fehlgeschlagen.");
+        if (!result.ok) {
+          setError(result.message);
           return;
         }
-        const slug = data.initiative?.slug as string | undefined;
-        event.currentTarget.reset();
+        const slug = result.data.initiative?.slug;
+        form.reset();
         setExpanded(false);
+        onCreated?.();
         router.refresh();
         if (slug) {
           router.push(`/vereinsleitung/initiativen/${slug}`);
         }
-      } catch {
-        setError("Netzwerkfehler — bitte erneut versuchen.");
+      } finally {
+        submittingRef.current = false;
       }
     });
   };
@@ -82,17 +103,14 @@ export default function InitiativeBacklogCreateCard({ defaultExpanded = false, c
 
       {expanded ? (
         <form onSubmit={onSubmit} className="space-y-4 p-4">
-          {error ? (
-            <p className="rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <ClubDevelopmentFormError message={error} /> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block sm:col-span-2">
               <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Titel *</span>
               <input
                 name="title"
                 required
+                disabled={pending}
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               />
             </label>
@@ -100,6 +118,7 @@ export default function InitiativeBacklogCreateCard({ defaultExpanded = false, c
               <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Kurzbeschreibung</span>
               <input
                 name="summary"
+                disabled={pending}
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               />
             </label>
@@ -108,6 +127,7 @@ export default function InitiativeBacklogCreateCard({ defaultExpanded = false, c
               <textarea
                 name="expectedOutcome"
                 rows={2}
+                disabled={pending}
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               />
             </label>
@@ -117,6 +137,7 @@ export default function InitiativeBacklogCreateCard({ defaultExpanded = false, c
                 name="backlogPriority"
                 type="number"
                 defaultValue={0}
+                disabled={pending}
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
               />
             </label>

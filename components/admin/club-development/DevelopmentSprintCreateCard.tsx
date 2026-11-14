@@ -2,11 +2,18 @@
 
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEventHandler } from "react";
+import { useRef, useState, useTransition, type FormEventHandler } from "react";
+import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type Props = {
   canCreate: boolean;
   defaultExpanded?: boolean;
+};
+
+type CreateSprintResponse = {
+  sprint?: { slug?: string };
+  error?: string;
 };
 
 export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded = false }: Props) {
@@ -14,45 +21,56 @@ export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const submittingRef = useRef(false);
 
   if (!canCreate) return null;
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
+    if (submittingRef.current || pending) return;
     setError(null);
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const title = String(formData.get("title") ?? "").trim();
     const goal = String(formData.get("goal") ?? "").trim();
     const owner = String(formData.get("owner") ?? "").trim();
     const startsAt = String(formData.get("startsAt") ?? "").trim();
     const endsAt = String(formData.get("endsAt") ?? "").trim();
 
+    if (!title) {
+      setError("Titel ist erforderlich.");
+      return;
+    }
+
+    submittingRef.current = true;
     startTransition(async () => {
       try {
-        const res = await fetch("/api/club-development/sprints", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            goal: goal || undefined,
-            owner: owner || undefined,
-            startsAt: startsAt || undefined,
-            endsAt: endsAt || undefined,
-            status: "PLANNED",
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Sprint konnte nicht erstellt werden.");
+        const result = await clubDevelopmentFetchJson<CreateSprintResponse>(
+          "/api/club-development/sprints",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title,
+              goal: goal || undefined,
+              owner: owner || undefined,
+              startsAt: startsAt || undefined,
+              endsAt: endsAt || undefined,
+              status: "PLANNED",
+            }),
+          },
+        );
+        if (!result.ok) {
+          setError(result.message);
           return;
         }
-        const slug = data.sprint?.slug as string | undefined;
-        event.currentTarget.reset();
+        const slug = result.data.sprint?.slug;
+        form.reset();
         setExpanded(false);
         router.refresh();
         if (slug) router.push(`/vereinsleitung/sprints/${slug}`);
-      } catch {
-        setError("Netzwerkfehler — bitte erneut versuchen.");
+      } finally {
+        submittingRef.current = false;
       }
     });
   };
@@ -62,35 +80,51 @@ export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded
       <SprintCreateCollapsibleHeader expanded={expanded} onToggle={() => setExpanded(!expanded)} />
       {expanded ? (
         <form onSubmit={onSubmit} className="space-y-4 p-4">
-          {error ? (
-            <p className="rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <ClubDevelopmentFormError message={error} /> : null}
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Titel *</span>
             <input
               name="title"
               required
+              disabled={pending}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
             />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Ziel</span>
-            <textarea name="goal" rows={2} className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
+            <textarea
+              name="goal"
+              rows={2}
+              disabled={pending}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+            />
           </label>
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Verantwortlich</span>
-              <input name="owner" className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
+              <input
+                name="owner"
+                disabled={pending}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              />
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Start</span>
-              <input name="startsAt" type="date" className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
+              <input
+                name="startsAt"
+                type="date"
+                disabled={pending}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              />
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Ende</span>
-              <input name="endsAt" type="date" className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
+              <input
+                name="endsAt"
+                type="date"
+                disabled={pending}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              />
             </label>
           </div>
           <div className="flex justify-end">

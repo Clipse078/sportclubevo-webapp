@@ -189,7 +189,7 @@ export default function DevelopmentSprintDetailWorkspace({
         </p>
 
         {error ? (
-          <p className="mt-3 rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
+          <p className="mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900" role="alert">
             {error}
           </p>
         ) : null}

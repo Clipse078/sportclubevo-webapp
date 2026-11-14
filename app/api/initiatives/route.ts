@@ -7,6 +7,7 @@ import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 import { MeetingApprovalRule } from "@prisma/client";
 import { validateApprovalConfig, parseApproverPersonIds } from "@/lib/meetings/meeting-approval-presentation";
+import { slugifyInitiativeTitle } from "@/lib/club-development/initiative-slug";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -34,12 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawSlug = (body?.slug ?? "").trim();
-    const slug =
-      rawSlug ||
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+    const slug = rawSlug || slugifyInitiativeTitle(title);
 
     const existing = await prisma.initiative.findFirst({
       where: { slug, tenantId },

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { Loader2, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeDisposition, InitiativeStatus } from "@prisma/client";
 import InitiativeBacklogCreateCard from "./InitiativeBacklogCreateCard";
+import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { Badge } from "@/components/ui";
 
 export type InitiativeBacklogRow = {
@@ -24,6 +26,7 @@ export type InitiativeBacklogRow = {
 type Props = {
   initialInitiatives: InitiativeBacklogRow[];
   canManage: boolean;
+  canView: boolean;
 };
 
 const STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -63,7 +66,16 @@ function serializeRows(
   }));
 }
 
-export default function InitiativeBacklogWorkspace({ initialInitiatives, canManage }: Props) {
+type BacklogResponse = {
+  initiatives: Parameters<typeof serializeRows>[0];
+  error?: string;
+};
+
+export default function InitiativeBacklogWorkspace({
+  initialInitiatives,
+  canManage,
+  canView,
+}: Props) {
   const [rows, setRows] = useState<InitiativeBacklogRow[]>(initialInitiatives);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -71,31 +83,42 @@ export default function InitiativeBacklogWorkspace({ initialInitiatives, canMana
   const [dispositionFilter, setDispositionFilter] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const skipInitialFetchRef = useRef(true);
+  const filtersChangedRef = useRef(false);
 
   const fetchBacklog = useCallback(() => {
+    if (!canView) {
+      setError("Du hast keine Berechtigung, den Backlog zu laden.");
+      return;
+    }
     startTransition(async () => {
       setError(null);
       const params = new URLSearchParams();
       if (search.trim()) params.set("search", search.trim());
       if (statusFilter) params.set("status", statusFilter);
       if (dispositionFilter) params.set("disposition", dispositionFilter);
-      try {
-        const res = await fetch(`/api/club-development/initiatives/backlog?${params.toString()}`);
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Backlog konnte nicht geladen werden.");
-          return;
-        }
-        const initiatives = (data.initiatives ?? []) as Parameters<typeof serializeRows>[0];
-        setRows(serializeRows(initiatives));
-      } catch {
-        setError("Netzwerkfehler beim Laden des Backlogs.");
+      const result = await clubDevelopmentFetchJson<BacklogResponse>(
+        `/api/club-development/initiatives/backlog?${params.toString()}`,
+      );
+      if (!result.ok) {
+        setError(result.message);
+        return;
       }
+      const initiatives = (result.data.initiatives ?? []) as Parameters<typeof serializeRows>[0];
+      setRows(serializeRows(initiatives));
     });
-  }, [dispositionFilter, search, statusFilter]);
+  }, [canView, dispositionFilter, search, statusFilter]);
 
   useEffect(() => {
-    const handle = window.setTimeout(fetchBacklog, 300);
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      filtersChangedRef.current = false;
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      filtersChangedRef.current = true;
+      fetchBacklog();
+    }, 300);
     return () => window.clearTimeout(handle);
   }, [fetchBacklog]);
 
@@ -105,9 +128,18 @@ export default function InitiativeBacklogWorkspace({ initialInitiatives, canMana
     return rows.filter((row) => (row.owner ?? "").toLowerCase().includes(ownerQ));
   }, [ownerFilter, rows]);
 
+  const listEmpty = filteredRows.length === 0;
+  const showLoadFailureHint = Boolean(error) && rows.length === 0 && !filtersChangedRef.current;
+
   return (
     <div className="space-y-4" data-testid="initiative-backlog-workspace">
-      <InitiativeBacklogCreateCard canCreate={canManage} />
+      <InitiativeBacklogCreateCard
+        canCreate={canManage}
+        onCreated={() => {
+          filtersChangedRef.current = true;
+          fetchBacklog();
+        }}
+      />
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -160,11 +192,7 @@ export default function InitiativeBacklogWorkspace({ initialInitiatives, canMana
           </label>
         </div>
 
-        {error ? (
-          <p className="mb-3 rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <ClubDevelopmentFormError message={error} className="mb-3" /> : null}
 
         {pending ? (
           <div className="mb-2 flex justify-center">
@@ -172,8 +200,14 @@ export default function InitiativeBacklogWorkspace({ initialInitiatives, canMana
           </div>
         ) : null}
 
-        {filteredRows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[var(--muted)]">Keine Initiativen im Backlog.</p>
+        {listEmpty ? (
+          <div className="py-8 text-center text-sm text-[var(--muted)]">
+            {showLoadFailureHint
+              ? "Backlog konnte nicht geladen werden. Bereits sichtbare Einträge bleiben erhalten, sobald vorhanden."
+              : canManage
+                ? "Keine Initiativen im Backlog. Erfassen Sie die erste Initiative oben."
+                : "Keine sichtbaren Initiativen im Backlog."}
+          </div>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {filteredRows.map((row) => (

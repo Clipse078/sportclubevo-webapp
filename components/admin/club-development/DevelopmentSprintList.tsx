@@ -34,7 +34,7 @@ export default function DevelopmentSprintList({ sprints }: Props) {
   if (sprints.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-10 text-center text-sm text-[var(--muted)]">
-        Noch keine Entwicklungssprints erfasst.
+        Noch keine Sprints in der Liste — legen Sie oben den ersten Entwicklungssprint an.
       </div>
     );
   }

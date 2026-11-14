@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { TaskPriority, TaskStatus } from "@prisma/client";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { taskPriorityVisual } from "@/lib/tasks/task-priority-visual";
+import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type BoardCard = {
   taskId: string;
@@ -60,23 +61,19 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle }: Props)
   const loadBoard = useCallback(() => {
     startTransition(async () => {
       setError(null);
-      try {
-        const res = await fetch(`/api/club-development/sprints/${sprintId}/board`);
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Board konnte nicht geladen werden.");
-          setBoard(null);
-          return;
-        }
-        setBoard({
-          OPEN: data.columns?.OPEN ?? [],
-          IN_PROGRESS: data.columns?.IN_PROGRESS ?? [],
-          DONE: data.columns?.DONE ?? [],
-        });
-      } catch {
-        setError("Netzwerkfehler beim Laden des Boards.");
-        setBoard(null);
+      const result = await clubDevelopmentFetchJson<{
+        columns?: BoardState;
+        error?: string;
+      }>(`/api/club-development/sprints/${sprintId}/board`);
+      if (!result.ok) {
+        setError(result.message);
+        return;
       }
+      setBoard({
+        OPEN: result.data.columns?.OPEN ?? [],
+        IN_PROGRESS: result.data.columns?.IN_PROGRESS ?? [],
+        DONE: result.data.columns?.DONE ?? [],
+      });
     });
   }, [sprintId]);
 
@@ -220,8 +217,8 @@ function BoardColumnsGrid({
 
 function BoardErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="rounded-xl border border-red-500/30 bg-red-950/20 px-4 py-8 text-center">
-      <p className="text-sm text-red-100">{message}</p>
+    <div className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-8 text-center">
+      <p className="text-sm text-rose-900">{message}</p>
       <button
         type="button"
         onClick={onRetry}

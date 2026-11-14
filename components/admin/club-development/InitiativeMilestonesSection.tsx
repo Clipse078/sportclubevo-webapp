@@ -88,7 +88,7 @@ export default function InitiativeMilestonesSection({ initiativeId, canManage }:
   return (
     <div className="space-y-3" data-testid="initiative-milestones-section">
       {error ? (
-        <p className="rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
+        <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900" role="alert">
           {error}
         </p>
       ) : null}

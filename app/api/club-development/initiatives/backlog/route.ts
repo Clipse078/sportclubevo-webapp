@@ -30,11 +30,19 @@ export async function GET(req: NextRequest) {
   const status = parseStatus(req.nextUrl.searchParams.get("status"));
   const disposition = parseDisposition(req.nextUrl.searchParams.get("disposition"));
 
-  const initiatives = await listInitiativeBacklog(access.context.actor, {
-    search,
-    ownerPersonId,
-    status,
-    disposition,
-  });
-  return NextResponse.json({ initiatives });
+  try {
+    const initiatives = await listInitiativeBacklog(access.context.actor, {
+      search,
+      ownerPersonId,
+      status,
+      disposition,
+    });
+    return NextResponse.json({ initiatives });
+  } catch (error) {
+    console.error("Initiative backlog load failed:", error);
+    return NextResponse.json(
+      { error: "Backlog konnte nicht geladen werden." },
+      { status: 500 },
+    );
+  }
 }
