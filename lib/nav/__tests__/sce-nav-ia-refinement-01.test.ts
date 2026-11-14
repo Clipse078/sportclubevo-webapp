@@ -2,11 +2,17 @@
  * SCE-NAV-IA-REFINEMENT-01 — navigation IA refinement regression contract.
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildAppNavigationModelForUser,
+  isDomainPanelSecondaryItemRouteActive,
   resolveActiveAppNavigation,
+  resolveDomainNavigationPanelInitialL2Key,
+  resolveDomainPanelRightColumnEntries,
   resolveDomainSecondaryNavItems,
+  resolveSecondaryNavItemModuleLocalChildren,
 } from "@/lib/nav/app-navigation-model";
 import { ADMIN_TARGET_L2_GROUPS, CLUB_TARGET_L2_GROUPS } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
 import { resolveNavKeyTargetL1, resolveTargetL2ForNavKey } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
@@ -18,6 +24,10 @@ const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS) as PermissionKey[];
 function findSystemNavItem(key: string) {
   const system = NAV_SECTIONS.find((s) => s.sectionLabel === "System");
   return system?.items.find((i) => i.key === key);
+}
+
+function readCss(): string {
+  return readFileSync(join(process.cwd(), "app/(admin)/global-app-navigation.css"), "utf8");
 }
 
 describe("SCE-NAV-IA-REFINEMENT-01 navigation contract", () => {
@@ -34,7 +44,42 @@ describe("SCE-NAV-IA-REFINEMENT-01 navigation contract", () => {
       expect(active.activeDestinationKey, pathname).toBe("aufgaben");
     }
     expect(resolveNavKeyTargetL1("aufgaben")).toBe("club");
-    expect(resolveTargetL2ForNavKey("aufgaben")).toBe("Personen & Teams");
+    expect(resolveTargetL2ForNavKey("aufgaben")).toBe("Aufgaben");
+  });
+
+  it("exposes Aufgaben as a direct Verein mega-menu destination (not under Personen & Teams)", () => {
+    const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
+    const club = model.domains.find((d) => d.id === "club")!;
+    const secondary = resolveDomainSecondaryNavItems(club);
+    const aufgabenEntry = secondary.find((item) => item.label === "Aufgaben");
+    expect(aufgabenEntry).toMatchObject({
+      key: "aufgaben",
+      href: "/dashboard/aufgaben",
+    });
+    expect(resolveSecondaryNavItemModuleLocalChildren(club, aufgabenEntry!)).toEqual([]);
+
+    const peopleGroup = CLUB_TARGET_L2_GROUPS.find((g) => g.id === "people-teams");
+    expect(peopleGroup?.keys).not.toContain("aufgaben");
+    expect(secondary.some((item) => item.label === "Personen & Teams")).toBe(true);
+  });
+
+  it("focuses open Verein panel on Aufgaben for task routes without unrelated L3 column", () => {
+    const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
+    const club = model.domains.find((d) => d.id === "club")!;
+    const items = resolveDomainSecondaryNavItems(club);
+    const active = resolveActiveAppNavigation("/dashboard/aufgaben", model);
+    const initial = resolveDomainNavigationPanelInitialL2Key(club, items, active);
+    expect(initial).toBe("aufgaben");
+    expect(
+      isDomainPanelSecondaryItemRouteActive(
+        "/dashboard/aufgaben",
+        club,
+        items.find((i) => i.key === "aufgaben")!,
+        active.activeDestinationKey,
+        active.activeChildKey,
+        items,
+      ),
+    ).toBe(true);
   });
 
   it("places Anbieter-Zuordnung, Referenzvereine and Wettkämpfe under Administration", () => {
@@ -61,6 +106,22 @@ describe("SCE-NAV-IA-REFINEMENT-01 navigation contract", () => {
     }
   });
 
+  it("labels Administration hub System & Zugänge with Übersicht in the panel", () => {
+    const adminGroup = ADMIN_TARGET_L2_GROUPS.find((g) => g.id === "administration");
+    expect(adminGroup?.label).toBe("System & Zugänge");
+
+    const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
+    const admin = model.domains.find((d) => d.id === "admin")!;
+    const secondary = resolveDomainSecondaryNavItems(admin);
+    const systemGroup = secondary.find((item) => item.headerGroupId === "administration");
+    expect(systemGroup?.label).toBe("System & Zugänge");
+
+    const l3 = resolveDomainPanelRightColumnEntries(admin, systemGroup!);
+    expect(l3.some((entry) => entry.label === "Übersicht")).toBe(true);
+    expect(l3.some((entry) => entry.label === "Administration Übersicht")).toBe(false);
+    expect(l3.some((entry) => entry.label === "System & Zugänge Übersicht")).toBe(false);
+  });
+
   it("keeps Personen and Teams as a single canonical Verein home (no Organisation duplicates)", () => {
     const tagesbetrieb = NAV_SECTIONS.find((s) => s.sectionLabel === "Tagesbetrieb");
     const organisation = tagesbetrieb?.items.find((i) => i.key === "organisation");
@@ -68,7 +129,7 @@ describe("SCE-NAV-IA-REFINEMENT-01 navigation contract", () => {
 
     const peopleGroup = CLUB_TARGET_L2_GROUPS.find((g) => g.id === "people-teams");
     expect(peopleGroup?.keys).toEqual(
-      expect.arrayContaining(["teams", "personen", "mitglieder", "aufgaben"]),
+      expect.arrayContaining(["teams", "personen", "mitglieder"]),
     );
     expect(peopleGroup?.keys).not.toContain("provider-mapping");
   });
@@ -113,5 +174,23 @@ describe("SCE-NAV-IA-REFINEMENT-01 navigation contract", () => {
     const tasksOnly = buildAppNavigationModelForUser([PERMISSIONS.TASKS_VIEW], "club");
     expect(tasksOnly.destinations.some((d) => d.key === "aufgaben")).toBe(true);
     expect(tasksOnly.domains.some((d) => d.id === "communication")).toBe(false);
+  });
+
+  it("separates explored L2 submenu (orange) from route-active L2 (subtle marker)", () => {
+    const css = readCss();
+    expect(css).toMatch(/\.sce-domain-nav-panel-l2-control--selected[\s\S]*color:\s*var\(--sce-primary\)/);
+    expect(css).toMatch(
+      /\.sce-domain-nav-panel-l2-link--active[\s\S]*color:\s*var\(--foreground\)/,
+    );
+    expect(css).toMatch(/\.sce-domain-nav-panel-l2-label::after/);
+    expect(css).toMatch(/\.sce-domain-nav-panel-l3-link--active[\s\S]*color:\s*var\(--sce-primary\)/);
+
+    const panel = readFileSync(
+      join(process.cwd(), "components/sce/navigation/SceDomainNavigationPanel.tsx"),
+      "utf8",
+    );
+    expect(panel).toContain("sce-domain-nav-panel-l2-control--selected");
+    expect(panel).toContain("setUserL2Key(null)");
+    expect(panel).toContain("[autoL2Key, domain.id]");
   });
 });

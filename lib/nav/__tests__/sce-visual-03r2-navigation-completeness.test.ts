@@ -52,9 +52,9 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(club).toBeTruthy();
     const secondary = resolveDomainSecondaryNavItems(club!);
     expect(secondary.length).toBeGreaterThanOrEqual(4);
-    expect(secondary.length).toBeLessThanOrEqual(7);
+    expect(secondary.length).toBeLessThanOrEqual(8);
     expect(secondary.map((item) => item.label)).toEqual(
-      expect.arrayContaining(["Organisation", "Personen & Teams", "Mitgliedschaft"]),
+      expect.arrayContaining(["Organisation", "Aufgaben", "Personen & Teams", "Mitgliedschaft"]),
     );
     expect(secondary.map((item) => item.key)).not.toContain("org-units");
     expect(secondary.every((item) => item.headerGroupId)).toBe(true);

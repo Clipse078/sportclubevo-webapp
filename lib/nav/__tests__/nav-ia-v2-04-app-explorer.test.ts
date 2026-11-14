@@ -65,6 +65,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(groups.map((group) => group.label)).toEqual(
       expect.arrayContaining([
         "Organisation",
+        "Aufgaben",
         "Personen & Teams",
         "Mitgliedschaft",
         "Vereinsbetrieb",
@@ -189,7 +190,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     const catalog = buildSemanticNavigationDestinationCatalog(model, domainLabel);
     expect(catalog.length).toBeGreaterThan(60);
     expect(catalog.every((row) => row.domainId && row.destinationKey && row.href)).toBe(true);
-    expect(catalog.some((row) => row.groupLabel === "Administration")).toBe(true);
+    expect(catalog.some((row) => row.groupLabel === "System & Zugänge")).toBe(true);
     const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
     expect(drawer).not.toContain("NAV_SECTIONS");
   });

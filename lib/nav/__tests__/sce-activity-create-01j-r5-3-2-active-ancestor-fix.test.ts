@@ -98,19 +98,19 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.2 — browse vs active", () => {
     expect(panelL2RouteActive(pathname, active, "Organisation")).toBe(false);
 
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
-    expect(panel).toContain("selected && \"sce-domain-nav-panel-l2-control--selected\"");
+    expect(panel).toContain("sce-domain-nav-panel-l2-control--selected");
     expect(panel).not.toMatch(/\(active \|\| selected\) && "sce-domain-nav-panel-l2-control--active"/);
-    expect(panel).toContain('active={active}');
+    expect(panel).toContain("const active = isL2Active(item)");
     expect(panel).not.toContain("active={active || selected}");
     expect(browsedL2Key).toBeTruthy();
   });
 });
 
 describe("SCE-ACTIVITY-CREATE-01J-R5.3.2 — L2 chevron + L3 visual contract", () => {
-  it("styles chevron from the same route-active L2 state as icon and label", () => {
+  it("styles chevron from the explored L2 branch and keeps L3 route-active orange", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-control--active[\s\S]*\.sce-domain-nav-panel-l2-chevron[\s\S]*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-control--selected[\s\S]*\.sce-domain-nav-panel-l2-chevron[\s\S]*var\(--sce-primary\)/,
     );
     expect(css).toMatch(/\.sce-domain-nav-panel-l3-link--active[\s\S]*color:\s*var\(--sce-primary\)/);
   });

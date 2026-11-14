@@ -386,7 +386,7 @@
       "labelV2": "Aufgaben",
       "icon": "tasks",
       "targetL1": "club",
-      "targetL2": "Personen & Teams",
+      "targetL2": "Aufgaben",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1140,7 +1140,7 @@
       "labelV2": "Admin",
       "icon": "settings",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1162,7 +1162,7 @@
       "labelV2": "Rollen & Berechtigungen",
       "icon": "roles-access",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1185,7 +1185,7 @@
       "labelV2": "Saisons",
       "icon": "season",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1208,7 +1208,7 @@
       "labelV2": "Anlagen & Ressourcen",
       "icon": "facility",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1231,7 +1231,7 @@
       "labelV2": "Darstellung",
       "icon": "settings",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1253,7 +1253,7 @@
       "labelV2": "Personen & Zugänge",
       "icon": "people",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1276,7 +1276,7 @@
       "labelV2": "Rollen",
       "icon": "roles-access",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1298,7 +1298,7 @@
       "labelV2": "Tenants",
       "icon": "organisation",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
         "header": false,
@@ -1377,8 +1377,15 @@
       "label": "Organisation",
       "headerVisible": true,
       "keys": [
-        "organisation",
-        "org-units"
+        "organisation"
+      ]
+    },
+    {
+      "id": "aufgaben",
+      "label": "Aufgaben",
+      "headerVisible": true,
+      "keys": [
+        "aufgaben"
       ]
     },
     {
@@ -1389,7 +1396,6 @@
         "teams",
         "personen",
         "mitglieder",
-        "aufgaben",
         "trainer-staff"
       ]
     },

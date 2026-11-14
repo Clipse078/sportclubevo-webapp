@@ -47,10 +47,10 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — canonical selected-state CSS contra
       /\.sce-global-primary-nav-item--active\s*\{[\s\S]*color:\s*var\(--sce-primary\)/,
     );
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-link--active[\s\S]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-link--active[\s\S]*color:\s*var\(--foreground\)/,
     );
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-control--active[\s\S]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-control--selected[\s\S]*color:\s*var\(--sce-primary\)/,
     );
     expect(css).toMatch(
       /\.sce-domain-nav-panel-l3-link--active[\s\S]*color:\s*var\(--sce-primary\)/,
@@ -61,7 +61,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — canonical selected-state CSS contra
     const css = readRelative("app/(admin)/global-app-navigation.css");
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-control--active[\s\S]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-control--selected[\s\S]*color:\s*var\(--sce-primary\)/,
     );
     expect(panel).not.toContain("NavDestinationSceIcon");
   });

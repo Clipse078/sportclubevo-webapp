@@ -48,7 +48,7 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(css).toContain("--sce-nav-start-x");
     expect(css).toContain("sce-nav-spine-row");
     expect(css).toContain("sce-global-brand-tenant-stack");
-    expect(css).not.toContain("backdrop-filter: blur");
+    expect(css).toMatch(/\.sce-domain-nav-overlay-scrim[\s\S]*backdrop-filter:\s*blur/);
   });
 
   it("maps module vs context nav landmarks to the correct aria labels", () => {

@@ -275,6 +275,13 @@ function dedupeNavChildrenByHref(children: NavItemChild[]): NavItemChild[] {
   });
 }
 
+function resolveDomainPanelOverviewLabel(item: DomainSecondaryNavItem): string {
+  if (item.headerGroupId === "administration") {
+    return "Übersicht";
+  }
+  return `${item.label} Übersicht`;
+}
+
 /** Right-column entries for hierarchical panel mode (overview + module-local children). */
 export function resolveDomainPanelRightColumnEntries(
   domain: NavigationDomain,
@@ -289,7 +296,7 @@ export function resolveDomainPanelRightColumnEntries(
     : [
         {
           key: `${item.key}__domain-panel-overview`,
-          label: `${item.label} Übersicht`,
+          label: resolveDomainPanelOverviewLabel(item),
           href: item.href,
         },
         ...children,

@@ -45,7 +45,6 @@ const CLUB_PEOPLE_KEYS = new Set([
   "personen",
   "mitglieder",
   "trainer-staff",
-  "aufgaben",
 ]);
 
 const CLUB_MEMBERSHIP_KEYS = new Set([
@@ -184,7 +183,7 @@ function resolveTargetL2(key: string): string {
     return "Website";
   }
   if (CLUB_ORGANISATION_KEYS.has(key)) return "Organisation";
-  if (key === "aufgaben") return "Personen & Teams";
+  if (key === "aufgaben") return "Aufgaben";
   if (CLUB_PEOPLE_KEYS.has(key)) return "Personen & Teams";
   if (CLUB_MEMBERSHIP_KEYS.has(key)) return "Mitgliedschaft";
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
@@ -194,7 +193,7 @@ function resolveTargetL2(key: string): string {
   if (CLUB_SPONSORING_KEYS.has(key)) return "Sponsoring";
   if (CLUB_ADMIN_INTEGRATION_KEYS.has(key)) return "Integrationen & Zuordnungen";
   if (CLUB_ADMIN_STAMMDATEN_KEYS.has(key)) return "Stammdaten";
-  if (CLUB_ADMIN_KEYS.has(key)) return "Administration";
+  if (CLUB_ADMIN_KEYS.has(key)) return "System & Zugänge";
   return "Club";
 }
 
@@ -348,13 +347,19 @@ export const CLUB_TARGET_L2_GROUPS = [
     id: "organisation",
     label: "Organisation",
     headerVisible: true,
-    keys: ["organisation", "org-units"],
+    keys: ["organisation"],
+  },
+  {
+    id: "aufgaben",
+    label: "Aufgaben",
+    headerVisible: true,
+    keys: ["aufgaben"],
   },
   {
     id: "people-teams",
     label: "Personen & Teams",
     headerVisible: true,
-    keys: ["teams", "personen", "mitglieder", "aufgaben", "trainer-staff"],
+    keys: ["teams", "personen", "mitglieder", "trainer-staff"],
   },
   {
     id: "mitgliedschaft",
@@ -413,7 +418,7 @@ export const CLUB_TARGET_L2_GROUPS = [
 export const ADMIN_TARGET_L2_GROUPS = [
   {
     id: "administration",
-    label: "Administration",
+    label: "System & Zugänge",
     headerVisible: true,
     keys: [
       "administration",

@@ -96,7 +96,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.2 canonical desktop L1 order", () => {
       if (domain.id === "admin") {
         expect(items.map((item) => item.label)).toEqual(
           expect.arrayContaining([
-            "Administration",
+            "System & Zugänge",
             "Stammdaten",
             "Integrationen & Zuordnungen",
           ]),

@@ -12,6 +12,7 @@ import {
 import {
   resolveDomainPanelRightColumnEntries,
   resolveDomainSecondaryNavItems,
+  resolveSecondaryNavItemModuleLocalChildren,
 } from "@/lib/nav/app-navigation-model";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -74,15 +75,14 @@ describe("SCE-CD-04R4 mega-menu destination clarity", () => {
     );
   });
 
-  it("keeps module overview link when children use distinct routes", () => {
+  it("keeps Organisation as a direct Verein destination without an owned L3 column", () => {
     const club = clubDomainWithVereinsentwicklung();
     const organisation = resolveDomainSecondaryNavItems(club!).find((i) => i.label === "Organisation");
-    expect(organisation).toBeTruthy();
-    const l3 = resolveDomainPanelRightColumnEntries(club!, organisation!);
-    expect(l3.some((child) => child.key === "org-units" && child.href === organisation!.href)).toBe(
-      true,
-    );
-    expect(l3.some((child) => child.label === "Organisation Übersicht")).toBe(false);
+    expect(organisation).toMatchObject({
+      key: "organisation",
+      href: "/dashboard/org-units",
+    });
+    expect(resolveDomainPanelRightColumnEntries(club!, organisation!)).toEqual([]);
   });
 
   it("styles L3 destination links with interface typography", () => {

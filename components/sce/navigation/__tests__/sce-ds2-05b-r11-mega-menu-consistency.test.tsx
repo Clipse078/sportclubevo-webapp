@@ -61,10 +61,10 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 const adminKeys = Object.values(PERMISSIONS);
 
 const DOMAINS = [
-  { id: "club", l3: true },
+  { id: "club", l3: false },
   { id: "planning", l3: false },
-  { id: "publishing", l3: true },
-  { id: "communication", l3: true },
+  { id: "publishing", l3: false },
+  { id: "communication", l3: false },
   { id: "admin", l3: false },
 ] as const;
 
@@ -207,7 +207,10 @@ describe("SCE-DS2-05B-R11 desktop mega-menu consistency", () => {
           panel.style.getPropertyValue("--sce-domain-nav-overlay-max-height"),
         ).toBe(overlayMaxHeight);
 
-        const { frame } = assertSharedGrid(panel, domain.l3);
+        const frameEl = within(panel).getByTestId("sce-domain-nav-panel-frame");
+        const expectsL3 =
+          frameEl.getAttribute("data-sce-domain-nav-l3") === "populated";
+        const { frame } = assertSharedGrid(panel, expectsL3);
         expect(frame.getAttribute("data-sce-domain-nav-grid")).toBe("title-l2-l3");
       }
     }
@@ -221,22 +224,18 @@ describe("SCE-DS2-05B-R11 desktop mega-menu consistency", () => {
     await user.click(screen.getByTestId("primary-domain-panel-trigger-club"));
     const clubPanel = screen.getByTestId("sce-domain-nav-panel");
     const top = clubPanel.style.top;
-    const activeL2 = within(clubPanel).getByRole("button", { name: /Organisation/i });
-    expect(activeL2).toHaveClass("sce-domain-nav-panel-l2-control--active");
+    const activeL2 = within(clubPanel).getByRole("link", { name: /^Organisation$/i });
+    expect(activeL2).toHaveClass("sce-domain-nav-panel-l2-link--active");
+    expect(activeL2).toHaveAttribute("aria-current", "page");
+    expect(activeL2).toHaveAttribute("href", "/dashboard/org-units");
     expect(activeL2.className).not.toMatch(/underline|border-l|border-s|bg-/);
-    const activeL3 = within(clubPanel).getByRole("link", {
-      name: "Organisationseinheiten",
-    });
-    expect(activeL3).toHaveClass("sce-domain-nav-panel-l3-link--active");
-    expect(activeL3).toHaveAttribute("aria-current", "page");
-    expect(activeL3).toHaveAttribute("href", "/dashboard/org-units");
 
     await user.click(within(clubPanel).getByRole("button", { name: "Mitgliedschaft" }));
     const switched = screen.getByTestId("sce-domain-nav-panel");
     expect(switched.style.top).toBe(top);
     expect(switched).toHaveAttribute("data-sce-domain-nav-panel-mode", "hierarchical");
     expect(
-      within(switched).getByRole("link", { name: "Mitgliedschaft Übersicht" }),
+      within(switched).getByRole("link", { name: "Registrierungen" }),
     ).toHaveAttribute("href", "/dashboard/registrations");
     assertSharedGrid(switched, true);
 

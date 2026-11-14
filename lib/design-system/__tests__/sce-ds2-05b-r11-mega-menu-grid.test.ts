@@ -150,8 +150,9 @@ describe("SCE-DS2-05B-R11 mega-menu grid contract", () => {
   it("preserves orange text-only active states and keyboard focus chrome", () => {
     const css = readRepo(NAV_CSS);
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-link--active,\s*\.sce-domain-nav-panel-l2-control--active,\s*\.sce-domain-nav-panel-l3-link--active\s*\{[^}]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l3-link--active\s*\{[^}]*color:\s*var\(--sce-primary\)/,
     );
+    expect(css).toMatch(/\.sce-domain-nav-panel-l2-control--selected[\s\S]*color:\s*var\(--sce-primary\)/);
     expect(css).toMatch(
       /\.sce-domain-nav-panel-l2-link--active[\s\S]*background:\s*transparent/,
     );

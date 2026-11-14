@@ -56,7 +56,7 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const secondary = resolveDomainSecondaryNavItems(club);
     expect(secondary.length).toBeGreaterThanOrEqual(4);
-    expect(secondary.length).toBeLessThanOrEqual(7);
+    expect(secondary.length).toBeLessThanOrEqual(8);
     expect(secondary.some((item) => item.label === "Administration")).toBe(false);
     expect(secondary.every((item) => item.headerGroupId)).toBe(true);
   });
