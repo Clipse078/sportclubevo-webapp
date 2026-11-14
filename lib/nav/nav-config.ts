@@ -317,57 +317,24 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        // SCE-NAV-IA-REFINEMENT-01: Organisation = strukturelle Einheiten (kein Personen/Teams-Hub).
         key: "organisation",
-        label: "Organisation",
+        label: "Organisationseinheiten",
         href: "/dashboard/org-units",
-        permissionKeys: [
-          PERMISSIONS.ORG_VIEW,
-          PERMISSIONS.ORG_MANAGE,
-          PERMISSIONS.TEAMS_VIEW,
-          PERMISSIONS.TEAMS_MANAGE,
-          PERMISSIONS.COMPETITIONS_VIEW,
-          PERMISSIONS.COMPETITIONS_MANAGE,
-          PERMISSIONS.PEOPLE_VIEW,
-          PERMISSIONS.PEOPLE_MANAGE,
-        ],
-        children: [
-          {
-            key: "org-units",
-            label: "Organisationseinheiten",
-            href: "/dashboard/org-units",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "teams",
-            label: "Teams",
-            href: "/dashboard/teams",
-            permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            key: "provider-mapping",
-            label: "Anbieter-Zuordnung",
-            href: "/dashboard/teams/provider-mapping",
-            permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            key: "vereine",
-            label: "Vereine",
-            href: "/dashboard/vereine",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "personen",
-            label: "Personen",
-            href: "/dashboard/persons",
-            permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
-          },
-          {
-            key: "competitions",
-            label: "Wettkämpfe",
-            href: "/dashboard/competitions",
-            permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
-          },
-        ],
+        permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+      },
+      {
+        key: "teams",
+        label: "Teams",
+        href: "/dashboard/teams",
+        permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
+        carrySeason: true,
+      },
+      {
+        key: "personen",
+        label: "Personen",
+        href: "/dashboard/persons",
+        permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
       },
       {
         // PLATFORM-UX-01: membership lifecycle module — distinct from Personen
@@ -428,6 +395,18 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
         children: [
           {
+            key: "communication-overview",
+            label: "Übersicht",
+            navIconLabel: "Kommunikation Übersicht",
+            href: "/dashboard/communication",
+            permissionKeys: [
+              PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+              PERMISSIONS.COMMUNICATION_CLUB_SEND,
+              PERMISSIONS.COMMUNICATION_INBOX_VIEW,
+            ],
+            matchExact: true,
+          },
+          {
             key: "communication-mitteilungen",
             label: "Mitteilungen",
             href: "/dashboard/communication/mitteilungen",
@@ -453,12 +432,6 @@ export const NAV_SECTIONS: NavSection[] = [
               PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
               PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
             ],
-          },
-          {
-            key: "communication-email-sender",
-            label: "E-Mail-Absender",
-            href: "/dashboard/communication/email-sender",
-            permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
           },
         ],
       },
@@ -715,6 +688,30 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: "System",
     items: [
+      {
+        key: "provider-mapping",
+        label: "Anbieter-Zuordnung",
+        href: "/dashboard/teams/provider-mapping",
+        permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
+      },
+      {
+        key: "communication-email-sender",
+        label: "E-Mail-Absender",
+        href: "/dashboard/communication/email-sender",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+      {
+        key: "vereine",
+        label: "Referenzvereine",
+        href: "/dashboard/vereine",
+        permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+      },
+      {
+        key: "competitions",
+        label: "Wettkämpfe",
+        href: "/dashboard/competitions",
+        permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
+      },
       {
         key: "administration",
         label: "Admin",

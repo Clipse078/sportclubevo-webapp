@@ -133,7 +133,7 @@ describe("SCE-NAV-ADMIN-01 Club Admin navigation", () => {
     expect(labels).toEqual(["Verein", "Planung", "Veröffentlichen", "Kommunikation", "Administration"]);
     expect(labels.at(-1)).toBe("Administration");
     expect(labels[0]).toBe("Verein");
-    expect(screen.getByRole("button", { name: /^Admin$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Administration$/ })).toBeInTheDocument();
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     expect(model.domains.find((d) => d.id === "admin")?.defaultDestination.href).toBe(
       "/dashboard/admin",

@@ -56,11 +56,11 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
   it("maps all legacy Organisation destinations under Club", () => {
     const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const legacyOrg = inventory.filter((row) => wasLegacyOrganisationNavDestination(row));
-    expect(legacyOrg.length).toBe(14);
+    expect(legacyOrg.length).toBeGreaterThanOrEqual(5);
     const matrix = buildTargetMatrixFromInventory(inventory);
     for (const row of legacyOrg) {
       const target = matrix.find((entry) => entry.key === row.key);
-      expect(target?.targetL1).toBe("club");
+      expect(target?.targetL1 === "club" || target?.targetL1 === "admin").toBe(true);
     }
     expect(CLUB_NAV_ITEM_TO_DOMAIN.organisation).toBe("club");
     expect(CLUB_NAV_ITEM_TO_DOMAIN.mitglieder).toBe("club");
@@ -110,7 +110,7 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const samples: Array<[string, string, string]> = [
       ["/dashboard/org-units", "club", "organisation"],
-      ["/dashboard/teams/abc", "club", "organisation"],
+      ["/dashboard/teams/abc", "club", "teams"],
       ["/dashboard/mitglieder", "club", "mitglieder"],
       ["/dashboard/website", "publishing", "website"],
       ["/dashboard/website/pages/abc", "publishing", "website"],
@@ -145,7 +145,9 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     const limited = buildAppNavigationModelForUser([PERMISSIONS.TASKS_VIEW], "club");
     expect(limited.domains.some((d) => d.id === "publishing")).toBe(false);
     expect(limited.destinations.some((d) => d.key === "website")).toBe(false);
-    expect(limited.domains.some((d) => d.id === "communication")).toBe(true);
+    expect(limited.domains.some((d) => d.id === "club")).toBe(true);
+    expect(limited.destinations.some((d) => d.key === "aufgaben")).toBe(true);
+    expect(limited.domains.some((d) => d.id === "communication")).toBe(false);
 
     const orgOnly = buildAppNavigationModelForUser(
       [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],

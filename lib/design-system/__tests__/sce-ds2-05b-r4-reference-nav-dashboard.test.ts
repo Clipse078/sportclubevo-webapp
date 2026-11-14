@@ -99,9 +99,11 @@ describe("SCE-DS2-05B-R4 delivery", () => {
     const items = resolveDomainSecondaryNavItems(club);
     const active = resolveActiveAppNavigation("/dashboard/org-units", model);
     const organisation = items.find((item) => item.label === "Organisation")!;
+    expect(active.activeDestinationKey).toBe("organisation");
     expect(resolveDomainNavigationPanelInitialL2Key(club, items, active)).toBe(organisation.key);
-    const l3 = resolveDomainPanelRightColumnEntries(club, organisation);
-    expect(l3.some((child) => child.key === "org-units")).toBe(true);
+    const mitgliedschaft = items.find((item) => item.label === "Mitgliedschaft")!;
+    const l3 = resolveDomainPanelRightColumnEntries(club, mitgliedschaft);
+    expect(l3.some((child) => child.key === "registrierungen")).toBe(true);
   });
 
   it("assigns distinct programme row grid columns for date and time", () => {

@@ -199,8 +199,8 @@
     {
       "key": "organisation",
       "route": "/dashboard/org-units",
-      "label": "Organisation",
-      "labelV2": "Organisation",
+      "label": "Organisationseinheiten",
+      "labelV2": "Organisationseinheiten",
       "icon": "organisation",
       "targetL1": "club",
       "targetL2": "Organisation",
@@ -212,38 +212,9 @@
       },
       "permissionKeys": [
         "org.view",
-        "org.manage",
-        "teams.view",
-        "teams.manage",
-        "competitions.view",
-        "competitions.manage",
-        "people.view",
-        "people.manage"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "org-units",
-      "route": "/dashboard/org-units",
-      "label": "Organisationseinheiten",
-      "labelV2": "Organisationseinheiten",
-      "icon": "org-unit",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "org.view",
         "org.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -256,62 +227,17 @@
       "icon": "team",
       "targetL1": "club",
       "targetL2": "Personen & Teams",
-      "targetLocalGroup": "organisation",
+      "targetLocalGroup": null,
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "teams.view",
         "teams.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "provider-mapping",
-      "route": "/dashboard/teams/provider-mapping",
-      "label": "Anbieter-Zuordnung",
-      "labelV2": "Anbieter-Zuordnung",
-      "icon": "integration",
-      "targetL1": "club",
-      "targetL2": "Personen & Teams",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "teams.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "vereine",
-      "route": "/dashboard/vereine",
-      "label": "Vereine",
-      "labelV2": "Vereine",
-      "icon": "club",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "org.view",
-        "org.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -324,40 +250,17 @@
       "icon": "people",
       "targetL1": "club",
       "targetL2": "Personen & Teams",
-      "targetLocalGroup": "organisation",
+      "targetLocalGroup": null,
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "people.view",
         "people.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "competitions",
-      "route": "/dashboard/competitions",
-      "label": "Wettkämpfe",
-      "labelV2": "Wettkämpfe",
-      "icon": "competition",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "competitions.view",
-        "competitions.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -482,8 +385,8 @@
       "label": "Aufgaben",
       "labelV2": "Aufgaben",
       "icon": "tasks",
-      "targetL1": "kommunikation",
-      "targetL2": "Aufgaben & Koordination",
+      "targetL1": "club",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -527,7 +430,7 @@
       "labelV2": "Kommunikation",
       "icon": "communication",
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -546,18 +449,42 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "communication-overview",
+      "route": "/dashboard/communication",
+      "label": "Übersicht",
+      "labelV2": "Übersicht",
+      "icon": "communication",
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Koordination",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "communication.club.view",
+        "communication.club.send",
+        "communication.inbox.view"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "communication-mitteilungen",
       "route": "/dashboard/communication/mitteilungen",
       "label": "Mitteilungen",
       "labelV2": "Mitteilungen",
       "icon": null,
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.club.view",
@@ -575,12 +502,12 @@
       "labelV2": "Kampagnen",
       "icon": null,
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.club.view",
@@ -598,38 +525,16 @@
       "labelV2": "Zielgruppen",
       "icon": "target-group",
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.zielgruppen.view",
         "communication.zielgruppen.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "communication-email-sender",
-      "route": "/dashboard/communication/email-sender",
-      "label": "E-Mail-Absender",
-      "labelV2": "E-Mail-Absender",
-      "icon": "communication",
-      "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
-      "targetLocalGroup": "communication",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "users.manage_memberships"
       ],
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
@@ -1139,6 +1044,96 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "provider-mapping",
+      "route": "/dashboard/teams/provider-mapping",
+      "label": "Anbieter-Zuordnung",
+      "labelV2": "Anbieter-Zuordnung",
+      "icon": "integration",
+      "targetL1": "admin",
+      "targetL2": "Integrationen & Zuordnungen",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "teams.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "communication-email-sender",
+      "route": "/dashboard/communication/email-sender",
+      "label": "E-Mail-Absender",
+      "labelV2": "E-Mail-Absender",
+      "icon": "communication",
+      "targetL1": "admin",
+      "targetL2": "Integrationen & Zuordnungen",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "vereine",
+      "route": "/dashboard/vereine",
+      "label": "Referenzvereine",
+      "labelV2": "Referenzvereine",
+      "icon": "club",
+      "targetL1": "admin",
+      "targetL2": "Stammdaten",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "competitions",
+      "route": "/dashboard/competitions",
+      "label": "Wettkämpfe",
+      "labelV2": "Wettkämpfe",
+      "icon": "competition",
+      "targetL1": "admin",
+      "targetL2": "Stammdaten",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "competitions.view",
+        "competitions.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "administration",
       "route": "/dashboard/admin",
       "label": "Admin",
@@ -1170,9 +1165,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "roles.view",
@@ -1193,9 +1188,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "seasons.view",
@@ -1216,9 +1211,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "facilities.view",
@@ -1239,9 +1234,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.manage"
@@ -1261,9 +1256,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.view",
@@ -1284,9 +1279,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.manage"
@@ -1306,9 +1301,9 @@
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "tenants.view",
@@ -1326,12 +1321,12 @@
       "labelV2": "Integrationen",
       "icon": "integration",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "Integrationen & Zuordnungen",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "tenants.manage"
@@ -1383,9 +1378,7 @@
       "headerVisible": true,
       "keys": [
         "organisation",
-        "org-units",
-        "vereine",
-        "competitions"
+        "org-units"
       ]
     },
     {
@@ -1393,11 +1386,11 @@
       "label": "Personen & Teams",
       "headerVisible": true,
       "keys": [
-        "mitglieder",
         "teams",
-        "trainer-staff",
         "personen",
-        "provider-mapping"
+        "mitglieder",
+        "aufgaben",
+        "trainer-staff"
       ]
     },
     {

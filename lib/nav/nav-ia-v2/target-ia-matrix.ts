@@ -38,19 +38,14 @@ const PUBLISHING_KEYS = new Set([
   "mobile-app",
 ]);
 
-const CLUB_ORGANISATION_KEYS = new Set([
-  "organisation",
-  "org-units",
-  "vereine",
-  "competitions",
-]);
+const CLUB_ORGANISATION_KEYS = new Set(["organisation", "org-units"]);
 
 const CLUB_PEOPLE_KEYS = new Set([
   "teams",
-  "provider-mapping",
   "personen",
   "mitglieder",
   "trainer-staff",
+  "aufgaben",
 ]);
 
 const CLUB_MEMBERSHIP_KEYS = new Set([
@@ -85,6 +80,14 @@ const CLUB_DOCUMENTS_KEYS = new Set(["workspace"]);
 const CLUB_FINANCE_KEYS = new Set(["finanzen"]);
 const CLUB_SPONSORING_KEYS = new Set(["sponsoring"]);
 
+const CLUB_ADMIN_INTEGRATION_KEYS = new Set([
+  "provider-mapping",
+  "admin-integrations",
+  "communication-email-sender",
+]);
+
+const CLUB_ADMIN_STAMMDATEN_KEYS = new Set(["vereine", "competitions"]);
+
 const CLUB_ADMIN_KEYS = new Set([
   "administration",
   "admin-tenant-roles",
@@ -94,7 +97,8 @@ const CLUB_ADMIN_KEYS = new Set([
   "admin-people-access",
   "admin-roles",
   "admin-tenants",
-  "admin-integrations",
+  ...CLUB_ADMIN_INTEGRATION_KEYS,
+  ...CLUB_ADMIN_STAMMDATEN_KEYS,
 ]);
 
 const PLANUNG_KEYS = new Set([
@@ -108,12 +112,11 @@ const PLANUNG_KEYS = new Set([
 ]);
 
 const KOMMUNIKATION_KEYS = new Set([
-  "aufgaben",
   "communication",
+  "communication-overview",
   "communication-mitteilungen",
   "communication-kampagnen",
   "communication-zielgruppen",
-  "communication-email-sender",
 ]);
 
 const DASHBOARD_KEYS = new Set(["dashboard"]);
@@ -170,8 +173,7 @@ function resolveTargetL2(key: string): string {
     return "Sport & Termine";
   }
   if (KOMMUNIKATION_KEYS.has(key)) {
-    if (key.startsWith("communication")) return "Nachrichten & Einstellungen";
-    return "Aufgaben & Koordination";
+    return "Nachrichten & Koordination";
   }
   if (PUBLISHING_KEYS.has(key)) {
     if (key.startsWith("infoboard")) return "Infoboard";
@@ -182,6 +184,7 @@ function resolveTargetL2(key: string): string {
     return "Website";
   }
   if (CLUB_ORGANISATION_KEYS.has(key)) return "Organisation";
+  if (key === "aufgaben") return "Personen & Teams";
   if (CLUB_PEOPLE_KEYS.has(key)) return "Personen & Teams";
   if (CLUB_MEMBERSHIP_KEYS.has(key)) return "Mitgliedschaft";
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
@@ -189,6 +192,8 @@ function resolveTargetL2(key: string): string {
   if (CLUB_OPERATIONS_KEYS.has(key)) return "Vereinsbetrieb";
   if (CLUB_FINANCE_KEYS.has(key)) return "Finanzen";
   if (CLUB_SPONSORING_KEYS.has(key)) return "Sponsoring";
+  if (CLUB_ADMIN_INTEGRATION_KEYS.has(key)) return "Integrationen & Zuordnungen";
+  if (CLUB_ADMIN_STAMMDATEN_KEYS.has(key)) return "Stammdaten";
   if (CLUB_ADMIN_KEYS.has(key)) return "Administration";
   return "Club";
 }
@@ -343,13 +348,13 @@ export const CLUB_TARGET_L2_GROUPS = [
     id: "organisation",
     label: "Organisation",
     headerVisible: true,
-    keys: ["organisation", "org-units", "vereine", "competitions"],
+    keys: ["organisation", "org-units"],
   },
   {
     id: "people-teams",
     label: "Personen & Teams",
     headerVisible: true,
-    keys: ["mitglieder", "teams", "trainer-staff", "personen", "provider-mapping"],
+    keys: ["teams", "personen", "mitglieder", "aufgaben", "trainer-staff"],
   },
   {
     id: "mitgliedschaft",
@@ -419,6 +424,18 @@ export const ADMIN_TARGET_L2_GROUPS = [
       "admin-people-access",
       "admin-roles",
     ],
+  },
+  {
+    id: "stammdaten",
+    label: "Stammdaten",
+    headerVisible: true,
+    keys: ["vereine", "competitions"],
+  },
+  {
+    id: "integrationen",
+    label: "Integrationen & Zuordnungen",
+    headerVisible: true,
+    keys: ["provider-mapping", "admin-integrations", "communication-email-sender"],
   },
 ] as const;
 

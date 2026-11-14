@@ -63,9 +63,9 @@ describe("SCE-NAVBAR-UPGRADE-01-R9 hierarchical domain panel", () => {
     expect(resolveDomainNavigationPanelUsesHierarchy(planning, planningItems)).toBe(false);
     expect(resolveDomainNavigationPanelUsesHierarchy(club, clubItems)).toBe(true);
 
-    const organisation = clubItems.find((item) => item.label === "Organisation")!;
-    const l3 = resolveDomainPanelRightColumnEntries(club, organisation);
-    expect(l3.some((child) => child.key === "org-units")).toBe(true);
+    const mitgliedschaft = clubItems.find((item) => item.label === "Mitgliedschaft")!;
+    const l3 = resolveDomainPanelRightColumnEntries(club, mitgliedschaft);
+    expect(l3.some((child) => child.key === "registrierungen")).toBe(true);
     expect(new Set(l3.map((child) => child.href)).size).toBe(l3.length);
     expect(l3.some((child) => child.label === "Organisation Übersicht")).toBe(false);
   });

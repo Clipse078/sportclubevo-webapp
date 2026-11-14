@@ -905,14 +905,28 @@ export function resolveActiveAppNavigation(
   let activeDomain: NavigationDomain | null = null;
   let activeDestination: NavigationDestination | null = null;
   let activeChildKey: string | null = null;
+  let bestOverallRank: NavigationHrefMatchRank | null = null;
 
   for (const domain of model.domains) {
     const match = resolveActiveDestination(pathname, domain);
-    if (match) {
+    if (!match) continue;
+
+    const child = match.childKey
+      ? match.destination.children?.find((entry) => entry.key === match.childKey)
+      : null;
+    const matchedHref = child?.href ?? match.destination.href;
+    const rank = rankNavigationHrefMatch(
+      pathname,
+      matchedHref,
+      child?.matchExact,
+      0,
+    );
+    if (!rank) continue;
+    if (!bestOverallRank || compareNavigationHrefMatchRank(rank, bestOverallRank) > 0) {
+      bestOverallRank = rank;
       activeDomain = domain;
       activeDestination = match.destination;
       activeChildKey = match.childKey;
-      break;
     }
   }
 

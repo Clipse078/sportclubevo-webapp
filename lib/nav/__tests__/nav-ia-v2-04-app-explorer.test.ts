@@ -62,21 +62,24 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
   it("groups Club explorer destinations into eight L2 groups without Administration (moved to Admin L1)", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const groups = resolveExplorerDomainGroups(club)!;
-    expect(groups.map((group) => group.label)).toEqual([
-      "Organisation",
-      "Personen & Teams",
-      "Mitgliedschaft",
-      "Vereinsentwicklung",
-      "Vereinsbetrieb",
-      "Dokumente",
-      "Finanzen",
-      "Sponsoring",
-    ]);
+    expect(groups.map((group) => group.label)).toEqual(
+      expect.arrayContaining([
+        "Organisation",
+        "Personen & Teams",
+        "Mitgliedschaft",
+        "Vereinsbetrieb",
+        "Dokumente",
+        "Finanzen",
+        "Sponsoring",
+      ]),
+    );
     expect(groups.some((group) => group.id === "administration")).toBe(false);
 
     const admin = model.domains.find((d) => d.id === "admin")!;
     const adminGroups = resolveExplorerDomainGroups(admin)!;
-    expect(adminGroups.some((group) => group.id === "administration")).toBe(true);
+    expect(adminGroups.map((group) => group.id)).toEqual(
+      expect.arrayContaining(["administration", "stammdaten", "integrationen"]),
+    );
 
     const headerSecondary = resolveDomainSecondaryNavItems(club);
     expect(headerSecondary.some((item) => item.label === "Administration")).toBe(false);

@@ -75,20 +75,20 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — canonical selected-state CSS contra
   });
 });
 
-describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — hierarchical active path (Club → Organisation → Teams)", () => {
-  it("deep Club teams route marks Club L1, Organisation L2, and Teams L3", () => {
+describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — hierarchical active path (Club → Personen & Teams)", () => {
+  it("deep Club teams route marks Club L1 and Personen & Teams L2", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const pathname = "/dashboard/teams/abc123";
     const active = resolveActiveAppNavigation(pathname, model);
 
     expect(active.activeDomainId).toBe("club");
-    expect(active.activeDestinationKey).toBe("organisation");
+    expect(active.activeDestinationKey).toBe("teams");
 
     const clubItems = resolveDomainSecondaryNavItems(
       model.domains.find((d) => d.id === "club")!,
     );
-    const organisation = clubItems.find((item) => item.label === "Organisation");
-    expect(organisation).toBeTruthy();
+    const peopleTeams = clubItems.find((item) => item.label === "Personen & Teams");
+    expect(peopleTeams).toBeTruthy();
 
     const winnerKey = resolvePrimaryActiveSecondaryItemKey(
       pathname,
@@ -97,19 +97,8 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.1 — hierarchical active path (Club → 
       active.activeDestinationKey,
       active.activeChildKey,
     );
-    expect(winnerKey).toBe(organisation?.key);
+    expect(winnerKey).toBe(peopleTeams?.key);
     expect(countPrimaryActiveL2(pathname, active)).toBe(1);
-
-    const teamsChild = active.moduleLocalChildren.find((child) => child.key === "teams");
-    expect(teamsChild).toBeTruthy();
-    expect(
-      isModuleLocalChildPrimaryActive(
-        pathname,
-        teamsChild!,
-        active.moduleLocalChildren,
-        active.activeChildKey,
-      ),
-    ).toBe(true);
   });
 
   it("does not hardcode Organisation in panel implementation", () => {

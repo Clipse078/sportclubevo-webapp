@@ -82,7 +82,7 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
       ["/dashboard", "dashboard", undefined],
       ["/dashboard/planner/week", "planning", "planung"],
       ["/dashboard/org-units", "club", "organisation"],
-      ["/dashboard/teams/abc", "club", "organisation"],
+      ["/dashboard/teams/abc", "club", "teams"],
       ["/dashboard/website", "publishing", "website"],
       ["/dashboard/website/pages/abc", "publishing", "website"],
       ["/dashboard/infoboard/preview", "publishing", "infoboard"],
@@ -129,8 +129,9 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
 
     const tasksOnly = buildAppNavigationModelForUser([PERMISSIONS.TASKS_VIEW], "club");
     expect(tasksOnly.domains.some((d) => d.id === "publishing")).toBe(false);
-    const communicationDomain = tasksOnly.domains.find((d) => d.id === "communication")!;
-    expect(resolveDomainSecondaryNavItems(communicationDomain).length).toBeGreaterThan(0);
+    expect(tasksOnly.domains.some((d) => d.id === "communication")).toBe(false);
+    const clubDomain = tasksOnly.domains.find((d) => d.id === "club")!;
+    expect(resolveDomainSecondaryNavItems(clubDomain).length).toBeGreaterThan(0);
 
     const publishingOnly = buildAppNavigationModelForUser(
       [PERMISSIONS.WEBSITE_MANAGE, PERMISSIONS.INFOBOARD_MANAGE],
