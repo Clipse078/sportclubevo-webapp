@@ -1,7 +1,17 @@
 import "server-only";
 
-import { DevelopmentSprintStatus, TaskStatus, VisibilityScope } from "@prisma/client";
+import {
+  DevelopmentSprintStatus,
+  Prisma,
+  TaskStatus,
+  VisibilityScope,
+} from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+
+export type SprintMembershipDbClient = Pick<
+  Prisma.TransactionClient,
+  "developmentSprint" | "developmentSprintTaskMembership" | "task"
+>;
 
 export class SprintServiceError extends Error {
   constructor(message: string) {
@@ -93,8 +103,12 @@ export async function updateDevelopmentSprint(
   });
 }
 
-export async function assertTaskInTenant(tenantId: string, taskId: string) {
-  const task = await prisma.task.findFirst({
+export async function assertTaskInTenant(
+  tenantId: string,
+  taskId: string,
+  client: SprintMembershipDbClient = prisma,
+) {
+  const task = await client.task.findFirst({
     where: { id: taskId, tenantId },
     select: { id: true, contextType: true, contextId: true },
   });
@@ -102,21 +116,26 @@ export async function assertTaskInTenant(tenantId: string, taskId: string) {
   return task;
 }
 
-export async function addTaskToSprint(tenantId: string, sprintId: string, taskId: string) {
-  const sprint = await prisma.developmentSprint.findFirst({
+export async function addTaskToSprint(
+  tenantId: string,
+  sprintId: string,
+  taskId: string,
+  client: SprintMembershipDbClient = prisma,
+) {
+  const sprint = await client.developmentSprint.findFirst({
     where: { id: sprintId, tenantId },
     select: { id: true, status: true },
   });
   if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
-  await assertTaskInTenant(tenantId, taskId);
+  await assertTaskInTenant(tenantId, taskId, client);
 
-  const active = await prisma.developmentSprintTaskMembership.findFirst({
+  const active = await client.developmentSprintTaskMembership.findFirst({
     where: { tenantId, sprintId, taskId, removedAt: null },
     select: { id: true },
   });
   if (active) throw new SprintServiceError("Aufgabe ist bereits im Sprint.");
 
-  const otherSprint = await prisma.developmentSprintTaskMembership.findFirst({
+  const otherSprint = await client.developmentSprintTaskMembership.findFirst({
     where: {
       tenantId,
       taskId,
@@ -131,12 +150,12 @@ export async function addTaskToSprint(tenantId: string, sprintId: string, taskId
     );
   }
 
-  const revived = await prisma.developmentSprintTaskMembership.findFirst({
+  const revived = await client.developmentSprintTaskMembership.findFirst({
     where: { tenantId, sprintId, taskId },
     orderBy: { addedAt: "desc" },
   });
   if (revived?.removedAt) {
-    return prisma.developmentSprintTaskMembership.update({
+    return client.developmentSprintTaskMembership.update({
       where: { id: revived.id },
       data: {
         removedAt: null,
@@ -146,7 +165,7 @@ export async function addTaskToSprint(tenantId: string, sprintId: string, taskId
     });
   }
 
-  return prisma.developmentSprintTaskMembership.create({
+  return client.developmentSprintTaskMembership.create({
     data: {
       tenantId,
       sprintId,

@@ -21,8 +21,28 @@ export function buildSprintReviewViewModel(input: {
   startedAt: Date | null;
   completedAt: Date | null;
   closeSnapshot: unknown;
+  /** When set, historical task rows and counts are filtered to currently authorized tasks. */
+  authorizedTaskIds?: Set<string>;
 }): SprintReviewViewModel {
-  const snapshot = parseCloseSnapshot(input.closeSnapshot);
+  const parsed = parseCloseSnapshot(input.closeSnapshot);
+  const snapshot =
+    parsed && input.authorizedTaskIds
+      ? {
+          ...parsed,
+          finishedTasks: parsed.finishedTasks.filter((t) =>
+            input.authorizedTaskIds!.has(t.taskId),
+          ),
+          unfinishedTasks: parsed.unfinishedTasks.filter((t) =>
+            input.authorizedTaskIds!.has(t.taskId),
+          ),
+          committedAtStartTaskIds: parsed.committedAtStartTaskIds.filter((id) =>
+            input.authorizedTaskIds!.has(id),
+          ),
+          addedAfterStartTaskIds: parsed.addedAfterStartTaskIds.filter((id) =>
+            input.authorizedTaskIds!.has(id),
+          ),
+        }
+      : parsed;
   if (snapshot) {
     return {
       goal: input.goal,

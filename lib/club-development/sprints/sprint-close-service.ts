@@ -230,13 +230,13 @@ export async function closeDevelopmentSprint(
         closeSnapshot: snapshot,
       },
     });
-  });
 
-  for (const row of unfinishedTasks) {
-    if (row.disposition === "FUTURE_SPRINT" && row.moveToSprintId) {
-      await addTaskToSprint(tenantId, row.moveToSprintId, row.taskId);
+    for (const row of unfinishedTasks) {
+      if (row.disposition === "FUTURE_SPRINT" && row.moveToSprintId) {
+        await addTaskToSprint(tenantId, row.moveToSprintId, row.taskId, tx);
+      }
     }
-  }
+  });
 
   void clientRequestId;
 

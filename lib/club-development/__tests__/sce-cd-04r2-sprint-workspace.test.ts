@@ -16,6 +16,7 @@ import {
   isTaskOverdue,
 } from "../sprints/sprint-board-filters";
 import { buildSprintReviewViewModel, parseCloseSnapshot } from "../sprints/sprint-review";
+import { filterCloseSnapshotForAuthorization } from "../sprints/sprint-review-snapshot-auth";
 import type { SprintBoardCard } from "../sprints/sprint-board";
 
 const prismaMocks = vi.hoisted(() => ({
@@ -131,5 +132,46 @@ describe("SCE-CD-04R2 sprint workspace", () => {
   it("keeps legacy REMOVE helper behaviour for unfinished membership soft-remove", () => {
     expect(membershipIdsToSoftRemove(["a", "b"], "REMOVE")).toEqual(["a", "b"]);
     expect(classifySprintCloseTasks([{ taskId: "x", status: TaskStatus.DONE }]).finished).toHaveLength(1);
+  });
+
+  it("filters historical close snapshot task rows by current authorization without mutating stored ids in DB", () => {
+    const snapshot: SprintCloseSnapshot = {
+      version: 1,
+      closedAt: "2026-11-14T12:00:00.000Z",
+      goalResult: DevelopmentSprintGoalResult.ACHIEVED,
+      reviewNotes: null,
+      finishedTasks: [{ taskId: "visible", title: "Visible", statusAtClose: TaskStatus.DONE, finished: true }],
+      unfinishedTasks: [
+        {
+          taskId: "hidden",
+          title: "Secret",
+          statusAtClose: TaskStatus.OPEN,
+          finished: false,
+          disposition: "BACKLOG",
+        },
+      ],
+      committedAtStartTaskIds: ["visible", "hidden"],
+      addedAfterStartTaskIds: ["hidden"],
+      defaultUnfinishedDisposition: "BACKLOG",
+    };
+
+    const filtered = filterCloseSnapshotForAuthorization(snapshot, new Set(["visible"]));
+    expect(filtered.finishedTasks.map((t) => t.taskId)).toEqual(["visible"]);
+    expect(filtered.unfinishedTasks).toHaveLength(0);
+    expect(filtered.addedAfterStartTaskIds).toHaveLength(0);
+    expect(snapshot.unfinishedTasks).toHaveLength(1);
+
+    const review = buildSprintReviewViewModel({
+      goal: "G",
+      goalResult: null,
+      reviewNotes: null,
+      startedAt: null,
+      completedAt: null,
+      closeSnapshot: snapshot,
+      authorizedTaskIds: new Set(["visible"]),
+    });
+    expect(review.addedAfterStartCount).toBe(0);
+    expect(review.finishedAtClose).toHaveLength(1);
+    expect(review.unfinishedAtClose).toHaveLength(0);
   });
 });
