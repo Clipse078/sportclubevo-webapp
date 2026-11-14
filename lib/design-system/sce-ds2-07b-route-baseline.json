@@ -225,6 +225,7 @@
   "app/(admin)/vereinsleitung/prozesse/new/page.tsx",
   "app/(admin)/vereinsleitung/prozesse/page.tsx",
   "app/(admin)/vereinsleitung/sprints/[slug]/board/page.tsx",
+  "app/(admin)/vereinsleitung/sprints/[slug]/rueckblick/page.tsx",
   "app/(admin)/vereinsleitung/sprints/[slug]/page.tsx",
   "app/(admin)/vereinsleitung/sprints/page.tsx",
   "app/(admin)/vereinsleitung/strategie/page.tsx",

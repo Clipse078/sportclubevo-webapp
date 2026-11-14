@@ -4,7 +4,8 @@ import {
   getDevelopmentSprintById,
   hasSprintManagePermission,
 } from "@/lib/club-development/sprints/queries";
-import { updateDevelopmentSprint, SprintServiceError } from "@/lib/club-development/sprints/sprint-service";
+import { SprintServiceError } from "@/lib/club-development/sprints/sprint-service";
+import { patchDevelopmentSprintMetadata } from "@/lib/club-development/sprints/sprint-lifecycle";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 
@@ -43,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const sprint = await updateDevelopmentSprint(access.context.tenantId, id, {
+    const sprint = await patchDevelopmentSprintMetadata(access.context.tenantId, id, {
       title: body?.title,
       goal: body?.goal !== undefined ? body.goal : undefined,
       status: Object.values(DevelopmentSprintStatus).includes(body?.status)

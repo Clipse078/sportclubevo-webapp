@@ -12,6 +12,7 @@ Additive schema for Vereinsentwicklung **strategy**, **initiative backlog**, **m
 |------|-----------|--------|
 | 1 | `prisma/migrations/20261113183000_sce_cd_04_strategy_sprints/migration.sql` | Enums, `Initiative` backlog fields, `InitiativeMilestone`, `InitiativeTargetLink`, `DevelopmentSprint`, `DevelopmentSprintTaskMembership` |
 | 2 | `prisma/migrations/20261114103000_sce_cd_04_task_primary_initiative/migration.sql` | `Task.primaryInitiativeId` FK → `Initiative`, index `(tenantId, primaryInitiativeId)` |
+| 3 | `prisma/migrations/20261114180000_sce_cd_04r2_sprint_lifecycle_history/migration.sql` | `DevelopmentSprint.startedAt`, `goalResult`, `reviewNotes`, `closeSnapshot`; `DevelopmentSprintTaskMembership.committedAtSprintStart` |
 
 After both: `npx prisma generate` in CI/build.
 
@@ -67,6 +68,7 @@ Indexes: `(tenantId, backlogPriority)`, `(tenantId, disposition)`.
 | `/vereinsleitung/sprints` | `GET/POST /api/club-development/sprints` |
 | `/vereinsleitung/sprints/[slug]` | sprint PATCH (start), tasks, close |
 | `/vereinsleitung/sprints/[slug]/board` | board + task status PATCH |
+| `/vereinsleitung/sprints/[slug]/rueckblick` | `GET /api/club-development/sprints/[id]/review` |
 | Sprint / initiative pickers | `GET /api/club-development/task-candidates`, `GET /api/club-development/targets/candidates` |
 
 ## Isolated-database validation (local)

@@ -69,12 +69,18 @@ describe("SCE-CD-04 PO UAT corrections", () => {
 
   it("sprint close and bulk planning use German product copy", () => {
     const detail = read("components/admin/club-development/DevelopmentSprintDetailWorkspace.tsx");
+    const closePanel = read("components/admin/club-development/SprintClosePanel.tsx");
+    const nav = read("components/admin/club-development/DevelopmentSprintWorkspaceNav.tsx");
     expect(detail).toContain("SprintBulkTaskPlanningPanel");
+    expect(detail).toContain("Aus Sprint entfernen");
     expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
       "Aufgaben hinzufügen",
     );
     expect(detail).not.toContain("(KEEP)");
     expect(detail).not.toContain("(REMOVE)");
+    expect(closePanel).toContain("Offene Aufgaben ins Backlog zurückgeben");
+    expect(closePanel).toContain("Sprint-Zielergebnis");
+    expect(nav).toContain("Rückblick");
     expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
       "Ohne Initiative",
     );

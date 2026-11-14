@@ -861,6 +861,12 @@ enum DevelopmentSprintStatus {
   COMPLETED
 }
 
+enum DevelopmentSprintGoalResult {
+  ACHIEVED
+  PARTLY_ACHIEVED
+  NOT_ACHIEVED
+}
+
 enum InitiativeMilestoneStatus {
   OPEN
   DONE
@@ -3282,7 +3288,11 @@ model DevelopmentSprint {
   ownerPersonId   String?
   startsAt        DateTime?
   endsAt          DateTime?
+  startedAt       DateTime?
   completedAt     DateTime?
+  goalResult      DevelopmentSprintGoalResult?
+  reviewNotes     String?
+  closeSnapshot   Json?
   visibilityScope VisibilityScope         @default(ORGANISATION)
   createdByUserId String?
   createdAt       DateTime                @default(now())
@@ -3302,9 +3312,10 @@ model DevelopmentSprintTaskMembership {
   tenantId             String
   sprintId             String
   taskId               String
-  addedAt              DateTime  @default(now())
-  addedAfterSprintStart Boolean  @default(false)
-  removedAt            DateTime?
+  addedAt                 DateTime  @default(now())
+  addedAfterSprintStart   Boolean   @default(false)
+  committedAtSprintStart  Boolean   @default(false)
+  removedAt               DateTime?
 
   tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sprint DevelopmentSprint @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)

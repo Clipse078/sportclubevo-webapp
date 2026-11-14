@@ -3,8 +3,12 @@ import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
-import { getDevelopmentSprintBySlug } from "@/lib/club-development/sprints/queries";
+import {
+  getDevelopmentSprintBySlug,
+  hasSprintManagePermission,
+} from "@/lib/club-development/sprints/queries";
 import DevelopmentSprintBoard from "@/components/admin/club-development/DevelopmentSprintBoard";
+import DevelopmentSprintWorkspaceShell from "@/components/admin/club-development/DevelopmentSprintWorkspaceShell";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 
@@ -19,30 +23,46 @@ export default async function DevelopmentSprintBoardPage({ params }: PageProps) 
   const sprint = await getDevelopmentSprintBySlug(slug, actor);
   if (!sprint) notFound();
 
+  const canManage = hasSprintManagePermission(actor);
+  const tenantId = actor.tenantId;
+
   return (
     <PageShell fullWidth>
       <ListPagePattern
         eyebrow="Sprint-Board"
-        title={`Board: ${sprint.title}`}
-        description="Kanban nach Aufgabenstatus — Spalten Offen, In Arbeit, Erledigt."
+        title={sprint.title}
+        description="Kanban nach Aufgabenstatus — Offen, In Arbeit, Erledigt."
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
-          { label: "Vereinsentwicklung", href: "/vereinsleitung" },
           { label: "Sprints", href: "/vereinsleitung/sprints" },
           { label: sprint.title, href: `/vereinsleitung/sprints/${sprint.slug}` },
           { label: "Board" },
         ]}
         headerActions={
           <Link
-            href={`/vereinsleitung/sprints/${sprint.slug}`}
+            href="/vereinsleitung/sprints"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3.5 py-2 text-sm text-[var(--muted)] hover:bg-[var(--surface-2)]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Sprintdetails
+            Zurück
           </Link>
         }
       >
-        <DevelopmentSprintBoard sprintId={sprint.id} sprintTitle={sprint.title} />
+        {tenantId ? (
+          <DevelopmentSprintWorkspaceShell
+            tenantId={tenantId}
+            sprint={sprint}
+            canManage={canManage}
+            activeTab="board"
+          >
+            <DevelopmentSprintBoard
+              sprintId={sprint.id}
+              sprintTitle={sprint.title}
+              canManage={canManage}
+              currentUserId={session.user.id ?? null}
+            />
+          </DevelopmentSprintWorkspaceShell>
+        ) : null}
       </ListPagePattern>
     </PageShell>
   );

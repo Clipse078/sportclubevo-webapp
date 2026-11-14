@@ -5937,6 +5937,29 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
+    "urlPattern": "/vereinsleitung/sprints/[slug]/rueckblick",
+    "sourceFile": "app/(admin)/vereinsleitung/sprints/[slug]/rueckblick/page.tsx",
+    "module": "vereinsleitung",
+    "requiredPermissions": [
+      "governance.view"
+    ],
+    "testPersona": "Vereinsleitung governance editor",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
     "urlPattern": "/vereinsleitung/strategie",
     "sourceFile": "app/(admin)/vereinsleitung/strategie/page.tsx",
     "module": "vereinsleitung",
@@ -6211,12 +6234,12 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-14T09:35:03.880Z",
-  "totalCanonicalRoutes": 223,
+  "generatedAt": "2026-11-14T15:57:00.345Z",
+  "totalCanonicalRoutes": 224,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 223,
+  "pendingAuthenticatedVisualCount": 224,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 223,
+  "automatedChecksPassedCount": 224,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
@@ -6236,6 +6259,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 223,
+  "entriesScanned": 224,
   "defects": []
 };
