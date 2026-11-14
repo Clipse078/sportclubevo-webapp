@@ -31,6 +31,7 @@ import { groupApprovalVotesByRevision } from "@/lib/club-development/club-develo
 import { parseApproverPersonIds } from "@/lib/club-development/initiative-approval-presentation";
 import { personLabelFromRecord } from "@/lib/meetings/meeting-person-display";
 import type { MeetingApprovalVoteView } from "@/lib/meetings/meeting-approval-workspace-data";
+import { CD_INITIATIVE_COPY } from "@/lib/club-development/product-copy";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -230,7 +231,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                       value: String(dbInitiative.backlogPriority ?? 0),
                     },
                     {
-                      label: "Disposition",
+                      label: CD_INITIATIVE_COPY.dispositionFilter,
                       value:
                         DISPOSITION_LABELS[dbInitiative.disposition ?? "NONE"] ??
                         dbInitiative.disposition,
@@ -361,9 +362,9 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
           </>
         ) : (
           // Graceful fallback for slugs not yet in DB (legacy mock links still work)
-          <SectionCard title="Initiative nicht gefunden">
+          <SectionCard title={CD_INITIATIVE_COPY.notFound}>
             <EmptyState
-              heading="Diese Initiative ist noch nicht erfasst"
+              heading={CD_INITIATIVE_COPY.notFoundHeading}
               description={`Slug: ${slug}`}
             />
           </SectionCard>

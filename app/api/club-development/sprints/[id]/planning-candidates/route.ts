@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 import {
   getDevelopmentSprintById,
   hasSprintManagePermission,
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const sprint = await getDevelopmentSprintById(id, access.context.actor);
   if (!sprint) {
-    return NextResponse.json({ error: "Sprint nicht gefunden." }, { status: 404 });
+    return NextResponse.json({ error: CD_SPRINT_API_COPY.phaseNotFound }, { status: 404 });
   }
 
   const taskCtx = await buildTaskServiceContextForActor(

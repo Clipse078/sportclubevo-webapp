@@ -42,7 +42,7 @@ describe("ClubDevelopmentOverview", () => {
     expect(screen.getAllByText("Aktive Ziele").length).toBeGreaterThan(0);
     expect(screen.getAllByText("0").length).toBeGreaterThan(0);
     expect(screen.getByText("Keine aktiven Ziele sichtbar.")).toBeTruthy();
-    expect(screen.getByText("Keine laufenden Initiativen sichtbar.")).toBeTruthy();
+    expect(screen.getByText("Keine laufenden Vorhaben sichtbar.")).toBeTruthy();
     expect(screen.queryByText("Aktive Prozesse")).toBeNull();
     expect(screen.queryByText("Demo-Daten — nicht produktiv")).toBeNull();
     expect(screen.getByText("Vorhaben & Aufgaben")).toBeTruthy();

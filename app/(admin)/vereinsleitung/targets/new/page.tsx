@@ -14,7 +14,7 @@ export default async function NewTargetPage() {
       <FormPagePattern
         eyebrow="Ziele"
         title="Neues Ziel erstellen"
-        description="Strategisches Ziel mit messbaren Metriken erfassen. Optional eine Vorlage als Ausgangspunkt verwenden."
+        description="Strategisches Ziel mit messbaren Kennzahlen erfassen. Optional eine Vorlage als Ausgangspunkt verwenden."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Ziele", href: "/vereinsleitung/targets" },

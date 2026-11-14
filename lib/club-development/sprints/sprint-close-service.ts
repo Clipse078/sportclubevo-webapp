@@ -6,6 +6,7 @@ import {
   TaskStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 import { addTaskToSprint, SprintServiceError } from "./sprint-service";
 import type { SprintCloseInput, SprintCloseSnapshot, UnfinishedTaskDisposition } from "./sprint-close-types";
 
@@ -71,10 +72,10 @@ async function assertEligibleFutureSprint(
     where: { id: targetSprintId, tenantId },
     select: { id: true, status: true },
   });
-  if (!target) throw new SprintServiceError("Ziel-Sprint nicht gefunden.");
-  if (target.id === sprintId) throw new SprintServiceError("Aufgabe kann nicht in denselben Sprint verschoben werden.");
+  if (!target) throw new SprintServiceError(CD_SPRINT_API_COPY.targetPhaseNotFound);
+  if (target.id === sprintId) throw new SprintServiceError(CD_SPRINT_API_COPY.cannotMoveToSamePhase);
   if (target.status === DevelopmentSprintStatus.COMPLETED) {
-    throw new SprintServiceError("Abgeschlossene Sprints sind als Ziel nicht erlaubt.");
+    throw new SprintServiceError(CD_SPRINT_API_COPY.completedPhaseNotAllowedAsTarget);
   }
 }
 
@@ -95,7 +96,7 @@ export async function closeDevelopmentSprint(
       goalResult: true,
     },
   });
-  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!sprint) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
 
   if (sprint.status === DevelopmentSprintStatus.COMPLETED) {
     const existing = sprint.closeSnapshot as SprintCloseSnapshot | null;
@@ -108,15 +109,15 @@ export async function closeDevelopmentSprint(
         snapshot: existing,
       };
     }
-    throw new SprintServiceError("Sprint ist bereits abgeschlossen.");
+    throw new SprintServiceError(CD_SPRINT_API_COPY.phaseAlreadyCompleted);
   }
 
   if (sprint.status !== DevelopmentSprintStatus.ACTIVE) {
-    throw new SprintServiceError("Nur aktive Sprints können abgeschlossen werden.");
+    throw new SprintServiceError(CD_SPRINT_API_COPY.onlyActivePhaseCanClose);
   }
 
   if (!Object.values(DevelopmentSprintGoalResult).includes(input.goalResult)) {
-    throw new SprintServiceError("Sprint-Zielergebnis ist erforderlich.");
+    throw new SprintServiceError(CD_SPRINT_API_COPY.phaseGoalResultRequired);
   }
 
   const memberships = await prisma.developmentSprintTaskMembership.findMany({
@@ -175,9 +176,7 @@ export async function closeDevelopmentSprint(
   for (const row of unfinishedTasks) {
     if (row.disposition === "FUTURE_SPRINT") {
       if (!row.moveToSprintId) {
-        throw new SprintServiceError(
-          `Für Aufgabe „${row.title}" ist ein Ziel-Sprint für die Verschiebung erforderlich.`,
-        );
+        throw new SprintServiceError(CD_SPRINT_API_COPY.targetPhaseRequiredForTask(row.title));
       }
       await assertEligibleFutureSprint(tenantId, sprintId, row.moveToSprintId);
     }

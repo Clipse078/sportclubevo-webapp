@@ -24,7 +24,7 @@ export default async function VereinsleitungStrategiePage() {
       <ListPagePattern
         eyebrow="Strategie"
         title="Strategische Übersicht"
-        description="Ziele mit Outcome-Fortschritt, Umsetzungsfortschritt über verknüpfte Initiativen und Kennzahlen."
+        description="Ziele mit Outcome-Fortschritt, Umsetzungsfortschritt über verknüpfte Vorhaben und Kennzahlen."
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },

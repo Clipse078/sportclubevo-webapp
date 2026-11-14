@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import InitiativeBacklogWorkspace from "@/components/admin/club-development/InitiativeBacklogWorkspace";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
-import { CD_NAV_COPY, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { CD_NAV_COPY, CD_SPRINT_WORKSPACE_COPY, CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 
 export default async function InitiativeBacklogPage() {
   const session = await auth();
@@ -38,7 +38,7 @@ export default async function InitiativeBacklogPage() {
       <ListPagePattern
         eyebrow={CD_NAV_COPY.initiativesEyebrow}
         title={CD_NAV_COPY.initiativeBacklog}
-        description={`Priorisierte Vorhaben mit Disposition, ${CD_SPRINT_WORKSPACE_COPY.expectedResult} und Filtern für die Umsetzungsplanung.`}
+        description={`${CD_TARGET_COPY.backlogDescriptionEinordnung}, ${CD_SPRINT_WORKSPACE_COPY.expectedResult} und Filtern für die Umsetzungsplanung.`}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },

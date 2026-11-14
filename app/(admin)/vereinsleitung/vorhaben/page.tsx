@@ -30,7 +30,7 @@ export default function VorhabenAufgabenPage() {
           <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-xs)]">
             <div className="flex items-center gap-2">
               <Flag className="h-5 w-5 text-[var(--sce-primary)]" />
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">Initiativen</h2>
+              <h2 className="text-sm font-semibold text-[var(--foreground)]">Vorhaben</h2>
               <Badge variant="success" size="sm">
                 Verfügbar
               </Badge>
@@ -43,7 +43,7 @@ export default function VorhabenAufgabenPage() {
               href="/vereinsleitung/initiativen"
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--sce-primary)] hover:underline"
             >
-              Zu Initiativen
+              Zu Vorhaben
               <ArrowRight className="h-4 w-4" />
             </Link>
           </article>

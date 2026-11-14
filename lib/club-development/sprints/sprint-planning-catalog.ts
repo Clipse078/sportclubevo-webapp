@@ -302,10 +302,10 @@ export async function assertSprintPlanningMutable(
     select: { id: true, status: true },
   });
   if (!sprint) {
-    throw new Error("Sprint nicht gefunden.");
+    throw new Error("Umsetzungsphase nicht gefunden.");
   }
   if (sprint.status === DevelopmentSprintStatus.COMPLETED) {
-    throw new Error("Abgeschlossene Sprints können nicht mehr geplant werden.");
+    throw new Error("Abgeschlossene Umsetzungsphasen können nicht mehr geplant werden.");
   }
   return sprint;
 }

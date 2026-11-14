@@ -796,7 +796,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   {
     key: "vereinsleitung",
     label: "Vereinsleitung",
-    description: "Meetings, Initiativen, KPIs und Entscheidungen.",
+    description: "Meetings, Vorhaben, KPIs und Entscheidungen.",
     href: "/vereinsleitung",
     permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
     carrySeason: false,

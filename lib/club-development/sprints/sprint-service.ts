@@ -7,6 +7,7 @@ import {
   VisibilityScope,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 
 export type SprintMembershipDbClient = Pick<
   Prisma.TransactionClient,
@@ -85,7 +86,7 @@ export async function updateDevelopmentSprint(
     where: { id: sprintId, tenantId },
     select: { id: true },
   });
-  if (!existing) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!existing) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
 
   return prisma.developmentSprint.update({
     where: { id: sprintId },
@@ -126,14 +127,14 @@ export async function addTaskToSprint(
     where: { id: sprintId, tenantId },
     select: { id: true, status: true },
   });
-  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!sprint) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
   await assertTaskInTenant(tenantId, taskId, client);
 
   const active = await client.developmentSprintTaskMembership.findFirst({
     where: { tenantId, sprintId, taskId, removedAt: null },
     select: { id: true },
   });
-  if (active) throw new SprintServiceError("Aufgabe ist bereits im Sprint.");
+  if (active) throw new SprintServiceError(CD_SPRINT_API_COPY.taskAlreadyInPhase);
 
   const otherSprint = await client.developmentSprintTaskMembership.findFirst({
     where: {
@@ -145,9 +146,7 @@ export async function addTaskToSprint(
     select: { sprint: { select: { title: true } } },
   });
   if (otherSprint) {
-    throw new SprintServiceError(
-      `Aufgabe ist bereits im Sprint „${otherSprint.sprint.title}" — Aufgaben werden nicht automatisch verschoben.`,
-    );
+    throw new SprintServiceError(CD_SPRINT_API_COPY.taskAlreadyInOtherPhase(otherSprint.sprint.title));
   }
 
   const revived = await client.developmentSprintTaskMembership.findFirst({
@@ -185,7 +184,7 @@ export async function removeTaskFromSprint(
     where: { tenantId, sprintId, taskId, removedAt: null },
     data: { removedAt },
   });
-  if (updated.count === 0) throw new SprintServiceError("Aufgabe ist nicht im Sprint.");
+  if (updated.count === 0) throw new SprintServiceError(CD_SPRINT_API_COPY.taskNotInPhase);
 }
 
 export async function listActiveSprintMemberships(tenantId: string, sprintId: string) {
@@ -275,9 +274,9 @@ export async function bulkAddTasksToSprint(
     where: { id: sprintId, tenantId },
     select: { id: true, status: true },
   });
-  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!sprint) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
   if (sprint.status === DevelopmentSprintStatus.COMPLETED) {
-    throw new SprintServiceError("Abgeschlossene Sprints können nicht mehr geplant werden.");
+    throw new SprintServiceError(CD_SPRINT_API_COPY.completedPhasesCannotBePlanned);
   }
 
   const taskIds = [...new Set(rawTaskIds.map((id) => id.trim()).filter(Boolean))];
@@ -297,9 +296,9 @@ export async function bulkAddTasksToSprint(
               : validation.code === "NOT_FOUND"
                 ? "Aufgabe nicht gefunden."
                 : validation.code === "IN_TARGET_SPRINT"
-                  ? "Aufgabe ist bereits im Sprint."
+                  ? CD_SPRINT_API_COPY.taskAlreadyInPhase
                   : validation.code === "OTHER_SPRINT"
-                    ? "Aufgabe ist bereits einem anderen Sprint zugeordnet."
+                    ? CD_SPRINT_API_COPY.taskAlreadyInOtherPhaseShort
                     : validation.code === "INELIGIBLE"
                       ? "Aufgabe kann nicht mehr geplant werden."
                       : "Aufgabe gehört nicht zu diesem Verein.",
@@ -321,7 +320,7 @@ export async function bulkAddTasksToSprint(
         rejected.push({
           taskId,
           code: "IN_TARGET_SPRINT",
-          message: "Aufgabe ist bereits im Sprint.",
+          message: CD_SPRINT_API_COPY.taskAlreadyInPhase,
         });
         continue;
       }
@@ -329,7 +328,7 @@ export async function bulkAddTasksToSprint(
         rejected.push({
           taskId,
           code: "OTHER_SPRINT",
-          message: `Aufgabe ist bereits im Sprint „${inserted.sprintTitle}".`,
+          message: CD_SPRINT_API_COPY.taskAlreadyInOtherPhase(inserted.sprintTitle),
         });
         continue;
       }

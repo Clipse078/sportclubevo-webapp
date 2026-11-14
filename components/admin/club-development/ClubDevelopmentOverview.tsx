@@ -132,7 +132,7 @@ export default function ClubDevelopmentOverview({
         />
         <ModuleShortcut
           title="Vorhaben & Aufgaben"
-          description="Initiativen und operative Aufgaben — ein gemeinsamer Arbeitsbereich folgt."
+          description="Vorhaben und operative Aufgaben — ein gemeinsamer Arbeitsbereich folgt."
           href="/vereinsleitung/vorhaben"
           status="In Arbeit"
           icon={<CheckSquare className="h-4 w-4 text-[var(--sce-warning)]" />}
@@ -182,12 +182,12 @@ export default function ClubDevelopmentOverview({
         </SectionShell>
 
         <SectionShell
-          title="Aktive Initiativen"
+          title="Aktive Vorhaben"
           href="/vereinsleitung/initiativen"
-          linkLabel="Alle Initiativen"
+          linkLabel="Alle Vorhaben"
         >
           {initiatives.length === 0 ? (
-            <EmptySection message="Keine laufenden Initiativen sichtbar." />
+            <EmptySection message="Keine laufenden Vorhaben sichtbar." />
           ) : (
             initiatives.slice(0, 5).map((ini) => (
               <Link
@@ -329,7 +329,7 @@ function KpiStrip({ kpis }: { kpis: ClubDevelopmentOverviewKpis }) {
         description="Status Aktiv, sichtbar für Sie"
       />
       <DashboardKpiCard
-        title="Initiativen"
+        title="Vorhaben"
         value={String(kpis.activeInitiativeCount)}
         accent="info"
         icon={<Flag className="h-5 w-5" />}

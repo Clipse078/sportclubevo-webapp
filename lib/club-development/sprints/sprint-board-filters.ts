@@ -54,7 +54,7 @@ export function groupBoardCardsByInitiative(cards: SprintBoardCard[]): {
   const groups = new Map<string, { label: string; cards: SprintBoardCard[] }>();
   for (const card of cards) {
     const key = card.initiativeId ?? "__none__";
-    const label = card.initiativeLabel ?? "Ohne Initiative";
+    const label = card.initiativeLabel ?? "Ohne Vorhaben";
     const existing = groups.get(key);
     if (existing) existing.cards.push(card);
     else groups.set(key, { label, cards: [card] });

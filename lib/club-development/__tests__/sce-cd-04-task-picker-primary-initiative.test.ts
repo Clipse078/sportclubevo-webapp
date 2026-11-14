@@ -40,7 +40,7 @@ describe("SCE-CD-04 task picker & primary initiative", () => {
     prismaMocks.developmentSprintTaskMembershipFindFirst.mockResolvedValue({ id: "mem-existing" });
 
     await expect(addTaskToSprint("tenant-1", "sprint-1", "task-1")).rejects.toThrow(
-      "Aufgabe ist bereits im Sprint.",
+      "Aufgabe ist bereits in dieser Umsetzungsphase.",
     );
     expect(prismaMocks.developmentSprintTaskMembershipCreate).not.toHaveBeenCalled();
   });

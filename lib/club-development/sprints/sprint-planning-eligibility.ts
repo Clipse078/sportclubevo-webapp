@@ -1,4 +1,5 @@
 import { TaskStatus } from "@prisma/client";
+import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 
 /** Terminal Aufgabenstatus — not offered for sprint planning by default. */
 export function isSprintPlanningEligibleStatus(status: TaskStatus): boolean {
@@ -11,10 +12,10 @@ export function sprintPlanningExclusionMessage(input: {
   status: TaskStatus;
 }): string | null {
   if (input.inTargetSprint) {
-    return "Bereits im Sprint";
+    return CD_SPRINT_API_COPY.alreadyInPhase;
   }
   if (input.otherSprintTitle) {
-    return `Bereits im Sprint „${input.otherSprintTitle}" — Aufgaben werden nicht automatisch verschoben.`;
+    return CD_SPRINT_API_COPY.alreadyInPhaseNamed(input.otherSprintTitle);
   }
   if (!isSprintPlanningEligibleStatus(input.status)) {
     return "Abgeschlossene oder abgebrochene Aufgaben können nicht geplant werden.";

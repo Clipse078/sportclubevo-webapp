@@ -2,6 +2,7 @@ import "server-only";
 
 import { DevelopmentSprintStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 import { SprintServiceError, updateDevelopmentSprint } from "./sprint-service";
 
 const ALLOWED_STATUS_TRANSITIONS: Record<DevelopmentSprintStatus, DevelopmentSprintStatus[]> = {
@@ -32,7 +33,7 @@ export async function startDevelopmentSprint(
     where: { id: sprintId, tenantId },
     select: { id: true, status: true },
   });
-  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!sprint) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
   assertSprintStatusTransition(sprint.status, DevelopmentSprintStatus.ACTIVE);
 
   await prisma.$transaction(async (tx) => {
@@ -63,7 +64,7 @@ export async function patchDevelopmentSprintMetadata(
     where: { id: sprintId, tenantId },
     select: { id: true, status: true },
   });
-  if (!sprint) throw new SprintServiceError("Sprint nicht gefunden.");
+  if (!sprint) throw new SprintServiceError(CD_SPRINT_API_COPY.phaseNotFound);
 
   if (input.status !== undefined && input.status !== sprint.status) {
     if (input.status === DevelopmentSprintStatus.ACTIVE && sprint.status === DevelopmentSprintStatus.PLANNED) {
@@ -72,7 +73,7 @@ export async function patchDevelopmentSprintMetadata(
       return updateDevelopmentSprint(tenantId, sprintId, metadata);
     }
     if (input.status === DevelopmentSprintStatus.COMPLETED) {
-      throw new SprintServiceError("Sprints werden über den Abschluss-Workflow beendet.");
+      throw new SprintServiceError(CD_SPRINT_API_COPY.closeViaWorkflow);
     }
     assertSprintStatusTransition(sprint.status, input.status);
   }

@@ -368,7 +368,7 @@ export default function InitiativeForm({
         </button>
         <button type="submit" disabled={loading} className={submitButtonClass}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {mode === "create" ? "Initiative erstellen" : "Änderungen speichern"}
+          {mode === "create" ? "Vorhaben erstellen" : "Änderungen speichern"}
         </button>
       </div>
     </form>

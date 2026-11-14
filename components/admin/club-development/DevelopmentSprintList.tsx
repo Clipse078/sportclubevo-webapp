@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, Kanban } from "lucide-react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 export type DevelopmentSprintListItem = {
   id: string;
@@ -72,7 +73,7 @@ export function SprintBoardQuickLink({ slug }: { slug: string }) {
       className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
     >
       <Kanban className="h-4 w-4" />
-      Zum Board
+      {CD_SPRINT_WORKSPACE_COPY.boardQuickLink}
     </Link>
   );
 }

@@ -14,8 +14,8 @@ export default function CreateInitiativeComposerDialog({ open, onClose }: Props)
     <SceClubDevelopmentComposerShell
       open={open}
       onClose={onClose}
-      title="Neue Initiative"
-      description="Initiative im Workspace erfassen — ohne die Übersicht zu verlassen."
+      title="Neues Vorhaben"
+      description="Vorhaben im Workspace erfassen — ohne die Übersicht zu verlassen."
       testId="create-initiative-composer"
     >
       <ClubDevelopmentComposerCancelBridge onClose={onClose}>

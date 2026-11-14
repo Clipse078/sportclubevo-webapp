@@ -12,7 +12,7 @@ export default function CreateInitiativeTrigger({ className }: { className?: str
       data-testid="initiative-create-trigger"
     >
       <Plus className="h-4 w-4" aria-hidden />
-      Neue Initiative
+      Neues Vorhaben
     </Link>
   );
 }

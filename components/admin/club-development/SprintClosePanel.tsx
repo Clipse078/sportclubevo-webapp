@@ -174,7 +174,7 @@ export default function SprintClosePanel({ sprintId, memberships }: Props) {
 
           {defaultDisposition === "FUTURE_SPRINT" && unfinished.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-[var(--muted)]">Ziel-Sprint je Aufgabe</p>
+              <p className="text-xs font-medium text-[var(--muted)]">{CD_SPRINT_WORKSPACE_COPY.closeTargetPhasePerTask}</p>
               {unfinished.map((row) => (
                 <label key={row.taskId} className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="min-w-[8rem]">{row.title}</span>
@@ -185,7 +185,7 @@ export default function SprintClosePanel({ sprintId, memberships }: Props) {
                       setMoveTargets((prev) => ({ ...prev, [row.taskId]: e.target.value }))
                     }
                   >
-                    <option value="">— Sprint wählen —</option>
+                    <option value="">{CD_SPRINT_WORKSPACE_COPY.chooseTargetPhase}</option>
                     {futureSprints.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.title}
@@ -232,7 +232,7 @@ function CloseActions({
         className="inline-flex items-center gap-2 rounded-lg border border-[var(--sce-primary)] bg-[var(--sce-primary)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Sprint abschließen
+        {CD_SPRINT_WORKSPACE_COPY.closePhase}
       </button>
       {message ? <p className="text-xs text-[var(--sce-success)]">{message}</p> : null}
     </div>

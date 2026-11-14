@@ -34,7 +34,7 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
           return;
         }
         setRetryTaskId(null);
-        setInfo("Aufgabe wurde dem Sprint zugeordnet.");
+        setInfo("Aufgabe wurde der Umsetzungsphase zugeordnet.");
         onCreated();
         return;
       }
@@ -56,7 +56,7 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
         setInfo(
           typeof data.allocationError === "string"
             ? data.allocationError
-            : "Aufgabe erstellt, Sprint-Zuordnung fehlgeschlagen.",
+            : "Aufgabe erstellt, Zuordnung zur Umsetzungsphase fehlgeschlagen.",
         );
         setTitle("");
         return;
@@ -114,7 +114,7 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
             className="inline-flex items-center gap-2 rounded-lg border border-[var(--sce-primary)] bg-[var(--sce-primary)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Anlegen und zum Sprint hinzufügen
+            Anlegen und zur Umsetzungsphase hinzufügen
           </button>
         </div>
       ) : null}

@@ -84,7 +84,7 @@ describe("SCE-CD-04R2 sprint workspace", () => {
     expect(mine.map((r) => r.taskId)).toEqual(["a"]);
 
     const grouped = groupBoardCardsByInitiative(rows);
-    expect(grouped.some((g) => g.label === "Ohne Initiative")).toBe(true);
+    expect(grouped.some((g) => g.label === "Ohne Vorhaben")).toBe(true);
   });
 
   it("marks overdue due dates", () => {

@@ -96,7 +96,7 @@ export default function InitiativeBacklogCreateCard({
             aria-hidden
           />
           <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Initiative im Backlog erfassen
+            Vorhaben im Backlog erfassen
           </span>
         </button>
       </div>

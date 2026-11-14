@@ -313,7 +313,7 @@ describeIntegration("SCE-CD-04R2 sprint close & visibility (real disposable Post
           { taskId, disposition: "FUTURE_SPRINT", moveToSprintId: sprintBId },
         ],
       }),
-    ).rejects.toThrow(/Ziel-Sprint|Abgeschlossen/i);
+    ).rejects.toThrow(/Ziel-Umsetzungsphase|Abgeschlossen/i);
 
     const sprintA = await admin.developmentSprint.findUnique({
       where: { id: sprintAId },

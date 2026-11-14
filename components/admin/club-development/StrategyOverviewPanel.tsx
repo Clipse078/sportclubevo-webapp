@@ -73,7 +73,7 @@ export default function StrategyOverviewPanel({
               </div>
               <p className="text-xs text-[var(--muted)]">
                 Status: {STATUS_LABELS[target.status] ?? target.status} · {target.linkedInitiativeCount}{" "}
-                verknüpfte Initiative{target.linkedInitiativeCount === 1 ? "" : "n"}
+                {target.linkedInitiativeCount === 1 ? "verknüpftes Vorhaben" : "verknüpfte Vorhaben"}
               </p>
             </div>
             <Link

@@ -91,6 +91,9 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
       "ClubDevelopmentFormError",
     );
+    expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
+      "Vorhaben im Backlog erfassen",
+    );
   });
 
   it("sprint board cards link tasks and show assignees without card-level drag", () => {

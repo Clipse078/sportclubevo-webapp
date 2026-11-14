@@ -25,7 +25,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   MATCH_INVITATION: "Spieleinladung",
   MEETING_FOLLOWUP: "Meeting",
-  INITIATIVE_UPDATE: "Initiative",
+  INITIATIVE_UPDATE: "Vorhaben",
   TARGET_PROGRESS: "Ziel",
   TOURNAMENT_REMINDER: "Turnier",
   GOVERNANCE_FOLLOWUP: "Governance",

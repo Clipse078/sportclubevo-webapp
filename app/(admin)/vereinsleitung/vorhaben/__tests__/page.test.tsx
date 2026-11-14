@@ -18,9 +18,9 @@ describe("/vereinsleitung/vorhaben page", () => {
   it("shows in-arbeit status and links to initiatives and tasks", () => {
     render(<VorhabenAufgabenPage />);
     expect(screen.getByText("In Arbeit")).toBeTruthy();
-    expect(screen.getByText("Zu Initiativen")).toBeTruthy();
+    expect(screen.getByText("Zu Vorhaben")).toBeTruthy();
     expect(screen.getByText("Zu Aufgaben")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Zu Initiativen/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Zu Vorhaben/i })).toHaveAttribute(
       "href",
       "/vereinsleitung/initiativen",
     );

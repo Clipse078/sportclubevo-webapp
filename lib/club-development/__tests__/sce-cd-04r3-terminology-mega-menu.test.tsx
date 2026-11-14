@@ -100,6 +100,18 @@ describe("SCE-CD-04R3 product copy anchors", () => {
     expect(section).not.toContain("Aktuelle Sprint-Zuordnung");
   });
 
+  it("uses Einordnung, Kennzahlen and Vereinsführung presentation labels", () => {
+    const backlog = read("components/admin/club-development/InitiativeBacklogWorkspace.tsx");
+    expect(backlog).toContain("CD_INITIATIVE_COPY.dispositionFilter");
+    expect(backlog).not.toMatch(/>Disposition</);
+    expect(read("components/admin/targets/TargetForm.tsx")).toContain("Vereinsführung");
+    expect(read("components/admin/targets/TargetForm.tsx")).toContain("Kennzahlen");
+    expect(read("lib/club-development/sprints/sprint-service.ts")).toContain("CD_SPRINT_API_COPY");
+    expect(read("components/admin/initiatives/InitiativeGovernanceBanner.tsx")).toContain(
+      "Prüfung & Freigabe",
+    );
+  });
+
   it("preserves safe returnTo routing contract", () => {
     expect(read("lib/tasks/task-navigation.ts")).toContain("returnTo");
     expect(read("components/admin/club-development/SprintTaskTitleLink.tsx")).toContain(

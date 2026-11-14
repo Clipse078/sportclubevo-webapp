@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeDisposition, InitiativeStatus } from "@prisma/client";
+import { CD_INITIATIVE_COPY } from "@/lib/club-development/product-copy";
 import InitiativeBacklogCreateCard from "./InitiativeBacklogCreateCard";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
@@ -168,7 +169,7 @@ export default function InitiativeBacklogWorkspace({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs text-[var(--muted)]">Disposition</span>
+            <span className="mb-1 block text-xs text-[var(--muted)]">{CD_INITIATIVE_COPY.dispositionFilter}</span>
             <select
               value={dispositionFilter}
               onChange={(e) => setDispositionFilter(e.target.value)}
@@ -205,8 +206,8 @@ export default function InitiativeBacklogWorkspace({
             {showLoadFailureHint
               ? "Backlog konnte nicht geladen werden. Bereits sichtbare Einträge bleiben erhalten, sobald vorhanden."
               : canManage
-                ? "Keine Initiativen im Backlog. Erfassen Sie die erste Initiative oben."
-                : "Keine sichtbaren Initiativen im Backlog."}
+                ? CD_INITIATIVE_COPY.emptyBacklogManage
+                : CD_INITIATIVE_COPY.emptyBacklogView}
           </div>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
