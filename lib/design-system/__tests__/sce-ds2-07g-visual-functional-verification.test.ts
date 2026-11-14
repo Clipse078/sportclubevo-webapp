@@ -21,10 +21,10 @@ const ROOT = process.cwd();
 
 describe("SCE-DS2-07G visual and functional verification", () => {
   it("covers every DS2-07G canonical route in the verification matrix", () => {
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(218);
-    expect(SCE_DS2_07G_VERIFICATION_MATRIX).toHaveLength(218);
-    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.totalCanonicalRoutes).toBe(218);
-    expect(new Set(SCE_DS2_07G_VERIFICATION_MATRIX.map((row) => row.sourceFile)).size).toBe(218);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(223);
+    expect(SCE_DS2_07G_VERIFICATION_MATRIX).toHaveLength(223);
+    expect(SCE_DS2_07G_VERIFICATION_SUMMARY.totalCanonicalRoutes).toBe(223);
+    expect(new Set(SCE_DS2_07G_VERIFICATION_MATRIX.map((row) => row.sourceFile)).size).toBe(223);
   });
 
   it("uses the batch-9 evidence contract in the matrix summary", () => {
@@ -92,7 +92,7 @@ describe("SCE-DS2-07G visual and functional verification", () => {
   });
 
   it("runs static canonical audit without blocking defects", () => {
-    expect(SCE_DS2_07G_STATIC_AUDIT.entriesScanned).toBe(218);
+    expect(SCE_DS2_07G_STATIC_AUDIT.entriesScanned).toBe(223);
     expect(SCE_DS2_07G_STATIC_AUDIT.defects).toEqual([]);
   });
 

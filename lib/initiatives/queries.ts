@@ -39,6 +39,9 @@ const INITIATIVE_LIST_SELECT = {
   visiblePersonRefs: true,
   // Phase D: target group visibility refs
   visibleTargetGroupRefs: true,
+  expectedOutcome: true,
+  backlogPriority: true,
+  disposition: true,
 } as const;
 
 export async function getInitiatives(actor: ActorContext) {

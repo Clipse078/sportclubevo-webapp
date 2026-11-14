@@ -848,6 +848,24 @@ enum InitiativeStatus {
   CANCELLED
 }
 
+enum InitiativeDisposition {
+  NONE
+  DEFERRED
+  REJECTED
+  ARCHIVED
+}
+
+enum DevelopmentSprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+enum InitiativeMilestoneStatus {
+  OPEN
+  DONE
+}
+
 enum ClubDevelopmentProcessStatus {
   DRAFT
   ACTIVE
@@ -1258,6 +1276,10 @@ model Tenant {
   meetingLifecycleEvents           MeetingLifecycleEvent[]
   initiatives                      Initiative[]
   initiativeApprovalVotes          InitiativeApprovalVote[]
+  initiativeMilestones             InitiativeMilestone[]
+  initiativeTargetLinks            InitiativeTargetLink[]
+  developmentSprints               DevelopmentSprint[]
+  developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
   targets                          Target[]
@@ -3162,6 +3184,9 @@ model Initiative {
   ownerPersonId String?
   progress    Int?
   dueDate     DateTime?
+  expectedOutcome String?
+  backlogPriority Int                 @default(0)
+  disposition     InitiativeDisposition @default(NONE)
 
   // SCE-CD-03R2 — optional person-based approval (Meetings 2.0 pattern)
   approvalRequired        Boolean                       @default(false)
@@ -3194,6 +3219,9 @@ model Initiative {
   tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   linkedAgendaItems   MeetingAgendaItem[] @relation("MeetingAgendaInitiativeLink")
   approvalVotes       InitiativeApprovalVote[]
+  milestones          InitiativeMilestone[]
+  targetLinks         InitiativeTargetLink[]
+  primaryInitiativeTasks Task[]            @relation("TaskPrimaryInitiative")
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -3201,6 +3229,91 @@ model Initiative {
   @@index([reviewStage])
   @@index([dueDate])
   @@index([visibilityScope])
+  @@index([tenantId, backlogPriority])
+  @@index([tenantId, disposition])
+}
+
+model InitiativeMilestone {
+  id            String                    @id @default(cuid())
+  tenantId      String
+  initiativeId  String
+  title         String
+  description   String?
+  targetDate    DateTime?
+  sortOrder     Int                       @default(0)
+  status        InitiativeMilestoneStatus @default(OPEN)
+  completedAt   DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, initiativeId])
+  @@index([initiativeId, sortOrder])
+}
+
+model InitiativeTargetLink {
+  id           String   @id @default(cuid())
+  tenantId     String
+  initiativeId String
+  targetId     String
+  createdAt    DateTime @default(now())
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  target     Target     @relation(fields: [targetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([initiativeId, targetId])
+  @@index([tenantId])
+  @@index([tenantId, targetId])
+  @@index([tenantId, initiativeId])
+}
+
+model DevelopmentSprint {
+  id              String                  @id @default(cuid())
+  tenantId        String
+  slug            String
+  title           String
+  goal            String?
+  status          DevelopmentSprintStatus @default(PLANNED)
+  owner           String?
+  ownerPersonId   String?
+  startsAt        DateTime?
+  endsAt          DateTime?
+  completedAt     DateTime?
+  visibilityScope VisibilityScope         @default(ORGANISATION)
+  createdByUserId String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  tenant      Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  memberships DevelopmentSprintTaskMembership[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([visibilityScope])
+}
+
+model DevelopmentSprintTaskMembership {
+  id                   String    @id @default(cuid())
+  tenantId             String
+  sprintId             String
+  taskId               String
+  addedAt              DateTime  @default(now())
+  addedAfterSprintStart Boolean  @default(false)
+  removedAt            DateTime?
+
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sprint DevelopmentSprint @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task   Task              @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, sprintId])
+  @@index([sprintId, removedAt])
+  @@index([tenantId, taskId])
 }
 
 /// Immutable approver vote on an Initiative (SCE-CD-03R2; revision-scoped SCE-CD-03R3F1).
@@ -4528,6 +4641,8 @@ model Task {
   completedAt     DateTime?
   contextType     TaskContextType?
   contextId       String?
+  /// SCE-CD-04 — optional Vorhaben association without replacing task context (meeting/match/etc.).
+  primaryInitiativeId String?
   /// AUFGABEN-01B — self-relation; max depth 1 (subtask only, no grandchildren).
   parentTaskId    String?
   /// AUFGABEN-01B — recurrence occurrence link (root tasks generated from a series).
@@ -4553,6 +4668,8 @@ model Task {
   followers  TaskFollower[]
   documentReferences TaskDocumentReference[]
   accessGrants TaskAccessGrant[]
+  sprintMemberships DevelopmentSprintTaskMembership[]
+  primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -4561,6 +4678,7 @@ model Task {
   @@index([tenantId, status, reminder1At])
   @@index([tenantId, status, reminder2At])
   @@index([tenantId, contextType, contextId])
+  @@index([tenantId, primaryInitiativeId])
   @@index([parentTaskId])
   @@index([taskSeriesId])
   @@index([tenantId, visibilityScope])
@@ -5609,6 +5727,7 @@ model Target {
 
   metrics TargetMetric[]
   tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  initiativeTargetLinks InitiativeTargetLink[]
 
   @@index([tenantId])
   @@index([category])

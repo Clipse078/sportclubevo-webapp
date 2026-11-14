@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TaskVisibilityScope } from "@prisma/client";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import {
@@ -50,9 +50,14 @@ export default function TaskOrgVisibilityFields({
     defaultViewerUserGrantIds,
   );
 
+  const initialOrgGrantsKey = useMemo(() => initialOrgGrants.join("|"), [initialOrgGrants]);
+  const syncedOrgGrantsKeyRef = useRef(initialOrgGrantsKey);
+
   useEffect(() => {
+    if (syncedOrgGrantsKeyRef.current === initialOrgGrantsKey) return;
+    syncedOrgGrantsKeyRef.current = initialOrgGrantsKey;
     setOrgUnitGrantIds(initialOrgGrants);
-  }, [initialOrgGrants]);
+  }, [initialOrgGrants, initialOrgGrantsKey]);
 
   const requiresOrgUnits = visibilityScope === "ORG_UNIT";
   const description = TASK_VISIBILITY_SCOPE_DESCRIPTIONS[visibilityScope];
@@ -87,7 +92,7 @@ export default function TaskOrgVisibilityFields({
 
       {visibilityScope === "ORG_UNIT" ? (
         <div className="space-y-1">
-          <span className="text-xs font-medium text-[var(--text-2)]">Organisationseinheiten</span>
+          <span className="text-xs font-medium text-[var(--text-2)]">Organisationseinheit</span>
           <TaskOrgUnitMultiPicker
             fieldName="orgUnitGrantIds"
             options={orgUnitOptions}

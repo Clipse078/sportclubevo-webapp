@@ -7,7 +7,7 @@ Reference inventory for canonical SCE List Selector rollout. Status as of SCE-SE
 | Communication recipients | `/dashboard/communication/*` | Multi-entity audience | `CommunicationAudienceSelector` + discover API | A | Communication adapter + `SceListSelectorPanel` | CANONICAL_ALREADY |
 | Zielgruppen builder | `/dashboard/communication/zielgruppen/*` | OrgUnit, Team, Role, Person, External | `ZielgruppeDefinitionEditor` + discover | A | TARGET_GROUP_MANAGEMENT context | CANONICAL_ALREADY |
 | Aufgaben assignees | Aufgaben create / workspace | Person (linked User persisted) | `TaskPeopleMultiPicker` + discover API | A | `PERSON` + `TASK_ASSIGNMENT` + `SceChipMultiSelectorField` | CANONICAL_ENGINE |
-| Aufgaben org visibility | Aufgaben forms | OrgUnit (auth-filtered) | `TaskOrgUnitMultiPicker` popover filter | A | `ORG_UNIT` task adapter + `TASK_ASSIGNMENT` | MIGRATED |
+| Aufgaben org visibility | Aufgaben forms | OrgUnit (auth-filtered) | `TaskOrgUnitMultiPicker` inline combobox (`SceInlineOrgUnitMultiPicker`) | A | `ORG_UNIT` task adapter + `TASK_ASSIGNMENT` | CANONICAL_ENGINE |
 | Requirements audience | Requirements builder | Person + structural expansion sources | `RequirementAudienceBuilder` + `SceRecipientSelector` | A | `REQUIREMENT_AUDIENCE` (Person/Team/Org/Role/TargetGroup) | CANONICAL_ADAPTER |
 | Workspace access grants | Workspace folder/document ACL | Person, Team, OrgUnit | `/api/workspace/access/audiences` manual search | A | `WORKSPACE_ACCESS` + `WorkspaceAccessAudienceScePicker` | MIGRATED |
 | Workspace access grants | Same | Role (function key) | Static `PERSON_FUNCTION_OPTIONS` search | C | Domain function keys ≠ tenant Role rows | KEEP_DOMAIN_SPECIFIC |

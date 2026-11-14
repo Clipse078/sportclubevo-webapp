@@ -2551,6 +2551,18 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
+    "route": "/vereinsleitung/initiativen/backlog",
+    "source": "app/(admin)/vereinsleitung/initiativen/backlog/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
     "route": "/vereinsleitung/initiativen/new",
     "source": "app/(admin)/vereinsleitung/initiativen/new/page.tsx",
     "pageArchitecture": "canonical",
@@ -2697,6 +2709,54 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/prozesse",
     "source": "app/(admin)/vereinsleitung/prozesse/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/sprints/[slug]/board",
+    "source": "app/(admin)/vereinsleitung/sprints/[slug]/board/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/sprints/[slug]",
+    "source": "app/(admin)/vereinsleitung/sprints/[slug]/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/sprints",
+    "source": "app/(admin)/vereinsleitung/sprints/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/strategie",
+    "source": "app/(admin)/vereinsleitung/strategie/page.tsx",
     "pageArchitecture": "canonical",
     "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
