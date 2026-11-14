@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition, type FormEventHandler } from "react";
+import { useCallback, useState, useTransition } from "react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
+import ClubDevelopmentTaskSearchPicker from "./ClubDevelopmentTaskSearchPicker";
 
 export type SprintMembershipRow = {
   membershipId: string;
   taskId: string;
   title: string;
+  statusLabel: string;
+  assigneeLabels: string[];
+  initiativeTitle: string | null;
   addedAfterSprintStart: boolean;
 };
 
@@ -38,7 +42,6 @@ export default function DevelopmentSprintDetailWorkspace({
 }: Props) {
   const router = useRouter();
   const [memberships, setMemberships] = useState(initialMemberships);
-  const [taskIdInput, setTaskIdInput] = useState("");
   const [unfinishedDisposition, setUnfinishedDisposition] = useState<"KEEP" | "REMOVE">("KEEP");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -55,26 +58,43 @@ export default function DevelopmentSprintDetailWorkspace({
       if (!memRes.ok) return;
       const rows = (memData.memberships ?? []) as { id: string; taskId: string; addedAfterSprintStart: boolean }[];
       const columns = boardData.columns ?? {};
-      const allCards = [...(columns.OPEN ?? []), ...(columns.IN_PROGRESS ?? []), ...(columns.DONE ?? [])];
-      const titleByTaskId = new Map(
-        allCards.map((c: { taskId: string; title: string }) => [c.taskId, c.title] as const),
-      );
+      const allCards = [
+        ...(columns.OPEN ?? []),
+        ...(columns.IN_PROGRESS ?? []),
+        ...(columns.DONE ?? []),
+      ] as {
+        taskId: string;
+        title: string;
+        status: string;
+        assignees: { displayName: string }[];
+        initiativeLabel: string | null;
+      }[];
+      const cardByTaskId = new Map(allCards.map((c) => [c.taskId, c] as const));
+      const STATUS_MAP: Record<string, string> = {
+        OPEN: "Offen",
+        IN_PROGRESS: "In Bearbeitung",
+        DONE: "Erledigt",
+        CANCELLED: "Abgebrochen",
+      };
       setMemberships(
-        rows.map((row) => ({
-          membershipId: row.id,
-          taskId: row.taskId,
-          title: titleByTaskId.get(row.taskId) ?? row.taskId,
-          addedAfterSprintStart: row.addedAfterSprintStart,
-        })),
+        rows.map((row) => {
+          const card = cardByTaskId.get(row.taskId);
+          return {
+            membershipId: row.id,
+            taskId: row.taskId,
+            title: card?.title ?? "Aufgabe",
+            statusLabel: card ? (STATUS_MAP[card.status] ?? card.status) : "—",
+            assigneeLabels: card?.assignees.map((a) => a.displayName).filter(Boolean) ?? [],
+            initiativeTitle: card?.initiativeLabel ?? null,
+            addedAfterSprintStart: row.addedAfterSprintStart,
+          };
+        }),
       );
     });
   }, [sprintId]);
 
-  const addTask: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
+  const addTask = (taskId: string) => {
     setError(null);
-    const taskId = taskIdInput.trim();
-    if (!taskId) return;
     startTransition(async () => {
       const res = await fetch(`/api/club-development/sprints/${sprintId}/tasks`, {
         method: "POST",
@@ -86,8 +106,24 @@ export default function DevelopmentSprintDetailWorkspace({
         setError(typeof data.error === "string" ? data.error : "Aufgabe konnte nicht hinzugefügt werden.");
         return;
       }
-      setTaskIdInput("");
       await reloadMemberships();
+      router.refresh();
+    });
+  };
+
+  const activateSprint = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await fetch(`/api/club-development/sprints/${sprintId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ACTIVE" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Sprint konnte nicht gestartet werden.");
+        return;
+      }
       router.refresh();
     });
   };
@@ -130,15 +166,22 @@ export default function DevelopmentSprintDetailWorkspace({
   };
 
   const showClosePanel = status !== "COMPLETED";
+  const excludeTaskIds = memberships.map((m) => m.taskId);
 
   return (
     <div className="space-y-6" data-testid="sprint-detail-workspace">
-      <SprintDetailTopActions slug={sprintSlug} status={status} />
+      <SprintDetailTopActions
+        slug={sprintSlug}
+        status={status}
+        canManage={canManage}
+        onActivate={activateSprint}
+        activatePending={pending}
+      />
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
         <h2 className="text-sm font-semibold text-[var(--foreground)]">Aufgaben im Sprint</h2>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          Aufgaben per ID hinzufügen oder im{" "}
+          Aufgaben suchen und hinzufügen — nur Aufgaben, die Sie sehen dürfen. Neue Aufgaben im{" "}
           <Link href="/dashboard/aufgaben" className="text-[var(--sce-primary)] hover:underline">
             Aufgabenbereich
           </Link>{" "}
@@ -157,7 +200,7 @@ export default function DevelopmentSprintDetailWorkspace({
           ) : (
             memberships.map((row) => (
               <li key={row.membershipId} className="flex items-center justify-between gap-3 py-2.5">
-                <SprintTaskMembershipLink taskId={row.taskId} title={row.title} afterStart={row.addedAfterSprintStart} />
+                <SprintTaskMembershipLink row={row} />
                 {canManage ? (
                   <button
                     type="button"
@@ -175,24 +218,14 @@ export default function DevelopmentSprintDetailWorkspace({
         </ul>
 
         {canManage ? (
-          <form onSubmit={addTask} className="mt-4 flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-4">
-            <label className="min-w-[12rem] flex-1">
-              <span className="mb-1 block text-xs text-[var(--muted)]">Aufgaben-ID</span>
-              <input
-                value={taskIdInput}
-                onChange={(e) => setTaskIdInput(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-                placeholder="task-…"
-              />
-            </label>
-            <button
-              type="submit"
+          <div className="mt-4 border-t border-[var(--border)] pt-4">
+            <p className="mb-2 text-xs font-medium text-[var(--muted)]">Aufgabe zum Sprint hinzufügen</p>
+            <ClubDevelopmentTaskSearchPicker
+              excludeTaskIds={excludeTaskIds}
               disabled={pending}
-              className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-            >
-              Hinzufügen
-            </button>
-          </form>
+              onSelect={(task) => addTask(task.id)}
+            />
+          </div>
         ) : null}
       </section>
 
@@ -241,32 +274,51 @@ export default function DevelopmentSprintDetailWorkspace({
   );
 }
 
-function SprintDetailTopActions({ slug, status }: { slug: string; status: DevelopmentSprintStatus }) {
+function SprintDetailTopActions({
+  slug,
+  status,
+  canManage,
+  onActivate,
+  activatePending,
+}: {
+  slug: string;
+  status: DevelopmentSprintStatus;
+  canManage: boolean;
+  onActivate: () => void;
+  activatePending: boolean;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <SprintBoardQuickLink slug={slug} />
       <span className="text-xs text-[var(--muted)]">Aktueller Status: {STATUS_LABELS[status]}</span>
+      {canManage && status === "PLANNED" ? (
+        <button
+          type="button"
+          onClick={onActivate}
+          disabled={activatePending}
+          className="rounded-lg border border-[var(--sce-primary)] px-3 py-1.5 text-xs font-medium text-[var(--sce-primary)] disabled:opacity-50"
+        >
+          Sprint starten
+        </button>
+      ) : null}
     </div>
   );
 }
 
-function SprintTaskMembershipLink({
-  taskId,
-  title,
-  afterStart,
-}: {
-  taskId: string;
-  title: string;
-  afterStart: boolean;
-}) {
+function SprintTaskMembershipLink({ row }: { row: SprintMembershipRow }) {
   return (
     <div className="min-w-0">
-      <Link href={taskWorkspaceHref(taskId)} className="text-sm font-medium text-[var(--sce-primary)] hover:underline">
-        {title}
+      <Link
+        href={taskWorkspaceHref(row.taskId)}
+        className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+      >
+        {row.title}
       </Link>
       <p className="text-xs text-[var(--muted)]">
-        {taskId}
-        {afterStart ? " · nach Sprintstart hinzugefügt" : ""}
+        {row.statusLabel}
+        {row.assigneeLabels.length > 0 ? ` · ${row.assigneeLabels.join(", ")}` : ""}
+        {row.initiativeTitle ? ` · ${row.initiativeTitle}` : ""}
+        {row.addedAfterSprintStart ? " · nach Sprintstart hinzugefügt" : ""}
       </p>
     </div>
   );

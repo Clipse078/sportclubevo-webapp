@@ -11,6 +11,9 @@ import {
 } from "@/lib/club-development/sprints/sprint-service";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { requireVisibleTask } from "@/lib/tasks/task-access";
+import { TaskForbiddenError, TaskNotFoundError } from "@/lib/tasks/errors";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -52,6 +55,23 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     if (!taskId) {
       return NextResponse.json({ error: "taskId ist erforderlich." }, { status: 400 });
     }
+
+    const taskCtx = await buildTaskServiceContextForActor(
+      access.context.actorUserId,
+      access.context.tenantId,
+    );
+    if (!taskCtx) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    try {
+      await requireVisibleTask(taskCtx, taskId);
+    } catch (err) {
+      if (err instanceof TaskForbiddenError || err instanceof TaskNotFoundError) {
+        return NextResponse.json({ error: "Aufgabe nicht sichtbar oder nicht gefunden." }, { status: 403 });
+      }
+      throw err;
+    }
+
     const membership = await addTaskToSprint(access.context.tenantId, id, taskId);
     return NextResponse.json({ membership }, { status: 201 });
   } catch (err) {

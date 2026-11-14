@@ -21,6 +21,7 @@ import { loadInitiativeConnectedWork } from "@/lib/club-development/initiative-c
 import InitiativeConnectedWorkSection from "@/components/admin/club-development/InitiativeConnectedWorkSection";
 import InitiativeMilestonesSection from "@/components/admin/club-development/InitiativeMilestonesSection";
 import InitiativeTargetLinksSection from "@/components/admin/club-development/InitiativeTargetLinksSection";
+import InitiativePrimaryTasksSection from "@/components/admin/club-development/InitiativePrimaryTasksSection";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import InitiativeApprovalPanel from "@/components/admin/initiatives/InitiativeApprovalPanel";
@@ -341,6 +342,10 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
 
             <SectionCard title="Meilensteine">
               <InitiativeMilestonesSection initiativeId={dbInitiative.id} canManage={canManageInitiative} />
+            </SectionCard>
+
+            <SectionCard title="Optionale Aufgabenverknüpfung">
+              <InitiativePrimaryTasksSection initiativeId={dbInitiative.id} canManage={canManageInitiative} />
             </SectionCard>
 
             {connectedWork ? <InitiativeConnectedWorkSection connected={connectedWork} /> : null}

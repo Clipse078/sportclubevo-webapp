@@ -409,6 +409,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/[id]/primary-tasks/route.ts",
+    "urlPattern": "/api/club-development/initiatives/[id]/primary-tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/initiatives/[id]/target-links/route.ts",
     "urlPattern": "/api/club-development/initiatives/[id]/target-links",
     "audience": "API"
@@ -477,6 +483,18 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/strategy-overview/route.ts",
     "urlPattern": "/api/club-development/strategy-overview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/targets/candidates/route.ts",
+    "urlPattern": "/api/club-development/targets/candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/task-candidates/route.ts",
+    "urlPattern": "/api/club-development/task-candidates",
     "audience": "API"
   },
   {

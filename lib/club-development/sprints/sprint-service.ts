@@ -114,7 +114,7 @@ export async function addTaskToSprint(tenantId: string, sprintId: string, taskId
     where: { tenantId, sprintId, taskId, removedAt: null },
     select: { id: true },
   });
-  if (active) return active;
+  if (active) throw new SprintServiceError("Aufgabe ist bereits im Sprint.");
 
   const revived = await prisma.developmentSprintTaskMembership.findFirst({
     where: { tenantId, sprintId, taskId },

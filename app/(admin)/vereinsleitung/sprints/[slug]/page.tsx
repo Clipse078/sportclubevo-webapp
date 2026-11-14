@@ -48,6 +48,9 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
     membershipId: string;
     taskId: string;
     title: string;
+    statusLabel: string;
+    assigneeLabels: string[];
+    initiativeTitle: string | null;
     addedAfterSprintStart: boolean;
   }[] = [];
 
@@ -65,7 +68,10 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
     initialMemberships = memberships.map((m) => ({
       membershipId: m.id,
       taskId: m.taskId,
-      title: titleById.get(m.taskId) ?? m.taskId,
+      title: titleById.get(m.taskId) ?? "Aufgabe",
+      statusLabel: "—",
+      assigneeLabels: [],
+      initiativeTitle: null,
       addedAfterSprintStart: m.addedAfterSprintStart,
     }));
   }

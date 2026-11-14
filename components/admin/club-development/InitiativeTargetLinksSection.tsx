@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition, type FormEventHandler } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import ClubDevelopmentTargetSearchPicker from "./ClubDevelopmentTargetSearchPicker";
 
 type TargetLinkRow = {
   id: string;
@@ -37,12 +38,10 @@ export default function InitiativeTargetLinksSection({ initiativeId, canManage }
     loadLinks();
   }, [loadLinks]);
 
-  const onLink: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
+  const linkedTargetIds = useMemo(() => links.map((l) => l.targetId), [links]);
+
+  const linkTarget = (targetId: string) => {
     if (!canManage) return;
-    const formData = new FormData(event.currentTarget);
-    const targetId = String(formData.get("targetId") ?? "").trim();
-    if (!targetId) return;
     startTransition(async () => {
       const res = await fetch(`/api/club-development/initiatives/${initiativeId}/target-links`, {
         method: "POST",
@@ -54,7 +53,6 @@ export default function InitiativeTargetLinksSection({ initiativeId, canManage }
         setError(typeof data.error === "string" ? data.error : "Verknüpfung fehlgeschlagen.");
         return;
       }
-      event.currentTarget.reset();
       loadLinks();
     });
   };
@@ -114,24 +112,14 @@ export default function InitiativeTargetLinksSection({ initiativeId, canManage }
       )}
 
       {canManage ? (
-        <form onSubmit={onLink} className="flex flex-wrap items-end gap-2">
-          <label className="min-w-[12rem] flex-1">
-            <span className="mb-1 block text-xs text-[var(--muted)]">Ziel-ID verknüpfen</span>
-            <input
-              name="targetId"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-              placeholder="target-…"
-            />
-          </label>
-          <button
-            type="submit"
+        <div className="flex flex-wrap items-start gap-2">
+          <ClubDevelopmentTargetSearchPicker
+            excludeTargetIds={linkedTargetIds}
             disabled={pending}
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--foreground)] disabled:opacity-60"
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Verknüpfen
-          </button>
-        </form>
+            onSelect={(target) => linkTarget(target.id)}
+          />
+          {pending ? <Loader2 className="mt-2 h-4 w-4 animate-spin text-[var(--muted)]" /> : null}
+        </div>
       ) : null}
     </div>
   );

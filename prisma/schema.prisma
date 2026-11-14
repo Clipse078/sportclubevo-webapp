@@ -3221,6 +3221,7 @@ model Initiative {
   approvalVotes       InitiativeApprovalVote[]
   milestones          InitiativeMilestone[]
   targetLinks         InitiativeTargetLink[]
+  primaryInitiativeTasks Task[]            @relation("TaskPrimaryInitiative")
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -4640,6 +4641,8 @@ model Task {
   completedAt     DateTime?
   contextType     TaskContextType?
   contextId       String?
+  /// SCE-CD-04 — optional Vorhaben association without replacing task context (meeting/match/etc.).
+  primaryInitiativeId String?
   /// AUFGABEN-01B — self-relation; max depth 1 (subtask only, no grandchildren).
   parentTaskId    String?
   /// AUFGABEN-01B — recurrence occurrence link (root tasks generated from a series).
@@ -4666,6 +4669,7 @@ model Task {
   documentReferences TaskDocumentReference[]
   accessGrants TaskAccessGrant[]
   sprintMemberships DevelopmentSprintTaskMembership[]
+  primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -4674,6 +4678,7 @@ model Task {
   @@index([tenantId, status, reminder1At])
   @@index([tenantId, status, reminder2At])
   @@index([tenantId, contextType, contextId])
+  @@index([tenantId, primaryInitiativeId])
   @@index([parentTaskId])
   @@index([taskSeriesId])
   @@index([tenantId, visibilityScope])

@@ -46,6 +46,7 @@ export async function loadSprintBoard(tenantId: string, sprintId: string) {
       dueAt: true,
       contextType: true,
       contextId: true,
+      primaryInitiativeId: true,
       assignees: {
         select: {
           userId: true,
@@ -55,9 +56,14 @@ export async function loadSprintBoard(tenantId: string, sprintId: string) {
     },
   });
 
-  const initiativeIds = tasks
-    .filter((t) => t.contextType === TaskContextType.INITIATIVE && t.contextId)
-    .map((t) => t.contextId!);
+  const initiativeIds = [
+    ...new Set([
+      ...tasks
+        .filter((t) => t.contextType === TaskContextType.INITIATIVE && t.contextId)
+        .map((t) => t.contextId!),
+      ...tasks.map((t) => t.primaryInitiativeId).filter((id): id is string => Boolean(id)),
+    ]),
+  ];
 
   const initiatives =
     initiativeIds.length > 0
@@ -76,10 +82,11 @@ export async function loadSprintBoard(tenantId: string, sprintId: string) {
 
   for (const task of tasks) {
     const column = mapTaskStatusToBoardColumn(task.status);
-    const initiative =
+    const initiativeIdForLabel =
       task.contextType === TaskContextType.INITIATIVE && task.contextId
-        ? initiativeById.get(task.contextId)
-        : null;
+        ? task.contextId
+        : task.primaryInitiativeId;
+    const initiative = initiativeIdForLabel ? initiativeById.get(initiativeIdForLabel) : null;
 
     const card: SprintBoardCard = {
       taskId: task.id,
@@ -93,7 +100,7 @@ export async function loadSprintBoard(tenantId: string, sprintId: string) {
         displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
       })),
       initiativeLabel: initiative?.title ?? null,
-      initiativeId: initiative?.id ?? null,
+      initiativeId: initiativeIdForLabel ?? null,
       addedAfterSprintStart: addedFlagByTask.get(task.id) ?? false,
     };
     columns[column].push(card);
