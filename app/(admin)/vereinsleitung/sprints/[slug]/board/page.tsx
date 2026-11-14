@@ -11,6 +11,10 @@ import DevelopmentSprintBoard from "@/components/admin/club-development/Developm
 import DevelopmentSprintWorkspaceShell from "@/components/admin/club-development/DevelopmentSprintWorkspaceShell";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
+import {
+  CD_NAV_COPY,
+  CD_SPRINT_WORKSPACE_COPY,
+} from "@/lib/club-development/product-copy";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -29,14 +33,14 @@ export default async function DevelopmentSprintBoardPage({ params }: PageProps) 
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Sprint-Board"
+        eyebrow={CD_SPRINT_WORKSPACE_COPY.taskBoardTitle}
         title={sprint.title}
         description="Kanban nach Aufgabenstatus — Offen, In Arbeit, Erledigt."
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
-          { label: "Sprints", href: "/vereinsleitung/sprints" },
+          { label: CD_NAV_COPY.implementationPlanning, href: "/vereinsleitung/sprints" },
           { label: sprint.title, href: `/vereinsleitung/sprints/${sprint.slug}` },
-          { label: "Board" },
+          { label: CD_SPRINT_WORKSPACE_COPY.tabTaskBoard },
         ]}
         headerActions={
           <Link

@@ -585,8 +585,20 @@
 [data-sce-theme="white"] .sce-domain-nav-panel,
 .sce-domain-nav-panel[data-sce-theme="white"] {
   background: var(--sce-color-surface-standard);
+  border-bottom: 1px solid var(--sce-color-border-subtle);
   border-top-color: var(--sce-color-border-subtle);
-  box-shadow: none;
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, #0f172a 22%, transparent);
+}
+
+/* SCE-CD-04R3 — page scrim under open mega-menu; header and panel stay undimmed */
+.sce-domain-nav-overlay-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--sce-z-floating-app) - 1);
+  background: color-mix(in srgb, #0f172a 7%, transparent);
+  pointer-events: auto;
 }
 
 [data-sce-theme="white"] .sce-context-nav-panel {

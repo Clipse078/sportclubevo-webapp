@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import DevelopmentSprintWorkspaceNav from "./DevelopmentSprintWorkspaceNav";
 import { Badge } from "@/components/ui";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 const STATUS_LABELS: Record<DevelopmentSprintStatus, string> = {
   PLANNED: "Geplant",
@@ -74,7 +75,7 @@ export default function DevelopmentSprintWorkspaceHeader({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Sprint konnte nicht gestartet werden.");
+        setError(typeof data.error === "string" ? data.error : "Umsetzungsphase konnte nicht gestartet werden.");
         return;
       }
       router.refresh();
@@ -101,9 +102,12 @@ export default function DevelopmentSprintWorkspaceHeader({
 
   const primaryAction =
     status === "PLANNED" && canManage && activeTab === "planung"
-      ? { label: "Sprint starten", onClick: startSprint }
+      ? { label: CD_SPRINT_WORKSPACE_COPY.startPhase, onClick: startSprint }
       : status === "ACTIVE" && canManage && activeTab === "planung"
-        ? { label: "Sprint abschließen", onClick: () => document.getElementById("sprint-close-panel")?.scrollIntoView({ behavior: "smooth" }) }
+        ? {
+            label: CD_SPRINT_WORKSPACE_COPY.closePhase,
+            onClick: () => document.getElementById("sprint-close-panel")?.scrollIntoView({ behavior: "smooth" }),
+          }
         : null;
 
   return (
@@ -122,7 +126,7 @@ export default function DevelopmentSprintWorkspaceHeader({
                 rows={2}
                 disabled={pending}
                 className="w-full max-w-xl rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-                placeholder="Sprintziel beschreiben …"
+                placeholder={CD_SPRINT_WORKSPACE_COPY.goalPlaceholder}
               />
               <div className="flex gap-2">
                 <button
@@ -150,7 +154,7 @@ export default function DevelopmentSprintWorkspaceHeader({
             <p className="max-w-2xl text-sm text-[var(--text-2)]">{goal}</p>
           ) : (
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
-              <span>Kein Sprintziel erfasst.</span>
+              <span>{CD_SPRINT_WORKSPACE_COPY.noGoalRecorded}</span>
               {canManage ? (
                 <button
                   type="button"

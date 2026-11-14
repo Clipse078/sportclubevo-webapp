@@ -55,8 +55,8 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(clubL1).toEqual([...CLUB_L1_DOMAIN_ORDER]);
     expect(clubL1.at(-1)).toBe("admin");
     expect(model.domains.some((d) => d.id === "organisation")).toBe(false);
-    expect(NAVIGATION_DOMAIN_DEFINITIONS.publishing.fallbackLabel).toBe("Publizieren");
-    expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Publizieren");
+    expect(NAVIGATION_DOMAIN_DEFINITIONS.publishing.fallbackLabel).toBe("Veröffentlichen");
+    expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Veröffentlichen");
   });
 
   it("groups Club explorer destinations into eight L2 groups without Administration (moved to Admin L1)", () => {
@@ -64,10 +64,10 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     const groups = resolveExplorerDomainGroups(club)!;
     expect(groups.map((group) => group.label)).toEqual([
       "Organisation",
-      "People & Teams",
+      "Personen & Teams",
       "Mitgliedschaft",
       "Vereinsentwicklung",
-      "Club-Betrieb",
+      "Vereinsbetrieb",
       "Dokumente",
       "Finanzen",
       "Sponsoring",

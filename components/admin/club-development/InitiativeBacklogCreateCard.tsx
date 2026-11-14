@@ -123,7 +123,7 @@ export default function InitiativeBacklogCreateCard({
               />
             </label>
             <label className="block sm:col-span-2">
-              <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Erwartetes Outcome</span>
+              <span className="mb-1 block text-xs font-medium text-[var(--muted)]">Erwartetes Ergebnis</span>
               <textarea
                 name="expectedOutcome"
                 rows={2}

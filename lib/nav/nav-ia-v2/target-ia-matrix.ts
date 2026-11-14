@@ -182,11 +182,11 @@ function resolveTargetL2(key: string): string {
     return "Website";
   }
   if (CLUB_ORGANISATION_KEYS.has(key)) return "Organisation";
-  if (CLUB_PEOPLE_KEYS.has(key)) return "People & Teams";
+  if (CLUB_PEOPLE_KEYS.has(key)) return "Personen & Teams";
   if (CLUB_MEMBERSHIP_KEYS.has(key)) return "Mitgliedschaft";
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
   if (CLUB_DOCUMENTS_KEYS.has(key)) return "Dokumente";
-  if (CLUB_OPERATIONS_KEYS.has(key)) return "Club-Betrieb";
+  if (CLUB_OPERATIONS_KEYS.has(key)) return "Vereinsbetrieb";
   if (CLUB_FINANCE_KEYS.has(key)) return "Finanzen";
   if (CLUB_SPONSORING_KEYS.has(key)) return "Sponsoring";
   if (CLUB_ADMIN_KEYS.has(key)) return "Administration";
@@ -347,7 +347,7 @@ export const CLUB_TARGET_L2_GROUPS = [
   },
   {
     id: "people-teams",
-    label: "People & Teams",
+    label: "Personen & Teams",
     headerVisible: true,
     keys: ["mitglieder", "teams", "trainer-staff", "personen", "provider-mapping"],
   },
@@ -375,7 +375,7 @@ export const CLUB_TARGET_L2_GROUPS = [
   },
   {
     id: "club-betrieb",
-    label: "Club-Betrieb",
+    label: "Vereinsbetrieb",
     headerVisible: true,
     keys: [
       "helfereinsaetze",

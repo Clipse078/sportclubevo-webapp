@@ -61,7 +61,7 @@ describe("SCE-NAV-IA-V2-03R1 single-active navigation", () => {
     const de = JSON.parse(readRelative("messages/de.json")) as {
       AppShell: { domains: { publishing: string } };
     };
-    expect(de.AppShell.domains.publishing).toBe("Publizieren");
+    expect(de.AppShell.domains.publishing).toBe("Veröffentlichen");
 
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const publishing = model.domains.find((d) => d.id === "publishing");

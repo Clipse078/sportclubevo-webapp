@@ -134,7 +134,7 @@ export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded
               className="inline-flex items-center gap-2 rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Sprint anlegen
+              Umsetzungsphase anlegen
             </button>
           </div>
         </form>
@@ -155,7 +155,7 @@ function SprintCreateCollapsibleHeader({ expanded, onToggle }: { expanded: boole
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
         />
-        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Sprint erstellen</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Umsetzungsphase erstellen</span>
       </button>
     </div>
   );

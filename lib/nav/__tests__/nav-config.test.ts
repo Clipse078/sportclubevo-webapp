@@ -287,8 +287,8 @@ describe("NAV_SECTIONS static structure", () => {
       "Sitzungen",
       "Vorhaben & Aufgaben",
       "Strategie",
-      "Initiativen-Backlog",
-      "Entwicklungs-Sprints",
+      "Vorhaben & Prioritäten",
+      "Umsetzungsplanung",
       "Prozesse & Richtlinien",
     ]);
     expect(sponsoring).toEqual(expect.objectContaining({

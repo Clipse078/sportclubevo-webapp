@@ -6,6 +6,7 @@ import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { sprintGoalResultLabel } from "@/lib/club-development/sprints/sprint-review-labels";
 import type { SprintReviewViewModel } from "@/lib/club-development/sprints/sprint-review-types";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type Props = {
   sprintId: string;
@@ -33,7 +34,7 @@ export default function DevelopmentSprintReviewWorkspace({ sprintId, sprintStatu
   if (sprintStatus !== "COMPLETED") {
     return (
       <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-10 text-center text-sm text-[var(--muted)]">
-        Der Rückblick ist verfügbar, sobald der Sprint abgeschlossen ist.
+        Der Rückblick ist verfügbar, sobald die Umsetzungsphase abgeschlossen ist.
       </div>
     );
   }
@@ -53,7 +54,7 @@ export default function DevelopmentSprintReviewWorkspace({ sprintId, sprintStatu
   return (
     <div className="space-y-6" data-testid="sprint-review-workspace">
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">Sprintziel & Ergebnis</h2>
+        <h2 className="text-sm font-semibold text-[var(--foreground)]">Ziel & Ergebnis</h2>
         <p className="mt-2 text-sm text-[var(--text-2)]">{review.goal?.trim() || "Kein Ziel erfasst."}</p>
         <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
           Ergebnis: {goalLabel ?? "—"}
@@ -64,12 +65,12 @@ export default function DevelopmentSprintReviewWorkspace({ sprintId, sprintStatu
       </section>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">Scope zum Sprintstart</h2>
+        <h2 className="text-sm font-semibold text-[var(--foreground)]">{CD_SPRINT_WORKSPACE_COPY.scopeAtStart}</h2>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          {review.committedAtStartTaskIds.length} Aufgaben im Start-Commitment ·{" "}
+          {review.committedAtStartTaskIds.length} Aufgaben zum Start eingeplant ·{" "}
           {review.addedAfterStartCount} nach Start hinzugefügt
         </p>
-        <TaskList tasks={review.committedAtStart} emptyLabel="Keine Commitments erfasst." />
+        <TaskList tasks={review.committedAtStart} emptyLabel="Keine Aufgaben zum Start eingeplant." />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -118,8 +119,8 @@ export default function DevelopmentSprintReviewWorkspace({ sprintId, sprintStatu
 
 function dispositionLabel(disposition: string): string {
   if (disposition === "BACKLOG") return "Ins Backlog";
-  if (disposition === "FUTURE_SPRINT") return "In späteren Sprint verschoben";
-  if (disposition === "RETAIN_HISTORICAL") return "Im Sprint vermerkt";
+  if (disposition === "FUTURE_SPRINT") return `In ${CD_SPRINT_WORKSPACE_COPY.futurePhase} verschoben`;
+  if (disposition === "RETAIN_HISTORICAL") return "In Umsetzungsphase vermerkt";
   return disposition;
 }
 

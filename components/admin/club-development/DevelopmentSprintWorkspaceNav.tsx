@@ -2,13 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type TabKey = "planung" | "board" | "rueckblick";
 
 const TABS: { key: TabKey; label: string; href: (slug: string) => string }[] = [
-  { key: "planung", label: "Planung", href: (slug) => `/vereinsleitung/sprints/${slug}` },
-  { key: "board", label: "Board", href: (slug) => `/vereinsleitung/sprints/${slug}/board` },
-  { key: "rueckblick", label: "Rückblick", href: (slug) => `/vereinsleitung/sprints/${slug}/rueckblick` },
+  {
+    key: "planung",
+    label: CD_SPRINT_WORKSPACE_COPY.tabPlanning,
+    href: (slug) => `/vereinsleitung/sprints/${slug}`,
+  },
+  {
+    key: "board",
+    label: CD_SPRINT_WORKSPACE_COPY.tabTaskBoard,
+    href: (slug) => `/vereinsleitung/sprints/${slug}/board`,
+  },
+  {
+    key: "rueckblick",
+    label: CD_SPRINT_WORKSPACE_COPY.tabReview,
+    href: (slug) => `/vereinsleitung/sprints/${slug}/rueckblick`,
+  },
 ];
 
 function activeTab(pathname: string, slug: string): TabKey {
@@ -28,7 +41,7 @@ export default function DevelopmentSprintWorkspaceNav({ slug }: Props) {
   return (
     <nav
       className="flex flex-wrap gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1"
-      aria-label="Sprint-Arbeitsbereich"
+      aria-label={CD_SPRINT_WORKSPACE_COPY.workspaceAria}
       data-testid="sprint-workspace-nav"
     >
       {TABS.map((tab) => {

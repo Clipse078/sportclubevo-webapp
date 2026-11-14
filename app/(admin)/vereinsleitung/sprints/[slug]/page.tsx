@@ -13,6 +13,10 @@ import DevelopmentSprintDetailWorkspace from "@/components/admin/club-developmen
 import DevelopmentSprintWorkspaceShell from "@/components/admin/club-development/DevelopmentSprintWorkspaceShell";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import {
+  CD_NAV_COPY,
+  CD_SPRINT_WORKSPACE_COPY,
+} from "@/lib/club-development/product-copy";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -37,11 +41,11 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
   return (
     <PageShell fullWidth>
       <DetailPagePattern
-        eyebrow="Sprint-Planung"
+        eyebrow={CD_SPRINT_WORKSPACE_COPY.tabPlanning}
         title={sprint.title}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
-          { label: "Sprints", href: "/vereinsleitung/sprints" },
+          { label: CD_NAV_COPY.implementationPlanning, href: "/vereinsleitung/sprints" },
           { label: sprint.title },
         ]}
         headerActions={

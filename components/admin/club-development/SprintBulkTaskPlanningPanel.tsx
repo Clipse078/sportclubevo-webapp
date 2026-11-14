@@ -153,7 +153,7 @@ export default function SprintBulkTaskPlanningPanel({ sprintId, disabled = false
         if (data.partial) {
           setInfo(data.error ?? `${data.addedCount ?? 0} Aufgabe(n) hinzugefügt.`);
         } else {
-          setInfo(`${data.addedCount ?? selectedCount} Aufgabe(n) zum Sprint hinzugefügt.`);
+          setInfo(`${data.addedCount ?? selectedCount} Aufgabe(n) hinzugefügt.`);
         }
         setSelectedIds(new Set());
         setExpanded(false);
@@ -180,7 +180,7 @@ export default function SprintBulkTaskPlanningPanel({ sprintId, disabled = false
       {expanded ? (
         <div className="mt-3 space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-xs text-[var(--muted)]">
-            Vorhaben und Aufgaben auswählen — es wird nur die Aufgabe dem Sprint zugeordnet, nicht das
+            Vorhaben und Aufgaben auswählen — es wird nur die Aufgabe der Umsetzungsphase zugeordnet, nicht das
             Vorhaben selbst.
           </p>
 
@@ -258,8 +258,8 @@ export default function SprintBulkTaskPlanningPanel({ sprintId, disabled = false
             >
               {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
               {selectedCount > 0
-                ? `${selectedCount} Aufgaben zum Sprint hinzufügen`
-                : "Zum Sprint hinzufügen"}
+                ? `${selectedCount} Aufgaben hinzufügen`
+                : "Aufgaben hinzufügen"}
             </button>
             <button
               type="button"
@@ -318,7 +318,7 @@ function InitiativePlanningGroup({
           checked={state === "all"}
           disabled={group.tasks.every((t) => !t.selectable)}
           onChange={onToggleGroup}
-          aria-label={`Alle auswählbaren Aufgaben der Initiative ${group.title} auswählen`}
+          aria-label={`Alle auswählbaren Aufgaben des Vorhabens ${group.title} auswählen`}
           className="mt-1"
         />
         <button
@@ -381,7 +381,7 @@ function StandalonePlanningGroup({
           onClick={onToggleExpand}
           className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
         >
-          <span className="text-sm font-semibold text-[var(--foreground)]">Ohne Initiative</span>
+          <span className="text-sm font-semibold text-[var(--foreground)]">Ohne Vorhaben</span>
           <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--muted)] transition ${expanded ? "rotate-180" : ""}`} />
         </button>
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { TaskWorkspaceAssociations } from "@/lib/tasks/task-workspace-associations";
+import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type Props = {
   associations: TaskWorkspaceAssociations;
@@ -35,7 +36,7 @@ export function TaskWorkspaceAssociationsSection({ associations }: Props) {
   return (
     <div className="space-y-3" data-testid="task-workspace-associations">
       {primaryInitiative ? (
-        <AssociationBlock label="Primäres Vorhaben">
+        <AssociationBlock label={CD_TASK_WORKSPACE_COPY.primaryInitiative}>
           <Link href={primaryInitiative.href} className="sce-link-primary font-medium">
             {primaryInitiative.title}
           </Link>
@@ -43,7 +44,7 @@ export function TaskWorkspaceAssociationsSection({ associations }: Props) {
       ) : null}
 
       {currentSprints.length > 0 ? (
-        <AssociationBlock label="Aktuelle Sprint-Zuordnung">
+        <AssociationBlock label={CD_TASK_WORKSPACE_COPY.currentImplementationPhase}>
           <ul className="space-y-1">
             {currentSprints.map((sprint) => (
               <li key={sprint.sprintId}>
@@ -57,7 +58,7 @@ export function TaskWorkspaceAssociationsSection({ associations }: Props) {
       ) : null}
 
       {sprintHistory.length > 0 ? (
-        <AssociationBlock label="Frühere Sprint-Teilnahme">
+        <AssociationBlock label={CD_TASK_WORKSPACE_COPY.priorImplementationPhases}>
           <ul className="space-y-1">
             {sprintHistory.map((sprint) => (
               <li key={`${sprint.sprintId}-${sprint.removedAt}`}>

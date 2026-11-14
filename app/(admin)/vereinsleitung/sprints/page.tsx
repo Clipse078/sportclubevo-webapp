@@ -10,6 +10,7 @@ import DevelopmentSprintCreateCard from "@/components/admin/club-development/Dev
 import DevelopmentSprintList from "@/components/admin/club-development/DevelopmentSprintList";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
+import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
 
 export default async function DevelopmentSprintsPage() {
   const session = await auth();
@@ -33,13 +34,13 @@ export default async function DevelopmentSprintsPage() {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Sprints"
-        title="Entwicklungssprints"
-        description="Zeitlich gebundene Umsetzungsphasen mit Aufgaben und Kanban-Board."
+        eyebrow="Umsetzungsphasen"
+        title={CD_NAV_COPY.implementationPlanning}
+        description="Zeitlich gebundene Umsetzungsphasen mit Aufgaben und Aufgabenboard."
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },
-          { label: "Sprints" },
+          { label: CD_NAV_COPY.implementationPlanning },
         ]}
         emptyIcon={<Kanban className="h-10 w-10" />}
       >

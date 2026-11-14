@@ -272,7 +272,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
               {dbInitiative.expectedOutcome ? (
                 <div className="mb-4 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/40 px-3 py-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                    Erwartetes Outcome
+                    Erwartetes Ergebnis
                   </p>
                   <p className="mt-1 text-sm text-[var(--text-2)] whitespace-pre-wrap">
                     {dbInitiative.expectedOutcome}

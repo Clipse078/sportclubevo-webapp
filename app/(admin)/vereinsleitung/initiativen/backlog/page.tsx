@@ -7,6 +7,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import InitiativeBacklogWorkspace from "@/components/admin/club-development/InitiativeBacklogWorkspace";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
+import { CD_NAV_COPY, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 export default async function InitiativeBacklogPage() {
   const session = await auth();
@@ -35,13 +36,13 @@ export default async function InitiativeBacklogPage() {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Initiativen"
-        title="Initiativen-Backlog"
-        description="Priorisierte Vorhaben mit Disposition, Outcome und Filtern für die Umsetzungsplanung."
+        eyebrow={CD_NAV_COPY.initiativesEyebrow}
+        title={CD_NAV_COPY.initiativeBacklog}
+        description={`Priorisierte Vorhaben mit Disposition, ${CD_SPRINT_WORKSPACE_COPY.expectedResult} und Filtern für die Umsetzungsplanung.`}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },
-          { label: "Initiativen-Backlog" },
+          { label: CD_NAV_COPY.initiativeBacklog },
         ]}
         emptyIcon={<ClipboardList className="h-10 w-10" />}
       >

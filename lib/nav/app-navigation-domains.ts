@@ -113,7 +113,7 @@ export const NAVIGATION_DOMAIN_DEFINITIONS: Record<AppNavigationDomainId, Domain
   },
   publishing: {
     labelKey: "AppShell.domains.publishing",
-    fallbackLabel: "Publizieren",
+    fallbackLabel: "Veröffentlichen",
     priority: 2,
     sortOrder: 40,
     l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.publishing,
@@ -122,7 +122,7 @@ export const NAVIGATION_DOMAIN_DEFINITIONS: Record<AppNavigationDomainId, Domain
   },
   admin: {
     labelKey: "AppShell.domains.admin",
-    fallbackLabel: "Admin",
+    fallbackLabel: "Administration",
     priority: 2,
     sortOrder: 60,
     l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.admin,

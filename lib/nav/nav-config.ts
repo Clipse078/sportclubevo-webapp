@@ -635,7 +635,7 @@ export const NAV_SECTIONS: NavSection[] = [
           },
           {
             key: "club-entwicklung-initiativen-backlog",
-            label: "Initiativen-Backlog",
+            label: "Vorhaben & Prioritäten",
             href: "/vereinsleitung/initiativen/backlog",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
@@ -643,7 +643,7 @@ export const NAV_SECTIONS: NavSection[] = [
           },
           {
             key: "club-entwicklung-sprints",
-            label: "Entwicklungs-Sprints",
+            label: "Umsetzungsplanung",
             href: "/vereinsleitung/sprints",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,

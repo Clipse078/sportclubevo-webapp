@@ -15,6 +15,10 @@ import { loadTaskWorkspace } from "@/lib/tasks/workspace-service";
 import { TaskForbiddenError, TaskNotFoundError } from "@/lib/tasks/errors";
 import { parseTaskWorkspaceReturnTo } from "@/lib/tasks/task-navigation";
 import { sanitizeInternalAppReturnPath } from "@/lib/navigation/safe-internal-app-return-path";
+import {
+  CD_TASK_WORKSPACE_COPY,
+  isSprintWorkspaceReturnPath,
+} from "@/lib/club-development/product-copy";
 
 export async function loadTaskWorkspacePageData(taskId: string, searchParams: Record<string, string | undefined>) {
   await requirePermission(PERMISSIONS.TASKS_VIEW);
@@ -37,8 +41,8 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
     buildTaskManagementHref("/dashboard/aufgaben", {}, query, {
       tenantWideVisibility,
     });
-  const returnContextLabel = returnTo?.includes("/vereinsleitung/sprints/")
-    ? "Zurück zum Sprint"
+  const returnContextLabel = isSprintWorkspaceReturnPath(returnTo)
+    ? CD_TASK_WORKSPACE_COPY.returnToImplementationPhase
     : returnTo
       ? "Zurück"
       : null;

@@ -188,7 +188,7 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
     return (
       <BoardLoadingState>
         <Loader2 className="h-6 w-6 animate-spin text-[var(--muted)]" />
-        <p className="text-sm text-[var(--muted)]">Sprint-Board wird geladen …</p>
+        <p className="text-sm text-[var(--muted)]">Aufgabenboard wird geladen …</p>
       </BoardLoadingState>
     );
   }
@@ -202,7 +202,7 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
   return (
     <div className="space-y-4" data-testid="development-sprint-board">
       <p className="text-sm text-[var(--text-2)]">
-        Sprint-Board: <span className="font-semibold text-[var(--foreground)]">{sprintTitle}</span>
+        Aufgabenboard: <span className="font-semibold text-[var(--foreground)]">{sprintTitle}</span>
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -240,7 +240,7 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
           onChange={(e) => setFilters((f) => ({ ...f, initiativeId: e.target.value || null }))}
         >
           <option value="">Alle Vorhaben</option>
-          <option value="none">Ohne Initiative</option>
+          <option value="none">Ohne Vorhaben</option>
           {initiativeOptions.map((i) => (
             <option key={i.id} value={i.id}>
               {i.label}
@@ -271,7 +271,7 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
 
       {totalCards === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-12 text-center text-sm text-[var(--muted)]">
-          Keine Aufgaben in diesem Sprint.
+          Keine Aufgaben in dieser Umsetzungsphase.
           {canManage ? (
             <div className="mx-auto mt-4 max-w-md text-left">
               <SprintInlineTaskCreate sprintId={sprintId} onCreated={loadBoard} />

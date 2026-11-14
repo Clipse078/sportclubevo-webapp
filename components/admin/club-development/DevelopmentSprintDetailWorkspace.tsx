@@ -10,6 +10,7 @@ import SprintTaskTitleLink from "./SprintTaskTitleLink";
 import SprintBulkTaskPlanningPanel from "./SprintBulkTaskPlanningPanel";
 import SprintClosePanel from "./SprintClosePanel";
 import SprintInlineTaskCreate from "./SprintInlineTaskCreate";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 export type SprintMembershipRow = {
   membershipId: string;
@@ -140,9 +141,9 @@ export default function DevelopmentSprintDetailWorkspace({
   return (
     <div className="space-y-6" data-testid="sprint-detail-workspace">
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">Aufgaben im Sprint</h2>
+        <h2 className="text-sm font-semibold text-[var(--foreground)]">Aufgaben in dieser Umsetzungsphase</h2>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          Geplante Sprint-Aufgaben mit Status, Verantwortlichen und Vorhaben.
+          Geplante Aufgaben mit Status, Verantwortlichen und Vorhaben.
         </p>
 
         {error ? (
@@ -165,7 +166,7 @@ export default function DevelopmentSprintDetailWorkspace({
                     disabled={pending}
                     className="rounded-md border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-red-600"
                   >
-                    Aus Sprint entfernen
+                    Aus Umsetzungsphase entfernen
                   </button>
                 ) : null}
               </li>
@@ -231,7 +232,7 @@ function SprintTaskMembershipLink({ row }: { row: SprintMembershipRow }) {
         {row.priorityLabel ? ` · ${row.priorityLabel}` : ""}
         {row.initiativeTitle ? ` · ${row.initiativeTitle}` : ""}
         {row.dueLabel ? ` · Fällig ${row.dueLabel}` : ""}
-        {row.addedAfterSprintStart ? " · nach Sprintstart hinzugefügt" : ""}
+        {row.addedAfterSprintStart ? ` · ${CD_SPRINT_WORKSPACE_COPY.addedAfterStart}` : ""}
       </p>
       <SprintTaskAssigneeDisplay assignees={row.assignees} compact />
     </div>

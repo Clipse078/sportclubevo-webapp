@@ -86,7 +86,7 @@ export default function StrategyOverviewPanel({
           </div>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <ProgressBar label="Zielerreichung (Outcome)" percent={target.outcomeProgressPercent} />
+            <ProgressBar label="Zielerreichung (Erwartetes Ergebnis)" percent={target.outcomeProgressPercent} />
             <ProgressBar
               label="Umsetzungsfortschritt (Delivery)"
               percent={target.deliveryProgressPercent}

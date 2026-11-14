@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import type { DevelopmentSprintGoalResult, TaskStatus } from "@prisma/client";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import type { UnfinishedTaskDisposition } from "@/lib/club-development/sprints/sprint-close-types";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type MembershipPreview = {
   taskId: string;
@@ -28,8 +29,8 @@ const GOAL_RESULTS: { value: DevelopmentSprintGoalResult; label: string }[] = [
 
 const DEFAULT_DISPOSITIONS: { value: UnfinishedTaskDisposition; label: string }[] = [
   { value: "BACKLOG", label: "Offene Aufgaben ins Backlog zurückgeben" },
-  { value: "RETAIN_HISTORICAL", label: "Offene Aufgaben im Sprint vermerken (historisch)" },
-  { value: "FUTURE_SPRINT", label: "Ausgewählte Aufgaben in einen späteren Sprint verschieben" },
+  { value: "RETAIN_HISTORICAL", label: "Offene Aufgaben in der Umsetzungsphase vermerken (historisch)" },
+  { value: "FUTURE_SPRINT", label: `Ausgewählte Aufgaben in eine ${CD_SPRINT_WORKSPACE_COPY.futurePhase} verschieben` },
 ];
 
 export default function SprintClosePanel({ sprintId, memberships }: Props) {
@@ -95,7 +96,7 @@ export default function SprintClosePanel({ sprintId, memberships }: Props) {
       }
       const report = data.report;
       setMessage(
-        `Sprint abgeschlossen. Erledigt: ${report?.finishedCount ?? 0}, offen: ${report?.unfinishedCount ?? 0}.`,
+        `Umsetzungsphase abgeschlossen. Erledigt: ${report?.finishedCount ?? 0}, offen: ${report?.unfinishedCount ?? 0}.`,
       );
       router.refresh();
     });
@@ -112,7 +113,7 @@ export default function SprintClosePanel({ sprintId, memberships }: Props) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
       >
-        <span className="text-sm font-semibold text-[var(--foreground)]">Sprint abschließen</span>
+        <span className="text-sm font-semibold text-[var(--foreground)]">{CD_SPRINT_WORKSPACE_COPY.closePhase}</span>
         <ChevronDown className={`h-4 w-4 text-[var(--muted)] transition ${expanded ? "rotate-180" : ""}`} />
       </button>
       {expanded ? (
@@ -142,7 +143,7 @@ export default function SprintClosePanel({ sprintId, memberships }: Props) {
           </div>
 
           <fieldset className="space-y-2">
-            <legend className="text-xs font-medium text-[var(--muted)]">Sprint-Zielergebnis</legend>
+            <legend className="text-xs font-medium text-[var(--muted)]">Zielergebnis</legend>
             {GOAL_RESULTS.map((opt) => (
               <label key={opt.value} className="flex items-center gap-2 text-sm">
                 <input

@@ -11,6 +11,10 @@ import DevelopmentSprintReviewWorkspace from "@/components/admin/club-developmen
 import DevelopmentSprintWorkspaceShell from "@/components/admin/club-development/DevelopmentSprintWorkspaceShell";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
+import {
+  CD_NAV_COPY,
+  CD_SPRINT_WORKSPACE_COPY,
+} from "@/lib/club-development/product-copy";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -29,14 +33,14 @@ export default async function DevelopmentSprintReviewPage({ params }: PageProps)
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Sprint-Rückblick"
+        eyebrow={CD_SPRINT_WORKSPACE_COPY.tabReview}
         title={sprint.title}
-        description="Historische Sprintergebnisse und Scope-Änderungen"
+        description={`Ergebnisse der Umsetzungsphase und ${CD_SPRINT_WORKSPACE_COPY.scopeChanges}`}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
-          { label: "Sprints", href: "/vereinsleitung/sprints" },
+          { label: CD_NAV_COPY.implementationPlanning, href: "/vereinsleitung/sprints" },
           { label: sprint.title, href: `/vereinsleitung/sprints/${sprint.slug}` },
-          { label: "Rückblick" },
+          { label: CD_SPRINT_WORKSPACE_COPY.tabReview },
         ]}
         headerActions={
           <Link
