@@ -57,8 +57,9 @@ Verified via designated scripts against canonical STAGE fingerprint `acd3b376829
 | 1 | `20261113183000_sce_cd_04_strategy_sprints` | Yes | Yes |
 | 2 | `20261114103000_sce_cd_04_task_primary_initiative` | Yes | Yes |
 | 3 | `20261114180000_sce_cd_04r2_sprint_lifecycle_history` | Yes (finished 2026-11-14T16:18:00Z) | Yes |
+| 4 | `20261115150000_sce_cd_05_club_strategy_authoring` | Yes (finished 2026-11-15T16:21:42.561Z) | Yes |
 
-`pendingMigrationsBeforeApply`: empty for CD-04 set. **cd04SchemaReady / cd04R2SchemaReady:** YES.  
+`pendingMigrationsBeforeApply`: empty for CD-04 + PKG-05 club-strategy set on canonical STAGE (re-verified read-only for PKG-06 handoff). **cd04SchemaReady / cd04R2SchemaReady / clubStrategySchemaReady:** YES.  
 **Deploy permission:** not exercised in this package (PKG-00 track for pipeline only).
 
 ## Remaining packages (workflow order)
@@ -70,4 +71,5 @@ Verified via designated scripts against canonical STAGE fingerprint `acd3b376829
 | ✓ | **PKG-02** | CD-WORK Vorhaben lens (replace hub) | — |
 | 3 | **PKG-03** | Authenticated PO UAT + optional `linkedInitiativeRefs` backfill | Migrations on preview tenant data |
 | 4 | **PKG-04** | Subtask-in-sprint policy (only if product requires) | Explicit requirement |
-| ✓ | **PKG-05** | Club strategy authoring on Strategie route | Preview needs migration `20261115150000_sce_cd_05_club_strategy_authoring` |
+| ✓ | **PKG-05** | Club strategy authoring on Strategie route | STAGE migration applied (see PKG-05 handoff) |
+| ✓ | **PKG-06** | Vorhaben inline create + Rückblick / board quick links | PR #985 open for PO review — `docs/planning/SCE-CD-04R6-PKG-06-VORHABEN-CREATE-RUECKBICK.md` |

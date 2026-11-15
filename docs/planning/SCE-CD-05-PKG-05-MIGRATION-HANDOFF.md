@@ -13,12 +13,24 @@ Reference: `docs/deployment/stage-preview-migration-runbook.md`.
 ## Read-only verification
 
 ```bash
-APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
   DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
   npx tsx scripts/sce-cd-05-pkg-05-stage-migration-verify-readonly.ts
 ```
 
 Inspect JSON output only — no credentials in logs. `writePerformed` is always `false`.
+
+### PKG-06 reconciliation (2026-11-15, intended STAGE)
+
+| Field | Value |
+|-------|--------|
+| `migration.applied` | `true` |
+| `migration.finishedAt` | `2026-11-15T16:21:42.561Z` |
+| `migration.checksumMatch` | `true` |
+| `schemaReady.clubStrategyTable` | `true` |
+| `pendingClubStrategyMigrations` | `[]` |
+
+Previously applied migration on shared STAGE matches repo `20261115150000_sce_cd_05_club_strategy_authoring` — no pending operator apply for PR #985 preview acceptance.
 
 Alternatively: `APP_ENV=stage npx prisma migrate status` and confirm whether `20261115150000_sce_cd_05_club_strategy_authoring` is pending.
 

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT,
+  PKG_06_VERIFIED_PREVIEW_URL,
+  buildPkg06PoAcceptanceAbsoluteUrl,
+  buildPkg06PoAcceptancePaths,
+} from "../sce-cd-04r6-pkg-06-handoff";
 
 const ROOT = join(__dirname, "../../..");
 
@@ -34,5 +40,26 @@ describe("PKG-06 Vorhaben workspace inline create + Rückblick deep links", () =
     expect(list).toContain("/rueckblick");
     expect(list).toContain("reviewQuickLink");
     expect(list).toContain("SprintBoardQuickLink");
+  });
+
+  it("Prioritäten lens uses inline collapsible create without ComposerDialog", () => {
+    const backlog = read("components/admin/club-development/InitiativeBacklogWorkspace.tsx");
+    const create = read("components/admin/club-development/InitiativeBacklogCreateCard.tsx");
+    expect(backlog).toContain("InitiativeBacklogCreateCard");
+    expect(backlog).not.toContain("CreateInitiativeComposerDialog");
+    expect(create).toContain("aria-expanded");
+    expect(create).not.toContain("Dialog");
+  });
+
+  it("records verified preview URL and PO acceptance paths for handoff", () => {
+    expect(PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT).toBe("b3d4ce40");
+    expect(PKG_06_VERIFIED_PREVIEW_URL).toContain("sportclubevo-webapp-stage-git-curs");
+    const paths = buildPkg06PoAcceptancePaths();
+    expect(paths.vorhabenInlineCreate).toBe("/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben");
+    expect(paths.zielAutoLinkCreate("tgt-1")).toContain("targetId=tgt-1");
+    expect(buildPkg06PoAcceptanceAbsoluteUrl(PKG_06_VERIFIED_PREVIEW_URL, paths.vorhabenInlineCreate)).toBe(
+      `${PKG_06_VERIFIED_PREVIEW_URL}/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben`,
+    );
+    expect(paths.sprintRueckblick("phase-a")).toBe("/vereinsleitung/sprints/phase-a/rueckblick");
   });
 });
