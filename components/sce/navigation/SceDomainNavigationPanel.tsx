@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { MouseEvent, RefObject } from "react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";
@@ -117,6 +117,10 @@ export function SceDomainNavigationPanel({
   const selectedL2Key = userL2Key ?? autoL2Key;
   const panelRef = useRef<HTMLDivElement>(null);
   useStableDomainNavOverlay(open, headerRef, panelRef);
+
+  useEffect(() => {
+    setUserL2Key(null);
+  }, [autoL2Key, domain.id]);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.key === selectedL2Key) ?? null,

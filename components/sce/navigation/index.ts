@@ -1,4 +1,5 @@
 export { SceDomainNavigationPanel } from "./SceDomainNavigationPanel";
+export { SceDomainNavOverlayScrim } from "./SceDomainNavOverlayScrim";
 export { SceNavigationSpineRow } from "./SceNavigationSpineRow";
 export { SceGlobalSeasonSwitcher } from "./SceGlobalSeasonSwitcher";
 export { SceGlobalUtilities } from "./SceGlobalUtilities";

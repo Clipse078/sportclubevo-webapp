@@ -67,7 +67,7 @@ export default async function ProviderMappingPage({ searchParams }: PageProps) {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Teams · Anbieter-Mapping"
+        eyebrow="Teams · Anbieter-Zuordnung"
         title="Anbieter-Zuordnungen"
         description="Ordnen Sie TeamSeason-Einträge externen Anbieter-Teams zu. Der Wettbewerb dient als Kontext — er besitzt die Zuordnung nicht."
         breadcrumbs={[

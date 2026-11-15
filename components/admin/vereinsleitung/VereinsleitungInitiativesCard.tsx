@@ -52,7 +52,7 @@ export default function VereinsleitungInitiativesCard({ initiatives }: Vereinsle
     <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">Initiativen</h3>
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">Vorhaben</h3>
           {!hasRealData ? <p className="mt-0.5 text-[11px] text-slate-400">Demo-Daten</p> : null}
         </div>
         <div className="flex items-center gap-2">

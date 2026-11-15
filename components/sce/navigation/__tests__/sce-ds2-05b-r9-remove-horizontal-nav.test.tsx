@@ -142,11 +142,10 @@ describe("SCE-DS2-05B-R9 remove redundant horizontal navigation", () => {
     renderShell();
     await user.click(screen.getByTestId("primary-domain-panel-trigger-club"));
     const clubPanel = screen.getByTestId("sce-domain-nav-panel");
-    const organisation = within(clubPanel).getByRole("button", { name: /Organisation/i });
-    expect(organisation.className).toContain("sce-domain-nav-panel-l2-control--active");
-    const orgUnits = within(clubPanel).getByRole("link", { name: "Organisationseinheiten" });
-    expect(orgUnits).toHaveAttribute("aria-current", "page");
-    expect(orgUnits).toHaveClass("sce-domain-nav-panel-l3-link--active");
+    const organisation = within(clubPanel).getByRole("link", { name: /^Organisation$/i });
+    expect(organisation.className).toContain("sce-domain-nav-panel-l2-link--active");
+    expect(organisation).toHaveAttribute("aria-current", "page");
+    expect(organisation).toHaveAttribute("href", "/dashboard/org-units");
   });
 
   it("preserves RBAC filtering in the primary header and mega menu", async () => {

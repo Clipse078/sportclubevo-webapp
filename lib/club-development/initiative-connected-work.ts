@@ -8,6 +8,8 @@ import { canSeeMeeting } from "@/lib/meetings/queries";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { listTasksForContext } from "@/lib/tasks/list-tasks-for-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { canReadTask } from "@/lib/tasks/visibility";
+import { loadTaskForTenantAuth, taskAuthorizationFromRow } from "@/lib/tasks/task-access";
 
 const AGENDA_STATUS_LABELS: Record<string, string> = {
   OPEN: "Offen",
@@ -46,7 +48,7 @@ export type InitiativeTaskRow = {
   dueAt: string | null;
   assigneeLabel: string | null;
   href: string;
-  source: "INITIATIVE" | "MEETING_DECISION";
+  source: "INITIATIVE" | "MEETING_DECISION" | "PRIMARY_INITIATIVE";
 };
 
 export type InitiativeConnectedWork = {
@@ -235,6 +237,51 @@ export async function loadInitiativeConnectedWork(
       } catch {
         // decision context may be unreadable
       }
+    }
+  }
+
+  const primaryRows = await prisma.task.findMany({
+    where: {
+      tenantId: actor.tenantId,
+      primaryInitiativeId: initiativeId,
+      status: { not: "CANCELLED" },
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      dueAt: true,
+      assignees: {
+        select: { user: { select: { firstName: true, lastName: true } } },
+        take: 1,
+        orderBy: { assignedAt: "asc" },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 50,
+  });
+
+  if (taskCtx) {
+    for (const row of primaryRows) {
+      if (taskMap.has(row.id)) continue;
+      try {
+        const full = await loadTaskForTenantAuth(actor.tenantId!, row.id);
+        if (!full || !canReadTask(taskCtx, taskAuthorizationFromRow(full))) continue;
+      } catch {
+        continue;
+      }
+      const assignee = row.assignees[0];
+      taskMap.set(row.id, {
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        dueAt: row.dueAt?.toISOString() ?? null,
+        assigneeLabel: assignee
+          ? `${assignee.user.firstName} ${assignee.user.lastName}`.trim()
+          : null,
+        href: `/dashboard/aufgaben/${encodeURIComponent(row.id)}`,
+        source: "PRIMARY_INITIATIVE",
+      });
     }
   }
 

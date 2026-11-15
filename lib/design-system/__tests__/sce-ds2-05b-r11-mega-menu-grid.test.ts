@@ -24,8 +24,8 @@ const NAV_CSS = "app/(admin)/global-app-navigation.css";
 const PANEL = "components/sce/navigation/SceDomainNavigationPanel.tsx";
 const GRID = "minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr)";
 
-const DIRECT_L2_DOMAINS = ["planning", "admin"] as const;
-const HIERARCHICAL_DOMAINS = ["club", "publishing", "communication"] as const;
+const DIRECT_L2_DOMAINS = ["planning", "communication"] as const;
+const HIERARCHICAL_DOMAINS = ["club", "publishing", "admin"] as const;
 
 function readRepo(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
@@ -70,7 +70,7 @@ describe("SCE-DS2-05B-R11 mega-menu grid contract", () => {
     expect(panel).not.toContain("sce-domain-nav-panel-l3-empty");
   });
 
-  it("classifies Planung and Admin as direct L2 and keeps L3 on the hierarchical domains", () => {
+  it("classifies Planung and Kommunikation as direct L2 and keeps L3 on hierarchical domains", () => {
     const model = buildAppNavigationModelForUser(Object.values(PERMISSIONS), "club");
 
     for (const id of DIRECT_L2_DOMAINS) {
@@ -150,8 +150,9 @@ describe("SCE-DS2-05B-R11 mega-menu grid contract", () => {
   it("preserves orange text-only active states and keyboard focus chrome", () => {
     const css = readRepo(NAV_CSS);
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-link--active,\s*\.sce-domain-nav-panel-l2-control--active,\s*\.sce-domain-nav-panel-l3-link--active\s*\{[^}]*color:\s*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l3-link--active\s*\{[^}]*color:\s*var\(--sce-primary\)/,
     );
+    expect(css).toMatch(/\.sce-domain-nav-panel-l2-control--selected[\s\S]*color:\s*var\(--sce-primary\)/);
     expect(css).toMatch(
       /\.sce-domain-nav-panel-l2-link--active[\s\S]*background:\s*transparent/,
     );

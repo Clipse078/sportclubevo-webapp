@@ -81,8 +81,9 @@ describe("SCE-DS2-05B-R3 delivery", () => {
     const initialL2 = resolveDomainNavigationPanelInitialL2Key(club, items, active);
     const organisation = items.find((item) => item.label === "Organisation");
     expect(initialL2).toBe(organisation?.key);
-    const l3 = resolveSecondaryNavItemModuleLocalChildren(club, organisation!);
-    expect(l3.some((child) => child.key === "org-units")).toBe(true);
+    const mitgliedschaft = items.find((item) => item.label === "Mitgliedschaft")!;
+    const l3 = resolveSecondaryNavItemModuleLocalChildren(club, mitgliedschaft);
+    expect(l3.some((child) => child.key === "registrierungen")).toBe(true);
   });
 
   it("uses single-line dashboard programme row grid with semantic activity pills", () => {

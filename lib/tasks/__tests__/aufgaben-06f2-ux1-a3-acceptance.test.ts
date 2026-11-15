@@ -449,6 +449,9 @@ describe("AUFGABEN-06F2-UX1-A3 acceptance", () => {
     });
 
     it("visibility UI — multi org, private people, no stale hidden grants", () => {
+      const orgPicker = read("components/admin/aufgaben/TaskOrgUnitMultiPicker.tsx");
+      expect(orgPicker).toContain("SceInlineOrgUnitMultiPicker");
+      expect(orgPicker).not.toContain("SceListSelectorPanel");
       const orgFields = read("components/admin/aufgaben/TaskOrgVisibilityFields.tsx");
       expect(orgFields).toContain("TaskOrgUnitMultiPicker");
       expect(orgFields).toContain("ASSIGNEES_ONLY");

@@ -64,6 +64,8 @@ vi.mock("@/lib/db/prisma", () => ({
     workspaceDocument: { findFirst: vi.fn() },
     $transaction: mocks.transaction,
     auditLog: { create: mocks.auditCreate },
+    developmentSprintTaskMembership: { findMany: vi.fn().mockResolvedValue([]) },
+    initiative: { findFirst: vi.fn().mockResolvedValue(null) },
   },
 }));
 
@@ -90,6 +92,7 @@ function taskDto(overrides: Partial<TaskDto> = {}): TaskDto {
     completedAt: null,
     contextType: null,
     contextId: null,
+    primaryInitiativeId: null,
     parentTaskId: null,
     taskSeriesId: null,
     orgUnitId: null,
@@ -121,6 +124,7 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     completedAt: null,
     contextType: null,
     contextId: null,
+    primaryInitiativeId: null,
     parentTaskId: null,
     taskSeriesId: null,
     orgUnitId: null,

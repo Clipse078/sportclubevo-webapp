@@ -59,7 +59,7 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const club = model.domains.find((d) => d.id === "club");
     expect(club?.destinations.map((d) => d.key)).toEqual(
-      expect.arrayContaining(["organisation", "mitglieder", "anmeldungen"]),
+      expect.arrayContaining(["organisation", "teams", "personen", "mitglieder", "anmeldungen", "aufgaben"]),
     );
     expect(model.domains.map((d) => d.id)).not.toContain("mitglieder");
     expect(model.domains.map((d) => d.id)).not.toContain("organisation");
@@ -68,7 +68,8 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
   it("drops destinations with no permission from the filtered model", () => {
     const model = buildAppNavigationModelForUser([PERMISSIONS.TASKS_VIEW], "club");
     expect(model.destinations.some((d) => d.key === "website")).toBe(false);
-    expect(model.domains.some((d) => d.id === "communication")).toBe(true);
+    expect(model.domains.some((d) => d.id === "club")).toBe(true);
+    expect(model.domains.some((d) => d.id === "communication")).toBe(false);
   });
 
   it("still resolves routes through permission-filtered destinations", () => {

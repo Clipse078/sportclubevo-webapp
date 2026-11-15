@@ -1,7 +1,7 @@
 {
   "programme": "SCE-NAV-IA-V2-01",
   "generatedFrom": "lib/nav/nav-config.ts",
-  "clubAdminPermissionCount": 125,
+  "clubAdminPermissionCount": 145,
   "destinations": [
     {
       "key": "dashboard",
@@ -199,8 +199,8 @@
     {
       "key": "organisation",
       "route": "/dashboard/org-units",
-      "label": "Organisation",
-      "labelV2": "Organisation",
+      "label": "Organisationseinheiten",
+      "labelV2": "Organisationseinheiten",
       "icon": "organisation",
       "targetL1": "club",
       "targetL2": "Organisation",
@@ -212,38 +212,9 @@
       },
       "permissionKeys": [
         "org.view",
-        "org.manage",
-        "teams.view",
-        "teams.manage",
-        "competitions.view",
-        "competitions.manage",
-        "people.view",
-        "people.manage"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "org-units",
-      "route": "/dashboard/org-units",
-      "label": "Organisationseinheiten",
-      "labelV2": "Organisationseinheiten",
-      "icon": "org-unit",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "org.view",
         "org.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -255,63 +226,18 @@
       "labelV2": "Teams",
       "icon": "team",
       "targetL1": "club",
-      "targetL2": "People & Teams",
-      "targetLocalGroup": "organisation",
+      "targetL2": "Personen & Teams",
+      "targetLocalGroup": null,
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "teams.view",
         "teams.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "provider-mapping",
-      "route": "/dashboard/teams/provider-mapping",
-      "label": "Anbieter-Mapping",
-      "labelV2": "Anbieter-Mapping",
-      "icon": "integration",
-      "targetL1": "club",
-      "targetL2": "People & Teams",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "teams.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "vereine",
-      "route": "/dashboard/vereine",
-      "label": "Vereine",
-      "labelV2": "Vereine",
-      "icon": "club",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "org.view",
-        "org.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -323,41 +249,18 @@
       "labelV2": "Personen",
       "icon": "people",
       "targetL1": "club",
-      "targetL2": "People & Teams",
-      "targetLocalGroup": "organisation",
+      "targetL2": "Personen & Teams",
+      "targetLocalGroup": null,
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "people.view",
         "people.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "competitions",
-      "route": "/dashboard/competitions",
-      "label": "Wettkämpfe",
-      "labelV2": "Wettkämpfe",
-      "icon": "competition",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "competitions.view",
-        "competitions.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -369,7 +272,7 @@
       "labelV2": "Mitglieder",
       "icon": "member",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -482,8 +385,8 @@
       "label": "Aufgaben",
       "labelV2": "Aufgaben",
       "icon": "tasks",
-      "targetL1": "kommunikation",
-      "targetL2": "Aufgaben & Koordination",
+      "targetL1": "club",
+      "targetL2": "Aufgaben",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -505,7 +408,7 @@
       "labelV2": "Helfereinsätze",
       "icon": "volunteer",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -527,7 +430,7 @@
       "labelV2": "Kommunikation",
       "icon": "communication",
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -546,18 +449,42 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "communication-overview",
+      "route": "/dashboard/communication",
+      "label": "Übersicht",
+      "labelV2": "Übersicht",
+      "icon": "communication",
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Koordination",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "communication.club.view",
+        "communication.club.send",
+        "communication.inbox.view"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "communication-mitteilungen",
       "route": "/dashboard/communication/mitteilungen",
       "label": "Mitteilungen",
       "labelV2": "Mitteilungen",
       "icon": null,
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.club.view",
@@ -575,12 +502,12 @@
       "labelV2": "Kampagnen",
       "icon": null,
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.club.view",
@@ -598,38 +525,16 @@
       "labelV2": "Zielgruppen",
       "icon": "target-group",
       "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
+      "targetL2": "Nachrichten & Koordination",
       "targetLocalGroup": "communication",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "communication.zielgruppen.view",
         "communication.zielgruppen.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "communication-email-sender",
-      "route": "/dashboard/communication/email-sender",
-      "label": "E-Mail-Absender",
-      "labelV2": "E-Mail-Absender",
-      "icon": "communication",
-      "targetL1": "kommunikation",
-      "targetL2": "Nachrichten & Einstellungen",
-      "targetLocalGroup": "communication",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "users.manage_memberships"
       ],
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
@@ -1012,7 +917,7 @@
       "labelV2": "Trainer & Mitarbeitende",
       "icon": "coach",
       "targetL1": "club",
-      "targetL2": "People & Teams",
+      "targetL2": "Personen & Teams",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1021,166 +926,6 @@
       },
       "permissionKeys": [
         "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "meetings",
-      "route": "/vereinsleitung/meetings",
-      "label": "Meetings",
-      "labelV2": "Sitzungen",
-      "icon": "committee-board",
-      "targetL1": "club",
-      "targetL2": "Club-Betrieb",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung",
-      "route": "/vereinsleitung/club-entwicklung",
-      "label": "Club Entwicklung",
-      "labelV2": "Vereinsentwicklung",
-      "icon": "insight",
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-ziele",
-      "route": "/vereinsleitung/targets",
-      "label": "Ziele",
-      "labelV2": "Ziele",
-      "icon": null,
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-initiativen",
-      "route": "/vereinsleitung/initiativen",
-      "label": "Initiativen",
-      "labelV2": "Initiativen",
-      "icon": null,
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "targets.view",
-        "targets.manage",
-        "meetings.view",
-        "meetings.manage",
-        "initiatives.view",
-        "initiatives.manage",
-        "users.manage_memberships"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "club-entwicklung-prozesse",
-      "route": "/vereinsleitung/prozesse",
-      "label": "Prozesse & Aufgaben",
-      "labelV2": "Prozesse & Aufgaben",
-      "icon": "workflow",
-      "targetL1": "club",
-      "targetL2": "Vereinsentwicklung",
-      "targetLocalGroup": "club-entwicklung",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "material",
-      "route": "/vereinsleitung/material",
-      "label": "Material & Inventar",
-      "labelV2": "Material & Inventar",
-      "icon": "material-inventory",
-      "targetL1": "club",
-      "targetL2": "Club-Betrieb",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -1189,12 +934,12 @@
     },
     {
       "key": "finanzen",
-      "route": "/vereinsleitung/finanzen",
+      "route": "/dashboard/finance",
       "label": "Finanzen",
       "labelV2": "Finanzen",
       "icon": "finance",
       "targetL1": "club",
-      "targetL2": "Finanzen & Partnerschaften",
+      "targetL2": "Finanzen",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1202,9 +947,7 @@
         "mobileEligible": true
       },
       "permissionKeys": [
-        "users.manage_memberships",
-        "targets.manage",
-        "meetings.manage"
+        "finance.view"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -1218,7 +961,7 @@
       "labelV2": "Sponsoring",
       "icon": "sponsor",
       "targetL1": "club",
-      "targetL2": "Finanzen & Partnerschaften",
+      "targetL2": "Sponsoring",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1263,7 +1006,7 @@
       "labelV2": "Formulare & Freigaben",
       "icon": "form",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1285,7 +1028,7 @@
       "labelV2": "Vorfälle & Disziplin",
       "icon": "discipline-incident",
       "targetL1": "club",
-      "targetL2": "Club-Betrieb",
+      "targetL2": "Vereinsbetrieb",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1301,13 +1044,103 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "provider-mapping",
+      "route": "/dashboard/teams/provider-mapping",
+      "label": "Anbieter-Zuordnung",
+      "labelV2": "Anbieter-Zuordnung",
+      "icon": "integration",
+      "targetL1": "admin",
+      "targetL2": "Integrationen & Zuordnungen",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "teams.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "communication-email-sender",
+      "route": "/dashboard/communication/email-sender",
+      "label": "E-Mail-Absender",
+      "labelV2": "E-Mail-Absender",
+      "icon": "communication",
+      "targetL1": "admin",
+      "targetL2": "Integrationen & Zuordnungen",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "vereine",
+      "route": "/dashboard/vereine",
+      "label": "Referenzvereine",
+      "labelV2": "Referenzvereine",
+      "icon": "club",
+      "targetL1": "admin",
+      "targetL2": "Stammdaten",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "competitions",
+      "route": "/dashboard/competitions",
+      "label": "Wettkämpfe",
+      "labelV2": "Wettkämpfe",
+      "icon": "competition",
+      "targetL1": "admin",
+      "targetL2": "Stammdaten",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "competitions.view",
+        "competitions.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "administration",
       "route": "/dashboard/admin",
       "label": "Admin",
       "labelV2": "Admin",
       "icon": "settings",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -1329,12 +1162,12 @@
       "labelV2": "Rollen & Berechtigungen",
       "icon": "roles-access",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "roles.view",
@@ -1352,12 +1185,12 @@
       "labelV2": "Saisons",
       "icon": "season",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "seasons.view",
@@ -1375,12 +1208,12 @@
       "labelV2": "Anlagen & Ressourcen",
       "icon": "facility",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "facilities.view",
@@ -1398,12 +1231,12 @@
       "labelV2": "Darstellung",
       "icon": "settings",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.manage"
@@ -1420,12 +1253,12 @@
       "labelV2": "Personen & Zugänge",
       "icon": "people",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.view",
@@ -1443,12 +1276,12 @@
       "labelV2": "Rollen",
       "icon": "roles-access",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "users.manage"
@@ -1465,12 +1298,12 @@
       "labelV2": "Tenants",
       "icon": "organisation",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "System & Zugänge",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "tenants.view",
@@ -1488,12 +1321,12 @@
       "labelV2": "Integrationen",
       "icon": "integration",
       "targetL1": "admin",
-      "targetL2": "Administration",
+      "targetL2": "Integrationen & Zuordnungen",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
         "tenants.manage"
@@ -1544,22 +1377,26 @@
       "label": "Organisation",
       "headerVisible": true,
       "keys": [
-        "organisation",
-        "org-units",
-        "vereine",
-        "competitions"
+        "organisation"
+      ]
+    },
+    {
+      "id": "aufgaben",
+      "label": "Aufgaben",
+      "headerVisible": true,
+      "keys": [
+        "aufgaben"
       ]
     },
     {
       "id": "people-teams",
-      "label": "People & Teams",
+      "label": "Personen & Teams",
       "headerVisible": true,
       "keys": [
-        "mitglieder",
         "teams",
-        "trainer-staff",
         "personen",
-        "provider-mapping"
+        "mitglieder",
+        "trainer-staff"
       ]
     },
     {
@@ -1579,14 +1416,19 @@
       "headerVisible": true,
       "keys": [
         "club-entwicklung",
+        "club-entwicklung-uebersicht",
+        "club-entwicklung-strategie",
         "club-entwicklung-ziele",
-        "club-entwicklung-initiativen",
+        "club-entwicklung-initiativen-backlog",
+        "club-entwicklung-vorhaben",
+        "club-entwicklung-sprints",
+        "club-entwicklung-sitzungen",
         "club-entwicklung-prozesse"
       ]
     },
     {
       "id": "club-betrieb",
-      "label": "Club-Betrieb",
+      "label": "Vereinsbetrieb",
       "headerVisible": true,
       "keys": [
         "helfereinsaetze",
@@ -1605,10 +1447,17 @@
     },
     {
       "id": "finanzen",
-      "label": "Finanzen & Partnerschaften",
+      "label": "Finanzen",
       "headerVisible": true,
       "keys": [
-        "finanzen",
+        "finanzen"
+      ]
+    },
+    {
+      "id": "sponsoring",
+      "label": "Sponsoring",
+      "headerVisible": true,
+      "keys": [
         "sponsoring"
       ]
     }

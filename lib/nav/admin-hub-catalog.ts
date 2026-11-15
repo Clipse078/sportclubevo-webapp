@@ -82,7 +82,7 @@ export const ADMIN_HUB_CARD_CATALOG: AdminHubCardDef[] = [
     description: "Absenderidentitäten für vereinsweite Kommunikation verwalten.",
     href: "/dashboard/communication/email-sender",
     permissionKeys: [...TENANT_ADMINISTRATION_PERMISSIONS],
-    groupId: "communication",
+    groupId: "integrations",
   },
   {
     key: "communications-admin",

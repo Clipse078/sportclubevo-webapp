@@ -19,6 +19,9 @@ import { MetadataCard } from "@/components/ui/MetadataCard";
 import { TimelinePlaceholder } from "@/components/ui/TimelinePlaceholder";
 import { loadInitiativeConnectedWork } from "@/lib/club-development/initiative-connected-work";
 import InitiativeConnectedWorkSection from "@/components/admin/club-development/InitiativeConnectedWorkSection";
+import InitiativeMilestonesSection from "@/components/admin/club-development/InitiativeMilestonesSection";
+import InitiativeTargetLinksSection from "@/components/admin/club-development/InitiativeTargetLinksSection";
+import InitiativePrimaryTasksSection from "@/components/admin/club-development/InitiativePrimaryTasksSection";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import InitiativeApprovalPanel from "@/components/admin/initiatives/InitiativeApprovalPanel";
@@ -28,6 +31,7 @@ import { groupApprovalVotesByRevision } from "@/lib/club-development/club-develo
 import { parseApproverPersonIds } from "@/lib/club-development/initiative-approval-presentation";
 import { personLabelFromRecord } from "@/lib/meetings/meeting-person-display";
 import type { MeetingApprovalVoteView } from "@/lib/meetings/meeting-approval-workspace-data";
+import { CD_INITIATIVE_COPY } from "@/lib/club-development/product-copy";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -40,6 +44,13 @@ const STATUS_LABELS: Record<string, string> = {
   ON_HOLD: "Pausiert",
   COMPLETED: "Abgeschlossen",
   CANCELLED: "Abgesagt",
+};
+
+const DISPOSITION_LABELS: Record<string, string> = {
+  NONE: "Keine",
+  DEFERRED: "Zurückgestellt",
+  REJECTED: "Abgelehnt",
+  ARCHIVED: "Archiviert",
 };
 
 const STATUS_BADGE_VARIANTS: Record<
@@ -150,7 +161,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
   return (
     <PageShell fullWidth>
       <DetailPagePattern
-        eyebrow="Initiativen"
+        eyebrow="Vorhaben"
         title={pageTitle}
         description={dbInitiative?.summary ?? undefined}
         headerBadge={
@@ -164,7 +175,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
         }
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Initiativen", href: "/vereinsleitung/initiativen" },
+          { label: "Vorhaben", href: "/vereinsleitung/initiativen" },
           { label: pageTitle },
         ]}
         headerActions={
@@ -215,6 +226,16 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                       value: statusLabel,
                       icon: <Flag className="h-3.5 w-3.5" />,
                     },
+                    {
+                      label: "Backlog-Priorität",
+                      value: String(dbInitiative.backlogPriority ?? 0),
+                    },
+                    {
+                      label: CD_INITIATIVE_COPY.dispositionFilter,
+                      value:
+                        DISPOSITION_LABELS[dbInitiative.disposition ?? "NONE"] ??
+                        dbInitiative.disposition,
+                    },
                   ]}
                   columns={1}
                 />
@@ -249,6 +270,16 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
           <>
             {/* Description & progress */}
             <SectionCard title="Beschreibung">
+              {dbInitiative.expectedOutcome ? (
+                <div className="mb-4 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/40 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    Erwartetes Ergebnis
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--text-2)] whitespace-pre-wrap">
+                    {dbInitiative.expectedOutcome}
+                  </p>
+                </div>
+              ) : null}
               {dbInitiative.description ? (
                 <p className="text-sm leading-relaxed text-[var(--text-2)]">
                   {dbInitiative.description}
@@ -306,6 +337,18 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
               />
             </SectionCard>
 
+            <SectionCard title="Strategische Ziele">
+              <InitiativeTargetLinksSection initiativeId={dbInitiative.id} canManage={canManageInitiative} />
+            </SectionCard>
+
+            <SectionCard title="Meilensteine">
+              <InitiativeMilestonesSection initiativeId={dbInitiative.id} canManage={canManageInitiative} />
+            </SectionCard>
+
+            <SectionCard title="Optionale Aufgabenverknüpfung">
+              <InitiativePrimaryTasksSection initiativeId={dbInitiative.id} canManage={canManageInitiative} />
+            </SectionCard>
+
             {connectedWork ? <InitiativeConnectedWorkSection connected={connectedWork} /> : null}
 
             {dbInitiative ? (
@@ -319,9 +362,9 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
           </>
         ) : (
           // Graceful fallback for slugs not yet in DB (legacy mock links still work)
-          <SectionCard title="Initiative nicht gefunden">
+          <SectionCard title={CD_INITIATIVE_COPY.notFound}>
             <EmptyState
-              heading="Diese Initiative ist noch nicht erfasst"
+              heading={CD_INITIATIVE_COPY.notFoundHeading}
               description={`Slug: ${slug}`}
             />
           </SectionCard>

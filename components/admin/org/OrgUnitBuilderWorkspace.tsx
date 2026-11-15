@@ -123,7 +123,7 @@ export default function OrgUnitBuilderWorkspace({
         <div
           className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
           role="tablist"
-          aria-label="Organisation Builder Ansicht"
+          aria-label="Organisationsansicht"
         >
           <button
             type="button"
@@ -158,7 +158,11 @@ export default function OrgUnitBuilderWorkspace({
         </div>
 
         {canManage ? (
-          <OrgUnitCreateTrigger parentOptions={parentOptions} className="fca-button-primary inline-flex items-center gap-2" />
+          <OrgUnitCreateTrigger
+            parentOptions={parentOptions}
+            label="Organisationseinheit erstellen"
+            className="fca-button-primary inline-flex items-center gap-2"
+          />
         ) : null}
       </div>
 

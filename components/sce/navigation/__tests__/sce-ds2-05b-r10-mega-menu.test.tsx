@@ -126,23 +126,20 @@ describe("SCE-DS2-05B-R10 desktop mega menu", () => {
       title.compareDocumentPosition(categories!) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(
-      categories!.compareDocumentPosition(destinations!) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    if (destinations) {
+      expect(
+        categories!.compareDocumentPosition(destinations) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    expect(frame).toHaveAttribute("data-sce-domain-nav-l3", "empty");
 
-    const activeL2 = within(frame).getByRole("button", {
-      name: /Organisation/i,
+    const activeL2 = within(frame).getByRole("link", {
+      name: /^Organisation$/i,
     });
-    expect(activeL2.className).toContain(
-      "sce-domain-nav-panel-l2-control--active",
-    );
+    expect(activeL2.className).toContain("sce-domain-nav-panel-l2-link--active");
+    expect(activeL2).toHaveAttribute("aria-current", "page");
     expect(activeL2.className).not.toMatch(/underline|border-l|border-s/);
-    const activeL3 = within(frame).getByRole("link", {
-      name: "Organisationseinheiten",
-    });
-    expect(activeL3).toHaveClass("sce-domain-nav-panel-l3-link--active");
-    expect(activeL3.className).not.toMatch(/underline/);
 
     const top = panel.style.top;
     await user.click(

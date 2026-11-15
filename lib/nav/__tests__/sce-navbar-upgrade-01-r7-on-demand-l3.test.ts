@@ -62,11 +62,13 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
   it("derives L3 children from the canonical model for Row 2 parents", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const club = model.domains.find((d) => d.id === "club")!;
-    const organisation = resolveDomainSecondaryNavItems(club).find((item) => item.label === "Organisation");
-    expect(organisation).toBeTruthy();
-    const l3 = resolveSecondaryNavItemModuleLocalChildren(club, organisation!);
-    expect(l3.some((child) => child.key === "teams")).toBe(true);
-    expect(l3.some((child) => child.key === "org-units")).toBe(true);
+    const mitgliedschaft = resolveDomainSecondaryNavItems(club).find(
+      (item) => item.label === "Mitgliedschaft",
+    );
+    expect(mitgliedschaft).toBeTruthy();
+    const l3 = resolveSecondaryNavItemModuleLocalChildren(club, mitgliedschaft!);
+    expect(l3.some((child) => child.key === "registrierungen")).toBe(true);
+    expect(l3.some((child) => child.key === "warteliste")).toBe(true);
   });
 
   it("keeps L3 inside the hierarchical domain panel and not a persistent context strip", () => {

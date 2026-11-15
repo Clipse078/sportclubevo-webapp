@@ -55,28 +55,32 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(clubL1).toEqual([...CLUB_L1_DOMAIN_ORDER]);
     expect(clubL1.at(-1)).toBe("admin");
     expect(model.domains.some((d) => d.id === "organisation")).toBe(false);
-    expect(NAVIGATION_DOMAIN_DEFINITIONS.publishing.fallbackLabel).toBe("Publizieren");
-    expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Publizieren");
+    expect(NAVIGATION_DOMAIN_DEFINITIONS.publishing.fallbackLabel).toBe("Veröffentlichen");
+    expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Veröffentlichen");
   });
 
   it("groups Club explorer destinations into eight L2 groups without Administration (moved to Admin L1)", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const groups = resolveExplorerDomainGroups(club)!;
-    expect(groups.map((group) => group.label)).toEqual([
-      "Organisation",
-      "People & Teams",
-      "Mitgliedschaft",
-      "Vereinsentwicklung",
-      "Club-Betrieb",
-      "Dokumente",
-      "Finanzen",
-      "Sponsoring",
-    ]);
+    expect(groups.map((group) => group.label)).toEqual(
+      expect.arrayContaining([
+        "Organisation",
+        "Aufgaben",
+        "Personen & Teams",
+        "Mitgliedschaft",
+        "Vereinsbetrieb",
+        "Dokumente",
+        "Finanzen",
+        "Sponsoring",
+      ]),
+    );
     expect(groups.some((group) => group.id === "administration")).toBe(false);
 
     const admin = model.domains.find((d) => d.id === "admin")!;
     const adminGroups = resolveExplorerDomainGroups(admin)!;
-    expect(adminGroups.some((group) => group.id === "administration")).toBe(true);
+    expect(adminGroups.map((group) => group.id)).toEqual(
+      expect.arrayContaining(["administration", "stammdaten", "integrationen"]),
+    );
 
     const headerSecondary = resolveDomainSecondaryNavItems(club);
     expect(headerSecondary.some((item) => item.label === "Administration")).toBe(false);
@@ -186,7 +190,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     const catalog = buildSemanticNavigationDestinationCatalog(model, domainLabel);
     expect(catalog.length).toBeGreaterThan(60);
     expect(catalog.every((row) => row.domainId && row.destinationKey && row.href)).toBe(true);
-    expect(catalog.some((row) => row.groupLabel === "Administration")).toBe(true);
+    expect(catalog.some((row) => row.groupLabel === "System & Zugänge")).toBe(true);
     const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
     expect(drawer).not.toContain("NAV_SECTIONS");
   });

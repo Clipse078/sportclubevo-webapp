@@ -179,18 +179,22 @@ describe("NAV_SECTIONS static structure", () => {
     expect(saisons?.href).toBe("/dashboard/seasons");
   });
 
-  it("Organisation lists children in the canonical order ending with Personen, then Wettkämpfe", () => {
+  it("Organisationseinheiten is a direct Verein entry without nested Organisation submenu", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const organisation = tagesbetrieb!.items.find((i) => i.key === "organisation");
-    const childKeys = organisation!.children?.map((c) => c.key) ?? [];
-    expect(childKeys).toEqual([
-      "org-units",
-      "teams",
-      "provider-mapping",
-      "vereine",
-      "personen",
-      "competitions",
-    ]);
+    expect(organisation?.label).toBe("Organisationseinheiten");
+    expect(organisation?.href).toBe("/dashboard/org-units");
+    expect(organisation?.children ?? []).toEqual([]);
+  });
+
+  it("Teams and Personen are canonical top-level Verein entries (not under Organisation)", () => {
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const keys = tagesbetrieb!.items.map((item) => item.key);
+    expect(keys).toContain("teams");
+    expect(keys).toContain("personen");
+    const organisation = tagesbetrieb!.items.find((i) => i.key === "organisation");
+    expect(organisation?.children?.map((c) => c.key) ?? []).not.toContain("teams");
+    expect(organisation?.children?.map((c) => c.key) ?? []).not.toContain("personen");
   });
 
   it("Administration lists Rollen & Berechtigungen, Saisons, Anlagen & Ressourcen first", () => {
@@ -212,6 +216,8 @@ describe("NAV_SECTIONS static structure", () => {
       "dashboard",
       "planung",
       "organisation",
+      "teams",
+      "personen",
       "mitglieder",
       "anmeldungen",
       "aufgaben",
@@ -227,6 +233,12 @@ describe("NAV_SECTIONS static structure", () => {
       PERMISSIONS.COMMUNICATION_INBOX_VIEW,
     ]);
     expect(communication?.children).toEqual([
+      expect.objectContaining({
+        key: "communication-overview",
+        label: "Übersicht",
+        href: "/dashboard/communication",
+        matchExact: true,
+      }),
       expect.objectContaining({
         key: "communication-mitteilungen",
         label: "Mitteilungen",
@@ -254,17 +266,26 @@ describe("NAV_SECTIONS static structure", () => {
           PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
         ],
       }),
-      expect.objectContaining({
-        key: "communication-email-sender",
-        label: "E-Mail-Absender",
-        href: "/dashboard/communication/email-sender",
-        permissionKeys: [PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
-      }),
     ]);
+    expect(
+      communication?.children?.some((child) => child.key === "communication-email-sender"),
+    ).toBe(false);
 
     const system = findSection("System");
     const administration = system!.items.find((i) => i.key === "administration");
-    expect(administration?.children?.some((child) => child.key === "admin-communications")).toBe(false);
+    expect(administration?.children?.some((child) => child.key === "admin-communications")).toBe(
+      false,
+    );
+    const systemKeys = system!.items.map((item) => item.key);
+    expect(systemKeys).toEqual(
+      expect.arrayContaining([
+        "provider-mapping",
+        "communication-email-sender",
+        "vereine",
+        "competitions",
+        "administration",
+      ]),
+    );
   });
 
   it("exposes Sponsoring as a permission-gated Führung future module", () => {
@@ -283,11 +304,16 @@ describe("NAV_SECTIONS static structure", () => {
     expect(clubDev?.label).toBe("Vereinsentwicklung");
     expect(clubDev?.children?.map((c) => c.label)).toEqual([
       "Übersicht",
+      "Strategie",
       "Pläne & Ziele",
-      "Sitzungen",
+      "Vorhaben & Prioritäten",
       "Vorhaben & Aufgaben",
+      "Umsetzungsplanung",
+      "Sitzungen",
       "Prozesse & Richtlinien",
     ]);
+    const sitzungen = clubDev?.children?.find((c) => c.key === "club-entwicklung-sitzungen");
+    expect(sitzungen?.navSection).toBe("admin");
     expect(sponsoring).toEqual(expect.objectContaining({
       label: "Sponsoring",
       href: "/dashboard/sponsoring",

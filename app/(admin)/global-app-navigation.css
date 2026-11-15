@@ -103,6 +103,17 @@
   }
 }
 
+/* SCE-CD-04 — wider tenant identity rail on large desktops (primary nav shifts right). */
+@media (min-width: 1280px) {
+  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
+    --sce-nav-brand-rail-width: clamp(15.5rem, 12rem + 18vw, 30rem);
+  }
+
+  .sce-global-tenant-row-rail[data-tenant-layout="tenant-header-primary"] .sce-tenant-header-identity-name {
+    max-width: min(100%, calc(var(--sce-nav-brand-rail-width) - 3rem));
+  }
+}
+
 .sce-nav-spine-brand-cell {
   display: flex;
   align-items: center;
@@ -574,8 +585,20 @@
 [data-sce-theme="white"] .sce-domain-nav-panel,
 .sce-domain-nav-panel[data-sce-theme="white"] {
   background: var(--sce-color-surface-standard);
+  border-bottom: 1px solid var(--sce-color-border-subtle);
   border-top-color: var(--sce-color-border-subtle);
-  box-shadow: none;
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, #0f172a 22%, transparent);
+}
+
+/* SCE-CD-04R3 — page scrim under open mega-menu; header and panel stay undimmed */
+.sce-domain-nav-overlay-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--sce-z-floating-app) - 1);
+  background: color-mix(in srgb, #0f172a 7%, transparent);
+  pointer-events: auto;
 }
 
 [data-sce-theme="white"] .sce-context-nav-panel {
@@ -730,7 +753,7 @@
   letter-spacing: 0.03em;
 }
 
-/* SCE-DS2-05B-R5 density retained: compact uppercase L2/L3 rows */
+/* SCE-DS2-05B-R5 density retained: shared L2/L3 row layout */
 .sce-domain-nav-panel-l2-link,
 .sce-domain-nav-panel-l2-control,
 .sce-domain-nav-panel-l3-link {
@@ -744,17 +767,31 @@
   border: none;
   border-radius: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  color: color-mix(in srgb, var(--text-2) 98%, transparent);
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.sce-domain-nav-panel-l2-link,
+.sce-domain-nav-panel-l2-control {
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   line-height: 1.15;
-  color: color-mix(in srgb, var(--text-2) 98%, transparent);
-  text-decoration: none;
-  background: transparent;
-  cursor: pointer;
-  transition: color var(--transition-fast);
+}
+
+/* SCE-CD-04R4 — sentence-case destination links in column 3 */
+.sce-domain-nav-panel-l3-link {
+  font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.25;
 }
 
 [data-sce-theme="white"] .sce-domain-nav-panel-l2-link,
@@ -781,13 +818,40 @@
   outline-offset: 1px;
 }
 
-.sce-domain-nav-panel-l2-link--active,
-.sce-domain-nav-panel-l2-control--active,
+/* L3 = canonical destination: semantic orange. L2 browse = orange; L2 route = subtle marker. */
 .sce-domain-nav-panel-l3-link--active {
   color: var(--sce-primary);
   font-weight: 800;
   background: transparent;
   box-shadow: none;
+}
+
+.sce-domain-nav-panel-l2-control--selected {
+  color: var(--sce-primary);
+  font-weight: 800;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sce-domain-nav-panel-l2-link--active,
+.sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected) {
+  color: var(--foreground);
+  font-weight: 800;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sce-domain-nav-panel-l2-link--active .sce-domain-nav-panel-l2-label::after,
+.sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected)
+  .sce-domain-nav-panel-l2-label::after {
+  content: "";
+  display: inline-block;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  margin-inline-start: 0.35rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--sce-primary) 65%, transparent);
+  vertical-align: 0.1em;
 }
 
 .sce-domain-nav-panel-l2-chevron {
@@ -796,27 +860,32 @@
   opacity: 0.88;
 }
 
-.sce-domain-nav-panel-l2-control--active .sce-domain-nav-panel-l2-chevron,
-.sce-domain-nav-panel-l2-link--active .sce-domain-nav-panel-l2-chevron {
+.sce-domain-nav-panel-l2-control--selected .sce-domain-nav-panel-l2-chevron {
   color: var(--sce-primary);
   opacity: 1;
 }
 
-.sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active) {
+[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active {
+  color: var(--sce-primary);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected {
   color: var(--sce-primary);
   background: transparent;
   box-shadow: none;
 }
 
 [data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active,
-[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active,
-[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active,
+[data-sce-theme="white"]
+  .sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected),
 .sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active,
-.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active,
-.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active,
-[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active),
-.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active) {
-  color: var(--sce-primary);
+.sce-domain-nav-panel[data-sce-theme="white"]
+  .sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected) {
+  color: var(--foreground);
   background: transparent;
   box-shadow: none;
 }
@@ -831,19 +900,26 @@
   background: transparent;
 }
 
-.sce-domain-nav-panel-l2-link--active:hover,
-.sce-domain-nav-panel-l2-control--active:hover,
 .sce-domain-nav-panel-l2-control--selected:hover,
 .sce-domain-nav-panel-l3-link--active:hover,
-[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
-[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active:hover,
 [data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:hover,
 [data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active:hover,
-.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
-.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--active:hover,
 .sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-control--selected:hover,
 .sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l3-link--active:hover {
   color: var(--sce-primary-hover);
+  background: transparent;
+  box-shadow: none;
+}
+
+.sce-domain-nav-panel-l2-link--active:hover,
+.sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected):hover,
+[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
+[data-sce-theme="white"]
+  .sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected):hover,
+.sce-domain-nav-panel[data-sce-theme="white"] .sce-domain-nav-panel-l2-link--active:hover,
+.sce-domain-nav-panel[data-sce-theme="white"]
+  .sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected):hover {
+  color: var(--foreground);
   background: transparent;
   box-shadow: none;
 }

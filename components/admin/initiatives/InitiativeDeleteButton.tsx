@@ -64,7 +64,7 @@ export default function InitiativeDeleteButton({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setError(data?.error ?? "Initiative konnte nicht gelöscht werden.");
+        setError(data?.error ?? "Vorhaben konnte nicht gelöscht werden.");
         return;
       }
 
@@ -92,7 +92,7 @@ export default function InitiativeDeleteButton({
       <Dialog
         open={open}
         onClose={() => !deleting && setOpen(false)}
-        title="Initiative endgültig löschen"
+        title="Vorhaben endgültig löschen"
         description={`„${initiativeTitle}" dauerhaft und unwiderruflich aus dem System entfernen.`}
         footer={
           <div className="flex flex-col gap-2">
@@ -134,7 +134,7 @@ export default function InitiativeDeleteButton({
               <div>
                 <p className="mb-2 font-medium text-[var(--foreground)]">Wird gelöscht:</p>
                 <ul className="ml-4 list-disc space-y-1">
-                  <li>Initiative &bdquo;{initiativeTitle}&ldquo;</li>
+                  <li>Vorhaben &bdquo;{initiativeTitle}&ldquo;</li>
                 </ul>
               </div>
             </>

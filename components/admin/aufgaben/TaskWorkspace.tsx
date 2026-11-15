@@ -10,7 +10,7 @@ import {
   useTransition,
   type KeyboardEvent,
 } from "react";
-import type { TaskStatus } from "@prisma/client";
+import type { TaskContextType, TaskStatus } from "@prisma/client";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -61,6 +61,11 @@ import {
   serializeTaskDescriptionForStorage,
   storedTaskDescriptionIsEmpty,
 } from "@/lib/tasks/task-description";
+import { TaskWorkspaceAssociationsSection } from "./TaskWorkspaceAssociationsSection";
+import { taskWorkspaceContextSectionLabel } from "@/lib/tasks/task-workspace-context-section-labels";
+import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { PageShell } from "@/components/ui/page";
+import { DetailPagePattern } from "@/components/ui/patterns";
 
 function InlineTitle({
   task,
@@ -146,12 +151,15 @@ function InlineTitle({
 function TaskContextSection({
   taskId,
   context,
+  contextType,
   canEdit,
 }: {
   taskId: string;
   context: TaskContextPresentation | null;
+  contextType: TaskContextType | null;
   canEdit: boolean;
 }) {
+  const sectionLabel = taskWorkspaceContextSectionLabel(contextType ?? undefined);
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -162,7 +170,7 @@ function TaskContextSection({
     return (
       <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Kontext
+          {sectionLabel}
         </p>
         <form
           className="mt-2 space-y-2"
@@ -227,7 +235,7 @@ function TaskContextSection({
           className="text-sm text-[var(--sce-primary)] hover:underline"
           onClick={() => setEditing(true)}
         >
-          Kontext hinzufügen
+          {sectionLabel} hinzufügen
         </button>
       </section>
     ) : null;
@@ -237,7 +245,7 @@ function TaskContextSection({
     <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
       <div className="flex items-start justify-between gap-2">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Kontext
+          {sectionLabel}
         </p>
         {canEdit ? (
           <button
@@ -249,17 +257,22 @@ function TaskContextSection({
           </button>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-[var(--text-2)]">
-        {context.typeLabel}
-        {context.title ? ` · ${context.title}` : ""}
-      </p>
+      {context.href ? (
+        <Link
+          href={context.href}
+          className="sce-link-primary mt-1.5 inline-block text-sm font-medium"
+          aria-label={`${context.title ?? context.typeLabel} öffnen`}
+        >
+          {context.title ?? context.typeLabel}
+        </Link>
+      ) : (
+        <p className="mt-1.5 text-sm text-[var(--text-2)]">
+          {context.typeLabel}
+          {context.title ? ` · ${context.title}` : ""}
+        </p>
+      )}
       {context.subtitle ? (
         <p className="text-xs text-[var(--muted)]">{context.subtitle}</p>
-      ) : null}
-      {context.href ? (
-        <Link href={context.href} className="sce-link-primary mt-1 inline-block text-sm">
-          {context.title ?? context.typeLabel} öffnen →
-        </Link>
       ) : null}
     </section>
   );
@@ -506,6 +519,7 @@ export function TaskWorkspacePanel({
   locale,
   timeZone,
   backHref,
+  returnContextLabel,
   presentation,
   currentUserId,
   onClose,
@@ -530,6 +544,7 @@ export function TaskWorkspacePanel({
     follow,
     documentReferences,
     accessGrants,
+    associations,
   } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -578,6 +593,409 @@ export function TaskWorkspacePanel({
   );
 
   const isModal = presentation === "modal";
+  const isPage = presentation === "page";
+
+  const overflowMenu = (
+    <div className="relative">
+      <button
+        type="button"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
+        aria-label="Aktionen"
+        onClick={() => setMenuOpen((v) => !v)}
+        data-testid="task-workspace-overflow"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {menuOpen ? (
+        <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
+          {capabilities.canComplete && task.status !== "DONE" && task.status !== "CANCELLED" ? (
+            <button
+              type="button"
+              className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
+              disabled={pending}
+              onClick={() =>
+                runAction(() => {
+                  const fd = new FormData();
+                  fd.set("taskId", task.id);
+                  return completeAufgabeAction(fd);
+                })
+              }
+            >
+              Aufgabe abschließen
+            </button>
+          ) : null}
+          {capabilities.canCancel && task.status !== "CANCELLED" ? (
+            <button
+              type="button"
+              className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
+              disabled={pending}
+              onClick={() =>
+                runAction(() => {
+                  const fd = new FormData();
+                  fd.set("taskId", task.id);
+                  return cancelAufgabeAction(fd);
+                })
+              }
+            >
+              Abbrechen
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const mainColumn = (
+    <div className="min-w-0 space-y-5">
+      <InlineDescription task={task} canEdit={capabilities.canEditDescription} />
+
+      {!task.parentTaskId ? (
+        <section aria-labelledby="task-subtasks-heading">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 id="task-subtasks-heading" className="text-sm font-semibold text-[var(--foreground)]">
+              Teilaufgaben
+            </h2>
+            {progress.totalCount > 0 ? (
+              <span className="text-xs text-[var(--muted)]" data-testid="task-workspace-progress">
+                {progress.label}
+              </span>
+            ) : null}
+          </div>
+          {progress.totalCount > 0 ? (
+            <div
+              className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress.percent}
+              data-testid="task-workspace-progress-bar"
+            >
+              <div
+                className="h-full rounded-full bg-[var(--primary)] transition-[width]"
+                style={{ width: `${Math.min(100, progress.percent)}%` }}
+              />
+            </div>
+          ) : null}
+          {openSubtaskCount > 0 || nextSubtaskDueAt ? (
+            <p className="mb-2 text-xs text-[var(--muted)]" data-testid="task-workspace-subtask-summary">
+              {openSubtaskCount > 0
+                ? `${openSubtaskCount} offene Teilaufgabe${openSubtaskCount === 1 ? "" : "n"}`
+                : null}
+              {openSubtaskCount > 0 && nextSubtaskDueAt ? " · " : null}
+              {nextSubtaskDueAt
+                ? `Nächste Frist: ${presentTaskDeadline({
+                    dueAt: nextSubtaskDueAt,
+                    status: "OPEN",
+                    locale,
+                    timeZone,
+                  }).label}`
+                : null}
+            </p>
+          ) : null}
+          {subtasks.length > 0 ? (
+            <ul className="divide-y divide-[var(--border)]/60 rounded-lg border border-[var(--border)]">
+              {subtasks.map((sub) => {
+                const subDeadline = presentTaskDeadline({
+                  dueAt: sub.dueAt,
+                  status: sub.status,
+                  locale,
+                  timeZone,
+                });
+                return (
+                  <li key={sub.id} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 text-left text-sm font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
+                      onClick={() => navigateToTask(sub.id)}
+                      data-testid={`task-workspace-subtask-${sub.id}`}
+                    >
+                      {sub.title}
+                    </button>
+                    <span className={taskStatusBadgeClass(sub.status)}>
+                      {taskStatusPresentation(sub.status).label}
+                    </span>
+                    <AssigneeAvatars assignees={sub.assignees} />
+                    <span className="text-xs text-[var(--muted)]">{subDeadline.label || "—"}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">Noch keine Teilaufgaben.</p>
+          )}
+          <SubtaskCreateInline parentTaskId={task.id} canCreate={capabilities.canCreateSubtask} />
+        </section>
+      ) : null}
+
+      <TaskContextSection
+        taskId={task.id}
+        context={context}
+        contextType={task.contextType}
+        canEdit={capabilities.canEditContext}
+      />
+
+      <TaskWorkspaceAssociationsSection associations={associations} />
+
+      <TaskDocumentReferencesSection
+        taskId={task.id}
+        references={documentReferences}
+        canLink={capabilities.canLinkDocuments}
+      />
+
+      <div>
+        <TaskFollowControl taskId={task.id} initialState={follow} />
+        <TaskActivitySection
+          taskId={task.id}
+          currentUserId={currentUserId}
+          canCollaborate={capabilities.canCollaborate}
+          locale={locale}
+          timeZone={timeZone}
+        />
+      </div>
+    </div>
+  );
+
+  const sidebarColumn = (
+    <aside className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
+      <PropertyRow label="Status">
+        {capabilities.canEditStatus ? (
+          <select
+            className="fca-input w-full text-sm"
+            value={task.status}
+            disabled={pending}
+            onChange={(e) =>
+              runAction(() => {
+                const fd = new FormData();
+                fd.set("taskId", task.id);
+                fd.set("status", e.target.value);
+                return updateAufgabeStatusAction(fd);
+              })
+            }
+            data-testid="task-workspace-status"
+          >
+            {(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] as TaskStatus[]).map((s) => (
+              <option key={s} value={s}>
+                {taskStatusPresentation(s).label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className={taskStatusBadgeClass(task.status)}>
+            <TaskStatusLabel status={task.status} />
+          </span>
+        )}
+      </PropertyRow>
+
+      <PropertyRow label="Verantwortlich">
+        <AssigneeEditor
+          key={task.assignees
+            .map((a) => a.userId)
+            .slice()
+            .sort()
+            .join(",")}
+          task={task}
+          canAssign={capabilities.canAssign}
+          pending={pending}
+          onAssign={(userIds) =>
+            runAction(() => {
+              const fd = new FormData();
+              fd.set("taskId", task.id);
+              fd.set("assigneeUserIds", userIds.join(","));
+              return assignAufgabeAction(fd);
+            })
+          }
+        />
+      </PropertyRow>
+
+      <PropertyRow label="Priorität">
+        {capabilities.canEditPriority ? (
+          <TaskPriorityField
+            value={task.priority}
+            omitName
+            disabled={pending}
+            testId="task-workspace-priority"
+            onValueChange={(next) =>
+              runAction(() => {
+                const fd = new FormData();
+                fd.set("taskId", task.id);
+                fd.set("priority", next);
+                return updateAufgabePriorityAction(fd);
+              })
+            }
+          />
+        ) : (
+          <TaskPriorityIconLabel priority={task.priority} />
+        )}
+      </PropertyRow>
+
+      <PropertyRow label={CD_TASK_WORKSPACE_COPY.dueAt}>
+        {capabilities.canEditDueAt ? (
+          <TaskDeadlineReminderEditor
+            task={task}
+            timeZone={timeZone}
+            disabled={pending}
+            onError={(message) => setActionError(message)}
+            onUpdated={() => router.refresh()}
+          />
+        ) : (
+          <span
+            className={cn(
+              "text-sm tabular-nums",
+              deadline.emphasis === "urgent" && "font-medium text-[var(--sce-color-status-warning)]",
+              deadline.emphasis === "attention" && "text-[var(--sce-color-status-warning)]",
+            )}
+          >
+            {deadline.label || "Kein Termin"}
+          </span>
+        )}
+      </PropertyRow>
+
+      {seriesRecurrenceLabel ? (
+        <PropertyRow label="Wiederkehrende Aufgabe">
+          {canOpenSeriesWorkspace && seriesId ? (
+            <Link
+              href={taskSeriesHref(seriesId)}
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--sce-primary)] hover:underline"
+              data-testid="task-workspace-series-link"
+            >
+              <Repeat2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {seriesTitle ?? seriesRecurrenceLabel}
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-2)]">
+              <Repeat2 className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
+              {seriesTitle ?? seriesRecurrenceLabel}
+            </span>
+          )}
+          {seriesTitle ? (
+            <p className="mt-0.5 text-xs text-[var(--muted)]">{seriesRecurrenceLabel}</p>
+          ) : null}
+        </PropertyRow>
+      ) : null}
+
+      {provenance && provenance.links.length > 0 ? (
+        <PropertyRow label="Entstanden aus">
+          <ul className="space-y-1 text-sm text-[var(--text-2)]">
+            {provenance.links.map((link) => (
+              <li key={`${link.kind}-${link.label}`}>
+                {link.href && !link.restricted ? (
+                  <Link href={link.href} className="font-medium text-[#0b4aa2] hover:underline">
+                    {link.label}
+                  </Link>
+                ) : (
+                  <span>{link.restricted ? "Eingeschränkter Bezug" : link.label}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </PropertyRow>
+      ) : null}
+
+      <TaskOrgVisibilityEditor
+        task={task}
+        orgUnitOptions={orgUnitOptions}
+        orgUnitDisplayLabel={orgUnitDisplayLabel}
+        accessGrants={accessGrants}
+        canEdit={capabilities.canEditOrgVisibility}
+      />
+
+      <details className="rounded-md border border-[var(--border)]/70 px-3 py-2" data-testid="task-workspace-system-meta">
+        <summary className="cursor-pointer text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          System &amp; Verlauf
+        </summary>
+        <div className="mt-3 space-y-3">
+          <PropertyRow label="Erstellt von">
+            <span className="text-sm text-[var(--text-2)]">
+              {creator?.displayName ?? TASK_CREATOR_UNAVAILABLE_LABEL}
+            </span>
+          </PropertyRow>
+          <PropertyRow label="Erstellt am">
+            <span className="text-xs text-[var(--muted)]">
+              {new Date(task.createdAt).toLocaleString(locale, { timeZone })}
+            </span>
+          </PropertyRow>
+          <PropertyRow label="Aktualisiert">
+            <span className="text-xs text-[var(--muted)]">
+              {new Date(task.updatedAt).toLocaleString(locale, { timeZone })}
+            </span>
+          </PropertyRow>
+        </div>
+      </details>
+
+      {capabilities.readOnly ? (
+        <p className="rounded-md border border-[var(--border)] bg-[var(--surface-2)]/40 px-2 py-1.5 text-xs text-[var(--muted)]">
+          Nur-Lese-Zugriff — Änderungen sind nicht erlaubt.
+        </p>
+      ) : null}
+    </aside>
+  );
+
+  const bodyGrid = (
+    <div
+      className={cn(
+        "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]",
+        isModal && cn(SCE_DIALOG_BODY, "min-h-0 flex-1 overflow-y-auto overscroll-contain"),
+      )}
+      data-task-workspace-scroll-body={isModal ? "true" : undefined}
+      data-task-workspace-page-body={isPage ? "true" : undefined}
+    >
+      {mainColumn}
+      {sidebarColumn}
+    </div>
+  );
+
+  if (isPage) {
+    return (
+      <PageShell fullWidth>
+        <DetailPagePattern
+          eyebrow="Aufgabe"
+          title={task.title}
+          summary={
+            parentTask ? (
+              <p className="text-sm text-[var(--muted)]">
+                Übergeordnete Aufgabe:{" "}
+                <button
+                  type="button"
+                  className="text-[var(--primary)] hover:underline"
+                  onClick={() => navigateToTask(parentTask.id)}
+                >
+                  {parentTask.title}
+                </button>
+              </p>
+            ) : null
+          }
+          headerBadge={headerStatus}
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Aufgaben", href: "/dashboard/aufgaben" },
+            { label: task.title },
+          ]}
+          headerActions={
+            <div className="flex items-center gap-2">
+              <Link
+                href={backHref}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3.5 py-2 text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                data-testid="task-workspace-back"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {returnContextLabel ?? "Zurück zur Übersicht"}
+              </Link>
+              {overflowMenu}
+            </div>
+          }
+        >
+          <div data-testid="task-workspace" data-task-workspace-presentation="page">
+            {actionError ? (
+              <p className="mb-4 rounded-md border border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] px-3 py-2 text-sm text-[var(--sce-color-status-error)]">
+                {actionError}
+              </p>
+            ) : null}
+            {bodyGrid}
+          </div>
+        </DetailPagePattern>
+      </PageShell>
+    );
+  }
 
   return (
     <div
@@ -638,354 +1056,17 @@ export function TaskWorkspacePanel({
               <X className="h-4 w-4" />
             </button>
           ) : null}
-          <div className="relative">
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
-              aria-label="Aktionen"
-              onClick={() => setMenuOpen((v) => !v)}
-              data-testid="task-workspace-overflow"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-            {menuOpen ? (
-              <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-                {capabilities.canComplete && task.status !== "DONE" && task.status !== "CANCELLED" ? (
-                  <button
-                    type="button"
-                    className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                    disabled={pending}
-                    onClick={() =>
-                      runAction(() => {
-                        const fd = new FormData();
-                        fd.set("taskId", task.id);
-                        return completeAufgabeAction(fd);
-                      })
-                    }
-                  >
-                    Aufgabe abschließen
-                  </button>
-                ) : null}
-                {capabilities.canCancel && task.status !== "CANCELLED" ? (
-                  <button
-                    type="button"
-                    className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                    disabled={pending}
-                    onClick={() =>
-                      runAction(() => {
-                        const fd = new FormData();
-                        fd.set("taskId", task.id);
-                        return cancelAufgabeAction(fd);
-                      })
-                    }
-                  >
-                    Abbrechen
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+          {overflowMenu}
         </div>
       </header>
 
       {actionError ? (
-        <p className="border-b border-red-500/20 bg-red-950/20 px-6 py-2 text-sm text-red-200">
+        <p className="border-b border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] px-6 py-2 text-sm text-[var(--sce-color-status-error)]">
           {actionError}
         </p>
       ) : null}
 
-      <div
-        className={cn(
-          SCE_DIALOG_BODY,
-          "min-h-0 overscroll-contain",
-          "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]",
-        )}
-        data-task-workspace-scroll-body="true"
-      >
-        <div className="min-w-0 space-y-5">
-          <InlineDescription task={task} canEdit={capabilities.canEditDescription} />
-
-          {!task.parentTaskId ? (
-            <section aria-labelledby="task-subtasks-heading">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h2 id="task-subtasks-heading" className="text-sm font-semibold text-[var(--foreground)]">
-                  Teilaufgaben
-                </h2>
-                {progress.totalCount > 0 ? (
-                  <span className="text-xs text-[var(--muted)]" data-testid="task-workspace-progress">
-                    {progress.label}
-                  </span>
-                ) : null}
-              </div>
-              {progress.totalCount > 0 ? (
-                <div
-                  className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={progress.percent}
-                  data-testid="task-workspace-progress-bar"
-                >
-                  <div
-                    className="h-full rounded-full bg-[var(--primary)] transition-[width]"
-                    style={{ width: `${Math.min(100, progress.percent)}%` }}
-                  />
-                </div>
-              ) : null}
-              {openSubtaskCount > 0 || nextSubtaskDueAt ? (
-                <p className="mb-2 text-xs text-[var(--muted)]" data-testid="task-workspace-subtask-summary">
-                  {openSubtaskCount > 0
-                    ? `${openSubtaskCount} offene Teilaufgabe${openSubtaskCount === 1 ? "" : "n"}`
-                    : null}
-                  {openSubtaskCount > 0 && nextSubtaskDueAt ? " · " : null}
-                  {nextSubtaskDueAt
-                    ? `Nächste Frist: ${presentTaskDeadline({
-                        dueAt: nextSubtaskDueAt,
-                        status: "OPEN",
-                        locale,
-                        timeZone,
-                      }).label}`
-                    : null}
-                </p>
-              ) : null}
-              {subtasks.length > 0 ? (
-                <ul className="divide-y divide-[var(--border)]/60 rounded-lg border border-[var(--border)]">
-                  {subtasks.map((sub) => {
-                    const subDeadline = presentTaskDeadline({
-                      dueAt: sub.dueAt,
-                      status: sub.status,
-                      locale,
-                      timeZone,
-                    });
-                    return (
-                      <li key={sub.id} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-                        <button
-                          type="button"
-                          className="min-w-0 flex-1 text-left text-sm font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
-                          onClick={() => navigateToTask(sub.id)}
-                          data-testid={`task-workspace-subtask-${sub.id}`}
-                        >
-                          {sub.title}
-                        </button>
-                        <span className={taskStatusBadgeClass(sub.status)}>
-                          {taskStatusPresentation(sub.status).label}
-                        </span>
-                        <AssigneeAvatars assignees={sub.assignees} />
-                        <span className="text-xs text-[var(--muted)]">{subDeadline.label || "—"}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-sm text-[var(--muted)]">Noch keine Teilaufgaben.</p>
-              )}
-              <SubtaskCreateInline
-                parentTaskId={task.id}
-                canCreate={capabilities.canCreateSubtask}
-              />
-            </section>
-          ) : null}
-
-          <TaskContextSection
-            taskId={task.id}
-            context={context}
-            canEdit={capabilities.canEditContext}
-          />
-
-          <TaskDocumentReferencesSection
-            taskId={task.id}
-            references={documentReferences}
-            canLink={capabilities.canLinkDocuments}
-          />
-
-          <div className="space-y-2">
-            <TaskFollowControl taskId={task.id} initialState={follow} />
-            <TaskActivitySection
-              taskId={task.id}
-              currentUserId={currentUserId}
-              canCollaborate={capabilities.canCollaborate}
-              locale={locale}
-              timeZone={timeZone}
-            />
-          </div>
-        </div>
-
-        <aside className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
-          <PropertyRow label="Status">
-            {capabilities.canEditStatus ? (
-              <select
-                className="fca-input w-full text-sm"
-                value={task.status}
-                disabled={pending}
-                onChange={(e) =>
-                  runAction(() => {
-                    const fd = new FormData();
-                    fd.set("taskId", task.id);
-                    fd.set("status", e.target.value);
-                    return updateAufgabeStatusAction(fd);
-                  })
-                }
-                data-testid="task-workspace-status"
-              >
-                {(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] as TaskStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {taskStatusPresentation(s).label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className={taskStatusBadgeClass(task.status)}>
-                <TaskStatusLabel status={task.status} />
-              </span>
-            )}
-          </PropertyRow>
-
-          <PropertyRow label="Verantwortlich">
-            <AssigneeEditor
-              key={task.assignees
-                .map((a) => a.userId)
-                .slice()
-                .sort()
-                .join(",")}
-              task={task}
-              canAssign={capabilities.canAssign}
-              pending={pending}
-              onAssign={(userIds) =>
-                runAction(() => {
-                  const fd = new FormData();
-                  fd.set("taskId", task.id);
-                  fd.set("assigneeUserIds", userIds.join(","));
-                  return assignAufgabeAction(fd);
-                })
-              }
-            />
-          </PropertyRow>
-
-          <PropertyRow label="Priorität">
-            {capabilities.canEditPriority ? (
-              <TaskPriorityField
-                value={task.priority}
-                omitName
-                disabled={pending}
-                testId="task-workspace-priority"
-                onValueChange={(next) =>
-                  runAction(() => {
-                    const fd = new FormData();
-                    fd.set("taskId", task.id);
-                    fd.set("priority", next);
-                    return updateAufgabePriorityAction(fd);
-                  })
-                }
-              />
-            ) : (
-              <TaskPriorityIconLabel priority={task.priority} />
-            )}
-          </PropertyRow>
-
-          <PropertyRow label="Deadline">
-            {capabilities.canEditDueAt ? (
-              <TaskDeadlineReminderEditor
-                task={task}
-                timeZone={timeZone}
-                disabled={pending}
-                onError={(message) => setActionError(message)}
-                onUpdated={() => router.refresh()}
-              />
-            ) : (
-              <span
-                className={cn(
-                  "text-sm tabular-nums",
-                  deadline.emphasis === "urgent" && "font-medium text-orange-400",
-                  deadline.emphasis === "attention" && "text-amber-800",
-                )}
-              >
-                {deadline.label || "Kein Termin"}
-              </span>
-            )}
-          </PropertyRow>
-
-          {seriesRecurrenceLabel ? (
-            <PropertyRow label="Wiederkehrende Aufgabe">
-              {canOpenSeriesWorkspace && seriesId ? (
-                <Link
-                  href={taskSeriesHref(seriesId)}
-                  className="inline-flex items-center gap-1.5 text-sm text-[var(--sce-primary)] hover:underline"
-                  data-testid="task-workspace-series-link"
-                >
-                  <Repeat2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {seriesTitle ?? seriesRecurrenceLabel}
-                </Link>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-2)]">
-                  <Repeat2 className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
-                  {seriesTitle ?? seriesRecurrenceLabel}
-                </span>
-              )}
-              {seriesTitle ? (
-                <p className="mt-0.5 text-xs text-[var(--muted)]">{seriesRecurrenceLabel}</p>
-              ) : null}
-            </PropertyRow>
-          ) : null}
-
-          {context ? (
-            <PropertyRow label="Kontext">
-              <span className="text-sm text-[var(--text-2)]">
-                {context.compactSecondary ?? context.typeLabel}
-              </span>
-            </PropertyRow>
-          ) : null}
-
-          {provenance && provenance.links.length > 0 ? (
-            <PropertyRow label="Entstanden aus">
-              <ul className="space-y-1 text-sm text-[var(--text-2)]">
-                {provenance.links.map((link) => (
-                  <li key={`${link.kind}-${link.label}`}>
-                    {link.href && !link.restricted ? (
-                      <Link href={link.href} className="font-medium text-[#0b4aa2] hover:underline">
-                        {link.label}
-                      </Link>
-                    ) : (
-                      <span>{link.restricted ? "Eingeschränkter Bezug" : link.label}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </PropertyRow>
-          ) : null}
-
-          <TaskOrgVisibilityEditor
-            task={task}
-            orgUnitOptions={orgUnitOptions}
-            orgUnitDisplayLabel={orgUnitDisplayLabel}
-            accessGrants={accessGrants}
-            canEdit={capabilities.canEditOrgVisibility}
-          />
-
-          <PropertyRow label="Erstellt von">
-            <span className="text-sm text-[var(--text-2)]">
-              {creator?.displayName ?? TASK_CREATOR_UNAVAILABLE_LABEL}
-            </span>
-          </PropertyRow>
-
-          <PropertyRow label="Erstellt am">
-            <span className="text-xs text-[var(--muted)]">
-              {new Date(task.createdAt).toLocaleString(locale, { timeZone })}
-            </span>
-          </PropertyRow>
-
-          <PropertyRow label="Aktualisiert">
-            <span className="text-xs text-[var(--muted)]">
-              {new Date(task.updatedAt).toLocaleString(locale, { timeZone })}
-            </span>
-          </PropertyRow>
-
-          {capabilities.readOnly ? (
-            <p className="rounded-md border border-[var(--border)] bg-[var(--surface-2)]/40 px-2 py-1.5 text-xs text-[var(--muted)]">
-              Nur-Lese-Zugriff — Änderungen sind nicht erlaubt.
-            </p>
-          ) : null}
-        </aside>
-      </div>
+      {bodyGrid}
     </div>
   );
 }

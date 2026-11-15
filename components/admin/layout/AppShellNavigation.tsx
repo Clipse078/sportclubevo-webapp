@@ -50,6 +50,7 @@ import {
   ScePrimaryNavigation,
   SceTenantContextRail,
   SceTenantIdentityBar,
+  SceDomainNavOverlayScrim,
 } from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
@@ -416,6 +417,12 @@ function AppShellNavigationInner({
           onClose={closeDomainPanel}
         />
       ) : null}
+
+      <SceDomainNavOverlayScrim
+        open={Boolean(openDomainPanelId && openDomainPanel && openDomainPanelItems.length > 0)}
+        headerRef={headerRef}
+        onClose={closeDomainPanel}
+      />
 
       <nav
         aria-label={t("mobilePrimaryNavAria")}

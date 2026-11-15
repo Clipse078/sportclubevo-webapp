@@ -46,6 +46,7 @@ export async function computeInitiativeProgressSnapshot(
 
   const contextFilters = [
     { contextType: TaskContextType.INITIATIVE, contextId: initiativeId },
+    { primaryInitiativeId: initiativeId },
     ...(decisionIds.length > 0
       ? [{ contextType: TaskContextType.MEETING_DECISION, contextId: { in: decisionIds } }]
       : []),

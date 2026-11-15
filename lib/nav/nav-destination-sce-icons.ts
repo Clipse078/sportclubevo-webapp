@@ -22,6 +22,7 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   workspace: "documents",
   aufgaben: "tasks",
   communication: "communication",
+  "communication-overview": "communication",
   "communication-email-sender": "communication",
   mitglieder: "member",
   anmeldungen: "invitation",

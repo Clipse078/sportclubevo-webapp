@@ -1,7 +1,5 @@
-/** DS2-07F governance marker: SceWorkspaceChrome (record panel chrome in TaskWorkspace). */
+/** DS2-07F governance marker: dedicated task page via DetailPagePattern (TaskWorkspace page mode). */
 import { notFound } from "next/navigation";
-import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
-import { cn } from "@/lib/cn";
 import { TaskWorkspacePanel } from "@/components/admin/aufgaben/TaskWorkspace";
 import { loadTaskWorkspacePageData } from "@/lib/tasks/task-workspace-page";
 
@@ -22,23 +20,17 @@ export default async function AufgabenTaskDetailPage({ params, searchParams }: P
   }
 
   return (
-    <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      <main
-        data-sce-page-shell
-        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}
-      >
-        <TaskWorkspacePanel
-          bundle={data.bundle}
-          assigneeOptions={data.assigneeOptions}
-          orgUnitOptions={data.orgUnitOptions}
-          orgUnitDisplayLabel={data.orgUnitDisplayLabel}
-          locale={data.locale}
-          timeZone={data.timeZone}
-          backHref={data.backHref}
-          currentUserId={data.currentUserId}
-          presentation="page"
-        />
-      </main>
-    </div>
+    <TaskWorkspacePanel
+      bundle={data.bundle}
+      assigneeOptions={data.assigneeOptions}
+      orgUnitOptions={data.orgUnitOptions}
+      orgUnitDisplayLabel={data.orgUnitDisplayLabel}
+      locale={data.locale}
+      timeZone={data.timeZone}
+      backHref={data.backHref}
+      returnContextLabel={data.returnContextLabel}
+      currentUserId={data.currentUserId}
+      presentation="page"
+    />
   );
 }

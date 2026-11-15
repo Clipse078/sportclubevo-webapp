@@ -70,7 +70,10 @@ describe("SCE-NAVBAR-UPGRADE-01-R9 domain panel interactions", () => {
 
     const panel = screen.getByTestId("sce-domain-nav-panel");
     expect(panel).toHaveAttribute("data-sce-domain-nav-panel-mode", "hierarchical");
-    expect(within(panel).getByText("Organisationseinheiten")).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: /^Organisation$/i })).toHaveAttribute(
+      "href",
+      "/dashboard/org-units",
+    );
 
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("sce-domain-nav-panel")).not.toBeInTheDocument();

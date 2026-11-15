@@ -15,7 +15,7 @@ export default function CreateTargetComposerDialog({ open, onClose }: Props) {
       open={open}
       onClose={onClose}
       title="Neues Ziel"
-      description="Strategisches Ziel mit Metriken — Vorlagen optional im Composer."
+      description="Strategisches Ziel mit Kennzahlen — Vorlagen optional im Composer."
       testId="create-target-composer"
     >
       <ClubDevelopmentComposerCancelBridge onClose={onClose}>

@@ -6,8 +6,21 @@ import type { TaskContextType } from "@prisma/client";
 
 const TASK_BASE = "/dashboard/aufgaben";
 
-export function taskWorkspaceHref(taskId: string): string {
-  return `${TASK_BASE}/${encodeURIComponent(taskId)}`;
+export function taskWorkspaceHref(taskId: string, options?: { returnTo?: string | null }): string {
+  const base = `${TASK_BASE}/${encodeURIComponent(taskId)}`;
+  const returnTo = options?.returnTo?.trim();
+  if (!returnTo) {
+    return base;
+  }
+  const params = new URLSearchParams({ returnTo });
+  return `${base}?${params.toString()}`;
+}
+
+export function parseTaskWorkspaceReturnTo(
+  searchParams: Record<string, string | undefined>,
+): string | null {
+  const raw = searchParams.returnTo ?? searchParams.from;
+  return raw?.trim() ? raw.trim() : null;
 }
 
 /** Stable deep link to a task timeline comment anchor. */

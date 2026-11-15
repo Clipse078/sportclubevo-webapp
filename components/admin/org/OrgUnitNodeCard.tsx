@@ -113,7 +113,7 @@ export default function OrgUnitNodeCard({
       data-testid={`org-unit-node-${unit.id}`}
       data-org-node-density={density}
       className={cn(
-        "group relative flex h-full w-full flex-col justify-center rounded-xl border px-3 py-2.5 text-left shadow-sm transition",
+        "group/org-node relative flex h-full w-full flex-col justify-start rounded-xl border px-3 py-2 text-left shadow-sm transition",
         "bg-[var(--surface-2)]/95 backdrop-blur-[2px]",
         "border-[var(--border)] hover:border-[var(--border-strong)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-surface-muted)]",
@@ -156,6 +156,7 @@ export default function OrgUnitNodeCard({
             type="button"
             className="mt-0.5 shrink-0 rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)]"
             aria-label={unit.collapsed ? "Zweig aufklappen" : "Zweig zuklappen"}
+            title={unit.collapsed ? "Zweig aufklappen" : "Zweig zuklappen"}
             aria-expanded={!unit.collapsed}
             onClick={(e) => {
               e.stopPropagation();
@@ -178,14 +179,30 @@ export default function OrgUnitNodeCard({
 
         <div className="min-w-0 flex-1">
           <p
+            id={`org-unit-name-${unit.id}`}
             className={cn(
-              "truncate font-semibold leading-tight text-[var(--text-1)]",
-              density === "MICRO" ? "text-[11px]" : density === "COMPACT" ? "text-[13px]" : "text-sm",
+              "font-semibold leading-snug text-[var(--text-1)]",
+              density === "MICRO"
+                ? "line-clamp-1 text-[11px]"
+                : density === "COMPACT"
+                  ? "line-clamp-2 break-words text-[13px]"
+                  : "line-clamp-2 break-words text-sm",
             )}
             title={unit.name}
+            aria-describedby={`org-unit-name-tip-${unit.id}`}
           >
             {unit.name}
           </p>
+          <span
+            id={`org-unit-name-tip-${unit.id}`}
+            role="tooltip"
+            className={cn(
+              "pointer-events-none absolute left-2 right-2 top-full z-20 mt-1 hidden rounded-md border border-[var(--border-strong)] bg-[var(--surface-3)] px-2 py-1.5 text-xs font-medium leading-snug text-[var(--text-1)] shadow-md",
+              "group-hover/org-node:block group-focus-within/org-node:block",
+            )}
+          >
+            {unit.name}
+          </span>
           {showType ? (
             <p
               className="truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]"

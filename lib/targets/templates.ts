@@ -475,5 +475,5 @@ export const CATEGORY_LABELS: Record<TargetTemplate["category"], string> = {
   FINANZEN: "Finanzen & Infrastruktur",
   AUSBILDUNG: "Ausbildung",
   MEDIEN_SOZIALES: "Medien & Soziales",
-  GOVERNANCE: "Governance",
+  GOVERNANCE: "Vereinsführung",
 };

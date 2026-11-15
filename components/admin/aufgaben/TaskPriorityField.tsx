@@ -38,9 +38,11 @@ export default function TaskPriorityField({
     onValueChange?.(next);
   }
 
+  const showAdjacentIcon = controlledValue === undefined && onValueChange === undefined;
+
   return (
     <div className="flex items-center gap-2" data-testid={testId}>
-      <TaskPriorityIconLabel priority={value} />
+      {showAdjacentIcon ? <TaskPriorityIconLabel priority={value} /> : null}
       <select
         {...(omitName ? {} : { name })}
         value={value}

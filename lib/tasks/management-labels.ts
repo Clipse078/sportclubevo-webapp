@@ -16,6 +16,16 @@ export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
   URGENT: "Dringend",
 };
 
+export function formatTaskPriorityLabel(
+  priority: TaskPriority | string | null | undefined,
+): string | null {
+  if (!priority) return null;
+  if (priority in TASK_PRIORITY_LABELS) {
+    return TASK_PRIORITY_LABELS[priority as TaskPriority];
+  }
+  return null;
+}
+
 export const TASK_CONTEXT_LABELS: Record<TaskContextType, string> = {
   MATCH: "Spiel",
   TRAINING: "Training",

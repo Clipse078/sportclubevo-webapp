@@ -1,0 +1,184 @@
+/**
+ * SCE-CD-04R3 — Vereinsentwicklung user-facing German product copy.
+ * Presentation labels only; routes, enums and API keys stay unchanged.
+ */
+
+export const CD_NAV_COPY = {
+  initiativeBacklog: "Vorhaben & Prioritäten",
+  implementationPlanning: "Umsetzungsplanung",
+  initiativesEyebrow: "Vorhaben",
+  strategyOverview: "Strategie",
+  initiativesAndTasksHub: "Vorhaben & Aufgaben",
+} as const;
+
+/** PKG-05 — club strategy authoring (Strategie route). */
+export const CD_STRATEGY_AUTHORING_COPY = {
+  sectionTitle: "Clubstrategie",
+  sectionIntro:
+    "Kompakte Ausgangslage und Ausrichtung für den Verein. Schwerpunkte verweisen auf bestehende Ziele — Kennzahlen und Beschreibungen bleiben dort.",
+  situationLabel: "Ausgangslage",
+  situationPlaceholder: "Was ist für die aktuelle Vereinslage wesentlich?",
+  alignmentLabel: "Gemeinsame Ausrichtung",
+  alignmentPlaceholder: "Wohin soll sich der Verein entwickeln?",
+  responsibleLabel: "Verantwortliche Person",
+  unassignedResponsible: "Nicht zugewiesen",
+  periodLabel: "Strategieperiode (Bezeichnung)",
+  periodPlaceholder: "z. B. Saison 2026/27",
+  periodStartLabel: "Periode von",
+  periodEndLabel: "Periode bis",
+  nextReviewLabel: "Nächste Überprüfung",
+  saveAction: "Strategie speichern",
+  focusHeading: "Schwerpunkte",
+  focusHint: "Kurze Liste strategischer Ziele — ohne Zieltexte zu duplizieren.",
+  focusEmpty: "Noch keine Schwerpunkte verknüpft.",
+  meetingLinksHeading: "Verknüpfte Sitzungen & Entscheide",
+  associationHint:
+    "Rückverweis auf Sitzungen und Beschlüsse als Begründung — Speichern ändert keine Freigabe oder Strategiestatus.",
+  documentsHeading: "Strategische Unterlagen",
+  documentsHint: "Leitbild, vereinbarte Strategiedokumente und ergänzende Workspace-Dokumente.",
+  documentsEmpty: "Noch keine Dokumente verknüpft.",
+  docKindLeitbild: "Leitbild",
+  docKindStrategy: "Vereinbarte Strategieunterlagen",
+  docKindSupporting: "Weitere Unterlagen",
+  progressHeading: "Umsetzungsfortschritt & Zielerreichung",
+  progressHint:
+    "Zielerreichung aus Kennzahlen; Umsetzungsfortschritt aus verknüpften Vorhaben — getrennt dargestellt.",
+} as const;
+
+/** PKG-01 — navigation hub copy (routes unchanged). */
+export const CD_OVERVIEW_SHORTCUT_COPY = {
+  strategyDescription:
+    "Fortschrittsübersicht zu Zielen, Kennzahlen und verknüpften Vorhaben — kein Ersatz für Zieldetails.",
+  backlogDescription: "Priorisierte Vorhaben mit Einordnung und Erwartetem Ergebnis.",
+  sprintDescription: "Umsetzungsphasen planen, Aufgaben zuordnen und abschließen.",
+  workHubDescription:
+    "Gemeinsamer Arbeitsbereich für sichtbare Vorhaben und zugehörige Aufgaben — gefilterte Lens, kein Ersatz für die Aufgaben-Inbox.",
+} as const;
+
+/** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
+export const CD_VORHABEN_WORKSPACE_COPY = {
+  intro:
+    "Vorhaben & Aufgaben bündelt sichtbare Vorhaben mit zugehörigen Aufgaben in einer gefilterten Arbeitsansicht. Vorhaben-Details, Ziele, Umsetzungsplanung und die zentrale Aufgaben-Inbox bleiben erreichbar.",
+  shortcutStrategy: "Ziele, Kennzahlen und Fortschritt — Sprung zu Zieldetails oder gefiltertem Backlog.",
+  shortcutBacklog: "Prioritäten und Einordnung — nicht derselbe Einstieg wie dieser Arbeitsbereich.",
+  shortcutSprints: "Root-Aufgaben planen; Unteraufgaben bleiben am übergeordneten Aufgaben-Arbeitsplatz.",
+  shortcutTasksInbox: "Alle Aufgaben mandantenweit — dieser Bereich filtert auf Vereinsentwicklung.",
+  targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
+  searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
+  allInitiatives: "Alle sichtbaren Vorhaben",
+  anyOpenTaskStatus: "Aktive Aufgaben (ohne Abbruch)",
+  focusInitiative: "Fokus:",
+  initiativesHeading: "Vorhaben",
+  tasksHeading: "Zugehörige Aufgaben",
+  rootTasksOnly: "Nur übergeordnete Aufgaben — Unteraufgaben im Aufgaben-Arbeitsplatz.",
+  emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
+  emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  noInitiativeAccess: "Keine Berechtigung zur Vorhaben-Ansicht.",
+  noTaskAccess: "Keine Berechtigung zur Aufgaben-Ansicht.",
+} as const;
+
+export const CD_INITIATIVE_COPY = {
+  singular: "Vorhaben",
+  plural: "Vorhaben",
+  dispositionFilter: "Einordnung",
+  createInBacklog: "Vorhaben im Backlog erfassen",
+  createNew: "Neues Vorhaben",
+  createAction: "Vorhaben erstellen",
+  saveChanges: "Änderungen speichern",
+  notFound: "Vorhaben nicht gefunden",
+  notFoundHeading: "Dieses Vorhaben ist noch nicht erfasst",
+  deleteTitle: "Vorhaben endgültig löschen",
+  deleteFailed: "Vorhaben konnte nicht gelöscht werden.",
+  emptyBacklogManage: "Keine Vorhaben im Backlog. Erfassen Sie das erste Vorhaben oben.",
+  emptyBacklogView: "Keine sichtbaren Vorhaben im Backlog.",
+  composerTitle: "Neues Vorhaben",
+  composerDescription: "Vorhaben im Workspace erfassen — ohne die Übersicht zu verlassen.",
+  withoutInitiative: "Ohne Vorhaben",
+  reviewBanner: "Prüfung & Freigabe",
+} as const;
+
+/** Canonical German labels for development sprint (Umsetzungsphase) lifecycle — presentation only. */
+export const CD_SPRINT_STATUS_LABELS = {
+  PLANNED: "Geplant",
+  ACTIVE: "Aktiv",
+  COMPLETED: "Abgeschlossen",
+} as const;
+
+export const CD_SPRINT_WORKSPACE_COPY = {
+  workspaceAria: "Umsetzungsphase-Arbeitsbereich",
+  tabPlanning: "Planung",
+  tabTaskBoard: "Aufgabenboard",
+  tabReview: "Rückblick",
+  createPhase: "Umsetzungsphase erstellen",
+  startPhase: "Phase starten",
+  closePhase: "Umsetzungsphase abschließen",
+  tasksInPhase: "Aufgaben",
+  removeFromPhase: "Aus Phase entfernen",
+  taskBoardTitle: "Aufgabenboard",
+  goalPlaceholder: "Ziel beschreiben …",
+  noGoalRecorded: "Kein Ziel erfasst.",
+  addedAfterStart: "Nach Start hinzugefügt",
+  committedAtStart: "Zum Start eingeplant",
+  scopeAtStart: "Aufgabenumfang zum Start",
+  scopeChanges: "Änderungen am Aufgabenumfang",
+  futurePhase: "künftige Umsetzungsphase",
+  futurePhaseTitle: "Künftige Umsetzungsphase",
+  expectedResult: "Erwartetes Ergebnis",
+  metrics: "Kennzahlen",
+  boardQuickLink: "Zum Aufgabenboard",
+  closeTargetPhasePerTask: "Ziel-Umsetzungsphase je Aufgabe",
+  chooseTargetPhase: "— Umsetzungsphase wählen —",
+  addTaskToPhase: "Anlegen und zur Umsetzungsphase hinzufügen",
+  taskAssignedToPhase: "Aufgabe wurde der Umsetzungsphase zugeordnet.",
+  phaseAssignmentFailed: "Aufgabe erstellt, Zuordnung zur Umsetzungsphase fehlgeschlagen.",
+} as const;
+
+/** API / service error and status messages for development sprints (Umsetzungsphase). */
+export const CD_SPRINT_API_COPY = {
+  phaseNotFound: "Umsetzungsphase nicht gefunden.",
+  phaseAlreadyCompleted: "Umsetzungsphase ist bereits abgeschlossen.",
+  onlyActivePhaseCanClose: "Nur aktive Umsetzungsphasen können abgeschlossen werden.",
+  phaseGoalResultRequired: "Zielergebnis der Umsetzungsphase ist erforderlich.",
+  completedPhasesCannotBePlanned: "Abgeschlossene Umsetzungsphasen können nicht mehr geplant werden.",
+  closeViaWorkflow: "Umsetzungsphasen werden über den Abschluss-Workflow beendet.",
+  taskAlreadyInPhase: "Aufgabe ist bereits in dieser Umsetzungsphase.",
+  taskNotInPhase: "Aufgabe ist nicht in dieser Umsetzungsphase.",
+  taskAlreadyInOtherPhase: (phaseTitle: string) =>
+    `Aufgabe ist bereits in der Umsetzungsphase „${phaseTitle}" — Aufgaben werden nicht automatisch verschoben.`,
+  taskAlreadyInOtherPhaseShort: "Aufgabe ist bereits einer anderen Umsetzungsphase zugeordnet.",
+  alreadyInPhase: "Bereits in dieser Umsetzungsphase",
+  alreadyInPhaseNamed: (phaseTitle: string) =>
+    `Bereits in der Umsetzungsphase „${phaseTitle}" — Aufgaben werden nicht automatisch verschoben.`,
+  targetPhaseNotFound: "Ziel-Umsetzungsphase nicht gefunden.",
+  cannotMoveToSamePhase: "Aufgabe kann nicht in dieselbe Umsetzungsphase verschoben werden.",
+  completedPhaseNotAllowedAsTarget: "Abgeschlossene Umsetzungsphasen sind als Ziel nicht erlaubt.",
+  targetPhaseRequiredForTask: (taskTitle: string) =>
+    `Für Aufgabe „${taskTitle}" ist eine Ziel-Umsetzungsphase für die Verschiebung erforderlich.`,
+  phaseAssignmentFailed: "Zuordnung zur Umsetzungsphase fehlgeschlagen.",
+} as const;
+
+export const CD_TASK_WORKSPACE_COPY = {
+  primaryInitiative: "Primäres Vorhaben",
+  assignedImplementationPhase: "Zugeordnete Umsetzungsphase",
+  priorImplementationPhases: "Frühere Umsetzungsphasen",
+  returnToImplementationPhase: "Zurück zur Umsetzungsphase",
+  dueAt: "Fällig am",
+} as const;
+
+export const CD_TARGET_COPY = {
+  metricsSection: "Kennzahlen",
+  noMetricsYet: "Noch keine Kennzahlen erfasst.",
+  createWithMetrics: "Strategisches Ziel mit messbaren Kennzahlen erfassen.",
+  createWithMetricsComposer: "Strategisches Ziel mit Kennzahlen — Vorlagen optional im Composer.",
+  progressDetail: "Fortschritt, Kennzahlen und Messwerte im Detail.",
+  linkedInitiativesProgress: "Ziele mit Outcome-Fortschritt, Umsetzungsfortschritt über verknüpfte Vorhaben und Kennzahlen.",
+  backlogDescriptionEinordnung: "Priorisierte Vorhaben mit Einordnung",
+} as const;
+
+export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {
+  return Boolean(returnTo?.includes("/vereinsleitung/sprints/"));
+}
+
+export function formatLinkedInitiativeCount(count: number): string {
+  return count === 1 ? "1 verknüpftes Vorhaben" : `${count} verknüpfte Vorhaben`;
+}

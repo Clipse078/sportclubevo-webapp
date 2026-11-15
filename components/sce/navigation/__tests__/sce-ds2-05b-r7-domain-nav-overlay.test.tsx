@@ -119,9 +119,7 @@ describe("SCE-DS2-05B-R7 domain nav overlay", () => {
     const topBefore = panel.style.top;
     expect(topBefore).toBe("96px");
 
-    const l2Buttons = within(panel).getAllByRole("button");
-    expect(l2Buttons.length).toBeGreaterThan(1);
-    await user.click(l2Buttons[1]!);
+    await user.click(within(panel).getByRole("button", { name: "Mitgliedschaft" }));
 
     expect(screen.getByTestId("sce-domain-nav-panel")).toBeInTheDocument();
     expect(screen.getByTestId("sce-domain-nav-panel").style.top).toBe(topBefore);
@@ -169,7 +167,8 @@ describe("SCE-DS2-05B-R7 domain nav overlay", () => {
 
     await user.click(screen.getByTestId("primary-domain-panel-trigger-club"));
     const panel = screen.getByTestId("sce-domain-nav-panel");
-    const l3 = within(panel).getByText("Organisationseinheiten");
+    await user.click(within(panel).getByRole("button", { name: "Mitgliedschaft" }));
+    const l3 = within(panel).getByRole("link", { name: "Registrierungen" });
     l3.dispatchEvent(new MouseEvent("pointermove", { bubbles: true }));
     expect(screen.getByTestId("sce-domain-nav-panel")).toBeInTheDocument();
   });
@@ -180,6 +179,7 @@ describe("SCE-DS2-05B-R7 domain nav overlay", () => {
     mockAnchorRect(80);
     await user.click(screen.getByTestId("primary-domain-panel-trigger-club"));
     const panel = screen.getByTestId("sce-domain-nav-panel");
+    await user.click(within(panel).getByRole("button", { name: "Mitgliedschaft" }));
     const body = panel.querySelector(".sce-domain-nav-panel-cham-body");
     const l2 = panel.querySelector(".sce-domain-nav-panel-l2");
     const l3 = panel.querySelector(".sce-domain-nav-panel-l3");

@@ -94,7 +94,13 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.2 canonical desktop L1 order", () => {
         expect(items.length).toBeGreaterThan(0);
       }
       if (domain.id === "admin") {
-        expect(items.some((item) => item.key.startsWith("admin-"))).toBe(true);
+        expect(items.map((item) => item.label)).toEqual(
+          expect.arrayContaining([
+            "System & Zugänge",
+            "Stammdaten",
+            "Integrationen & Zuordnungen",
+          ]),
+        );
       }
     }
   });

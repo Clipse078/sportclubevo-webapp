@@ -58,6 +58,8 @@ export const AUTHENTICATED_ROUTE_EXCLUSION_PREFIXES = [
   /** Legacy Vereinsleitung hub surfaces not promoted to canonical nav leaves. */
   "/vereinsleitung/kpis",
   "/vereinsleitung/templates",
+  /** Vereinsleitung strategic workspaces (capability-gated; contextual entry only). */
+  "/vereinsleitung/",
 ] as const;
 
 /** Exact routes that are authenticated but not canonical nav registry leaves. */

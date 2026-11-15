@@ -1,73 +1,78 @@
-import Link from "next/link";
-import { ArrowRight, CheckSquare, Flag } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { getActorContext } from "@/lib/visibility/get-actor-context";
+import { loadVorhabenWorkspace } from "@/lib/club-development/vorhaben-workspace";
+import VorhabenAufgabenWorkspace from "@/components/admin/club-development/VorhabenAufgabenWorkspace";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
+import { CD_NAV_COPY, CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import type { InitiativeStatus, TaskStatus } from "@prisma/client";
 
-export default function VorhabenAufgabenPage() {
+type PageProps = {
+  searchParams?: Promise<{
+    targetId?: string;
+    initiativeId?: string;
+    search?: string;
+    initiativeStatus?: string;
+    taskStatus?: string;
+  }>;
+};
+
+function parseInitiativeStatus(raw: string | undefined): InitiativeStatus | undefined {
+  if (!raw) return undefined;
+  const values = new Set([
+    "PLANNED",
+    "IN_PROGRESS",
+    "ON_TRACK",
+    "ON_HOLD",
+    "COMPLETED",
+    "CANCELLED",
+  ]);
+  return values.has(raw) ? (raw as InitiativeStatus) : undefined;
+}
+
+function parseTaskStatus(raw: string | undefined): TaskStatus | undefined {
+  if (!raw) return undefined;
+  const values = new Set(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"]);
+  return values.has(raw) ? (raw as TaskStatus) : undefined;
+}
+
+export default async function VorhabenAufgabenPage({ searchParams }: PageProps) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
+  const query = (await searchParams) ?? {};
+  const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
+
+  const filters = {
+    search: query.search?.trim() || undefined,
+    initiativeId: query.initiativeId?.trim() || undefined,
+    targetId: query.targetId?.trim() || undefined,
+    initiativeStatus: parseInitiativeStatus(query.initiativeStatus),
+    taskStatus: parseTaskStatus(query.taskStatus),
+  };
+
+  const snapshot = await loadVorhabenWorkspace(actor, filters, {
+    returnToPath: "/vereinsleitung/vorhaben",
+  });
+
   return (
     <PageShell fullWidth>
       <ListPagePattern
         eyebrow="Vereinsentwicklung"
-        title="Vorhaben & Aufgaben"
-        description="Ein gemeinsamer Arbeitsbereich für strategische Vorhaben und zugehörige Aufgaben wird vorbereitet (SCE-CD-WORK)."
+        title={CD_NAV_COPY.initiativesAndTasksHub}
+        description={CD_VORHABEN_WORKSPACE_COPY.intro}
         breadcrumbs={[
           { label: "Verein" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },
-          { label: "Vorhaben & Aufgaben" },
+          { label: CD_NAV_COPY.initiativesAndTasksHub },
         ]}
       >
-        <div className="mb-6 flex items-center gap-2">
-          <Badge variant="warning" size="sm">
-            In Arbeit
-          </Badge>
-          <p className="text-sm text-[var(--text-2)]">
-            Bis der dedizierte Bereich verfügbar ist, nutzen Sie die bestehenden Module.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 max-w-3xl">
-          <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-xs)]">
-            <div className="flex items-center gap-2">
-              <Flag className="h-5 w-5 text-[var(--sce-primary)]" />
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">Initiativen</h2>
-              <Badge variant="success" size="sm">
-                Verfügbar
-              </Badge>
-            </div>
-            <p className="mt-2 text-sm text-[var(--text-2)] leading-relaxed">
-              Strategische Entwicklungsvorhaben mit Fortschritt, Verantwortlichen und
-              Sichtbarkeitssteuerung.
-            </p>
-            <Link
-              href="/vereinsleitung/initiativen"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--sce-primary)] hover:underline"
-            >
-              Zu Initiativen
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </article>
-
-          <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-xs)]">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="h-5 w-5 text-[var(--sce-primary)]" />
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">Aufgaben</h2>
-              <Badge variant="success" size="sm">
-                Verfügbar
-              </Badge>
-            </div>
-            <p className="mt-2 text-sm text-[var(--text-2)] leading-relaxed">
-              Operative Aufgaben und Zuweisungen im zentralen Aufgaben-Bereich.
-            </p>
-            <Link
-              href="/dashboard/aufgaben"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--sce-primary)] hover:underline"
-            >
-              Zu Aufgaben
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </article>
-        </div>
+        <VorhabenAufgabenWorkspace
+          initialSnapshot={snapshot}
+          initialTargetId={filters.targetId ?? null}
+          initialInitiativeId={filters.initiativeId ?? null}
+        />
       </ListPagePattern>
     </PageShell>
   );

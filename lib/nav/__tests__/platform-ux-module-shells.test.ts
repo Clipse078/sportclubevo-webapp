@@ -15,6 +15,8 @@ const CANONICAL_FULL_ORDER = [
   "dashboard",
   "planung",
   "organisation",
+  "teams",
+  "personen",
   "mitglieder",
   "anmeldungen",
   "aufgaben",
@@ -25,14 +27,15 @@ const CANONICAL_FULL_ORDER = [
   "mobile-app",
   "infoboard",
   "trainer-staff",
-  "meetings",
-  "club-entwicklung",
-  "material",
   "finanzen",
   "sponsoring",
   "workspace",
   "formulare-freigaben",
   "vorfaelle-disziplin",
+  "provider-mapping",
+  "communication-email-sender",
+  "vereine",
+  "competitions",
   "administration",
 ];
 
@@ -135,13 +138,10 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       "helfereinsaetze",
       "communication",
       "trainer-staff",
-      "meetings",
-      "club-entwicklung",
-      "material",
-      "finanzen",
       "sponsoring",
       "formulare-freigaben",
       "vorfaelle-disziplin",
+      "communication-email-sender",
       "administration",
     ]);
   });
@@ -177,7 +177,13 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       "formulare-freigaben",
       "vorfaelle-disziplin",
     ]);
-    expect(system!.items.map((i) => i.key)).toEqual(["administration"]);
+    expect(system!.items.map((i) => i.key)).toEqual([
+      "provider-mapping",
+      "communication-email-sender",
+      "vereine",
+      "competitions",
+      "administration",
+    ]);
   });
 
   it("shows Commercial billing only for platform billing.view in platform workspace", () => {

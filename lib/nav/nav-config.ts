@@ -317,57 +317,24 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        // SCE-NAV-IA-REFINEMENT-01: Organisation = strukturelle Einheiten (kein Personen/Teams-Hub).
         key: "organisation",
-        label: "Organisation",
+        label: "Organisationseinheiten",
         href: "/dashboard/org-units",
-        permissionKeys: [
-          PERMISSIONS.ORG_VIEW,
-          PERMISSIONS.ORG_MANAGE,
-          PERMISSIONS.TEAMS_VIEW,
-          PERMISSIONS.TEAMS_MANAGE,
-          PERMISSIONS.COMPETITIONS_VIEW,
-          PERMISSIONS.COMPETITIONS_MANAGE,
-          PERMISSIONS.PEOPLE_VIEW,
-          PERMISSIONS.PEOPLE_MANAGE,
-        ],
-        children: [
-          {
-            key: "org-units",
-            label: "Organisationseinheiten",
-            href: "/dashboard/org-units",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "teams",
-            label: "Teams",
-            href: "/dashboard/teams",
-            permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            key: "provider-mapping",
-            label: "Anbieter-Mapping",
-            href: "/dashboard/teams/provider-mapping",
-            permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            key: "vereine",
-            label: "Vereine",
-            href: "/dashboard/vereine",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "personen",
-            label: "Personen",
-            href: "/dashboard/persons",
-            permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
-          },
-          {
-            key: "competitions",
-            label: "Wettkämpfe",
-            href: "/dashboard/competitions",
-            permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
-          },
-        ],
+        permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+      },
+      {
+        key: "teams",
+        label: "Teams",
+        href: "/dashboard/teams",
+        permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
+        carrySeason: true,
+      },
+      {
+        key: "personen",
+        label: "Personen",
+        href: "/dashboard/persons",
+        permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
       },
       {
         // PLATFORM-UX-01: membership lifecycle module — distinct from Personen
@@ -428,6 +395,18 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
         children: [
           {
+            key: "communication-overview",
+            label: "Übersicht",
+            navIconLabel: "Kommunikation Übersicht",
+            href: "/dashboard/communication",
+            permissionKeys: [
+              PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+              PERMISSIONS.COMMUNICATION_CLUB_SEND,
+              PERMISSIONS.COMMUNICATION_INBOX_VIEW,
+            ],
+            matchExact: true,
+          },
+          {
             key: "communication-mitteilungen",
             label: "Mitteilungen",
             href: "/dashboard/communication/mitteilungen",
@@ -453,12 +432,6 @@ export const NAV_SECTIONS: NavSection[] = [
               PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
               PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
             ],
-          },
-          {
-            key: "communication-email-sender",
-            label: "E-Mail-Absender",
-            href: "/dashboard/communication/email-sender",
-            permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
           },
         ],
       },
@@ -602,6 +575,14 @@ export const NAV_SECTIONS: NavSection[] = [
             matchExact: true,
           },
           {
+            key: "club-entwicklung-strategie",
+            label: "Strategie",
+            href: "/vereinsleitung/strategie",
+            navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
+          },
+          {
             key: "club-entwicklung-ziele",
             label: "Pläne & Ziele",
             href: "/vereinsleitung/targets",
@@ -610,9 +591,9 @@ export const NAV_SECTIONS: NavSection[] = [
             requiresVereinsleitungMembership: true,
           },
           {
-            key: "club-entwicklung-sitzungen",
-            label: "Sitzungen",
-            href: "/vereinsleitung/meetings",
+            key: "club-entwicklung-initiativen-backlog",
+            label: "Vorhaben & Prioritäten",
+            href: "/vereinsleitung/initiativen/backlog",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
             requiresVereinsleitungMembership: true,
@@ -626,12 +607,30 @@ export const NAV_SECTIONS: NavSection[] = [
             requiresVereinsleitungMembership: true,
           },
           {
+            key: "club-entwicklung-sprints",
+            label: "Umsetzungsplanung",
+            href: "/vereinsleitung/sprints",
+            navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
+          },
+          {
+            key: "club-entwicklung-sitzungen",
+            label: "Sitzungen",
+            href: "/vereinsleitung/meetings",
+            navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+            requiresVereinsleitungMembership: true,
+            navSection: "admin",
+          },
+          {
             key: "club-entwicklung-prozesse",
             label: "Prozesse & Richtlinien",
             href: "/vereinsleitung/prozesse",
             navContexts: ["club"],
             permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
             requiresVereinsleitungMembership: true,
+            navSection: "admin",
           },
         ],
       },
@@ -691,6 +690,30 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: "System",
     items: [
+      {
+        key: "provider-mapping",
+        label: "Anbieter-Zuordnung",
+        href: "/dashboard/teams/provider-mapping",
+        permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
+      },
+      {
+        key: "communication-email-sender",
+        label: "E-Mail-Absender",
+        href: "/dashboard/communication/email-sender",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+      {
+        key: "vereine",
+        label: "Referenzvereine",
+        href: "/dashboard/vereine",
+        permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+      },
+      {
+        key: "competitions",
+        label: "Wettkämpfe",
+        href: "/dashboard/competitions",
+        permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
+      },
       {
         key: "administration",
         label: "Admin",
@@ -772,7 +795,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   {
     key: "vereinsleitung",
     label: "Vereinsleitung",
-    description: "Meetings, Initiativen, KPIs und Entscheidungen.",
+    description: "Meetings, Vorhaben, KPIs und Entscheidungen.",
     href: "/vereinsleitung",
     permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
     carrySeason: false,

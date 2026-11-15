@@ -49,86 +49,39 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.2 — PO UAT Club → Organisation → Te
     const active = resolveActiveAppNavigation(pathname, model);
 
     expect(active.activeDomainId).toBe("club");
-    expect(active.activeDestinationKey).toBe("organisation");
-    expect(active.activeChildKey).toBe("teams");
-
-    const teamsChild = active.moduleLocalChildren.find((child) => child.key === "teams");
-    expect(teamsChild).toBeTruthy();
-    expect(
-      isModuleLocalChildPrimaryActive(
-        pathname,
-        teamsChild!,
-        active.moduleLocalChildren,
-        active.activeChildKey,
-      ),
-    ).toBe(true);
+    expect(active.activeDestinationKey).toBe("teams");
+    expect(active.activeChildKey).toBe(null);
   });
 
-  it("marks Organisation as active L2 ancestor while Teams is the active L3", () => {
+  it("marks Personen & Teams as active L2 ancestor for team programm routes", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const active = resolveActiveAppNavigation(pathname, model);
-    const club = model.domains.find((d) => d.id === "club")!;
-    const organisation = resolveDomainSecondaryNavItems(club).find(
-      (item) => item.label === "Organisation",
-    )!;
 
-    expect(
-      organisation &&
-        resolveSecondaryNavItemModuleLocalChildren(club, organisation).some(
-          (child) => child.key === "teams",
-        ),
-    ).toBe(true);
-
-    expect(panelL2RouteActive(pathname, active, "Organisation")).toBe(true);
-    expect(panelL2RouteActive(pathname, active, "People & Teams")).toBe(false);
+    expect(panelL2RouteActive(pathname, active, "Personen & Teams")).toBe(true);
+    expect(panelL2RouteActive(pathname, active, "Organisation")).toBe(false);
   });
 
-  it("would fail R5.3.1 header-only winner semantics for overlapping IA groups", () => {
+  it("resolves provider-mapping under Administration (longest href wins over Teams prefix)", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const pathnameOverlap = "/dashboard/teams/provider-mapping";
     const active = resolveActiveAppNavigation(pathnameOverlap, model);
-    const club = model.domains.find((d) => d.id === "club")!;
+    const admin = model.domains.find((d) => d.id === "admin")!;
     const items = active.domainSecondaryItems;
-    const organisation = items.find((item) => item.label === "Organisation")!;
-    const people = items.find((item) => item.label === "People & Teams")!;
+    const integrationen = items.find((item) => item.label === "Integrationen & Zuordnungen")!;
+
+    expect(active.activeDomainId).toBe("admin");
+    expect(active.activeDestinationKey).toBe("provider-mapping");
 
     expect(
       isDomainHeaderSecondaryItemActive(
         pathnameOverlap,
-        club,
-        people,
+        admin,
+        integrationen,
         active.activeDestinationKey,
         active.activeChildKey,
         items,
       ),
     ).toBe(true);
-    expect(
-      isDomainHeaderSecondaryItemActive(
-        pathnameOverlap,
-        club,
-        organisation,
-        active.activeDestinationKey,
-        active.activeChildKey,
-        items,
-      ),
-    ).toBe(false);
-
-    expect(isDomainPanelSecondaryItemRouteActive(
-      pathnameOverlap,
-      club,
-      organisation,
-      active.activeDestinationKey,
-      active.activeChildKey,
-      items,
-    )).toBe(true);
-    expect(isDomainPanelSecondaryItemRouteActive(
-      pathnameOverlap,
-      club,
-      people,
-      active.activeDestinationKey,
-      active.activeChildKey,
-      items,
-    )).toBe(false);
   });
 });
 
@@ -141,23 +94,23 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.3.2 — browse vs active", () => {
     const browsedL2Key = "people-teams";
     expect(browsedL2Key).not.toBe(active.activeDestinationKey);
 
-    expect(panelL2RouteActive(pathname, active, "Organisation")).toBe(true);
-    expect(panelL2RouteActive(pathname, active, "People & Teams")).toBe(false);
+    expect(panelL2RouteActive(pathname, active, "Personen & Teams")).toBe(true);
+    expect(panelL2RouteActive(pathname, active, "Organisation")).toBe(false);
 
     const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
-    expect(panel).toContain("selected && \"sce-domain-nav-panel-l2-control--selected\"");
+    expect(panel).toContain("sce-domain-nav-panel-l2-control--selected");
     expect(panel).not.toMatch(/\(active \|\| selected\) && "sce-domain-nav-panel-l2-control--active"/);
-    expect(panel).toContain('active={active}');
+    expect(panel).toContain("const active = isL2Active(item)");
     expect(panel).not.toContain("active={active || selected}");
     expect(browsedL2Key).toBeTruthy();
   });
 });
 
 describe("SCE-ACTIVITY-CREATE-01J-R5.3.2 — L2 chevron + L3 visual contract", () => {
-  it("styles chevron from the same route-active L2 state as icon and label", () => {
+  it("styles chevron from the explored L2 branch and keeps L3 route-active orange", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-l2-control--active[\s\S]*\.sce-domain-nav-panel-l2-chevron[\s\S]*var\(--sce-primary\)/,
+      /\.sce-domain-nav-panel-l2-control--selected[\s\S]*\.sce-domain-nav-panel-l2-chevron[\s\S]*var\(--sce-primary\)/,
     );
     expect(css).toMatch(/\.sce-domain-nav-panel-l3-link--active[\s\S]*color:\s*var\(--sce-primary\)/);
   });

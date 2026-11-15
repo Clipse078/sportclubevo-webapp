@@ -52,17 +52,17 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(club).toBeTruthy();
     const secondary = resolveDomainSecondaryNavItems(club!);
     expect(secondary.length).toBeGreaterThanOrEqual(4);
-    expect(secondary.length).toBeLessThanOrEqual(7);
+    expect(secondary.length).toBeLessThanOrEqual(8);
     expect(secondary.map((item) => item.label)).toEqual(
-      expect.arrayContaining(["Organisation", "People & Teams", "Mitgliedschaft"]),
+      expect.arrayContaining(["Organisation", "Aufgaben", "Personen & Teams", "Mitgliedschaft"]),
     );
     expect(secondary.map((item) => item.key)).not.toContain("org-units");
     expect(secondary.every((item) => item.headerGroupId)).toBe(true);
 
     const active = resolveActiveAppNavigation("/dashboard/org-units", model);
     expect(active.domainSecondaryItems.map((item) => item.headerGroupId)).toContain("organisation");
-    expect(active.moduleLocalChildren.map((child) => child.key)).toContain("org-units");
-    expect(active.contextualChildren.map((child) => child.key)).toContain("org-units");
+    expect(active.activeDestinationKey).toBe("organisation");
+    expect(active.moduleLocalChildren).toEqual([]);
   });
 
   it("promotes Planung hub children to domain secondary navigation", () => {

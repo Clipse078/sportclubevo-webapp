@@ -87,10 +87,10 @@ The largest gaps for 2.0 are: **demo-only** overview (`/vereinsleitung/club-entw
 | Surface | Data |
 |---------|------|
 | `/vereinsleitung` (Vereinsleitung hub) | **Live** — targets, meetings, initiatives, `governance-overview`, operative KPI counts |
-| `/vereinsleitung/club-entwicklung` (nav “Club Entwicklung”) | **Demo** — `DEMO_PROCESSES`, invented KPI strip |
+| `/vereinsleitung/club-entwicklung` (nav “Vereinsentwicklung” / Übersicht) | **Live** — KPI strip + shortcuts to Strategie, Vorhaben & Prioritäten, Umsetzungsplanung (SCE-CD-04R5 PKG-01) |
 | `/vereinsleitung/kpis` | **Demo** — static numbers |
 
-**Gap:** Nav points users to the demo hub; the live governance summary already exists one level up (`/vereinsleitung`).
+**Gap:** `/vereinsleitung/kpis` remains demo; **Prozesse & Richtlinien** still non-persistent; Strategie page is progress lens only (authoring on Pläne & Ziele).
 
 ### B.7 Organisation units & teams
 

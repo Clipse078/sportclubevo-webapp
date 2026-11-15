@@ -37,7 +37,7 @@ export default function InitiativeGovernanceBanner({
           <div className="flex items-center gap-2 text-[var(--muted)]">
             <ProductDomainSceIcon name="roles-access" size={16} />
             <span className="text-[12px] font-semibold uppercase tracking-[0.1em]">
-              Governance
+              Prüfung & Freigabe
             </span>
           </div>
 

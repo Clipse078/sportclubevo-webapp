@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { InitiativeStatus, VisibilityScope } from "@prisma/client";
+import { InitiativeDisposition, InitiativeStatus, VisibilityScope } from "@prisma/client";
 import { getInitiatives } from "@/lib/initiatives/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 import { MeetingApprovalRule } from "@prisma/client";
 import { validateApprovalConfig, parseApproverPersonIds } from "@/lib/meetings/meeting-approval-presentation";
+import { slugifyInitiativeTitle } from "@/lib/club-development/initiative-slug";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -34,12 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawSlug = (body?.slug ?? "").trim();
-    const slug =
-      rawSlug ||
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+    const slug = rawSlug || slugifyInitiativeTitle(title);
 
     const existing = await prisma.initiative.findFirst({
       where: { slug, tenantId },
@@ -110,6 +106,14 @@ export async function POST(request: NextRequest) {
         visibilityScope: Object.values(VisibilityScope).includes(body?.visibilityScope as VisibilityScope)
           ? (body.visibilityScope as VisibilityScope)
           : VisibilityScope.ORGANISATION,
+        expectedOutcome: body?.expectedOutcome?.trim() || null,
+        backlogPriority:
+          typeof body?.backlogPriority === "number" && Number.isFinite(body.backlogPriority)
+            ? Math.trunc(body.backlogPriority)
+            : 0,
+        disposition: Object.values(InitiativeDisposition).includes(body?.disposition as InitiativeDisposition)
+          ? (body.disposition as InitiativeDisposition)
+          : InitiativeDisposition.NONE,
       },
       select: { id: true, slug: true, title: true },
     });

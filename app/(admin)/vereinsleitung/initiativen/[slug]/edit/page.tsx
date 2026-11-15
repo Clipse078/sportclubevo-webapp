@@ -43,12 +43,12 @@ export default async function EditInitiativePage({ params }: PageProps) {
   return (
     <PageShell fullWidth>
       <FormPagePattern
-        eyebrow="Initiativen"
-        title="Initiative bearbeiten"
+        eyebrow="Vorhaben"
+        title="Vorhaben bearbeiten"
         description={`Bearbeite: ${initiative.title}`}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Initiativen", href: "/vereinsleitung/initiativen" },
+          { label: "Vorhaben", href: "/vereinsleitung/initiativen" },
           { label: initiative.title, href: `/vereinsleitung/initiativen/${slug}` },
           { label: "Bearbeiten" },
         ]}

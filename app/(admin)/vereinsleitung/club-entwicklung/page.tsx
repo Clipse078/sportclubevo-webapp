@@ -104,7 +104,7 @@ export default async function ClubEntwicklungPage() {
       <ListPagePattern
         eyebrow="Verein"
         title="Vereinsentwicklung"
-        description="Übersicht über Ziele, Initiativen, Sitzungen und offene Massnahmen — nur Daten, die Sie sehen dürfen."
+        description="Übersicht über Ziele, Vorhaben, Sitzungen und offene Massnahmen — nur Daten, die Sie sehen dürfen."
         breadcrumbs={[
           { label: "Verein" },
           { label: "Vereinsentwicklung" },

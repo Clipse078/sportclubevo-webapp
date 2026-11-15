@@ -42,10 +42,29 @@ describe("ClubDevelopmentOverview", () => {
     expect(screen.getAllByText("Aktive Ziele").length).toBeGreaterThan(0);
     expect(screen.getAllByText("0").length).toBeGreaterThan(0);
     expect(screen.getByText("Keine aktiven Ziele sichtbar.")).toBeTruthy();
-    expect(screen.getByText("Keine laufenden Initiativen sichtbar.")).toBeTruthy();
+    expect(screen.getByText("Keine laufenden Vorhaben sichtbar.")).toBeTruthy();
     expect(screen.queryByText("Aktive Prozesse")).toBeNull();
     expect(screen.queryByText("Demo-Daten — nicht produktiv")).toBeNull();
     expect(screen.getByText("Vorhaben & Aufgaben")).toBeTruthy();
     expect(screen.getByText("Prozesse & Richtlinien")).toBeTruthy();
+
+    const hrefs = screen.getAllByRole("link").map((el) => el.getAttribute("href"));
+    expect(hrefs).toContain("/vereinsleitung/strategie");
+    expect(hrefs).toContain("/vereinsleitung/initiativen/backlog");
+    expect(hrefs).toContain("/vereinsleitung/sprints");
+
+    const shortcutTitles = screen
+      .getAllByRole("heading", { level: 3 })
+      .slice(0, 7)
+      .map((el) => el.textContent);
+    expect(shortcutTitles).toEqual([
+      "Strategie",
+      "Pläne & Ziele",
+      "Vorhaben & Prioritäten",
+      "Vorhaben & Aufgaben",
+      "Umsetzungsplanung",
+      "Sitzungen",
+      "Prozesse & Richtlinien",
+    ]);
   });
 });

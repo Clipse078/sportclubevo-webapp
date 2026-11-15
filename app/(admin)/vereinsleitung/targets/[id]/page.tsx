@@ -29,7 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   FINANZEN: "Finanzen & Infrastruktur",
   AUSBILDUNG: "Ausbildung",
   MEDIEN_SOZIALES: "Medien & Soziales",
-  GOVERNANCE: "Governance",
+  GOVERNANCE: "Vereinsführung",
 };
 
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
@@ -157,7 +157,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </div>
 
             {target.metrics.length === 0 ? (
-              <p className="text-sm text-[var(--text-2)]">Noch keine Metriken erfasst.</p>
+              <p className="text-sm text-[var(--text-2)]">Noch keine Kennzahlen erfasst.</p>
             ) : (
               <div className="space-y-8">
                 {target.metrics.map((metric) => (

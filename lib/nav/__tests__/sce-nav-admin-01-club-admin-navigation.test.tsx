@@ -33,8 +33,8 @@ vi.mock("next-intl", () => ({
       "domains.planning": "Planung",
       "domains.communication": "Kommunikation",
       "domains.club": "Verein",
-      "domains.publishing": "Publizieren",
-      "domains.admin": "Admin",
+      "domains.publishing": "Veröffentlichen",
+      "domains.admin": "Administration",
       primaryNavAria: "Hauptnavigation",
       mobilePrimaryNavAria: "Mobile Hauptnavigation",
       more: "Mehr",
@@ -130,10 +130,10 @@ describe("SCE-NAV-ADMIN-01 Club Admin navigation", () => {
     const labels = Array.from(nav.querySelectorAll(".sce-global-primary-nav-domain-label")).map(
       (el) => el.textContent,
     );
-    expect(labels).toEqual(["Verein", "Planung", "Publizieren", "Kommunikation", "Admin"]);
-    expect(labels.at(-1)).toBe("Admin");
+    expect(labels).toEqual(["Verein", "Planung", "Veröffentlichen", "Kommunikation", "Administration"]);
+    expect(labels.at(-1)).toBe("Administration");
     expect(labels[0]).toBe("Verein");
-    expect(screen.getByRole("button", { name: /^Admin$/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Administration$/ })).toBeInTheDocument();
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     expect(model.domains.find((d) => d.id === "admin")?.defaultDestination.href).toBe(
       "/dashboard/admin",
@@ -160,7 +160,7 @@ describe("SCE-NAV-ADMIN-01 Club Admin navigation", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const bottom = selectMobileBottomDomains(model, null, 5);
     expect(bottom.some((d) => d.id === "admin")).toBe(true);
-    expect(domainLabelsFromNav(COMM_SENDER_ONLY)).not.toContain("Admin");
+    expect(domainLabelsFromNav(COMM_SENDER_ONLY)).not.toContain("Administration");
   });
 
   it("resolves Admin active state for /dashboard/admin and child routes", () => {

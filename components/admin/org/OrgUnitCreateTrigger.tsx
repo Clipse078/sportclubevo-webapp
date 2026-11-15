@@ -16,7 +16,7 @@ type Props = {
 export default function OrgUnitCreateTrigger({
   parentOptions,
   defaultParentId,
-  label = "Neue Einheit",
+  label = "Organisationseinheit erstellen",
   className,
 }: Props) {
   const [open, setOpen] = useState(false);

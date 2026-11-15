@@ -221,12 +221,15 @@ export default function OrgUnitSearchableList({
           type="text"
           placeholder={
             showArchived
-              ? "Archivierte Einheit suchen…"
-              : "Einheit suchen nach Name, Key oder Typ…"
+              ? "Archivierte Organisationseinheit suchen …"
+              : "Organisationseinheit suchen …"
           }
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoComplete="off"
+          aria-label={
+            showArchived ? "Archivierte Organisationseinheit suchen" : "Organisationseinheit suchen"
+          }
         />
         {query ? (
           <button
@@ -252,16 +255,16 @@ export default function OrgUnitSearchableList({
           <EmptyState
             icon={<Search className="h-10 w-10" />}
             heading="Keine Treffer"
-            description={`Für „${query}" wurden keine Einheiten gefunden.`}
+            description={`Für „${query}" wurden keine Organisationseinheiten gefunden.`}
           />
         ) : displayUnits.length === 0 ? (
           <EmptyState
             icon={<ProductDomainSceIcon name="org-unit" size={48} />}
             heading="Noch keine Organisationseinheiten"
-            description="Erstelle die erste Einheit, um die Organisationsstruktur aufzubauen."
+            description="Legen Sie die erste Organisationseinheit an, um die Vereinsstruktur aufzubauen."
             action={
               <Link href="/dashboard/org-units/new" className="fca-button-primary">
-                Erste Einheit erstellen
+                Organisationseinheit erstellen
               </Link>
             }
           />

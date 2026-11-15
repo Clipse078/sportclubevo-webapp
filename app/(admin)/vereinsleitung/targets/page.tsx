@@ -17,7 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   FINANZEN: "Finanzen & Infrastruktur",
   AUSBILDUNG: "Ausbildung",
   MEDIEN_SOZIALES: "Medien & Soziales",
-  GOVERNANCE: "Governance",
+  GOVERNANCE: "Vereinsführung",
 };
 
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {

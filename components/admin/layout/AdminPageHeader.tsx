@@ -71,7 +71,7 @@ function getHeaderContent(pathname: string): HeaderContent {
   if (pathname === "/vereinsleitung/initiativen/new") {
     return {
       eyebrow: "Initiativen",
-      title: "Neue Initiative",
+      title: "Neues Vorhaben",
       description: "Initiative mit Sichtbarkeitseinstellungen erfassen.",
     };
   }
@@ -136,7 +136,7 @@ function getHeaderContent(pathname: string): HeaderContent {
     return {
       eyebrow: "Ziele",
       title: "Neues Ziel erstellen",
-      description: "Strategisches Ziel mit messbaren Metriken und Vorlagen erfassen.",
+      description: "Strategisches Ziel mit messbaren Kennzahlen und Vorlagen erfassen.",
     };
   }
 
@@ -144,7 +144,7 @@ function getHeaderContent(pathname: string): HeaderContent {
     return {
       eyebrow: "Ziele",
       title: "Ziel Details",
-      description: "Fortschritt, Metriken und Messwerte im Detail.",
+      description: "Fortschritt, Kennzahlen und Messwerte im Detail.",
     };
   }
 

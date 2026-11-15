@@ -55,7 +55,7 @@ const CATEGORIES = [
   { value: "FINANZEN", label: "Finanzen & Infrastruktur" },
   { value: "AUSBILDUNG", label: "Ausbildung" },
   { value: "MEDIEN_SOZIALES", label: "Medien & Soziales" },
-  { value: "GOVERNANCE", label: "Governance" },
+  { value: "GOVERNANCE", label: "Vereinsführung" },
 ] as const;
 
 const STATUSES = [
@@ -419,7 +419,7 @@ export default function TargetForm({
 
       <section className={sectionClass}>
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Metriken</h3>
+          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Kennzahlen</h3>
           <button
             type="button"
             onClick={addMetric}

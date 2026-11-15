@@ -40,13 +40,15 @@ function expectTextOnlyActive(css: string, selector: string) {
 }
 
 const L1_ACTIVE = ".sce-global-primary-nav-item--active";
-const L2_ACTIVE = [
+const L2_ORANGE = [
+  ".sce-domain-nav-panel-l2-control--selected",
+  ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-control--selected",
+];
+const L2_ROUTE_SUBTLE = [
   ".sce-domain-nav-panel-l2-link--active",
-  ".sce-domain-nav-panel-l2-control--active",
-  ".sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active)",
+  ".sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected)",
   ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-link--active",
-  ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-control--active",
-  ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active)",
+  ".sce-domain-nav-panel[data-sce-theme=\"white\"] .sce-domain-nav-panel-l2-control--active:not(.sce-domain-nav-panel-l2-control--selected)",
 ];
 const L3_ACTIVE = [
   ".sce-context-nav-panel-link--active",
@@ -55,15 +57,28 @@ const L3_ACTIVE = [
 ];
 
 describe("SCE-DS2-05B-R8 unified navigation active states", () => {
-  it("uses the same orange-text-only contract for L1, L2, and L3", () => {
+  it("uses orange text-only for L1, explored L2, and L3; route-active L2 stays subtle", () => {
     const css = readRepo(NAV_CSS);
-    for (const selector of [L1_ACTIVE, ...L2_ACTIVE, ...L3_ACTIVE]) {
+    for (const selector of [L1_ACTIVE, ...L2_ORANGE, ...L3_ACTIVE]) {
       expectTextOnlyActive(css, selector);
+    }
+    for (const selector of L2_ROUTE_SUBTLE) {
+      const blocks = declarationBlocks(css, selector);
+      expect(blocks.length, selector).toBeGreaterThan(0);
+      for (const block of blocks) {
+        expect(block, selector).toMatch(/color:\s*var\(--foreground\)/);
+        expect(block, selector).toMatch(/background:\s*transparent/);
+        expect(block, selector).not.toMatch(/inset/);
+      }
     }
     expect(css).not.toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
     expect(css).not.toContain("inset 3px 0 0");
     expect(css).not.toContain("inset 2px 0 0 var(--sce-primary)");
-    expect(css).not.toMatch(/background:[^;]*var\(--sce-primary\)/);
+    for (const selector of [...L2_ORANGE, ...L3_ACTIVE, L1_ACTIVE]) {
+      for (const block of declarationBlocks(css, selector)) {
+        expect(block).not.toMatch(/background:[^;]*var\(--sce-primary\)/);
+      }
+    }
   });
 
   it("keeps L1 Barlow Condensed uppercase typography and active weight", () => {
@@ -86,7 +101,7 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
     expect(css).not.toContain(".sce-global-nav-level-separator");
     expect(css).not.toContain(".sce-global-module-nav");
     expect(css).not.toContain(".sce-global-context-nav");
-    for (const selector of L2_ACTIVE) {
+    for (const selector of [...L2_ORANGE, ...L2_ROUTE_SUBTLE]) {
       expect(declarationBlocks(css, selector).join("\n")).not.toMatch(/padding-left/);
     }
   });

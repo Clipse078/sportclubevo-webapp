@@ -6,8 +6,13 @@ import {
   CheckSquare,
   ClipboardList,
   Flag,
+  LineChart,
   Workflow,
 } from "lucide-react";
+import {
+  CD_NAV_COPY,
+  CD_OVERVIEW_SHORTCUT_COPY,
+} from "@/lib/club-development/product-copy";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
@@ -117,6 +122,13 @@ export default function ClubDevelopmentOverview({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <ModuleShortcut
+          title={CD_NAV_COPY.strategyOverview}
+          description={CD_OVERVIEW_SHORTCUT_COPY.strategyDescription}
+          href="/vereinsleitung/strategie"
+          status="Verfügbar"
+          icon={<LineChart className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
           title="Pläne & Ziele"
           description="Strategische Vereinsziele mit Kennzahlen und Review-Status."
           href="/vereinsleitung/targets"
@@ -124,18 +136,32 @@ export default function ClubDevelopmentOverview({
           icon={<GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
+          title={CD_NAV_COPY.initiativeBacklog}
+          description={CD_OVERVIEW_SHORTCUT_COPY.backlogDescription}
+          href="/vereinsleitung/initiativen/backlog"
+          status="Verfügbar"
+          icon={<ClipboardList className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_NAV_COPY.initiativesAndTasksHub}
+          description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
+          href="/vereinsleitung/vorhaben"
+          status="Verfügbar"
+          icon={<CheckSquare className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_NAV_COPY.implementationPlanning}
+          description={CD_OVERVIEW_SHORTCUT_COPY.sprintDescription}
+          href="/vereinsleitung/sprints"
+          status="Verfügbar"
+          icon={<Flag className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
           title="Sitzungen"
           description="Meetings planen, Protokoll und Massnahmen verfolgen."
           href="/vereinsleitung/meetings"
           status="Verfügbar"
           icon={<CalendarDays className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title="Vorhaben & Aufgaben"
-          description="Initiativen und operative Aufgaben — ein gemeinsamer Arbeitsbereich folgt."
-          href="/vereinsleitung/vorhaben"
-          status="In Arbeit"
-          icon={<CheckSquare className="h-4 w-4 text-[var(--sce-warning)]" />}
         />
         <ModuleShortcut
           title="Prozesse & Richtlinien"
@@ -182,12 +208,12 @@ export default function ClubDevelopmentOverview({
         </SectionShell>
 
         <SectionShell
-          title="Aktive Initiativen"
+          title="Aktive Vorhaben"
           href="/vereinsleitung/initiativen"
-          linkLabel="Alle Initiativen"
+          linkLabel="Alle Vorhaben"
         >
           {initiatives.length === 0 ? (
-            <EmptySection message="Keine laufenden Initiativen sichtbar." />
+            <EmptySection message="Keine laufenden Vorhaben sichtbar." />
           ) : (
             initiatives.slice(0, 5).map((ini) => (
               <Link
@@ -329,7 +355,7 @@ function KpiStrip({ kpis }: { kpis: ClubDevelopmentOverviewKpis }) {
         description="Status Aktiv, sichtbar für Sie"
       />
       <DashboardKpiCard
-        title="Initiativen"
+        title="Vorhaben"
         value={String(kpis.activeInitiativeCount)}
         accent="info"
         icon={<Flag className="h-5 w-5" />}

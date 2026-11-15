@@ -302,7 +302,7 @@ function TaskActivitySectionBody({
       <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Aktivität</h2>
 
       {canCollaborate ? (
-        <div className="mb-4">
+        <div className="mb-2">
           <TaskCommentComposer taskId={taskId} onSubmit={handleCreate} />
         </div>
       ) : null}
@@ -330,8 +330,8 @@ function TaskActivitySectionBody({
         </div>
       ) : null}
 
-      {loading ? (
-        <div className="flex items-center gap-2 py-6 text-sm text-[var(--muted)]">
+      {loading && entries.length === 0 ? (
+        <div className="flex items-center gap-2 py-2 text-sm text-[var(--muted)]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           Aktivität wird geladen…
         </div>

@@ -21,7 +21,7 @@ const KPI_GROUPS = [
   {
     title: "Strategische Entwicklung",
     items: [
-      { label: "Aktive Initiativen", value: "8", delta: "+2 seit Jahresstart" },
+      { label: "Aktive Vorhaben", value: "8", delta: "+2 seit Jahresstart" },
       { label: "Offene Massnahmen", value: "17", delta: "-3 seit letzter Sitzung" },
     ],
   },
