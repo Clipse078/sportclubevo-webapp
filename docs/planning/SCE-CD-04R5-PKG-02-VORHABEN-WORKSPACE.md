@@ -37,6 +37,14 @@ Replace `/vereinsleitung/vorhaben` navigation-only hub with a **real workspace**
 - PKG-04 subtask sprint picker (`rootsOnly: false`)
 - PKG-05 Strategiekonzeption authoring slice
 
+## PO walkthrough acceptance concerns (PKG-02)
+
+Record for authenticated PO UAT — not blocking navigation reorder:
+
+1. If workspace results exceed **80 root Aufgaben**, the limit must be **visible** and a path must exist to access the remaining work.
+2. **Task-status filtering** must stay consistent with displayed Vorhaben and progress indicators.
+3. The **Beschluss-task coverage** limitation must be stated clearly wherever Beschluss-linked tasks affect the lens.
+
 ## Next package (PKG-05)
 
 See completion matrix: optional **Strategische Begründung** on Target detail, workspace document links, Strategie empty states — **no new framework**.

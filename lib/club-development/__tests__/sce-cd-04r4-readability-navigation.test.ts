@@ -78,18 +78,16 @@ describe("SCE-CD-04R4 mega-menu destination clarity", () => {
     expect(labels.some((label) => label === "Vereinsentwicklung Übersicht")).toBe(false);
     expect(new Set(hrefs).size).toBe(hrefs.length);
 
-    expect(labels).toEqual(
-      expect.arrayContaining([
-        "Übersicht",
-        "Pläne & Ziele",
-        "Sitzungen",
-        "Vorhaben & Aufgaben",
-        "Strategie",
-        "Vorhaben & Prioritäten",
-        "Umsetzungsplanung",
-        "Prozesse & Richtlinien",
-      ]),
-    );
+    expect(labels).toEqual([
+      "Übersicht",
+      "Strategie",
+      "Pläne & Ziele",
+      "Vorhaben & Prioritäten",
+      "Vorhaben & Aufgaben",
+      "Umsetzungsplanung",
+      "Sitzungen",
+      "Prozesse & Richtlinien",
+    ]);
   });
 
   it("keeps Organisation as a direct Verein destination without an owned L3 column", () => {

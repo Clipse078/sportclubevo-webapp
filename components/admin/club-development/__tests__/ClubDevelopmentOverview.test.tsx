@@ -52,5 +52,19 @@ describe("ClubDevelopmentOverview", () => {
     expect(hrefs).toContain("/vereinsleitung/strategie");
     expect(hrefs).toContain("/vereinsleitung/initiativen/backlog");
     expect(hrefs).toContain("/vereinsleitung/sprints");
+
+    const shortcutTitles = screen
+      .getAllByRole("heading", { level: 3 })
+      .slice(0, 7)
+      .map((el) => el.textContent);
+    expect(shortcutTitles).toEqual([
+      "Strategie",
+      "Pläne & Ziele",
+      "Vorhaben & Prioritäten",
+      "Vorhaben & Aufgaben",
+      "Umsetzungsplanung",
+      "Sitzungen",
+      "Prozesse & Richtlinien",
+    ]);
   });
 });
