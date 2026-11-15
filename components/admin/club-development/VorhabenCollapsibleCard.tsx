@@ -169,13 +169,14 @@ export default function VorhabenCollapsibleCard({
                       </li>
                     ))}
                   </ul>
-                ) : (
+                ) : panel.canManageInitiatives ? null : (
                   <p className="mb-2 text-sm text-[var(--muted)]">Noch keine Zielverknüpfungen.</p>
                 )}
                 {panel.canManageInitiatives ? (
                   <InitiativeTargetLinksSection
                     initiativeId={summary.id}
                     canManage={panel.canManageInitiatives}
+                    suppressEmptyMessage={panel.targetLinks.length === 0}
                   />
                 ) : null}
               </div>
@@ -194,7 +195,7 @@ export default function VorhabenCollapsibleCard({
             {panel.canViewTasks ? (
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Wurzel-Aufgaben
+                  {CD_VORHABEN_WORKSPACE_COPY.tasksSubheading}
                 </p>
                 {panel.rootTasks.length === 0 ? (
                   <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.emptyTasks}</p>
@@ -232,9 +233,6 @@ export default function VorhabenCollapsibleCard({
                     </Link>
                   </div>
                 ) : null}
-                <p className="mt-1 text-[11px] text-[var(--muted)]">
-                  Nur Wurzel-Aufgaben — Unteraufgaben öffnen Sie in der Aufgabenansicht.
-                </p>
               </div>
             ) : null}
 

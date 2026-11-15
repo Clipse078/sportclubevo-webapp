@@ -35,7 +35,7 @@ export default function VorhabenPrioritaetenControl({ prioritaetenActive }: Prop
       <p className="text-xs text-[var(--text-2)]">
         {prioritaetenActive
           ? "Prioritäten und Einordnung — Reihenfolge und Erwartetes Ergebnis."
-          : "Ausklappbare Vorhaben mit zugehörigen Aufgaben im Kartenbereich."}
+          : "Vorhaben ausklappen, zugehörige Aufgaben und Fortschritt im Kartenbereich."}
       </p>
       <Link
         href={prioritaetenActive ? buildToggleHref(false) : buildToggleHref(true)}

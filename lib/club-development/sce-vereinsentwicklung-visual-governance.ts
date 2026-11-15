@@ -27,8 +27,13 @@ export const SCE_VEREINSENTWICKLUNG_COPY_GOVERNANCE_PATHS = [
 
 export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx",
+  "app/(admin)/vereinsleitung/meetings/page.tsx",
   "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
+  "components/admin/club-development/StrategyAuthoringPanel.tsx",
+  "components/admin/club-development/ZieleWorkspacePanel.tsx",
+  "components/admin/vereinsleitung/VereinsleitungMeetingsWorkspaceClient.tsx",
+  "components/admin/meetings/workspace/MeetingWorkspace.tsx",
 ] as const;
 
 export type VereinsentwicklungVisualGovernanceFinding = {
@@ -102,6 +107,69 @@ export function collectVereinsentwicklungWorkspaceViolations(
       findings.push({
         file: normalized,
         reason: "Prioritäten control must remain visible within Vorhaben view.",
+      });
+    }
+  }
+
+  if (normalized === "app/(admin)/vereinsleitung/meetings/page.tsx") {
+    if (!src.includes("CD_MEETINGS_WORKSPACE_COPY.pageSubtitle")) {
+      findings.push({
+        file: normalized,
+        reason: "Sitzungen list must use canonical workspace subtitle copy key.",
+      });
+    }
+    if (!src.includes("VereinsleitungMeetingsWorkspaceClient")) {
+      findings.push({
+        file: normalized,
+        reason: "Sitzungen list must render migrated workspace client.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/vereinsleitung/VereinsleitungMeetingsWorkspaceClient.tsx") {
+    if (!src.includes(SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.sectionShell)) {
+      findings.push({
+        file: normalized,
+        reason: "Sitzungen list must use SceClubDevelopmentSectionShell.",
+      });
+    }
+    if (!src.includes("CreateMeetingInlineCollapsibleCard")) {
+      findings.push({
+        file: normalized,
+        reason: "Neue Sitzung must use inline collapsible create card.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/StrategyAuthoringPanel.tsx") {
+    if (!src.includes(SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.sectionShell)) {
+      findings.push({
+        file: normalized,
+        reason: "Strategie & Ziele authoring must use section shells.",
+      });
+    }
+    if (src.includes("focusHint")) {
+      findings.push({
+        file: normalized,
+        reason: "Schwerpunkte section must not repeat redundant focus hint copy.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/meetings/workspace/MeetingWorkspace.tsx") {
+    if (!src.includes(SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.sectionShell)) {
+      findings.push({
+        file: normalized,
+        reason: "Meeting workspace must wrap summary in section shell.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/VorhabenAufgabenWorkspace.tsx") {
+    if (src.includes("Wurzel-Aufgaben")) {
+      findings.push({
+        file: normalized,
+        reason: 'Vorhaben surfaces must label tasks as "Aufgaben", not Wurzel-Aufgaben.',
       });
     }
   }

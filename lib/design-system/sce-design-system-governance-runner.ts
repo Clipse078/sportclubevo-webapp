@@ -158,6 +158,10 @@ function scanCreateTriggers(violations: SceGovernanceViolation[], file: string, 
   if (!src.includes("fca-button") && !src.includes("button")) return;
   if (src.includes('data-sce-create-flow="modal"')) return;
   if (src.includes("data-sce-create-flow='modal'")) return;
+  if (src.includes('data-sce-create-flow="inline-collapsible"')) return;
+  if (src.includes("data-sce-create-flow='inline-collapsible'")) return;
+  if (src.includes('data-sce-create-flow="page"')) return;
+  if (src.includes("data-sce-create-flow='page'")) return;
   pushViolation(
     violations,
     "SCE-DS-GOV-CREATE-001",

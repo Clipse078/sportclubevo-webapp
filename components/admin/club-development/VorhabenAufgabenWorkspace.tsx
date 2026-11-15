@@ -76,7 +76,6 @@ function TaskRowCard({ row }: { row: VorhabenWorkspaceTaskRow }) {
             )}
           </p>
         ) : null}
-        <p className="mt-1 text-[11px] text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.rootTasksOnly}</p>
       </div>
       <Badge variant="outline" size="sm">
         {row.statusLabel}

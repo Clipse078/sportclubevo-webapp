@@ -37,7 +37,6 @@ export default function ZieleWorkspacePanel({
       {canManageTargets ? <CreateTargetWorkspaceCollapsibleCard canCreate /> : null}
       <SceClubDevelopmentSectionShell title="Alle Ziele" bodyClassName="p-5 space-y-3">
         <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressHint}</p>
-        <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressScopeNote}</p>
         <div className="space-y-3">
           {targets.map((target) => (
             <TargetZieleCollapsibleCard

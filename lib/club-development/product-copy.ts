@@ -35,7 +35,6 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   metaHeading: "Rahmen",
   saveAction: "Strategie speichern",
   focusHeading: "Schwerpunkte",
-  focusHint: "Verknüpfte Ziele — Details und Kennzahlen im Ziel.",
   focusEmpty: "Noch keine Schwerpunkte verknüpft.",
   supportingHeading: "Sitzungen, Beschlüsse & Unterlagen",
   supportingCollapsedSummary: (meetings: number, decisions: number, documents: number) => {
@@ -57,8 +56,15 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   docKindSupporting: "Weitere Unterlagen",
   progressHeading: "Fortschritt zu Zielen",
   progressHint: "Zielerreichung (Kennzahlen) und Umsetzungsfortschritt (Vorhaben) sind getrennt.",
-  progressScopeNote:
-    "Die Fortschrittsübersicht zeigt alle sichtbaren Ziele — Schwerpunkte oben sind die strategisch verknüpften Ziele.",
+} as const;
+
+/** Vereinsentwicklung — Sitzungen list & workspace chrome. */
+export const CD_MEETINGS_WORKSPACE_COPY = {
+  pageSubtitle: "Sitzungen planen, Beschlüsse festhalten und Aufgaben verfolgen.",
+  listSectionTitle: "Alle Sitzungen",
+  summarySectionTitle: "Sitzungsübersicht",
+  createAction: "Neue Sitzung",
+  createContext: "Termin für die Vereinsleitung erfassen",
 } as const;
 
 /** PKG-01 — navigation hub copy (routes unchanged). */
@@ -83,7 +89,7 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   focusInitiative: "Fokus:",
   initiativesHeading: "Vorhaben",
   tasksHeading: "Zugehörige Aufgaben",
-  rootTasksOnly: "Nur übergeordnete Aufgaben — Unteraufgaben im Aufgaben-Arbeitsplatz.",
+  tasksSubheading: "Aufgaben",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
   rootTasksTruncationNotice: (shown: number, total: number) =>

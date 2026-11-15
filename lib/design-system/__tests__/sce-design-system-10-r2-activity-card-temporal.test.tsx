@@ -111,9 +111,9 @@ describe("SCE-DESIGN-SYSTEM-10-R2 — activity card temporal consistency", () =>
     expect(refLayout).not.toContain("formatFixtureDateLine");
   });
 
-  it("DATE-01R1: Vereinsleitung meetings overview uses SceDateTile", () => {
+  it("DATE-01R1: Vereinsleitung meetings list shows full calendar date", () => {
     const list = readSrc("components/admin/vereinsleitung/VereinsleitungMeetingsList.tsx");
-    expect(list).toContain("SceDateTile");
+    expect(list).toContain("formatDateShort");
     expect(list).toContain("vereinsleitung-meeting-date-");
   });
 

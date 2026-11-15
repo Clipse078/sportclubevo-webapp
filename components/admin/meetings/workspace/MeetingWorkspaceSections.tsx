@@ -33,6 +33,7 @@ import {
   workspaceInputClass,
   workspacePanelClass,
   workspacePrimaryButtonClass,
+  workspaceSectionBodyClass,
   workspaceSectionHeaderClass,
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
@@ -77,10 +78,10 @@ function SectionShell({
   return (
     <section id={sectionId} className={workspacePanelClass} data-testid={sectionId}>
       <div className={workspaceSectionHeaderClass}>
-        <h3 className="text-base font-semibold text-[var(--foreground)]">{title}</h3>
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">{title}</h3>
         {action}
       </div>
-      <div className="space-y-3">{children}</div>
+      <div className={workspaceSectionBodyClass}>{children}</div>
     </section>
   );
 }

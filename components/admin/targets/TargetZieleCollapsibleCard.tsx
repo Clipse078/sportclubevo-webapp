@@ -17,6 +17,7 @@ import {
 type Props = {
   target: StrategyTargetOverview;
   isFocus?: boolean;
+  showFocusBadge?: boolean;
 };
 
 function formatPercent(value: number | null, emptyLabel = "—") {
@@ -24,7 +25,11 @@ function formatPercent(value: number | null, emptyLabel = "—") {
   return `${value}%`;
 }
 
-export default function TargetZieleCollapsibleCard({ target, isFocus = false }: Props) {
+export default function TargetZieleCollapsibleCard({
+  target,
+  isFocus = false,
+  showFocusBadge = true,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const panelId = `target-ziele-panel-${target.id}`;
 
@@ -50,7 +55,7 @@ export default function TargetZieleCollapsibleCard({ target, isFocus = false }: 
           />
         </button>
         <div className="min-w-0 flex-1">
-          <ZieleCardTitle target={target} isFocus={isFocus} />
+          <ZieleCardTitle target={target} isFocus={isFocus} showFocusBadge={showFocusBadge} />
           <p className="mt-0.5 text-xs text-[var(--muted)]">
             Zielstatus: {formatTargetStatusLabel(target.status)} · Zielerreichung:{" "}
             {formatPercent(target.outcomeProgressPercent)} · Umsetzung:{" "}
@@ -125,9 +130,11 @@ export default function TargetZieleCollapsibleCard({ target, isFocus = false }: 
 function ZieleCardTitle({
   target,
   isFocus,
+  showFocusBadge,
 }: {
   target: StrategyTargetOverview;
   isFocus: boolean;
+  showFocusBadge: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -139,7 +146,7 @@ function ZieleCardTitle({
       >
         {target.title}
       </Link>
-      {isFocus ? (
+      {isFocus && showFocusBadge ? (
         <span className="rounded-full border border-[var(--sce-primary)]/30 bg-[var(--sce-primary)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--sce-primary)]">
           {CD_STRATEGY_PROGRESS_COPY.focusBadge}
         </span>

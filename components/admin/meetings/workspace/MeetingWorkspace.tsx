@@ -17,6 +17,8 @@ import {
   MeetingParticipantsSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import MeetingPendenzenPanel from "@/components/admin/meetings/workspace/MeetingPendenzenPanel";
+import SceClubDevelopmentSectionShell from "@/components/admin/club-development/SceClubDevelopmentSectionShell";
+import { CD_MEETINGS_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { PendenzListItem } from "@/lib/meetings/meeting-pendenzen";
 import { countOpenPendenzen, countOverduePendenzen, mergeMeetingPendenzen } from "@/lib/meetings/meeting-pendenzen";
 import { MEETING_ACTION_STATUS_LABEL } from "@/lib/meetings/meeting-protocol-labels";
@@ -202,33 +204,39 @@ export default function MeetingWorkspace({
     <>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
       <div className="space-y-4" data-testid="meeting-workspace">
-        <MeetingWorkspaceHeader
-          title={title}
-          meeting={meeting}
-          slug={slug}
-          canManage={effectiveCanManage}
-          fmtCfg={fmtCfg}
-          agendaCount={agendaItems.length}
-          participantCount={participants.length}
-          decisionCount={decisions.length}
-          actionCount={actions.length}
-          pendingDecisionApprovals={pendingDecisionApprovals}
-          hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
-          onNavigateToSection={navigateToSection}
-        />
+        <SceClubDevelopmentSectionShell
+          title={CD_MEETINGS_WORKSPACE_COPY.summarySectionTitle}
+          bodyClassName="p-5 space-y-4"
+          testId="meeting-workspace-summary"
+        >
+          <MeetingWorkspaceHeader
+            title={title}
+            meeting={meeting}
+            slug={slug}
+            canManage={effectiveCanManage}
+            fmtCfg={fmtCfg}
+            agendaCount={agendaItems.length}
+            participantCount={participants.length}
+            decisionCount={decisions.length}
+            actionCount={actions.length}
+            pendingDecisionApprovals={pendingDecisionApprovals}
+            hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
+            onNavigateToSection={navigateToSection}
+          />
 
-        <MeetingWorkspaceStatusBar
-          meeting={meeting}
-          canManage={canManage}
-          canDelete={canDelete}
-          participants={participants}
-          agendaItems={agendaItems}
-          decisions={decisions}
-          actions={actions}
-          slug={slug}
-          openPendenzenCount={displayPendenzenOpenCount}
-          overduePendenzenCount={displayPendenzenOverdueCount}
-        />
+          <MeetingWorkspaceStatusBar
+            meeting={meeting}
+            canManage={canManage}
+            canDelete={canDelete}
+            participants={participants}
+            agendaItems={agendaItems}
+            decisions={decisions}
+            actions={actions}
+            slug={slug}
+            openPendenzenCount={displayPendenzenOpenCount}
+            overduePendenzenCount={displayPendenzenOverdueCount}
+          />
+        </SceClubDevelopmentSectionShell>
 
         <MeetingWorkspaceSectionNav
           counts={{

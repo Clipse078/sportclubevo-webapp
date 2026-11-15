@@ -130,14 +130,6 @@ export default function MeetingWorkspaceStatusBar({
                 role="menu"
                 className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg"
               >
-                <Link
-                  href={`/vereinsleitung/meetings/${slug}/edit`}
-                  role="menuitem"
-                  className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Bearbeiten
-                </Link>
                 {meeting.status === "PLANNED" ? (
                   <button
                     type="button"

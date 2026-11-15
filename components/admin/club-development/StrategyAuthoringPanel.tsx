@@ -30,6 +30,8 @@ import StrategyAssociationLinkEditor, {
 } from "./StrategyAssociationLinkEditor";
 import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSection";
 import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
+import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
@@ -298,30 +300,31 @@ export default function StrategyAuthoringPanel({
     });
   };
 
+  const strategyEditAside =
+    canManage && persisted ? (
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+        onClick={() => {
+          setSaveSuccess(false);
+          setSaveError(null);
+          setEditing((v) => !v);
+        }}
+        data-testid="strategy-edit-toggle"
+      >
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
+        {editing ? CD_STRATEGY_AUTHORING_COPY.cancelEditAction : CD_STRATEGY_AUTHORING_COPY.editAction}
+      </button>
+    ) : null;
+
   return (
     <div className="mb-8 space-y-5" data-testid="strategy-authoring-panel">
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
-            {CD_STRATEGY_AUTHORING_COPY.sectionTitle}
-          </h2>
-          {canManage && persisted ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
-              onClick={() => {
-                setSaveSuccess(false);
-                setSaveError(null);
-                setEditing((v) => !v);
-              }}
-              data-testid="strategy-edit-toggle"
-            >
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
-              {editing ? CD_STRATEGY_AUTHORING_COPY.cancelEditAction : CD_STRATEGY_AUTHORING_COPY.editAction}
-            </button>
-          ) : null}
-        </div>
-
+      <SceClubDevelopmentSectionShell
+        title={CD_STRATEGY_AUTHORING_COPY.sectionTitle}
+        headerAside={strategyEditAside}
+        bodyClassName="p-5 space-y-4"
+        testId="strategy-clubstrategie-section"
+      >
         {editing && canManage ? (
           <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
             <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -428,18 +431,18 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         )}
-      </section>
+      </SceClubDevelopmentSectionShell>
 
-      <section
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
-        data-testid="strategy-focus-section"
+      <SceClubDevelopmentSectionShell
+        title={CD_STRATEGY_AUTHORING_COPY.focusHeading}
+        headerAside={
+          focusTargets.length > 0 ? (
+            <span className="text-xs text-[var(--muted)] tabular-nums">{focusTargets.length}</span>
+          ) : null
+        }
+        bodyClassName="p-5 space-y-3"
+        testId="strategy-focus-section"
       >
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-base font-semibold text-[var(--foreground)]">
-            {CD_STRATEGY_AUTHORING_COPY.focusHeading}
-          </h3>
-          <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusHint}</p>
-        </div>
         {focusError ? (
           <div className="space-y-1">
             <ClubDevelopmentFormError message={focusError} />
@@ -457,7 +460,7 @@ export default function StrategyAuthoringPanel({
         ) : null}
 
         {focusTargets.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusEmpty}</p>
+          <SceClubDevelopmentEmptyState message={CD_STRATEGY_AUTHORING_COPY.focusEmpty} />
         ) : (
           <ul className="mb-3 space-y-3" data-testid="strategy-focus-cards">
             {focusTargetOverviews.map(({ focus, overview }) => (
@@ -475,7 +478,7 @@ export default function StrategyAuthoringPanel({
                   </div>
                 ) : null}
                 {overview ? (
-                  <TargetZieleCollapsibleCard target={overview} isFocus />
+                  <TargetZieleCollapsibleCard target={overview} isFocus showFocusBadge={false} />
                 ) : (
                   <Link
                     href={`/vereinsleitung/targets/${focus.target.id}`}
@@ -530,7 +533,7 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         ) : null}
-      </section>
+      </SceClubDevelopmentSectionShell>
 
       <StrategySupportingMaterialsCard
         meetingCount={supportingCounts.meetings}
