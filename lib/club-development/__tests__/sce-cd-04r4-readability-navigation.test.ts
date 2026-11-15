@@ -57,7 +57,8 @@ describe("SCE-CD-04R5 PKG-01 navigation copy", () => {
     expect(read("components/admin/club-development/StrategyOverviewPanel.tsx")).toContain(
       "targetId=",
     );
-    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).not.toContain("In Arbeit");
+    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).toContain("loadVorhabenWorkspace");
+    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).not.toContain("PKG-02");
   });
 });
 

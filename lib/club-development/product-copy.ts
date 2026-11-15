@@ -18,16 +18,29 @@ export const CD_OVERVIEW_SHORTCUT_COPY = {
   backlogDescription: "Priorisierte Vorhaben mit Einordnung und Erwartetem Ergebnis.",
   sprintDescription: "Umsetzungsphasen planen, Aufgaben zuordnen und abschließen.",
   workHubDescription:
-    "Weiterleitung zu Vorhaben, Prioritäten, Aufgaben und Umsetzungsplanung — kein gemeinsamer Arbeitsbereich (PKG-02).",
+    "Gemeinsamer Arbeitsbereich für sichtbare Vorhaben und zugehörige Aufgaben — gefilterte Lens, kein Ersatz für die Aufgaben-Inbox.",
 } as const;
 
-export const CD_VORHABEN_HUB_COPY = {
-  hubIntro:
-    "Vorhaben & Aufgaben ist ein Wegweiser. Liste, Backlog, Aufgaben und Umsetzungsphasen bleiben in den jeweiligen Modulen.",
-  initiativeListTitle: "Vorhaben-Liste",
-  initiativeListDescription: "Alle sichtbaren Vorhaben mit Status, Fortschritt und Verantwortlichen.",
-  taskInboxTitle: "Aufgaben",
-  taskInboxDescription: "Zentrale Aufgabenübersicht und Zuweisungen im Aufgaben-Bereich.",
+/** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
+export const CD_VORHABEN_WORKSPACE_COPY = {
+  intro:
+    "Vorhaben & Aufgaben bündelt sichtbare Vorhaben mit zugehörigen Aufgaben in einer gefilterten Arbeitsansicht. Vorhaben-Details, Ziele, Umsetzungsplanung und die zentrale Aufgaben-Inbox bleiben erreichbar.",
+  shortcutStrategy: "Ziele, Kennzahlen und Fortschritt — Sprung zu Zieldetails oder gefiltertem Backlog.",
+  shortcutBacklog: "Prioritäten und Einordnung — nicht derselbe Einstieg wie dieser Arbeitsbereich.",
+  shortcutSprints: "Root-Aufgaben planen; Unteraufgaben bleiben am übergeordneten Aufgaben-Arbeitsplatz.",
+  shortcutTasksInbox: "Alle Aufgaben mandantenweit — dieser Bereich filtert auf Vereinsentwicklung.",
+  targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
+  searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
+  allInitiatives: "Alle sichtbaren Vorhaben",
+  anyOpenTaskStatus: "Aktive Aufgaben (ohne Abbruch)",
+  focusInitiative: "Fokus:",
+  initiativesHeading: "Vorhaben",
+  tasksHeading: "Zugehörige Aufgaben",
+  rootTasksOnly: "Nur übergeordnete Aufgaben — Unteraufgaben im Aufgaben-Arbeitsplatz.",
+  emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
+  emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  noInitiativeAccess: "Keine Berechtigung zur Vorhaben-Ansicht.",
+  noTaskAccess: "Keine Berechtigung zur Aufgaben-Ansicht.",
 } as const;
 
 export const CD_INITIATIVE_COPY = {

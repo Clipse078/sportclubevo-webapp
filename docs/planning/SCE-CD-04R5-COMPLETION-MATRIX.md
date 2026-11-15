@@ -14,7 +14,7 @@ Product label **Strategiekonzeption & Dokumentation** denotes the composed workf
 | 3 | **Strategie** (progress lens) | `/vereinsleitung/strategie` | Rollup query | **Read-only overview** — links to Zieldetails and filtered Backlog; not strategy authoring |
 | 4 | **Vorhaben & Prioritäten** | `/vereinsleitung/initiativen/backlog` | `Initiative` backlog fields | **Working** — `?targetId=` filter from Strategie |
 | 5 | **Vorhaben** list/detail | `/vereinsleitung/initiativen/*` | Initiatives, milestones, target links | **Working** |
-| 6 | **Vorhaben & Aufgaben** hub | `/vereinsleitung/vorhaben` | None (routing only) | **Hub** — cards to list, backlog, Aufgaben, sprints (CD-WORK deferred PKG-02) |
+| 6 | **Vorhaben & Aufgaben** workspace | `/vereinsleitung/vorhaben` | Initiatives + linked root `Task` rows | **Working (PKG-02)** — filtered CD-WORK lens; API `GET /api/club-development/vorhaben-workspace`; tests in `vorhaben-workspace.test.ts` (manual PO UAT: PKG-03) |
 | 7 | **Umsetzungsplanung** | `/vereinsleitung/sprints/*` | `DevelopmentSprint` | **Working** (requires migrations on DB) |
 | 8 | **Aufgaben** | `/dashboard/aufgaben`, task workspace | `Task` | **Working** — primary initiative + sprint associations |
 | 9 | **Prozesse & Richtlinien** | `/vereinsleitung/prozesse` | Demo only | **Not started** (CD-PROCESS) |
@@ -70,7 +70,7 @@ Verified via designated scripts against canonical STAGE fingerprint `acd3b376829
 |-------|-----|--------|---------|
 | — | PKG-00 | Pipeline migration apply on non-STAGE envs | Ops |
 | ✓ | **PKG-01** | Navigation & workflow comprehension | — |
-| 2 | **PKG-02** | CD-WORK Vorhaben lens (replace hub) | — |
+| ✓ | **PKG-02** | CD-WORK Vorhaben lens (replace hub) | — |
 | 3 | **PKG-03** | Authenticated PO UAT + optional `linkedInitiativeRefs` backfill | Migrations on preview tenant data |
 | 4 | **PKG-04** | Subtask-in-sprint policy (only if product requires) | Explicit requirement |
 | 5 | **PKG-05** | Strategiekonzeption authoring slice (rationale + doc links) | Optional parallel to PKG-02 |
