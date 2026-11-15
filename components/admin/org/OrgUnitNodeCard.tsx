@@ -113,7 +113,7 @@ export default function OrgUnitNodeCard({
       data-testid={`org-unit-node-${unit.id}`}
       data-org-node-density={density}
       className={cn(
-        "group relative flex h-full w-full flex-col justify-center rounded-xl border px-3 py-2.5 text-left shadow-sm transition",
+        "group relative flex h-full w-full flex-col justify-start rounded-xl border px-3 py-2 text-left shadow-sm transition",
         "bg-[var(--surface-2)]/95 backdrop-blur-[2px]",
         "border-[var(--border)] hover:border-[var(--border-strong)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-surface-muted)]",
@@ -180,8 +180,12 @@ export default function OrgUnitNodeCard({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "truncate font-semibold leading-tight text-[var(--text-1)]",
-              density === "MICRO" ? "text-[11px]" : density === "COMPACT" ? "text-[13px]" : "text-sm",
+              "font-semibold leading-snug text-[var(--text-1)]",
+              density === "MICRO"
+                ? "line-clamp-1 text-[11px]"
+                : density === "COMPACT"
+                  ? "line-clamp-2 break-words text-[13px]"
+                  : "line-clamp-2 break-words text-sm",
             )}
             title={unit.name}
           >

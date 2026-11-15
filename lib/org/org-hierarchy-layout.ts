@@ -30,12 +30,12 @@ export type OrgHierarchyLayoutResult = {
   height: number;
 };
 
-export const ORG_HIERARCHY_NODE_WIDTH = 240;
-export const ORG_HIERARCHY_NODE_HEIGHT = 116;
+export const ORG_HIERARCHY_NODE_WIDTH = 272;
+export const ORG_HIERARCHY_NODE_HEIGHT = 124;
 const DEFAULT_NODE_WIDTH = ORG_HIERARCHY_NODE_WIDTH;
 const DEFAULT_NODE_HEIGHT = ORG_HIERARCHY_NODE_HEIGHT;
-const DEFAULT_GAP_X = 32;
-const DEFAULT_GAP_Y = 64;
+const DEFAULT_GAP_X = 20;
+const DEFAULT_GAP_Y = 40;
 
 function compareUnits(a: OrgHierarchyUnit, b: OrgHierarchyUnit): number {
   if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;

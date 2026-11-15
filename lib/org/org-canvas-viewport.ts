@@ -13,7 +13,7 @@ export const ORG_CANVAS_DEFAULT_NODE_HEIGHT = ORG_HIERARCHY_NODE_HEIGHT;
 export const ORG_CANVAS_MIN_SCALE = 0.45;
 export const ORG_CANVAS_MAX_SCALE = 1.75;
 /** Minimum on-screen node width when using fit-to-view (px). */
-export const ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH = 152;
+export const ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH = 168;
 
 export type OrgCanvasChromeInsets = {
   top?: number;
@@ -103,8 +103,20 @@ export function computeOrgCanvasFitToView(input: FitToViewInput): FitToViewResul
   );
 
   const legibleFloor = legibleMinScreenNodeWidth / nodeWidth;
-  let scale = Math.max(fitScaleRaw, legibleFloor);
-  const legibilityClamped = scale > fitScaleRaw + 0.001;
+  let scale = fitScaleRaw;
+  let legibilityClamped = false;
+
+  const nodesUnreadableAtFit = fitScaleRaw * nodeWidth < legibleMinScreenNodeWidth - 0.5;
+  if (nodesUnreadableAtFit) {
+    const bumpedScale = Math.max(fitScaleRaw, legibleFloor);
+    const overflowsAtBumped =
+      cw * bumpedScale > innerVw - padding * 2 || ch * bumpedScale > innerVh - padding * 2;
+    if (overflowsAtBumped) {
+      scale = bumpedScale;
+      legibilityClamped = scale > fitScaleRaw + 0.001;
+    }
+  }
+
   scale = Math.max(minScale, Math.min(maxScale, scale));
 
   const hierarchyOverflowsViewport =

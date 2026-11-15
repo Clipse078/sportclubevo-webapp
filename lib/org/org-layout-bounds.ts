@@ -13,7 +13,7 @@ export type OrgLayoutBoundingBox = {
   height: number;
 };
 
-const DEFAULT_MARGIN = 56;
+const DEFAULT_MARGIN = 36;
 
 export function computeOrgLayoutBoundingBox(
   nodes: Pick<OrgHierarchyLayoutNode, "x" | "y" | "width" | "height">[],

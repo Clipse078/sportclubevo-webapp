@@ -28,7 +28,7 @@ describe("org-canvas-viewport", () => {
     expect(result.panX).toBeLessThan(200);
   });
 
-  it("applies legibility guard when fit would shrink nodes too far", () => {
+  it("applies legibility guard only when large hierarchies overflow at readable scale", () => {
     const result = computeOrgCanvasFitToView({
       viewportWidth: 800,
       viewportHeight: 600,
@@ -42,6 +42,21 @@ describe("org-canvas-viewport", () => {
     );
     expect(result.legibilityClamped).toBe(true);
     expect(result.hierarchyOverflowsViewport).toBe(true);
+  });
+
+  it("does not force legibility zoom-in when the hierarchy already fits with slack", () => {
+    const result = computeOrgCanvasFitToView({
+      viewportWidth: 1200,
+      viewportHeight: 800,
+      layoutWidth: 1200,
+      layoutHeight: 400,
+      contentWidth: 720,
+      contentHeight: 320,
+      nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
+      legibleMinScreenNodeWidth: ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+    });
+    expect(result.legibilityClamped).toBe(false);
+    expect(result.hierarchyOverflowsViewport).toBe(false);
   });
 
   it("classifies contextual zoom levels", () => {

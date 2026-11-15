@@ -39,6 +39,7 @@ import { anchorRectFromElement } from "@/lib/org/org-unit-hover-eligibility";
 import { useOrgBuilderHistory } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
+import { SCE_SEARCH_FIELD_INPUT_CLASS } from "@/lib/design-system/sce-form-control-foundation";
 import { LayoutGrid, Maximize2, Redo2, Search, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 
 export type OrgUnitCanvasItem = OrgHierarchyUnit & {
@@ -261,10 +262,27 @@ export default function OrgUnitCanvasView({
   );
 
   useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || layout.nodes.length === 0 || didInitialFit.current) return;
+
+    const runInitialFit = () => {
+      if (didInitialFit.current) return;
+      if (viewport.clientWidth < 1 || viewport.clientHeight < 1) return;
+      didInitialFit.current = true;
+      applyFitToView();
+    };
+
+    runInitialFit();
     if (didInitialFit.current) return;
-    if (layout.nodes.length === 0) return;
-    didInitialFit.current = true;
-    applyFitToView();
+
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      runInitialFit();
+      if (didInitialFit.current) observer.disconnect();
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, [applyFitToView, layout.nodes.length]);
 
   useEffect(() => {
@@ -419,13 +437,16 @@ export default function OrgUnitCanvasView({
         data-testid="org-canvas-toolbar"
       >
         <div className="relative min-w-[12rem] flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
+            aria-hidden
+          />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Organisationseinheit suchen …"
-            className="fca-input w-full pl-9"
+            className={cn(SCE_SEARCH_FIELD_INPUT_CLASS, "h-9 w-full text-sm")}
             aria-label="Organisationseinheit suchen"
             data-testid="org-canvas-search"
           />
