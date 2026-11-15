@@ -54,7 +54,7 @@ describe("PKG-06 Vorhaben workspace inline create + Rückblick deep links", () =
   });
 
   it("records verified preview URL and PO acceptance paths for handoff", () => {
-    expect(PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT).toBe("de809ada");
+    expect(PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT).toBe("2457dd13");
     expect(PKG_06_VERIFIED_PREVIEW_URL).toContain("sportclubevo-webapp-stage-git-curs");
     const paths = buildPkg06PoAcceptancePaths();
     expect(paths.vorhabenInlineCreate).toBe("/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben");
