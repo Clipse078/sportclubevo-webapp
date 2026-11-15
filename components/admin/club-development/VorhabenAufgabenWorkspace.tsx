@@ -36,7 +36,7 @@ const TASK_STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "OPEN", label: "Offen" },
   { value: "IN_PROGRESS", label: "In Arbeit" },
   { value: "DONE", label: "Erledigt" },
-  { value: "BLOCKED", label: "Blockiert" },
+  { value: "CANCELLED", label: "Abgebrochen" },
 ];
 
 const LINK_KIND_LABELS: Record<VorhabenWorkspaceTaskRow["linkKind"], string> = {

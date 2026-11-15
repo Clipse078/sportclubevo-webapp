@@ -31,6 +31,21 @@ const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
   CANCELLED: "Abgesagt",
 };
 
+const INITIATIVE_LIST_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  status: true,
+  visibilityScope: true,
+  createdByUserId: true,
+  visibleRoleRefs: true,
+  visibleUserRefs: true,
+  visibleTeamRefs: true,
+  visibleOrgUnitRefs: true,
+  visiblePersonRefs: true,
+  visibleTargetGroupRefs: true,
+} satisfies Prisma.InitiativeSelect;
+
 const TASK_ROW_SELECT = {
   id: true,
   title: true,
@@ -266,12 +281,7 @@ export async function loadVorhabenWorkspace(
         ...buildInitiativeListWhere(actor.tenantId, filters),
         ...buildVisibilityWhere(actor),
       },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        status: true,
-      },
+      select: INITIATIVE_LIST_SELECT,
     });
     const visible = applyVisibilityFilter(initiativeRows, actor);
     const sorted = [...visible].sort((a, b) => a.title.localeCompare(b.title, "de"));
@@ -434,10 +444,14 @@ export async function loadVorhabenWorkspace(
       if (missingIds.size > 0) {
         const extraInitiatives = await prisma.initiative.findMany({
           where: { tenantId: actor.tenantId, id: { in: [...missingIds] } },
-          select: { id: true, title: true, slug: true },
+          select: INITIATIVE_LIST_SELECT,
         });
         for (const row of applyVisibilityFilter(extraInitiatives, actor)) {
-          initiativeById.set(row.id, row);
+          initiativeById.set(row.id, {
+            id: row.id,
+            title: row.title,
+            slug: row.slug,
+          });
         }
       }
 
