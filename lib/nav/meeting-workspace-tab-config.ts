@@ -8,10 +8,10 @@ export type MeetingWorkspaceTabId =
   | "details";
 
 export const MEETING_WORKSPACE_SECTION_ORDER: MeetingWorkspaceTabId[] = [
+  "teilnehmer",
   "traktanden",
   "beschluesse",
   "pendenzen",
-  "teilnehmer",
   "details",
 ];
 

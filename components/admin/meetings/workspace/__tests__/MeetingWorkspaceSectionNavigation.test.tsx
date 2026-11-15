@@ -21,8 +21,27 @@ const counts = {
   traktanden: 1,
   beschluesse: 0,
   pendenzenOpen: 0,
-  teilnehmer: 0,
+  teilnehmer: 2,
 };
+
+const previewParticipants = [
+  {
+    id: "p-1",
+    name: "Alice Example",
+    role: null,
+    status: "INVITED" as const,
+    userId: null,
+    personId: "per-1",
+  },
+  {
+    id: "p-2",
+    name: "Bob Example",
+    role: null,
+    status: "INVITED" as const,
+    userId: null,
+    personId: "per-2",
+  },
+];
 
 function DraftableTraktanden() {
   const [title, setTitle] = useState("Traktanden-Entwurf");
@@ -46,6 +65,18 @@ function SectionNavigationHarness({ isDirty = false, canManageParticipants = tru
     <MeetingWorkspaceDirtyShell>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
       <MeetingWorkspaceSectionNav counts={counts}>
+        <MeetingWorkspaceCollapsibleSection
+          sectionId="teilnehmer"
+          title="Teilnehmer (2)"
+          collapsedPreview="Alice Example, Bob Example"
+        >
+          <MeetingParticipantsSection
+            meetingId="m-1"
+            canManage={canManageParticipants}
+            items={previewParticipants}
+            onItemsChange={vi.fn()}
+          />
+        </MeetingWorkspaceCollapsibleSection>
         <MeetingWorkspaceCollapsibleSection sectionId="traktanden" title="Traktanden (1)">
           <DraftableTraktanden />
         </MeetingWorkspaceCollapsibleSection>
@@ -55,13 +86,8 @@ function SectionNavigationHarness({ isDirty = false, canManageParticipants = tru
         <MeetingWorkspaceCollapsibleSection sectionId="pendenzen" title="Pendenzen (0)" lazy>
           <div data-testid="pendenzen-lazy-content">Pendenzen geladen</div>
         </MeetingWorkspaceCollapsibleSection>
-        <MeetingWorkspaceCollapsibleSection sectionId="teilnehmer" title="Teilnehmer (0)">
-          <MeetingParticipantsSection
-            meetingId="m-1"
-            canManage={canManageParticipants}
-            items={[]}
-            onItemsChange={vi.fn()}
-          />
+        <MeetingWorkspaceCollapsibleSection sectionId="details" title="Sitzungsdetails">
+          <div data-testid="details-content">Details</div>
         </MeetingWorkspaceCollapsibleSection>
       </MeetingWorkspaceSectionNav>
     </MeetingWorkspaceDirtyShell>
@@ -96,6 +122,34 @@ describe("Meeting workspace section navigation (runtime)", () => {
 
   afterEach(() => {
     window.history.replaceState(null, "", `${window.location.pathname}${originalHash}`);
+  });
+
+  it("lists nav tabs in canonical section order", () => {
+    render(<SectionNavigationHarness />);
+    const tabs = within(screen.getByTestId("meeting-workspace-section-nav")).getAllByRole("link");
+    const keys = tabs.map((link) =>
+      link.getAttribute("data-testid")?.replace("meeting-workspace-tab-", ""),
+    );
+    expect(keys).toEqual(["teilnehmer", "traktanden", "beschluesse", "pendenzen", "details"]);
+  });
+
+  it("defaults Traktanden expanded and Teilnehmer collapsed", () => {
+    render(<SectionNavigationHarness />);
+    expect(screen.getByTestId("meeting-workspace-section-traktanden")).toHaveAttribute(
+      "data-expanded",
+      "true",
+    );
+    expect(screen.getByTestId("meeting-workspace-section-teilnehmer")).toHaveAttribute(
+      "data-expanded",
+      "false",
+    );
+  });
+
+  it("shows participant name preview while Teilnehmer is collapsed", () => {
+    render(<SectionNavigationHarness />);
+    expect(screen.getByTestId("meeting-workspace-section-preview-teilnehmer")).toHaveTextContent(
+      "Alice Example, Bob Example",
+    );
   });
 
   it("expands a section on toggle click", () => {
@@ -171,6 +225,10 @@ describe("Meeting workspace section navigation (runtime)", () => {
     expect(screen.getByTestId("meeting-workspace-section-pendenzen")).toHaveAttribute(
       "data-expanded",
       "true",
+    );
+    expect(screen.getByTestId("meeting-workspace-section-traktanden")).toHaveAttribute(
+      "data-expanded",
+      "false",
     );
     expect(screen.getByTestId("pendenzen-lazy-content")).toBeInTheDocument();
   });

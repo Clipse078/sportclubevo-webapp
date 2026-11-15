@@ -27,6 +27,7 @@ import {
 } from "@/lib/nav/meeting-workspace-tab-config";
 import { LEGACY_MEETING_SECTION_HASH_TO_TAB } from "@/lib/meetings/meeting-workspace-section-url";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
+import { formatMeetingParticipantsCollapsedPreview } from "@/lib/meetings/meeting-participant-preview";
 import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { ReactNode } from "react";
@@ -211,6 +212,11 @@ export default function MeetingWorkspace({
     ) as Record<MeetingWorkspaceTabId, string>;
   }, [sectionCounts]);
 
+  const teilnehmerCollapsedPreview = useMemo(
+    () => formatMeetingParticipantsCollapsedPreview(participants.map((p) => p.name)),
+    [participants],
+  );
+
   return (
     <>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
@@ -250,6 +256,20 @@ export default function MeetingWorkspace({
         </SceClubDevelopmentSectionShell>
 
         <MeetingWorkspaceSectionNav counts={sectionCounts}>
+          <MeetingWorkspaceCollapsibleSection
+            sectionId="teilnehmer"
+            title={sectionLabels.teilnehmer}
+            collapsedPreview={teilnehmerCollapsedPreview}
+          >
+            <MeetingParticipantsSection
+              meetingId={meeting.id}
+              canManage={effectiveCanManage}
+              items={participants}
+              onItemsChange={setParticipants}
+              onDirtyChange={setIsDirty}
+            />
+          </MeetingWorkspaceCollapsibleSection>
+
           <MeetingWorkspaceCollapsibleSection
             sectionId="traktanden"
             title={sectionLabels.traktanden}
@@ -320,19 +340,6 @@ export default function MeetingWorkspace({
                   })),
                 });
               }}
-            />
-          </MeetingWorkspaceCollapsibleSection>
-
-          <MeetingWorkspaceCollapsibleSection
-            sectionId="teilnehmer"
-            title={sectionLabels.teilnehmer}
-          >
-            <MeetingParticipantsSection
-              meetingId={meeting.id}
-              canManage={effectiveCanManage}
-              items={participants}
-              onItemsChange={setParticipants}
-              onDirtyChange={setIsDirty}
             />
           </MeetingWorkspaceCollapsibleSection>
 

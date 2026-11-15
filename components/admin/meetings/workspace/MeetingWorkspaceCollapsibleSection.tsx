@@ -17,6 +17,8 @@ type Props = {
   title: string;
   children: ReactNode;
   lazy?: boolean;
+  /** Shown under the section title while collapsed (e.g. participant names). */
+  collapsedPreview?: ReactNode;
 };
 
 export default function MeetingWorkspaceCollapsibleSection({
@@ -24,6 +26,7 @@ export default function MeetingWorkspaceCollapsibleSection({
   title,
   children,
   lazy = false,
+  collapsedPreview,
 }: Props) {
   const panelId = useId();
   const {
@@ -66,30 +69,40 @@ export default function MeetingWorkspaceCollapsibleSection({
       data-expanded={expanded ? "true" : "false"}
     >
       <div className={workspaceSectionHeaderClass}>
-        <button
-          type="button"
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-          aria-expanded={expanded}
-          aria-controls={panelId}
-          onClick={() => requestToggleSection(sectionId)}
-          data-testid={`meeting-workspace-section-toggle-${sectionId}`}
-        >
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 text-[var(--muted)] transition-transform motion-reduce:transition-none",
-              expanded && "rotate-180",
-            )}
-            aria-hidden
-          />
-          <h2
-            ref={setHeadingRef}
-            id={`${domId}-heading`}
-            className="text-sm font-semibold text-[var(--foreground)]"
-            tabIndex={-1}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <button
+            type="button"
+            className="flex min-w-0 items-center gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={() => requestToggleSection(sectionId)}
+            data-testid={`meeting-workspace-section-toggle-${sectionId}`}
           >
-            {title}
-          </h2>
-        </button>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-[var(--muted)] transition-transform motion-reduce:transition-none",
+                expanded && "rotate-180",
+              )}
+              aria-hidden
+            />
+            <h2
+              ref={setHeadingRef}
+              id={`${domId}-heading`}
+              className="text-sm font-semibold text-[var(--foreground)]"
+              tabIndex={-1}
+            >
+              {title}
+            </h2>
+          </button>
+          {!expanded && collapsedPreview ? (
+            <p
+              className="pl-6 text-xs text-[var(--text-2)]"
+              data-testid={`meeting-workspace-section-preview-${sectionId}`}
+            >
+              {collapsedPreview}
+            </p>
+          ) : null}
+        </div>
       </div>
       {shouldRenderBody ? (
         <div

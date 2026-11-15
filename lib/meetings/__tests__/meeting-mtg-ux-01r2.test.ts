@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatMeetingWorkspaceTabLabel,
   buildMeetingWorkspaceTabNavigationConfig,
+  MEETING_WORKSPACE_SECTION_ORDER,
 } from "@/lib/nav/meeting-workspace-tab-config";
 import { getMeetingPrimaryAction } from "@/lib/meetings/meeting-lifecycle";
 
@@ -27,6 +28,13 @@ describe("SCE-MTG-UX-01R2 meeting workspace refinement", () => {
     const config = buildMeetingWorkspaceTabNavigationConfig(counts);
     expect(config.tabs.find((t) => t.key === "traktanden")?.label).toBe("Traktanden (3)");
     expect(config.tabs.every((t) => t.count === undefined)).toBe(true);
+  });
+
+  it("uses canonical section order for navigation tabs", () => {
+    const config = buildMeetingWorkspaceTabNavigationConfig(counts);
+    expect(config.tabs.map((t) => t.key)).toEqual(MEETING_WORKSPACE_SECTION_ORDER);
+    expect(MEETING_WORKSPACE_SECTION_ORDER[0]).toBe("teilnehmer");
+    expect(config.defaultTab).toBe("traktanden");
   });
 
   it("Pendenzen tab uses one canonical panel without duplicate section headings", () => {
