@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TaskContextType, TaskStatus } from "@prisma/client";
-import { sortInitiativeBacklogRows } from "../initiative-backlog";
+import { buildInitiativeBacklogWhere, sortInitiativeBacklogRows } from "../initiative-backlog";
 import {
   computeMetricOutcomePercent,
   computeTargetOutcomePercent,
@@ -25,6 +25,14 @@ vi.mock("@/lib/db/prisma", () => ({
 describe("SCE-CD-04 strategy & sprints", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("adds targetId filter via InitiativeTargetLink relation", () => {
+    const where = buildInitiativeBacklogWhere("tenant-1", { targetId: "target-42" });
+    expect(where).toMatchObject({
+      tenantId: "tenant-1",
+      targetLinks: { some: { targetId: "target-42" } },
+    });
   });
 
   it("sorts backlog by backlogPriority desc then updatedAt desc", () => {

@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
 
   const search = req.nextUrl.searchParams.get("search") ?? undefined;
   const ownerPersonId = req.nextUrl.searchParams.get("ownerPersonId") ?? undefined;
+  const targetId = req.nextUrl.searchParams.get("targetId")?.trim() || undefined;
   const status = parseStatus(req.nextUrl.searchParams.get("status"));
   const disposition = parseDisposition(req.nextUrl.searchParams.get("disposition"));
 
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
     const initiatives = await listInitiativeBacklog(access.context.actor, {
       search,
       ownerPersonId,
+      targetId,
       status,
       disposition,
     });

@@ -28,6 +28,7 @@ type Props = {
   initialInitiatives: InitiativeBacklogRow[];
   canManage: boolean;
   canView: boolean;
+  initialTargetId?: string | null;
 };
 
 const STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -76,8 +77,10 @@ export default function InitiativeBacklogWorkspace({
   initialInitiatives,
   canManage,
   canView,
+  initialTargetId = null,
 }: Props) {
   const [rows, setRows] = useState<InitiativeBacklogRow[]>(initialInitiatives);
+  const targetIdFilter = (initialTargetId ?? "").trim();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [ownerFilter, setOwnerFilter] = useState("");
@@ -98,6 +101,7 @@ export default function InitiativeBacklogWorkspace({
       if (search.trim()) params.set("search", search.trim());
       if (statusFilter) params.set("status", statusFilter);
       if (dispositionFilter) params.set("disposition", dispositionFilter);
+      if (targetIdFilter) params.set("targetId", targetIdFilter);
       const result = await clubDevelopmentFetchJson<BacklogResponse>(
         `/api/club-development/initiatives/backlog?${params.toString()}`,
       );
@@ -108,7 +112,7 @@ export default function InitiativeBacklogWorkspace({
       const initiatives = (result.data.initiatives ?? []) as Parameters<typeof serializeRows>[0];
       setRows(serializeRows(initiatives));
     });
-  }, [canView, dispositionFilter, search, statusFilter]);
+  }, [canView, dispositionFilter, search, statusFilter, targetIdFilter]);
 
   useEffect(() => {
     if (skipInitialFetchRef.current) {
@@ -134,6 +138,17 @@ export default function InitiativeBacklogWorkspace({
 
   return (
     <div className="space-y-4" data-testid="initiative-backlog-workspace">
+      {targetIdFilter ? (
+        <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
+          Filter: Vorhaben, die mit dem gewählten strategischen Ziel verknüpft sind.{" "}
+          <Link
+            href="/vereinsleitung/initiativen/backlog"
+            className="font-medium text-[var(--sce-primary)] hover:underline"
+          >
+            Filter entfernen
+          </Link>
+        </p>
+      ) : null}
       <InitiativeBacklogCreateCard
         canCreate={canManage}
         onCreated={() => {

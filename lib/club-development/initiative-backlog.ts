@@ -39,6 +39,8 @@ export type InitiativeBacklogFilters = {
   status?: InitiativeStatus | InitiativeStatus[];
   ownerPersonId?: string;
   disposition?: InitiativeDisposition | InitiativeDisposition[];
+  /** Read-only filter: initiatives linked to this target via InitiativeTargetLink. */
+  targetId?: string;
 };
 
 export function sortInitiativeBacklogRows<
@@ -79,6 +81,10 @@ export function buildInitiativeBacklogWhere(
     where.disposition = Array.isArray(filters.disposition)
       ? { in: filters.disposition }
       : filters.disposition;
+  }
+
+  if (filters.targetId?.trim()) {
+    where.targetLinks = { some: { targetId: filters.targetId.trim() } };
   }
 
   return where;

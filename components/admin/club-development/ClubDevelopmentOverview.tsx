@@ -6,8 +6,13 @@ import {
   CheckSquare,
   ClipboardList,
   Flag,
+  LineChart,
   Workflow,
 } from "lucide-react";
+import {
+  CD_NAV_COPY,
+  CD_OVERVIEW_SHORTCUT_COPY,
+} from "@/lib/club-development/product-copy";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
@@ -124,6 +129,27 @@ export default function ClubDevelopmentOverview({
           icon={<GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
+          title={CD_NAV_COPY.strategyOverview}
+          description={CD_OVERVIEW_SHORTCUT_COPY.strategyDescription}
+          href="/vereinsleitung/strategie"
+          status="Verfügbar"
+          icon={<LineChart className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_NAV_COPY.initiativeBacklog}
+          description={CD_OVERVIEW_SHORTCUT_COPY.backlogDescription}
+          href="/vereinsleitung/initiativen/backlog"
+          status="Verfügbar"
+          icon={<ClipboardList className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_NAV_COPY.implementationPlanning}
+          description={CD_OVERVIEW_SHORTCUT_COPY.sprintDescription}
+          href="/vereinsleitung/sprints"
+          status="Verfügbar"
+          icon={<Flag className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
           title="Sitzungen"
           description="Meetings planen, Protokoll und Massnahmen verfolgen."
           href="/vereinsleitung/meetings"
@@ -131,11 +157,11 @@ export default function ClubDevelopmentOverview({
           icon={<CalendarDays className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
-          title="Vorhaben & Aufgaben"
-          description="Vorhaben und operative Aufgaben — ein gemeinsamer Arbeitsbereich folgt."
+          title={CD_NAV_COPY.initiativesAndTasksHub}
+          description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
           href="/vereinsleitung/vorhaben"
-          status="In Arbeit"
-          icon={<CheckSquare className="h-4 w-4 text-[var(--sce-warning)]" />}
+          status="Verfügbar"
+          icon={<CheckSquare className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
           title="Prozesse & Richtlinien"

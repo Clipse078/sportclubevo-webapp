@@ -2,6 +2,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
+import {
+  CD_NAV_COPY,
+  formatLinkedInitiativeCount,
+} from "@/lib/club-development/product-copy";
 
 type StrategyOverviewPanelProps = {
   targets: StrategyTargetOverview[];
@@ -72,17 +76,28 @@ export default function StrategyOverviewPanel({
                 <h2 className="text-base font-semibold text-[var(--foreground)]">{target.title}</h2>
               </div>
               <p className="text-xs text-[var(--muted)]">
-                Status: {STATUS_LABELS[target.status] ?? target.status} · {target.linkedInitiativeCount}{" "}
-                {target.linkedInitiativeCount === 1 ? "verknüpftes Vorhaben" : "verknüpfte Vorhaben"}
+                Status: {STATUS_LABELS[target.status] ?? target.status} ·{" "}
+                {formatLinkedInitiativeCount(target.linkedInitiativeCount)}
               </p>
             </div>
-            <Link
-              href={`/vereinsleitung/targets/${target.id}`}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
-            >
-              Zieldetails
-              <ArrowRight className="h-3 w-3" />
-            </Link>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Link
+                href={`/vereinsleitung/targets/${target.id}`}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
+              >
+                Zieldetails
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+              {target.linkedInitiativeCount > 0 ? (
+                <Link
+                  href={`/vereinsleitung/initiativen/backlog?targetId=${encodeURIComponent(target.id)}`}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
+                >
+                  {CD_NAV_COPY.initiativeBacklog}
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">

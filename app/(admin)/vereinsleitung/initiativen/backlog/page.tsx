@@ -9,12 +9,19 @@ import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { CD_NAV_COPY, CD_SPRINT_WORKSPACE_COPY, CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 
-export default async function InitiativeBacklogPage() {
+type PageProps = {
+  searchParams?: Promise<{ targetId?: string }>;
+};
+
+export default async function InitiativeBacklogPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const query = (await searchParams) ?? {};
+  const targetId = query.targetId?.trim() || undefined;
+
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
-  const initiatives = await listInitiativeBacklog(actor);
+  const initiatives = await listInitiativeBacklog(actor, { targetId });
   const canManage = actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
   const canView =
     canManage || actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_VIEW);
@@ -50,6 +57,7 @@ export default async function InitiativeBacklogPage() {
           initialInitiatives={initialInitiatives}
           canManage={canManage}
           canView={canView}
+          initialTargetId={targetId ?? null}
         />
       </ListPagePattern>
     </PageShell>

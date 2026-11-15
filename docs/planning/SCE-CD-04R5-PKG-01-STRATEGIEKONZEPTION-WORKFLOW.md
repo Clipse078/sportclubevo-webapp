@@ -1,7 +1,7 @@
 # SCE-CD-04R5-PKG-01 — Strategiekonzeption workflow closure
 
 **Programme:** Vereinsentwicklung (SCE-CD-04 completion)  
-**Status:** Ready for review (spec only; no migrations; no Organigramm scope)  
+**Status:** Implemented (navigation + backlog target filter; see completion matrix)  
 **Base branch:** `cursor/sce-strategy-backlog-sprints-01`  
 **Dependency note:** Preserves open PR **#980** (Organigramm) unmerged — no cherry-pick/merge from that line.
 
@@ -39,6 +39,15 @@ Actor: VL member with `targets.view`, `initiatives.manage`, `tasks.manage`.
 6. Open linked Aufgabe workspace — see **Primäres Vorhaben**, **Zugeordnete Umsetzungsphase**, **Zurück zur Umsetzungsphase**.
 
 **Verified user behavior** requires authenticated preview after migrations — not claimed until PKG-03 UAT.
+
+## Verified (implementation)
+
+- `ClubDevelopmentOverview`: module shortcuts to `/vereinsleitung/strategie`, `/vereinsleitung/initiativen/backlog`, `/vereinsleitung/sprints`; Vorhaben-Hub **Verfügbar** (not Strategiekonzeption-complete).
+- `StrategyOverviewPanel`: backlog deep link `?targetId=` when `linkedInitiativeCount > 0`.
+- `/vereinsleitung/vorhaben`: four-card routing hub (list, backlog, Aufgaben, Umsetzungsplanung).
+- Backlog API/workspace: read-only `targetId` filter via `InitiativeTargetLink`.
+- Tests: `ClubDevelopmentOverview.test.tsx`, `sce-cd-04r4-readability-navigation.test.ts`, backlog filter unit test.
+- Matrix: `docs/planning/SCE-CD-04R5-COMPLETION-MATRIX.md`.
 
 ## Implementation evidence targets
 

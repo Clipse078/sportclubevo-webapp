@@ -47,5 +47,10 @@ describe("ClubDevelopmentOverview", () => {
     expect(screen.queryByText("Demo-Daten — nicht produktiv")).toBeNull();
     expect(screen.getByText("Vorhaben & Aufgaben")).toBeTruthy();
     expect(screen.getByText("Prozesse & Richtlinien")).toBeTruthy();
+
+    const hrefs = screen.getAllByRole("link").map((el) => el.getAttribute("href"));
+    expect(hrefs).toContain("/vereinsleitung/strategie");
+    expect(hrefs).toContain("/vereinsleitung/initiativen/backlog");
+    expect(hrefs).toContain("/vereinsleitung/sprints");
   });
 });

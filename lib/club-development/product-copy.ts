@@ -7,6 +7,27 @@ export const CD_NAV_COPY = {
   initiativeBacklog: "Vorhaben & Prioritäten",
   implementationPlanning: "Umsetzungsplanung",
   initiativesEyebrow: "Vorhaben",
+  strategyOverview: "Strategie",
+  initiativesAndTasksHub: "Vorhaben & Aufgaben",
+} as const;
+
+/** PKG-01 — navigation hub copy (routes unchanged). */
+export const CD_OVERVIEW_SHORTCUT_COPY = {
+  strategyDescription:
+    "Fortschrittsübersicht zu Zielen, Kennzahlen und verknüpften Vorhaben — kein Ersatz für Zieldetails.",
+  backlogDescription: "Priorisierte Vorhaben mit Einordnung und Erwartetem Ergebnis.",
+  sprintDescription: "Umsetzungsphasen planen, Aufgaben zuordnen und abschließen.",
+  workHubDescription:
+    "Weiterleitung zu Vorhaben, Prioritäten, Aufgaben und Umsetzungsplanung — kein gemeinsamer Arbeitsbereich (PKG-02).",
+} as const;
+
+export const CD_VORHABEN_HUB_COPY = {
+  hubIntro:
+    "Vorhaben & Aufgaben ist ein Wegweiser. Liste, Backlog, Aufgaben und Umsetzungsphasen bleiben in den jeweiligen Modulen.",
+  initiativeListTitle: "Vorhaben-Liste",
+  initiativeListDescription: "Alle sichtbaren Vorhaben mit Status, Fortschritt und Verantwortlichen.",
+  taskInboxTitle: "Aufgaben",
+  taskInboxDescription: "Zentrale Aufgabenübersicht und Zuweisungen im Aufgaben-Bereich.",
 } as const;
 
 export const CD_INITIATIVE_COPY = {

@@ -17,6 +17,8 @@ import {
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
+  CD_NAV_COPY,
+  CD_OVERVIEW_SHORTCUT_COPY,
   CD_SPRINT_WORKSPACE_COPY,
   CD_TASK_WORKSPACE_COPY,
 } from "@/lib/club-development/product-copy";
@@ -44,6 +46,20 @@ function clubDomainWithVereinsentwicklung() {
   );
   return domains.find((d) => d.id === "club") ?? null;
 }
+
+describe("SCE-CD-04R5 PKG-01 navigation copy", () => {
+  it("documents overview shortcuts without claiming Strategiekonzeption completion", () => {
+    expect(CD_NAV_COPY.strategyOverview).toBe("Strategie");
+    expect(CD_OVERVIEW_SHORTCUT_COPY.strategyDescription).toMatch(/Fortschrittsübersicht/);
+    expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
+      "/vereinsleitung/strategie",
+    );
+    expect(read("components/admin/club-development/StrategyOverviewPanel.tsx")).toContain(
+      "targetId=",
+    );
+    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).not.toContain("In Arbeit");
+  });
+});
 
 describe("SCE-CD-04R4 mega-menu destination clarity", () => {
   it("omits synthetic hub overview when an explicit child shares the same href", () => {
