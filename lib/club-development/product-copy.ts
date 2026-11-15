@@ -14,7 +14,8 @@ export const CD_NAV_COPY = {
 /** PKG-05 — club strategy authoring (Strategie route). */
 export const CD_STRATEGY_AUTHORING_COPY = {
   pageTitle: "Strategie",
-  pageDescription: "Clubstrategie, Schwerpunkte und Fortschritt zu Zielen.",
+  pageDescription: "Gemeinsame Ausrichtung, Ziele und Fortschritt.",
+  workspacePageDescription: "Gemeinsame Ausrichtung, Ziele und Fortschritt.",
   sectionTitle: "Clubstrategie",
   editAction: "Bearbeiten",
   cancelEditAction: "Ansicht",
@@ -37,6 +38,14 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   focusHint: "Verknüpfte Ziele — Details und Kennzahlen im Ziel.",
   focusEmpty: "Noch keine Schwerpunkte verknüpft.",
   supportingHeading: "Sitzungen, Beschlüsse & Unterlagen",
+  supportingCollapsedSummary: (meetings: number, decisions: number, documents: number) => {
+    const parts: string[] = [];
+    if (meetings > 0) parts.push(`${meetings} Sitzung${meetings === 1 ? "" : "en"}`);
+    if (decisions > 0) parts.push(`${decisions} Beschluss${decisions === 1 ? "" : "e"}`);
+    if (documents > 0) parts.push(`${documents} Unterlage${documents === 1 ? "" : "n"}`);
+    if (parts.length === 0) return "Keine Verknüpfungen";
+    return parts.join(" · ");
+  },
   meetingLinksHeading: "Sitzungen & Beschlüsse",
   associationSaveAction: "Verknüpfungen speichern",
   associationSaveSuccess: "Verknüpfungen gespeichert.",

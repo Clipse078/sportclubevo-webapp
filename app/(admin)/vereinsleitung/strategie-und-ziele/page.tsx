@@ -5,6 +5,7 @@ import { loadClubStrategyAuthoring } from "@/lib/club-development/club-strategy-
 import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
 import { CD_NAV_WORKSPACE_LABELS } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
 import StrategieUndZieleWorkspaceClient from "@/components/admin/club-development/StrategieUndZieleWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
@@ -31,7 +32,7 @@ export default async function StrategieUndZielePage() {
       <ListPagePattern
         eyebrow="Vereinsentwicklung"
         title={CD_NAV_WORKSPACE_LABELS.strategieUndZiele}
-        description="Clubstrategie, Schwerpunkte und Fortschritt zu Zielen — lokale Ansichten Strategie und Alle Ziele."
+        description={CD_STRATEGY_AUTHORING_COPY.workspacePageDescription}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },

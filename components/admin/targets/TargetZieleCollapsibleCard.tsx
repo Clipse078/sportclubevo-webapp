@@ -34,28 +34,29 @@ export default function TargetZieleCollapsibleCard({ target, isFocus = false }: 
       data-testid={`target-ziele-collapsible-${target.id}`}
       data-expanded={expanded ? "true" : "false"}
     >
-      <div className="px-4 py-3">
+      <div className="flex items-start gap-2 px-4 py-3">
         <button
           type="button"
-          className="flex w-full min-w-0 items-start gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          className="mt-0.5 rounded-md p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           aria-expanded={expanded}
           aria-controls={panelId}
+          aria-label={expanded ? "Ziel einklappen" : "Ziel ausklappen"}
           onClick={() => setExpanded(!expanded)}
           data-testid={`target-ziele-toggle-${target.id}`}
         >
           <ChevronDown
-            className={`mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
+            className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
             aria-hidden
           />
-          <div className="min-w-0 flex-1">
-            <ZieleCardTitle target={target} isFocus={isFocus} />
-            <p className="mt-0.5 text-xs text-[var(--muted)]">
-              Zielstatus: {formatTargetStatusLabel(target.status)} · Zielerreichung:{" "}
-              {formatPercent(target.outcomeProgressPercent)} · Umsetzung:{" "}
-              {formatPercent(target.deliveryProgressPercent)}
-            </p>
-          </div>
         </button>
+        <div className="min-w-0 flex-1">
+          <ZieleCardTitle target={target} isFocus={isFocus} />
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
+            Zielstatus: {formatTargetStatusLabel(target.status)} · Zielerreichung:{" "}
+            {formatPercent(target.outcomeProgressPercent)} · Umsetzung:{" "}
+            {formatPercent(target.deliveryProgressPercent)}
+          </p>
+        </div>
       </div>
 
       <div id={panelId} hidden={!expanded} className="border-t border-[var(--border)] p-4">
@@ -131,7 +132,13 @@ function ZieleCardTitle({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <GoalSceIcon className="h-4 w-4 shrink-0 text-[var(--sce-primary)]" aria-hidden />
-      <span className="text-base font-semibold text-[var(--foreground)]">{target.title}</span>
+      <Link
+        href={`/vereinsleitung/targets/${target.id}`}
+        className="text-base font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {target.title}
+      </Link>
       {isFocus ? (
         <span className="rounded-full border border-[var(--sce-primary)]/30 bg-[var(--sce-primary)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--sce-primary)]">
           {CD_STRATEGY_PROGRESS_COPY.focusBadge}

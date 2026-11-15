@@ -59,6 +59,7 @@ export default function StrategieUndZieleWorkspaceClient({
           <StrategyAuthoringPanel
             initial={authoring}
             canManage={canManageTargets}
+            targets={targets}
             availableMeetings={availableMeetings}
             availableDecisions={availableDecisions}
           />

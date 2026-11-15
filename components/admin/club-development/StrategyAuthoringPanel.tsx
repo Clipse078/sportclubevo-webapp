@@ -26,12 +26,16 @@ import StrategyAssociationLinkEditor, {
   entityRefsFromAuthoring,
 } from "./StrategyAssociationLinkEditor";
 import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSection";
+import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
+import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
+import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
   canManage: boolean;
+  targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
   availableDecisions: import("@/lib/linking/types").EntityRef[];
 };
@@ -58,6 +62,7 @@ function narrativeSnapshot(dto: ClubStrategyAuthoringDto) {
 export default function StrategyAuthoringPanel({
   initial,
   canManage,
+  targets,
   availableMeetings,
   availableDecisions,
 }: Props) {
@@ -117,6 +122,23 @@ export default function StrategyAuthoringPanel({
   }, [initial, editing]);
 
   const linkedTargetIds = useMemo(() => focusTargets.map((f) => f.target.id), [focusTargets]);
+
+  const focusTargetOverviews = useMemo(() => {
+    const byId = new Map(targets.map((row) => [row.id, row]));
+    return focusTargets.map((row) => ({
+      focus: row,
+      overview: byId.get(row.target.id) ?? null,
+    }));
+  }, [focusTargets, targets]);
+
+  const supportingCounts = useMemo(
+    () => ({
+      meetings: initial.meetingRefs.length,
+      decisions: initial.decisionRefs.length,
+      documents: initial.documentReferences.length,
+    }),
+    [initial.decisionRefs.length, initial.documentReferences.length, initial.meetingRefs.length],
+  );
 
   const unsavedNarrative = useMemo(() => {
     if (!editing) return false;
@@ -281,8 +303,8 @@ export default function StrategyAuthoringPanel({
         </div>
 
         {editing && canManage ? (
-          <form onSubmit={onSave} className="space-y-4" data-testid="strategy-narrative-form">
-            <div className="grid gap-3 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/40 p-3 md:grid-cols-2 xl:grid-cols-4">
+          <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
               <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker
                   selected={responsiblePerson}
@@ -363,22 +385,16 @@ export default function StrategyAuthoringPanel({
           </form>
         ) : (
           <div data-testid="strategy-narrative-read">
-            <dl className="mb-4 grid gap-2 rounded-lg border border-[var(--border)]/70 bg-[var(--surface-2)]/30 px-3 py-2.5 text-sm md:grid-cols-2 xl:grid-cols-4">
-              <MetaReadItem label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel} value={responsibleReadLabel} />
-              <MetaReadItem
-                label={CD_STRATEGY_AUTHORING_COPY.periodLabel}
-                value={formatStrategyPeriodSummary({
-                  periodLabel: initial.periodLabel,
-                  periodStartsAt: initial.periodStartsAt,
-                  periodEndsAt: initial.periodEndsAt,
-                })}
-              />
-              <MetaReadItem
-                label={CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}
-                value={formatStrategyDateLabel(initial.nextReviewAt)}
-              />
-            </dl>
-            <div className="space-y-3">
+            <StrategyMetaReadLine
+              responsible={responsibleReadLabel}
+              period={formatStrategyPeriodSummary({
+                periodLabel: initial.periodLabel,
+                periodStartsAt: initial.periodStartsAt,
+                periodEndsAt: initial.periodEndsAt,
+              })}
+              nextReview={formatStrategyDateLabel(initial.nextReviewAt)}
+            />
+            <div className="max-w-3xl space-y-4">
               <NarrativeBlock
                 label={CD_STRATEGY_AUTHORING_COPY.situationLabel}
                 text={initial.situationText}
@@ -423,28 +439,31 @@ export default function StrategyAuthoringPanel({
         {focusTargets.length === 0 ? (
           <p className="text-sm text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusEmpty}</p>
         ) : (
-          <ul className="mb-3 space-y-2">
-            {focusTargets.map((row) => (
-              <li
-                key={row.target.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 px-3 py-2.5"
-              >
-                <Link
-                  href={`/vereinsleitung/targets/${row.target.id}`}
-                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
-                >
-                  {row.target.title}
-                </Link>
+          <ul className="mb-3 space-y-3" data-testid="strategy-focus-cards">
+            {focusTargetOverviews.map(({ focus, overview }) => (
+              <li key={focus.target.id} className="space-y-1">
                 {canManage && editing ? (
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--muted)] hover:text-rose-700"
-                    disabled={pendingFocus}
-                    onClick={() => removeFocusTarget(row.target.id)}
-                  >
-                    Entfernen
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-[var(--muted)] hover:text-rose-700"
+                      disabled={pendingFocus}
+                      onClick={() => removeFocusTarget(focus.target.id)}
+                    >
+                      Schwerpunkt entfernen
+                    </button>
+                  </div>
                 ) : null}
+                {overview ? (
+                  <TargetZieleCollapsibleCard target={overview} isFocus />
+                ) : (
+                  <Link
+                    href={`/vereinsleitung/targets/${focus.target.id}`}
+                    className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--sce-primary)] shadow-sm hover:underline"
+                  >
+                    {focus.target.title}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -493,33 +512,29 @@ export default function StrategyAuthoringPanel({
         ) : null}
       </section>
 
-      <section
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm"
-        data-testid="strategy-supporting-section"
+      <StrategySupportingMaterialsCard
+        meetingCount={supportingCounts.meetings}
+        decisionCount={supportingCounts.decisions}
+        documentCount={supportingCounts.documents}
       >
-        <h3 className="mb-3 text-sm font-semibold text-[var(--foreground)]">
-          {CD_STRATEGY_AUTHORING_COPY.supportingHeading}
-        </h3>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <StrategyAssociationLinkEditor
-            key={`assoc-${initial.contentRevision}-${initial.meetingRefs.length}-${initial.decisionRefs.length}`}
-            initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
-            initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
-            availableMeetings={availableMeetings}
-            availableDecisions={availableDecisions}
-            canManage={canManage}
-            editing={editing && canManage}
-            compact
-          />
-          <StrategyDocumentReferencesSection
-            key={`docs-${initial.contentRevision}-${initial.documentReferences.length}`}
-            references={initial.documentReferences}
-            canManage={canManage}
-            editing={editing && canManage}
-            compact
-          />
-        </div>
-      </section>
+        <StrategyAssociationLinkEditor
+          key={`assoc-${initial.contentRevision}-${initial.meetingRefs.length}-${initial.decisionRefs.length}`}
+          initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
+          initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
+          availableMeetings={availableMeetings}
+          availableDecisions={availableDecisions}
+          canManage={canManage}
+          editing={editing && canManage}
+          compact
+        />
+        <StrategyDocumentReferencesSection
+          key={`docs-${initial.contentRevision}-${initial.documentReferences.length}`}
+          references={initial.documentReferences}
+          canManage={canManage}
+          editing={editing && canManage}
+          compact
+        />
+      </StrategySupportingMaterialsCard>
     </div>
   );
 }
@@ -533,12 +548,39 @@ function MotionMetaField({ label, children }: { label: string; children: ReactNo
   );
 }
 
-function MetaReadItem({ label, value }: { label: string; value: string }) {
+function StrategyMetaReadLine({
+  responsible,
+  period,
+  nextReview,
+}: {
+  responsible: string;
+  period: string;
+  nextReview: string;
+}) {
   return (
-    <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</dt>
-      <dd className="text-sm text-[var(--foreground)]">{value}</dd>
-    </div>
+    <p
+      className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]"
+      data-testid="strategy-meta-read-line"
+    >
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.responsibleLabel}:
+        </span>{" "}
+        {responsible}
+      </span>
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.periodLabel}:
+        </span>{" "}
+        {period}
+      </span>
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}:
+        </span>{" "}
+        {nextReview}
+      </span>
+    </p>
   );
 }
 
@@ -547,7 +589,9 @@ function NarrativeBlock({ label, text, empty }: { label: string; text: string | 
   return (
     <div>
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
-      <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{content || empty}</p>
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]">
+        {content || <span className="text-[var(--muted)]">{empty}</span>}
+      </p>
     </div>
   );
 }

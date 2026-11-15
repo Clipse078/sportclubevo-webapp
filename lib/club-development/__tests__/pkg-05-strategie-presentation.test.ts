@@ -16,6 +16,9 @@ function read(rel: string) {
 describe("PKG-05 Strategie presentation", () => {
   it("uses club-facing page title and Sitzungen & Beschlüsse label", () => {
     expect(CD_STRATEGY_AUTHORING_COPY.pageTitle).toBe("Strategie");
+    expect(CD_STRATEGY_AUTHORING_COPY.workspacePageDescription).toBe(
+      "Gemeinsame Ausrichtung, Ziele und Fortschritt.",
+    );
     expect(CD_STRATEGY_AUTHORING_COPY.meetingLinksHeading).toBe("Sitzungen & Beschlüsse");
     expect(CD_STRATEGY_AUTHORING_COPY.progressHint).toMatch(/Zielerreichung/);
     expect(CD_STRATEGY_AUTHORING_COPY.progressHint).toMatch(/Umsetzungsfortschritt/);
@@ -37,15 +40,20 @@ describe("PKG-05 Strategie presentation", () => {
   });
 
   it("page shell titles Strategie and authoring panel supports read/edit", () => {
-    const page = read("app/(admin)/vereinsleitung/strategie/page.tsx");
-    expect(page).toContain("CD_STRATEGY_AUTHORING_COPY.pageTitle");
-    expect(page).not.toContain("Strategische Übersicht");
+    const workspacePage = read("app/(admin)/vereinsleitung/strategie-und-ziele/page.tsx");
+    expect(workspacePage).not.toContain("Strategische Übersicht");
+    expect(workspacePage).toContain("CD_STRATEGY_AUTHORING_COPY.workspacePageDescription");
+    expect(workspacePage).not.toContain("lokale Ansichten");
 
     const panel = read("components/admin/club-development/StrategyAuthoringPanel.tsx");
     expect(panel).toContain('data-testid="strategy-edit-toggle"');
     expect(panel).toContain("hasPersistedClubStrategy");
     expect(panel).toContain('data-testid="strategy-narrative-read"');
     expect(panel).toContain('data-testid="strategy-unsaved"');
+    expect(panel).toContain("TargetZieleCollapsibleCard");
+    expect(panel).toContain("StrategySupportingMaterialsCard");
+    expect(panel).toContain('data-testid="strategy-meta-read-line"');
+    expect(panel).not.toContain("StrategyOverviewPanel");
   });
 
   it("association and documents default to linked lists outside edit mode", () => {
