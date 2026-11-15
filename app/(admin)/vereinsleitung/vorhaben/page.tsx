@@ -33,7 +33,7 @@ function parseInitiativeStatus(raw: string | undefined): InitiativeStatus | unde
 
 function parseTaskStatus(raw: string | undefined): TaskStatus | undefined {
   if (!raw) return undefined;
-  const values = new Set(["OPEN", "IN_PROGRESS", "DONE", "BLOCKED", "CANCELLED"]);
+  const values = new Set(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"]);
   return values.has(raw) ? (raw as TaskStatus) : undefined;
 }
 

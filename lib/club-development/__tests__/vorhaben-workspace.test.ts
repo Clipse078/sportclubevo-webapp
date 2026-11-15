@@ -9,10 +9,14 @@ import type { ActorContext } from "@/lib/visibility/actor-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const prismaMocks = vi.hoisted(() => ({
-  initiativeFindMany: vi.fn(),
   taskFindMany: vi.fn(),
   meetingAgendaItemFindMany: vi.fn(),
   meetingDecisionFindMany: vi.fn(),
+  initiativeFindMany: vi.fn(),
+}));
+
+const backlogMocks = vi.hoisted(() => ({
+  listInitiativeBacklog: vi.fn(),
 }));
 
 const progressMocks = vi.hoisted(() => ({
@@ -36,6 +40,10 @@ vi.mock("@/lib/db/prisma", () => ({
     meetingAgendaItem: { findMany: prismaMocks.meetingAgendaItemFindMany },
     meetingDecision: { findMany: prismaMocks.meetingDecisionFindMany },
   },
+}));
+
+vi.mock("@/lib/club-development/initiative-backlog", () => ({
+  listInitiativeBacklog: backlogMocks.listInitiativeBacklog,
 }));
 
 vi.mock("@/lib/club-development/initiative-progress", () => ({
@@ -125,11 +133,11 @@ describe("loadVorhabenWorkspace", () => {
   it("returns restrictedReason without initiative or task permissions", async () => {
     const result = await loadVorhabenWorkspace(actorWith(["targets.view"]));
     expect(result.restrictedReason).toMatch(/Leseberechtigung/);
-    expect(prismaMocks.initiativeFindMany).not.toHaveBeenCalled();
+    expect(backlogMocks.listInitiativeBacklog).not.toHaveBeenCalled();
   });
 
   it("lists root tasks linked via INITIATIVE context or primaryInitiativeId", async () => {
-    prismaMocks.initiativeFindMany.mockResolvedValue([
+    backlogMocks.listInitiativeBacklog.mockResolvedValue([
       { id: "init-1", slug: "alpha", title: "Alpha", status: "IN_PROGRESS" },
     ]);
     prismaMocks.taskFindMany
@@ -173,7 +181,7 @@ describe("loadVorhabenWorkspace", () => {
   });
 
   it("applies taskStatus filter when provided", async () => {
-    prismaMocks.initiativeFindMany.mockResolvedValue([
+    backlogMocks.listInitiativeBacklog.mockResolvedValue([
       { id: "init-1", slug: "alpha", title: "Alpha", status: "IN_PROGRESS" },
     ]);
     prismaMocks.taskFindMany.mockResolvedValue([]);

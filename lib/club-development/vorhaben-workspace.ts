@@ -8,7 +8,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
-import { applyVisibilityFilter, buildVisibilityWhere } from "@/lib/visibility/visibility-filter";
+import { applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
@@ -20,7 +20,7 @@ import {
   resolveCanonicalInitiativeIdForTask,
 } from "@/lib/club-development/initiative-associated-tasks";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
-import { buildInitiativeBacklogWhere } from "@/lib/club-development/initiative-backlog";
+import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
   PLANNED: "Geplant",
@@ -161,21 +161,6 @@ async function meetingDecisionIdsForInitiative(
   return decisions.map((row) => row.id);
 }
 
-function buildInitiativeListWhere(
-  tenantId: string,
-  filters: VorhabenWorkspaceFilters,
-): Prisma.InitiativeWhereInput {
-  const base = buildInitiativeBacklogWhere(tenantId, {
-    search: filters.search,
-    targetId: filters.targetId,
-    status: filters.initiativeStatus,
-  });
-  if (filters.initiativeId?.trim()) {
-    return { ...base, id: filters.initiativeId.trim() };
-  }
-  return base;
-}
-
 function buildTaskAssociationWhere(initiativeIds: string[]): Prisma.TaskWhereInput[] {
   const orFilters: Prisma.TaskWhereInput[] = [];
   for (const initiativeId of initiativeIds) {
@@ -276,15 +261,15 @@ export async function loadVorhabenWorkspace(
   const initiativeById = new Map<string, { id: string; title: string; slug: string }>();
 
   if (canViewInitiatives) {
-    const initiativeRows = await prisma.initiative.findMany({
-      where: {
-        ...buildInitiativeListWhere(actor.tenantId, filters),
-        ...buildVisibilityWhere(actor),
-      },
-      select: INITIATIVE_LIST_SELECT,
+    const initiativeRows = await listInitiativeBacklog(actor, {
+      search: filters.search,
+      targetId: filters.targetId,
+      status: filters.initiativeStatus,
     });
-    const visible = applyVisibilityFilter(initiativeRows, actor);
-    const sorted = [...visible].sort((a, b) => a.title.localeCompare(b.title, "de"));
+    const filteredByInitiative = filters.initiativeId?.trim()
+      ? initiativeRows.filter((row) => row.id === filters.initiativeId!.trim())
+      : initiativeRows;
+    const sorted = [...filteredByInitiative].sort((a, b) => a.title.localeCompare(b.title, "de"));
 
     const taskCtx = canViewTasks ? await getTaskServiceContext() : null;
     const openCounts = new Map<string, number>();
