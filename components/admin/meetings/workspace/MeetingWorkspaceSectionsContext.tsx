@@ -105,6 +105,7 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
     () => new Set(expandedSections),
   );
   const [scrollMarginPx, setScrollMarginPx] = useState(144);
+  const [headingRegistrationTick, setHeadingRegistrationTick] = useState(0);
 
   const urlSearch = useMemo(() => {
     if (searchParams instanceof URLSearchParams) {
@@ -227,6 +228,9 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
   const registerSectionHeading = useCallback(
     (sectionId: MeetingWorkspaceTabId, el: HTMLHeadingElement | null) => {
       headingRefs.current.set(sectionId, el);
+      if (el) {
+        setHeadingRegistrationTick((n) => n + 1);
+      }
     },
     [],
   );
@@ -324,7 +328,7 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
     });
 
     return () => observer.disconnect();
-  }, [expandedSections, scrollMarginPx]);
+  }, [expandedSections, headingRegistrationTick, scrollMarginPx]);
 
   const value = useMemo(
     () => ({
