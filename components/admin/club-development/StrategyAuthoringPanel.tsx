@@ -243,14 +243,14 @@ export default function StrategyAuthoringPanel({
         {editing && canManage ? (
           <form onSubmit={onSave} className="space-y-4" data-testid="strategy-narrative-form">
             <div className="grid gap-3 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/40 p-3 md:grid-cols-2 xl:grid-cols-4">
-              <motionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
+              <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker
                   selected={responsiblePerson}
                   onSelect={setResponsiblePerson}
                   onClearSelected={() => setResponsiblePerson(null)}
                 />
-              </motionMetaField>
-              <motionMetaField label={CD_STRATEGY_AUTHORING_COPY.periodLabel}>
+              </MotionMetaField>
+              <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.periodLabel}>
                 <input
                   value={periodLabel}
                   onChange={(e) => setPeriodLabel(e.target.value)}
@@ -258,8 +258,8 @@ export default function StrategyAuthoringPanel({
                   className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm"
                   data-testid="strategy-period-label"
                 />
-              </motionMetaField>
-              <motionMetaField label={`${CD_STRATEGY_AUTHORING_COPY.periodStartLabel} – ${CD_STRATEGY_AUTHORING_COPY.periodEndLabel}`}>
+              </MotionMetaField>
+              <MotionMetaField label={`${CD_STRATEGY_AUTHORING_COPY.periodStartLabel} – ${CD_STRATEGY_AUTHORING_COPY.periodEndLabel}`}>
                 <div className="flex gap-2">
                   <input
                     type="date"
@@ -274,8 +274,8 @@ export default function StrategyAuthoringPanel({
                     className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm"
                   />
                 </div>
-              </motionMetaField>
-              <motionMetaField label={CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}>
+              </MotionMetaField>
+              <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}>
                 <input
                   type="date"
                   value={nextReviewAt}
@@ -283,7 +283,7 @@ export default function StrategyAuthoringPanel({
                   className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm"
                   data-testid="strategy-next-review"
                 />
-              </motionMetaField>
+              </MotionMetaField>
             </div>
 
             <div>
@@ -314,7 +314,7 @@ export default function StrategyAuthoringPanel({
               />
             </div>
 
-            <motionSaveStatus
+            <MotionSaveStatus
               unsaved={unsavedNarrative}
               saveError={saveError}
               saveSuccess={saveSuccess}
@@ -436,7 +436,7 @@ export default function StrategyAuthoringPanel({
   );
 }
 
-function motionMetaField({ label, children }: { label: string; children: ReactNode }) {
+function MotionMetaField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
       <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
@@ -464,7 +464,7 @@ function NarrativeBlock({ label, text, empty }: { label: string; text: string | 
   );
 }
 
-function motionSaveStatus({
+function MotionSaveStatus({
   unsaved,
   saveError,
   saveSuccess,

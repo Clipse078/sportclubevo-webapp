@@ -78,7 +78,7 @@ export default function StrategyAssociationLinkEditor({
   : "rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm";
 
   return (
-    <motionSection
+    <MotionSection
       className={sectionClass}
       data-testid="strategy-association-links"
       compact={compact}
@@ -123,7 +123,7 @@ export default function StrategyAssociationLinkEditor({
           </ul>
         )
       ) : (
-        <motionEditAssociations
+        <MotionEditAssociations
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
           meetingRefs={meetingRefs}
@@ -139,11 +139,11 @@ export default function StrategyAssociationLinkEditor({
           handleSave={handleSave}
         />
       )}
-    </motionSection>
+    </MotionSection>
   );
 }
 
-function motionSection({
+function MotionSection({
   children,
   className,
   compact,
@@ -167,7 +167,7 @@ function motionSection({
   );
 }
 
-function motionEditAssociations({
+function MotionEditAssociations({
   availableMeetings,
   availableDecisions,
   meetingRefs,
