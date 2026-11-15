@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
 
 type TabKey = "planung" | "board" | "rueckblick";
 
@@ -36,32 +36,19 @@ type Props = {
 
 export default function DevelopmentSprintWorkspaceNav({ slug }: Props) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
   const current = activeTab(pathname, slug);
 
   return (
-    <nav
-      className="flex flex-wrap gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1"
+    <SceSegmentedControl
+      value={current}
+      options={TABS.map((tab) => ({ value: tab.key, label: tab.label }))}
+      onChange={(next) => {
+        const href = TABS.find((tab) => tab.key === next)?.href(slug);
+        if (href) router.push(href);
+      }}
       aria-label={CD_SPRINT_WORKSPACE_COPY.workspaceAria}
-      data-testid="sprint-workspace-nav"
-    >
-      {TABS.map((tab) => {
-        const isActive = tab.key === current;
-        return (
-          <Link
-            key={tab.key}
-            href={tab.href(slug)}
-            className={[
-              "rounded-md px-3 py-1.5 text-sm font-medium transition",
-              isActive
-                ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
-                : "text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]",
-            ].join(" ")}
-            aria-current={isActive ? "page" : undefined}
-          >
-            {tab.label}
-          </Link>
-        );
-      })}
-    </nav>
+      testId="sprint-workspace-nav"
+    />
   );
 }

@@ -39,7 +39,7 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx")).toContain(
       'variant="vorhaben"',
     );
-    expect(read("components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx")).toContain(
+    expect(read("components/admin/club-development/VorhabenWorkspaceToolbar.tsx")).toContain(
       "VorhabenPrioritaetenControl",
     );
   });

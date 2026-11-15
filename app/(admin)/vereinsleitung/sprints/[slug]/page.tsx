@@ -13,10 +13,8 @@ import DevelopmentSprintDetailWorkspace from "@/components/admin/club-developmen
 import DevelopmentSprintWorkspaceShell from "@/components/admin/club-development/DevelopmentSprintWorkspaceShell";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import {
-  CD_NAV_COPY,
-  CD_SPRINT_WORKSPACE_COPY,
-} from "@/lib/club-development/product-copy";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { buildDevelopmentSprintBreadcrumbs } from "@/lib/club-development/sprint-workspace-chrome";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -43,11 +41,7 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
       <DetailPagePattern
         eyebrow={CD_SPRINT_WORKSPACE_COPY.tabPlanning}
         title={sprint.title}
-        breadcrumbs={[
-          { label: "Verein", href: "/vereinsleitung" },
-          { label: CD_NAV_COPY.implementationPlanning, href: "/vereinsleitung/sprints" },
-          { label: sprint.title },
-        ]}
+        breadcrumbs={buildDevelopmentSprintBreadcrumbs(sprint.slug, sprint.title, "planung")}
         headerActions={
           <Link
             href="/vereinsleitung/sprints"

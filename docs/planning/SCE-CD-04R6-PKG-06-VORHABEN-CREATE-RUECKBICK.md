@@ -41,14 +41,15 @@ Recorded in completion matrix and `PKG_06_PARENT_TASK_ONLY_PHASE_PLANNING_POLICY
 - **Umsetzungsphasen** schedule **root tasks only** (`searchClubDevelopmentTaskCandidates` defaults `rootsOnly: true`, `parentTaskId: null`).
 - **Unteraufgaben** remain managed **under the parent task** in the Aufgaben workspace (max depth 1). They are **not** independently assigned to phases unless PKG-04 explicitly changes `rootsOnly` with product sign-off.
 
-## Inline Vorhaben create — normal + Prioritäten
+## Inline Vorhaben create — unified shell (PKG-06 UX)
 
 | View | Route query | Create surface | Modal? |
 |------|-------------|----------------|--------|
-| **Vorhaben** (default) | `ansicht=vorhaben` | `CreateInitiativeWorkspaceCollapsibleCard` in `VorhabenAufgabenWorkspace` | No — `inline-collapsible` + `InitiativeForm` |
-| **Prioritäten** | `ansicht=vorhaben&prioritaeten=1` | `InitiativeBacklogCreateCard` in `InitiativeBacklogWorkspace` | No — inline collapsible (backlog priority fields) |
+| **Vorhaben** (default) | `ansicht=vorhaben` | `CreateInitiativeWorkspaceCollapsibleCard` (`variant="standard"`) | No — full-width `InitiativeForm` |
+| **Prioritäten** | `ansicht=vorhaben&prioritaeten=1` | Same card (`variant="prioritaeten"`) | No — optional priority / expected outcome fields |
+| **Ziel context** | Target detail + `targetId` filter | Same card + contextual link retry | No |
 
-Neither consolidated lens uses `CreateInitiativeComposerDialog`. Legacy modal-first list routes remain in the governance inventory (`sce-contextual-create-governance.ts`).
+`InitiativeBacklogCreateCard` is a thin adapter only. Completion matrix: `docs/planning/SCE-CD-04R6-PKG-06-COMPLETION-MATRIX.md`.
 
 Optional `?targetId=` on the **Vorhaben** lens loads `filterTarget` and auto-links after create via `POST …/initiative-links` (`CreateInitiativeWorkspaceCollapsibleCard`).
 

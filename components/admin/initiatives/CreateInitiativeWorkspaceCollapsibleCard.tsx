@@ -11,6 +11,10 @@ import {
   useSceInlineDiscardPrompt,
 } from "@/components/sce/club-development/SceClubDevelopmentInlineDirtyCloseProvider";
 import { CD_INITIATIVE_COPY } from "@/lib/club-development/product-copy";
+import {
+  SCE_VORHABEN_INLINE_CREATE_FORM_INNER_CLASS,
+  SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS,
+} from "@/lib/club-development/vorhaben-inline-create-layout";
 
 const PANEL_ID = "vorhaben-workspace-create-initiative-panel";
 const CARD_TEST_ID = "vorhaben-workspace-create-initiative-card";
@@ -20,10 +24,15 @@ type FilterTarget = {
   title: string;
 };
 
+export type VorhabenInlineCreateVariant = "standard" | "prioritaeten";
+
 type Props = {
   canCreate: boolean;
   filterTarget?: FilterTarget | null;
   onCreated?: () => void;
+  variant?: VorhabenInlineCreateVariant;
+  collapseToggleTestId?: string;
+  cardTestId?: string;
 };
 
 async function linkInitiativeToTarget(targetId: string, initiativeId: string) {
@@ -43,6 +52,9 @@ function CreateInitiativeWorkspaceCollapsibleCardInner({
   canCreate,
   filterTarget = null,
   onCreated,
+  variant = "standard",
+  collapseToggleTestId = "vorhaben-workspace-create-initiative",
+  cardTestId = CARD_TEST_ID,
 }: Props) {
   const router = useRouter();
   const discardPrompt = useSceInlineDiscardPrompt();
@@ -86,32 +98,41 @@ function CreateInitiativeWorkspaceCollapsibleCardInner({
 
   const contextLabel = filterTarget
     ? `Verknüpfung mit: ${filterTarget.title}`
-    : CD_INITIATIVE_COPY.composerDescription;
+    : variant === "prioritaeten"
+      ? CD_INITIATIVE_COPY.prioritaetenCreateContext
+      : CD_INITIATIVE_COPY.composerDescription;
 
   return (
-    <div ref={cardRef} data-sce-contextual-create-flow="inline-collapsible" className="flex justify-end">
-      <div className="w-full max-w-xl">
-        {linkError ? (
-          <p className="mb-2 text-sm text-red-700" role="alert">
-            {linkError}
-          </p>
-        ) : null}
-        <SceClubDevelopmentContextualCreateCollapsibleShell
-          actionLabel={CD_INITIATIVE_COPY.createAction}
-          contextLabel={contextLabel}
-          expanded={expanded}
-          onExpandedChange={guardedExpandedChange}
-          panelDomId={PANEL_ID}
-          cardTestId={CARD_TEST_ID}
-          collapseToggleTestId="vorhaben-workspace-create-initiative"
-          discardPrompt={discardPrompt}
-        >
+    <div
+      ref={cardRef}
+      className={SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS}
+      data-sce-contextual-create-flow="inline-collapsible"
+      data-testid="vorhaben-inline-create-shell"
+    >
+      {linkError ? (
+        <p className="mb-2 text-sm text-red-700" role="alert">
+          {linkError}
+        </p>
+      ) : null}
+      <SceClubDevelopmentContextualCreateCollapsibleShell
+        actionLabel={CD_INITIATIVE_COPY.createAction}
+        contextLabel={contextLabel}
+        expanded={expanded}
+        onExpandedChange={guardedExpandedChange}
+        panelDomId={PANEL_ID}
+        cardTestId={cardTestId}
+        collapseToggleTestId={collapseToggleTestId}
+        discardPrompt={discardPrompt}
+      >
+        <div className={SCE_VORHABEN_INLINE_CREATE_FORM_INNER_CLASS}>
           <ClubDevelopmentComposerCancelBridge onClose={() => setExpanded(false)}>
             {(onCancel) => (
               <InitiativeForm
                 key={formKey}
                 mode="create"
                 layout="composer"
+                composerCompact
+                prioritaetenFields={variant === "prioritaeten"}
                 onCancel={onCancel}
                 preselectedTargetTitle={filterTarget?.title}
                 onSuccess={async (initiative) => {
@@ -127,8 +148,8 @@ function CreateInitiativeWorkspaceCollapsibleCardInner({
               />
             )}
           </ClubDevelopmentComposerCancelBridge>
-        </SceClubDevelopmentContextualCreateCollapsibleShell>
-      </div>
+        </div>
+      </SceClubDevelopmentContextualCreateCollapsibleShell>
     </div>
   );
 }

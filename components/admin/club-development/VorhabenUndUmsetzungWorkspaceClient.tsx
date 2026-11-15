@@ -9,7 +9,6 @@ import DevelopmentSprintList, {
   type DevelopmentSprintListItem,
 } from "./DevelopmentSprintList";
 import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
-import VorhabenPrioritaetenControl from "./VorhabenPrioritaetenControl";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import {
   buildVorhabenUndUmsetzungHref,
@@ -77,13 +76,14 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         testId="vorhaben-umsetzung-view-nav"
       />
       <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
-        <VorhabenPrioritaetenControl prioritaetenActive={showPrioritaeten && backlogCanView} />
         {showPrioritaeten && backlogCanView ? (
           <InitiativeBacklogWorkspace
             initialInitiatives={backlogInitiatives}
             canManage={backlogCanManage}
             canView={backlogCanView}
             initialTargetId={backlogTargetId}
+            filterTarget={filterTarget}
+            showPrioritaetenActive
           />
         ) : (
           <VorhabenAufgabenWorkspace
@@ -92,6 +92,8 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
             initialTargetId={initialTargetId}
             initialInitiativeId={initialInitiativeId}
             filterTarget={filterTarget}
+            showPrioritaetenControl={backlogCanView}
+            showPrioritaetenActive={showPrioritaeten && backlogCanView}
           />
         )}
       </div>

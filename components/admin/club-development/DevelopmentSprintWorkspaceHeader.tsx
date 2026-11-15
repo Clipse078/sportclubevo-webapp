@@ -11,6 +11,7 @@ import { CD_SPRINT_STATUS_LABELS, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-de
 type Props = {
   sprintId: string;
   slug: string;
+  title: string;
   goal: string | null;
   status: DevelopmentSprintStatus;
   owner: string | null;
@@ -35,6 +36,7 @@ function formatSwissDate(value: string | null) {
 export default function DevelopmentSprintWorkspaceHeader({
   sprintId,
   slug,
+  title,
   goal,
   status,
   owner,
@@ -106,9 +108,13 @@ export default function DevelopmentSprintWorkspaceHeader({
     <header className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm" data-testid="sprint-workspace-header">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
+          <h1 className="text-lg font-semibold text-[var(--foreground)]">{title}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info">{CD_SPRINT_STATUS_LABELS[status]}</Badge>
           </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            {CD_SPRINT_WORKSPACE_COPY.phaseGoalLabel}
+          </p>
           {editingGoal ? (
             <div className="space-y-2">
               <textarea
@@ -153,7 +159,7 @@ export default function DevelopmentSprintWorkspaceHeader({
                   className="inline-flex items-center gap-1 text-[var(--sce-primary)] hover:underline"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                  Ziel bearbeiten
+                  {CD_SPRINT_WORKSPACE_COPY.phaseGoalEditAction}
                 </button>
               ) : null}
             </div>
@@ -165,7 +171,7 @@ export default function DevelopmentSprintWorkspaceHeader({
               className="inline-flex items-center gap-1 text-xs text-[var(--sce-primary)] hover:underline"
             >
               <Pencil className="h-3.5 w-3.5" />
-              Ziel bearbeiten
+              {CD_SPRINT_WORKSPACE_COPY.phaseGoalEditAction}
             </button>
           ) : null}
         </div>

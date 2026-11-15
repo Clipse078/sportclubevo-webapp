@@ -20,6 +20,7 @@ import type { NavHeaderL2GroupDefinition } from "@/lib/nav/nav-ia-v2/target-ia-m
 import type { NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
+import { pathnameMatchesVereinsentwicklungNavHref } from "@/lib/club-development/vereinsentwicklung-nav-path-aliases";
 
 export type { NavPresentationPriority };
 
@@ -729,9 +730,7 @@ export function buildAppNavigationModelForUser(
 }
 
 export function isNavigationHrefActive(pathname: string, href: string): boolean {
-  if (pathname === href) return true;
-  if (href === "/dashboard") return false;
-  return pathname.startsWith(`${href}/`);
+  return pathnameMatchesVereinsentwicklungNavHref(pathname, href);
 }
 
 /** Relative strength of a pathname ↔ href match (higher wins among siblings). */
@@ -755,8 +754,9 @@ export function rankNavigationHrefMatch(
     return { exact: true, hrefLength: href.length, order };
   }
   if (href === "/dashboard") return null;
-  if (pathname.startsWith(`${href}/`)) {
-    return { exact: false, hrefLength: href.length, order };
+  if (pathnameMatchesVereinsentwicklungNavHref(pathname, href)) {
+    const exact = pathname === href;
+    return { exact, hrefLength: href.length, order };
   }
   return null;
 }

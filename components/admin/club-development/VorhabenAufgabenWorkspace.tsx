@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ExternalLink, Loader2, Search, SlidersHorizontal } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeStatus, TaskStatus } from "@prisma/client";
 import { CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
@@ -16,6 +17,11 @@ import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { Badge } from "@/components/ui";
 import CreateInitiativeWorkspaceCollapsibleCard from "@/components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard";
+import VorhabenWorkspaceToolbar from "./VorhabenWorkspaceToolbar";
+import VorhabenZielFilterChip, {
+  buildVorhabenZielFilterRemoveHref,
+} from "./VorhabenZielFilterChip";
+import VorhabenWorkspaceLoadingState from "./VorhabenWorkspaceLoadingState";
 
 export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
 
@@ -30,6 +36,8 @@ type Props = {
   initialInitiativeId?: string | null;
   variant: VorhabenAufgabenWorkspaceVariant;
   filterTarget?: FilterTarget | null;
+  showPrioritaetenControl?: boolean;
+  showPrioritaetenActive?: boolean;
 };
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -97,7 +105,10 @@ export default function VorhabenAufgabenWorkspace({
   initialInitiativeId = null,
   variant,
   filterTarget = null,
+  showPrioritaetenControl = false,
+  showPrioritaetenActive = false,
 }: Props) {
+  const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [search, setSearch] = useState("");
   const [initiativeId, setInitiativeId] = useState(initialInitiativeId ?? "");
@@ -167,35 +178,17 @@ export default function VorhabenAufgabenWorkspace({
   const initiativesEmpty = snapshot.initiatives.length === 0;
 
   const filterBar = (
-    <div className="mb-4 space-y-3">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="relative block min-w-[min(100%,16rem)] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={CD_VORHABEN_WORKSPACE_COPY.searchPlaceholder}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] py-2 pl-9 pr-3 text-sm"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={() => setSecondaryFiltersOpen((open) => !open)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-medium text-[var(--foreground)] hover:border-[var(--sce-primary)]/40"
-          aria-expanded={secondaryFiltersOpen}
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
-          {secondaryFiltersOpen
-            ? CD_VORHABEN_WORKSPACE_COPY.hideFiltersAction
-            : CD_VORHABEN_WORKSPACE_COPY.moreFiltersAction}
-          <ChevronDown
-            className={`h-3.5 w-3.5 transition ${secondaryFiltersOpen ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </button>
-      </div>
+    <>
+      <VorhabenWorkspaceToolbar
+        search={search}
+        onSearchChange={setSearch}
+        secondaryFiltersOpen={secondaryFiltersOpen}
+        onSecondaryFiltersToggle={() => setSecondaryFiltersOpen((open) => !open)}
+        showPrioritaetenControl={isVorhabenView && showPrioritaetenControl}
+        prioritaetenActive={showPrioritaetenActive}
+      />
       {secondaryFiltersOpen ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {!isVorhabenView ? (
             <label className="block">
               <span className="mb-1 block text-xs text-[var(--muted)]">Vorhaben</span>
@@ -248,21 +241,16 @@ export default function VorhabenAufgabenWorkspace({
           </label>
         </div>
       ) : null}
-    </div>
+    </>
   );
 
   return (
     <div className="space-y-4" data-testid="vorhaben-aufgaben-workspace" data-variant={variant}>
-      {targetIdFilter ? (
-        <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
-          {CD_VORHABEN_WORKSPACE_COPY.targetFilterHint}{" "}
-          <Link
-            href={buildVorhabenUndUmsetzungHref(variant)}
-            className="font-medium text-[var(--sce-primary)] hover:underline"
-          >
-            Filter entfernen
-          </Link>
-        </p>
+      {filterTarget ? (
+        <VorhabenZielFilterChip
+          targetTitle={filterTarget.title}
+          removeHref={buildVorhabenZielFilterRemoveHref(variant, searchParams)}
+        />
       ) : null}
 
       {showRestricted ? (
@@ -307,11 +295,7 @@ export default function VorhabenAufgabenWorkspace({
 
         {error ? <ClubDevelopmentFormError message={error} className="mb-3" /> : null}
 
-        {pending ? (
-          <div className="mb-3 flex justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-[var(--muted)]" aria-label="Lädt" />
-          </div>
-        ) : null}
+        {pending ? <VorhabenWorkspaceLoadingState /> : null}
 
         {isVorhabenView ? (
           <section aria-labelledby="vorhaben-workspace-initiatives-heading">

@@ -50,7 +50,6 @@ const VALID_DND: Record<keyof BoardState, TaskStatus[]> = {
 
 type Props = {
   sprintId: string;
-  sprintTitle: string;
   canManage: boolean;
   currentUserId: string | null;
 };
@@ -60,7 +59,7 @@ function formatDue(iso: string | null) {
   return new Intl.DateTimeFormat("de-CH", { day: "2-digit", month: "2-digit" }).format(new Date(iso));
 }
 
-export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManage, currentUserId }: Props) {
+export default function DevelopmentSprintBoard({ sprintId, canManage, currentUserId }: Props) {
   const [board, setBoard] = useState<BoardState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -201,8 +200,8 @@ export default function DevelopmentSprintBoard({ sprintId, sprintTitle, canManag
 
   return (
     <div className="space-y-4" data-testid="development-sprint-board">
-      <p className="text-sm text-[var(--text-2)]">
-        Aufgabenboard: <span className="font-semibold text-[var(--foreground)]">{sprintTitle}</span>
+      <p className="sr-only">
+        Aufgaben nach Status — jede Karte bietet Schaltflächen zum Verschieben ohne Ziehen.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">

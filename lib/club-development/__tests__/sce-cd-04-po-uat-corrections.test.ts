@@ -88,11 +88,9 @@ describe("SCE-CD-04 PO UAT corrections", () => {
 
   it("accessible light-theme errors on club-development forms", () => {
     expect(read("components/admin/club-development/ClubDevelopmentFormError.tsx")).toContain("text-rose-900");
-    expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
-      "ClubDevelopmentFormError",
-    );
-    expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
-      "Vorhaben im Backlog erfassen",
+    expect(read("components/admin/initiatives/InitiativeForm.tsx")).toContain('role="alert"');
+    expect(read("components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx")).toContain(
+      "Vorhaben erstellen",
     );
   });
 

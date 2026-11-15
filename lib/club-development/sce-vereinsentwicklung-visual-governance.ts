@@ -30,6 +30,8 @@ export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "app/(admin)/vereinsleitung/meetings/page.tsx",
   "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
+  "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
+  "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
   "components/admin/club-development/ZieleWorkspacePanel.tsx",
   "components/admin/vereinsleitung/VereinsleitungMeetingsWorkspaceClient.tsx",
@@ -103,10 +105,40 @@ export function collectVereinsentwicklungWorkspaceViolations(
   }
 
   if (normalized === "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx") {
-    if (!src.includes("VorhabenPrioritaetenControl")) {
+    if (!src.includes("InitiativeBacklogWorkspace") || !src.includes("VorhabenAufgabenWorkspace")) {
       findings.push({
         file: normalized,
-        reason: "Prioritäten control must remain visible within Vorhaben view.",
+        reason: "Vorhaben view must render standard or Prioritäten workspace.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx") {
+    if (src.includes("max-w-xl") || src.includes("justify-end")) {
+      findings.push({
+        file: normalized,
+        reason: "Vorhaben inline create shell must span full content width.",
+      });
+    }
+    if (!src.includes("SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS")) {
+      findings.push({
+        file: normalized,
+        reason: "Vorhaben inline create must use canonical full-width shell marker.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/InitiativeBacklogWorkspace.tsx") {
+    if (!src.includes("CreateInitiativeWorkspaceCollapsibleCard")) {
+      findings.push({
+        file: normalized,
+        reason: "Prioritäten workspace must use shared Vorhaben inline create card.",
+      });
+    }
+    if (src.includes("InitiativeBacklogCreateCard") && !src.includes("deprecated")) {
+      findings.push({
+        file: normalized,
+        reason: "Prioritäten workspace must not use a separate create form implementation.",
       });
     }
   }

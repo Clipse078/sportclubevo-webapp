@@ -22,6 +22,10 @@ export type InitiativeFormSuccessPayload = {
 type InitiativeFormProps = {
   mode: "create" | "edit";
   layout?: "page" | "composer";
+  /** Inline create: compact primary fields; Freigabe/Sichtbarkeit under progressive disclosure. */
+  composerCompact?: boolean;
+  /** Prioritäten lens: optional backlog priority and expected outcome. */
+  prioritaetenFields?: boolean;
   onSuccess?: (initiative: InitiativeFormSuccessPayload) => void | Promise<void>;
   onCancel?: () => void;
   preselectedTargetTitle?: string | null;
@@ -54,6 +58,8 @@ const STATUS_OPTIONS = [
 export default function InitiativeForm({
   mode,
   layout = "page",
+  composerCompact = false,
+  prioritaetenFields = false,
   onSuccess,
   onCancel,
   initiativeId,
@@ -65,6 +71,9 @@ export default function InitiativeForm({
   const [title, setTitle] = useState(defaultValues?.title ?? "");
   const [summary, setSummary] = useState(defaultValues?.summary ?? "");
   const [description, setDescription] = useState(defaultValues?.description ?? "");
+  const [expectedOutcome, setExpectedOutcome] = useState("");
+  const [backlogPriority, setBacklogPriority] = useState("0");
+  const [showAdvancedComposer, setShowAdvancedComposer] = useState(false);
   const [status, setStatus] = useState(defaultValues?.status ?? "PLANNED");
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
     defaultValues?.ownerPersonId
@@ -116,6 +125,8 @@ export default function InitiativeForm({
       title,
       summary,
       description,
+      expectedOutcome,
+      backlogPriority,
       status,
       ownerPerson,
       approvalRequired,
@@ -130,6 +141,8 @@ export default function InitiativeForm({
       title,
       summary,
       description,
+      expectedOutcome,
+      backlogPriority,
       status,
       ownerPerson,
       approvalRequired,
@@ -158,10 +171,16 @@ export default function InitiativeForm({
       const ownerLabel = ownerPerson?.displayName
         || [ownerPerson?.firstName, ownerPerson?.lastName].filter(Boolean).join(" ")
         || null;
+      const parsedBacklogPriority = Number.parseInt(backlogPriority, 10);
       const payload = {
         title: title.trim(),
         summary: summary.trim() || null,
         description: description.trim() || null,
+        expectedOutcome: prioritaetenFields ? expectedOutcome.trim() || null : undefined,
+        backlogPriority:
+          prioritaetenFields && Number.isFinite(parsedBacklogPriority)
+            ? Math.trunc(parsedBacklogPriority)
+            : undefined,
         status,
         owner: ownerLabel,
         ownerPersonId: ownerPerson?.id?.trim() || null,
@@ -224,8 +243,11 @@ export default function InitiativeForm({
     submitButtonClass,
   } = sceFormSurfaceClasses(layout);
 
+  const showComposerAdvanced = mode === "create" && layout === "composer" && composerCompact;
+  const showExtendedDetails = !showComposerAdvanced || showAdvancedComposer;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" data-testid="initiative-form">
       {error ? (
         <div className={errorClass} role="alert">
           {error}
@@ -268,16 +290,41 @@ export default function InitiativeForm({
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className={labelClass}>Beschreibung</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ausführliche Beschreibung…"
-              rows={4}
-              className={fieldClass}
-            />
-          </div>
+          {showExtendedDetails ? (
+            <div className="md:col-span-2">
+              <label className={labelClass}>Beschreibung</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ausführliche Beschreibung…"
+                rows={4}
+                className={fieldClass}
+              />
+            </div>
+          ) : null}
+
+          {prioritaetenFields ? (
+            <>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Erwartetes Ergebnis</label>
+                <textarea
+                  value={expectedOutcome}
+                  onChange={(e) => setExpectedOutcome(e.target.value)}
+                  rows={2}
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Priorität (Reihenfolge)</label>
+                <input
+                  type="number"
+                  value={backlogPriority}
+                  onChange={(e) => setBacklogPriority(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+            </>
+          ) : null}
 
           <div>
             <label className={labelClass}>Status</label>
@@ -319,9 +366,20 @@ export default function InitiativeForm({
             />
           </div>
         </div>
+        {showComposerAdvanced ? (
+          <button
+            type="button"
+            onClick={() => setShowAdvancedComposer((open) => !open)}
+            className="mt-2 text-sm font-medium text-[var(--sce-primary)] hover:underline"
+            aria-expanded={showAdvancedComposer}
+            data-testid="initiative-form-advanced-toggle"
+          >
+            {showAdvancedComposer ? "Weitere Angaben einklappen" : "Weitere Angaben"}
+          </button>
+        ) : null}
       </section>
 
-      {mode === "create" ? (
+      {mode === "create" && showExtendedDetails ? (
         <section className={sectionClass}>
           <h3 className={sectionTitleClass}>Freigabe (optional)</h3>
           <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
@@ -357,6 +415,7 @@ export default function InitiativeForm({
         </section>
       ) : null}
 
+      {showExtendedDetails ? (
       <section className={sectionClass}>
         <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
         <p className="mb-5 text-[12px] text-[var(--muted)]">
@@ -376,6 +435,7 @@ export default function InitiativeForm({
           onTargetGroupsChange={setVisibleTargetGroupRefs}
         />
       </section>
+      ) : null}
 
       <div className="flex items-center justify-between gap-4">
         <button

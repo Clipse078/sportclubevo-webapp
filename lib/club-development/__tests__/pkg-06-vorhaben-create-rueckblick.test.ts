@@ -42,13 +42,15 @@ describe("PKG-06 Vorhaben workspace inline create + Rückblick deep links", () =
     expect(list).toContain("SprintBoardQuickLink");
   });
 
-  it("Prioritäten lens uses inline collapsible create without ComposerDialog", () => {
+  it("Prioritäten lens uses shared inline collapsible create without ComposerDialog", () => {
     const backlog = read("components/admin/club-development/InitiativeBacklogWorkspace.tsx");
-    const create = read("components/admin/club-development/InitiativeBacklogCreateCard.tsx");
-    expect(backlog).toContain("InitiativeBacklogCreateCard");
+    const shared = read("components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx");
+    expect(backlog).toContain("CreateInitiativeWorkspaceCollapsibleCard");
+    expect(backlog).toContain('variant="prioritaeten"');
     expect(backlog).not.toContain("CreateInitiativeComposerDialog");
-    expect(create).toContain("aria-expanded");
-    expect(create).not.toContain("Dialog");
+    expect(shared).toContain("SceClubDevelopmentContextualCreateCollapsibleShell");
+    expect(shared).not.toContain("Dialog");
+    expect(shared).toContain("vorhaben-inline-create-shell");
   });
 
   it("records verified preview URL and PO acceptance paths for handoff", () => {
