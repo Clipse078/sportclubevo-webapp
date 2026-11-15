@@ -7,11 +7,13 @@
 export const SCE_CONTEXTUAL_CREATE_INLINE_ENTRY_PATHS = [
   "components/admin/targets/TargetInitiativeLinksSection.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
+  "components/admin/club-development/ZieleWorkspacePanel.tsx",
 ] as const;
 
 export const SCE_CONTEXTUAL_CREATE_INLINE_CARD_MARKERS = [
   "CreateInitiativeContextualCollapsibleCard",
   "CreateTargetContextualCollapsibleCard",
+  "CreateTargetWorkspaceCollapsibleCard",
   "data-sce-contextual-create-flow=\"inline-collapsible\"",
 ] as const;
 
@@ -24,10 +26,10 @@ export const SCE_CONTEXTUAL_CREATE_INLINE_SHELL =
 export const SCE_CONTEXTUAL_CREATE_OVERLAY_INVENTORY = [
   {
     id: "create-target-list-modal",
-    surface: "Ziele list workspace",
+    surface: "Legacy Ziele list routes",
     component: "CreateTargetComposerDialog",
     trigger: "CreateTargetTrigger",
-    notes: "Modal-first list create remains canonical until separate migration.",
+    notes: "Consolidated Strategie & Ziele workspace uses CreateTargetWorkspaceCollapsibleCard.",
   },
   {
     id: "create-initiative-list-page",

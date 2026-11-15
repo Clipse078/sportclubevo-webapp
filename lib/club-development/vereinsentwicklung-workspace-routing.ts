@@ -7,6 +7,8 @@ export const CD_VORHABEN_UMSETZUNG_BASE = "/vereinsleitung/vorhaben-und-umsetzun
 
 export const CD_WORKSPACE_ANSICHT_QUERY = "ansicht" as const;
 export const CD_WORKSPACE_PRIORITAETEN_QUERY = "prioritaeten" as const;
+/** Expanded Vorhaben card in consolidated Vorhaben & Umsetzung workspace lists. */
+export const CD_WORKSPACE_VORHABEN_EXPAND_QUERY = "vorhabenExpand" as const;
 
 export const CD_STRATEGIE_ZIELE_VIEWS = ["strategie", "ziele"] as const;
 export type CdStrategieZieleView = (typeof CD_STRATEGIE_ZIELE_VIEWS)[number];

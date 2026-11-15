@@ -1,6 +1,6 @@
 "use client";
 
-import CreateTargetTrigger from "@/components/admin/targets/CreateTargetTrigger";
+import CreateTargetWorkspaceCollapsibleCard from "@/components/admin/targets/CreateTargetWorkspaceCollapsibleCard";
 import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
@@ -31,11 +31,8 @@ export default function ZieleWorkspacePanel({
 
   return (
     <div className="space-y-4" data-testid="ziele-workspace-panel">
-      {canManageTargets ? (
-        <div className="flex justify-end">
-          <CreateTargetTrigger />
-        </div>
-      ) : null}
+      {/* data-sce-contextual-create-flow="inline-collapsible" — CreateTargetWorkspaceCollapsibleCard */}
+      {canManageTargets ? <CreateTargetWorkspaceCollapsibleCard canCreate /> : null}
       <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressHint}</p>
       <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressScopeNote}</p>
       <div className="space-y-3">

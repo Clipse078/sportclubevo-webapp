@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { loadVorhabenWorkspace } from "@/lib/club-development/vorhaben-workspace";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
+import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
 import {
   hasSprintManagePermission,
   listDevelopmentSprints,
@@ -81,6 +82,14 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
   const canViewInitiatives =
     canManageInitiatives || actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_VIEW);
 
+  const nextMilestoneById =
+    actor.tenantId && initiatives.length > 0
+      ? await loadNextOpenMilestoneByInitiativeIds(
+          actor.tenantId,
+          initiatives.map((row) => row.id),
+        )
+      : new Map();
+
   const initialInitiatives = initiatives.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -93,6 +102,8 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
     disposition: row.disposition,
     dueDate: row.dueDate?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
+    deliveryProgressPercent: Math.min(100, Math.max(0, row.progress ?? 0)),
+    nextMilestone: nextMilestoneById.get(row.id) ?? null,
   }));
 
   const sprintItems = sprints.map((sprint) => ({

@@ -46,6 +46,10 @@ vi.mock("@/lib/club-development/initiative-backlog", () => ({
   listInitiativeBacklog: backlogMocks.listInitiativeBacklog,
 }));
 
+vi.mock("@/lib/club-development/initiative-workspace-summaries", () => ({
+  loadNextOpenMilestoneByInitiativeIds: vi.fn().mockResolvedValue(new Map()),
+}));
+
 vi.mock("@/lib/club-development/initiative-progress", () => ({
   computeInitiativeProgressSnapshot: progressMocks.computeInitiativeProgressSnapshot,
 }));

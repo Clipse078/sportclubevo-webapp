@@ -8,7 +8,9 @@ import { CD_INITIATIVE_COPY } from "@/lib/club-development/product-copy";
 import InitiativeBacklogCreateCard from "./InitiativeBacklogCreateCard";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
-import { Badge } from "@/components/ui";
+import { mapBacklogRowToVorhabenCardSummary } from "@/lib/club-development/vorhaben-workspace-card-mappers";
+import type { VorhabenWorkspaceCardNextMilestone } from "@/lib/club-development/vorhaben-workspace-card-types";
+import VorhabenWorkspaceCardList from "./VorhabenWorkspaceCardList";
 
 export type InitiativeBacklogRow = {
   id: string;
@@ -22,6 +24,8 @@ export type InitiativeBacklogRow = {
   disposition: InitiativeDisposition;
   dueDate: string | null;
   updatedAt: string;
+  deliveryProgressPercent: number;
+  nextMilestone: VorhabenWorkspaceCardNextMilestone | null;
 };
 
 type Props = {
@@ -31,6 +35,12 @@ type Props = {
   initialTargetId?: string | null;
 };
 
+const DISPOSITION_LABELS: Record<Exclude<InitiativeDisposition, "NONE">, string> = {
+  DEFERRED: "Zurückgestellt",
+  REJECTED: "Abgelehnt",
+  ARCHIVED: "Archiviert",
+};
+
 const STATUS_LABELS: Record<InitiativeStatus, string> = {
   PLANNED: "Geplant",
   IN_PROGRESS: "In Arbeit",
@@ -38,12 +48,6 @@ const STATUS_LABELS: Record<InitiativeStatus, string> = {
   ON_HOLD: "Pausiert",
   COMPLETED: "Abgeschlossen",
   CANCELLED: "Abgesagt",
-};
-
-const DISPOSITION_LABELS: Record<Exclude<InitiativeDisposition, "NONE">, string> = {
-  DEFERRED: "Zurückgestellt",
-  REJECTED: "Abgelehnt",
-  ARCHIVED: "Archiviert",
 };
 
 function serializeRows(
@@ -59,12 +63,26 @@ function serializeRows(
     disposition: InitiativeDisposition;
     dueDate: Date | null;
     updatedAt: Date;
+    deliveryProgressPercent?: number;
+    progress?: number | null;
+    nextMilestone?: VorhabenWorkspaceCardNextMilestone | null;
   }[],
 ): InitiativeBacklogRow[] {
   return rows.map((row) => ({
-    ...row,
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    status: row.status,
+    owner: row.owner,
+    expectedOutcome: row.expectedOutcome,
+    backlogPriority: row.backlogPriority,
+    disposition: row.disposition,
     dueDate: row.dueDate?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
+    deliveryProgressPercent:
+      row.deliveryProgressPercent ?? Math.min(100, Math.max(0, row.progress ?? 0)),
+    nextMilestone: row.nextMilestone ?? null,
   }));
 }
 
@@ -135,6 +153,18 @@ export default function InitiativeBacklogWorkspace({
 
   const listEmpty = filteredRows.length === 0;
   const showLoadFailureHint = Boolean(error) && rows.length === 0 && !filtersChangedRef.current;
+
+  const cardSummaries = useMemo(
+    () =>
+      filteredRows.map((row) =>
+        mapBacklogRowToVorhabenCardSummary({
+          ...row,
+          progress: row.deliveryProgressPercent,
+          nextMilestone: row.nextMilestone,
+        }),
+      ),
+    [filteredRows],
+  );
 
   return (
     <div className="space-y-4" data-testid="initiative-backlog-workspace">
@@ -225,34 +255,11 @@ export default function InitiativeBacklogWorkspace({
                 : CD_INITIATIVE_COPY.emptyBacklogView}
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--border)]">
-            {filteredRows.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/vereinsleitung/initiativen/${row.slug}`}
-                    className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-                  >
-                    {row.title}
-                  </Link>
-                  {row.summary ? (
-                    <p className="mt-0.5 text-xs text-[var(--text-2)] line-clamp-2">{row.summary}</p>
-                  ) : null}
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Priorität {row.backlogPriority} · {STATUS_LABELS[row.status]}
-                    {row.owner ? ` · ${row.owner}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {row.disposition !== "NONE" ? (
-                    <Badge variant="secondary" size="sm">
-                      {DISPOSITION_LABELS[row.disposition as keyof typeof DISPOSITION_LABELS]}
-                    </Badge>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <VorhabenWorkspaceCardList
+            items={cardSummaries}
+            showBacklogMeta
+            testId="initiative-backlog-cards"
+          />
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { InitiativeDisposition, InitiativeStatus } from "@prisma/client";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
+import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 
@@ -39,7 +40,22 @@ export async function GET(req: NextRequest) {
       status,
       disposition,
     });
-    return NextResponse.json({ initiatives });
+    const tenantId = access.context.actor.tenantId;
+    const nextMilestoneById =
+      tenantId && initiatives.length > 0
+        ? await loadNextOpenMilestoneByInitiativeIds(
+            tenantId,
+            initiatives.map((row) => row.id),
+          )
+        : new Map();
+
+    const payload = initiatives.map((row) => ({
+      ...row,
+      deliveryProgressPercent: Math.min(100, Math.max(0, row.progress ?? 0)),
+      nextMilestone: nextMilestoneById.get(row.id) ?? null,
+    }));
+
+    return NextResponse.json({ initiatives: payload });
   } catch (error) {
     console.error("Initiative backlog load failed:", error);
     return NextResponse.json(

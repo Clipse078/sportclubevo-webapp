@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Loader2, Search } from "lucide-react";
+import { ExternalLink, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeStatus, TaskStatus } from "@prisma/client";
 import { CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
@@ -10,11 +10,9 @@ import {
   buildVorhabenUndUmsetzungHref,
   CD_WORKSPACE_PRIORITAETEN_QUERY,
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
-import type {
-  VorhabenWorkspaceInitiativeRow,
-  VorhabenWorkspaceSnapshot,
-  VorhabenWorkspaceTaskRow,
-} from "@/lib/club-development/vorhaben-workspace";
+import type { VorhabenWorkspaceSnapshot, VorhabenWorkspaceTaskRow } from "@/lib/club-development/vorhaben-workspace";
+import { mapWorkspaceInitiativeToVorhabenCardSummary } from "@/lib/club-development/vorhaben-workspace-card-mappers";
+import VorhabenWorkspaceCardList from "./VorhabenWorkspaceCardList";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { Badge } from "@/components/ui";
@@ -66,34 +64,6 @@ function NavShortcut({
       </span>
       <span className="mt-0.5 text-[11px] leading-snug text-[var(--muted)]">{description}</span>
     </Link>
-  );
-}
-
-function InitiativeRowCard({ row }: { row: VorhabenWorkspaceInitiativeRow }) {
-  return (
-    <article className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            href={row.detailHref}
-            className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-          >
-            {row.title}
-          </Link>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
-            {row.statusLabel} · {row.progress}% · {row.openRootTaskCount}{" "}
-            {row.openRootTaskCount === 1 ? "offene Aufgabe" : "offene Aufgaben"}
-          </p>
-        </div>
-        <Link
-          href={row.workHref}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
-        >
-          Fokus
-          <ArrowRight className="h-3 w-3" aria-hidden />
-        </Link>
-      </div>
-    </article>
   );
 }
 
@@ -154,6 +124,11 @@ export default function VorhabenAufgabenWorkspace({
   const selectedInitiative = useMemo(
     () => snapshot.initiatives.find((row) => row.id === initiativeId) ?? null,
     [initiativeId, snapshot.initiatives],
+  );
+
+  const initiativeCards = useMemo(
+    () => snapshot.initiatives.map((row) => mapWorkspaceInitiativeToVorhabenCardSummary(row)),
+    [snapshot.initiatives],
   );
 
   const fetchWorkspace = useCallback(() => {
@@ -358,13 +333,7 @@ export default function VorhabenAufgabenWorkspace({
             ) : initiativesEmpty ? (
               <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.emptyInitiatives}</p>
             ) : (
-              <ul className="space-y-2">
-                {snapshot.initiatives.map((row) => (
-                  <li key={row.id}>
-                    <InitiativeRowCard row={row} />
-                  </li>
-                ))}
-              </ul>
+              <VorhabenWorkspaceCardList items={initiativeCards} testId="vorhaben-aufgaben-cards" />
             )}
           </section>
 

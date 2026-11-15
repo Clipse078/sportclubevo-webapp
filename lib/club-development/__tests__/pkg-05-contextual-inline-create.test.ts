@@ -66,6 +66,13 @@ describe("PKG-05 contextual inline collapsible create (SCE rule)", () => {
     expect(findings.length).toBeGreaterThan(0);
   });
 
+  it("Ziele workspace list uses inline collapsible create instead of modal", () => {
+    const panel = read("components/admin/club-development/ZieleWorkspacePanel.tsx");
+    expect(panel).toContain("CreateTargetWorkspaceCollapsibleCard");
+    expect(panel).not.toContain("CreateTargetComposerDialog");
+    expect(panel).not.toContain("CreateTargetTrigger");
+  });
+
   it("documents remaining overlay inventory without claiming full-app migration", () => {
     expect(SCE_CONTEXTUAL_CREATE_OVERLAY_INVENTORY.length).toBeGreaterThanOrEqual(3);
     expect(SCE_CONTEXTUAL_CREATE_OVERLAY_INVENTORY.some((row) => row.component === "CreateTargetComposerDialog")).toBe(

@@ -65,7 +65,11 @@ describe("PKG-05 Vereinsentwicklung workspace consolidation", () => {
     expect(read("components/admin/club-development/StrategyAuthoringPanel.tsx")).toContain(
       "CreateTargetContextualCollapsibleCard",
     );
+    expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "CreateTargetWorkspaceCollapsibleCard",
+    );
     expect(read("components/admin/targets/TargetZieleCollapsibleCard.tsx")).toContain("aria-expanded");
+    expect(read("components/admin/club-development/VorhabenCollapsibleCard.tsx")).toContain("aria-expanded");
   });
 
   it("documents legacy aliases without removing detail routes", () => {
