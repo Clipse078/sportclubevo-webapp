@@ -7,6 +7,7 @@ import { loadClubStrategyAuthoring } from "@/lib/club-development/club-strategy-
 import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-presentation";
 import StrategyAuthoringPanel from "@/components/admin/club-development/StrategyAuthoringPanel";
 import StrategyOverviewPanel from "@/components/admin/club-development/StrategyOverviewPanel";
 import { PageShell } from "@/components/ui/page";
@@ -28,6 +29,9 @@ export default async function VereinsleitungStrategiePage() {
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
   const canViewTargets =
     canManageTargets || actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW);
+  const focusTargetIds = new Set(
+    authoring?.focusTargets.map((row) => row.target.id) ?? [],
+  );
 
   return (
     <PageShell fullWidth>
@@ -56,6 +60,7 @@ export default async function VereinsleitungStrategiePage() {
             {CD_STRATEGY_AUTHORING_COPY.progressHeading}
           </h2>
           <p className="text-sm text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressHint}</p>
+          <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.progressScopeNote}</p>
         </div>
 
         {targets.length === 0 ? (
@@ -72,6 +77,9 @@ export default async function VereinsleitungStrategiePage() {
                   ? "Noch keine sichtbaren Ziele."
                   : "Keine Berechtigung zum Anzeigen strategischer Ziele."}
             </p>
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              {CD_STRATEGY_PROGRESS_COPY.progressOverviewVsFocusWhenEmpty}
+            </p>
             {canManageTargets ? (
               <Link
                 href="/vereinsleitung/targets/new"
@@ -82,7 +90,11 @@ export default async function VereinsleitungStrategiePage() {
             ) : null}
           </div>
         ) : (
-          <StrategyOverviewPanel targets={targets} canManageTargets={canManageTargets} />
+          <StrategyOverviewPanel
+            targets={targets}
+            canManageTargets={canManageTargets}
+            focusTargetIds={focusTargetIds}
+          />
         )}
       </ListPagePattern>
     </PageShell>

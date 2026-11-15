@@ -417,16 +417,17 @@ export default function TargetForm({
         </div>
       </section>
 
-      <section className={sectionClass}>
+      <section id="kennzahlen" className={sectionClass}>
         <div className="mb-5 flex items-center justify-between gap-3">
           <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Kennzahlen</h3>
           <button
             type="button"
             onClick={addMetric}
             className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+            data-testid="target-form-add-metric"
           >
             <Plus className="h-3.5 w-3.5" />
-            Metrik hinzufügen
+            Kennzahl hinzufügen
           </button>
         </div>
 

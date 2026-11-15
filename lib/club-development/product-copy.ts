@@ -48,6 +48,8 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   docKindSupporting: "Weitere Unterlagen",
   progressHeading: "Fortschritt zu Zielen",
   progressHint: "Zielerreichung (Kennzahlen) und Umsetzungsfortschritt (Vorhaben) sind getrennt.",
+  progressScopeNote:
+    "Die Fortschrittsübersicht zeigt alle sichtbaren Ziele — Schwerpunkte oben sind die strategisch verknüpften Ziele.",
 } as const;
 
 /** PKG-01 — navigation hub copy (routes unchanged). */
@@ -173,6 +175,14 @@ export const CD_TASK_WORKSPACE_COPY = {
 export const CD_TARGET_COPY = {
   metricsSection: "Kennzahlen",
   noMetricsYet: "Noch keine Kennzahlen erfasst.",
+  addMetricAction: "Kennzahl hinzufügen",
+  governanceSection: "Prüfung & Freigabe",
+  reviewStatusLabel: "Prüfstatus",
+  targetStatusLabel: "Zielstatus",
+  linksInitiatives: "Vorhaben",
+  linksMeetings: "Sitzungen",
+  noLinkedInitiatives: "Keine Vorhaben verknüpft.",
+  noLinkedMeetings: "Keine Sitzungen verknüpft.",
   createWithMetrics: "Strategisches Ziel mit messbaren Kennzahlen erfassen.",
   createWithMetricsComposer: "Strategisches Ziel mit Kennzahlen — Vorlagen optional im Composer.",
   progressDetail: "Fortschritt, Kennzahlen und Messwerte im Detail.",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Link2, ExternalLink } from "lucide-react";
 import { resolveTargetCrossLinks } from "@/lib/linking/helpers";
+import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 
 type TargetLinksPanelProps = {
   targetId: string;
@@ -39,12 +40,10 @@ export default function TargetLinksPanel({
       <div className="space-y-4">
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-            Initiativen
+            {CD_TARGET_COPY.linksInitiatives}
           </p>
           {initiativeRefs.length === 0 ? (
-            <p className="text-[12px] text-[var(--muted)] italic">
-              Keine Initiativen verknüpft.
-            </p>
+            <p className="text-[12px] text-[var(--muted)] italic">{CD_TARGET_COPY.noLinkedInitiatives}</p>
           ) : (
             <ul className="space-y-1.5">
               {initiativeRefs.map((ref) => (
@@ -64,12 +63,10 @@ export default function TargetLinksPanel({
 
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-            Meetings
+            {CD_TARGET_COPY.linksMeetings}
           </p>
           {meetingRefs.length === 0 ? (
-            <p className="text-[12px] text-[var(--muted)] italic">
-              Keine Meetings verknüpft.
-            </p>
+            <p className="text-[12px] text-[var(--muted)] italic">{CD_TARGET_COPY.noLinkedMeetings}</p>
           ) : (
             <ul className="space-y-1.5">
               {meetingRefs.map((ref) => (

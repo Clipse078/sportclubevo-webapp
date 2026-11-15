@@ -57,7 +57,9 @@ describe("PKG-05 Strategie presentation", () => {
 
   it("overview panel keeps outcome and delivery progress distinct", () => {
     const overview = read("components/admin/club-development/StrategyOverviewPanel.tsx");
-    expect(overview).toContain("Zielerreichung");
-    expect(overview).toContain("Umsetzungsfortschritt");
+    expect(overview).toContain("CD_STRATEGY_PROGRESS_COPY.outcomeLabel");
+    expect(overview).toContain("CD_STRATEGY_PROGRESS_COPY.deliveryLabel");
+    expect(overview).not.toMatch(/Delivery/);
+    expect(overview).toContain("StrategyProgressIndicator");
   });
 });
