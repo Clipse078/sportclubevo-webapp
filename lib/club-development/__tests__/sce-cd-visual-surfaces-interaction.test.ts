@@ -23,7 +23,7 @@ describe("Vereinsentwicklung visual surfaces — interaction regressions", () =>
     expect(create).toContain("SceClubDevelopmentInlineDirtyCloseProvider");
     expect(create).toContain("MeetingForm");
     expect(client).toContain("CreateMeetingInlineCollapsibleCard");
-    expect(trigger).toContain('data-sce-create-flow="inline-collapsible"');
+    expect(trigger).toContain("CreateMeetingListTrigger");
     expect(trigger).toContain("MEETINGS_INLINE_CREATE_EVENT");
   });
 
