@@ -50,6 +50,7 @@ export type ClubStrategyAuthoringDto = {
   nextReviewAt: string | null;
   contentRevision: number;
   meetingRefs: { slug: string; title: string; url: string }[];
+  decisionRefs: { slug: string; title: string; url: string }[];
   focusTargets: ClubStrategyFocusTargetDto[];
   documentReferences: ClubStrategyDocumentReferenceDto[];
 };
@@ -100,6 +101,14 @@ function meetingRefsFromRaw(raw: unknown) {
   }));
 }
 
+function decisionRefsFromRaw(raw: unknown) {
+  return parseEntityRefs(raw).map((ref) => ({
+    slug: ref.slug,
+    title: ref.title,
+    url: ref.url ?? `/vereinsleitung/meetings`,
+  }));
+}
+
 export async function loadClubStrategyAuthoring(
   actor: ActorContext,
   actorUserId: string,
@@ -120,6 +129,7 @@ export async function loadClubStrategyAuthoring(
       nextReviewAt: true,
       contentRevision: true,
       linkedMeetingRefs: true,
+      linkedDecisionRefs: true,
       focusTargets: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -169,6 +179,7 @@ export async function loadClubStrategyAuthoring(
       nextReviewAt: null,
       contentRevision: 0,
       meetingRefs: [],
+      decisionRefs: [],
       focusTargets: [],
       documentReferences: [],
     };
@@ -211,6 +222,7 @@ export async function loadClubStrategyAuthoring(
     nextReviewAt: row.nextReviewAt?.toISOString() ?? null,
     contentRevision: row.contentRevision,
     meetingRefs: meetingRefsFromRaw(row.linkedMeetingRefs),
+    decisionRefs: decisionRefsFromRaw(row.linkedDecisionRefs),
     focusTargets,
     documentReferences,
   };
@@ -331,34 +343,75 @@ export async function upsertClubStrategyAuthoring(
   return { id: updated.id, contentRevision: updated.contentRevision };
 }
 
+async function assertTenantMeetingSlugs(tenantId: string, meetingRefs: { slug: string; title: string }[]) {
+  if (meetingRefs.length === 0) return;
+  const slugs = meetingRefs.map((r) => r.slug);
+  const found = await prisma.meeting.findMany({
+    where: { tenantId, slug: { in: slugs } },
+    select: { slug: true },
+  });
+  const foundSlugs = new Set(found.map((r) => r.slug));
+  const unknown = slugs.find((s) => !foundSlugs.has(s));
+  if (unknown) throw new Error(`MEETING_NOT_FOUND:${unknown}`);
+}
+
+async function assertTenantDecisionIds(tenantId: string, decisionRefs: { slug: string; title: string }[]) {
+  if (decisionRefs.length === 0) return;
+  const ids = decisionRefs.map((r) => r.slug);
+  const found = await prisma.meetingDecision.findMany({
+    where: { id: { in: ids }, meeting: { tenantId } },
+    select: { id: true },
+  });
+  const foundIds = new Set(found.map((r) => r.id));
+  const unknown = ids.find((id) => !foundIds.has(id));
+  if (unknown) throw new Error(`DECISION_NOT_FOUND:${unknown}`);
+}
+
 export async function replaceClubStrategyMeetingRefs(
   actor: ActorContext,
   actorUserId: string,
   meetingRefs: { slug: string; title: string }[],
 ): Promise<void> {
+  await replaceClubStrategyAssociationRefs(actor, actorUserId, { meetingRefs, decisionRefs: undefined });
+}
+
+/** Replace Sitzungs- and Beschluss-Verknüpfungen (no strategy approval side effects). */
+export async function replaceClubStrategyAssociationRefs(
+  actor: ActorContext,
+  actorUserId: string,
+  input: {
+    meetingRefs?: { slug: string; title: string }[];
+    decisionRefs?: { slug: string; title: string }[];
+  },
+): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const tenantId = actor.tenantId;
   const strategyId = await ensureClubStrategyRow(tenantId, actorUserId);
 
-  if (meetingRefs.length > 0) {
-    const slugs = meetingRefs.map((r) => r.slug);
-    const found = await prisma.meeting.findMany({
-      where: { tenantId, slug: { in: slugs } },
-      select: { slug: true },
-    });
-    const foundSlugs = new Set(found.map((r) => r.slug));
-    const unknown = slugs.find((s) => !foundSlugs.has(s));
-    if (unknown) throw new Error(`MEETING_NOT_FOUND:${unknown}`);
+  const meetingRefs = input.meetingRefs;
+  const decisionRefs = input.decisionRefs;
+
+  if (meetingRefs !== undefined) {
+    await assertTenantMeetingSlugs(tenantId, meetingRefs);
   }
+  if (decisionRefs !== undefined) {
+    await assertTenantDecisionIds(tenantId, decisionRefs);
+  }
+
+  if (meetingRefs === undefined && decisionRefs === undefined) return;
 
   const before = await prisma.clubStrategy.findUnique({
     where: { id: strategyId },
-    select: { linkedMeetingRefs: true },
+    select: { linkedMeetingRefs: true, linkedDecisionRefs: true },
   });
+
+  const data: Record<string, unknown> = { updatedByUserId: actorUserId };
+  if (meetingRefs !== undefined) data.linkedMeetingRefs = meetingRefs;
+  if (decisionRefs !== undefined) data.linkedDecisionRefs = decisionRefs;
 
   await prisma.clubStrategy.update({
     where: { id: strategyId, tenantId },
-    data: { linkedMeetingRefs: meetingRefs, updatedByUserId: actorUserId },
+    data,
   });
 
   void logAuditEvent({
@@ -367,8 +420,11 @@ export async function replaceClubStrategyMeetingRefs(
     entityId: strategyId,
     action: "LINKS_UPDATE",
     before: before ?? undefined,
-    after: { linkedMeetingRefs: meetingRefs },
-    metadata: { clubStrategy: true },
+    after: {
+      ...(meetingRefs !== undefined ? { linkedMeetingRefs: meetingRefs } : {}),
+      ...(decisionRefs !== undefined ? { linkedDecisionRefs: decisionRefs } : {}),
+    },
+    metadata: { clubStrategy: true, associationOnly: true },
   });
 }
 

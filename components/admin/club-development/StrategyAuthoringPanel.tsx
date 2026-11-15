@@ -8,13 +8,19 @@ import type { ClubStrategyAuthoringDto } from "@/lib/club-development/club-strat
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import ClubDevelopmentTargetSearchPicker from "./ClubDevelopmentTargetSearchPicker";
+import StrategyAssociationLinkEditor, {
+  entityRefsFromAuthoring,
+} from "./StrategyAssociationLinkEditor";
 import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSection";
+import type { EntityRef } from "@/lib/linking/types";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
   canManage: boolean;
+  availableMeetings: EntityRef[];
+  availableDecisions: EntityRef[];
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -24,7 +30,12 @@ function toDateInputValue(iso: string | null): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default function StrategyAuthoringPanel({ initial, canManage }: Props) {
+export default function StrategyAuthoringPanel({
+  initial,
+  canManage,
+  availableMeetings,
+  availableDecisions,
+}: Props) {
   const router = useRouter();
   const [situationText, setSituationText] = useState(initial.situationText ?? "");
   const [alignmentText, setAlignmentText] = useState(initial.alignmentText ?? "");
@@ -296,22 +307,13 @@ export default function StrategyAuthoringPanel({ initial, canManage }: Props) {
         ) : null}
       </section>
 
-      {initial.meetingRefs.length > 0 ? (
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
-          <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">
-            {CD_STRATEGY_AUTHORING_COPY.meetingLinksHeading}
-          </h3>
-          <ul className="space-y-1.5">
-            {initial.meetingRefs.map((ref) => (
-              <li key={ref.slug}>
-                <Link href={ref.url} className="text-sm text-[var(--sce-primary)] hover:underline">
-                  {ref.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <StrategyAssociationLinkEditor
+        initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
+        initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
+        availableMeetings={availableMeetings}
+        availableDecisions={availableDecisions}
+        canManage={canManage}
+      />
 
       <StrategyDocumentReferencesSection
         references={initial.documentReferences}

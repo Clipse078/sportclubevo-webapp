@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { loadClubStrategyAuthoring } from "@/lib/club-development/club-strategy-service";
+import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
 import StrategyAuthoringPanel from "@/components/admin/club-development/StrategyAuthoringPanel";
@@ -18,9 +19,11 @@ export default async function VereinsleitungStrategiePage() {
 
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
   const actorUserId = session.user.effectiveUserId ?? session.user.id;
-  const [authoring, { targets }] = await Promise.all([
+  const [authoring, { targets }, availableMeetings, availableDecisions] = await Promise.all([
     loadClubStrategyAuthoring(actor, actorUserId),
     loadStrategyOverview(actor),
+    getMeetingLinkOptions(actor),
+    getMeetingDecisionLinkOptions(actor),
   ]);
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
   const canViewTargets =
@@ -43,6 +46,8 @@ export default async function VereinsleitungStrategiePage() {
           <StrategyAuthoringPanel
             initial={authoring}
             canManage={canManageTargets}
+            availableMeetings={availableMeetings}
+            availableDecisions={availableDecisions}
           />
         ) : null}
 

@@ -3425,6 +3425,7 @@ model ClubStrategy {
   periodEndsAt          DateTime?
   nextReviewAt          DateTime?
   linkedMeetingRefs     Json?
+  linkedDecisionRefs    Json?
   contentRevision       Int      @default(1)
   createdByUserId       String?
   updatedByUserId       String?

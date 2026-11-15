@@ -25,7 +25,7 @@ Product label **Strategiekonzeption & Dokumentation** denotes the composed workf
 | Capability | Supported today | Gap |
 |------------|-----------------|-----|
 | Strategic **direction** (objectives) | `Target` + **PKG-05 `ClubStrategy`** (Ausgangslage, Ausrichtung, Periode) | No SWOT/OKR modules; no AI authoring |
-| **Rationale** | Club strategy text + `linkedMeetingRefs` on `ClubStrategy` | Meeting-link editing UI minimal (API + read-only list); no new approval state on save |
+| **Rationale** | Club strategy text + `linkedMeetingRefs` / `linkedDecisionRefs` on `ClubStrategy` | Association editor on Strategie (Sitzungen & Beschlüsse); save does not imply approval |
 | **Kennzahlen** | `TargetMetric` on Ziel detail | Unchanged — Strategie rollup only |
 | **Supporting documents** | **PKG-05** `ClubStrategyDocumentReference` (Leitbild / vereinbart / supporting) with workspace visibility | **Prozesse & Richtlinien** (CD-PROCESS) still demo-only — out of PKG-05 scope |
 | **Revisit / edit** | Draft-friendly saves, `contentRevision` audit on narrative fields | No “agreed” label on save alone |
@@ -36,7 +36,7 @@ Product label **Strategiekonzeption & Dokumentation** denotes the composed workf
 
 | Gap | Notes |
 |-----|--------|
-| Meeting-ref editor on Strategie | PATCH API exists; full picker UX like Target `TargetLinkEditor` not ported |
+| Meeting/decision association editor | Shipped (`StrategyAssociationLinkEditor`); requires migration on STAGE for persistence |
 | PO UAT | Manual acceptance on preview/stage (PKG-03 track) |
 | Preview DB migration | `20261115150000_sce_cd_05_club_strategy_authoring` required on env before persistence works |
 

@@ -14,6 +14,7 @@ CREATE TABLE "ClubStrategy" (
     "periodEndsAt" TIMESTAMP(3),
     "nextReviewAt" TIMESTAMP(3),
     "linkedMeetingRefs" JSONB,
+    "linkedDecisionRefs" JSONB,
     "contentRevision" INTEGER NOT NULL DEFAULT 1,
     "createdByUserId" TEXT,
     "updatedByUserId" TEXT,

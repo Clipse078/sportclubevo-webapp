@@ -18,6 +18,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { EntityRef } from "./types";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildVisibilityWhere, applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
@@ -41,7 +42,9 @@ export async function getMeetingLinkOptions(actor: ActorContext): Promise<Entity
   if (
     !actor.tenantId ||
     !actor.permissionKeys.some((key) =>
-      ["meetings.view", "meetings.manage"].includes(key),
+      ["meetings.view", "meetings.manage", PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE].includes(
+        key,
+      ),
     )
   ) return [];
   const rows = await prisma.meeting.findMany({
@@ -76,4 +79,44 @@ export async function getInitiativeLinkOptions(actor: ActorContext): Promise<Ent
     title: i.title,
     url: `/vereinsleitung/initiativen/${i.slug}`,
   }));
+}
+
+/**
+ * Visible meeting decisions for association editors (Strategie, Target links).
+ * Decisions inherit parent-meeting visibility — restricted meetings are excluded.
+ */
+export async function getMeetingDecisionLinkOptions(actor: ActorContext): Promise<EntityRef[]> {
+  if (!actor.tenantId) return [];
+  const maySeeMeetings = actor.permissionKeys.some((key) =>
+    ["meetings.view", "meetings.manage", PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE].includes(
+      key,
+    ),
+  );
+  if (!maySeeMeetings) return [];
+
+  const meetings = await prisma.meeting.findMany({
+    where: { tenantId: actor.tenantId, ...buildVisibilityWhere(actor) },
+    orderBy: { meetingDate: "desc" },
+    select: { id: true, slug: true, title: true, ...LINK_OPTION_VISIBILITY_SELECT },
+  });
+  const visibleMeetings = applyVisibilityFilter(meetings, actor);
+  if (visibleMeetings.length === 0) return [];
+
+  const meetingIds = visibleMeetings.map((m) => m.id);
+  const meetingById = new Map(visibleMeetings.map((m) => [m.id, m]));
+
+  const decisions = await prisma.meetingDecision.findMany({
+    where: { meetingId: { in: meetingIds } },
+    orderBy: [{ meetingId: "asc" }, { orderIndex: "asc" }, { createdAt: "asc" }],
+    select: { id: true, title: true, meetingId: true },
+  });
+
+  return decisions.map((d) => {
+    const meeting = meetingById.get(d.meetingId);
+    return {
+      slug: d.id,
+      title: meeting ? `${meeting.title}: ${d.title}` : d.title,
+      url: meeting ? `/vereinsleitung/meetings/${meeting.slug}` : undefined,
+    };
+  });
 }

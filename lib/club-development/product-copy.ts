@@ -32,6 +32,8 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   focusHint: "Kurze Liste strategischer Ziele — ohne Zieltexte zu duplizieren.",
   focusEmpty: "Noch keine Schwerpunkte verknüpft.",
   meetingLinksHeading: "Verknüpfte Sitzungen & Entscheide",
+  associationHint:
+    "Rückverweis auf Sitzungen und Beschlüsse als Begründung — Speichern ändert keine Freigabe oder Strategiestatus.",
   documentsHeading: "Strategische Unterlagen",
   documentsHint: "Leitbild, vereinbarte Strategiedokumente und ergänzende Workspace-Dokumente.",
   documentsEmpty: "Noch keine Dokumente verknüpft.",
