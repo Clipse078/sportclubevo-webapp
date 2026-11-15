@@ -11,6 +11,7 @@ import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { mapBacklogRowToVorhabenCardSummary } from "@/lib/club-development/vorhaben-workspace-card-mappers";
 import type { VorhabenWorkspaceCardNextMilestone } from "@/lib/club-development/vorhaben-workspace-card-types";
 import VorhabenWorkspaceCardList from "./VorhabenWorkspaceCardList";
+import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 
 export type InitiativeBacklogRow = {
   id: string;
@@ -186,7 +187,7 @@ export default function InitiativeBacklogWorkspace({
         }}
       />
 
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="relative block sm:col-span-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />

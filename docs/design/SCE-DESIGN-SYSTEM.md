@@ -707,6 +707,22 @@ A modal **Activity Composer must not launch another independent modal, dialog, s
 
 Machine-readable inventory of remaining overlays: `lib/club-development/sce-contextual-create-governance.ts` (`SCE_CONTEXTUAL_CREATE_OVERLAY_INVENTORY`).
 
+### Vereinsentwicklung visual reference (Club Development — PO standard)
+
+**Positive reference:** `/vereinsleitung/club-entwicklung` (`ClubDevelopmentOverview`) — page width via `PageShell fullWidth`, KPI strip where appropriate, white section cards with light headers, compact record rows, dashed empty states, restrained badges. **Not** a mandate to paste KPI tiles onto every form or detail page.
+
+| Primitive | Location |
+|-----------|----------|
+| Section card + header action | `SceClubDevelopmentSectionShell` |
+| Empty state | `SceClubDevelopmentEmptyState` |
+| Tokens | `sce-club-development-surface-styles.ts` |
+
+**Migrated in-package:** Vereinsentwicklung Übersicht, Strategie & Ziele (incl. Alle Ziele), Vorhaben & Umsetzung (Vorhaben / Aufgaben / Umsetzungsphasen), overview-linked governance copy cleanup.
+
+**Governance:** `SCE-DS-GOV-CD-VISUAL-001` — `lib/club-development/sce-vereinsentwicklung-visual-governance.ts`.
+
+**Rollout remainder:** `docs/design/SCE-VEREINSENTWICKLUNG-VISUAL-ADOPTION.md`.
+
 | Item | Status | Notes |
 |------|--------|-------|
 | **`SceActivityComposer`** shell (overlay / page / fullscreen) | **FOUNDATION_IMPLEMENTED** | `components/sce/activity-composer/` + `SceModalOverlay` |

@@ -113,6 +113,14 @@ export const SCE_DESIGN_SYSTEM_GOVERNANCE_RULES = {
     suggestion:
       "Use Create*ContextualCollapsibleCard + SceClubDevelopmentContextualCreateCollapsibleShell with data-sce-contextual-create-flow=\"inline-collapsible\".",
   },
+  "SCE-DS-GOV-CD-VISUAL-001": {
+    id: "SCE-DS-GOV-CD-VISUAL-001",
+    domain: "vereinsentwicklung",
+    summary:
+      "Vereinsentwicklung migrated surfaces must follow ClubDevelopmentOverview visual copy and workspace IA rules.",
+    suggestion:
+      "Use SceClubDevelopmentSectionShell / product-copy keys from lib/club-development/sce-vereinsentwicklung-visual-governance.ts.",
+  },
 } as const;
 
 export type SceDesignSystemGovernanceRuleId = keyof typeof SCE_DESIGN_SYSTEM_GOVERNANCE_RULES;

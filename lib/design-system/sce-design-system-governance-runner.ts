@@ -13,6 +13,10 @@ import {
 } from "@/lib/design-system/sce-design-system-governance";
 import { collectContextualCreateEntryViolations } from "@/lib/club-development/sce-contextual-create-governance";
 import {
+  collectVereinsentwicklungCopyViolations,
+  collectVereinsentwicklungWorkspaceViolations,
+} from "@/lib/club-development/sce-vereinsentwicklung-visual-governance";
+import {
   isPathCoveredBySceDesignSystemException,
   SCE_DESIGN_SYSTEM_EXCEPTION_REGISTRY,
 } from "@/lib/design-system/sce-design-system-exception-registry";
@@ -130,6 +134,19 @@ function scanContextualCreateOverlays(
 ): void {
   for (const finding of collectContextualCreateEntryViolations(file, src)) {
     pushViolation(violations, "SCE-DS-GOV-CONTEXTUAL-CREATE-001", finding.file, finding.reason);
+  }
+}
+
+function scanVereinsentwicklungVisualStandard(
+  violations: SceGovernanceViolation[],
+  file: string,
+  src: string,
+): void {
+  for (const finding of collectVereinsentwicklungCopyViolations(file, src)) {
+    pushViolation(violations, "SCE-DS-GOV-CD-VISUAL-001", finding.file, finding.reason);
+  }
+  for (const finding of collectVereinsentwicklungWorkspaceViolations(file, src)) {
+    pushViolation(violations, "SCE-DS-GOV-CD-VISUAL-001", finding.file, finding.reason);
   }
 }
 
@@ -441,6 +458,7 @@ export function runSceDesignSystemGovernance(options?: {
 
     scanCheckboxBaseline(violations, file, src);
     scanContextualCreateOverlays(violations, file, src);
+    scanVereinsentwicklungVisualStandard(violations, file, src);
     scanCreateTriggers(violations, file, src);
     scanPrimaryFullPageCreatePages(violations, file, src);
     scanFunctionalSurfaces(violations, file, src);

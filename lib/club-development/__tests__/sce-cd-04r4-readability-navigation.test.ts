@@ -50,7 +50,7 @@ function clubDomainWithVereinsentwicklung() {
 describe("SCE-CD-04R5 PKG-01 navigation copy", () => {
   it("documents overview shortcuts without claiming Strategiekonzeption completion", () => {
     expect(CD_NAV_COPY.strategyOverview).toBe("Strategie");
-    expect(CD_OVERVIEW_SHORTCUT_COPY.strategyDescription).toMatch(/Fortschrittsübersicht/);
+    expect(CD_OVERVIEW_SHORTCUT_COPY.strategyDescription).toMatch(/Ausrichtung, Ziele, Kennzahlen/);
     expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
       "/vereinsleitung/strategie-und-ziele",
     );

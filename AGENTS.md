@@ -19,3 +19,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Main nav: **Übersicht**, **Strategie & Ziele** (`/vereinsleitung/strategie-und-ziele?ansicht=`), **Vorhaben & Umsetzung** (`/vereinsleitung/vorhaben-und-umsetzung?ansicht=`), **Sitzungen**. **Prozesse & Richtlinien** stays reachable at `/vereinsleitung/prozesse` but is not in the menu.
 - Legacy list routes (`/strategie`, `/targets`, `/vorhaben`, backlog, `/sprints`, `/initiativen`) redirect into consolidated workspaces; detail URLs unchanged.
 - Local view switches use `ansicht` query params and dirty-state discard via `VereinsentwicklungWorkspaceViewNav`.
+
+## Vereinsentwicklung visual standard (ClubDevelopmentOverview)
+
+- **Reference route:** `/vereinsleitung/club-entwicklung` (`ClubDevelopmentOverview`). Reuse `SceClubDevelopmentSectionShell`, `SceClubDevelopmentEmptyState`, and `sce-club-development-surface-styles.ts` — do not add a parallel card system.
+- **Vorhaben & Umsetzung:** one page subtitle (`CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle`); no duplicate intros or shortcut cards inside local views; **Vorhaben** = full-width expandable cards; **Aufgaben** = cross-Vorhaben task list; **Prioritäten** via `VorhabenPrioritaetenControl` on the Vorhaben view only.
+- **Copy:** club language only on user-facing surfaces (Sitzungen, Vorhaben, Kennzahlen); no redundant **Verfügbar** badges on working destinations.
+- **Governance:** `SCE-DS-GOV-CD-VISUAL-001` + `lib/club-development/sce-vereinsentwicklung-visual-governance.ts`.
+- **Remaining adoption:** see `docs/design/SCE-VEREINSENTWICKLUNG-VISUAL-ADOPTION.md` (do not whole-app rewrite outside Vereinsentwicklung without an explicit package).

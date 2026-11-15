@@ -63,22 +63,19 @@ export const CD_STRATEGY_AUTHORING_COPY = {
 
 /** PKG-01 — navigation hub copy (routes unchanged). */
 export const CD_OVERVIEW_SHORTCUT_COPY = {
-  strategyDescription:
-    "Fortschrittsübersicht zu Zielen, Kennzahlen und verknüpften Vorhaben — kein Ersatz für Zieldetails.",
+  strategyDescription: "Ausrichtung, Ziele, Kennzahlen und Fortschritt im Überblick.",
   backlogDescription: "Priorisierte Vorhaben mit Einordnung und Erwartetem Ergebnis.",
   sprintDescription: "Umsetzungsphasen planen, Aufgaben zuordnen und abschließen.",
-  workHubDescription:
-    "Gemeinsamer Arbeitsbereich für sichtbare Vorhaben und zugehörige Aufgaben — gefilterte Lens, kein Ersatz für die Aufgaben-Inbox.",
+  workHubDescription: "Vorhaben, Aufgaben und Umsetzungsphasen in einem Arbeitsbereich.",
+} as const;
+
+/** Consolidated Vorhaben & Umsetzung workspace — page-level subtitle only. */
+export const CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY = {
+  pageSubtitle: "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
 } as const;
 
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
 export const CD_VORHABEN_WORKSPACE_COPY = {
-  intro:
-    "Vorhaben & Aufgaben bündelt sichtbare Vorhaben mit zugehörigen Aufgaben in einer gefilterten Arbeitsansicht. Vorhaben-Details, Ziele, Umsetzungsplanung und die zentrale Aufgaben-Inbox bleiben erreichbar.",
-  shortcutStrategy: "Ziele, Kennzahlen und Fortschritt — Sprung zu Zieldetails oder gefiltertem Backlog.",
-  shortcutBacklog: "Prioritäten und Einordnung — nicht derselbe Einstieg wie dieser Arbeitsbereich.",
-  shortcutSprints: "Root-Aufgaben planen; Unteraufgaben bleiben am übergeordneten Aufgaben-Arbeitsplatz.",
-  shortcutTasksInbox: "Alle Aufgaben mandantenweit — dieser Bereich filtert auf Vereinsentwicklung.",
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
   searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
   allInitiatives: "Alle sichtbaren Vorhaben",
@@ -90,8 +87,10 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
   rootTasksTruncationNotice: (shown: number, total: number) =>
-    `Es werden ${shown} von ${total} Wurzel-Aufgaben angezeigt.`,
-  allRootTasksAction: "Alle Wurzel-Aufgaben in Vorhaben & Aufgaben",
+    `Es werden ${shown} von ${total} übergeordneten Aufgaben angezeigt.`,
+  allRootTasksAction: "Alle übergeordneten Aufgaben anzeigen",
+  moreFiltersAction: "Weitere Filter",
+  hideFiltersAction: "Filter einklappen",
   noInitiativeAccess: "Keine Berechtigung zur Vorhaben-Ansicht.",
   noTaskAccess: "Keine Berechtigung zur Aufgaben-Ansicht.",
 } as const;

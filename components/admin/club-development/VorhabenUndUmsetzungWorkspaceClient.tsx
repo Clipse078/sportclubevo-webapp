@@ -9,6 +9,8 @@ import DevelopmentSprintList, {
   type DevelopmentSprintListItem,
 } from "./DevelopmentSprintList";
 import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
+import VorhabenPrioritaetenControl from "./VorhabenPrioritaetenControl";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import {
   buildVorhabenUndUmsetzungHref,
   CD_VORHABEN_UMSETZUNG_VIEWS,
@@ -16,6 +18,7 @@ import {
   CD_WORKSPACE_PRIORITAETEN_QUERY,
   parseVorhabenUmsetzungView,
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
 
 type BacklogRow = React.ComponentProps<typeof InitiativeBacklogWorkspace>["initialInitiatives"][number];
 
@@ -66,7 +69,8 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         buildHref={buildHref}
         testId="vorhaben-umsetzung-view-nav"
       />
-      <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"}>
+      <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
+        <VorhabenPrioritaetenControl prioritaetenActive={showPrioritaeten && backlogCanView} />
         {showPrioritaeten && backlogCanView ? (
           <InitiativeBacklogWorkspace
             initialInitiatives={backlogInitiatives}
@@ -76,6 +80,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
           />
         ) : (
           <VorhabenAufgabenWorkspace
+            variant="vorhaben"
             initialSnapshot={snapshot}
             initialTargetId={initialTargetId}
             initialInitiativeId={initialInitiativeId}
@@ -84,14 +89,17 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
       </div>
       <div hidden={activeView !== "aufgaben"} aria-hidden={activeView !== "aufgaben"}>
         <VorhabenAufgabenWorkspace
+          variant="aufgaben"
           initialSnapshot={snapshot}
           initialTargetId={initialTargetId}
           initialInitiativeId={initialInitiativeId}
         />
       </div>
       <div hidden={activeView !== "umsetzungsphasen"} aria-hidden={activeView !== "umsetzungsphasen"} className="space-y-4">
-        <DevelopmentSprintCreateCard canCreate={canManageSprints} />
-        <DevelopmentSprintList sprints={sprints} />
+        <SceClubDevelopmentSectionShell title={CD_NAV_COPY.implementationPlanning} bodyClassName="p-5 space-y-4">
+          <DevelopmentSprintCreateCard canCreate={canManageSprints} />
+          <DevelopmentSprintList sprints={sprints} />
+        </SceClubDevelopmentSectionShell>
       </div>
     </>
   );

@@ -16,7 +16,7 @@ import {
   CD_WORKSPACE_PRIORITAETEN_QUERY,
   CD_NAV_WORKSPACE_LABELS,
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
-import { CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
@@ -131,7 +131,7 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
       <ListPagePattern
         eyebrow="Vereinsentwicklung"
         title={CD_NAV_WORKSPACE_LABELS.vorhabenUndUmsetzung}
-        description={CD_VORHABEN_WORKSPACE_COPY.intro}
+        description={CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },
