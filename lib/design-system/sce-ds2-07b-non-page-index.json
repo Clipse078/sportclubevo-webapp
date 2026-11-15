@@ -523,6 +523,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/vorhaben-workspace/route.ts",
+    "urlPattern": "/api/club-development/vorhaben-workspace",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-directory/clubs/[clubId]/logo/route.ts",
     "urlPattern": "/api/club-directory/clubs/[clubId]/logo",
     "audience": "API"
