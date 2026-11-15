@@ -105,6 +105,14 @@ export const SCE_DESIGN_SYSTEM_GOVERNANCE_RULES = {
     summary: "New canonical flows must not normalize generic Interner Fehler when actionable errors exist.",
     suggestion: "Follow sce-actionable-error-foundation.ts domain-aware failure copy.",
   },
+  "SCE-DS-GOV-CONTEXTUAL-CREATE-001": {
+    id: "SCE-DS-GOV-CONTEXTUAL-CREATE-001",
+    domain: "create-flow",
+    summary:
+      "Migrated contextual create/link entry points (Ziel↔Vorhaben, Strategie↔Ziel) must not mount ComposerDialog/Dialog overlays.",
+    suggestion:
+      "Use Create*ContextualCollapsibleCard + SceClubDevelopmentContextualCreateCollapsibleShell with data-sce-contextual-create-flow=\"inline-collapsible\".",
+  },
 } as const;
 
 export type SceDesignSystemGovernanceRuleId = keyof typeof SCE_DESIGN_SYSTEM_GOVERNANCE_RULES;

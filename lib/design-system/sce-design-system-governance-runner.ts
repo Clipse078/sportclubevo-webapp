@@ -11,6 +11,7 @@ import {
   SCE_GOVERNANCE_CANONICAL_ACTIVITY_CARD_PATHS,
   SCE_GOVERNANCE_CHECKBOX_BASELINE_PATHS,
 } from "@/lib/design-system/sce-design-system-governance";
+import { collectContextualCreateEntryViolations } from "@/lib/club-development/sce-contextual-create-governance";
 import {
   isPathCoveredBySceDesignSystemException,
   SCE_DESIGN_SYSTEM_EXCEPTION_REGISTRY,
@@ -120,6 +121,16 @@ function scanCheckboxBaseline(violations: SceGovernanceViolation[], file: string
     file,
     "New raw checkbox usage outside DS-10 baseline allowlist.",
   );
+}
+
+function scanContextualCreateOverlays(
+  violations: SceGovernanceViolation[],
+  file: string,
+  src: string,
+): void {
+  for (const finding of collectContextualCreateEntryViolations(file, src)) {
+    pushViolation(violations, "SCE-DS-GOV-CONTEXTUAL-CREATE-001", finding.file, finding.reason);
+  }
 }
 
 function scanCreateTriggers(violations: SceGovernanceViolation[], file: string, src: string): void {
@@ -429,6 +440,7 @@ export function runSceDesignSystemGovernance(options?: {
     }
 
     scanCheckboxBaseline(violations, file, src);
+    scanContextualCreateOverlays(violations, file, src);
     scanCreateTriggers(violations, file, src);
     scanPrimaryFullPageCreatePages(violations, file, src);
     scanFunctionalSurfaces(violations, file, src);

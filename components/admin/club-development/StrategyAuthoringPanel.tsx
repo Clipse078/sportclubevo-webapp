@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Pencil, Plus } from "lucide-react";
-import CreateTargetComposerDialog from "@/components/admin/targets/CreateTargetComposerDialog";
+import { Loader2, Pencil } from "lucide-react";
+import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import { useRouter } from "next/navigation";
 import {
@@ -89,7 +89,7 @@ export default function StrategyAuthoringPanel({
   const [focusError, setFocusError] = useState<string | null>(null);
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
-  const [targetComposerOpen, setTargetComposerOpen] = useState(false);
+  const [targetCreateExpanded, setTargetCreateExpanded] = useState(false);
   const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -451,56 +451,46 @@ export default function StrategyAuthoringPanel({
         )}
 
         {canManage && editing ? (
-          <div className="flex flex-wrap items-start gap-2">
-            <button
-              type="button"
-              onClick={() => setTargetComposerOpen(true)}
-              disabled={pendingFocus}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
-              data-testid="strategy-create-target-and-link"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {CD_TARGET_COPY.createTargetAndLinkSchwerpunkt}
-            </button>
-            <ClubDevelopmentTargetSearchPicker
-              excludeTargetIds={linkedTargetIds}
-              onSelect={addFocusTarget}
-              testId="strategy-focus-target-picker"
+          <div className="space-y-3">
+            <CreateTargetContextualCollapsibleCard
+              expanded={targetCreateExpanded}
+              onExpandedChange={setTargetCreateExpanded}
+              contextualFocus={{
+                onFinished: ({ targetId, title, linkOk, linkError }) => {
+                  if (linkOk && targetId) {
+                    setFocusError(null);
+                    setFocusLinkRetryTargetId(null);
+                    setFocusTargets((prev) => [
+                      ...prev,
+                      {
+                        id: `local-${targetId}`,
+                        sortOrder: prev.length,
+                        target: {
+                          id: targetId,
+                          title: title ?? "Ziel",
+                          status: "DRAFT",
+                        },
+                      },
+                    ]);
+                    router.refresh();
+                    return;
+                  }
+                  if (targetId) {
+                    setFocusLinkRetryTargetId(targetId);
+                  }
+                  setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
+                },
+              }}
             />
+            <div className="flex flex-wrap items-start gap-2">
+              <ClubDevelopmentTargetSearchPicker
+                excludeTargetIds={linkedTargetIds}
+                onSelect={addFocusTarget}
+                testId="strategy-focus-target-picker"
+              />
+            </div>
           </div>
         ) : null}
-
-        <CreateTargetComposerDialog
-          open={targetComposerOpen}
-          onClose={() => setTargetComposerOpen(false)}
-          contextualFocus={{
-            onFinished: ({ targetId, title, linkOk, linkError }) => {
-              setTargetComposerOpen(false);
-              if (linkOk && targetId) {
-                setFocusError(null);
-                setFocusLinkRetryTargetId(null);
-                setFocusTargets((prev) => [
-                  ...prev,
-                  {
-                    id: `local-${targetId}`,
-                    sortOrder: prev.length,
-                    target: {
-                      id: targetId,
-                      title: title ?? "Ziel",
-                      status: "DRAFT",
-                    },
-                  },
-                ]);
-                router.refresh();
-                return;
-              }
-              if (targetId) {
-                setFocusLinkRetryTargetId(targetId);
-              }
-              setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
-            },
-          }}
-        />
       </section>
 
       <section

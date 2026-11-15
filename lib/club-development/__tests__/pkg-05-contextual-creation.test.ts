@@ -61,29 +61,32 @@ describe("PKG-05 contextual creation (Ziel ↔ Vorhaben, Strategie ↔ Ziel)", (
     const section = read("components/admin/targets/TargetInitiativeLinksSection.tsx");
     expect(detail).toContain("TargetInitiativeLinksSection");
     expect(edit).toContain("TargetInitiativeLinksSection");
-    expect(section).toContain('data-testid="target-create-initiative-and-link"');
-    expect(section).toContain("CD_TARGET_COPY.createInitiativeAndLink");
+    const card = read("components/admin/initiatives/CreateInitiativeContextualCollapsibleCard.tsx");
+    expect(card).toContain("CD_TARGET_COPY.createInitiativeAndLink");
+    expect(card).toContain('collapseToggleTestId="target-create-initiative-and-link"');
     expect(section).toContain("CD_TARGET_COPY.linkExistingInitiative");
-    expect(section).toContain("CreateInitiativeComposerDialog");
+    expect(section).toContain("CreateInitiativeContextualCollapsibleCard");
+    expect(section).not.toContain("CreateInitiativeComposerDialog");
     expect(section).not.toContain("<form");
   });
 
   it("reuses Vorhaben composer with preselected Ziel and contextual link callback", () => {
-    const dialog = read("components/admin/initiatives/CreateInitiativeComposerDialog.tsx");
-    expect(dialog).toContain("preselectedTarget");
-    expect(dialog).toContain("contextualLink");
-    expect(dialog).toContain("/initiative-links");
-    expect(dialog).toContain("SceClubDevelopmentComposerShell");
+    const card = read("components/admin/initiatives/CreateInitiativeContextualCollapsibleCard.tsx");
+    expect(card).toContain("preselectedTarget");
+    expect(card).toContain("contextualLink");
+    expect(card).toContain("/initiative-links");
+    expect(card).toContain("InitiativeForm");
+    expect(card).toContain('layout="composer"');
   });
 
   it("reuses Ziel composer for Strategie Schwerpunkte without navigation", () => {
     const strategy = read("components/admin/club-development/StrategyAuthoringPanel.tsx");
-    const dialog = read("components/admin/targets/CreateTargetComposerDialog.tsx");
-    expect(strategy).toContain("CreateTargetComposerDialog");
-    expect(strategy).toContain("strategy-create-target-and-link");
-    expect(dialog).toContain("contextualFocus");
-    expect(dialog).toContain("focus-targets");
-    expect(dialog).toContain("linkAsSchwerpunkt");
+    const card = read("components/admin/targets/CreateTargetContextualCollapsibleCard.tsx");
+    expect(strategy).toContain("CreateTargetContextualCollapsibleCard");
+    expect(card).toContain('collapseToggleTestId="strategy-create-target-and-link"');
+    expect(card).toContain("contextualFocus");
+    expect(card).toContain("focus-targets");
+    expect(card).toContain("linkAsSchwerpunkt");
   });
 
   it("searchInitiativeCandidates returns empty without view permission", async () => {

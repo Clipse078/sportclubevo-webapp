@@ -81,8 +81,8 @@ New and redesigned flows should prefer surfaces in this order — not every tier
 | Surface | Pattern observed | Evidence |
 | --- | --- | --- |
 | Hub | Full-page list/KPI (demo) | `app/(admin)/vereinsleitung/club-entwicklung/page.tsx` — `DEMO_PROCESSES`, not persisted |
-| Ziele | Modal-first + deep link | `CreateTargetComposerDialog` → `TargetNewPageClient layout=composer` |
-| Initiativen | Modal-first + deep link | `CreateInitiativeComposerDialog` → `InitiativeForm layout=composer` |
+| Ziele | Modal-first + deep link on list; **inline collapsible on Ziel detail** | List: `CreateTargetComposerDialog`. Contextual link: `CreateTargetContextualCollapsibleCard` |
+| Initiativen | Modal-first + deep link on list; **inline collapsible on Ziel↔Vorhaben** | List: `/initiativen/new`. Contextual link: `CreateInitiativeContextualCollapsibleCard` |
 | Meetings | Full-page create (SCE-CD-02R1+) + deep link | `CreateMeetingTrigger` → `MeetingForm` layout=page |
 | Prozesse | Demo list; disabled create | `/vereinsleitung/prozesse` — “Demnächst”; no composer until persistence |
 

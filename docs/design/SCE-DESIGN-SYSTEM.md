@@ -690,6 +690,23 @@ Full contracts: [`SCE-ACTIVITY-CREATION.md`](./SCE-ACTIVITY-CREATION.md) · Arch
 
 A modal **Activity Composer must not launch another independent modal, dialog, sheet, or drawer** over itself for normal creation interactions. Prefer inline controls, combobox/search, popover, expandable region, or Composer-owned embedded panel. If the interaction is genuinely too complex, use **full-page `/new` mode** — not stacked dialogs. **Club Event organisational audience selector** is the first mandated application (**01C**).
 
+### Contextual create/link rule (Club Development — PKG-05)
+
+**No modal** for contextual creation or editing on an open parent workspace (Ziel, Strategie, and future migrations).
+
+| Requirement | Contract |
+|-------------|----------|
+| **Surface** | Inline collapsible card at the trigger location in normal page flow |
+| **Shell** | `SceClubDevelopmentContextualCreateCollapsibleShell` + `data-sce-contextual-create-flow="inline-collapsible"` |
+| **A11y** | Header `aria-expanded` / `aria-controls`; no `role="dialog"`, backdrop, portal, focus trap, or body scroll lock |
+| **Scroll** | No dedicated inner scroll region on the card — document flow scroll only |
+| **Dirty cancel** | `SceClubDevelopmentInlineDirtyCloseProvider` + in-card discard confirm (not `SceUnsavedChangesDialog`) |
+| **Migrated flows** | Ziel → *Vorhaben erstellen & verknüpfen* · Strategie → *Ziel erstellen & verknüpfen* |
+| **Governance** | `SCE-DS-GOV-CONTEXTUAL-CREATE-001` on `SCE_CONTEXTUAL_CREATE_INLINE_ENTRY_PATHS` |
+| **List create** | Modal-first `Create*ComposerDialog` on list workspaces remains valid until intentionally migrated |
+
+Machine-readable inventory of remaining overlays: `lib/club-development/sce-contextual-create-governance.ts` (`SCE_CONTEXTUAL_CREATE_OVERLAY_INVENTORY`).
+
 | Item | Status | Notes |
 |------|--------|-------|
 | **`SceActivityComposer`** shell (overlay / page / fullscreen) | **FOUNDATION_IMPLEMENTED** | `components/sce/activity-composer/` + `SceModalOverlay` |

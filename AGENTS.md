@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Club Development contextual create (SCE)
+
+- Contextual create/link on **Ziel** and **Strategie** parent surfaces must use **inline collapsible cards** (`SceClubDevelopmentContextualCreateCollapsibleShell`), not `Dialog` / `SceClubDevelopmentComposerShell` overlays.
+- Enforced via `SCE-DS-GOV-CONTEXTUAL-CREATE-001` and `lib/club-development/sce-contextual-create-governance.ts`.
+- List-workspace modal composers (`CreateTargetComposerDialog`, `/initiativen/new`) are unchanged until a separate migration.

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, Loader2, Plus, Link2 } from "lucide-react";
+import { ExternalLink, Loader2, Link2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import ClubDevelopmentInitiativeSearchPicker from "@/components/admin/club-development/ClubDevelopmentInitiativeSearchPicker";
-import CreateInitiativeComposerDialog from "@/components/admin/initiatives/CreateInitiativeComposerDialog";
+import CreateInitiativeContextualCollapsibleCard from "@/components/admin/initiatives/CreateInitiativeContextualCollapsibleCard";
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import type { EntityRef } from "@/lib/linking/types";
 
@@ -32,7 +32,7 @@ export default function TargetInitiativeLinksSection({
   const [error, setError] = useState<string | null>(null);
   const [legacyUnlinkNotice, setLegacyUnlinkNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [composerOpen, setComposerOpen] = useState(false);
+  const [createExpanded, setCreateExpanded] = useState(false);
   const [highlightSlug, setHighlightSlug] = useState<string | null>(null);
   const [linkRetryInitiativeId, setLinkRetryInitiativeId] = useState<string | null>(null);
 
@@ -236,18 +236,15 @@ export default function TargetInitiativeLinksSection({
 
       {canManage ? (
         <div className="space-y-3 border-t border-[var(--border)] pt-4">
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setComposerOpen(true)}
-              disabled={pending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
-              data-testid="target-create-initiative-and-link"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {CD_TARGET_COPY.createInitiativeAndLink}
-            </button>
-          </div>
+          <CreateInitiativeContextualCollapsibleCard
+            expanded={createExpanded}
+            onExpandedChange={setCreateExpanded}
+            preselectedTarget={{ id: targetId, title: targetTitle }}
+            contextualLink={{
+              targetId,
+              onFinished: handleContextualCreate,
+            }}
+          />
           <div className="flex flex-wrap items-start gap-2">
             <p className="w-full text-[11px] font-medium text-[var(--muted)]">
               {CD_TARGET_COPY.linkExistingInitiative}
@@ -262,19 +259,6 @@ export default function TargetInitiativeLinksSection({
           </div>
         </div>
       ) : null}
-
-      <CreateInitiativeComposerDialog
-        open={composerOpen}
-        onClose={() => setComposerOpen(false)}
-        preselectedTarget={{ id: targetId, title: targetTitle }}
-        contextualLink={{
-          targetId,
-          onFinished: (payload) => {
-            setComposerOpen(false);
-            handleContextualCreate(payload);
-          },
-        }}
-      />
     </section>
   );
 }
