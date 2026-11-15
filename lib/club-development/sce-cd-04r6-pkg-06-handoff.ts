@@ -4,10 +4,13 @@
 
 export const PKG_06_PULL_REQUEST = 985 as const;
 
-export const PKG_06_VERIFIED_PREVIEW_COMMIT = "b3d4ce40d05d9e712d2d1b63155a5f108597a3f2" as const;
-export const PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT = "b3d4ce40" as const;
+export const PKG_06_VERIFIED_PREVIEW_COMMIT = "de809adaa4627f62daecb3881aa601631fe5a66c" as const;
+export const PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT = "de809ada" as const;
 
-/** Vercel Ready deployment for PR #985 head (verified 2026-11-15 UTC). */
+/**
+ * Vercel Ready deployment for PR #985 head.
+ * Re-verify preview host after CI Ready (commit `de809ada`).
+ */
 export const PKG_06_VERIFIED_PREVIEW_URL =
   "https://sportclubevo-webapp-stage-git-curs-87ffcf-mds-projects-462da62c.vercel.app" as const;
 
