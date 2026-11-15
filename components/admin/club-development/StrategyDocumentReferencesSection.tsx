@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { FileText, Plus, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { ClubStrategyDocumentReferenceDto } from "@/lib/club-development/club-strategy-service";
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
 import { WorkspaceDocumentVersionReferencePicker } from "@/components/admin/aufgaben/WorkspaceDocumentVersionReferencePicker";
@@ -14,6 +13,7 @@ type Props = {
   canManage: boolean;
   editing?: boolean;
   compact?: boolean;
+  onReferencesChanged?: (references: ClubStrategyDocumentReferenceDto[]) => void;
 };
 
 type DocKind = "LEITBILD" | "STRATEGY_AGREED" | "SUPPORTING";
@@ -60,14 +60,30 @@ export default function StrategyDocumentReferencesSection({
   canManage,
   editing = false,
   compact = false,
+  onReferencesChanged,
 }: Props) {
-  const router = useRouter();
+  const [rows, setRows] = useState(references);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [kind, setKind] = useState<DocKind>("SUPPORTING");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const manageLinks = canManage && editing;
+
+  useEffect(() => {
+    setRows(references);
+  }, [references]);
+
+  useEffect(() => {
+    onReferencesChanged?.(rows);
+  }, [onReferencesChanged, rows]);
+
+  async function refreshReferencesFromServer() {
+    const res = await fetch("/api/club-development/club-strategy");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.authoring) return;
+    setRows(data.authoring.documentReferences ?? []);
+  }
 
   function linkDocument(input: { documentId: string; workspaceDocumentVersionId: string }) {
     startTransition(async () => {
@@ -83,7 +99,7 @@ export default function StrategyDocumentReferencesSection({
       }
       setPickerOpen(false);
       setError(null);
-      router.refresh();
+      await refreshReferencesFromServer();
     });
   }
 
@@ -98,7 +114,7 @@ export default function StrategyDocumentReferencesSection({
         setError(typeof data.error === "string" ? data.error : "Entfernen fehlgeschlagen.");
         return;
       }
-      router.refresh();
+      setRows((prev) => prev.filter((row) => row.referenceId !== referenceId));
     });
   }
 
@@ -130,11 +146,11 @@ export default function StrategyDocumentReferencesSection({
         </p>
       ) : null}
 
-      {references.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.documentsEmpty}</p>
       ) : (
         <ul className="space-y-1.5">
-          {references.map((ref) => {
+          {rows.map((ref) => {
             const presentation = ref.presentation;
             return (
               <li

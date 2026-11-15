@@ -13,10 +13,10 @@ import { ChevronRight, Clock3, Edit, MapPin } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import VisibilityScopeBadge from "@/components/admin/shared/VisibilityScopeBadge";
 import { Badge } from "@/components/ui";
-import { SceDateTile } from "@/components/design-system/date";
+import { SCE_CD_RECORD_ROW_CLASS } from "@/components/admin/club-development/sce-club-development-surface-styles";
 import type { MeetingListItem } from "@/lib/meetings/queries";
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
-import { formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import { formatDateShort, formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 const STATUS_LABELS: Record<MeetingListItem["status"], string> = {
   PLANNED: "Geplant",
@@ -55,7 +55,7 @@ export default function VereinsleitungMeetingsList({
 }: VereinsleitungMeetingsListProps) {
   const fmtCfg: TenantFormatConfig = { locale, timezone };
   return (
-    <ul className="list-none space-y-3">
+    <ul className="list-none space-y-2">
       {meetings.map((meeting) => {
         const detailHref = `/vereinsleitung/meetings/${meeting.slug}`;
         const editHref = `/vereinsleitung/meetings/${meeting.slug}/edit`;
@@ -64,47 +64,40 @@ export default function VereinsleitungMeetingsList({
         return (
           <li key={meeting.slug}>
             <article
-              className="group relative rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm transition motion-safe:hover:-translate-y-[1px] motion-safe:hover:border-[var(--border-strong,var(--border))] motion-safe:hover:shadow-md"
+              className={`group relative ${SCE_CD_RECORD_ROW_CLASS}`}
               data-testid={`vereinsleitung-meeting-card-${meeting.slug}`}
             >
               <Link
                 href={detailHref}
-                className="absolute inset-0 z-0 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring,var(--blue))]"
+                className="absolute inset-0 z-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring,var(--blue))]"
                 aria-label={`${meeting.title} — Sitzung öffnen`}
                 data-testid="vereinsleitung-meeting-card-link"
               />
 
-              <div className="pointer-events-none relative z-[1] flex items-start gap-4">
-                <SceDateTile
-                  value={meeting.meetingDate}
-                  fmtCfg={fmtCfg}
-                  testId={`vereinsleitung-meeting-date-${meeting.slug}`}
-                  decorative
-                />
-                <div className="flex min-w-0 flex-1 flex-wrap items-start justify-between gap-4">
+              <div className="pointer-events-none relative z-[1] flex min-w-0 flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 pr-2">
                   <h3
-                    className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--blue)] motion-safe:transition-colors"
+                    className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]"
                     data-testid="vereinsleitung-meeting-card-title"
                   >
                     {meeting.title}
                   </h3>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-[var(--text-2)]">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-2)]">
                     <span
-                      className="inline-flex items-center gap-1.5 tabular-nums"
+                      className="inline-flex items-center gap-1.5 tabular-nums font-medium text-[var(--foreground)]"
+                      data-testid={`vereinsleitung-meeting-date-${meeting.slug}`}
+                    >
+                      {formatDateShort(meeting.meetingDate, fmtCfg)}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 tabular-nums"
                       data-testid={`vereinsleitung-meeting-time-${meeting.slug}`}
                     >
-                      <Clock3 className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                      <Clock3 className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
                       {formatTime(meeting.meetingDate, fmtCfg)} Uhr
+                      {durationLabel ? ` · ${durationLabel}` : ""}
                     </span>
-
-                    {durationLabel ? (
-                      <span className="inline-flex items-center gap-1.5 text-[var(--text-2)]">
-                        <Clock3 className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                        {durationLabel} geplant
-                      </span>
-                    ) : null}
 
                     {meeting.attendeeCount ? (
                       <span className="inline-flex items-center gap-1.5">
@@ -114,7 +107,7 @@ export default function VereinsleitungMeetingsList({
                     ) : null}
 
                     {meeting.location ? (
-                      <span className="inline-flex max-w-full items-center gap-1.5 text-[var(--muted)]">
+                      <span className="inline-flex max-w-full items-center gap-1 text-[var(--muted)]">
                         <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
                         <span className="truncate">{formatMeetingLocationDisplay(meeting.location)}</span>
                       </span>
@@ -131,7 +124,7 @@ export default function VereinsleitungMeetingsList({
                     <VisibilityScopeBadge scope={meeting.visibilityScope} />
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {canManage ? (
                       <Link
                         href={editHref}
@@ -143,15 +136,14 @@ export default function VereinsleitungMeetingsList({
                       </Link>
                     ) : null}
                     <span
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--blue)]"
+                      className="inline-flex items-center gap-0.5 text-xs font-semibold text-[var(--sce-primary)]"
                       data-testid="vereinsleitung-meeting-card-open-label"
                       aria-hidden
                     >
                       Öffnen
-                      <ChevronRight className="h-4 w-4" aria-hidden />
+                      <ChevronRight className="h-3.5 w-3.5" aria-hidden />
                     </span>
                   </div>
-                </div>
                 </div>
               </div>
             </article>
@@ -162,5 +154,4 @@ export default function VereinsleitungMeetingsList({
   );
 }
 
-// Re-export shape alias for tests and legacy imports
 export type MeetingListItemShape = MeetingListItem;

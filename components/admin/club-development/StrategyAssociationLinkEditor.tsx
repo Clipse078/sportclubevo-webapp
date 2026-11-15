@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ComponentProps, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, Loader2 } from "lucide-react";
 import { toggleEntityRef, isLinked, parseEntityRefs } from "@/lib/linking/helpers";
@@ -17,6 +16,7 @@ type Props = {
   canManage: boolean;
   editing?: boolean;
   compact?: boolean;
+  onAssociationsSaved?: (counts: { meetings: number; decisions: number }) => void;
 };
 
 export default function StrategyAssociationLinkEditor({
@@ -27,8 +27,8 @@ export default function StrategyAssociationLinkEditor({
   canManage,
   editing = false,
   compact = false,
+  onAssociationsSaved,
 }: Props) {
-  const router = useRouter();
   const [meetingRefs, setMeetingRefs] = useState<EntityRef[]>(initialMeetingRefs);
   const [decisionRefs, setDecisionRefs] = useState<EntityRef[]>(initialDecisionRefs);
   const [loading, setLoading] = useState(false);
@@ -61,7 +61,10 @@ export default function StrategyAssociationLinkEditor({
         return;
       }
       setSaved(true);
-      router.refresh();
+      onAssociationsSaved?.({
+        meetings: meetingRefs.length,
+        decisions: decisionRefs.length,
+      });
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {

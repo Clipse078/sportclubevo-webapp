@@ -13,11 +13,18 @@ import VisibilityScopeSelect, {
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
 
+export type InitiativeFormSuccessPayload = {
+  id: string;
+  slug: string;
+  title: string;
+};
+
 type InitiativeFormProps = {
   mode: "create" | "edit";
   layout?: "page" | "composer";
-  onSuccess?: (initiativeId: string) => void;
+  onSuccess?: (initiative: InitiativeFormSuccessPayload) => void | Promise<void>;
   onCancel?: () => void;
+  preselectedTargetTitle?: string | null;
   initiativeId?: string;
   defaultValues?: {
     title?: string;
@@ -51,6 +58,7 @@ export default function InitiativeForm({
   onCancel,
   initiativeId,
   defaultValues,
+  preselectedTargetTitle = null,
 }: InitiativeFormProps) {
   const router = useRouter();
 
@@ -185,9 +193,12 @@ export default function InitiativeForm({
 
       const data = await res.json().catch(() => ({}));
       const slug = typeof data?.initiative?.slug === "string" ? data.initiative.slug : "";
+      const id = typeof data?.initiative?.id === "string" ? data.initiative.id : initiativeId ?? "";
+      const savedTitle =
+        typeof data?.initiative?.title === "string" ? data.initiative.title : title.trim();
       resetBaseline();
       if (onSuccess) {
-        onSuccess(slug);
+        await onSuccess({ id, slug, title: savedTitle });
         return;
       }
       if (mode === "create" && slug) {
@@ -218,6 +229,15 @@ export default function InitiativeForm({
       {error ? (
         <div className={errorClass} role="alert">
           {error}
+        </div>
+      ) : null}
+
+      {preselectedTargetTitle ? (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-3 py-2 text-sm text-[var(--foreground)]">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Verknüpftes Ziel
+          </span>
+          <p className="mt-0.5 font-medium">{preselectedTargetTitle}</p>
         </div>
       ) : null}
 

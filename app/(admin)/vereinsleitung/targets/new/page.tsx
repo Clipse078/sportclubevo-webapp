@@ -17,7 +17,7 @@ export default async function NewTargetPage() {
         description="Strategisches Ziel mit messbaren Kennzahlen erfassen. Optional eine Vorlage als Ausgangspunkt verwenden."
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
           { label: "Neues Ziel" },
         ]}
       >

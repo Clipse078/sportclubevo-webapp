@@ -9,6 +9,10 @@ import {
 } from "@/lib/visibility/visibility-filter";
 import { computeInitiativeProgressSnapshot } from "./initiative-progress";
 import { computeTargetOutcomePercent } from "./target-outcome-progress";
+import {
+  describeDeliveryProgressUnknown,
+  describeOutcomeProgressUnknown,
+} from "./strategy-progress-presentation";
 
 type JsonInitiativeRef = { slug?: string; title?: string };
 
@@ -24,6 +28,8 @@ export type StrategyTargetOverview = {
   outcomeProgressPercent: number | null;
   linkedInitiativeCount: number;
   deliveryProgressPercent: number | null;
+  outcomeProgressUnknownReason: string | null;
+  deliveryProgressUnknownReason: string | null;
   metrics: {
     id: string;
     label: string;
@@ -137,6 +143,8 @@ export async function loadStrategyOverview(
     }
 
     const outcomeProgressPercent = computeTargetOutcomePercent(target.metrics);
+    const deliveryProgressPercent =
+      deliveryCount > 0 ? Math.round(deliverySum / deliveryCount) : null;
 
     targets.push({
       id: target.id,
@@ -144,8 +152,15 @@ export async function loadStrategyOverview(
       status: target.status,
       outcomeProgressPercent,
       linkedInitiativeCount: deliveryTotal,
-      deliveryProgressPercent:
-        deliveryCount > 0 ? Math.round(deliverySum / deliveryCount) : null,
+      deliveryProgressPercent,
+      outcomeProgressUnknownReason: describeOutcomeProgressUnknown(target.metrics),
+      deliveryProgressUnknownReason:
+        deliveryProgressPercent === null
+          ? describeDeliveryProgressUnknown({
+              linkedInitiativeCount: deliveryTotal,
+              initiativesWithEligibleTasks: deliveryCount,
+            })
+          : null,
       metrics: target.metrics.map((m) => ({
         id: m.id,
         label: m.label,

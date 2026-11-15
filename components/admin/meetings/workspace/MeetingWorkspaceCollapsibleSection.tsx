@@ -1,0 +1,121 @@
+"use client";
+
+import { ChevronDown } from "lucide-react";
+import { useCallback, useId, type CSSProperties, type ReactNode } from "react";
+import { cn } from "@/lib/cn";
+import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
+import { meetingWorkspaceSectionDomId } from "@/lib/nav/meeting-workspace-tab-config";
+import {
+  workspacePanelClass,
+  workspaceSectionBodyClass,
+  workspaceSectionHeaderClass,
+} from "./meetingWorkspaceFieldClasses";
+import { useMeetingWorkspaceSections } from "./MeetingWorkspaceSectionsContext";
+
+type Props = {
+  sectionId: MeetingWorkspaceTabId;
+  title: string;
+  children: ReactNode;
+  lazy?: boolean;
+  /** Shown under the section title while collapsed (e.g. participant names). */
+  collapsedPreview?: ReactNode;
+};
+
+export default function MeetingWorkspaceCollapsibleSection({
+  sectionId,
+  title,
+  children,
+  lazy = false,
+  collapsedPreview,
+}: Props) {
+  const panelId = useId();
+  const {
+    expandedSections,
+    requestToggleSection,
+    registerSectionHeading,
+    registerSectionPanel,
+    sectionScrollMarginPx,
+    hasActivatedLazySection,
+  } = useMeetingWorkspaceSections();
+
+  const domId = meetingWorkspaceSectionDomId(sectionId);
+  const expanded = expandedSections.has(sectionId);
+  const shouldRenderBody = !lazy || hasActivatedLazySection(sectionId);
+
+  const setHeadingRef = useCallback(
+    (el: HTMLHeadingElement | null) => {
+      registerSectionHeading(sectionId, el);
+    },
+    [registerSectionHeading, sectionId],
+  );
+
+  const setPanelRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      registerSectionPanel(sectionId, el);
+    },
+    [registerSectionPanel, sectionId],
+  );
+
+  return (
+    <section
+      id={domId}
+      className={cn(workspacePanelClass, "scroll-mt-[var(--meeting-workspace-scroll-margin)]")}
+      style={
+        {
+          "--meeting-workspace-scroll-margin": `${sectionScrollMarginPx}px`,
+        } as CSSProperties
+      }
+      data-testid={`meeting-workspace-section-${sectionId}`}
+      data-expanded={expanded ? "true" : "false"}
+    >
+      <div className={workspaceSectionHeaderClass}>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <button
+            type="button"
+            className="flex min-w-0 items-center gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
+            aria-expanded={expanded}
+            aria-controls={panelId}
+            onClick={() => requestToggleSection(sectionId)}
+            data-testid={`meeting-workspace-section-toggle-${sectionId}`}
+          >
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-[var(--muted)] transition-transform motion-reduce:transition-none",
+                expanded && "rotate-180",
+              )}
+              aria-hidden
+            />
+            <h2
+              ref={setHeadingRef}
+              id={`${domId}-heading`}
+              className="text-sm font-semibold text-[var(--foreground)]"
+              tabIndex={-1}
+            >
+              {title}
+            </h2>
+          </button>
+          {!expanded && collapsedPreview ? (
+            <p
+              className="pl-6 text-xs text-[var(--text-2)]"
+              data-testid={`meeting-workspace-section-preview-${sectionId}`}
+            >
+              {collapsedPreview}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      {shouldRenderBody ? (
+        <div
+          ref={setPanelRef}
+          id={panelId}
+          hidden={!expanded}
+          className={workspaceSectionBodyClass}
+          data-testid={`meeting-workspace-panel-${sectionId}`}
+          aria-labelledby={`${domId}-heading`}
+        >
+          {children}
+        </div>
+      ) : null}
+    </section>
+  );
+}

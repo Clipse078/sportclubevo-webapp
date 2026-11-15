@@ -45,24 +45,20 @@ describe("ClubDevelopmentOverview", () => {
     expect(screen.getByText("Keine laufenden Vorhaben sichtbar.")).toBeTruthy();
     expect(screen.queryByText("Aktive Prozesse")).toBeNull();
     expect(screen.queryByText("Demo-Daten — nicht produktiv")).toBeNull();
-    expect(screen.getByText("Vorhaben & Aufgaben")).toBeTruthy();
-    expect(screen.getByText("Prozesse & Richtlinien")).toBeTruthy();
 
     const hrefs = screen.getAllByRole("link").map((el) => el.getAttribute("href"));
-    expect(hrefs).toContain("/vereinsleitung/strategie");
-    expect(hrefs).toContain("/vereinsleitung/initiativen/backlog");
-    expect(hrefs).toContain("/vereinsleitung/sprints");
+    expect(hrefs).toContain("/vereinsleitung/strategie-und-ziele");
+    expect(hrefs).toContain("/vereinsleitung/vorhaben-und-umsetzung");
+    expect(hrefs).toContain("/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben");
+    expect(hrefs).toContain("/vereinsleitung/strategie-und-ziele?ansicht=ziele");
 
     const shortcutTitles = screen
       .getAllByRole("heading", { level: 3 })
-      .slice(0, 7)
+      .slice(0, 4)
       .map((el) => el.textContent);
     expect(shortcutTitles).toEqual([
-      "Strategie",
-      "Pläne & Ziele",
-      "Vorhaben & Prioritäten",
-      "Vorhaben & Aufgaben",
-      "Umsetzungsplanung",
+      "Strategie & Ziele",
+      "Vorhaben & Umsetzung",
       "Sitzungen",
       "Prozesse & Richtlinien",
     ]);

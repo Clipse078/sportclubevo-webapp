@@ -7,6 +7,14 @@ export type MeetingWorkspaceTabId =
   | "teilnehmer"
   | "details";
 
+export const MEETING_WORKSPACE_SECTION_ORDER: MeetingWorkspaceTabId[] = [
+  "teilnehmer",
+  "traktanden",
+  "beschluesse",
+  "pendenzen",
+  "details",
+];
+
 const TAB_LABELS: Record<MeetingWorkspaceTabId, string> = {
   traktanden: "Traktanden",
   beschluesse: "Beschlüsse",
@@ -43,20 +51,14 @@ export function buildMeetingWorkspaceTabNavigationConfig(counts: {
   pendenzenOpen: number;
   teilnehmer: number;
 }): ContextTabNavigationConfig<MeetingWorkspaceTabId> {
-  const tabIds: MeetingWorkspaceTabId[] = [
-    "traktanden",
-    "beschluesse",
-    "pendenzen",
-    "teilnehmer",
-    "details",
-  ];
+  const tabIds = MEETING_WORKSPACE_SECTION_ORDER;
 
   return {
     contextKind: "MEETING_WORKSPACE",
     defaultTab: "traktanden",
     tabQueryParam: "bereich",
     tabRoutes: Object.fromEntries(
-      tabIds.map((key) => [key, "#"]),
+      tabIds.map((key) => [key, `#${meetingWorkspaceSectionDomId(key)}`]),
     ) as ContextTabNavigationConfig<MeetingWorkspaceTabId>["tabRoutes"],
     tabs: tabIds.map((key) => ({
       key,

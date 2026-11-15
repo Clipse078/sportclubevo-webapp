@@ -38,9 +38,8 @@ export default function MeetingWorkspaceDetailsSection({
   return (
     <div className="space-y-4" data-testid="meeting-section-sitzungsdetails">
       <section className="min-w-0 space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Sitzungsdetails</h3>
-          {canManage ? (
+        {canManage ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Link
               href={`/vereinsleitung/meetings/${slug}/edit`}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-2)]"
@@ -48,8 +47,8 @@ export default function MeetingWorkspaceDetailsSection({
               <Pencil className="h-3.5 w-3.5" />
               Bearbeiten
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
         <MeetingDetailsGrid meeting={meeting} fmtCfg={fmtCfg} />
       </section>
 

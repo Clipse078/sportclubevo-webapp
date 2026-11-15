@@ -1,26 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Loader2, Search } from "lucide-react";
+import { ChevronDown, ExternalLink, Loader2, Search, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeStatus, TaskStatus } from "@prisma/client";
-import {
-  CD_NAV_COPY,
-  CD_VORHABEN_WORKSPACE_COPY,
-} from "@/lib/club-development/product-copy";
-import type {
-  VorhabenWorkspaceInitiativeRow,
-  VorhabenWorkspaceSnapshot,
-  VorhabenWorkspaceTaskRow,
-} from "@/lib/club-development/vorhaben-workspace";
+import { CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { buildVorhabenUndUmsetzungHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import type { VorhabenWorkspaceSnapshot, VorhabenWorkspaceTaskRow } from "@/lib/club-development/vorhaben-workspace";
+import { mapWorkspaceInitiativeToVorhabenCardSummary } from "@/lib/club-development/vorhaben-workspace-card-mappers";
+import VorhabenWorkspaceCardList from "./VorhabenWorkspaceCardList";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
+import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { Badge } from "@/components/ui";
+
+export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
 
 type Props = {
   initialSnapshot: VorhabenWorkspaceSnapshot;
   initialTargetId?: string | null;
   initialInitiativeId?: string | null;
+  variant: VorhabenAufgabenWorkspaceVariant;
 };
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -44,56 +46,6 @@ const LINK_KIND_LABELS: Record<VorhabenWorkspaceTaskRow["linkKind"], string> = {
   PRIMARY_INITIATIVE: "Primäres Vorhaben",
   MEETING_DECISION: "Beschluss",
 };
-
-function NavShortcut({
-  href,
-  label,
-  description,
-}: {
-  href: string;
-  label: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group flex flex-col rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 transition hover:border-[var(--sce-primary)]/40"
-    >
-      <span className="text-xs font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">
-        {label}
-      </span>
-      <span className="mt-0.5 text-[11px] leading-snug text-[var(--muted)]">{description}</span>
-    </Link>
-  );
-}
-
-function InitiativeRowCard({ row }: { row: VorhabenWorkspaceInitiativeRow }) {
-  return (
-    <article className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            href={row.detailHref}
-            className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-          >
-            {row.title}
-          </Link>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
-            {row.statusLabel} · {row.progress}% · {row.openRootTaskCount}{" "}
-            {row.openRootTaskCount === 1 ? "offene Aufgabe" : "offene Aufgaben"}
-          </p>
-        </div>
-        <Link
-          href={row.workHref}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
-        >
-          Fokus
-          <ArrowRight className="h-3 w-3" aria-hidden />
-        </Link>
-      </div>
-    </article>
-  );
-}
 
 function TaskRowCard({ row }: { row: VorhabenWorkspaceTaskRow }) {
   return (
@@ -124,7 +76,6 @@ function TaskRowCard({ row }: { row: VorhabenWorkspaceTaskRow }) {
             )}
           </p>
         ) : null}
-        <p className="mt-1 text-[11px] text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.rootTasksOnly}</p>
       </div>
       <Badge variant="outline" size="sm">
         {row.statusLabel}
@@ -137,21 +88,29 @@ export default function VorhabenAufgabenWorkspace({
   initialSnapshot,
   initialTargetId = null,
   initialInitiativeId = null,
+  variant,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [search, setSearch] = useState("");
   const [initiativeId, setInitiativeId] = useState(initialInitiativeId ?? "");
   const [initiativeStatus, setInitiativeStatus] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
+  const [secondaryFiltersOpen, setSecondaryFiltersOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const skipInitialFetchRef = useRef(true);
 
   const targetIdFilter = (initialTargetId ?? "").trim();
+  const isVorhabenView = variant === "vorhaben";
 
   const selectedInitiative = useMemo(
     () => snapshot.initiatives.find((row) => row.id === initiativeId) ?? null,
     [initiativeId, snapshot.initiatives],
+  );
+
+  const initiativeCards = useMemo(
+    () => snapshot.initiatives.map((row) => mapWorkspaceInitiativeToVorhabenCardSummary(row)),
+    [snapshot.initiatives],
   );
 
   const fetchWorkspace = useCallback(() => {
@@ -199,82 +158,54 @@ export default function VorhabenAufgabenWorkspace({
   const tasksEmpty = snapshot.tasks.length === 0;
   const initiativesEmpty = snapshot.initiatives.length === 0;
 
-  return (
-    <div className="space-y-6" data-testid="vorhaben-aufgaben-workspace">
-      <p className="max-w-3xl text-sm text-[var(--text-2)] leading-relaxed">{CD_VORHABEN_WORKSPACE_COPY.intro}</p>
-
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <NavShortcut
-          href="/vereinsleitung/strategie"
-          label={CD_NAV_COPY.strategyOverview}
-          description={CD_VORHABEN_WORKSPACE_COPY.shortcutStrategy}
-        />
-        <NavShortcut
-          href={
-            targetIdFilter
-              ? `/vereinsleitung/initiativen/backlog?targetId=${encodeURIComponent(targetIdFilter)}`
-              : "/vereinsleitung/initiativen/backlog"
-          }
-          label={CD_NAV_COPY.initiativeBacklog}
-          description={CD_VORHABEN_WORKSPACE_COPY.shortcutBacklog}
-        />
-        <NavShortcut
-          href="/vereinsleitung/sprints"
-          label={CD_NAV_COPY.implementationPlanning}
-          description={CD_VORHABEN_WORKSPACE_COPY.shortcutSprints}
-        />
-        <NavShortcut
-          href="/dashboard/aufgaben"
-          label="Aufgaben"
-          description={CD_VORHABEN_WORKSPACE_COPY.shortcutTasksInbox}
-        />
-      </div>
-
-      {targetIdFilter ? (
-        <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
-          {CD_VORHABEN_WORKSPACE_COPY.targetFilterHint}{" "}
-          <Link href="/vereinsleitung/vorhaben" className="font-medium text-[var(--sce-primary)] hover:underline">
-            Filter entfernen
-          </Link>
-        </p>
-      ) : null}
-
-      {showRestricted ? (
-        <div
-          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-          role="status"
+  const filterBar = (
+    <div className="mb-4 space-y-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="relative block min-w-[min(100%,16rem)] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={CD_VORHABEN_WORKSPACE_COPY.searchPlaceholder}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] py-2 pl-9 pr-3 text-sm"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setSecondaryFiltersOpen((open) => !open)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-medium text-[var(--foreground)] hover:border-[var(--sce-primary)]/40"
+          aria-expanded={secondaryFiltersOpen}
         >
-          {snapshot.restrictedReason}
-        </div>
-      ) : null}
-
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="relative block sm:col-span-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={CD_VORHABEN_WORKSPACE_COPY.searchPlaceholder}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] py-2 pl-9 pr-3 text-sm"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-[var(--muted)]">Vorhaben</span>
-            <select
-              value={initiativeId}
-              onChange={(e) => setInitiativeId(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-              disabled={!snapshot.canViewInitiatives}
-            >
-              <option value="">{CD_VORHABEN_WORKSPACE_COPY.allInitiatives}</option>
-              {snapshot.initiatives.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.title}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+          {secondaryFiltersOpen
+            ? CD_VORHABEN_WORKSPACE_COPY.hideFiltersAction
+            : CD_VORHABEN_WORKSPACE_COPY.moreFiltersAction}
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition ${secondaryFiltersOpen ? "rotate-180" : ""}`}
+            aria-hidden
+          />
+        </button>
+      </div>
+      {secondaryFiltersOpen ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {!isVorhabenView ? (
+            <label className="block">
+              <span className="mb-1 block text-xs text-[var(--muted)]">Vorhaben</span>
+              <select
+                value={initiativeId}
+                onChange={(e) => setInitiativeId(e.target.value)}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+                disabled={!snapshot.canViewInitiatives}
+              >
+                <option value="">{CD_VORHABEN_WORKSPACE_COPY.allInitiatives}</option>
+                {snapshot.initiatives.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label className="block">
             <span className="mb-1 block text-xs text-[var(--muted)]">Vorhaben-Status</span>
             <select
@@ -308,8 +239,37 @@ export default function VorhabenAufgabenWorkspace({
             </select>
           </label>
         </div>
+      ) : null}
+    </div>
+  );
 
-        {selectedInitiative ? (
+  return (
+    <div className="space-y-4" data-testid="vorhaben-aufgaben-workspace" data-variant={variant}>
+      {targetIdFilter ? (
+        <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
+          {CD_VORHABEN_WORKSPACE_COPY.targetFilterHint}{" "}
+          <Link
+            href={buildVorhabenUndUmsetzungHref(variant)}
+            className="font-medium text-[var(--sce-primary)] hover:underline"
+          >
+            Filter entfernen
+          </Link>
+        </p>
+      ) : null}
+
+      {showRestricted ? (
+        <div
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="status"
+        >
+          {snapshot.restrictedReason}
+        </div>
+      ) : null}
+
+      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
+        {filterBar}
+
+        {selectedInitiative && !isVorhabenView ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
             <span className="text-[var(--text-2)]">{CD_VORHABEN_WORKSPACE_COPY.focusInitiative}</span>
             <Link
@@ -336,50 +296,27 @@ export default function VorhabenAufgabenWorkspace({
           </div>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        {isVorhabenView ? (
           <section aria-labelledby="vorhaben-workspace-initiatives-heading">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 id="vorhaben-workspace-initiatives-heading" className="text-sm font-semibold text-[var(--foreground)]">
-                {CD_VORHABEN_WORKSPACE_COPY.initiativesHeading}
-              </h2>
-              <Link
-                href="/vereinsleitung/initiativen"
-                className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-              >
-                Vorhaben-Liste
-              </Link>
-            </div>
             {!snapshot.canViewInitiatives ? (
               <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.noInitiativeAccess}</p>
             ) : initiativesEmpty ? (
-              <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.emptyInitiatives}</p>
+              <SceClubDevelopmentEmptyState message={CD_VORHABEN_WORKSPACE_COPY.emptyInitiatives} />
             ) : (
-              <ul className="space-y-2">
-                {snapshot.initiatives.map((row) => (
-                  <li key={row.id}>
-                    <InitiativeRowCard row={row} />
-                  </li>
-                ))}
-              </ul>
+              <VorhabenWorkspaceCardList items={initiativeCards} testId="vorhaben-aufgaben-cards" />
             )}
           </section>
-
-          <section aria-labelledby="vorhaben-workspace-tasks-heading">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 id="vorhaben-workspace-tasks-heading" className="text-sm font-semibold text-[var(--foreground)]">
-                {CD_VORHABEN_WORKSPACE_COPY.tasksHeading}
-              </h2>
-              <Link
-                href="/dashboard/aufgaben"
-                className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-              >
-                Gesamt-Inbox
-              </Link>
-            </div>
+        ) : (
+          <SceClubDevelopmentSectionShell
+            title={CD_VORHABEN_WORKSPACE_COPY.tasksHeading}
+            href="/dashboard/aufgaben"
+            linkLabel="Gesamt-Inbox"
+            bodyClassName="px-5 py-3"
+          >
             {!snapshot.canViewTasks ? (
               <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.noTaskAccess}</p>
             ) : tasksEmpty ? (
-              <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.emptyTasks}</p>
+              <SceClubDevelopmentEmptyState message={CD_VORHABEN_WORKSPACE_COPY.emptyTasks} />
             ) : (
               <ul>
                 {snapshot.tasks.map((row) => (
@@ -387,8 +324,8 @@ export default function VorhabenAufgabenWorkspace({
                 ))}
               </ul>
             )}
-          </section>
-        </div>
+          </SceClubDevelopmentSectionShell>
+        )}
       </div>
     </div>
   );

@@ -14,9 +14,15 @@ type TargetLinkRow = {
 type Props = {
   initiativeId: string;
   canManage: boolean;
+  /** Avoid duplicating empty copy when the parent section already states none linked. */
+  suppressEmptyMessage?: boolean;
 };
 
-export default function InitiativeTargetLinksSection({ initiativeId, canManage }: Props) {
+export default function InitiativeTargetLinksSection({
+  initiativeId,
+  canManage,
+  suppressEmptyMessage = false,
+}: Props) {
   const [links, setLinks] = useState<TargetLinkRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -81,9 +87,10 @@ export default function InitiativeTargetLinksSection({ initiativeId, canManage }
         </p>
       ) : null}
 
-      {links.length === 0 ? (
+      {links.length === 0 && !suppressEmptyMessage ? (
         <p className="text-sm text-[var(--muted)]">Keine strategischen Ziele verknüpft.</p>
-      ) : (
+      ) : null}
+      {links.length > 0 ? (
         <ul className="space-y-2">
           {links.map((link) => (
             <li
@@ -109,7 +116,7 @@ export default function InitiativeTargetLinksSection({ initiativeId, canManage }
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
 
       {canManage ? (
         <div className="flex flex-wrap items-start gap-2">

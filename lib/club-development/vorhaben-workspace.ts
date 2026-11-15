@@ -19,8 +19,11 @@ import {
   initiativeTaskAssociationOrFilters,
   resolveCanonicalInitiativeIdForTask,
 } from "@/lib/club-development/initiative-associated-tasks";
+import { initiativeDeliveryProgressPercentFromSnapshot } from "@/lib/club-development/initiative-delivery-progress";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
+import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
+import type { VorhabenWorkspaceCardNextMilestone } from "@/lib/club-development/vorhaben-workspace-card-types";
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
   PLANNED: "Geplant",
@@ -77,7 +80,10 @@ export type VorhabenWorkspaceInitiativeRow = {
   title: string;
   status: InitiativeStatus;
   statusLabel: string;
-  progress: number;
+  deliveryProgressPercent: number;
+  ownerLabel: string | null;
+  nextMilestone: VorhabenWorkspaceCardNextMilestone | null;
+  summary: string | null;
   openRootTaskCount: number;
   detailHref: string;
   workHref: string;
@@ -301,6 +307,11 @@ export async function loadVorhabenWorkspace(
       }
     }
 
+    const nextMilestoneById = await loadNextOpenMilestoneByInitiativeIds(
+      actor.tenantId,
+      sorted.map((row) => row.id),
+    );
+
     const withProgress = await Promise.all(
       sorted.map(async (row) => {
         const snapshot = await computeInitiativeProgressSnapshot(actor.tenantId!, row.id);
@@ -312,7 +323,10 @@ export async function loadVorhabenWorkspace(
           title: row.title,
           status: row.status,
           statusLabel: INITIATIVE_STATUS_LABELS[row.status],
-          progress: snapshot.progress,
+          deliveryProgressPercent: initiativeDeliveryProgressPercentFromSnapshot(snapshot),
+          ownerLabel: row.owner?.trim() || null,
+          nextMilestone: nextMilestoneById.get(row.id) ?? null,
+          summary: row.summary,
           openRootTaskCount: openCounts.get(row.id) ?? 0,
           detailHref: `/vereinsleitung/initiativen/${encodeURIComponent(row.slug)}`,
           workHref: `/vereinsleitung/vorhaben?${workQuery.toString()}`,

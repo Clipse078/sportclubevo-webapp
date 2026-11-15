@@ -30,8 +30,14 @@ describe("SCE-CD-02R5 meetings UX", () => {
     expect(readSrc("components/admin/aufgaben/contextual/ContextRelatedTasksPanelView.tsx")).not.toMatch(
       /import ContextualTaskCreateDialog/,
     );
-    expect(readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx")).toContain(
+    expect(readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx")).not.toContain(
       "MeetingTaskCreateScrollLink",
+    );
+    expect(readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx")).toContain(
+      "ContextRelatedTasksPanel",
+    );
+    expect(readSrc("components/admin/meetings/workspace/MeetingPendenzenPanel.tsx")).toContain(
+      "meeting-open-inline-task-create",
     );
   });
 });

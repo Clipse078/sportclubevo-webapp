@@ -30,7 +30,7 @@ type DefaultValues = {
 
 type Props = {
   layout?: "page" | "composer";
-  onSuccess?: (targetId: string) => void;
+  onSuccess?: (targetId: string, meta?: { title: string }) => void | Promise<void>;
   onCancel?: () => void;
 };
 

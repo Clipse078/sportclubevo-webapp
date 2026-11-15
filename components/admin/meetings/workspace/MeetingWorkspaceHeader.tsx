@@ -124,8 +124,8 @@ export default function MeetingWorkspaceHeader({
     canManage && (primary.lifecycleAction !== undefined || primary.targetSectionId !== null);
 
   return (
-    <header className="space-y-3" data-testid="meeting-workspace-header">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+    <header className="space-y-2" data-testid="meeting-workspace-header">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex shrink-0 flex-col items-center gap-1">
           <SceDateTile
             value={meeting.meetingDate}
@@ -140,7 +140,7 @@ export default function MeetingWorkspaceHeader({
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <MeetingHeaderTitleBlock title={title} lifecycleLabel={lifecycle.lifecycleLabel} />
+            <MeetingHeaderTitleBlock title={title} />
             {showPrimary ? (
               <button
                 type="button"
@@ -245,21 +245,12 @@ function StatusChip({
   );
 }
 
-function MeetingHeaderTitleBlock({
-  title,
-  lifecycleLabel,
-}: {
-  title: string;
-  lifecycleLabel: string;
-}) {
+function MeetingHeaderTitleBlock({ title }: { title: string }) {
   return (
-    <div className="min-w-0 space-y-1">
+    <div className="min-w-0">
       <p className="text-xl font-semibold tracking-tight text-[var(--foreground)] sm:text-2xl">
         {title}
       </p>
-      <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-2)]">
-        {lifecycleLabel}
-      </span>
     </div>
   );
 }

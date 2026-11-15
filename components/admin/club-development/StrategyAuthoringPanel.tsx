@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { Loader2, Pencil } from "lucide-react";
+import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
+import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import { useRouter } from "next/navigation";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -11,6 +14,8 @@ import {
   type FormEventHandler,
   type ReactNode,
 } from "react";
+import type { ClubStrategyDocumentReferenceDto } from "@/lib/club-development/club-strategy-service";
+import { strategySupportingMaterialCounts } from "@/lib/club-development/initiative-delivery-progress-presentation";
 import type { ClubStrategyAuthoringDto } from "@/lib/club-development/club-strategy-service";
 import {
   formatStrategyDateLabel,
@@ -24,12 +29,18 @@ import StrategyAssociationLinkEditor, {
   entityRefsFromAuthoring,
 } from "./StrategyAssociationLinkEditor";
 import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSection";
+import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
+import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
+import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
   canManage: boolean;
+  targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
   availableDecisions: import("@/lib/linking/types").EntityRef[];
 };
@@ -56,6 +67,7 @@ function narrativeSnapshot(dto: ClubStrategyAuthoringDto) {
 export default function StrategyAuthoringPanel({
   initial,
   canManage,
+  targets,
   availableMeetings,
   availableDecisions,
 }: Props) {
@@ -87,6 +99,10 @@ export default function StrategyAuthoringPanel({
   const [focusError, setFocusError] = useState<string | null>(null);
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
+  const [targetCreateExpanded, setTargetCreateExpanded] = useState(false);
+  const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
+  const [supportingCounts, setSupportingCounts] = useState(() => strategySupportingMaterialCounts(initial));
+  const [documentReferences, setDocumentReferences] = useState(initial.documentReferences);
 
   useEffect(() => {
     setFocusTargets(initial.focusTargets);
@@ -110,9 +126,41 @@ export default function StrategyAuthoringPanel({
           : null,
       );
     }
+    if (!editing) {
+      setSupportingCounts(strategySupportingMaterialCounts(initial));
+      setDocumentReferences(initial.documentReferences);
+    }
   }, [initial, editing]);
 
+  const handleAssociationsSaved = useCallback(
+    (counts: { meetings: number; decisions: number }) => {
+      setSupportingCounts((prev) => ({
+        ...prev,
+        meetings: counts.meetings,
+        decisions: counts.decisions,
+      }));
+    },
+    [],
+  );
+
+  const handleDocumentReferencesChanged = useCallback(
+    (refs: ClubStrategyDocumentReferenceDto[]) => {
+      setDocumentReferences(refs);
+      const accessible = refs.filter((row) => row.presentation.accessible).length;
+      setSupportingCounts((prev) => ({ ...prev, documents: accessible }));
+    },
+    [],
+  );
+
   const linkedTargetIds = useMemo(() => focusTargets.map((f) => f.target.id), [focusTargets]);
+
+  const focusTargetOverviews = useMemo(() => {
+    const byId = new Map(targets.map((row) => [row.id, row]));
+    return focusTargets.map((row) => ({
+      focus: row,
+      overview: byId.get(row.target.id) ?? null,
+    }));
+  }, [focusTargets, targets]);
 
   const unsavedNarrative = useMemo(() => {
     if (!editing) return false;
@@ -198,6 +246,42 @@ export default function StrategyAuthoringPanel({
     });
   };
 
+  const retryFocusLink = () => {
+    if (!focusLinkRetryTargetId) return;
+    setFocusError(null);
+    startFocus(async () => {
+      const res = await fetch("/api/club-development/club-strategy/focus-targets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetId: focusLinkRetryTargetId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFocusError(
+          typeof data.error === "string" ? data.error : CD_TARGET_COPY.focusLinkRetry,
+        );
+        return;
+      }
+      setFocusLinkRetryTargetId(null);
+      setFocusTargets((prev) => {
+        if (prev.some((f) => f.target.id === focusLinkRetryTargetId)) return prev;
+        return [
+          ...prev,
+          {
+            id: `local-${focusLinkRetryTargetId}`,
+            sortOrder: prev.length,
+            target: {
+              id: focusLinkRetryTargetId,
+              title: "Ziel",
+              status: "DRAFT",
+            },
+          },
+        ];
+      });
+      router.refresh();
+    });
+  };
+
   const removeFocusTarget = (targetId: string) => {
     if (!canManage || !editing) return;
     setFocusError(null);
@@ -216,33 +300,34 @@ export default function StrategyAuthoringPanel({
     });
   };
 
+  const strategyEditAside =
+    canManage && persisted ? (
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+        onClick={() => {
+          setSaveSuccess(false);
+          setSaveError(null);
+          setEditing((v) => !v);
+        }}
+        data-testid="strategy-edit-toggle"
+      >
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
+        {editing ? CD_STRATEGY_AUTHORING_COPY.cancelEditAction : CD_STRATEGY_AUTHORING_COPY.editAction}
+      </button>
+    ) : null;
+
   return (
     <div className="mb-8 space-y-5" data-testid="strategy-authoring-panel">
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
-            {CD_STRATEGY_AUTHORING_COPY.sectionTitle}
-          </h2>
-          {canManage && persisted ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
-              onClick={() => {
-                setSaveSuccess(false);
-                setSaveError(null);
-                setEditing((v) => !v);
-              }}
-              data-testid="strategy-edit-toggle"
-            >
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
-              {editing ? CD_STRATEGY_AUTHORING_COPY.cancelEditAction : CD_STRATEGY_AUTHORING_COPY.editAction}
-            </button>
-          ) : null}
-        </div>
-
+      <SceClubDevelopmentSectionShell
+        title={CD_STRATEGY_AUTHORING_COPY.sectionTitle}
+        headerAside={strategyEditAside}
+        bodyClassName="p-5 space-y-4"
+        testId="strategy-clubstrategie-section"
+      >
         {editing && canManage ? (
-          <form onSubmit={onSave} className="space-y-4" data-testid="strategy-narrative-form">
-            <div className="grid gap-3 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/40 p-3 md:grid-cols-2 xl:grid-cols-4">
+          <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
               <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker
                   selected={responsiblePerson}
@@ -323,22 +408,16 @@ export default function StrategyAuthoringPanel({
           </form>
         ) : (
           <div data-testid="strategy-narrative-read">
-            <dl className="mb-4 grid gap-2 rounded-lg border border-[var(--border)]/70 bg-[var(--surface-2)]/30 px-3 py-2.5 text-sm md:grid-cols-2 xl:grid-cols-4">
-              <MetaReadItem label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel} value={responsibleReadLabel} />
-              <MetaReadItem
-                label={CD_STRATEGY_AUTHORING_COPY.periodLabel}
-                value={formatStrategyPeriodSummary({
-                  periodLabel: initial.periodLabel,
-                  periodStartsAt: initial.periodStartsAt,
-                  periodEndsAt: initial.periodEndsAt,
-                })}
-              />
-              <MetaReadItem
-                label={CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}
-                value={formatStrategyDateLabel(initial.nextReviewAt)}
-              />
-            </dl>
-            <div className="space-y-3">
+            <StrategyMetaReadLine
+              responsible={responsibleReadLabel}
+              period={formatStrategyPeriodSummary({
+                periodLabel: initial.periodLabel,
+                periodStartsAt: initial.periodStartsAt,
+                periodEndsAt: initial.periodEndsAt,
+              })}
+              nextReview={formatStrategyDateLabel(initial.nextReviewAt)}
+            />
+            <div className="max-w-3xl space-y-4">
               <NarrativeBlock
                 label={CD_STRATEGY_AUTHORING_COPY.situationLabel}
                 text={initial.situationText}
@@ -352,86 +431,133 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         )}
-      </section>
+      </SceClubDevelopmentSectionShell>
 
-      <section
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
-        data-testid="strategy-focus-section"
+      <SceClubDevelopmentSectionShell
+        title={CD_STRATEGY_AUTHORING_COPY.focusHeading}
+        headerAside={
+          focusTargets.length > 0 ? (
+            <span className="text-xs text-[var(--muted)] tabular-nums">{focusTargets.length}</span>
+          ) : null
+        }
+        bodyClassName="p-5 space-y-3"
+        testId="strategy-focus-section"
       >
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-base font-semibold text-[var(--foreground)]">
-            {CD_STRATEGY_AUTHORING_COPY.focusHeading}
-          </h3>
-          <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusHint}</p>
-        </div>
-        {focusError ? <ClubDevelopmentFormError message={focusError} /> : null}
+        {focusError ? (
+          <div className="space-y-1">
+            <ClubDevelopmentFormError message={focusError} />
+            {focusLinkRetryTargetId ? (
+              <button
+                type="button"
+                className="text-xs font-medium text-[var(--sce-primary)] underline"
+                onClick={retryFocusLink}
+                disabled={pendingFocus}
+              >
+                {CD_TARGET_COPY.focusLinkRetry}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         {focusTargets.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusEmpty}</p>
+          <SceClubDevelopmentEmptyState message={CD_STRATEGY_AUTHORING_COPY.focusEmpty} />
         ) : (
-          <ul className="mb-3 space-y-2">
-            {focusTargets.map((row) => (
-              <li
-                key={row.target.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 px-3 py-2.5"
-              >
-                <Link
-                  href={`/vereinsleitung/targets/${row.target.id}`}
-                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
-                >
-                  {row.target.title}
-                </Link>
+          <ul className="mb-3 space-y-3" data-testid="strategy-focus-cards">
+            {focusTargetOverviews.map(({ focus, overview }) => (
+              <li key={focus.target.id} className="space-y-1">
                 {canManage && editing ? (
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--muted)] hover:text-rose-700"
-                    disabled={pendingFocus}
-                    onClick={() => removeFocusTarget(row.target.id)}
-                  >
-                    Entfernen
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-[var(--muted)] hover:text-rose-700"
+                      disabled={pendingFocus}
+                      onClick={() => removeFocusTarget(focus.target.id)}
+                    >
+                      Schwerpunkt entfernen
+                    </button>
+                  </div>
                 ) : null}
+                {overview ? (
+                  <TargetZieleCollapsibleCard target={overview} isFocus showFocusBadge={false} />
+                ) : (
+                  <Link
+                    href={`/vereinsleitung/targets/${focus.target.id}`}
+                    className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--sce-primary)] shadow-sm hover:underline"
+                  >
+                    {focus.target.title}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
         )}
 
         {canManage && editing ? (
-          <ClubDevelopmentTargetSearchPicker
-            excludeTargetIds={linkedTargetIds}
-            onSelect={addFocusTarget}
-            testId="strategy-focus-target-picker"
-          />
+          <div className="space-y-3">
+            <CreateTargetContextualCollapsibleCard
+              expanded={targetCreateExpanded}
+              onExpandedChange={setTargetCreateExpanded}
+              contextualFocus={{
+                onFinished: ({ targetId, title, linkOk, linkError }) => {
+                  if (linkOk && targetId) {
+                    setFocusError(null);
+                    setFocusLinkRetryTargetId(null);
+                    setFocusTargets((prev) => [
+                      ...prev,
+                      {
+                        id: `local-${targetId}`,
+                        sortOrder: prev.length,
+                        target: {
+                          id: targetId,
+                          title: title ?? "Ziel",
+                          status: "DRAFT",
+                        },
+                      },
+                    ]);
+                    router.refresh();
+                    return;
+                  }
+                  if (targetId) {
+                    setFocusLinkRetryTargetId(targetId);
+                  }
+                  setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
+                },
+              }}
+            />
+            <div className="flex flex-wrap items-start gap-2">
+              <ClubDevelopmentTargetSearchPicker
+                excludeTargetIds={linkedTargetIds}
+                onSelect={addFocusTarget}
+                testId="strategy-focus-target-picker"
+              />
+            </div>
+          </div>
         ) : null}
-      </section>
+      </SceClubDevelopmentSectionShell>
 
-      <section
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm"
-        data-testid="strategy-supporting-section"
+      <StrategySupportingMaterialsCard
+        meetingCount={supportingCounts.meetings}
+        decisionCount={supportingCounts.decisions}
+        documentCount={supportingCounts.documents}
       >
-        <h3 className="mb-3 text-sm font-semibold text-[var(--foreground)]">
-          {CD_STRATEGY_AUTHORING_COPY.supportingHeading}
-        </h3>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <StrategyAssociationLinkEditor
-            key={`assoc-${initial.contentRevision}-${initial.meetingRefs.length}-${initial.decisionRefs.length}`}
-            initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
-            initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
-            availableMeetings={availableMeetings}
-            availableDecisions={availableDecisions}
-            canManage={canManage}
-            editing={editing && canManage}
-            compact
-          />
-          <StrategyDocumentReferencesSection
-            key={`docs-${initial.contentRevision}-${initial.documentReferences.length}`}
-            references={initial.documentReferences}
-            canManage={canManage}
-            editing={editing && canManage}
-            compact
-          />
-        </div>
-      </section>
+        <StrategyAssociationLinkEditor
+          initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
+          initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
+          availableMeetings={availableMeetings}
+          availableDecisions={availableDecisions}
+          canManage={canManage}
+          editing={editing && canManage}
+          compact
+          onAssociationsSaved={handleAssociationsSaved}
+        />
+        <StrategyDocumentReferencesSection
+          references={documentReferences}
+          canManage={canManage}
+          editing={editing && canManage}
+          compact
+          onReferencesChanged={handleDocumentReferencesChanged}
+        />
+      </StrategySupportingMaterialsCard>
     </div>
   );
 }
@@ -445,12 +571,39 @@ function MotionMetaField({ label, children }: { label: string; children: ReactNo
   );
 }
 
-function MetaReadItem({ label, value }: { label: string; value: string }) {
+function StrategyMetaReadLine({
+  responsible,
+  period,
+  nextReview,
+}: {
+  responsible: string;
+  period: string;
+  nextReview: string;
+}) {
   return (
-    <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</dt>
-      <dd className="text-sm text-[var(--foreground)]">{value}</dd>
-    </div>
+    <p
+      className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]"
+      data-testid="strategy-meta-read-line"
+    >
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.responsibleLabel}:
+        </span>{" "}
+        {responsible}
+      </span>
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.periodLabel}:
+        </span>{" "}
+        {period}
+      </span>
+      <span>
+        <span className="font-medium text-[var(--text-2)]">
+          {CD_STRATEGY_AUTHORING_COPY.nextReviewLabel}:
+        </span>{" "}
+        {nextReview}
+      </span>
+    </p>
   );
 }
 
@@ -459,7 +612,9 @@ function NarrativeBlock({ label, text, empty }: { label: string; text: string | 
   return (
     <div>
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
-      <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{content || empty}</p>
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]">
+        {content || <span className="text-[var(--muted)]">{empty}</span>}
+      </p>
     </div>
   );
 }

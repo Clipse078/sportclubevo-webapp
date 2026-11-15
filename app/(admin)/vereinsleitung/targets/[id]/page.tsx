@@ -17,28 +17,21 @@ import TargetMetricProgress from "@/components/admin/targets/TargetMetricProgres
 import TargetDataPointForm from "@/components/admin/targets/TargetDataPointForm";
 import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
+import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
+import { parseEntityRefs } from "@/lib/linking/helpers";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
+import TargetMetricsEmptyState from "@/components/admin/targets/TargetMetricsEmptyState";
+import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
+import {
+  TARGET_CATEGORY_LABELS,
+  TARGET_STATUS_BADGE_CLASSES,
+  formatTargetPeriodLabel,
+  formatTargetStatusLabel,
+} from "@/lib/targets/target-presentation";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { Edit, ArrowLeft, Calendar, Tag } from "lucide-react";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  SPORTLICHE_ENTWICKLUNG: "Sportliche Entwicklung",
-  MITGLIEDERWACHSTUM: "Mitgliederwachstum",
-  FINANZEN: "Finanzen & Infrastruktur",
-  AUSBILDUNG: "Ausbildung",
-  MEDIEN_SOZIALES: "Medien & Soziales",
-  GOVERNANCE: "Vereinsführung",
-};
-
-const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
-  ACTIVE: { label: "Aktiv", classes: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  DRAFT: { label: "Entwurf", classes: "border-amber-200 bg-amber-50 text-amber-700" },
-  PAUSED: { label: "Pausiert", classes: "border-slate-200 bg-slate-50 text-[var(--text-2)]" },
-  COMPLETED: { label: "Abgeschlossen", classes: "border-blue-200 bg-blue-50 text-blue-700" },
-  CANCELLED: { label: "Abgebrochen", classes: "border-rose-200 bg-rose-50 text-rose-700" },
-};
 
 function formatSwissDate(value: Date | string) {
   return new Intl.DateTimeFormat("de-CH", {
@@ -67,6 +60,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
   // Resolve permanent-delete authority for delete button visibility
   const tenantId = session.user?.activeTenantId;
   let canDelete = false;
+  let canManageTarget = false;
   if (tenantId) {
     const resolver = createEffectivePermissionResolver(prisma);
     canDelete = await resolver.hasTenantDeletionAuthority({
@@ -74,10 +68,17 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
       permission: PERMISSIONS.TARGETS_DELETE,
       tenantId,
     });
+    canManageTarget =
+      actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE) &&
+      actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
   }
 
-  const statusInfo = STATUS_LABELS[target.status] ?? STATUS_LABELS.DRAFT;
-  const categoryLabel = CATEGORY_LABELS[target.category] ?? target.category;
+  const statusLabel = formatTargetStatusLabel(target.status);
+  const statusClasses =
+    TARGET_STATUS_BADGE_CLASSES[target.status as keyof typeof TARGET_STATUS_BADGE_CLASSES] ??
+    TARGET_STATUS_BADGE_CLASSES.DRAFT;
+  const categoryLabel = TARGET_CATEGORY_LABELS[target.category] ?? target.category;
+  const periodDisplay = formatTargetPeriodLabel(target.period, target.periodLabel);
 
   return (
     <PageShell fullWidth>
@@ -87,14 +88,15 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
         description={target.description ?? undefined}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
           { label: target.title },
         ]}
         headerBadge={
           <span
-            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${statusInfo.classes}`}
+            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${statusClasses}`}
+            title={`${CD_TARGET_COPY.targetStatusLabel}: ${statusLabel}`}
           >
-            {statusInfo.label}
+            {statusLabel}
           </span>
         }
         headerActions={
@@ -129,20 +131,12 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
         <div className="space-y-5">
           <section className={VEREINSLEITUNG_PANEL_CLASS}>
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${statusInfo.classes}`}
-              >
-                {statusInfo.label}
-              </span>
-              <ReviewStageBadge stage={target.reviewStage} />
               <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
                 {categoryLabel}
               </span>
-              {target.periodLabel ? (
-                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
-                  {target.periodLabel}
-                </span>
-              ) : null}
+              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
+                {periodDisplay}
+              </span>
               {target.ageGroupHint ? (
                 <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
                   {target.ageGroupHint}
@@ -157,7 +151,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </div>
 
             {target.metrics.length === 0 ? (
-              <p className="text-sm text-[var(--text-2)]">Noch keine Kennzahlen erfasst.</p>
+              <TargetMetricsEmptyState targetId={id} canManage={canManageTarget} />
             ) : (
               <div className="space-y-8">
                 {target.metrics.map((metric) => (
@@ -212,6 +206,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
               </div>
             )}
           </section>
+
+          <TargetInitiativeLinksSection
+            targetId={id}
+            targetTitle={target.title}
+            canManage={canManageTarget}
+            legacyInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
+          />
         </div>
 
         <aside className="space-y-5">
@@ -228,12 +229,23 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                 </div>
               </div>
 
+              <div>
+                <dt className="text-[11px] text-slate-400 mb-1">{CD_TARGET_COPY.targetStatusLabel}</dt>
+                <dd>
+                  <span
+                    className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusClasses}`}
+                  >
+                    {statusLabel}
+                  </span>
+                </dd>
+              </div>
+
               <div className="flex items-start gap-3">
                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                 <div>
                   <dt className="text-[11px] text-slate-400">Zeitraum</dt>
                   <dd className="text-sm font-medium text-[var(--foreground)]">
-                    {target.periodLabel ?? target.period}
+                    {periodDisplay}
                     {target.startsAt && target.endsAt ? (
                       <span className="block text-[11px] font-normal text-[var(--text-2)]">
                         {formatSwissDate(target.startsAt)} – {formatSwissDate(target.endsAt)}
@@ -266,13 +278,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             <div className="mb-4 flex items-center gap-2">
               <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-slate-400" />
               <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
-                Governance
+                {CD_TARGET_COPY.governanceSection}
               </h3>
             </div>
 
             <div className="space-y-3">
               <div>
-                <p className="text-[11px] text-slate-400 mb-1.5">Prüfstatus</p>
+                <p className="text-[11px] text-slate-400 mb-1.5">{CD_TARGET_COPY.reviewStatusLabel}</p>
                 <ReviewStageBadge stage={target.reviewStage} />
               </div>
 
@@ -316,11 +328,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </section>
           ) : null}
 
-          <TargetLinksPanel
-            targetId={id}
-            linkedInitiativeRefsRaw={target.linkedInitiativeRefs}
-            linkedMeetingRefsRaw={target.linkedMeetingRefs}
-          />
+          <TargetLinksPanel targetId={id} linkedMeetingRefsRaw={target.linkedMeetingRefs} />
         </aside>
       </div>
       </DetailPagePattern>

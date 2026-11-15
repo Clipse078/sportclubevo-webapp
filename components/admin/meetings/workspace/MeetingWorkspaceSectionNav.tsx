@@ -1,17 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, type KeyboardEvent, type ReactNode } from "react";
+import { useMemo, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 import {
   SCE_CONTEXT_TABS_NAV_CLASS,
   sceContextTabClassName,
 } from "@/lib/design-system/sce-context-tabs-foundation";
-import { SceContextTabProvider, useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import {
   buildMeetingWorkspaceTabNavigationConfig,
-  meetingWorkspaceSectionDomId,
   type MeetingWorkspaceTabId,
 } from "@/lib/nav/meeting-workspace-tab-config";
+import {
+  MeetingWorkspaceSectionsProvider,
+  useMeetingWorkspaceSections,
+} from "./MeetingWorkspaceSectionsContext";
 
 type Counts = {
   traktanden: number;
@@ -20,124 +23,95 @@ type Counts = {
   teilnehmer: number;
 };
 
-type Props = {
-  counts: Counts;
-  children: (activeTab: MeetingWorkspaceTabId) => ReactNode;
+type InnerProps = {
+  children: ReactNode;
 };
 
-const LEGACY_SECTION_TO_TAB: Record<string, MeetingWorkspaceTabId> = {
-  "meeting-section-traktanden": "traktanden",
-  "meeting-section-beschlüsse": "beschluesse",
-  "meeting-section-teilnehmer": "teilnehmer",
-  "meeting-section-pendenzen": "pendenzen",
-  "meeting-section-massnahmen": "pendenzen",
-  "meeting-section-aufgaben": "pendenzen",
-};
+function MeetingWorkspaceSectionNavLinks() {
+  const { highlightedSection, navigateToSection, hrefForSection, registerSectionNav, counts } =
+    useMeetingWorkspaceSections();
 
-function MeetingWorkspaceSectionNavInner({
-  counts,
-  children,
-}: Props) {
-  const { activeTab, navigateToTab, config } = useContextDetailTab<MeetingWorkspaceTabId>();
+  const config = useMemo(() => buildMeetingWorkspaceTabNavigationConfig(counts), [counts]);
 
-  useEffect(() => {
-    function onNavigateTab(event: Event) {
-      const detail = (event as CustomEvent<{ tab?: MeetingWorkspaceTabId }>).detail;
-      if (detail?.tab) {
-        navigateToTab(detail.tab, { skipDirtyConfirm: true });
-      }
-    }
-    function onHashSection() {
-      const hash = window.location.hash.replace(/^#/, "");
-      const tab = LEGACY_SECTION_TO_TAB[hash];
-      if (tab) {
-        navigateToTab(tab, { skipDirtyConfirm: true });
-      }
-    }
-    window.addEventListener("meeting-workspace-navigate-tab", onNavigateTab);
-    window.addEventListener("hashchange", onHashSection);
-    onHashSection();
-    return () => {
-      window.removeEventListener("meeting-workspace-navigate-tab", onNavigateTab);
-      window.removeEventListener("hashchange", onHashSection);
-    };
-  }, [navigateToTab]);
+  function onNavClick(event: MouseEvent<HTMLAnchorElement>, tab: MeetingWorkspaceTabId) {
+    event.preventDefault();
+    navigateToSection(tab);
+  }
 
-  const activate = useCallback(
-    (tab: MeetingWorkspaceTabId) => {
-      navigateToTab(tab);
-    },
-    [navigateToTab],
-  );
-
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     const tabs = config.tabs;
-    const index = tabs.findIndex((t) => t.key === activeTab);
+    const index = tabs.findIndex((t) => t.key === highlightedSection);
+    const focusLink = (tab: MeetingWorkspaceTabId) => {
+      document.getElementById(`meeting-workspace-nav-${tab}`)?.focus();
+    };
     if (event.key === "ArrowRight") {
       event.preventDefault();
       const next = tabs[(index + 1) % tabs.length];
-      if (next) activate(next.key);
+      if (next) {
+        navigateToSection(next.key);
+        focusLink(next.key);
+      }
     }
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       const prev = tabs[(index - 1 + tabs.length) % tabs.length];
-      if (prev) activate(prev.key);
+      if (prev) {
+        navigateToSection(prev.key);
+        focusLink(prev.key);
+      }
     }
   }
 
   return (
-    <section className={cn("min-w-0")}>
+    <nav
+      ref={(el) => registerSectionNav(el)}
+      aria-label="Sitzungsbereiche"
+      data-testid="meeting-workspace-section-nav"
+      className={cn(
+        SCE_CONTEXT_TABS_NAV_CLASS,
+        "sticky z-20 -mx-1 bg-[var(--background)]/95 px-1 pb-0 pt-1 backdrop-blur-sm",
+      )}
+      style={{ top: "var(--sce-global-app-header-offset, 0px)" }}
+      onKeyDown={onKeyDown}
+    >
+      {config.tabs.map((tab) => {
+        const isCurrent = tab.key === highlightedSection;
+        return (
+          <Link
+            key={tab.key}
+            id={`meeting-workspace-nav-${tab.key}`}
+            href={hrefForSection(tab.key)}
+            aria-current={isCurrent ? "location" : undefined}
+            className={cn(sceContextTabClassName(isCurrent), "no-underline")}
+            onClick={(event) => onNavClick(event, tab.key)}
+            data-testid={`meeting-workspace-tab-${tab.key}`}
+          >
+            {tab.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function MeetingWorkspaceSectionNavInner({ children }: InnerProps) {
+  return (
+    <section className="min-w-0 space-y-4">
       <h2 className="sr-only">Sitzungsbereiche</h2>
-      <div
-        data-testid="meeting-workspace-section-nav"
-        role="tablist"
-        aria-label="Sitzungsbereiche"
-        className={SCE_CONTEXT_TABS_NAV_CLASS}
-        onKeyDown={onKeyDown}
-      >
-        {config.tabs.map((tab) => {
-          const isActive = tab.key === activeTab;
-          const label = tab.label;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              id={`meeting-workspace-tab-${tab.key}`}
-              aria-selected={isActive}
-              aria-controls={meetingWorkspaceSectionDomId(tab.key)}
-              tabIndex={isActive ? 0 : -1}
-              className={sceContextTabClassName(isActive)}
-              onClick={() => activate(tab.key)}
-              data-testid={`meeting-workspace-tab-${tab.key}`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      <div
-        role="tabpanel"
-        id={meetingWorkspaceSectionDomId(activeTab)}
-        aria-labelledby={`meeting-workspace-tab-${activeTab}`}
-        className="mt-4 focus:outline-none"
-        data-testid={`meeting-workspace-panel-${activeTab}`}
-      >
-        {children(activeTab)}
-      </div>
+      <MeetingWorkspaceSectionNavLinks />
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
 
-export default function MeetingWorkspaceSectionNav(props: Props) {
-  const config = useMemo(
-    () => buildMeetingWorkspaceTabNavigationConfig(props.counts),
-    [props.counts],
-  );
+type Props = InnerProps & {
+  counts: Counts;
+};
 
+export default function MeetingWorkspaceSectionNav({ counts, children }: Props) {
   return (
-    <SceContextTabProvider config={config}>
-      <MeetingWorkspaceSectionNavInner {...props} />
-    </SceContextTabProvider>
+    <MeetingWorkspaceSectionsProvider counts={counts}>
+      <MeetingWorkspaceSectionNavInner>{children}</MeetingWorkspaceSectionNavInner>
+    </MeetingWorkspaceSectionsProvider>
   );
 }

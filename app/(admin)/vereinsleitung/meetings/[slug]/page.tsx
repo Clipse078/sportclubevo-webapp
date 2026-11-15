@@ -11,7 +11,6 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/VereinsleitungMeetingDetail";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
-import MeetingTaskCreateScrollLink from "@/components/admin/meetings/workspace/MeetingTaskCreateScrollLink";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
@@ -71,7 +70,6 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
 
   const pageTitle = dbMeeting?.title ?? "Sitzung";
   const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
-  const tWork = await getTranslations("PlanningEditor.operational.work");
   const tenant = await getActiveTenant();
   const fmtCfg: TenantFormatConfig = {
     locale: tenant?.locale ?? "de-CH",
@@ -109,9 +107,6 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
       ]}
       headerActions={
         <div className="flex items-center gap-2">
-          {dbMeeting && canManage ? (
-            <MeetingTaskCreateScrollLink label={tWork("createTask")} />
-          ) : null}
           <Link
             href="/vereinsleitung/meetings"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-transparent px-3.5 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"

@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { collectContextualCreateEntryViolations } from "@/lib/club-development/sce-contextual-create-governance";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import {
   SCE_DESIGN_SYSTEM_CANONICAL_MASTER,
@@ -79,6 +82,31 @@ describe("SCE-DESIGN-SYSTEM-11 governance runner behaviour", () => {
       files: ["components/admin/__governance-fixtures__/CreateTriggerViolationFixture.tsx"],
     });
     expect(result.violations.some((v) => v.ruleId === "SCE-DS-GOV-CREATE-001")).toBe(true);
+  });
+
+  it("PASS — migrated contextual create entries avoid modal composer shells", () => {
+    const result = runSceDesignSystemGovernance({
+      files: [
+        "components/admin/targets/TargetInitiativeLinksSection.tsx",
+        "components/admin/club-development/StrategyAuthoringPanel.tsx",
+      ],
+    });
+    expect(
+      result.violations.filter((v) => v.ruleId === "SCE-DS-GOV-CONTEXTUAL-CREATE-001"),
+    ).toHaveLength(0);
+  });
+
+  it("FAIL — contextual create modal shell in migrated entry (fixture pattern)", () => {
+    const fixtureSrc = readFileSync(
+      join(process.cwd(), "components/admin/__governance-fixtures__/ContextualCreateModalViolationFixture.tsx"),
+      "utf8",
+    );
+    expect(fixtureSrc).toContain("CreateInitiativeComposerDialog");
+    const modalEntry = collectContextualCreateEntryViolations(
+      "components/admin/targets/TargetInitiativeLinksSection.tsx",
+      `import CreateInitiativeComposerDialog\n${fixtureSrc}`,
+    );
+    expect(modalEntry.some((f) => f.reason.includes("ComposerDialog"))).toBe(true);
   });
 
   it("PASS — semantic light preview exception for tournament documents", () => {

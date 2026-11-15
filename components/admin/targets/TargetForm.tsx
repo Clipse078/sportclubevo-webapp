@@ -10,6 +10,13 @@ import VisibilityScopeSelect, {
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
 import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
+import {
+  PLANNING_EDITOR_STICKY_FOOTER_CLASS,
+  PLANNING_EDITOR_STICKY_FOOTER_RESERVE_CLASS,
+} from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import {
+  parseTargetMetricNumericInput,
+} from "@/lib/targets/target-metric-payload";
 
 type MetricDraft = {
   id?: string;
@@ -25,7 +32,7 @@ type MetricDraft = {
 type TargetFormProps = {
   mode: "create" | "edit";
   layout?: "page" | "composer";
-  onSuccess?: (targetId: string) => void;
+  onSuccess?: (targetId: string, meta?: { title: string }) => void | Promise<void>;
   onCancel?: () => void;
   targetId?: string;
   defaultValues?: {
@@ -92,10 +99,48 @@ function emptyMetric(): MetricDraft {
     type: "PERCENTAGE",
     direction: "INCREASE",
     targetValue: "",
-    currentValue: "0",
+    currentValue: "",
     unit: "",
     notes: "",
   };
+}
+
+function buildMetricPayloadForSubmit(metrics: MetricDraft[]) {
+  const errors: string[] = [];
+  const payload = metrics
+    .filter((m) => m.label.trim())
+    .map((m, idx) => {
+      const targetValue = parseTargetMetricNumericInput(m.targetValue);
+      const currentValue = parseTargetMetricNumericInput(m.currentValue);
+      const label = m.label.trim();
+
+      if (targetValue === null) {
+        errors.push(`Kennzahl „${label}“: Zielwert ist erforderlich (0 ist gültig).`);
+      }
+      if (currentValue === null) {
+        errors.push(`Kennzahl „${label}“: Aktueller Wert ist erforderlich (0 ist gültig).`);
+      }
+
+      return {
+        id: m.id,
+        label,
+        type: m.type,
+        direction: m.direction,
+        targetValue,
+        currentValue,
+        unit: m.unit.trim() || null,
+        notes: m.notes.trim() || null,
+        sortOrder: idx,
+      };
+    })
+    .filter((m) => m.targetValue !== null && m.currentValue !== null)
+    .map((m) => ({
+      ...m,
+      targetValue: m.targetValue as number,
+      currentValue: m.currentValue as number,
+    }));
+
+  return { payload, error: errors[0] ?? null };
 }
 
 export default function TargetForm({
@@ -206,6 +251,13 @@ export default function TargetForm({
       return;
     }
 
+    const { payload: metricPayload, error: metricError } = buildMetricPayloadForSubmit(metrics);
+    if (metricError) {
+      setError(metricError);
+      document.getElementById("kennzahlen")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -226,18 +278,7 @@ export default function TargetForm({
         visibleRoleRefs: visibilityScope === "RESTRICTED" ? visibleRoleRefs : [],
         visibleUserRefs: visibilityScope === "RESTRICTED" ? visibleUserRefs : [],
         visibleTargetGroupRefs: visibilityScope === "RESTRICTED" ? visibleTargetGroupRefs : [],
-        metrics: metrics
-          .filter((m) => m.label.trim())
-          .map((m, idx) => ({
-            label: m.label.trim(),
-            type: m.type,
-            direction: m.direction,
-            targetValue: parseFloat(m.targetValue) || 0,
-            currentValue: parseFloat(m.currentValue) || 0,
-            unit: m.unit.trim() || null,
-            notes: m.notes.trim() || null,
-            sortOrder: idx,
-          })),
+        metrics: metricPayload,
       };
 
       const url = mode === "edit" ? `/api/targets/${targetId}` : "/api/targets";
@@ -251,15 +292,21 @@ export default function TargetForm({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data?.error ?? "Fehler beim Speichern.");
+        const message = data?.error ?? "Fehler beim Speichern.";
+        setError(message);
+        if (res.status === 400 && /Kennzahl/.test(String(message))) {
+          document.getElementById("kennzahlen")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
         return;
       }
 
       const data = await res.json();
       const id = data?.target?.id ?? targetId ?? "";
+      const savedTitle =
+        typeof data?.target?.title === "string" ? data.target.title : title.trim();
       resetBaseline();
       if (onSuccess) {
-        onSuccess(id);
+        await onSuccess(id, { title: savedTitle });
         return;
       }
       router.push(`/vereinsleitung/targets/${id}?status=saved`);
@@ -281,10 +328,13 @@ export default function TargetForm({
     submitButtonClass,
   } = sceFormSurfaceClasses(layout);
 
+  const stickyFormClass =
+    layout === "page" ? `space-y-6 ${PLANNING_EDITOR_STICKY_FOOTER_RESERVE_CLASS}` : "space-y-6";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className={stickyFormClass}>
       {error ? (
-        <div className={errorClass} role="alert">
+        <div className={errorClass} role="alert" data-testid="target-form-error">
           {error}
         </div>
       ) : null}
@@ -417,18 +467,29 @@ export default function TargetForm({
         </div>
       </section>
 
-      <section className={sectionClass}>
+      <section id="kennzahlen" className={sectionClass} data-testid="target-form-kennzahlen-section">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Kennzahlen</h3>
           <button
             type="button"
             onClick={addMetric}
             className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+            data-testid="target-form-add-metric"
           >
             <Plus className="h-3.5 w-3.5" />
-            Metrik hinzufügen
+            Kennzahl hinzufügen
           </button>
         </div>
+
+        {error && /Kennzahl/.test(error) ? (
+          <div className={`${errorClass} mb-4`} role="alert">
+            {error}
+          </div>
+        ) : null}
+
+        <p className="mb-4 text-[12px] text-[var(--muted)]">
+          Kennzahlen werden mit dem Ziel über „Änderungen speichern“ unten gesichert.
+        </p>
 
         <div className="space-y-5">
           {metrics.map((metric, idx) => (
@@ -438,14 +499,14 @@ export default function TargetForm({
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                  Metrik {idx + 1}
+                  Kennzahl {idx + 1}
                 </p>
                 {metrics.length > 1 ? (
                   <button
                     type="button"
                     onClick={() => removeMetric(idx)}
                     className="flex h-7 w-7 items-center justify-center rounded-full text-rose-400 hover:bg-rose-50 hover:text-rose-600"
-                    aria-label="Metrik entfernen"
+                    aria-label="Kennzahl entfernen"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -565,7 +626,20 @@ export default function TargetForm({
         />
       </section>
 
-      <div className="flex items-center justify-between gap-4">
+      {layout === "page" && error ? (
+        <div className={`${errorClass} mb-2`} role="alert">
+          {error}
+        </div>
+      ) : null}
+
+      <div
+        className={
+          layout === "page"
+            ? PLANNING_EDITOR_STICKY_FOOTER_CLASS
+            : "flex items-center justify-between gap-4"
+        }
+        data-testid="target-form-actions"
+      >
         <button
           type="button"
           onClick={() => guardedCancel(() => (onCancel ? onCancel() : router.back()))}
@@ -575,7 +649,12 @@ export default function TargetForm({
           Abbrechen
         </button>
 
-        <button type="submit" disabled={loading} className={submitButtonClass}>
+        <button
+          type="submit"
+          disabled={loading}
+          className={submitButtonClass}
+          data-testid="target-form-submit"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {mode === "create" ? "Ziel erstellen" : "Änderungen speichern"}
         </button>

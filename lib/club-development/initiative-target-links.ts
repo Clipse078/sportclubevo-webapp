@@ -15,6 +15,7 @@ export async function listInitiativeTargetLinks(tenantId: string, initiativeId: 
     where: { tenantId, initiativeId },
     include: {
       target: { select: { id: true, title: true, status: true } },
+      initiative: { select: { id: true, slug: true, title: true, status: true } },
     },
     orderBy: { createdAt: "asc" },
   });
@@ -34,6 +35,7 @@ export async function linkInitiativeTarget(
     update: {},
     include: {
       target: { select: { id: true, title: true, status: true } },
+      initiative: { select: { id: true, slug: true, title: true, status: true } },
     },
   });
 }
