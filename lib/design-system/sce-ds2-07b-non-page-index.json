@@ -397,6 +397,30 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/club-strategy/document-references/route.ts",
+    "urlPattern": "/api/club-development/club-strategy/document-references",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/club-strategy/focus-targets/route.ts",
+    "urlPattern": "/api/club-development/club-strategy/focus-targets",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/club-strategy/meeting-links/route.ts",
+    "urlPattern": "/api/club-development/club-strategy/meeting-links",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/club-strategy/route.ts",
+    "urlPattern": "/api/club-development/club-strategy",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/initiatives/[id]/milestones/[milestoneId]/route.ts",
     "urlPattern": "/api/club-development/initiatives/[id]/milestones/[milestoneId]",
     "audience": "API"
