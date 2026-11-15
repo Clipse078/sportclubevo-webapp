@@ -156,6 +156,7 @@ export default function OrgUnitNodeCard({
             type="button"
             className="mt-0.5 shrink-0 rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text-1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)]"
             aria-label={unit.collapsed ? "Zweig aufklappen" : "Zweig zuklappen"}
+            title={unit.collapsed ? "Zweig aufklappen" : "Zweig zuklappen"}
             aria-expanded={!unit.collapsed}
             onClick={(e) => {
               e.stopPropagation();

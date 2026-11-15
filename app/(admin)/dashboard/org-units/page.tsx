@@ -48,8 +48,8 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
     <PageShell fullWidth>
       <ListPagePattern
         eyebrow="Organisation"
-        title="Organisation Builder"
-        description="Visuelles Organigramm — Hierarchie, Mitglieder und Berechtigungen auf autoritativen OrgUnit-Daten."
+        title="Vereinsorganisation"
+        description="Organisationseinheiten, Teams und Verantwortlichkeiten im Verein übersichtlich verwalten."
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Organisation" },

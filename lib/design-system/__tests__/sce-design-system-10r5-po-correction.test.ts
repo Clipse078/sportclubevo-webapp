@@ -73,7 +73,7 @@ describe("SCE-DESIGN-SYSTEM-10R5 Organisation Builder polish", () => {
     const runAutoBody = canvas.match(/function runAutoLayout\(\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
     expect(runAutoBody).toContain("persistManual({})");
     expect(runAutoBody).not.toContain("/api/org-units");
-    expect(canvas).toContain("Organisationsstruktur (Eltern-Kind) bleibt unverändert");
+    expect(canvas).toContain("Die Organisationshierarchie bleibt unverändert");
   });
 
   it("passes toggle-first guard for organisation builder", () => {

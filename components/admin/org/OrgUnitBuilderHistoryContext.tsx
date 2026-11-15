@@ -171,7 +171,7 @@ export function OrgBuilderHistoryProvider({ children }: ProviderProps) {
     (input: { before: OrgLayoutPositionMap; apply: (map: OrgLayoutPositionMap) => void }) => {
       pushCommand(
         createOrgBuilderCommand({
-          label: "Auto-Layout angewendet",
+          label: "Automatisch angeordnet",
           scope: "presentation",
           undo: async () => {
             input.apply(input.before);

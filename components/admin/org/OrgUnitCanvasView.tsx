@@ -424,7 +424,7 @@ export default function OrgUnitCanvasView({
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Einheit suchen…"
+            placeholder="Organisationseinheit suchen …"
             className="fca-input w-full pl-9"
             aria-label="Organisationseinheit suchen"
             data-testid="org-canvas-search"
@@ -473,10 +473,11 @@ export default function OrgUnitCanvasView({
             type="button"
             className="fca-button-secondary p-2"
             aria-label="Verkleinern"
+            title="Verkleinern"
             data-testid="org-canvas-zoom-out"
             onClick={() => setScale((s) => clampOrgCanvasScale(s - 0.1))}
           >
-            <ZoomOut className="h-4 w-4" />
+            <ZoomOut className="h-4 w-4" aria-hidden />
           </button>
           <span
             className="min-w-[3.25rem] px-1 text-center text-xs font-medium tabular-nums text-[var(--muted)]"
@@ -489,30 +490,33 @@ export default function OrgUnitCanvasView({
             type="button"
             className="fca-button-secondary p-2"
             aria-label="Vergrössern"
+            title="Vergrössern"
             data-testid="org-canvas-zoom-in"
             onClick={() => setScale((s) => clampOrgCanvasScale(s + 0.1))}
           >
-            <ZoomIn className="h-4 w-4" />
+            <ZoomIn className="h-4 w-4" aria-hidden />
           </button>
           <button
             type="button"
             className="fca-button-secondary inline-flex items-center gap-1 px-2.5 py-2 text-xs"
-            aria-label="Hierarchie einpassen"
+            aria-label="Ansicht einpassen"
+            title="Ansicht einpassen"
             data-testid="org-canvas-fit"
             onClick={applyFitToView}
           >
-            <Maximize2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Einpassen</span>
+            <Maximize2 className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">Ansicht einpassen</span>
           </button>
           <button
             type="button"
             className="fca-button-secondary inline-flex items-center gap-1 px-2.5 py-2 text-xs"
-            aria-label="Automatisches Layout"
+            aria-label="Automatisch anordnen"
+            title="Automatisch anordnen"
             data-testid="org-canvas-auto-layout"
             onClick={requestAutoLayout}
           >
-            <LayoutGrid className="h-4 w-4" />
-            <span className="hidden sm:inline">Auto-Layout</span>
+            <LayoutGrid className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">Automatisch anordnen</span>
           </button>
         </div>
       </div>
@@ -751,7 +755,7 @@ export default function OrgUnitCanvasView({
 
         {orgUnits.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-[var(--muted)]">
-            Keine Organisationseinheiten — erstelle die erste Einheit.
+            Noch keine Organisationseinheiten. Legen Sie die erste Organisationseinheit an.
           </div>
         ) : null}
       </div>
@@ -800,7 +804,7 @@ export default function OrgUnitCanvasView({
             ? `„${reparentPending.unitName}" verschieben?`
             : "Einheit verschieben"
         }
-        description="Neue übergeordnete Einheit bestätigen — serverseitige Zyklus- und Tiefenprüfung."
+        description="Bestätigen Sie die neue übergeordnete Organisationseinheit in der Hierarchie."
         size="md"
         footer={null}
       >
@@ -840,8 +844,8 @@ export default function OrgUnitCanvasView({
       <Dialog
         open={autoLayoutConfirmOpen}
         onClose={() => setAutoLayoutConfirmOpen(false)}
-        title="Auto-Layout anwenden?"
-        description="Manuelle Knotenpositionen werden durch das hierarchische Layout ersetzt. Die Organisationsstruktur (Eltern-Kind) bleibt unverändert."
+        title="Automatisch anordnen?"
+        description="Manuelle Knotenpositionen werden durch eine automatische Anordnung ersetzt. Die Organisationshierarchie bleibt unverändert."
         size="md"
         footer={null}
       >
@@ -850,7 +854,7 @@ export default function OrgUnitCanvasView({
             Abbrechen
           </button>
           <button type="button" className="fca-button-primary" onClick={runAutoLayout}>
-            Auto-Layout anwenden
+            Automatisch anordnen
           </button>
         </div>
       </Dialog>
