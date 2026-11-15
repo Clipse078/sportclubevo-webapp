@@ -22,8 +22,20 @@ export function scrollMeetingWorkspaceSectionHeading(
   headingEl: HTMLElement,
   navEl: HTMLElement | null,
 ): void {
-  const offset = measureMeetingWorkspaceScrollOffset(navEl);
-  const top = headingEl.getBoundingClientRect().top + window.scrollY - offset;
+  const top = computeClampedSectionScrollTop(headingEl, navEl);
   const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
-  window.scrollTo({ top: Math.max(0, top), behavior });
+  window.scrollTo({ top, behavior });
+}
+
+export function computeClampedSectionScrollTop(
+  headingEl: HTMLElement,
+  navEl: HTMLElement | null,
+): number {
+  const offset = measureMeetingWorkspaceScrollOffset(navEl);
+  const ideal = headingEl.getBoundingClientRect().top + window.scrollY - offset;
+  const maxScroll = Math.max(
+    0,
+    (document.documentElement?.scrollHeight ?? 0) - window.innerHeight,
+  );
+  return Math.min(Math.max(0, ideal), maxScroll);
 }

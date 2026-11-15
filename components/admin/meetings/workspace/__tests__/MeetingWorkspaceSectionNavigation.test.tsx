@@ -108,6 +108,19 @@ describe("Meeting workspace section navigation (runtime)", () => {
     expect(screen.getByTestId("beschluesse-content")).toBeVisible();
   });
 
+  it("updates aria-current to the clicked section", () => {
+    render(<SectionNavigationHarness />);
+    const nav = screen.getByTestId("meeting-workspace-section-nav");
+    fireEvent.click(screen.getByTestId("meeting-workspace-tab-beschluesse"));
+    expect(within(nav).getByTestId("meeting-workspace-tab-beschluesse")).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+    expect(within(nav).getByTestId("meeting-workspace-tab-traktanden")).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
+
   it("keeps multiple sections open", () => {
     render(<SectionNavigationHarness />);
     expect(screen.getByTestId("meeting-workspace-section-traktanden")).toHaveAttribute(

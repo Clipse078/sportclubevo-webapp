@@ -124,8 +124,8 @@ export default function MeetingWorkspaceHeader({
     canManage && (primary.lifecycleAction !== undefined || primary.targetSectionId !== null);
 
   return (
-    <header className="space-y-3" data-testid="meeting-workspace-header">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+    <header className="space-y-2" data-testid="meeting-workspace-header">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex shrink-0 flex-col items-center gap-1">
           <SceDateTile
             value={meeting.meetingDate}

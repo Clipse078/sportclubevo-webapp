@@ -47,6 +47,11 @@ describe("meeting workspace scroll offset", () => {
     document.body.append(header);
 
     Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      value: 10000,
+      configurable: true,
+    });
+    Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });
     const scrollTo = vi.fn();
     window.scrollTo = scrollTo;
 

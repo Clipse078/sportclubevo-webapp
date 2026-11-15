@@ -30,6 +30,7 @@ export default function MeetingWorkspaceCollapsibleSection({
     expandedSections,
     requestToggleSection,
     registerSectionHeading,
+    registerSectionPanel,
     sectionScrollMarginPx,
     hasActivatedLazySection,
   } = useMeetingWorkspaceSections();
@@ -43,6 +44,13 @@ export default function MeetingWorkspaceCollapsibleSection({
       registerSectionHeading(sectionId, el);
     },
     [registerSectionHeading, sectionId],
+  );
+
+  const setPanelRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      registerSectionPanel(sectionId, el);
+    },
+    [registerSectionPanel, sectionId],
   );
 
   return (
@@ -85,6 +93,7 @@ export default function MeetingWorkspaceCollapsibleSection({
       </div>
       {shouldRenderBody ? (
         <div
+          ref={setPanelRef}
           id={panelId}
           hidden={!expanded}
           className={workspaceSectionBodyClass}

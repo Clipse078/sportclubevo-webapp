@@ -368,10 +368,21 @@ export default function MeetingPendenzenPanel({
 
       {relatedTasksCreateSlot ? <div className="min-w-0">{relatedTasksCreateSlot}</div> : null}
 
-      {initialLoading && items.length === 0 ? (
+      {initialLoading && actions.length === 0 && items.length === 0 ? (
         <p className="flex items-center gap-2 text-sm text-[var(--text-2)]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           Pendenzen werden geladen…
+        </p>
+      ) : null}
+
+      {initialLoading && (actions.length > 0 || items.length > 0) ? (
+        <p
+          className="flex items-center gap-2 text-xs text-[var(--muted)]"
+          aria-live="polite"
+          data-testid="meeting-pendenzen-tasks-loading"
+        >
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          Verknüpfte Aufgaben werden ergänzt…
         </p>
       ) : null}
 

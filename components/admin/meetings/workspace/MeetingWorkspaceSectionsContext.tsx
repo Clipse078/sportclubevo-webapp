@@ -18,10 +18,15 @@ import {
   resolveMeetingWorkspaceTabFromHash,
   stripLegacyBereichFromSearchParams,
 } from "@/lib/meetings/meeting-workspace-section-url";
+import { measureMeetingWorkspaceScrollOffset } from "@/lib/meetings/meeting-workspace-scroll";
 import {
-  measureMeetingWorkspaceScrollOffset,
-  scrollMeetingWorkspaceSectionHeading,
-} from "@/lib/meetings/meeting-workspace-scroll";
+  afterExpandedLayoutCommit,
+  createProgrammaticScrollLock,
+  MEETING_WORKSPACE_SPY_SUPPRESS_MS,
+  scrollMeetingWorkspaceSectionHeadingAfterLayout,
+  shouldSuppressScrollSpy,
+  type ProgrammaticSectionScrollLock,
+} from "@/lib/meetings/meeting-workspace-section-navigation";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
 import { MEETING_WORKSPACE_SECTION_ORDER } from "@/lib/nav/meeting-workspace-tab-config";
 
@@ -39,6 +44,7 @@ type SectionsContextValue = {
   navigateToSection: (sectionId: MeetingWorkspaceTabId, options?: { skipScroll?: boolean }) => void;
   hrefForSection: (sectionId: MeetingWorkspaceTabId) => string;
   registerSectionHeading: (sectionId: MeetingWorkspaceTabId, el: HTMLHeadingElement | null) => void;
+  registerSectionPanel: (sectionId: MeetingWorkspaceTabId, el: HTMLElement | null) => void;
   registerSectionNav: (el: HTMLElement | null) => void;
   sectionScrollMarginPx: number;
   hasActivatedLazySection: (sectionId: MeetingWorkspaceTabId) => boolean;
@@ -95,7 +101,10 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
   });
 
   const headingRefs = useRef(new Map<MeetingWorkspaceTabId, HTMLHeadingElement | null>());
+  const panelRefs = useRef(new Map<MeetingWorkspaceTabId, HTMLElement | null>());
   const navRef = useRef<HTMLElement | null>(null);
+  const programmaticScrollLockRef = useRef<ProgrammaticSectionScrollLock | null>(null);
+  const layoutResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [lazyActivated, setLazyActivated] = useState<Set<MeetingWorkspaceTabId>>(
     () => new Set(expandedSections),
   );
@@ -127,11 +136,41 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
     [pathname, urlSearch],
   );
 
-  const scrollToSection = useCallback((sectionId: MeetingWorkspaceTabId) => {
-    const heading = headingRefs.current.get(sectionId);
-    if (heading) {
-      scrollMeetingWorkspaceSectionHeading(heading, navRef.current);
+  const queueSectionScroll = useCallback((sectionId: MeetingWorkspaceTabId) => {
+    programmaticScrollLockRef.current = createProgrammaticScrollLock(sectionId);
+    setHighlightedSection(sectionId);
+
+    const runScroll = () => {
+      const heading = headingRefs.current.get(sectionId);
+      if (!heading) return;
+      scrollMeetingWorkspaceSectionHeadingAfterLayout(heading, navRef.current);
+    };
+
+    layoutResizeObserverRef.current?.disconnect();
+    const panel = panelRefs.current.get(sectionId);
+    if (panel && typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver(() => {
+        if (!shouldSuppressScrollSpy(programmaticScrollLockRef.current)) return;
+        afterExpandedLayoutCommit(runScroll);
+      });
+      resizeObserver.observe(panel);
+      layoutResizeObserverRef.current = resizeObserver;
+      window.setTimeout(() => resizeObserver.disconnect(), 2_500);
     }
+
+    afterExpandedLayoutCommit(runScroll);
+
+    const releaseLock = () => {
+      if (programmaticScrollLockRef.current?.sectionId === sectionId) {
+        programmaticScrollLockRef.current = null;
+      }
+      layoutResizeObserverRef.current?.disconnect();
+    };
+
+    if (typeof window !== "undefined" && "onscrollend" in window) {
+      window.addEventListener("scrollend", releaseLock, { once: true });
+    }
+    window.setTimeout(releaseLock, MEETING_WORKSPACE_SPY_SUPPRESS_MS);
   }, []);
 
   const pushSectionHash = useCallback(
@@ -172,10 +211,10 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       setHighlightedSection(sectionId);
       pushSectionHash(sectionId);
       if (!options?.skipScroll) {
-        requestAnimationFrame(() => scrollToSection(sectionId));
+        afterExpandedLayoutCommit(() => queueSectionScroll(sectionId));
       }
     },
-    [activateLazySection, pushSectionHash, scrollToSection],
+    [activateLazySection, pushSectionHash, queueSectionScroll],
   );
 
   const requestToggleSection = useCallback(
@@ -197,9 +236,9 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       });
       setHighlightedSection(sectionId);
       pushSectionHash(sectionId);
-      requestAnimationFrame(() => scrollToSection(sectionId));
+      afterExpandedLayoutCommit(() => queueSectionScroll(sectionId));
     },
-    [activateLazySection, expandedSections, pushSectionHash, scrollToSection],
+    [activateLazySection, expandedSections, pushSectionHash, queueSectionScroll],
   );
 
   const registerSectionHeading = useCallback(
@@ -208,6 +247,13 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       if (el) {
         setHeadingRegistrationTick((n) => n + 1);
       }
+    },
+    [],
+  );
+
+  const registerSectionPanel = useCallback(
+    (sectionId: MeetingWorkspaceTabId, el: HTMLElement | null) => {
+      panelRefs.current.set(sectionId, el);
     },
     [],
   );
@@ -259,9 +305,23 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       navigateToSection(tab);
     }
     function onNavigateTab(event: Event) {
-      const detail = (event as CustomEvent<{ tab?: MeetingWorkspaceTabId }>).detail;
+      const detail = (
+        event as CustomEvent<{ tab?: MeetingWorkspaceTabId; openControlTestId?: string }>
+      ).detail;
       if (detail?.tab) {
         navigateToSection(detail.tab);
+        if (detail.openControlTestId) {
+          window.setTimeout(() => {
+            afterExpandedLayoutCommit(() => {
+              const control = document.querySelector(
+                `[data-testid="${detail.openControlTestId}"]`,
+              );
+              if (control instanceof HTMLElement) {
+                control.click();
+              }
+            });
+          }, 50);
+        }
       }
     }
     window.addEventListener("hashchange", onHashChange);
@@ -299,6 +359,13 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
     const offset = measureMeetingWorkspaceScrollOffset(navEl);
     const observer = new IntersectionObserver(
       (entries) => {
+        const lock = programmaticScrollLockRef.current;
+        if (shouldSuppressScrollSpy(lock)) {
+          if (lock?.sectionId) {
+            setHighlightedSection(lock.sectionId);
+          }
+          return;
+        }
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -335,6 +402,7 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       navigateToSection,
       hrefForSection,
       registerSectionHeading,
+      registerSectionPanel,
       registerSectionNav,
       sectionScrollMarginPx: scrollMarginPx,
       hasActivatedLazySection,
@@ -348,6 +416,7 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       hrefForSection,
       navigateToSection,
       registerSectionHeading,
+      registerSectionPanel,
       registerSectionNav,
       requestToggleSection,
       scrollMarginPx,

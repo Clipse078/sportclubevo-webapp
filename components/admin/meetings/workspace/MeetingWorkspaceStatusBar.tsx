@@ -101,10 +101,7 @@ export default function MeetingWorkspaceStatusBar({
   }
 
   return (
-    <section
-      className="flex flex-col gap-2 border-y border-[var(--border)] py-3"
-      data-testid="meeting-workspace-status-bar"
-    >
+    <section className="flex flex-col gap-1.5" data-testid="meeting-workspace-status-bar">
       {summary.attentionLine ? (
         <p className="text-xs text-amber-800" role="status" data-testid="meeting-attention-hint">
           {summary.attentionLine}
@@ -185,7 +182,7 @@ export default function MeetingWorkspaceStatusBar({
       ) : null}
 
       {meeting.status === "COMPLETED" && canManage ? (
-        <div className="space-y-2 border-t border-[var(--border)] pt-3" data-testid="meeting-lifecycle-panel">
+        <div className="space-y-2 pt-2" data-testid="meeting-lifecycle-panel">
           <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="reopen-reason">
             Wieder öffnen (Begründung erforderlich)
           </label>

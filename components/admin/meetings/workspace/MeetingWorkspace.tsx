@@ -31,6 +31,14 @@ import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-s
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { ReactNode } from "react";
 
+const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
+  "meeting-section-teilnehmer": "meeting-participants-add-toggle",
+  "meeting-section-beschlüsse": "meeting-decision-create-toggle",
+  "meeting-section-beschluesse": "meeting-decision-create-toggle",
+  "meeting-section-pendenzen": "meeting-action-create-toggle",
+  "meeting-section-massnahmen": "meeting-action-create-toggle",
+};
+
 type MeetingWorkspaceProps = {
   title: string;
   meeting: MeetingLiveData;
@@ -125,10 +133,18 @@ export default function MeetingWorkspace({
 
   const navigateToSection = useCallback((sectionId: string) => {
     const tab: MeetingWorkspaceTabId | undefined =
-      LEGACY_MEETING_SECTION_HASH_TO_TAB[sectionId] ?? undefined;
+      LEGACY_MEETING_SECTION_HASH_TO_TAB[sectionId] ??
+      (sectionId.startsWith("meeting-workspace-section-")
+        ? (sectionId.replace("meeting-workspace-section-", "") as MeetingWorkspaceTabId)
+        : undefined);
     if (tab) {
       window.dispatchEvent(
-        new CustomEvent("meeting-workspace-navigate-tab", { detail: { tab } }),
+        new CustomEvent("meeting-workspace-navigate-tab", {
+          detail: {
+            tab,
+            openControlTestId: LEGACY_SECTION_INLINE_CONTROL[sectionId],
+          },
+        }),
       );
     }
   }, []);
@@ -201,7 +217,7 @@ export default function MeetingWorkspace({
       <div className="space-y-4" data-testid="meeting-workspace">
         <SceClubDevelopmentSectionShell
           title={CD_MEETINGS_WORKSPACE_COPY.summarySectionTitle}
-          bodyClassName="p-5 space-y-4"
+          bodyClassName="p-4 space-y-2"
           testId="meeting-workspace-summary"
         >
           <MeetingWorkspaceHeader

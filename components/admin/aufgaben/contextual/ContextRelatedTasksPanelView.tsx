@@ -111,7 +111,7 @@ export default function ContextRelatedTasksPanelView({
   if (pendenzenEmbed && isMeetingContext) {
     return (
       <div className="min-w-0" data-testid="context-related-tasks-pendenzen-embed">
-        {canCreate && createDialogProps ? (
+        {canCreate && createDialogProps && inlineCreateExpanded ? (
           <MeetingContextualTaskInlineCreateCard
             ref={inlineCreateRef}
             expanded={inlineCreateExpanded}
