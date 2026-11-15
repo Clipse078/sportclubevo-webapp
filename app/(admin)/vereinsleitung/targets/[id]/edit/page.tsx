@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getTargetById } from "@/lib/targets/queries";
-import { getMeetingLinkOptions, getInitiativeLinkOptions } from "@/lib/linking/queries";
+import { getMeetingLinkOptions } from "@/lib/linking/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import TargetForm from "@/components/admin/targets/TargetForm";
@@ -29,10 +29,9 @@ export default async function EditTargetPage({ params }: PageProps) {
   const { id } = await params;
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
 
-  const [target, availableMeetings, availableInitiatives] = await Promise.all([
+  const [target, availableMeetings] = await Promise.all([
     getTargetById(id, actor),
     getMeetingLinkOptions(actor),
-    getInitiativeLinkOptions(actor),
   ]);
 
   if (!target) notFound();
@@ -116,7 +115,6 @@ export default async function EditTargetPage({ params }: PageProps) {
             targetId={id}
             initialInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
             initialMeetingRefs={parseEntityRefs(target.linkedMeetingRefs)}
-            availableInitiatives={availableInitiatives}
             availableMeetings={availableMeetings}
           />
         </section>

@@ -30,6 +30,7 @@ export default function TargetInitiativeLinksSection({
 }: Props) {
   const [links, setLinks] = useState<InitiativeLinkRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [legacyUnlinkNotice, setLegacyUnlinkNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [composerOpen, setComposerOpen] = useState(false);
   const [highlightSlug, setHighlightSlug] = useState<string | null>(null);
@@ -72,9 +73,31 @@ export default function TargetInitiativeLinksSection({
     [links],
   );
 
+  const unlinkInitiative = (link: InitiativeLinkRow) => {
+    if (!canManage || link.legacy) return;
+    setLegacyUnlinkNotice(null);
+    startTransition(async () => {
+      const res = await fetch(
+        `/api/club-development/targets/${targetId}/initiative-links?initiativeId=${encodeURIComponent(link.initiativeId)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Entfernen fehlgeschlagen.");
+        return;
+      }
+      const legacyRemains = legacyInitiativeRefs.some((ref) => ref.slug === link.initiative.slug);
+      loadLinks();
+      if (legacyRemains) {
+        setLegacyUnlinkNotice(CD_TARGET_COPY.legacyLinkRemainsAfterUnlink);
+      }
+    });
+  };
+
   const linkInitiative = (initiativeId: string) => {
     if (!canManage) return;
     setLinkRetryInitiativeId(null);
+    setLegacyUnlinkNotice(null);
     startTransition(async () => {
       const res = await fetch(`/api/club-development/targets/${targetId}/initiative-links`, {
         method: "POST",
@@ -132,6 +155,16 @@ export default function TargetInitiativeLinksSection({
         <p className="text-[11px] text-[var(--muted)]">{CD_TARGET_COPY.vorhabenSectionHint}</p>
       </div>
 
+      {legacyUnlinkNotice ? (
+        <p
+          className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+          role="status"
+          data-testid="target-initiative-legacy-unlink-notice"
+        >
+          {legacyUnlinkNotice}
+        </p>
+      ) : null}
+
       {error ? (
         <p
           className="mb-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900"
@@ -178,7 +211,22 @@ export default function TargetInitiativeLinksSection({
                   <ExternalLink className="h-3 w-3 shrink-0 text-[var(--muted)]" />
                 </Link>
                 {link.legacy ? (
-                  <span className="text-[10px] text-[var(--muted)]">Legacy-Verknüpfung</span>
+                  <span
+                    className="text-[10px] text-[var(--muted)]"
+                    data-testid="target-initiative-legacy-badge"
+                  >
+                    {CD_TARGET_COPY.legacyInitiativeBadge}
+                  </span>
+                ) : canManage ? (
+                  <button
+                    type="button"
+                    onClick={() => unlinkInitiative(link)}
+                    disabled={pending}
+                    className="text-[10px] font-medium text-[var(--muted)] hover:text-red-600 disabled:opacity-60"
+                    data-testid="target-initiative-unlink"
+                  >
+                    {CD_TARGET_COPY.unlinkInitiativeAction}
+                  </button>
                 ) : null}
               </div>
             </li>

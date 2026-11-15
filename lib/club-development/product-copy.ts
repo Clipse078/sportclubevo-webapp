@@ -201,6 +201,15 @@ export const CD_TARGET_COPY = {
   targetCreatedFocusLinkFailed:
     "Ziel wurde erstellt, die Verknüpfung als Schwerpunkt ist jedoch fehlgeschlagen.",
   focusLinkRetry: "Schwerpunkt-Verknüpfung erneut versuchen",
+  legacyInitiativeBadge: "Legacy-Verknüpfung",
+  legacyLinkRemainsAfterUnlink:
+    "Die Verknüpfung in der Datenbank wurde entfernt. Eine ältere Legacy-Verknüpfung (JSON) zu diesem Vorhaben besteht weiterhin und wird in der Liste angezeigt.",
+  vorhabenManagedInSectionAbove:
+    "Vorhaben verwalten Sie im Abschnitt «Vorhaben» darüber — nicht über die Sitzungs-Verknüpfungen.",
+  meetingsEditorSection: "Sitzungen",
+  meetingsEditorHint:
+    "Verknüpfe relevante Sitzungen, in denen dieses Ziel besprochen wurde.",
+  unlinkInitiativeAction: "Entfernen",
 } as const;
 
 export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {
