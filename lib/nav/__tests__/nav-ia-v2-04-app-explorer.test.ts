@@ -45,7 +45,9 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAV-IA-V2-04 App Explorer", () => {
-  const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
+  const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club", {
+    vereinsleitungWorkspace: true,
+  });
   const domainLabel = (domain: { fallbackLabel: string }) => domain.fallbackLabel;
 
   it("exposes canonical six club domains with Admin after Publizieren", () => {
@@ -59,21 +61,20 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Veröffentlichen");
   });
 
-  it("groups Club explorer destinations into eight L2 groups without Administration (moved to Admin L1)", () => {
+  it("groups Club explorer destinations into nine L2 groups in PO Verein order (Administration on Admin L1)", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const groups = resolveExplorerDomainGroups(club)!;
-    expect(groups.map((group) => group.label)).toEqual(
-      expect.arrayContaining([
-        "Organisation",
-        "Aufgaben",
-        "Personen & Teams",
-        "Mitgliedschaft",
-        "Vereinsbetrieb",
-        "Dokumente",
-        "Finanzen",
-        "Sponsoring",
-      ]),
-    );
+    expect(groups.map((group) => group.label)).toEqual([
+      "Vereinsentwicklung",
+      "Organisation",
+      "Personen & Teams",
+      "Mitgliedschaft",
+      "Vereinsbetrieb",
+      "Aufgaben",
+      "Finanzen",
+      "Sponsoring",
+      "Dokumente",
+    ]);
     expect(groups.some((group) => group.id === "administration")).toBe(false);
 
     const admin = model.domains.find((d) => d.id === "admin")!;

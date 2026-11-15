@@ -27,3 +27,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Copy:** club language only on user-facing surfaces (Sitzungen, Vorhaben, Kennzahlen); no redundant **Verfügbar** badges on working destinations.
 - **Governance:** `SCE-DS-GOV-CD-VISUAL-001` + `lib/club-development/sce-vereinsentwicklung-visual-governance.ts`.
 - **Remaining adoption:** see `docs/design/SCE-VEREINSENTWICKLUNG-VISUAL-ADOPTION.md` (do not whole-app rewrite outside Vereinsentwicklung without an explicit package).
+
+## Verein (Club) L2 navigation order
+
+PO order for Club domain secondary nav (desktop panel + mobile explorer): **Vereinsentwicklung → Organisation → Personen & Teams → Mitgliedschaft → Vereinsbetrieb → Aufgaben → Finanzen → Sponsoring → Dokumente**. Canonical source: `CLUB_TARGET_L2_GROUPS` / `CLUB_VEREIN_L2_LABEL_ORDER` in `lib/nav/nav-ia-v2/target-ia-matrix.ts`. Vereinsentwicklung children stay: Übersicht → Strategie & Ziele → Vorhaben & Umsetzung → Sitzungen (`nav-config.ts`).
