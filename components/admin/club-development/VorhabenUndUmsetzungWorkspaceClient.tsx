@@ -22,6 +22,11 @@ import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
 
 type BacklogRow = React.ComponentProps<typeof InitiativeBacklogWorkspace>["initialInitiatives"][number];
 
+type FilterTarget = {
+  id: string;
+  title: string;
+};
+
 type Props = {
   snapshot: VorhabenWorkspaceSnapshot;
   initialTargetId: string | null;
@@ -30,6 +35,7 @@ type Props = {
   backlogCanManage: boolean;
   backlogCanView: boolean;
   backlogTargetId: string | null;
+  filterTarget: FilterTarget | null;
   sprints: DevelopmentSprintListItem[];
   canManageSprints: boolean;
   showPrioritaetenDefault: boolean;
@@ -43,6 +49,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
   backlogCanManage,
   backlogCanView,
   backlogTargetId,
+  filterTarget,
   sprints,
   canManageSprints,
   showPrioritaetenDefault,
@@ -84,6 +91,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
             initialSnapshot={snapshot}
             initialTargetId={initialTargetId}
             initialInitiativeId={initialInitiativeId}
+            filterTarget={filterTarget}
           />
         )}
       </div>

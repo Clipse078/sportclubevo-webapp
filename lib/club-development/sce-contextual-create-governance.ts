@@ -8,6 +8,7 @@ export const SCE_CONTEXTUAL_CREATE_INLINE_ENTRY_PATHS = [
   "components/admin/targets/TargetInitiativeLinksSection.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
   "components/admin/club-development/ZieleWorkspacePanel.tsx",
+  "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
 ] as const;
 
 export const SCE_CONTEXTUAL_CREATE_INLINE_CARD_MARKERS = [

@@ -150,6 +150,7 @@ export const CD_SPRINT_WORKSPACE_COPY = {
   expectedResult: "Erwartetes Ergebnis",
   metrics: "Kennzahlen",
   boardQuickLink: "Zum Aufgabenboard",
+  reviewQuickLink: "Zum Rückblick",
   closeTargetPhasePerTask: "Ziel-Umsetzungsphase je Aufgabe",
   chooseTargetPhase: "— Umsetzungsphase wählen —",
   addTaskToPhase: "Anlegen und zur Umsetzungsphase hinzufügen",

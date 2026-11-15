@@ -15,14 +15,21 @@ import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { Badge } from "@/components/ui";
+import CreateInitiativeWorkspaceCollapsibleCard from "@/components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard";
 
 export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
+
+type FilterTarget = {
+  id: string;
+  title: string;
+};
 
 type Props = {
   initialSnapshot: VorhabenWorkspaceSnapshot;
   initialTargetId?: string | null;
   initialInitiativeId?: string | null;
   variant: VorhabenAufgabenWorkspaceVariant;
+  filterTarget?: FilterTarget | null;
 };
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -89,6 +96,7 @@ export default function VorhabenAufgabenWorkspace({
   initialTargetId = null,
   initialInitiativeId = null,
   variant,
+  filterTarget = null,
 }: Props) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [search, setSearch] = useState("");
@@ -264,6 +272,15 @@ export default function VorhabenAufgabenWorkspace({
         >
           {snapshot.restrictedReason}
         </div>
+      ) : null}
+
+      {/* data-sce-contextual-create-flow="inline-collapsible" — CreateInitiativeWorkspaceCollapsibleCard */}
+      {isVorhabenView && snapshot.canManageInitiatives ? (
+        <CreateInitiativeWorkspaceCollapsibleCard
+          canCreate
+          filterTarget={filterTarget}
+          onCreated={() => fetchWorkspace()}
+        />
       ) : null}
 
       <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
