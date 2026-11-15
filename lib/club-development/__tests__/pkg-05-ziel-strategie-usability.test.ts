@@ -36,6 +36,17 @@ describe("PKG-05 Ziel ↔ Strategie usability", () => {
     const empty = read("components/admin/targets/TargetMetricsEmptyState.tsx");
     expect(empty).toContain("Kennzahl hinzufügen");
     expect(empty).toContain("/edit#kennzahlen");
-    expect(read("components/admin/targets/TargetForm.tsx")).toContain('id="kennzahlen"');
+    const form = read("components/admin/targets/TargetForm.tsx");
+    expect(form).toContain('id="kennzahlen"');
+    expect(form).toContain("Kennzahl {idx + 1}");
+    expect(form).toContain("PLANNING_EDITOR_STICKY_FOOTER_CLASS");
+    expect(form).toContain("data-testid=\"target-form-submit\"");
+    expect(form).not.toContain("Metrik {idx + 1}");
+  });
+
+  it("target PUT route persists Kennzahlen on edit save", () => {
+    const route = read("app/api/targets/[id]/route.ts");
+    expect(route).toContain("syncTargetMetricsForTarget");
+    expect(route).toContain("normalizeTargetMetricsFromBody");
   });
 });

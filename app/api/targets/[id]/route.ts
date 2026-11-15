@@ -5,6 +5,8 @@ import { requireTargetAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { normalizeTargetMetricsFromBody } from "@/lib/targets/target-metric-payload";
+import { syncTargetMetricsForTarget } from "@/lib/targets/target-metric-sync";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -87,6 +89,15 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const validPeriods = Object.values(TargetPeriod);
     const validScopes = Object.values(VisibilityScope);
 
+    let normalizedMetrics: Awaited<ReturnType<typeof normalizeTargetMetricsFromBody>> | null = null;
+    if (body?.metrics !== undefined) {
+      const metricsResult = normalizeTargetMetricsFromBody(body.metrics);
+      if (!metricsResult.ok) {
+        return NextResponse.json({ error: metricsResult.error }, { status: 400 });
+      }
+      normalizedMetrics = metricsResult;
+    }
+
     const updated = await prisma.target.update({
       where: { id, tenantId },
       data: {
@@ -118,6 +129,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       },
       select: { id: true, title: true },
     });
+
+    if (normalizedMetrics) {
+      await syncTargetMetricsForTarget(prisma, id, normalizedMetrics.metrics);
+    }
 
     void logAuditEvent({
       actorUserId: actor.userId,
