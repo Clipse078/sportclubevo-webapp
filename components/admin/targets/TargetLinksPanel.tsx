@@ -5,21 +5,16 @@ import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 
 type TargetLinksPanelProps = {
   targetId: string;
-  linkedInitiativeRefsRaw: unknown;
   linkedMeetingRefsRaw: unknown;
 };
 
 export default function TargetLinksPanel({
   targetId,
-  linkedInitiativeRefsRaw,
   linkedMeetingRefsRaw,
 }: TargetLinksPanelProps) {
-  const { initiativeRefs, meetingRefs } = resolveTargetCrossLinks(
-    linkedInitiativeRefsRaw,
-    linkedMeetingRefsRaw,
-  );
+  const { meetingRefs } = resolveTargetCrossLinks(null, linkedMeetingRefsRaw);
 
-  const totalLinks = initiativeRefs.length + meetingRefs.length;
+  const totalLinks = meetingRefs.length;
 
   return (
     <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
@@ -38,29 +33,6 @@ export default function TargetLinksPanel({
       </div>
 
       <div className="space-y-4">
-        <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-            {CD_TARGET_COPY.linksInitiatives}
-          </p>
-          {initiativeRefs.length === 0 ? (
-            <p className="text-[12px] text-[var(--muted)] italic">{CD_TARGET_COPY.noLinkedInitiatives}</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {initiativeRefs.map((ref) => (
-                <li key={ref.slug}>
-                  <Link
-                    href={ref.url ?? `/vereinsleitung/initiativen/${ref.slug}`}
-                    className="flex items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-[12px] font-medium text-[var(--foreground)] transition hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[#0b4aa2]"
-                  >
-                    <span className="min-w-0 flex-1 truncate">{ref.title}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0 text-[var(--muted)]" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             {CD_TARGET_COPY.linksMeetings}

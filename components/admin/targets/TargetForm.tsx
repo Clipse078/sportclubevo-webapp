@@ -32,7 +32,7 @@ type MetricDraft = {
 type TargetFormProps = {
   mode: "create" | "edit";
   layout?: "page" | "composer";
-  onSuccess?: (targetId: string) => void;
+  onSuccess?: (targetId: string, meta?: { title: string }) => void | Promise<void>;
   onCancel?: () => void;
   targetId?: string;
   defaultValues?: {
@@ -302,9 +302,11 @@ export default function TargetForm({
 
       const data = await res.json();
       const id = data?.target?.id ?? targetId ?? "";
+      const savedTitle =
+        typeof data?.target?.title === "string" ? data.target.title : title.trim();
       resetBaseline();
       if (onSuccess) {
-        onSuccess(id);
+        await onSuccess(id, { title: savedTitle });
         return;
       }
       router.push(`/vereinsleitung/targets/${id}?status=saved`);

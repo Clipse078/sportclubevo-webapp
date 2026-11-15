@@ -17,6 +17,8 @@ import TargetMetricProgress from "@/components/admin/targets/TargetMetricProgres
 import TargetDataPointForm from "@/components/admin/targets/TargetDataPointForm";
 import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
+import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
+import { parseEntityRefs } from "@/lib/linking/helpers";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import TargetMetricsEmptyState from "@/components/admin/targets/TargetMetricsEmptyState";
@@ -66,7 +68,9 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
       permission: PERMISSIONS.TARGETS_DELETE,
       tenantId,
     });
-    canManageTarget = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
+    canManageTarget =
+      actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE) &&
+      actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
   }
 
   const statusLabel = formatTargetStatusLabel(target.status);
@@ -202,6 +206,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
               </div>
             )}
           </section>
+
+          <TargetInitiativeLinksSection
+            targetId={id}
+            targetTitle={target.title}
+            canManage={canManageTarget}
+            legacyInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
+          />
         </div>
 
         <aside className="space-y-5">
@@ -317,11 +328,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </section>
           ) : null}
 
-          <TargetLinksPanel
-            targetId={id}
-            linkedInitiativeRefsRaw={target.linkedInitiativeRefs}
-            linkedMeetingRefsRaw={target.linkedMeetingRefs}
-          />
+          <TargetLinksPanel targetId={id} linkedMeetingRefsRaw={target.linkedMeetingRefs} />
         </aside>
       </div>
       </DetailPagePattern>

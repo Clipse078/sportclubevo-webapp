@@ -17,11 +17,11 @@ describe("PKG-05 Ziel ↔ Strategie usability", () => {
     expect(page).not.toMatch(/Initiativen|Meetings|Governance/);
   });
 
-  it("target links panel uses Vorhaben and Sitzungen", () => {
+  it("target links panel uses Sitzungen; Vorhaben live in contextual section", () => {
     const panel = read("components/admin/targets/TargetLinksPanel.tsx");
-    expect(panel).toContain("CD_TARGET_COPY.linksInitiatives");
+    const section = read("components/admin/targets/TargetInitiativeLinksSection.tsx");
     expect(panel).toContain("CD_TARGET_COPY.linksMeetings");
-    expect(panel).not.toMatch(/>\s*Initiativen\s*</);
+    expect(section).toContain("CD_TARGET_COPY.vorhabenSectionHeading");
     expect(panel).not.toMatch(/>\s*Meetings\s*</);
   });
 

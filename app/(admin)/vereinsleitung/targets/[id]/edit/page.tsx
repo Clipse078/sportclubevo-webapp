@@ -8,9 +8,11 @@ import { redirect } from "next/navigation";
 import { getTargetById } from "@/lib/targets/queries";
 import { getMeetingLinkOptions, getInitiativeLinkOptions } from "@/lib/linking/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import TargetForm from "@/components/admin/targets/TargetForm";
 import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import TargetLinkEditor from "@/components/admin/targets/TargetLinkEditor";
+import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/ui/page";
@@ -34,6 +36,10 @@ export default async function EditTargetPage({ params }: PageProps) {
   ]);
 
   if (!target) notFound();
+
+  const canManageTarget =
+    actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE) &&
+    actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
 
   const defaultValues = {
     title: target.title,
@@ -95,6 +101,15 @@ export default async function EditTargetPage({ params }: PageProps) {
         <ClubDevelopmentFormWorkflowShell>
           <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
         </ClubDevelopmentFormWorkflowShell>
+
+        <div className="mt-6">
+          <TargetInitiativeLinksSection
+            targetId={id}
+            targetTitle={target.title}
+            canManage={canManageTarget}
+            legacyInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
+          />
+        </div>
 
         <section className={`${VEREINSLEITUNG_PANEL_CLASS} mt-6`}>
           <TargetLinkEditor

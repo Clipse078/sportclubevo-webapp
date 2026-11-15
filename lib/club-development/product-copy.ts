@@ -188,6 +188,19 @@ export const CD_TARGET_COPY = {
   progressDetail: "Fortschritt, Kennzahlen und Messwerte im Detail.",
   linkedInitiativesProgress: "Ziele mit Outcome-Fortschritt, Umsetzungsfortschritt über verknüpfte Vorhaben und Kennzahlen.",
   backlogDescriptionEinordnung: "Priorisierte Vorhaben mit Einordnung",
+  vorhabenSectionHeading: "Vorhaben",
+  vorhabenSectionHint: "Umsetzung zu diesem Ziel — verknüpfte Vorhaben erscheinen in Strategie und Vorhaben & Prioritäten.",
+  createInitiativeAndLink: "Vorhaben erstellen & verknüpfen",
+  linkExistingInitiative: "Bestehendes Vorhaben verknüpfen",
+  openLinkedInitiative: "Vorhaben öffnen",
+  initiativeLinkRetry: "Verknüpfung erneut versuchen",
+  initiativeCreatedLinkFailed:
+    "Vorhaben wurde erstellt, die Verknüpfung zum Ziel ist jedoch fehlgeschlagen.",
+  preselectedTargetLabel: "Verknüpftes Ziel",
+  createTargetAndLinkSchwerpunkt: "Ziel erstellen & verknüpfen",
+  targetCreatedFocusLinkFailed:
+    "Ziel wurde erstellt, die Verknüpfung als Schwerpunkt ist jedoch fehlgeschlagen.",
+  focusLinkRetry: "Schwerpunkt-Verknüpfung erneut versuchen",
 } as const;
 
 export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {

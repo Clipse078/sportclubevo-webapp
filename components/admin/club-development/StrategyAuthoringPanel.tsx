@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, Plus } from "lucide-react";
+import CreateTargetComposerDialog from "@/components/admin/targets/CreateTargetComposerDialog";
+import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
@@ -87,6 +89,8 @@ export default function StrategyAuthoringPanel({
   const [focusError, setFocusError] = useState<string | null>(null);
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
+  const [targetComposerOpen, setTargetComposerOpen] = useState(false);
+  const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     setFocusTargets(initial.focusTargets);
@@ -194,6 +198,42 @@ export default function StrategyAuthoringPanel({
           target: { id: target.id, title: target.title, status: target.status },
         },
       ]);
+      router.refresh();
+    });
+  };
+
+  const retryFocusLink = () => {
+    if (!focusLinkRetryTargetId) return;
+    setFocusError(null);
+    startFocus(async () => {
+      const res = await fetch("/api/club-development/club-strategy/focus-targets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetId: focusLinkRetryTargetId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFocusError(
+          typeof data.error === "string" ? data.error : CD_TARGET_COPY.focusLinkRetry,
+        );
+        return;
+      }
+      setFocusLinkRetryTargetId(null);
+      setFocusTargets((prev) => {
+        if (prev.some((f) => f.target.id === focusLinkRetryTargetId)) return prev;
+        return [
+          ...prev,
+          {
+            id: `local-${focusLinkRetryTargetId}`,
+            sortOrder: prev.length,
+            target: {
+              id: focusLinkRetryTargetId,
+              title: "Ziel",
+              status: "DRAFT",
+            },
+          },
+        ];
+      });
       router.refresh();
     });
   };
@@ -364,7 +404,21 @@ export default function StrategyAuthoringPanel({
           </h3>
           <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusHint}</p>
         </div>
-        {focusError ? <ClubDevelopmentFormError message={focusError} /> : null}
+        {focusError ? (
+          <div className="space-y-1">
+            <ClubDevelopmentFormError message={focusError} />
+            {focusLinkRetryTargetId ? (
+              <button
+                type="button"
+                className="text-xs font-medium text-[var(--sce-primary)] underline"
+                onClick={retryFocusLink}
+                disabled={pendingFocus}
+              >
+                {CD_TARGET_COPY.focusLinkRetry}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         {focusTargets.length === 0 ? (
           <p className="text-sm text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.focusEmpty}</p>
@@ -397,12 +451,56 @@ export default function StrategyAuthoringPanel({
         )}
 
         {canManage && editing ? (
-          <ClubDevelopmentTargetSearchPicker
-            excludeTargetIds={linkedTargetIds}
-            onSelect={addFocusTarget}
-            testId="strategy-focus-target-picker"
-          />
+          <div className="flex flex-wrap items-start gap-2">
+            <button
+              type="button"
+              onClick={() => setTargetComposerOpen(true)}
+              disabled={pendingFocus}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
+              data-testid="strategy-create-target-and-link"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {CD_TARGET_COPY.createTargetAndLinkSchwerpunkt}
+            </button>
+            <ClubDevelopmentTargetSearchPicker
+              excludeTargetIds={linkedTargetIds}
+              onSelect={addFocusTarget}
+              testId="strategy-focus-target-picker"
+            />
+          </div>
         ) : null}
+
+        <CreateTargetComposerDialog
+          open={targetComposerOpen}
+          onClose={() => setTargetComposerOpen(false)}
+          contextualFocus={{
+            onFinished: ({ targetId, title, linkOk, linkError }) => {
+              setTargetComposerOpen(false);
+              if (linkOk && targetId) {
+                setFocusError(null);
+                setFocusLinkRetryTargetId(null);
+                setFocusTargets((prev) => [
+                  ...prev,
+                  {
+                    id: `local-${targetId}`,
+                    sortOrder: prev.length,
+                    target: {
+                      id: targetId,
+                      title: title ?? "Ziel",
+                      status: "DRAFT",
+                    },
+                  },
+                ]);
+                router.refresh();
+                return;
+              }
+              if (targetId) {
+                setFocusLinkRetryTargetId(targetId);
+              }
+              setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
+            },
+          }}
+        />
       </section>
 
       <section
