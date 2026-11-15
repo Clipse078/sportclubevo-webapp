@@ -5,7 +5,11 @@ import { useCallback, useId, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
 import { meetingWorkspaceSectionDomId } from "@/lib/nav/meeting-workspace-tab-config";
-import { workspacePanelClass, workspaceSectionBodyClass } from "./meetingWorkspaceFieldClasses";
+import {
+  workspacePanelClass,
+  workspaceSectionBodyClass,
+  workspaceSectionHeaderClass,
+} from "./meetingWorkspaceFieldClasses";
 import { useMeetingWorkspaceSections } from "./MeetingWorkspaceSectionsContext";
 
 type Props = {
@@ -53,7 +57,7 @@ export default function MeetingWorkspaceCollapsibleSection({
       data-testid={`meeting-workspace-section-${sectionId}`}
       data-expanded={expanded ? "true" : "false"}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--border)]/60 px-4 py-3">
+      <div className={workspaceSectionHeaderClass}>
         <button
           type="button"
           className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"

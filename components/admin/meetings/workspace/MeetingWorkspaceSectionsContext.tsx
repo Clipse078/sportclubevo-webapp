@@ -11,8 +11,6 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useOptionalSceComposerDirtyClose } from "@/components/sce/composer/SceComposerDirtyCloseContext";
-import { useOptionalContextDirtyNavigation } from "@/lib/context-tabs";
 import {
   buildMeetingWorkspaceLocationHref,
   MEETING_WORKSPACE_LEGACY_BEREICH_PARAM,
@@ -71,9 +69,6 @@ type ProviderProps = {
 export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const dirtyNav = useOptionalContextDirtyNavigation();
-  const dirtyClose = useOptionalSceComposerDirtyClose();
-
   const bereichParam = useMemo(() => {
     if (searchParams instanceof URLSearchParams) {
       return searchParams.get(MEETING_WORKSPACE_LEGACY_BEREICH_PARAM);
@@ -186,43 +181,25 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
   const requestToggleSection = useCallback(
     (sectionId: MeetingWorkspaceTabId) => {
       const isExpanded = expandedSections.has(sectionId);
-      const collapse = () => {
+      if (isExpanded) {
         setExpandedSections((prev) => {
           const next = new Set(prev);
           next.delete(sectionId);
           return next;
         });
-      };
-      const expand = () => {
-        activateLazySection(sectionId);
-        setExpandedSections((prev) => {
-          const next = new Set(prev);
-          next.add(sectionId);
-          return next;
-        });
-        setHighlightedSection(sectionId);
-        pushSectionHash(sectionId);
-        requestAnimationFrame(() => scrollToSection(sectionId));
-      };
-
-      if (isExpanded) {
-        if (dirtyNav?.isDirty && dirtyClose) {
-          dirtyClose.requestClose(collapse);
-          return;
-        }
-        collapse();
         return;
       }
-      expand();
+      activateLazySection(sectionId);
+      setExpandedSections((prev) => {
+        const next = new Set(prev);
+        next.add(sectionId);
+        return next;
+      });
+      setHighlightedSection(sectionId);
+      pushSectionHash(sectionId);
+      requestAnimationFrame(() => scrollToSection(sectionId));
     },
-    [
-      activateLazySection,
-      dirtyClose,
-      dirtyNav?.isDirty,
-      expandedSections,
-      pushSectionHash,
-      scrollToSection,
-    ],
+    [activateLazySection, expandedSections, pushSectionHash, scrollToSection],
   );
 
   const registerSectionHeading = useCallback(
@@ -294,6 +271,26 @@ export function MeetingWorkspaceSectionsProvider({ children, counts }: ProviderP
       window.removeEventListener("meeting-workspace-navigate-tab", onNavigateTab);
     };
   }, [navigateToSection]);
+
+  useEffect(() => {
+    const navEl = navRef.current;
+    if (!navEl) return;
+
+    const syncScrollMargin = () => {
+      setScrollMarginPx(measureMeetingWorkspaceScrollOffset(navEl));
+    };
+    syncScrollMargin();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const appHeader = document.querySelector<HTMLElement>(".sce-global-app-header");
+    const resizeObserver = new ResizeObserver(syncScrollMargin);
+    resizeObserver.observe(navEl);
+    if (appHeader) {
+      resizeObserver.observe(appHeader);
+    }
+    return () => resizeObserver.disconnect();
+  }, [headingRegistrationTick]);
 
   useEffect(() => {
     const navEl = navRef.current;

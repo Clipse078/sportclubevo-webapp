@@ -15,12 +15,13 @@ describe("meeting workspace anchor section navigation", () => {
     expect(section).toContain("motion-reduce:transition-none");
   });
 
-  it("keeps section provider hash and popstate sync without exclusive tab panels", () => {
+  it("keeps section provider hash sync without exclusive tab panels", () => {
     const ctx = readSrc("components/admin/meetings/workspace/MeetingWorkspaceSectionsContext.tsx");
     expect(ctx).toContain("hashchange");
     expect(ctx).toContain("pushState");
     expect(ctx).toContain("IntersectionObserver");
-    expect(ctx).toContain("requestClose");
+    expect(ctx).toContain("ResizeObserver");
+    expect(ctx).not.toContain("requestClose");
     expect(ctx).not.toContain("router.push");
   });
 

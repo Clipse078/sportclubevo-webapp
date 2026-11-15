@@ -270,10 +270,9 @@ export default function MeetingPendenzenPanel({
       data-testid="meeting-section-pendenzen"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold text-[var(--foreground)]">Pendenzen</h2>
-          <p className="text-xs text-[var(--text-2)]">{openCountLabel}</p>
-        </div>
+        <p className="text-xs text-[var(--text-2)]" aria-live="polite">
+          {openCountLabel}
+        </p>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {refreshing ? (
             <span className="inline-flex items-center gap-1 text-[var(--muted)]" aria-live="polite">

@@ -33,8 +33,6 @@ import {
   workspaceInputClass,
   workspacePanelClass,
   workspacePrimaryButtonClass,
-  workspaceSectionBodyClass,
-  workspaceSectionHeaderClass,
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 
@@ -64,25 +62,23 @@ function ErrorBanner({ message }: { message: string | null }) {
   );
 }
 
-function SectionShell({
-  title,
+/** Body-only wrapper for stacked workspace sections (heading lives in collapsible shell). */
+function MeetingSectionBody({
   children,
-  action,
+  toolbar,
+  legacySectionId,
 }: {
-  title: string;
-  icon?: ReactNode;
   children: ReactNode;
-  action?: ReactNode;
+  toolbar?: ReactNode;
+  legacySectionId: string;
 }) {
-  const sectionId = meetingSectionDomId(title);
   return (
-    <section id={sectionId} className={workspacePanelClass} data-testid={sectionId}>
-      <div className={workspaceSectionHeaderClass}>
-        <h3 className="text-sm font-semibold text-[var(--foreground)]">{title}</h3>
-        {action}
-      </div>
-      <div className={workspaceSectionBodyClass}>{children}</div>
-    </section>
+    <div id={legacySectionId} className="min-w-0 space-y-3" data-testid={legacySectionId}>
+      {toolbar ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">{toolbar}</div>
+      ) : null}
+      {children}
+    </div>
   );
 }
 
@@ -162,7 +158,7 @@ export function MeetingAgendaSection({
   });
 
   return (
-    <SectionShell title="Traktanden">
+    <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">
         <span>
           Geplante Traktandenzeit: <strong className="text-[var(--foreground)]">{agendaTotalMin} min</strong>
@@ -228,7 +224,7 @@ export function MeetingAgendaSection({
           </button>
         </div>
       ) : null}
-    </SectionShell>
+    </MeetingSectionBody>
   );
 }
 
@@ -543,9 +539,9 @@ export function MeetingParticipantsSection({
   }
 
   return (
-    <SectionShell
-      title="Teilnehmer"
-      action={
+    <MeetingSectionBody
+      legacySectionId={meetingSectionDomId("Teilnehmer")}
+      toolbar={
         canManage ? (
           <button
             type="button"
@@ -616,7 +612,7 @@ export function MeetingParticipantsSection({
           </button>
         </div>
       ) : null}
-    </SectionShell>
+    </MeetingSectionBody>
   );
 }
 
@@ -675,9 +671,9 @@ export function MeetingDecisionsSection({
   }
 
   return (
-    <SectionShell
-      title="Beschlüsse"
-      action={
+    <MeetingSectionBody
+      legacySectionId={meetingSectionDomId("Beschlüsse")}
+      toolbar={
         documentationEditable ? (
           <button
             type="button"
@@ -763,7 +759,7 @@ export function MeetingDecisionsSection({
           </div>
         </div>
       ) : null}
-    </SectionShell>
+    </MeetingSectionBody>
   );
 }
 
@@ -1275,9 +1271,9 @@ export function MeetingActionsSection({
   }
 
   return (
-    <SectionShell
-      title="Massnahmen"
-      action={
+    <MeetingSectionBody
+      legacySectionId={meetingSectionDomId("Massnahmen")}
+      toolbar={
         canManage ? (
           <button
             type="button"
@@ -1357,7 +1353,7 @@ export function MeetingActionsSection({
           </div>
         </div>
       ) : null}
-    </SectionShell>
+    </MeetingSectionBody>
   );
 }
 
