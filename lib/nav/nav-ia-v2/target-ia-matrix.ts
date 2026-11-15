@@ -57,14 +57,9 @@ const CLUB_MEMBERSHIP_KEYS = new Set([
 const CLUB_DEVELOPMENT_KEYS = new Set([
   "club-entwicklung",
   "club-entwicklung-uebersicht",
-  "club-entwicklung-ziele",
+  "club-entwicklung-strategie-ziele",
+  "club-entwicklung-vorhaben-umsetzung",
   "club-entwicklung-sitzungen",
-  "club-entwicklung-vorhaben",
-  "club-entwicklung-initiativen",
-  "club-entwicklung-strategie",
-  "club-entwicklung-initiativen-backlog",
-  "club-entwicklung-sprints",
-  "club-entwicklung-prozesse",
 ]);
 
 const CLUB_OPERATIONS_KEYS = new Set([
@@ -374,13 +369,9 @@ export const CLUB_TARGET_L2_GROUPS = [
     keys: [
       "club-entwicklung",
       "club-entwicklung-uebersicht",
-      "club-entwicklung-strategie",
-      "club-entwicklung-ziele",
-      "club-entwicklung-initiativen-backlog",
-      "club-entwicklung-vorhaben",
-      "club-entwicklung-sprints",
+      "club-entwicklung-strategie-ziele",
+      "club-entwicklung-vorhaben-umsetzung",
       "club-entwicklung-sitzungen",
-      "club-entwicklung-prozesse",
     ],
   },
   {

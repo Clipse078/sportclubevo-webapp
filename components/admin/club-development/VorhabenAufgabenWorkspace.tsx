@@ -4,10 +4,12 @@ import Link from "next/link";
 import { ArrowRight, ExternalLink, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { InitiativeStatus, TaskStatus } from "@prisma/client";
+import { CD_VORHABEN_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import {
-  CD_NAV_COPY,
-  CD_VORHABEN_WORKSPACE_COPY,
-} from "@/lib/club-development/product-copy";
+  buildStrategieUndZieleHref,
+  buildVorhabenUndUmsetzungHref,
+  CD_WORKSPACE_PRIORITAETEN_QUERY,
+} from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import type {
   VorhabenWorkspaceInitiativeRow,
   VorhabenWorkspaceSnapshot,
@@ -205,22 +207,21 @@ export default function VorhabenAufgabenWorkspace({
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <NavShortcut
-          href="/vereinsleitung/strategie"
-          label={CD_NAV_COPY.strategyOverview}
+          href={buildStrategieUndZieleHref("ziele", { targetId: targetIdFilter || undefined })}
+          label="Strategie & Ziele"
           description={CD_VORHABEN_WORKSPACE_COPY.shortcutStrategy}
         />
         <NavShortcut
-          href={
-            targetIdFilter
-              ? `/vereinsleitung/initiativen/backlog?targetId=${encodeURIComponent(targetIdFilter)}`
-              : "/vereinsleitung/initiativen/backlog"
-          }
-          label={CD_NAV_COPY.initiativeBacklog}
+          href={buildVorhabenUndUmsetzungHref("vorhaben", {
+            targetId: targetIdFilter || undefined,
+            [CD_WORKSPACE_PRIORITAETEN_QUERY]: "1",
+          })}
+          label="Prioritäten"
           description={CD_VORHABEN_WORKSPACE_COPY.shortcutBacklog}
         />
         <NavShortcut
-          href="/vereinsleitung/sprints"
-          label={CD_NAV_COPY.implementationPlanning}
+          href={buildVorhabenUndUmsetzungHref("umsetzungsphasen")}
+          label="Umsetzungsphasen"
           description={CD_VORHABEN_WORKSPACE_COPY.shortcutSprints}
         />
         <NavShortcut
@@ -233,7 +234,10 @@ export default function VorhabenAufgabenWorkspace({
       {targetIdFilter ? (
         <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
           {CD_VORHABEN_WORKSPACE_COPY.targetFilterHint}{" "}
-          <Link href="/vereinsleitung/vorhaben" className="font-medium text-[var(--sce-primary)] hover:underline">
+          <Link
+            href={buildVorhabenUndUmsetzungHref("vorhaben")}
+            className="font-medium text-[var(--sce-primary)] hover:underline"
+          >
             Filter entfernen
           </Link>
         </p>

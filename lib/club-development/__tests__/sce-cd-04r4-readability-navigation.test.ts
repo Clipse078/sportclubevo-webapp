@@ -52,14 +52,16 @@ describe("SCE-CD-04R5 PKG-01 navigation copy", () => {
     expect(CD_NAV_COPY.strategyOverview).toBe("Strategie");
     expect(CD_OVERVIEW_SHORTCUT_COPY.strategyDescription).toMatch(/Fortschrittsübersicht/);
     expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
-      "/vereinsleitung/strategie",
+      "/vereinsleitung/strategie-und-ziele",
     );
-    expect(read("app/(admin)/vereinsleitung/strategie/page.tsx")).toContain("StrategyAuthoringPanel");
+    expect(read("app/(admin)/vereinsleitung/strategie/page.tsx")).toContain("redirect(");
     expect(read("components/admin/club-development/StrategyOverviewPanel.tsx")).toContain(
-      "targetId=",
+      "buildVorhabenUndUmsetzungHref",
     );
-    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).toContain("loadVorhabenWorkspace");
-    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).not.toContain("PKG-02");
+    expect(read("app/(admin)/vereinsleitung/vorhaben/page.tsx")).toContain("legacyVorhabenRedirect");
+    expect(read("app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx")).toContain(
+      "VorhabenUndUmsetzungWorkspaceClient",
+    );
   });
 });
 
@@ -81,13 +83,9 @@ describe("SCE-CD-04R4 mega-menu destination clarity", () => {
 
     expect(labels).toEqual([
       "Übersicht",
-      "Strategie",
-      "Pläne & Ziele",
-      "Vorhaben & Prioritäten",
-      "Vorhaben & Aufgaben",
-      "Umsetzungsplanung",
+      "Strategie & Ziele",
+      "Vorhaben & Umsetzung",
       "Sitzungen",
-      "Prozesse & Richtlinien",
     ]);
   });
 

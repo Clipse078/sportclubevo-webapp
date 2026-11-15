@@ -13,3 +13,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Contextual create/link on **Ziel** and **Strategie** parent surfaces must use **inline collapsible cards** (`SceClubDevelopmentContextualCreateCollapsibleShell`), not `Dialog` / `SceClubDevelopmentComposerShell` overlays.
 - Enforced via `SCE-DS-GOV-CONTEXTUAL-CREATE-001` and `lib/club-development/sce-contextual-create-governance.ts`.
 - List-workspace modal composers (`CreateTargetComposerDialog`, `/initiativen/new`) are unchanged until a separate migration.
+
+## Vereinsentwicklung workspace IA (PKG-05)
+
+- Main nav: **Übersicht**, **Strategie & Ziele** (`/vereinsleitung/strategie-und-ziele?ansicht=`), **Vorhaben & Umsetzung** (`/vereinsleitung/vorhaben-und-umsetzung?ansicht=`), **Sitzungen**. **Prozesse & Richtlinien** stays reachable at `/vereinsleitung/prozesse` but is not in the menu.
+- Legacy list routes (`/strategie`, `/targets`, `/vorhaben`, backlog, `/sprints`, `/initiativen`) redirect into consolidated workspaces; detail URLs unchanged.
+- Local view switches use `ansicht` query params and dirty-state discard via `VereinsentwicklungWorkspaceViewNav`.

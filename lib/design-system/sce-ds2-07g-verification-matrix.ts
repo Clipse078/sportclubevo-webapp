@@ -5468,34 +5468,6 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
-    "urlPattern": "/vereinsleitung/initiativen",
-    "sourceFile": "app/(admin)/vereinsleitung/initiativen/page.tsx",
-    "module": "vereinsleitung",
-    "requiredPermissions": [
-      "governance.view"
-    ],
-    "testPersona": "Vereinsleitung governance editor",
-    "pageArchetype": "list",
-    "intercept": false,
-    "parallelSlot": null,
-    "architectureAdoption": "IMPLEMENTED",
-    "automatedChecks": "PASSED",
-    "desktop": "VERIFIED",
-    "compactDesktop": "VERIFIED",
-    "tablet": "VERIFIED",
-    "mobile": "VERIFIED",
-    "accessibility": "PENDING",
-    "functional": "VERIFIED",
-    "authenticatedVisual": "PENDING",
-    "evidenceReferences": [
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-desktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-compactDesktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-tablet.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen-mobile.png"
-    ],
-    "defects": []
-  },
-  {
     "urlPattern": "/vereinsleitung/initiativen/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/initiativen/[slug]/page.tsx",
     "module": "vereinsleitung",
@@ -5549,29 +5521,6 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
       "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-tablet.png",
       "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_initiativen_edit-mobile.png"
     ],
-    "defects": []
-  },
-  {
-    "urlPattern": "/vereinsleitung/initiativen/backlog",
-    "sourceFile": "app/(admin)/vereinsleitung/initiativen/backlog/page.tsx",
-    "module": "vereinsleitung",
-    "requiredPermissions": [
-      "governance.view"
-    ],
-    "testPersona": "Vereinsleitung governance editor",
-    "pageArchetype": "list",
-    "intercept": false,
-    "parallelSlot": null,
-    "architectureAdoption": "IMPLEMENTED",
-    "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
-    "accessibility": "PENDING",
-    "functional": "PENDING",
-    "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
     "defects": []
   },
   {
@@ -5868,29 +5817,6 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
-    "urlPattern": "/vereinsleitung/sprints",
-    "sourceFile": "app/(admin)/vereinsleitung/sprints/page.tsx",
-    "module": "vereinsleitung",
-    "requiredPermissions": [
-      "governance.view"
-    ],
-    "testPersona": "Vereinsleitung governance editor",
-    "pageArchetype": "list",
-    "intercept": false,
-    "parallelSlot": null,
-    "architectureAdoption": "IMPLEMENTED",
-    "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
-    "accessibility": "PENDING",
-    "functional": "PENDING",
-    "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": []
-  },
-  {
     "urlPattern": "/vereinsleitung/sprints/[slug]",
     "sourceFile": "app/(admin)/vereinsleitung/sprints/[slug]/page.tsx",
     "module": "vereinsleitung",
@@ -5960,8 +5886,8 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
-    "urlPattern": "/vereinsleitung/strategie",
-    "sourceFile": "app/(admin)/vereinsleitung/strategie/page.tsx",
+    "urlPattern": "/vereinsleitung/strategie-und-ziele",
+    "sourceFile": "app/(admin)/vereinsleitung/strategie-und-ziele/page.tsx",
     "module": "vereinsleitung",
     "requiredPermissions": [
       "governance.view"
@@ -5980,34 +5906,6 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "functional": "PENDING",
     "authenticatedVisual": "PENDING",
     "evidenceReferences": [],
-    "defects": []
-  },
-  {
-    "urlPattern": "/vereinsleitung/targets",
-    "sourceFile": "app/(admin)/vereinsleitung/targets/page.tsx",
-    "module": "vereinsleitung",
-    "requiredPermissions": [
-      "governance.view"
-    ],
-    "testPersona": "Vereinsleitung governance editor",
-    "pageArchetype": "list",
-    "intercept": false,
-    "parallelSlot": null,
-    "architectureAdoption": "IMPLEMENTED",
-    "automatedChecks": "PASSED",
-    "desktop": "VERIFIED",
-    "compactDesktop": "VERIFIED",
-    "tablet": "VERIFIED",
-    "mobile": "VERIFIED",
-    "accessibility": "PENDING",
-    "functional": "VERIFIED",
-    "authenticatedVisual": "PENDING",
-    "evidenceReferences": [
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets-desktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets-compactDesktop.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets-tablet.png",
-      "/opt/cursor/artifacts/sce-ds2-07g/_vereinsleitung_targets-mobile.png"
-    ],
     "defects": []
   },
   {
@@ -6207,8 +6105,8 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
-    "urlPattern": "/vereinsleitung/vorhaben",
-    "sourceFile": "app/(admin)/vereinsleitung/vorhaben/page.tsx",
+    "urlPattern": "/vereinsleitung/vorhaben-und-umsetzung",
+    "sourceFile": "app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx",
     "module": "vereinsleitung",
     "requiredPermissions": [
       "governance.view"
@@ -6234,12 +6132,12 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-15T18:31:25.921Z",
-  "totalCanonicalRoutes": 224,
+  "generatedAt": "2026-11-15T18:53:08.423Z",
+  "totalCanonicalRoutes": 220,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 224,
+  "pendingAuthenticatedVisualCount": 220,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 224,
+  "automatedChecksPassedCount": 220,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
@@ -6259,6 +6157,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 224,
+  "entriesScanned": 220,
   "defects": []
 };

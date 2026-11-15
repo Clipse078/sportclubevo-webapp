@@ -2,10 +2,11 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
+import { formatLinkedInitiativeCount } from "@/lib/club-development/product-copy";
 import {
-  CD_NAV_COPY,
-  formatLinkedInitiativeCount,
-} from "@/lib/club-development/product-copy";
+  buildVorhabenUndUmsetzungHref,
+  CD_WORKSPACE_PRIORITAETEN_QUERY,
+} from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-presentation";
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import StrategyProgressIndicator from "./StrategyProgressIndicator";
@@ -71,10 +72,13 @@ export default function StrategyOverviewPanel({
                 </Link>
                 {target.linkedInitiativeCount > 0 ? (
                   <Link
-                    href={`/vereinsleitung/initiativen/backlog?targetId=${encodeURIComponent(target.id)}`}
+                    href={buildVorhabenUndUmsetzungHref("vorhaben", {
+                      targetId: target.id,
+                      [CD_WORKSPACE_PRIORITAETEN_QUERY]: "1",
+                    })}
                     className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
                   >
-                    {CD_NAV_COPY.initiativeBacklog}
+                    Vorhaben & Umsetzung
                     <ArrowRight className="h-3 w-3" />
                   </Link>
                 ) : null}

@@ -122,39 +122,18 @@ export default function ClubDevelopmentOverview({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <ModuleShortcut
-          title={CD_NAV_COPY.strategyOverview}
+          title="Strategie & Ziele"
           description={CD_OVERVIEW_SHORTCUT_COPY.strategyDescription}
-          href="/vereinsleitung/strategie"
+          href="/vereinsleitung/strategie-und-ziele"
           status="Verfügbar"
           icon={<LineChart className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
-          title="Pläne & Ziele"
-          description="Strategische Vereinsziele mit Kennzahlen und Review-Status."
-          href="/vereinsleitung/targets"
-          status="Verfügbar"
-          icon={<GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title={CD_NAV_COPY.initiativeBacklog}
-          description={CD_OVERVIEW_SHORTCUT_COPY.backlogDescription}
-          href="/vereinsleitung/initiativen/backlog"
-          status="Verfügbar"
-          icon={<ClipboardList className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title={CD_NAV_COPY.initiativesAndTasksHub}
+          title="Vorhaben & Umsetzung"
           description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
-          href="/vereinsleitung/vorhaben"
+          href="/vereinsleitung/vorhaben-und-umsetzung"
           status="Verfügbar"
           icon={<CheckSquare className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title={CD_NAV_COPY.implementationPlanning}
-          description={CD_OVERVIEW_SHORTCUT_COPY.sprintDescription}
-          href="/vereinsleitung/sprints"
-          status="Verfügbar"
-          icon={<Flag className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
           title="Sitzungen"
@@ -173,7 +152,11 @@ export default function ClubDevelopmentOverview({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionShell title="Relevante Ziele" href="/vereinsleitung/targets" linkLabel="Alle Ziele">
+        <SectionShell
+          title="Relevante Ziele"
+          href="/vereinsleitung/strategie-und-ziele?ansicht=ziele"
+          linkLabel="Alle Ziele"
+        >
           {targets.length === 0 ? (
             <EmptySection message="Keine aktiven Ziele sichtbar." />
           ) : (
@@ -209,7 +192,7 @@ export default function ClubDevelopmentOverview({
 
         <SectionShell
           title="Aktive Vorhaben"
-          href="/vereinsleitung/initiativen"
+          href="/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben"
           linkLabel="Alle Vorhaben"
         >
           {initiatives.length === 0 ? (

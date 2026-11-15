@@ -88,7 +88,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
         description={target.description ?? undefined}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
           { label: target.title },
         ]}
         headerBadge={

@@ -82,7 +82,7 @@ export default async function EditTargetPage({ params }: PageProps) {
         description={`Bearbeite: ${target.title}`}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
           { label: target.title, href: `/vereinsleitung/targets/${id}` },
           { label: "Bearbeiten" },
         ]}
