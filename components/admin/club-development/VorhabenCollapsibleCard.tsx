@@ -215,6 +215,23 @@ export default function VorhabenCollapsibleCard({
                     ))}
                   </ul>
                 )}
+                {panel.rootTasksTruncated && panel.allRootTasksHref ? (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-[11px] text-[var(--muted)]" data-testid="vorhaben-root-tasks-truncation">
+                      {CD_VORHABEN_WORKSPACE_COPY.rootTasksTruncationNotice(
+                        panel.rootTasks.length,
+                        panel.rootTaskTotalCount,
+                      )}
+                    </p>
+                    <Link
+                      href={panel.allRootTasksHref}
+                      className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
+                      data-testid="vorhaben-root-tasks-view-all"
+                    >
+                      {CD_VORHABEN_WORKSPACE_COPY.allRootTasksAction}
+                    </Link>
+                  </div>
+                ) : null}
                 <p className="mt-1 text-[11px] text-[var(--muted)]">
                   Nur Wurzel-Aufgaben — Unteraufgaben öffnen Sie in der Aufgabenansicht.
                 </p>

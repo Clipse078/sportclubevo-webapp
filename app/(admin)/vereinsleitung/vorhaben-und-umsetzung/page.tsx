@@ -3,6 +3,7 @@ import type { InitiativeStatus, TaskStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
+import { loadInitiativeDeliveryProgressPercentByIds } from "@/lib/club-development/initiative-delivery-progress";
 import { loadVorhabenWorkspace } from "@/lib/club-development/vorhaben-workspace";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
 import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
@@ -90,6 +91,14 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
         )
       : new Map();
 
+  const deliveryProgressById =
+    actor.tenantId && initiatives.length > 0
+      ? await loadInitiativeDeliveryProgressPercentByIds(
+          actor.tenantId,
+          initiatives.map((row) => row.id),
+        )
+      : new Map<string, number>();
+
   const initialInitiatives = initiatives.map((row) => ({
     id: row.id,
     slug: row.slug,
@@ -102,7 +111,7 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
     disposition: row.disposition,
     dueDate: row.dueDate?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
-    deliveryProgressPercent: Math.min(100, Math.max(0, row.progress ?? 0)),
+    deliveryProgressPercent: deliveryProgressById.get(row.id) ?? 0,
     nextMilestone: nextMilestoneById.get(row.id) ?? null,
   }));
 

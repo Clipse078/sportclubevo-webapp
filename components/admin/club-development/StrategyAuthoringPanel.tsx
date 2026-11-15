@@ -6,6 +6,7 @@ import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/Cr
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import { useRouter } from "next/navigation";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -13,6 +14,8 @@ import {
   type FormEventHandler,
   type ReactNode,
 } from "react";
+import type { ClubStrategyDocumentReferenceDto } from "@/lib/club-development/club-strategy-service";
+import { strategySupportingMaterialCounts } from "@/lib/club-development/initiative-delivery-progress-presentation";
 import type { ClubStrategyAuthoringDto } from "@/lib/club-development/club-strategy-service";
 import {
   formatStrategyDateLabel,
@@ -96,6 +99,8 @@ export default function StrategyAuthoringPanel({
   const [pendingFocus, startFocus] = useTransition();
   const [targetCreateExpanded, setTargetCreateExpanded] = useState(false);
   const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
+  const [supportingCounts, setSupportingCounts] = useState(() => strategySupportingMaterialCounts(initial));
+  const [documentReferences, setDocumentReferences] = useState(initial.documentReferences);
 
   useEffect(() => {
     setFocusTargets(initial.focusTargets);
@@ -119,7 +124,31 @@ export default function StrategyAuthoringPanel({
           : null,
       );
     }
+    if (!editing) {
+      setSupportingCounts(strategySupportingMaterialCounts(initial));
+      setDocumentReferences(initial.documentReferences);
+    }
   }, [initial, editing]);
+
+  const handleAssociationsSaved = useCallback(
+    (counts: { meetings: number; decisions: number }) => {
+      setSupportingCounts((prev) => ({
+        ...prev,
+        meetings: counts.meetings,
+        decisions: counts.decisions,
+      }));
+    },
+    [],
+  );
+
+  const handleDocumentReferencesChanged = useCallback(
+    (refs: ClubStrategyDocumentReferenceDto[]) => {
+      setDocumentReferences(refs);
+      const accessible = refs.filter((row) => row.presentation.accessible).length;
+      setSupportingCounts((prev) => ({ ...prev, documents: accessible }));
+    },
+    [],
+  );
 
   const linkedTargetIds = useMemo(() => focusTargets.map((f) => f.target.id), [focusTargets]);
 
@@ -130,15 +159,6 @@ export default function StrategyAuthoringPanel({
       overview: byId.get(row.target.id) ?? null,
     }));
   }, [focusTargets, targets]);
-
-  const supportingCounts = useMemo(
-    () => ({
-      meetings: initial.meetingRefs.length,
-      decisions: initial.decisionRefs.length,
-      documents: initial.documentReferences.length,
-    }),
-    [initial.decisionRefs.length, initial.documentReferences.length, initial.meetingRefs.length],
-  );
 
   const unsavedNarrative = useMemo(() => {
     if (!editing) return false;
@@ -518,7 +538,6 @@ export default function StrategyAuthoringPanel({
         documentCount={supportingCounts.documents}
       >
         <StrategyAssociationLinkEditor
-          key={`assoc-${initial.contentRevision}-${initial.meetingRefs.length}-${initial.decisionRefs.length}`}
           initialMeetingRefs={entityRefsFromAuthoring(initial.meetingRefs)}
           initialDecisionRefs={entityRefsFromAuthoring(initial.decisionRefs)}
           availableMeetings={availableMeetings}
@@ -526,13 +545,14 @@ export default function StrategyAuthoringPanel({
           canManage={canManage}
           editing={editing && canManage}
           compact
+          onAssociationsSaved={handleAssociationsSaved}
         />
         <StrategyDocumentReferencesSection
-          key={`docs-${initial.contentRevision}-${initial.documentReferences.length}`}
-          references={initial.documentReferences}
+          references={documentReferences}
           canManage={canManage}
           editing={editing && canManage}
           compact
+          onReferencesChanged={handleDocumentReferencesChanged}
         />
       </StrategySupportingMaterialsCard>
     </div>

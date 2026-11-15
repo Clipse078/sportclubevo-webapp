@@ -37,7 +37,12 @@ describe("PKG-05 expandable Vorhaben cards in Vorhaben & Umsetzung", () => {
 
   it("lazy-loads expanded panel via dedicated API (no eager full task tree)", () => {
     expect(read("lib/club-development/vorhaben-workspace-card.ts")).toContain("parentTaskId: null");
-    expect(read("lib/club-development/vorhaben-workspace-card.ts")).toContain("take: 40");
+    expect(read("lib/club-development/vorhaben-workspace-card.ts")).toContain(
+      "VORHABEN_WORKSPACE_ROOT_TASK_DISPLAY_LIMIT",
+    );
+    expect(read("components/admin/club-development/VorhabenCollapsibleCard.tsx")).toContain(
+      "vorhaben-root-tasks-truncation",
+    );
     expect(read("app/api/club-development/initiatives/[id]/workspace-panel/route.ts")).toContain(
       "loadVorhabenWorkspacePanel",
     );
@@ -63,7 +68,7 @@ describe("PKG-05 expandable Vorhaben cards in Vorhaben & Umsetzung", () => {
       summary: null,
       backlogPriority: 2,
       disposition: "NONE",
-      progress: 40,
+      deliveryProgressPercent: 40,
       nextMilestone: { title: "M1", targetDate: null },
     });
     const workspace = mapWorkspaceInitiativeToVorhabenCardSummary({
@@ -72,7 +77,7 @@ describe("PKG-05 expandable Vorhaben cards in Vorhaben & Umsetzung", () => {
       title: "Alpha",
       status: "IN_PROGRESS",
       statusLabel: "In Arbeit",
-      progress: 40,
+      deliveryProgressPercent: 40,
       detailHref: "/vereinsleitung/initiativen/alpha",
       ownerLabel: "Ada",
       nextMilestone: { title: "M1", targetDate: null },

@@ -89,6 +89,9 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   rootTasksOnly: "Nur übergeordnete Aufgaben — Unteraufgaben im Aufgaben-Arbeitsplatz.",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  rootTasksTruncationNotice: (shown: number, total: number) =>
+    `Es werden ${shown} von ${total} Wurzel-Aufgaben angezeigt.`,
+  allRootTasksAction: "Alle Wurzel-Aufgaben in Vorhaben & Aufgaben",
   noInitiativeAccess: "Keine Berechtigung zur Vorhaben-Ansicht.",
   noTaskAccess: "Keine Berechtigung zur Aufgaben-Ansicht.",
 } as const;

@@ -19,6 +19,7 @@ import {
   initiativeTaskAssociationOrFilters,
   resolveCanonicalInitiativeIdForTask,
 } from "@/lib/club-development/initiative-associated-tasks";
+import { initiativeDeliveryProgressPercentFromSnapshot } from "@/lib/club-development/initiative-delivery-progress";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
 import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
@@ -79,7 +80,7 @@ export type VorhabenWorkspaceInitiativeRow = {
   title: string;
   status: InitiativeStatus;
   statusLabel: string;
-  progress: number;
+  deliveryProgressPercent: number;
   ownerLabel: string | null;
   nextMilestone: VorhabenWorkspaceCardNextMilestone | null;
   summary: string | null;
@@ -322,7 +323,7 @@ export async function loadVorhabenWorkspace(
           title: row.title,
           status: row.status,
           statusLabel: INITIATIVE_STATUS_LABELS[row.status],
-          progress: snapshot.progress,
+          deliveryProgressPercent: initiativeDeliveryProgressPercentFromSnapshot(snapshot),
           ownerLabel: row.owner?.trim() || null,
           nextMilestone: nextMilestoneById.get(row.id) ?? null,
           summary: row.summary,

@@ -61,4 +61,7 @@ export type VorhabenWorkspacePanelSnapshot = {
   targetLinks: VorhabenWorkspacePanelTargetLink[];
   milestones: VorhabenWorkspacePanelMilestone[];
   rootTasks: VorhabenWorkspacePanelRootTask[];
+  rootTaskTotalCount: number;
+  rootTasksTruncated: boolean;
+  allRootTasksHref: string | null;
 };

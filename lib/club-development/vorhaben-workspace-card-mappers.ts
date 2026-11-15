@@ -1,4 +1,5 @@
 import type { InitiativeDisposition, InitiativeStatus } from "@prisma/client";
+import { initiativeDeliveryProgressPercentFromSnapshot } from "@/lib/club-development/initiative-delivery-progress-presentation";
 import {
   VORHABEN_WORKSPACE_CARD_STATUS_LABELS,
   type VorhabenWorkspaceCardSummary,
@@ -21,7 +22,7 @@ export function mapBacklogRowToVorhabenCardSummary(row: {
   summary: string | null;
   backlogPriority: number;
   disposition: InitiativeDisposition;
-  progress?: number | null;
+  deliveryProgressPercent: number;
   nextMilestone?: VorhabenWorkspaceCardNextMilestone | null;
 }): VorhabenWorkspaceCardSummary {
   return {
@@ -31,7 +32,9 @@ export function mapBacklogRowToVorhabenCardSummary(row: {
     status: row.status,
     statusLabel: VORHABEN_WORKSPACE_CARD_STATUS_LABELS[row.status],
     ownerLabel: row.owner?.trim() || null,
-    deliveryProgressPercent: Math.min(100, Math.max(0, row.progress ?? 0)),
+    deliveryProgressPercent: initiativeDeliveryProgressPercentFromSnapshot({
+      progress: row.deliveryProgressPercent,
+    }),
     nextMilestone: formatVorhabenCardMilestone(row.nextMilestone),
     detailHref: `/vereinsleitung/initiativen/${encodeURIComponent(row.slug)}`,
     summary: row.summary,
@@ -46,7 +49,7 @@ export function mapWorkspaceInitiativeToVorhabenCardSummary(row: {
   title: string;
   status: InitiativeStatus;
   statusLabel: string;
-  progress: number;
+  deliveryProgressPercent: number;
   detailHref: string;
   ownerLabel?: string | null;
   nextMilestone?: VorhabenWorkspaceCardNextMilestone | null;
@@ -59,7 +62,9 @@ export function mapWorkspaceInitiativeToVorhabenCardSummary(row: {
     status: row.status,
     statusLabel: row.statusLabel,
     ownerLabel: row.ownerLabel?.trim() || null,
-    deliveryProgressPercent: Math.min(100, Math.max(0, row.progress)),
+    deliveryProgressPercent: initiativeDeliveryProgressPercentFromSnapshot({
+      progress: row.deliveryProgressPercent,
+    }),
     nextMilestone: formatVorhabenCardMilestone(row.nextMilestone),
     detailHref: row.detailHref,
     summary: row.summary ?? null,

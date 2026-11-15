@@ -1,6 +1,6 @@
 import "server-only";
 
-import { TaskContextType, TaskStatus, InitiativeMilestoneStatus } from "@prisma/client";
+import { TaskContextType, TaskStatus, InitiativeMilestoneStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -11,6 +11,8 @@ import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
+import { VORHABEN_WORKSPACE_ROOT_TASK_DISPLAY_LIMIT } from "@/lib/club-development/initiative-delivery-progress";
+import { buildVorhabenUndUmsetzungHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import type { VorhabenWorkspacePanelSnapshot } from "./vorhaben-workspace-card-types";
 
 const MILESTONE_STATUS_LABELS: Record<InitiativeMilestoneStatus, string> = {
@@ -74,17 +76,28 @@ export async function loadVorhabenWorkspacePanel(
           : []),
       ];
 
-      const taskRows = await prisma.task.findMany({
-        where: {
-          tenantId: actor.tenantId,
-          parentTaskId: null,
-          status: { not: TaskStatus.CANCELLED },
-          AND: [buildTaskReadWhere(taskCtx)],
-          OR: orFilters,
-        },
-        select: { id: true, title: true, status: true },
-        orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
-        take: 40,
+      const rootTaskWhere: Prisma.TaskWhereInput = {
+        tenantId: actor.tenantId,
+        parentTaskId: null,
+        status: { not: TaskStatus.CANCELLED },
+        AND: [buildTaskReadWhere(taskCtx)],
+        OR: orFilters,
+      };
+
+      const [taskRows, rootTaskTotalCount] = await Promise.all([
+        prisma.task.findMany({
+          where: rootTaskWhere,
+          select: { id: true, title: true, status: true },
+          orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
+          take: VORHABEN_WORKSPACE_ROOT_TASK_DISPLAY_LIMIT,
+        }),
+        prisma.task.count({ where: rootTaskWhere }),
+      ]);
+
+      const rootTasksTruncated = rootTaskTotalCount > taskRows.length;
+      const allRootTasksHref = buildVorhabenUndUmsetzungHref("aufgaben", {
+        initiativeId,
+        returnTo,
       });
 
       rootTasks = taskRows.map((row) => ({
@@ -93,6 +106,30 @@ export async function loadVorhabenWorkspacePanel(
         statusLabel: TASK_STATUS_LABELS[row.status],
         href: taskWorkspaceHref(row.id, { returnTo }),
       }));
+
+      return {
+        initiativeId,
+        reviewStage: initiative.reviewStage ?? null,
+        canManageInitiatives,
+        canManageTasks,
+        canViewTasks,
+        editHref: `/vereinsleitung/initiativen/${encodeURIComponent(initiative.slug)}/edit`,
+        targetLinks: targetLinkRows.map((link) => ({
+          targetId: link.target.id,
+          title: link.target.title,
+          href: `/vereinsleitung/targets/${encodeURIComponent(link.target.id)}`,
+        })),
+        milestones: milestones.map((m) => ({
+          id: m.id,
+          title: m.title,
+          statusLabel: MILESTONE_STATUS_LABELS[m.status],
+          targetDate: m.targetDate?.toISOString() ?? null,
+        })),
+        rootTasks,
+        rootTaskTotalCount,
+        rootTasksTruncated,
+        allRootTasksHref,
+      };
     }
   }
 
@@ -115,5 +152,8 @@ export async function loadVorhabenWorkspacePanel(
       targetDate: m.targetDate?.toISOString() ?? null,
     })),
     rootTasks,
+    rootTaskTotalCount: 0,
+    rootTasksTruncated: false,
+    allRootTasksHref: null,
   };
 }

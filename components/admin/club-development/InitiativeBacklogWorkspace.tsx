@@ -80,8 +80,7 @@ function serializeRows(
     disposition: row.disposition,
     dueDate: row.dueDate?.toISOString() ?? null,
     updatedAt: row.updatedAt.toISOString(),
-    deliveryProgressPercent:
-      row.deliveryProgressPercent ?? Math.min(100, Math.max(0, row.progress ?? 0)),
+    deliveryProgressPercent: row.deliveryProgressPercent ?? 0,
     nextMilestone: row.nextMilestone ?? null,
   }));
 }
@@ -159,7 +158,7 @@ export default function InitiativeBacklogWorkspace({
       filteredRows.map((row) =>
         mapBacklogRowToVorhabenCardSummary({
           ...row,
-          progress: row.deliveryProgressPercent,
+          deliveryProgressPercent: row.deliveryProgressPercent,
           nextMilestone: row.nextMilestone,
         }),
       ),
