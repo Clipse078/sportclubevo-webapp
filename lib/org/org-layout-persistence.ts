@@ -90,10 +90,11 @@ export function expandCollapsedAncestors(
   collapsed: Set<string>,
 ): Set<string> {
   const next = new Set(collapsed);
+  let changed = false;
   for (const ancestorId of ancestorIdsForUnit(unitId, units)) {
-    next.delete(ancestorId);
+    if (next.delete(ancestorId)) changed = true;
   }
-  return next;
+  return changed ? next : collapsed;
 }
 
 export const ORG_LAYOUT_PERSISTENCE_MODEL = "CLIENT_LOCAL_STORAGE" as const;

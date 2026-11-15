@@ -26,4 +26,14 @@ describe("org-layout-persistence", () => {
     expect(next.has("root")).toBe(false);
     expect(next.has("child")).toBe(false);
   });
+
+  it("returns the same collapsed set when ancestors are already expanded", () => {
+    const units = [
+      { id: "root", parentId: null },
+      { id: "leaf", parentId: "root" },
+    ];
+    const collapsed = new Set<string>();
+    const next = expandCollapsedAncestors("leaf", units, collapsed);
+    expect(next).toBe(collapsed);
+  });
 });
