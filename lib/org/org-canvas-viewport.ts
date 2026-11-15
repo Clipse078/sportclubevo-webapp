@@ -12,8 +12,12 @@ export const ORG_CANVAS_DEFAULT_NODE_WIDTH = ORG_HIERARCHY_NODE_WIDTH;
 export const ORG_CANVAS_DEFAULT_NODE_HEIGHT = ORG_HIERARCHY_NODE_HEIGHT;
 export const ORG_CANVAS_MIN_SCALE = 0.45;
 export const ORG_CANVAS_MAX_SCALE = 1.75;
-/** Minimum on-screen node width when using fit-to-view (px). */
+/** Minimum on-screen node width when prioritising readable default framing (px). */
 export const ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH = 168;
+/** Organisation name font size on cards at 1× canvas scale (px). */
+export const ORG_CANVAS_NODE_NAME_FONT_PX = 14;
+/** Target minimum rendered organisation name size in the default framing (px). */
+export const ORG_CANVAS_LEGIBLE_MIN_NAME_PX = 14;
 
 export type OrgCanvasChromeInsets = {
   top?: number;
@@ -22,11 +26,13 @@ export type OrgCanvasChromeInsets = {
   left?: number;
 };
 
+export type OrgCanvasFitMode = "initial" | "fitAll";
+
 export type OrgContextualZoomLevel = "NORMAL" | "COMPACT" | "MICRO";
 
 export function getOrgContextualZoomLevel(scale: number): OrgContextualZoomLevel {
   if (scale < 0.52) return "MICRO";
-  if (scale < 0.78) return "COMPACT";
+  if (scale < 0.82) return "COMPACT";
   return "NORMAL";
 }
 
@@ -46,15 +52,19 @@ export type FitToViewInput = {
   minScale?: number;
   maxScale?: number;
   legibleMinScreenNodeWidth?: number;
+  legibleMinNamePx?: number;
+  nodeNameFontPx?: number;
+  /** initial = readable default framing; fitAll = show every visible node (may shrink). */
+  mode?: OrgCanvasFitMode;
 };
 
 export type FitToViewResult = {
   scale: number;
   panX: number;
   panY: number;
-  /** True when legibility guard prevented shrinking below readable node size. */
+  /** True when legibility guard prevented shrinking below readable size. */
   legibilityClamped: boolean;
-  /** True when hierarchy cannot fully fit at legible scale. */
+  /** True when hierarchy cannot fully fit at the chosen scale. */
   hierarchyOverflowsViewport: boolean;
 };
 
@@ -74,6 +84,9 @@ export function computeOrgCanvasFitToView(input: FitToViewInput): FitToViewResul
     minScale = ORG_CANVAS_MIN_SCALE,
     maxScale = ORG_CANVAS_MAX_SCALE,
     legibleMinScreenNodeWidth = ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+    legibleMinNamePx = ORG_CANVAS_LEGIBLE_MIN_NAME_PX,
+    nodeNameFontPx = ORG_CANVAS_NODE_NAME_FONT_PX,
+    mode = "fitAll",
   } = input;
 
   const cw = contentWidth ?? layoutWidth;
@@ -96,40 +109,63 @@ export function computeOrgCanvasFitToView(input: FitToViewInput): FitToViewResul
     };
   }
 
-  const fitScaleRaw = Math.min(
-    (innerVw - padding * 2) / cw,
-    (innerVh - padding * 2) / ch,
-    1,
-  );
+  const scaleToFitWidth = (innerVw - padding * 2) / cw;
+  const scaleToFitHeight = (innerVh - padding * 2) / ch;
+  const fitScaleBoth = Math.min(scaleToFitWidth, scaleToFitHeight, maxScale);
 
-  const legibleFloor = legibleMinScreenNodeWidth / nodeWidth;
-  let scale = fitScaleRaw;
+  let scale: number;
   let legibilityClamped = false;
 
-  const nodesUnreadableAtFit = fitScaleRaw * nodeWidth < legibleMinScreenNodeWidth - 0.5;
-  if (nodesUnreadableAtFit) {
-    const bumpedScale = Math.max(fitScaleRaw, legibleFloor);
-    const overflowsAtBumped =
-      cw * bumpedScale > innerVw - padding * 2 || ch * bumpedScale > innerVh - padding * 2;
-    if (overflowsAtBumped) {
-      scale = bumpedScale;
-      legibilityClamped = scale > fitScaleRaw + 0.001;
+  if (mode === "fitAll") {
+    scale = fitScaleBoth;
+  } else {
+    const legibleByNode = legibleMinScreenNodeWidth / nodeWidth;
+    const legibleByName = legibleMinNamePx / nodeNameFontPx;
+    const readableFloor = Math.max(legibleByNode, legibleByName);
+
+    const widthLimitsBelowReadable =
+      scaleToFitWidth <= scaleToFitHeight + 0.0001 && scaleToFitWidth < readableFloor - 0.001;
+
+    if (fitScaleBoth >= readableFloor - 0.001) {
+      scale = fitScaleBoth;
+    } else if (widthLimitsBelowReadable) {
+      scale = Math.min(maxScale, readableFloor);
+      legibilityClamped = true;
+    } else {
+      scale = Math.max(readableFloor, Math.min(scaleToFitHeight, maxScale));
+      legibilityClamped = scale > fitScaleBoth + 0.001;
     }
   }
 
-  scale = Math.max(minScale, Math.min(maxScale, scale));
+  if (mode === "fitAll") {
+    scale = Math.max(0.08, Math.min(maxScale, scale));
+  } else {
+    scale = Math.max(minScale, Math.min(maxScale, scale));
+  }
 
   const hierarchyOverflowsViewport =
-    cw * scale > innerVw - padding * 2 || ch * scale > innerVh - padding * 2;
+    cw * scale > innerVw - padding * 2 + 0.5 || ch * scale > innerVh - padding * 2 + 0.5;
 
   const panX = insetLeft + padding + (innerVw - padding * 2 - cw * scale) / 2 - boundsMinX * scale;
-  const panY = insetTop + padding + (innerVh - padding * 2 - ch * scale) / 2 - boundsMinY * scale;
+
+  const panY =
+    mode === "initial"
+      ? insetTop + padding - boundsMinY * scale
+      : insetTop + padding + (innerVh - padding * 2 - ch * scale) / 2 - boundsMinY * scale;
 
   return { scale, panX, panY, legibilityClamped, hierarchyOverflowsViewport };
 }
 
 export function clampOrgCanvasScale(scale: number): number {
   return Math.max(ORG_CANVAS_MIN_SCALE, Math.min(ORG_CANVAS_MAX_SCALE, scale));
+}
+
+/** Minimum scale so organisation names render at the legibility target. */
+export function orgCanvasReadableMinScale(
+  legibleMinNamePx = ORG_CANVAS_LEGIBLE_MIN_NAME_PX,
+  nodeNameFontPx = ORG_CANVAS_NODE_NAME_FONT_PX,
+): number {
+  return legibleMinNamePx / nodeNameFontPx;
 }
 
 /** Grid background position aligned to pan/zoom (design-tool style). */

@@ -4,6 +4,9 @@ import {
   getOrgContextualZoomLevel,
   ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
   ORG_CANVAS_DEFAULT_NODE_WIDTH,
+  ORG_CANVAS_NODE_NAME_FONT_PX,
+  ORG_CANVAS_LEGIBLE_MIN_NAME_PX,
+  orgCanvasReadableMinScale,
 } from "@/lib/org/org-canvas-viewport";
 import {
   filterValidReparentTargets,
@@ -11,7 +14,7 @@ import {
 } from "@/lib/org/org-hierarchy-layout";
 
 describe("org-canvas-viewport", () => {
-  it("accounts for chrome insets and content bounds when fitting", () => {
+  it("accounts for chrome insets and content bounds when fitting (fitAll)", () => {
     const result = computeOrgCanvasFitToView({
       viewportWidth: 1200,
       viewportHeight: 800,
@@ -23,12 +26,13 @@ describe("org-canvas-viewport", () => {
       contentHeight: 600,
       chromeInsets: { top: 52, right: 352 },
       nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
+      mode: "fitAll",
     });
     expect(result.scale).toBeGreaterThan(0);
     expect(result.panX).toBeLessThan(200);
   });
 
-  it("applies legibility guard only when large hierarchies overflow at readable scale", () => {
+  it("fitAll shrinks to show entire hierarchy even when names become small", () => {
     const result = computeOrgCanvasFitToView({
       viewportWidth: 800,
       viewportHeight: 600,
@@ -36,15 +40,36 @@ describe("org-canvas-viewport", () => {
       layoutHeight: 3000,
       nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
       legibleMinScreenNodeWidth: ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+      mode: "fitAll",
     });
-    expect(result.scale * ORG_CANVAS_DEFAULT_NODE_WIDTH).toBeGreaterThanOrEqual(
-      ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH - 1,
+    expect(result.scale * ORG_CANVAS_DEFAULT_NODE_WIDTH).toBeLessThan(
+      ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
     );
-    expect(result.legibilityClamped).toBe(true);
-    expect(result.hierarchyOverflowsViewport).toBe(true);
+    expect(result.hierarchyOverflowsViewport).toBe(false);
   });
 
-  it("does not force legibility zoom-in when the hierarchy already fits with slack", () => {
+  it("initial framing keeps readable scale and top-aligns without width-driven shrink", () => {
+    const wide = computeOrgCanvasFitToView({
+      viewportWidth: 900,
+      viewportHeight: 680,
+      layoutWidth: 3200,
+      layoutHeight: 420,
+      contentWidth: 2800,
+      contentHeight: 380,
+      nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
+      mode: "initial",
+    });
+    const readable = orgCanvasReadableMinScale();
+    expect(wide.scale).toBeGreaterThanOrEqual(readable - 0.01);
+    expect(wide.scale * ORG_CANVAS_NODE_NAME_FONT_PX).toBeGreaterThanOrEqual(
+      ORG_CANVAS_LEGIBLE_MIN_NAME_PX - 0.5,
+    );
+    expect(wide.legibilityClamped).toBe(true);
+    expect(wide.hierarchyOverflowsViewport).toBe(true);
+    expect(wide.panY).toBeLessThan(160);
+  });
+
+  it("initial framing uses height slack without forced zoom-in when already readable", () => {
     const result = computeOrgCanvasFitToView({
       viewportWidth: 1200,
       viewportHeight: 800,
@@ -54,9 +79,11 @@ describe("org-canvas-viewport", () => {
       contentHeight: 320,
       nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
       legibleMinScreenNodeWidth: ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+      mode: "initial",
     });
     expect(result.legibilityClamped).toBe(false);
     expect(result.hierarchyOverflowsViewport).toBe(false);
+    expect(result.scale).toBeGreaterThanOrEqual(orgCanvasReadableMinScale() - 0.02);
   });
 
   it("classifies contextual zoom levels", () => {

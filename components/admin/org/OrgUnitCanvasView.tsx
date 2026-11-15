@@ -18,6 +18,7 @@ import {
   computeOrgCanvasFitToView,
   getOrgContextualZoomLevel,
   orgCanvasGridBackgroundStyle,
+  orgCanvasReadableMinScale,
   ORG_CANVAS_MAX_SCALE,
   ORG_CANVAS_MIN_SCALE,
 } from "@/lib/org/org-canvas-viewport";
@@ -71,6 +72,8 @@ type Props = {
 
 const ORG_CANVAS_TOOLBAR_INSET_PX = 52;
 const ORG_INSPECTOR_INSET_PX = 352;
+/** Viewport ref is already below the toolbar and beside the inspector — no fit inset. */
+const ORG_CANVAS_FIT_CHROME_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
 
 type NodeDragState = {
   nodeId: string;
@@ -147,11 +150,23 @@ export default function OrgUnitCanvasView({
     return {
       nodes: layoutNodes,
       edges: autoLayout.edges,
-      width: Math.max(autoLayout.width, box.width),
-      height: Math.max(autoLayout.height, box.height),
+      width: box.width,
+      height: box.height,
       boundingBox: box,
+      contentOriginX: box.minX,
+      contentOriginY: box.minY,
     };
-  }, [layoutNodes, autoLayout.edges, autoLayout.width, autoLayout.height]);
+  }, [layoutNodes, autoLayout.edges]);
+
+  const layoutNodesInContent = useMemo(
+    () =>
+      layout.nodes.map((node) => ({
+        ...node,
+        x: node.x - layout.contentOriginX,
+        y: node.y - layout.contentOriginY,
+      })),
+    [layout.contentOriginX, layout.contentOriginY, layout.nodes],
+  );
 
   const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
   const contextualZoom = getOrgContextualZoomLevel(scale);
@@ -219,36 +234,39 @@ export default function OrgUnitCanvasView({
     [tenantId],
   );
 
-  const applyFitToView = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport || layout.nodes.length === 0) return;
-    const box = layout.boundingBox;
-    const result = computeOrgCanvasFitToView({
-      viewportWidth: viewport.clientWidth,
-      viewportHeight: viewport.clientHeight,
-      layoutWidth: layout.width,
-      layoutHeight: layout.height,
-      boundsMinX: box.minX,
-      boundsMinY: box.minY,
-      contentWidth: box.width,
-      contentHeight: box.height,
-      chromeInsets: {
-        top: ORG_CANVAS_TOOLBAR_INSET_PX,
-        right: selectedId ? ORG_INSPECTOR_INSET_PX : 0,
-      },
-    });
-    setScale(result.scale);
-    setPan({ x: result.panX, y: result.panY });
-  }, [layout, selectedId]);
+  const applyFitToView = useCallback(
+    (mode: "initial" | "fitAll" = "fitAll") => {
+      const viewport = viewportRef.current;
+      if (!viewport || layout.nodes.length === 0) return;
+      const box = layout.boundingBox;
+      const result = computeOrgCanvasFitToView({
+        viewportWidth: viewport.clientWidth,
+        viewportHeight: viewport.clientHeight,
+        layoutWidth: layout.width,
+        layoutHeight: layout.height,
+        boundsMinX: 0,
+        boundsMinY: 0,
+        contentWidth: box.width,
+        contentHeight: box.height,
+        chromeInsets: ORG_CANVAS_FIT_CHROME_INSETS,
+        mode,
+      });
+      setScale(result.scale);
+      setPan({ x: result.panX, y: result.panY });
+    },
+    [layout],
+  );
 
   const focusNodeLegible = useCallback(
     (id: string) => {
-      const node = layout.nodes.find((n) => n.id === id);
+      const node = layoutNodesInContent.find((n) => n.id === id);
       const viewport = viewportRef.current;
       if (!node || !viewport) return;
       const vw = viewport.clientWidth;
       const vh = viewport.clientHeight;
-      const targetScale = clampOrgCanvasScale(Math.max(scale, 0.85));
+      const targetScale = clampOrgCanvasScale(
+        Math.max(scale, orgCanvasReadableMinScale()),
+      );
       const cx = node.x + node.width / 2;
       const cy = node.y + node.height / 2;
       setScale(targetScale);
@@ -258,7 +276,7 @@ export default function OrgUnitCanvasView({
       });
       onSelectId(id);
     },
-    [layout.nodes, onSelectId, scale],
+    [layoutNodesInContent, onSelectId, scale],
   );
 
   useEffect(() => {
@@ -269,7 +287,7 @@ export default function OrgUnitCanvasView({
       if (didInitialFit.current) return;
       if (viewport.clientWidth < 1 || viewport.clientHeight < 1) return;
       didInitialFit.current = true;
-      applyFitToView();
+      applyFitToView("initial");
     };
 
     runInitialFit();
@@ -337,8 +355,8 @@ export default function OrgUnitCanvasView({
   };
 
   const connectorPath = (fromId: string, toId: string) => {
-    const from = layout.nodes.find((n) => n.id === fromId);
-    const to = layout.nodes.find((n) => n.id === toId);
+    const from = layoutNodesInContent.find((n) => n.id === fromId);
+    const to = layoutNodesInContent.find((n) => n.id === toId);
     if (!from || !to) return "";
     const x1 = from.x + from.width / 2;
     const y1 = from.y + from.height;
@@ -353,7 +371,7 @@ export default function OrgUnitCanvasView({
     persistManual({});
     orgHistory.pushAutoLayout({ before, apply: (map) => persistManual(map) });
     setAutoLayoutConfirmOpen(false);
-    requestAnimationFrame(() => applyFitToView());
+    requestAnimationFrame(() => applyFitToView("fitAll"));
   }
 
   function requestAutoLayout() {
@@ -523,7 +541,7 @@ export default function OrgUnitCanvasView({
             aria-label="Ansicht einpassen"
             title="Ansicht einpassen"
             data-testid="org-canvas-fit"
-            onClick={applyFitToView}
+            onClick={() => applyFitToView("fitAll")}
           >
             <Maximize2 className="h-4 w-4" aria-hidden />
             <span className="hidden sm:inline">Ansicht einpassen</span>
@@ -652,7 +670,9 @@ export default function OrgUnitCanvasView({
             })}
           </svg>
 
-          {layout.nodes.map((node) => {
+          {layoutNodesInContent.map((node) => {
+            const layoutNode = layout.nodes.find((n) => n.id === node.id);
+            if (!layoutNode) return null;
             const data = nodeDataById.get(node.id);
             if (!data) return null;
             const isDropTarget =
@@ -709,8 +729,8 @@ export default function OrgUnitCanvasView({
                     pointerId: e.pointerId,
                     startClientX: e.clientX,
                     startClientY: e.clientY,
-                    startX: node.x,
-                    startY: node.y,
+                    startX: layoutNode.x,
+                    startY: layoutNode.y,
                   });
                   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                 }}

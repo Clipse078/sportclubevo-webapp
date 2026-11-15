@@ -42,7 +42,7 @@ describe("SCE-ORG-READABILITY-01", () => {
     expect(ORG_CANVAS_DEFAULT_NODE_WIDTH).toBe(ORG_HIERARCHY_NODE_WIDTH);
   });
 
-  it("applies legibility floor only when the hierarchy overflows at readable scale", () => {
+  it("keeps initial framing readable while fit-all may shrink for very large trees", () => {
     const fitsWithSlack = computeOrgCanvasFitToView({
       viewportWidth: 1280,
       viewportHeight: 720,
@@ -52,25 +52,31 @@ describe("SCE-ORG-READABILITY-01", () => {
       contentHeight: 360,
       nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
       legibleMinScreenNodeWidth: ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+      mode: "initial",
     });
     expect(fitsWithSlack.legibilityClamped).toBe(false);
     expect(fitsWithSlack.hierarchyOverflowsViewport).toBe(false);
-    expect(fitsWithSlack.scale).toBeGreaterThan(
-      ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH / ORG_CANVAS_DEFAULT_NODE_WIDTH - 0.02,
-    );
 
-    const largeHierarchy = computeOrgCanvasFitToView({
+    const largeInitial = computeOrgCanvasFitToView({
       viewportWidth: 800,
       viewportHeight: 600,
       layoutWidth: 4000,
       layoutHeight: 3000,
       nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
       legibleMinScreenNodeWidth: ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
+      mode: "initial",
     });
-    expect(largeHierarchy.legibilityClamped).toBe(true);
-    expect(largeHierarchy.hierarchyOverflowsViewport).toBe(true);
-    expect(largeHierarchy.scale * ORG_CANVAS_DEFAULT_NODE_WIDTH).toBeGreaterThanOrEqual(
-      ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH - 1,
-    );
+    expect(largeInitial.legibilityClamped).toBe(true);
+    expect(largeInitial.hierarchyOverflowsViewport).toBe(true);
+
+    const largeFitAll = computeOrgCanvasFitToView({
+      viewportWidth: 800,
+      viewportHeight: 600,
+      layoutWidth: 4000,
+      layoutHeight: 3000,
+      nodeWidth: ORG_CANVAS_DEFAULT_NODE_WIDTH,
+      mode: "fitAll",
+    });
+    expect(largeFitAll.hierarchyOverflowsViewport).toBe(false);
   });
 });
