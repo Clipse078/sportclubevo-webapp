@@ -54,6 +54,7 @@ describe("SCE-CD-04R5 PKG-01 navigation copy", () => {
     expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
       "/vereinsleitung/strategie",
     );
+    expect(read("app/(admin)/vereinsleitung/strategie/page.tsx")).toContain("StrategyAuthoringPanel");
     expect(read("components/admin/club-development/StrategyOverviewPanel.tsx")).toContain(
       "targetId=",
     );

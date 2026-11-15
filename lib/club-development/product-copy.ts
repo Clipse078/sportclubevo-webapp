@@ -11,6 +11,38 @@ export const CD_NAV_COPY = {
   initiativesAndTasksHub: "Vorhaben & Aufgaben",
 } as const;
 
+/** PKG-05 — club strategy authoring (Strategie route). */
+export const CD_STRATEGY_AUTHORING_COPY = {
+  sectionTitle: "Clubstrategie",
+  sectionIntro:
+    "Kompakte Ausgangslage und Ausrichtung für den Verein. Schwerpunkte verweisen auf bestehende Ziele — Kennzahlen und Beschreibungen bleiben dort.",
+  situationLabel: "Ausgangslage",
+  situationPlaceholder: "Was ist für die aktuelle Vereinslage wesentlich?",
+  alignmentLabel: "Gemeinsame Ausrichtung",
+  alignmentPlaceholder: "Wohin soll sich der Verein entwickeln?",
+  responsibleLabel: "Verantwortliche Person",
+  unassignedResponsible: "Nicht zugewiesen",
+  periodLabel: "Strategieperiode (Bezeichnung)",
+  periodPlaceholder: "z. B. Saison 2026/27",
+  periodStartLabel: "Periode von",
+  periodEndLabel: "Periode bis",
+  nextReviewLabel: "Nächste Überprüfung",
+  saveAction: "Strategie speichern",
+  focusHeading: "Schwerpunkte",
+  focusHint: "Kurze Liste strategischer Ziele — ohne Zieltexte zu duplizieren.",
+  focusEmpty: "Noch keine Schwerpunkte verknüpft.",
+  meetingLinksHeading: "Verknüpfte Sitzungen & Entscheide",
+  documentsHeading: "Strategische Unterlagen",
+  documentsHint: "Leitbild, vereinbarte Strategiedokumente und ergänzende Workspace-Dokumente.",
+  documentsEmpty: "Noch keine Dokumente verknüpft.",
+  docKindLeitbild: "Leitbild",
+  docKindStrategy: "Vereinbarte Strategieunterlagen",
+  docKindSupporting: "Weitere Unterlagen",
+  progressHeading: "Umsetzungsfortschritt & Zielerreichung",
+  progressHint:
+    "Zielerreichung aus Kennzahlen; Umsetzungsfortschritt aus verknüpften Vorhaben — getrennt dargestellt.",
+} as const;
+
 /** PKG-01 — navigation hub copy (routes unchanged). */
 export const CD_OVERVIEW_SHORTCUT_COPY = {
   strategyDescription:

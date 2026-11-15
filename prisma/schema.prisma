@@ -1288,6 +1288,9 @@ model Tenant {
   developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
+  clubStrategy                     ClubStrategy?
+  clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
+  clubStrategyFocusTargets         ClubStrategyFocusTarget[]
   targets                          Target[]
   tasks                            Task[]
   taskAssignees                    TaskAssignee[]
@@ -1608,6 +1611,7 @@ model User {
   taskCommentMentionsReceived  TaskCommentMention[]   @relation("TaskCommentMentionUser")
   taskFollows                  TaskFollower[]         @relation("TaskFollowerUser")
   createdTaskDocumentReferences TaskDocumentReference[] @relation("TaskDocumentReferenceCreatedBy")
+  createdClubStrategyDocumentReferences ClubStrategyDocumentReference[] @relation("ClubStrategyDocumentReferenceCreatedBy")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
@@ -3406,6 +3410,78 @@ model ClubDevelopmentProcessApprovalVote {
 
   @@unique([processId, approverPersonId, contentRevision])
   @@index([tenantId, processId, contentRevision])
+}
+
+/// PKG-05 — tenant-scoped club strategy authoring (single row per tenant).
+model ClubStrategy {
+  id                    String   @id @default(cuid())
+  tenantId              String   @unique
+  situationText         String?
+  alignmentText         String?
+  responsiblePersonId   String?
+  responsibleLabel      String?
+  periodLabel           String?
+  periodStartsAt        DateTime?
+  periodEndsAt          DateTime?
+  nextReviewAt          DateTime?
+  linkedMeetingRefs     Json?
+  contentRevision       Int      @default(1)
+  createdByUserId       String?
+  updatedByUserId       String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant            Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  focusTargets      ClubStrategyFocusTarget[]
+  documentReferences ClubStrategyDocumentReference[]
+
+  @@index([tenantId])
+}
+
+enum ClubStrategyDocumentKind {
+  LEITBILD
+  STRATEGY_AGREED
+  SUPPORTING
+}
+
+model ClubStrategyFocusTarget {
+  id             String @id @default(cuid())
+  tenantId       String
+  clubStrategyId String
+  targetId       String
+  sortOrder      Int    @default(0)
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clubStrategy ClubStrategy @relation(fields: [clubStrategyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  target       Target       @relation(fields: [targetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([clubStrategyId, targetId])
+  @@index([tenantId])
+  @@index([clubStrategyId, sortOrder])
+}
+
+model ClubStrategyDocumentReference {
+  id                         String                              @id @default(cuid())
+  tenantId                   String
+  clubStrategyId             String
+  kind                       ClubStrategyDocumentKind
+  workspaceDocumentVersionId String
+  versionBinding             TaskDocumentReferenceVersionBinding   @default(EXACT)
+  documentId                 String?
+  createdByUserId            String?
+  createdAt                  DateTime                            @default(now())
+
+  tenant                   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clubStrategy             ClubStrategy              @relation(fields: [clubStrategyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  workspaceDocumentVersion WorkspaceDocumentVersion  @relation(fields: [workspaceDocumentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  document                 WorkspaceDocument?        @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy                User?                     @relation("ClubStrategyDocumentReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([clubStrategyId, workspaceDocumentVersionId])
+  @@index([tenantId])
+  @@index([clubStrategyId, kind])
+  @@index([tenantId, workspaceDocumentVersionId])
 }
 
 // ---------------------------------------------------------------------------
@@ -5739,6 +5815,7 @@ model Target {
   metrics TargetMetric[]
   tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   initiativeTargetLinks InitiativeTargetLink[]
+  clubStrategyFocusLinks ClubStrategyFocusTarget[]
 
   @@index([tenantId])
   @@index([category])
@@ -6612,6 +6689,7 @@ model WorkspaceDocument {
   versions                         WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersions")
   communicationAttachmentSnapshots CommunicationAttachment[]  @relation("CommunicationAttachmentSourceDocument")
   taskDocumentReferences           TaskDocumentReference[]
+  clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
   accessGrants                     WorkspaceAccessGrant[]     @relation("WorkspaceDocumentAccessGrants")
   favorites                        WorkspaceFavorite[]        @relation("WorkspaceDocumentFavorites")
   recentAccess                     WorkspaceRecentAccess[]    @relation("WorkspaceDocumentRecentAccess")
@@ -6909,6 +6987,7 @@ model WorkspaceDocumentVersion {
   currentForDocument               WorkspaceDocument?        @relation("WorkspaceDocumentCurrentVersion")
   communicationAttachmentSnapshots CommunicationAttachment[] @relation("CommunicationAttachmentSourceVersion")
   taskDocumentReferences           TaskDocumentReference[]
+  clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
   requirementDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementWorkspaceDocumentVersionReferences")
 
   createdByUser User? @relation("WorkspaceDocumentVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)

@@ -11,7 +11,7 @@ Product label **Strategiekonzeption & Dokumentation** denotes the composed workf
 |------|-----------------|----------|------|--------------|
 | 1 | Vereinsentwicklung **Übersicht** | `/vereinsleitung/club-entwicklung` | Live aggregates | **Navigation improved** — shortcuts to Strategie, Vorhaben & Prioritäten, Umsetzungsplanung, Vorhaben-Hub |
 | 2 | **Pläne & Ziele** (authoring) | `/vereinsleitung/targets`, detail, composer | `Target`, `TargetMetric`, datapoints | **Working** — create, edit, persist, revisit |
-| 3 | **Strategie** (progress lens) | `/vereinsleitung/strategie` | Rollup query | **Read-only overview** — links to Zieldetails and filtered Backlog; not strategy authoring |
+| 3 | **Strategie** (authoring + progress) | `/vereinsleitung/strategie` | `ClubStrategy`, focus links, doc refs + rollup query | **PKG-05 working** — club-wide Ausgangslage/Ausrichtung, Schwerpunkte→Ziele, Workspace-Unterlagen, progress panel below |
 | 4 | **Vorhaben & Prioritäten** | `/vereinsleitung/initiativen/backlog` | `Initiative` backlog fields | **Working** — `?targetId=` filter from Strategie |
 | 5 | **Vorhaben** list/detail | `/vereinsleitung/initiativen/*` | Initiatives, milestones, target links | **Working** |
 | 6 | **Vorhaben & Aufgaben** workspace | `/vereinsleitung/vorhaben` | Initiatives + linked root `Task` rows | **Working (PKG-02)** — filtered CD-WORK lens; API `GET /api/club-development/vorhaben-workspace`; tests in `vorhaben-workspace.test.ts` (manual PO UAT: PKG-03) |
@@ -24,24 +24,21 @@ Product label **Strategiekonzeption & Dokumentation** denotes the composed workf
 
 | Capability | Supported today | Gap |
 |------------|-----------------|-----|
-| Strategic **direction** (objectives) | `Target` title, description, category, scope via targets UI | No club-wide “strategy narrative” artifact separate from targets |
-| **Rationale** | Target/initiative text fields; meeting decisions | No dedicated persisted strategy rationale document |
-| **Kennzahlen** | `TargetMetric` + datapoints on target detail | Kennzahlen remain on Ziel — Strategie page is rollup only |
-| **Supporting documents** | Workspace documents on other domains; **Prozesse** demo | **Prozesse & Richtlinien** not persisted — documentation slice of label is open |
-| **Revisit / edit** | Full target & initiative lifecycles | Strategie route is read-only progress; edit via Pläne & Ziele or Vorhaben |
+| Strategic **direction** (objectives) | `Target` + **PKG-05 `ClubStrategy`** (Ausgangslage, Ausrichtung, Periode) | No SWOT/OKR modules; no AI authoring |
+| **Rationale** | Club strategy text + `linkedMeetingRefs` on `ClubStrategy` | Meeting-link editing UI minimal (API + read-only list); no new approval state on save |
+| **Kennzahlen** | `TargetMetric` on Ziel detail | Unchanged — Strategie rollup only |
+| **Supporting documents** | **PKG-05** `ClubStrategyDocumentReference` (Leitbild / vereinbart / supporting) with workspace visibility | **Prozesse & Richtlinien** (CD-PROCESS) still demo-only — out of PKG-05 scope |
+| **Revisit / edit** | Draft-friendly saves, `contentRevision` audit on narrative fields | No “agreed” label on save alone |
 
-**Conclusion:** Users can create, persist, edit and revisit **Ziele** and **Vorhaben** (including Einordnung, Erwartetes Ergebnis, Kennzahlen on targets). The **Strategie** screen is an **authoring-adjacent progress overview**, not a substitute for Strategiekonzeption authoring. Persisted **Richtlinien/Prozesse** documentation is the main missing slice of “Dokumentation”.
+**Conclusion (PKG-05):** `/vereinsleitung/strategie` is now **authoring + progress**: club narrative, Schwerpunkte by reference to Ziele, workspace doc links, then existing Zielerreichung/Umsetzungsfortschritt cards. **Prozesse** persistence remains deferred (CD-PROCESS).
 
-### Next package for missing functionality
+### PKG-05 residual gaps
 
-**PKG-05 — Strategiekonzeption authoring slice (proposed)**  
-Minimal scope aligned with CD-00 (documentation-first Prozesse later; no new framework):
-
-1. Extend **Target** detail with an optional **Strategische Begründung** (`rationale` or reuse description with labeled section) surfaced on Strategie cards (read-only mirror).
-2. Optional **Workspace document link** section on target detail (“Strategische Unterlagen”) using existing document links — no new blob store.
-3. Empty states on `/vereinsleitung/strategie` that point to **Pläne & Ziele** for authoring, not implying completion.
-
-Defer full **CD-PROCESS** until Prozesse persistence programme; do not block PKG-02/03 on PKG-05.
+| Gap | Notes |
+|-----|--------|
+| Meeting-ref editor on Strategie | PATCH API exists; full picker UX like Target `TargetLinkEditor` not ported |
+| PO UAT | Manual acceptance on preview/stage (PKG-03 track) |
+| Preview DB migration | `20261115150000_sce_cd_05_club_strategy_authoring` required on env before persistence works |
 
 ## Aufgaben & Unteraufgaben policy (Umsetzungsphasen)
 
@@ -73,4 +70,4 @@ Verified via designated scripts against canonical STAGE fingerprint `acd3b376829
 | ✓ | **PKG-02** | CD-WORK Vorhaben lens (replace hub) | — |
 | 3 | **PKG-03** | Authenticated PO UAT + optional `linkedInitiativeRefs` backfill | Migrations on preview tenant data |
 | 4 | **PKG-04** | Subtask-in-sprint policy (only if product requires) | Explicit requirement |
-| 5 | **PKG-05** | Strategiekonzeption authoring slice (rationale + doc links) | Optional parallel to PKG-02 |
+| ✓ | **PKG-05** | Club strategy authoring on Strategie route | Preview needs migration `20261115150000_sce_cd_05_club_strategy_authoring` |
