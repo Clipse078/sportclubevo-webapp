@@ -113,7 +113,7 @@ export default function OrgUnitNodeCard({
       data-testid={`org-unit-node-${unit.id}`}
       data-org-node-density={density}
       className={cn(
-        "group/org-node relative flex h-full w-full flex-col justify-start rounded-xl border px-3 py-2 text-left shadow-sm transition",
+        "group/org-node relative flex h-full w-full flex-col justify-start overflow-hidden rounded-xl border px-3 py-2 text-left shadow-sm transition",
         "bg-[var(--surface-2)]/95 backdrop-blur-[2px]",
         "border-[var(--border)] hover:border-[var(--border-strong)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-surface-muted)]",
@@ -137,7 +137,7 @@ export default function OrgUnitNodeCard({
           data-org-reparent-handle={unit.id}
           data-testid={`org-unit-reparent-handle-${unit.id}`}
           className={cn(
-            "absolute -left-2 top-3 z-10 cursor-grab rounded-md border border-[var(--border)] bg-[var(--surface-3)]/90 p-1 text-[var(--muted)] shadow-sm",
+            "absolute left-1 top-3 z-10 cursor-grab rounded-md border border-[var(--border)] bg-[var(--surface-3)]/90 p-1 text-[var(--muted)] shadow-sm",
             "opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100",
             "hover:border-[var(--sce-accent)]/50 hover:text-[var(--sce-accent)]",
             "focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)]",
