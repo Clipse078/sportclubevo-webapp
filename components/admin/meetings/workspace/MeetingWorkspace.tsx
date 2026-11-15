@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
-import {
-  MeetingWorkspaceDirtyStateSync,
-} from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
+import { MeetingWorkspaceDirtyStateSync } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
 import MeetingWorkspaceStatusBar from "@/components/admin/meetings/workspace/MeetingWorkspaceStatusBar";
 import MeetingWorkspaceSectionNav from "@/components/admin/meetings/workspace/MeetingWorkspaceSectionNav";
+import MeetingWorkspaceCollapsibleSection from "@/components/admin/meetings/workspace/MeetingWorkspaceCollapsibleSection";
 import MeetingWorkspaceDetailsSection from "@/components/admin/meetings/workspace/MeetingWorkspaceDetailsSection";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import { canEditMeetingDocumentation } from "@/lib/meetings/meeting-workspace-lock";
@@ -17,12 +16,29 @@ import {
   MeetingParticipantsSection,
 } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import MeetingPendenzenPanel from "@/components/admin/meetings/workspace/MeetingPendenzenPanel";
+import SceClubDevelopmentSectionShell from "@/components/admin/club-development/SceClubDevelopmentSectionShell";
+import { CD_MEETINGS_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { PendenzListItem } from "@/lib/meetings/meeting-pendenzen";
 import { countOpenPendenzen, countOverduePendenzen, mergeMeetingPendenzen } from "@/lib/meetings/meeting-pendenzen";
 import { MEETING_ACTION_STATUS_LABEL } from "@/lib/meetings/meeting-protocol-labels";
+import {
+  formatMeetingWorkspaceTabLabel,
+  MEETING_WORKSPACE_SECTION_ORDER,
+} from "@/lib/nav/meeting-workspace-tab-config";
+import { LEGACY_MEETING_SECTION_HASH_TO_TAB } from "@/lib/meetings/meeting-workspace-section-url";
 import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
+import { formatMeetingParticipantsCollapsedPreview } from "@/lib/meetings/meeting-participant-preview";
 import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
+import type { ReactNode } from "react";
+
+const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
+  "meeting-section-teilnehmer": "meeting-participants-add-toggle",
+  "meeting-section-beschlüsse": "meeting-decision-create-toggle",
+  "meeting-section-beschluesse": "meeting-decision-create-toggle",
+  "meeting-section-pendenzen": "meeting-action-create-toggle",
+  "meeting-section-massnahmen": "meeting-action-create-toggle",
+};
 
 type MeetingWorkspaceProps = {
   title: string;
@@ -37,15 +53,6 @@ type MeetingWorkspaceProps = {
   initialPendenzenOpenCount?: number;
   initialPendenzenOverdueCount?: number;
   canDelete?: boolean;
-};
-
-const SECTION_TO_TAB: Record<string, MeetingWorkspaceTabId> = {
-  "meeting-section-traktanden": "traktanden",
-  "meeting-section-beschlüsse": "beschluesse",
-  "meeting-section-teilnehmer": "teilnehmer",
-  "meeting-section-pendenzen": "pendenzen",
-  "meeting-section-massnahmen": "pendenzen",
-  "meeting-section-aufgaben": "pendenzen",
 };
 
 export default function MeetingWorkspace({
@@ -71,11 +78,6 @@ export default function MeetingWorkspace({
   const [pendenzenOpenCount, setPendenzenOpenCount] = useState(initialPendenzenOpenCount);
   const [pendenzenOverdueCount, setPendenzenOverdueCount] = useState(initialPendenzenOverdueCount);
   const [pendenzenRefresh, setPendenzenRefresh] = useState(0);
-
-  useEffect(() => {
-    setPendenzenOpenCount(initialPendenzenOpenCount);
-    setPendenzenOverdueCount(initialPendenzenOverdueCount);
-  }, [initialPendenzenOpenCount, initialPendenzenOverdueCount]);
 
   const applyPendenzenSnapshot = useCallback(
     (data: {
@@ -123,27 +125,6 @@ export default function MeetingWorkspace({
     [meeting.id, meeting.meetingDate, meeting.title, slug],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch(`/api/meetings/${meeting.id}/pendenzen`);
-        const data = await res.json();
-        if (cancelled || !res.ok) return;
-        applyPendenzenSnapshot({
-          openCount: typeof data.openCount === "number" ? data.openCount : 0,
-          overdueCount: typeof data.overdueCount === "number" ? data.overdueCount : 0,
-          items: Array.isArray(data.items) ? data.items : [],
-        });
-      } catch {
-        // keep SSR counts
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [applyPendenzenSnapshot, meeting.id, pendenzenRefresh]);
-
   const documentationEditable = canEditMeetingDocumentation({
     status: meeting.status,
     reviewStage: meeting.reviewStage,
@@ -152,10 +133,19 @@ export default function MeetingWorkspace({
   const effectiveCanManage = canManage && documentationEditable;
 
   const navigateToSection = useCallback((sectionId: string) => {
-    const tab = SECTION_TO_TAB[sectionId];
+    const tab: MeetingWorkspaceTabId | undefined =
+      LEGACY_MEETING_SECTION_HASH_TO_TAB[sectionId] ??
+      (sectionId.startsWith("meeting-workspace-section-")
+        ? (sectionId.replace("meeting-workspace-section-", "") as MeetingWorkspaceTabId)
+        : undefined);
     if (tab) {
       window.dispatchEvent(
-        new CustomEvent("meeting-workspace-navigate-tab", { detail: { tab } }),
+        new CustomEvent("meeting-workspace-navigate-tab", {
+          detail: {
+            tab,
+            openControlTestId: LEGACY_SECTION_INLINE_CONTROL[sectionId],
+          },
+        }),
       );
     }
   }, []);
@@ -198,129 +188,171 @@ export default function MeetingWorkspace({
   const displayPendenzenOpenCount = countOpenPendenzen(mergedPendenzenForBadge);
   const displayPendenzenOverdueCount = countOverduePendenzen(mergedPendenzenForBadge);
 
+  const sectionCounts = useMemo(
+    () => ({
+      traktanden: agendaItems.length,
+      beschluesse: decisions.length,
+      pendenzenOpen: displayPendenzenOpenCount,
+      teilnehmer: participants.length,
+    }),
+    [
+      agendaItems.length,
+      decisions.length,
+      displayPendenzenOpenCount,
+      participants.length,
+    ],
+  );
+
+  const sectionLabels = useMemo(() => {
+    return Object.fromEntries(
+      MEETING_WORKSPACE_SECTION_ORDER.map((key) => [
+        key,
+        formatMeetingWorkspaceTabLabel(key, sectionCounts),
+      ]),
+    ) as Record<MeetingWorkspaceTabId, string>;
+  }, [sectionCounts]);
+
+  const teilnehmerCollapsedPreview = useMemo(
+    () => formatMeetingParticipantsCollapsedPreview(participants.map((p) => p.name)),
+    [participants],
+  );
+
   return (
     <>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
       <div className="space-y-4" data-testid="meeting-workspace">
-        <MeetingWorkspaceHeader
-          title={title}
-          meeting={meeting}
-          slug={slug}
-          canManage={effectiveCanManage}
-          fmtCfg={fmtCfg}
-          agendaCount={agendaItems.length}
-          participantCount={participants.length}
-          decisionCount={decisions.length}
-          actionCount={actions.length}
-          pendingDecisionApprovals={pendingDecisionApprovals}
-          hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
-          onNavigateToSection={navigateToSection}
-        />
-
-        <MeetingWorkspaceStatusBar
-          meeting={meeting}
-          canManage={canManage}
-          canDelete={canDelete}
-          participants={participants}
-          agendaItems={agendaItems}
-          decisions={decisions}
-          actions={actions}
-          slug={slug}
-          openPendenzenCount={displayPendenzenOpenCount}
-          overduePendenzenCount={displayPendenzenOverdueCount}
-        />
-
-        <MeetingWorkspaceSectionNav
-          counts={{
-            traktanden: agendaItems.length,
-            beschluesse: decisions.length,
-            pendenzenOpen: displayPendenzenOpenCount,
-            teilnehmer: participants.length,
-          }}
+        <SceClubDevelopmentSectionShell
+          title={CD_MEETINGS_WORKSPACE_COPY.summarySectionTitle}
+          bodyClassName="p-4 space-y-2"
+          testId="meeting-workspace-summary"
         >
-          {(activeTab) => (
-            <>
-              {activeTab === "traktanden" ? (
-                <MeetingAgendaSection
-                  meetingId={meeting.id}
-                  meetingPlannedDurationMin={meeting.plannedDurationMin}
-                  canManage={effectiveCanManage}
-                  items={agendaItems}
-                  decisions={decisions}
-                  onItemsChange={setAgendaItems}
-                  onDecisionsChange={setDecisions}
-                  onDirtyChange={setIsDirty}
-                />
-              ) : null}
-              {activeTab === "beschluesse" ? (
-                <MeetingDecisionsSection
-                  meetingId={meeting.id}
-                  meetingSlug={slug}
-                  meetingStatus={meeting.status}
-                  canManage={canManage}
-                  documentationEditable={effectiveCanManage}
-                  actorPersonId={actorPersonId}
-                  approvalWorkspaceData={approvalWorkspaceData}
-                  agendaItems={agendaItems}
-                  items={decisions}
-                  onItemsChange={setDecisions}
-                />
-              ) : null}
-              {activeTab === "pendenzen" ? (
-                <MeetingPendenzenPanel
-                  meetingId={meeting.id}
-                  meetingTitle={meeting.title}
-                  meetingSlug={slug}
-                  meetingDate={meeting.meetingDate}
-                  canManage={effectiveCanManage}
-                  actions={actions}
-                  onActionsChange={(next) => {
-                    setActions(next);
-                    setPendenzenRefresh((n) => n + 1);
-                  }}
-                  relatedTasksCreateSlot={relatedTasksPanel}
-                  refreshToken={pendenzenRefresh}
-                  onSnapshot={(snapshot) => {
-                    applyPendenzenSnapshot({
-                      openCount: snapshot.openCount,
-                      overdueCount: snapshot.overdueCount,
-                      items: snapshot.items.map((i) => ({
-                        sourceKind: i.sourceKind,
-                        sourceId: i.sourceId,
-                        title: i.title,
-                        description: i.description,
-                        deadline: i.deadline?.toISOString() ?? null,
-                        status: i.status,
-                        statusLabel: i.statusLabel,
-                        ownerLabel: i.ownerLabel,
-                        contextReference: i.contextReference,
-                        meetingDate: i.meetingDate.toISOString(),
-                      })),
-                    });
-                  }}
-                />
-              ) : null}
-              {activeTab === "teilnehmer" ? (
-                <MeetingParticipantsSection
-                  meetingId={meeting.id}
-                  canManage={effectiveCanManage}
-                  items={participants}
-                  onItemsChange={setParticipants}
-                  onDirtyChange={setIsDirty}
-                />
-              ) : null}
-              {activeTab === "details" ? (
-                <MeetingWorkspaceDetailsSection
-                  meeting={meeting}
-                  slug={slug}
-                  canManage={canManage}
-                  actorPersonId={actorPersonId}
-                  approvalWorkspaceData={approvalWorkspaceData}
-                  fmtCfg={fmtCfg}
-                />
-              ) : null}
-            </>
-          )}
+          <MeetingWorkspaceHeader
+            title={title}
+            meeting={meeting}
+            slug={slug}
+            canManage={effectiveCanManage}
+            fmtCfg={fmtCfg}
+            agendaCount={agendaItems.length}
+            participantCount={participants.length}
+            decisionCount={decisions.length}
+            actionCount={actions.length}
+            pendingDecisionApprovals={pendingDecisionApprovals}
+            hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
+            onNavigateToSection={navigateToSection}
+          />
+
+          <MeetingWorkspaceStatusBar
+            meeting={meeting}
+            canManage={canManage}
+            canDelete={canDelete}
+            participants={participants}
+            agendaItems={agendaItems}
+            decisions={decisions}
+            actions={actions}
+            slug={slug}
+            openPendenzenCount={displayPendenzenOpenCount}
+            overduePendenzenCount={displayPendenzenOverdueCount}
+          />
+        </SceClubDevelopmentSectionShell>
+
+        <MeetingWorkspaceSectionNav counts={sectionCounts}>
+          <MeetingWorkspaceCollapsibleSection
+            sectionId="teilnehmer"
+            title={sectionLabels.teilnehmer}
+            collapsedPreview={teilnehmerCollapsedPreview}
+          >
+            <MeetingParticipantsSection
+              meetingId={meeting.id}
+              canManage={effectiveCanManage}
+              items={participants}
+              onItemsChange={setParticipants}
+              onDirtyChange={setIsDirty}
+            />
+          </MeetingWorkspaceCollapsibleSection>
+
+          <MeetingWorkspaceCollapsibleSection
+            sectionId="traktanden"
+            title={sectionLabels.traktanden}
+          >
+            <MeetingAgendaSection
+              meetingId={meeting.id}
+              meetingPlannedDurationMin={meeting.plannedDurationMin}
+              canManage={effectiveCanManage}
+              items={agendaItems}
+              decisions={decisions}
+              onItemsChange={setAgendaItems}
+              onDecisionsChange={setDecisions}
+              onDirtyChange={setIsDirty}
+            />
+          </MeetingWorkspaceCollapsibleSection>
+
+          <MeetingWorkspaceCollapsibleSection
+            sectionId="beschluesse"
+            title={sectionLabels.beschluesse}
+          >
+            <MeetingDecisionsSection
+              meetingId={meeting.id}
+              meetingSlug={slug}
+              meetingStatus={meeting.status}
+              canManage={canManage}
+              documentationEditable={effectiveCanManage}
+              actorPersonId={actorPersonId}
+              approvalWorkspaceData={approvalWorkspaceData}
+              agendaItems={agendaItems}
+              items={decisions}
+              onItemsChange={setDecisions}
+            />
+          </MeetingWorkspaceCollapsibleSection>
+
+          <MeetingWorkspaceCollapsibleSection
+            sectionId="pendenzen"
+            title={sectionLabels.pendenzen}
+            lazy
+          >
+            <MeetingPendenzenPanel
+              meetingId={meeting.id}
+              meetingTitle={meeting.title}
+              meetingSlug={slug}
+              meetingDate={meeting.meetingDate}
+              canManage={effectiveCanManage}
+              actions={actions}
+              onActionsChange={(next) => {
+                setActions(next);
+                setPendenzenRefresh((n) => n + 1);
+              }}
+              relatedTasksCreateSlot={relatedTasksPanel}
+              refreshToken={pendenzenRefresh}
+              onSnapshot={(snapshot) => {
+                applyPendenzenSnapshot({
+                  openCount: snapshot.openCount,
+                  overdueCount: snapshot.overdueCount,
+                  items: snapshot.items.map((i) => ({
+                    sourceKind: i.sourceKind,
+                    sourceId: i.sourceId,
+                    title: i.title,
+                    description: i.description,
+                    deadline: i.deadline?.toISOString() ?? null,
+                    status: i.status,
+                    statusLabel: i.statusLabel,
+                    ownerLabel: i.ownerLabel,
+                    contextReference: i.contextReference,
+                    meetingDate: i.meetingDate.toISOString(),
+                  })),
+                });
+              }}
+            />
+          </MeetingWorkspaceCollapsibleSection>
+
+          <MeetingWorkspaceCollapsibleSection sectionId="details" title={sectionLabels.details}>
+            <MeetingWorkspaceDetailsSection
+              meeting={meeting}
+              slug={slug}
+              canManage={canManage}
+              actorPersonId={actorPersonId}
+              approvalWorkspaceData={approvalWorkspaceData}
+              fmtCfg={fmtCfg}
+            />
+          </MeetingWorkspaceCollapsibleSection>
         </MeetingWorkspaceSectionNav>
       </div>
     </>

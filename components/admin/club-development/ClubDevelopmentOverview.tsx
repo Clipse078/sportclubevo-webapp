@@ -9,10 +9,10 @@ import {
   LineChart,
   Workflow,
 } from "lucide-react";
-import {
-  CD_NAV_COPY,
-  CD_OVERVIEW_SHORTCUT_COPY,
-} from "@/lib/club-development/product-copy";
+import { CD_OVERVIEW_SHORTCUT_COPY } from "@/lib/club-development/product-copy";
+import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
+import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
 import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
@@ -72,42 +72,6 @@ function formatSwissDate(date: Date) {
   }).format(new Date(date));
 }
 
-function EmptySection({ message }: { message: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-6 text-center text-sm text-[var(--muted)]">
-      {message}
-    </div>
-  );
-}
-
-function SectionShell({
-  title,
-  href,
-  linkLabel,
-  children,
-}: {
-  title: string;
-  href: string;
-  linkLabel: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xs)] overflow-hidden">
-      <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">{title}</h2>
-        <Link
-          href={href}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
-        >
-          {linkLabel}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-      <div className="p-5 space-y-3">{children}</div>
-    </section>
-  );
-}
-
 export default function ClubDevelopmentOverview({
   targets,
   initiatives,
@@ -122,50 +86,26 @@ export default function ClubDevelopmentOverview({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <ModuleShortcut
-          title={CD_NAV_COPY.strategyOverview}
+          title="Strategie & Ziele"
           description={CD_OVERVIEW_SHORTCUT_COPY.strategyDescription}
-          href="/vereinsleitung/strategie"
-          status="Verfügbar"
+          href="/vereinsleitung/strategie-und-ziele"
           icon={<LineChart className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
-          title="Pläne & Ziele"
-          description="Strategische Vereinsziele mit Kennzahlen und Review-Status."
-          href="/vereinsleitung/targets"
-          status="Verfügbar"
-          icon={<GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title={CD_NAV_COPY.initiativeBacklog}
-          description={CD_OVERVIEW_SHORTCUT_COPY.backlogDescription}
-          href="/vereinsleitung/initiativen/backlog"
-          status="Verfügbar"
-          icon={<ClipboardList className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title={CD_NAV_COPY.initiativesAndTasksHub}
+          title="Vorhaben & Umsetzung"
           description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
-          href="/vereinsleitung/vorhaben"
-          status="Verfügbar"
+          href="/vereinsleitung/vorhaben-und-umsetzung"
           icon={<CheckSquare className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
-          title={CD_NAV_COPY.implementationPlanning}
-          description={CD_OVERVIEW_SHORTCUT_COPY.sprintDescription}
-          href="/vereinsleitung/sprints"
-          status="Verfügbar"
-          icon={<Flag className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
           title="Sitzungen"
-          description="Meetings planen, Protokoll und Massnahmen verfolgen."
+          description="Sitzungen planen, Protokoll und Massnahmen verfolgen."
           href="/vereinsleitung/meetings"
-          status="Verfügbar"
           icon={<CalendarDays className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
           title="Prozesse & Richtlinien"
-          description="Dokumentierte Abläufe — Persistenz und Freigabe folgen."
+          description="Dokumentierte Vereinsabläufe und Richtlinien."
           href="/vereinsleitung/prozesse"
           status="Demnächst"
           icon={<Workflow className="h-4 w-4 text-[var(--muted)]" />}
@@ -173,9 +113,13 @@ export default function ClubDevelopmentOverview({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionShell title="Relevante Ziele" href="/vereinsleitung/targets" linkLabel="Alle Ziele">
+        <SceClubDevelopmentSectionShell
+          title="Relevante Ziele"
+          href="/vereinsleitung/strategie-und-ziele?ansicht=ziele"
+          linkLabel="Alle Ziele"
+        >
           {targets.length === 0 ? (
-            <EmptySection message="Keine aktiven Ziele sichtbar." />
+            <SceClubDevelopmentEmptyState message="Keine aktiven Ziele sichtbar." />
           ) : (
             targets.slice(0, 5).map((target) => {
               const progress = computeTargetMetricProgress(target.metrics);
@@ -183,7 +127,7 @@ export default function ClubDevelopmentOverview({
                 <Link
                   key={target.id}
                   href={`/vereinsleitung/targets/${target.id}`}
-                  className="block rounded-lg border border-[var(--border)] px-4 py-3 transition hover:bg-[var(--surface-2)]"
+                  className={SCE_CD_RECORD_ROW_CLASS}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -205,21 +149,21 @@ export default function ClubDevelopmentOverview({
               );
             })
           )}
-        </SectionShell>
+        </SceClubDevelopmentSectionShell>
 
-        <SectionShell
+        <SceClubDevelopmentSectionShell
           title="Aktive Vorhaben"
-          href="/vereinsleitung/initiativen"
+          href="/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben"
           linkLabel="Alle Vorhaben"
         >
           {initiatives.length === 0 ? (
-            <EmptySection message="Keine laufenden Vorhaben sichtbar." />
+            <SceClubDevelopmentEmptyState message="Keine laufenden Vorhaben sichtbar." />
           ) : (
             initiatives.slice(0, 5).map((ini) => (
               <Link
                 key={ini.id}
                 href={`/vereinsleitung/initiativen/${ini.slug}`}
-                className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] px-4 py-3 transition hover:bg-[var(--surface-2)]"
+                className={`flex items-start justify-between gap-3 ${SCE_CD_RECORD_ROW_CLASS}`}
               >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--foreground)] truncate">
@@ -235,23 +179,23 @@ export default function ClubDevelopmentOverview({
               </Link>
             ))
           )}
-        </SectionShell>
+        </SceClubDevelopmentSectionShell>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionShell
+        <SceClubDevelopmentSectionShell
           title="Anstehende Sitzungen"
           href="/vereinsleitung/meetings"
           linkLabel="Alle Sitzungen"
         >
           {upcomingMeetings.length === 0 ? (
-            <EmptySection message="Keine geplanten Sitzungen in Sicht." />
+            <SceClubDevelopmentEmptyState message="Keine geplanten Sitzungen in Sicht." />
           ) : (
             upcomingMeetings.slice(0, 5).map((meeting) => (
               <Link
                 key={meeting.id}
                 href={`/vereinsleitung/meetings/${meeting.slug}`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-4 py-3 transition hover:bg-[var(--surface-2)]"
+                className={`flex items-center justify-between gap-3 ${SCE_CD_RECORD_ROW_CLASS}`}
               >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--foreground)] truncate">
@@ -267,20 +211,20 @@ export default function ClubDevelopmentOverview({
               </Link>
             ))
           )}
-        </SectionShell>
+        </SceClubDevelopmentSectionShell>
 
-        <SectionShell title="Meine offenen Aufgaben" href="/dashboard/aufgaben" linkLabel="Aufgaben">
+        <SceClubDevelopmentSectionShell
+          title="Meine offenen Aufgaben"
+          href="/dashboard/aufgaben"
+          linkLabel="Aufgaben"
+        >
           {kpis.myOpenTaskCount === null ? (
-            <EmptySection message="Keine Berechtigung für Aufgaben." />
+            <SceClubDevelopmentEmptyState message="Keine Berechtigung für Aufgaben." />
           ) : assignedTasks.length === 0 ? (
-            <EmptySection message="Keine zugewiesenen offenen Aufgaben." />
+            <SceClubDevelopmentEmptyState message="Keine zugewiesenen offenen Aufgaben." />
           ) : (
             assignedTasks.slice(0, 5).map((task) => (
-              <Link
-                key={task.id}
-                href="/dashboard/aufgaben"
-                className="block rounded-lg border border-[var(--border)] px-4 py-3 transition hover:bg-[var(--surface-2)]"
-              >
+              <Link key={task.id} href="/dashboard/aufgaben" className={SCE_CD_RECORD_ROW_CLASS}>
                 <p className="text-sm font-semibold text-[var(--foreground)]">{task.title}</p>
                 {task.dueAt ? (
                   <p className="text-xs text-[var(--muted)] mt-0.5">
@@ -292,7 +236,7 @@ export default function ClubDevelopmentOverview({
               </Link>
             ))
           )}
-        </SectionShell>
+        </SceClubDevelopmentSectionShell>
       </div>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(320px,0.9fr)]">
@@ -319,11 +263,10 @@ function ModuleShortcut({
   title: string;
   description: string;
   href: string;
-  status: "Verfügbar" | "In Arbeit" | "Demnächst";
+  status?: "In Arbeit" | "Demnächst";
   icon: ReactNode;
 }) {
-  const variant =
-    status === "Verfügbar" ? "success" : status === "In Arbeit" ? "warning" : "default";
+  const variant = status === "In Arbeit" ? "warning" : "default";
 
   return (
     <Link
@@ -334,9 +277,11 @@ function ModuleShortcut({
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-2)]">
           {icon}
         </span>
-        <Badge variant={variant} size="sm">
-          {status}
-        </Badge>
+        {status ? (
+          <Badge variant={variant} size="sm">
+            {status}
+          </Badge>
+        ) : null}
       </div>
       <h3 className="mt-3 text-sm font-semibold text-[var(--foreground)]">{title}</h3>
       <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-2)]">{description}</p>
@@ -369,7 +314,7 @@ function KpiStrip({ kpis }: { kpis: ClubDevelopmentOverviewKpis }) {
         description="Geplant, ab heute"
       />
       <DashboardKpiCard
-        title="Meeting-Massnahmen"
+        title="Sitzungs-Massnahmen"
         value={String(kpis.overdueActionCount)}
         accent={kpis.overdueActionCount > 0 ? "danger" : "default"}
         icon={<ClipboardList className="h-5 w-5" />}
@@ -390,7 +335,7 @@ function KpiStrip({ kpis }: { kpis: ClubDevelopmentOverviewKpis }) {
         accent={kpis.overdueTaskCount && kpis.overdueTaskCount > 0 ? "danger" : "default"}
         icon={<CheckSquare className="h-5 w-5" />}
         description={
-          kpis.overdueTaskCount === null ? "Keine Berechtigung" : "Tenant-weit sichtbar"
+          kpis.overdueTaskCount === null ? "Keine Berechtigung" : "Vereinsweit sichtbar"
         }
       />
     </div>

@@ -445,8 +445,20 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/[id]/workspace-panel/route.ts",
+    "urlPattern": "/api/club-development/initiatives/[id]/workspace-panel",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/initiatives/backlog/route.ts",
     "urlPattern": "/api/club-development/initiatives/backlog",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/initiatives/candidates/route.ts",
+    "urlPattern": "/api/club-development/initiatives/candidates",
     "audience": "API"
   },
   {
@@ -531,6 +543,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/strategy-overview/route.ts",
     "urlPattern": "/api/club-development/strategy-overview",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/targets/[id]/initiative-links/route.ts",
+    "urlPattern": "/api/club-development/targets/[id]/initiative-links",
     "audience": "API"
   },
   {

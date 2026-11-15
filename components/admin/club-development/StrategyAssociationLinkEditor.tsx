@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, type ComponentProps, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import Link from "next/link";
-import { Check, Link2, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { toggleEntityRef, isLinked, parseEntityRefs } from "@/lib/linking/helpers";
 import type { EntityRef } from "@/lib/linking/types";
 import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
@@ -15,6 +14,9 @@ type Props = {
   availableMeetings: EntityRef[];
   availableDecisions: EntityRef[];
   canManage: boolean;
+  editing?: boolean;
+  compact?: boolean;
+  onAssociationsSaved?: (counts: { meetings: number; decisions: number }) => void;
 };
 
 export default function StrategyAssociationLinkEditor({
@@ -23,8 +25,10 @@ export default function StrategyAssociationLinkEditor({
   availableMeetings,
   availableDecisions,
   canManage,
+  editing = false,
+  compact = false,
+  onAssociationsSaved,
 }: Props) {
-  const router = useRouter();
   const [meetingRefs, setMeetingRefs] = useState<EntityRef[]>(initialMeetingRefs);
   const [decisionRefs, setDecisionRefs] = useState<EntityRef[]>(initialDecisionRefs);
   const [loading, setLoading] = useState(false);
@@ -32,10 +36,13 @@ export default function StrategyAssociationLinkEditor({
   const [error, setError] = useState<string | null>(null);
 
   const chipBase =
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition cursor-pointer select-none";
+    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition cursor-pointer select-none";
   const chipActive = "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]";
   const chipInactive =
     "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-slate-300 hover:bg-[var(--surface-2)]";
+
+  const showReadList = !canManage || !editing;
+  const linkCount = meetingRefs.length + decisionRefs.length;
 
   async function handleSave() {
     if (!canManage) return;
@@ -54,7 +61,10 @@ export default function StrategyAssociationLinkEditor({
         return;
       }
       setSaved(true);
-      router.refresh();
+      onAssociationsSaved?.({
+        meetings: meetingRefs.length,
+        decisions: decisionRefs.length,
+      });
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -62,132 +72,219 @@ export default function StrategyAssociationLinkEditor({
     }
   }
 
-  if (!canManage && meetingRefs.length === 0 && decisionRefs.length === 0) {
+  if (!canManage && linkCount === 0) {
     return null;
   }
 
+  const sectionClass = compact
+    ? "space-y-2"
+  : "rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm";
+
   return (
-    <section
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
+    <MotionSection
+      className={sectionClass}
       data-testid="strategy-association-links"
+      compact={compact}
     >
-      <div className="mb-4 flex items-center gap-2">
-        <Link2 className="h-5 w-5 text-[var(--sce-primary)]" />
-        <h3 className="text-sm font-semibold text-[var(--foreground)]">
-          {CD_STRATEGY_AUTHORING_COPY.meetingLinksHeading}
-        </h3>
-      </div>
-      <p className="mb-4 text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.associationHint}</p>
+      <h4 className="text-xs font-semibold text-[var(--foreground)]">
+        {CD_STRATEGY_AUTHORING_COPY.meetingLinksHeading}
+      </h4>
 
       {error ? <ClubDevelopmentFormError message={error} /> : null}
       {saved ? (
-        <p className="mb-3 text-xs font-medium text-emerald-700">Verknüpfungen gespeichert — ohne Strategiefreigabe.</p>
+        <p className="text-xs font-medium text-emerald-700" data-testid="strategy-association-save-success">
+          {CD_STRATEGY_AUTHORING_COPY.associationSaveSuccess}
+        </p>
       ) : null}
 
-      {!canManage ? (
-        <div className="space-y-4">
-          {meetingRefs.length > 0 ? (
-            <ul className="space-y-1.5">
-              {meetingRefs.map((ref) => (
-                <li key={ref.slug}>
-                  <Link href={ref.url ?? `/vereinsleitung/meetings/${ref.slug}`} className="text-sm text-[var(--sce-primary)] hover:underline">
+      {showReadList ? (
+        linkCount === 0 ? (
+          <p className="text-xs text-[var(--muted)]">{CD_STRATEGY_AUTHORING_COPY.associationEmpty}</p>
+        ) : (
+          <ul className="space-y-1">
+            {meetingRefs.map((ref) => (
+              <li key={`m-${ref.slug}`}>
+                <Link
+                  href={ref.url ?? `/vereinsleitung/meetings/${ref.slug}`}
+                  className="text-sm text-[var(--sce-primary)] hover:underline"
+                >
+                  {ref.title}
+                </Link>
+              </li>
+            ))}
+            {decisionRefs.map((ref) => (
+              <li key={`d-${ref.slug}`}>
+                {ref.url ? (
+                  <Link href={ref.url} className="text-sm text-[var(--sce-primary)] hover:underline">
                     {ref.title}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {decisionRefs.length > 0 ? (
-            <ul className="space-y-1.5">
-              {decisionRefs.map((ref) => (
-                <li key={ref.slug}>
-                  {ref.url ? (
-                    <Link href={ref.url} className="text-sm text-[var(--sce-primary)] hover:underline">
-                      {ref.title}
-                    </Link>
-                  ) : (
-                    <span className="text-sm text-[var(--foreground)]">{ref.title}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
+                ) : (
+                  <span className="text-sm text-[var(--foreground)]">{ref.title}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )
       ) : (
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">Sitzungen</p>
-            {availableMeetings.length === 0 ? (
-              <p className="text-xs text-[var(--muted)] italic">Keine sichtbaren Sitzungen.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {availableMeetings.map((option) => {
-                  const active = isLinked(meetingRefs, option.slug);
-                  return (
-                    <button
-                      key={option.slug}
-                      type="button"
-                      onClick={() => {
-                        setSaved(false);
-                        setMeetingRefs((prev) => toggleEntityRef(prev, option));
-                      }}
-                      className={`${chipBase} ${active ? chipActive : chipInactive}`}
-                    >
-                      {active ? <Check className="h-3 w-3" /> : null}
-                      {option.title}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+        <MotionEditAssociations
+          availableMeetings={availableMeetings}
+          availableDecisions={availableDecisions}
+          meetingRefs={meetingRefs}
+          decisionRefs={decisionRefs}
+          chipBase={chipBase}
+          chipActive={chipActive}
+          chipInactive={chipInactive}
+          setMeetingRefs={setMeetingRefs}
+          setDecisionRefs={setDecisionRefs}
+          setSaved={setSaved}
+          linkCount={linkCount}
+          loading={loading}
+          handleSave={handleSave}
+        />
+      )}
+    </MotionSection>
+  );
+}
 
-          <div>
-            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">Beschlüsse</p>
-            {availableDecisions.length === 0 ? (
-              <p className="text-xs text-[var(--muted)] italic">Keine sichtbaren Beschlüsse.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {availableDecisions.map((option) => {
-                  const active = isLinked(decisionRefs, option.slug);
-                  return (
-                    <button
-                      key={option.slug}
-                      type="button"
-                      onClick={() => {
-                        setSaved(false);
-                        setDecisionRefs((prev) => toggleEntityRef(prev, option));
-                      }}
-                      className={`${chipBase} ${active ? chipActive : chipInactive}`}
-                    >
-                      {active ? <Check className="h-3 w-3" /> : null}
-                      {option.title}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+function MotionSection({
+  children,
+  className,
+  compact,
+  ...rest
+}: {
+  children: ReactNode;
+  className: string;
+  compact: boolean;
+} & ComponentProps<"div">) {
+  if (compact) {
+    return (
+      <div className={className} {...rest}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <section className={className} {...rest}>
+      {children}
+    </section>
+  );
+}
 
-          <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
-            <p className="text-[11px] text-[var(--muted)]">
-              {meetingRefs.length + decisionRefs.length} Verknüpfung
-              {meetingRefs.length + decisionRefs.length !== 1 ? "en" : ""} gewählt
-            </p>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
-              data-testid="strategy-association-save"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Verknüpfungen speichern
-            </button>
-          </div>
+function MotionEditAssociations({
+  availableMeetings,
+  availableDecisions,
+  meetingRefs,
+  decisionRefs,
+  chipBase,
+  chipActive,
+  chipInactive,
+  setMeetingRefs,
+  setDecisionRefs,
+  setSaved,
+  linkCount,
+  loading,
+  handleSave,
+}: {
+  availableMeetings: EntityRef[];
+  availableDecisions: EntityRef[];
+  meetingRefs: EntityRef[];
+  decisionRefs: EntityRef[];
+  chipBase: string;
+  chipActive: string;
+  chipInactive: string;
+  setMeetingRefs: Dispatch<SetStateAction<EntityRef[]>>;
+  setDecisionRefs: Dispatch<SetStateAction<EntityRef[]>>;
+  setSaved: (v: boolean) => void;
+  linkCount: number;
+  loading: boolean;
+  handleSave: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <AssociationChipGroup
+        title="Sitzungen"
+        options={availableMeetings}
+        refs={meetingRefs}
+        chipBase={chipBase}
+        chipActive={chipActive}
+        chipInactive={chipInactive}
+        onToggle={(option) => {
+          setSaved(false);
+          setMeetingRefs((prev) => toggleEntityRef(prev, option));
+        }}
+      />
+      <AssociationChipGroup
+        title="Beschlüsse"
+        options={availableDecisions}
+        refs={decisionRefs}
+        chipBase={chipBase}
+        chipActive={chipActive}
+        chipInactive={chipInactive}
+        onToggle={(option) => {
+          setSaved(false);
+          setDecisionRefs((prev) => toggleEntityRef(prev, option));
+        }}
+      />
+      <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2">
+        <p className="text-[11px] text-[var(--muted)]">
+          {linkCount} Verknüpfung{linkCount !== 1 ? "en" : ""}
+        </p>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface)] disabled:opacity-60"
+          data-testid="strategy-association-save"
+        >
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+          {CD_STRATEGY_AUTHORING_COPY.associationSaveAction}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AssociationChipGroup({
+  title,
+  options,
+  refs,
+  chipBase,
+  chipActive,
+  chipInactive,
+  onToggle,
+}: {
+  title: string;
+  options: EntityRef[];
+  refs: EntityRef[];
+  chipBase: string;
+  chipActive: string;
+  chipInactive: string;
+  onToggle: (option: EntityRef) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{title}</p>
+      {options.length === 0 ? (
+        <p className="text-xs text-[var(--muted)] italic">Keine sichtbaren Einträge.</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {options.map((option) => {
+            const active = isLinked(refs, option.slug);
+            return (
+              <button
+                key={option.slug}
+                type="button"
+                onClick={() => onToggle(option)}
+                className={`${chipBase} ${active ? chipActive : chipInactive}`}
+              >
+                {active ? <Check className="h-3 w-3" /> : null}
+                {option.title}
+              </button>
+            );
+          })}
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

@@ -13,56 +13,75 @@ export const CD_NAV_COPY = {
 
 /** PKG-05 — club strategy authoring (Strategie route). */
 export const CD_STRATEGY_AUTHORING_COPY = {
+  pageTitle: "Strategie",
+  pageDescription: "Gemeinsame Ausrichtung, Ziele und Fortschritt.",
+  workspacePageDescription: "Gemeinsame Ausrichtung, Ziele und Fortschritt.",
   sectionTitle: "Clubstrategie",
-  sectionIntro:
-    "Kompakte Ausgangslage und Ausrichtung für den Verein. Schwerpunkte verweisen auf bestehende Ziele — Kennzahlen und Beschreibungen bleiben dort.",
+  editAction: "Bearbeiten",
+  cancelEditAction: "Ansicht",
+  unsavedNotice: "Ungespeicherte Änderungen",
+  saveSuccess: "Strategie gespeichert.",
   situationLabel: "Ausgangslage",
   situationPlaceholder: "Was ist für die aktuelle Vereinslage wesentlich?",
   alignmentLabel: "Gemeinsame Ausrichtung",
   alignmentPlaceholder: "Wohin soll sich der Verein entwickeln?",
-  responsibleLabel: "Verantwortliche Person",
+  responsibleLabel: "Verantwortung",
   unassignedResponsible: "Nicht zugewiesen",
-  periodLabel: "Strategieperiode (Bezeichnung)",
+  periodLabel: "Strategieperiode",
   periodPlaceholder: "z. B. Saison 2026/27",
-  periodStartLabel: "Periode von",
-  periodEndLabel: "Periode bis",
+  periodStartLabel: "Von",
+  periodEndLabel: "Bis",
   nextReviewLabel: "Nächste Überprüfung",
+  metaHeading: "Rahmen",
   saveAction: "Strategie speichern",
   focusHeading: "Schwerpunkte",
-  focusHint: "Kurze Liste strategischer Ziele — ohne Zieltexte zu duplizieren.",
   focusEmpty: "Noch keine Schwerpunkte verknüpft.",
-  meetingLinksHeading: "Verknüpfte Sitzungen & Entscheide",
-  associationHint:
-    "Rückverweis auf Sitzungen und Beschlüsse als Begründung — Speichern ändert keine Freigabe oder Strategiestatus.",
-  documentsHeading: "Strategische Unterlagen",
-  documentsHint: "Leitbild, vereinbarte Strategiedokumente und ergänzende Workspace-Dokumente.",
-  documentsEmpty: "Noch keine Dokumente verknüpft.",
+  supportingHeading: "Sitzungen, Beschlüsse & Unterlagen",
+  supportingCollapsedSummary: (meetings: number, decisions: number, documents: number) => {
+    const parts: string[] = [];
+    if (meetings > 0) parts.push(`${meetings} Sitzung${meetings === 1 ? "" : "en"}`);
+    if (decisions > 0) parts.push(`${decisions} Beschluss${decisions === 1 ? "" : "e"}`);
+    if (documents > 0) parts.push(`${documents} Unterlage${documents === 1 ? "" : "n"}`);
+    if (parts.length === 0) return "Keine Verknüpfungen";
+    return parts.join(" · ");
+  },
+  meetingLinksHeading: "Sitzungen & Beschlüsse",
+  associationSaveAction: "Verknüpfungen speichern",
+  associationSaveSuccess: "Verknüpfungen gespeichert.",
+  associationEmpty: "Noch keine Verknüpfungen.",
+  documentsHeading: "Unterlagen",
+  documentsEmpty: "Noch keine Unterlagen verknüpft.",
   docKindLeitbild: "Leitbild",
   docKindStrategy: "Vereinbarte Strategieunterlagen",
   docKindSupporting: "Weitere Unterlagen",
-  progressHeading: "Umsetzungsfortschritt & Zielerreichung",
-  progressHint:
-    "Zielerreichung aus Kennzahlen; Umsetzungsfortschritt aus verknüpften Vorhaben — getrennt dargestellt.",
+  progressHeading: "Fortschritt zu Zielen",
+  progressHint: "Zielerreichung (Kennzahlen) und Umsetzungsfortschritt (Vorhaben) sind getrennt.",
+} as const;
+
+/** Vereinsentwicklung — Sitzungen list & workspace chrome. */
+export const CD_MEETINGS_WORKSPACE_COPY = {
+  pageSubtitle: "Sitzungen planen, Beschlüsse festhalten und Aufgaben verfolgen.",
+  listSectionTitle: "Alle Sitzungen",
+  summarySectionTitle: "Sitzungsübersicht",
+  createAction: "Neue Sitzung",
+  createContext: "Termin für die Vereinsleitung erfassen",
 } as const;
 
 /** PKG-01 — navigation hub copy (routes unchanged). */
 export const CD_OVERVIEW_SHORTCUT_COPY = {
-  strategyDescription:
-    "Fortschrittsübersicht zu Zielen, Kennzahlen und verknüpften Vorhaben — kein Ersatz für Zieldetails.",
+  strategyDescription: "Ausrichtung, Ziele, Kennzahlen und Fortschritt im Überblick.",
   backlogDescription: "Priorisierte Vorhaben mit Einordnung und Erwartetem Ergebnis.",
   sprintDescription: "Umsetzungsphasen planen, Aufgaben zuordnen und abschließen.",
-  workHubDescription:
-    "Gemeinsamer Arbeitsbereich für sichtbare Vorhaben und zugehörige Aufgaben — gefilterte Lens, kein Ersatz für die Aufgaben-Inbox.",
+  workHubDescription: "Vorhaben, Aufgaben und Umsetzungsphasen in einem Arbeitsbereich.",
+} as const;
+
+/** Consolidated Vorhaben & Umsetzung workspace — page-level subtitle only. */
+export const CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY = {
+  pageSubtitle: "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
 } as const;
 
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
 export const CD_VORHABEN_WORKSPACE_COPY = {
-  intro:
-    "Vorhaben & Aufgaben bündelt sichtbare Vorhaben mit zugehörigen Aufgaben in einer gefilterten Arbeitsansicht. Vorhaben-Details, Ziele, Umsetzungsplanung und die zentrale Aufgaben-Inbox bleiben erreichbar.",
-  shortcutStrategy: "Ziele, Kennzahlen und Fortschritt — Sprung zu Zieldetails oder gefiltertem Backlog.",
-  shortcutBacklog: "Prioritäten und Einordnung — nicht derselbe Einstieg wie dieser Arbeitsbereich.",
-  shortcutSprints: "Root-Aufgaben planen; Unteraufgaben bleiben am übergeordneten Aufgaben-Arbeitsplatz.",
-  shortcutTasksInbox: "Alle Aufgaben mandantenweit — dieser Bereich filtert auf Vereinsentwicklung.",
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
   searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
   allInitiatives: "Alle sichtbaren Vorhaben",
@@ -70,9 +89,14 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   focusInitiative: "Fokus:",
   initiativesHeading: "Vorhaben",
   tasksHeading: "Zugehörige Aufgaben",
-  rootTasksOnly: "Nur übergeordnete Aufgaben — Unteraufgaben im Aufgaben-Arbeitsplatz.",
+  tasksSubheading: "Aufgaben",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  rootTasksTruncationNotice: (shown: number, total: number) =>
+    `Es werden ${shown} von ${total} übergeordneten Aufgaben angezeigt.`,
+  allRootTasksAction: "Alle übergeordneten Aufgaben anzeigen",
+  moreFiltersAction: "Weitere Filter",
+  hideFiltersAction: "Filter einklappen",
   noInitiativeAccess: "Keine Berechtigung zur Vorhaben-Ansicht.",
   noTaskAccess: "Keine Berechtigung zur Aufgaben-Ansicht.",
 } as const;
@@ -168,11 +192,41 @@ export const CD_TASK_WORKSPACE_COPY = {
 export const CD_TARGET_COPY = {
   metricsSection: "Kennzahlen",
   noMetricsYet: "Noch keine Kennzahlen erfasst.",
+  addMetricAction: "Kennzahl hinzufügen",
+  governanceSection: "Prüfung & Freigabe",
+  reviewStatusLabel: "Prüfstatus",
+  targetStatusLabel: "Zielstatus",
+  linksInitiatives: "Vorhaben",
+  linksMeetings: "Sitzungen",
+  noLinkedInitiatives: "Keine Vorhaben verknüpft.",
+  noLinkedMeetings: "Keine Sitzungen verknüpft.",
   createWithMetrics: "Strategisches Ziel mit messbaren Kennzahlen erfassen.",
   createWithMetricsComposer: "Strategisches Ziel mit Kennzahlen — Vorlagen optional im Composer.",
   progressDetail: "Fortschritt, Kennzahlen und Messwerte im Detail.",
   linkedInitiativesProgress: "Ziele mit Outcome-Fortschritt, Umsetzungsfortschritt über verknüpfte Vorhaben und Kennzahlen.",
   backlogDescriptionEinordnung: "Priorisierte Vorhaben mit Einordnung",
+  vorhabenSectionHeading: "Vorhaben",
+  vorhabenSectionHint: "Umsetzung zu diesem Ziel — verknüpfte Vorhaben erscheinen in Strategie und Vorhaben & Prioritäten.",
+  createInitiativeAndLink: "Vorhaben erstellen & verknüpfen",
+  linkExistingInitiative: "Bestehendes Vorhaben verknüpfen",
+  openLinkedInitiative: "Vorhaben öffnen",
+  initiativeLinkRetry: "Verknüpfung erneut versuchen",
+  initiativeCreatedLinkFailed:
+    "Vorhaben wurde erstellt, die Verknüpfung zum Ziel ist jedoch fehlgeschlagen.",
+  preselectedTargetLabel: "Verknüpftes Ziel",
+  createTargetAndLinkSchwerpunkt: "Ziel erstellen & verknüpfen",
+  targetCreatedFocusLinkFailed:
+    "Ziel wurde erstellt, die Verknüpfung als Schwerpunkt ist jedoch fehlgeschlagen.",
+  focusLinkRetry: "Schwerpunkt-Verknüpfung erneut versuchen",
+  legacyInitiativeBadge: "Legacy-Verknüpfung",
+  legacyLinkRemainsAfterUnlink:
+    "Die Verknüpfung in der Datenbank wurde entfernt. Eine ältere Legacy-Verknüpfung (JSON) zu diesem Vorhaben besteht weiterhin und wird in der Liste angezeigt.",
+  vorhabenManagedInSectionAbove:
+    "Vorhaben verwalten Sie im Abschnitt «Vorhaben» darüber — nicht über die Sitzungs-Verknüpfungen.",
+  meetingsEditorSection: "Sitzungen",
+  meetingsEditorHint:
+    "Verknüpfe relevante Sitzungen, in denen dieses Ziel besprochen wurde.",
+  unlinkInitiativeAction: "Entfernen",
 } as const;
 
 export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {

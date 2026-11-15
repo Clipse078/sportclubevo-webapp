@@ -1,54 +1,9 @@
-import { Kanban } from "lucide-react";
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getActorContext } from "@/lib/visibility/get-actor-context";
-import {
-  hasSprintManagePermission,
-  listDevelopmentSprints,
-} from "@/lib/club-development/sprints/queries";
-import DevelopmentSprintCreateCard from "@/components/admin/club-development/DevelopmentSprintCreateCard";
-import DevelopmentSprintList from "@/components/admin/club-development/DevelopmentSprintList";
-import { PageShell } from "@/components/ui/page";
-import { ListPagePattern } from "@/components/ui/patterns";
-import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
+import { legacySprintsRedirect } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import type { VereinsentwicklungLegacyPageProps } from "@/lib/club-development/vereinsentwicklung-legacy-search-params";
 
-export default async function DevelopmentSprintsPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-
-  const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
-  const sprints = await listDevelopmentSprints(actor);
-  const canManage = hasSprintManagePermission(actor);
-
-  const listItems = sprints.map((sprint) => ({
-    id: sprint.id,
-    slug: sprint.slug,
-    title: sprint.title,
-    goal: sprint.goal,
-    status: sprint.status,
-    owner: sprint.owner,
-    startsAt: sprint.startsAt?.toISOString() ?? null,
-    endsAt: sprint.endsAt?.toISOString() ?? null,
-  }));
-
-  return (
-    <PageShell fullWidth>
-      <ListPagePattern
-        eyebrow="Umsetzungsphasen"
-        title={CD_NAV_COPY.implementationPlanning}
-        description="Zeitlich gebundene Umsetzungsphasen mit Aufgaben und Aufgabenboard."
-        breadcrumbs={[
-          { label: "Verein", href: "/vereinsleitung" },
-          { label: "Vereinsentwicklung", href: "/vereinsleitung" },
-          { label: CD_NAV_COPY.implementationPlanning },
-        ]}
-        emptyIcon={<Kanban className="h-10 w-10" />}
-      >
-        <div className="space-y-4">
-          <DevelopmentSprintCreateCard canCreate={canManage} />
-          <DevelopmentSprintList sprints={listItems} />
-        </div>
-      </ListPagePattern>
-    </PageShell>
-  );
+/** Legacy alias → Vorhaben & Umsetzung (Umsetzungsphasen). */
+export default async function DevelopmentSprintsPage({ searchParams }: VereinsentwicklungLegacyPageProps) {
+  const query = (await searchParams) ?? {};
+  redirect(legacySprintsRedirect(query));
 }

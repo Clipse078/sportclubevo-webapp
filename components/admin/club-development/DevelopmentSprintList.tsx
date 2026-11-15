@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronRight, Kanban } from "lucide-react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
 
 export type DevelopmentSprintListItem = {
   id: string;
@@ -34,9 +36,7 @@ type Props = {
 export default function DevelopmentSprintList({ sprints }: Props) {
   if (sprints.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-10 text-center text-sm text-[var(--muted)]">
-        Noch keine Umsetzungsphasen in der Liste — legen Sie oben die erste Umsetzungsphase an.
-      </div>
+      <SceClubDevelopmentEmptyState message="Noch keine Umsetzungsphasen — legen Sie oben die erste Umsetzungsphase an." />
     );
   }
 
@@ -46,7 +46,7 @@ export default function DevelopmentSprintList({ sprints }: Props) {
         <li key={sprint.id}>
           <Link
             href={`/vereinsleitung/sprints/${sprint.slug}`}
-            className="group flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm transition hover:border-[var(--sce-primary)]/40"
+            className={`group flex items-center justify-between gap-3 ${SCE_CD_RECORD_ROW_CLASS} hover:border-[var(--sce-primary)]/40`}
           >
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">

@@ -11,18 +11,23 @@ describe("SCE-CD-02R3 meeting creation UX", () => {
     expect(() => readSrc("components/admin/meetings/CreateMeetingComposerDialog.tsx")).toThrow();
   });
 
-  it("uses full-page create entry instead of modal composer", () => {
-    expect(readSrc("components/admin/meetings/CreateMeetingTrigger.tsx")).toContain(
-      'href="/vereinsleitung/meetings/new"',
+  it("uses inline collapsible create on the list with deep-link /new fallback route", () => {
+    expect(readSrc("components/admin/meetings/CreateMeetingInlineCollapsibleCard.tsx")).toContain(
+      'data-sce-create-flow="inline-collapsible"',
     );
     expect(readSrc("components/admin/meetings/CreateMeetingTrigger.tsx")).toContain(
-      'data-sce-create-flow="page"',
+      "MEETINGS_INLINE_CREATE_EVENT",
+    );
+    expect(readSrc("components/admin/vereinsleitung/VereinsleitungMeetingsWorkspaceClient.tsx")).toContain(
+      "CreateMeetingInlineCollapsibleCard",
     );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/new/page.tsx")).toContain('layout="page"');
     expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain("Erweiterte Einstellungen");
     expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain("MeetingParticipantMultiPicker");
     expect(readSrc("components/admin/meetings/MeetingForm.tsx")).not.toContain("Teilnehmeranzahl");
-    expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain('defaultValues?.visibilityScope ?? "RESTRICTED"');
+    expect(readSrc("components/admin/meetings/MeetingForm.tsx")).toContain(
+      'defaultValues?.visibilityScope ?? "RESTRICTED"',
+    );
     expect(readSrc("app/api/meetings/route.ts")).toContain("resolveMeetingVisibilityOnCreate");
   });
 

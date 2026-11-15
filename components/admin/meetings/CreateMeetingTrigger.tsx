@@ -1,18 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import { CreateMeetingListTrigger } from "./CreateMeetingInlineCollapsibleCard";
+
+export const MEETINGS_INLINE_CREATE_EVENT = "vereinsleitung-meetings-expand-create";
 
 export default function CreateMeetingTrigger({ className }: { className?: string }) {
   return (
-    <Link
-      href="/vereinsleitung/meetings/new"
-      className={className ?? "fca-button-primary inline-flex items-center gap-2"}
-      data-sce-create-flow="page"
-      data-testid="meeting-create-trigger"
-    >
-      <Plus className="h-4 w-4" aria-hidden />
-      Neue Sitzung
-    </Link>
+    <CreateMeetingListTrigger
+      className={className}
+      onClick={() => {
+        window.dispatchEvent(new CustomEvent(MEETINGS_INLINE_CREATE_EVENT));
+      }}
+    />
   );
 }

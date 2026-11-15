@@ -34,10 +34,12 @@ describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
 
   it("uses modal-first create triggers on corrected representative CTAs", () => {
     expect(SCE_DESIGN_SYSTEM_10R1_CREATE_FLOW.CREATE_IN_CONTEXT).toBe("MODAL_FIRST");
-    expect(readSrc("app/(admin)/vereinsleitung/targets/page.tsx")).toContain("CreateTargetTrigger");
+    expect(readSrc("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "CreateTargetWorkspaceCollapsibleCard",
+    );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/page.tsx")).toContain("CreateMeetingTrigger");
-    expect(readSrc("app/(admin)/vereinsleitung/initiativen/page.tsx")).toContain(
-      "CreateInitiativeTrigger",
+    expect(readSrc("components/admin/initiatives/CreateInitiativeTrigger.tsx")).toContain(
+      "/vereinsleitung/initiativen/new",
     );
     expect(readSrc("app/(admin)/dashboard/administration/roles/page.tsx")).toContain(
       "CreateTenantRoleTrigger",
@@ -62,7 +64,7 @@ describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
   });
 
   it("avoids white legacy workspace on corrected Vereinsziele list", () => {
-    const targetsPage = readSrc("app/(admin)/vereinsleitung/targets/page.tsx");
+    const targetsPage = readSrc("app/(admin)/vereinsleitung/strategie-und-ziele/page.tsx");
     expect(targetsPage).not.toContain("bg-white");
     expect(targetsPage).toContain("ListPagePattern");
   });

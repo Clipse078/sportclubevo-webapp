@@ -137,7 +137,7 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
           <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Vorlagen zur Prüfung
           </h3>
-          <p className="mt-0.5 text-[11px] text-[var(--muted)]">CommunicationTemplates in Prüfungsstufe</p>
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">Kommunikationsvorlagen in Prüfung</p>
         </div>
         <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${templateDrafts.length > 0 ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-slate-50 text-[var(--text-2)]"}`}>
           {templateDrafts.length}

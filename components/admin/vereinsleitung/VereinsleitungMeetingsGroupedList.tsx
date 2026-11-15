@@ -33,16 +33,18 @@ export default function VereinsleitungMeetingsGroupedList({
   const groups = groupMeetingsByCategory(meetings);
 
   return (
-    <div className="space-y-8" data-testid="vereinsleitung-meetings-grouped">
+    <div className="space-y-6" data-testid="vereinsleitung-meetings-grouped">
       {CATEGORY_ORDER.map((key) => {
         const items = groups[key];
         if (items.length === 0) return null;
         return (
           <section key={key} data-testid={`meetings-category-${key}`}>
-            <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">
-              {MEETING_LIST_CATEGORY_LABELS[key]}
-              <span className="ml-2 text-[var(--muted)]">({items.length})</span>
-            </h2>
+            <div className="mb-2 flex items-center justify-between gap-2 border-b border-[var(--border)]/80 pb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+                {MEETING_LIST_CATEGORY_LABELS[key]}
+              </h3>
+              <span className="text-xs text-[var(--muted)] tabular-nums">{items.length}</span>
+            </div>
             <VereinsleitungMeetingsList
               meetings={items}
               canManage={canManage}

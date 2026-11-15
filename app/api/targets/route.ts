@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import {
-  TargetCategory,
-  TargetStatus,
-  TargetPeriod,
-  TargetMetricType,
-  TargetDirection,
-  VisibilityScope,
-} from "@prisma/client";
+import { TargetCategory, TargetStatus, TargetPeriod, VisibilityScope } from "@prisma/client";
 import { getTargets } from "@/lib/targets/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import { normalizeTargetMetricsFromBody } from "@/lib/targets/target-metric-payload";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -55,19 +49,10 @@ export async function POST(request: NextRequest) {
       ? (body.visibilityScope as VisibilityScope)
       : VisibilityScope.ORGANISATION;
 
-    const validMetricTypes = Object.values(TargetMetricType);
-    const validDirections = Object.values(TargetDirection);
-
-    const rawMetrics: Array<{
-      label: string;
-      type: string;
-      direction: string;
-      targetValue: number;
-      currentValue?: number;
-      unit?: string;
-      notes?: string;
-      sortOrder?: number;
-    }> = Array.isArray(body?.metrics) ? body.metrics : [];
+    const metricsResult = normalizeTargetMetricsFromBody(body?.metrics);
+    if (!metricsResult.ok) {
+      return NextResponse.json({ error: metricsResult.error }, { status: 400 });
+    }
 
     const created = await prisma.target.create({
       data: {
@@ -92,22 +77,16 @@ export async function POST(request: NextRequest) {
         // Phase D: target group refs for resolved-member visibility
         visibleTargetGroupRefs: Array.isArray(body?.visibleTargetGroupRefs) ? body.visibleTargetGroupRefs : undefined,
         metrics: {
-          create: rawMetrics
-            .filter((m) => m.label?.trim())
-            .map((m, idx) => ({
-              label: m.label.trim(),
-              type: validMetricTypes.includes(m.type as TargetMetricType)
-                ? (m.type as TargetMetricType)
-                : TargetMetricType.PERCENTAGE,
-              direction: validDirections.includes(m.direction as TargetDirection)
-                ? (m.direction as TargetDirection)
-                : TargetDirection.INCREASE,
-              targetValue: Number(m.targetValue) || 0,
-              currentValue: Number(m.currentValue) || 0,
-              unit: m.unit?.trim() || null,
-              notes: m.notes?.trim() || null,
-              sortOrder: m.sortOrder ?? idx,
-            })),
+          create: metricsResult.metrics.map((m) => ({
+            label: m.label,
+            type: m.type,
+            direction: m.direction,
+            targetValue: m.targetValue,
+            currentValue: m.currentValue,
+            unit: m.unit,
+            notes: m.notes,
+            sortOrder: m.sortOrder,
+          })),
         },
       },
       select: { id: true, title: true },

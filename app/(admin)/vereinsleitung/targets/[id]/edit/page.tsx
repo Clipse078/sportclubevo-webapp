@@ -6,11 +6,13 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getTargetById } from "@/lib/targets/queries";
-import { getMeetingLinkOptions, getInitiativeLinkOptions } from "@/lib/linking/queries";
+import { getMeetingLinkOptions } from "@/lib/linking/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import TargetForm from "@/components/admin/targets/TargetForm";
 import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
 import TargetLinkEditor from "@/components/admin/targets/TargetLinkEditor";
+import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import { ArrowLeft } from "lucide-react";
 import { PageShell } from "@/components/ui/page";
@@ -27,13 +29,16 @@ export default async function EditTargetPage({ params }: PageProps) {
   const { id } = await params;
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
 
-  const [target, availableMeetings, availableInitiatives] = await Promise.all([
+  const [target, availableMeetings] = await Promise.all([
     getTargetById(id, actor),
     getMeetingLinkOptions(actor),
-    getInitiativeLinkOptions(actor),
   ]);
 
   if (!target) notFound();
+
+  const canManageTarget =
+    actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE) &&
+    actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
 
   const defaultValues = {
     title: target.title,
@@ -77,7 +82,7 @@ export default async function EditTargetPage({ params }: PageProps) {
         description={`Bearbeite: ${target.title}`}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Ziele", href: "/vereinsleitung/targets" },
+          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
           { label: target.title, href: `/vereinsleitung/targets/${id}` },
           { label: "Bearbeiten" },
         ]}
@@ -96,12 +101,20 @@ export default async function EditTargetPage({ params }: PageProps) {
           <TargetForm mode="edit" targetId={id} defaultValues={defaultValues} />
         </ClubDevelopmentFormWorkflowShell>
 
+        <div className="mt-6">
+          <TargetInitiativeLinksSection
+            targetId={id}
+            targetTitle={target.title}
+            canManage={canManageTarget}
+            legacyInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
+          />
+        </div>
+
         <section className={`${VEREINSLEITUNG_PANEL_CLASS} mt-6`}>
           <TargetLinkEditor
             targetId={id}
             initialInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
             initialMeetingRefs={parseEntityRefs(target.linkedMeetingRefs)}
-            availableInitiatives={availableInitiatives}
             availableMeetings={availableMeetings}
           />
         </section>

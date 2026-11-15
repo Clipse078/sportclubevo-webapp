@@ -121,9 +121,10 @@ export const SCE_UX_01_DOMAIN_AUDIT: SceUx01DomainFinding[] = [
       "/vereinsleitung/meetings",
       "/vereinsleitung/prozesse",
     ],
-    primaryPatterns: ["MODAL_DECISION", "FULL_PAGE_WORKFLOW"],
+    primaryPatterns: ["INLINE_EDIT", "MODAL_DECISION", "FULL_PAGE_WORKFLOW"],
     evidence: [
-      "CreateTargetComposerDialog · CreateInitiativeComposerDialog (Dialog size=workspace)",
+      "CreateTargetContextualCollapsibleCard · CreateInitiativeContextualCollapsibleCard (contextual create/link)",
+      "CreateTargetComposerDialog · CreateInitiativeComposerDialog (list modal-first)",
       "Meetings — CreateMeetingTrigger page flow + MeetingForm layout=page (SCE-CD-02R1+)",
       "Target/Initiative forms shared with /new deep-link routes (layout=composer)",
       "club-entwicklung hub uses permission-scoped overview (SCE-CD-01); prozesse route remains demo-only",

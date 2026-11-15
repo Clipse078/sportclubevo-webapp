@@ -57,14 +57,9 @@ const CLUB_MEMBERSHIP_KEYS = new Set([
 const CLUB_DEVELOPMENT_KEYS = new Set([
   "club-entwicklung",
   "club-entwicklung-uebersicht",
-  "club-entwicklung-ziele",
+  "club-entwicklung-strategie-ziele",
+  "club-entwicklung-vorhaben-umsetzung",
   "club-entwicklung-sitzungen",
-  "club-entwicklung-vorhaben",
-  "club-entwicklung-initiativen",
-  "club-entwicklung-strategie",
-  "club-entwicklung-initiativen-backlog",
-  "club-entwicklung-sprints",
-  "club-entwicklung-prozesse",
 ]);
 
 const CLUB_OPERATIONS_KEYS = new Set([
@@ -341,19 +336,38 @@ export const PUBLISHING_TARGET_L2_GROUPS = [
   },
 ] as const;
 
+/** PO-approved Verein (Club L1) secondary navigation order — desktop panel and mobile explorer. */
+export const CLUB_VEREIN_L2_LABEL_ORDER = [
+  "Vereinsentwicklung",
+  "Organisation",
+  "Personen & Teams",
+  "Mitgliedschaft",
+  "Vereinsbetrieb",
+  "Aufgaben",
+  "Finanzen",
+  "Sponsoring",
+  "Dokumente",
+] as const;
+
 /** Club L2 taxonomy (header-visible subset vs explorer-only deep admin). */
 export const CLUB_TARGET_L2_GROUPS = [
+  {
+    id: "vereinsentwicklung",
+    label: "Vereinsentwicklung",
+    headerVisible: true,
+    keys: [
+      "club-entwicklung",
+      "club-entwicklung-uebersicht",
+      "club-entwicklung-strategie-ziele",
+      "club-entwicklung-vorhaben-umsetzung",
+      "club-entwicklung-sitzungen",
+    ],
+  },
   {
     id: "organisation",
     label: "Organisation",
     headerVisible: true,
     keys: ["organisation"],
-  },
-  {
-    id: "aufgaben",
-    label: "Aufgaben",
-    headerVisible: true,
-    keys: ["aufgaben"],
   },
   {
     id: "people-teams",
@@ -368,22 +382,6 @@ export const CLUB_TARGET_L2_GROUPS = [
     keys: ["anmeldungen", "registrierungen", "warteliste", "archiv"],
   },
   {
-    id: "vereinsentwicklung",
-    label: "Vereinsentwicklung",
-    headerVisible: true,
-    keys: [
-      "club-entwicklung",
-      "club-entwicklung-uebersicht",
-      "club-entwicklung-strategie",
-      "club-entwicklung-ziele",
-      "club-entwicklung-initiativen-backlog",
-      "club-entwicklung-vorhaben",
-      "club-entwicklung-sprints",
-      "club-entwicklung-sitzungen",
-      "club-entwicklung-prozesse",
-    ],
-  },
-  {
     id: "club-betrieb",
     label: "Vereinsbetrieb",
     headerVisible: true,
@@ -395,10 +393,10 @@ export const CLUB_TARGET_L2_GROUPS = [
     ],
   },
   {
-    id: "dokumente",
-    label: "Dokumente",
+    id: "aufgaben",
+    label: "Aufgaben",
     headerVisible: true,
-    keys: ["workspace"],
+    keys: ["aufgaben"],
   },
   {
     id: "finanzen",
@@ -411,6 +409,12 @@ export const CLUB_TARGET_L2_GROUPS = [
     label: "Sponsoring",
     headerVisible: true,
     keys: ["sponsoring"],
+  },
+  {
+    id: "dokumente",
+    label: "Dokumente",
+    headerVisible: true,
+    keys: ["workspace"],
   },
 ] as const;
 

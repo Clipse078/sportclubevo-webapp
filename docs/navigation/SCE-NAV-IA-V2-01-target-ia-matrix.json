@@ -1373,19 +1373,23 @@
   ],
   "clubL2": [
     {
+      "id": "vereinsentwicklung",
+      "label": "Vereinsentwicklung",
+      "headerVisible": true,
+      "keys": [
+        "club-entwicklung",
+        "club-entwicklung-uebersicht",
+        "club-entwicklung-strategie-ziele",
+        "club-entwicklung-vorhaben-umsetzung",
+        "club-entwicklung-sitzungen"
+      ]
+    },
+    {
       "id": "organisation",
       "label": "Organisation",
       "headerVisible": true,
       "keys": [
         "organisation"
-      ]
-    },
-    {
-      "id": "aufgaben",
-      "label": "Aufgaben",
-      "headerVisible": true,
-      "keys": [
-        "aufgaben"
       ]
     },
     {
@@ -1411,22 +1415,6 @@
       ]
     },
     {
-      "id": "vereinsentwicklung",
-      "label": "Vereinsentwicklung",
-      "headerVisible": true,
-      "keys": [
-        "club-entwicklung",
-        "club-entwicklung-uebersicht",
-        "club-entwicklung-strategie",
-        "club-entwicklung-ziele",
-        "club-entwicklung-initiativen-backlog",
-        "club-entwicklung-vorhaben",
-        "club-entwicklung-sprints",
-        "club-entwicklung-sitzungen",
-        "club-entwicklung-prozesse"
-      ]
-    },
-    {
       "id": "club-betrieb",
       "label": "Vereinsbetrieb",
       "headerVisible": true,
@@ -1438,11 +1426,11 @@
       ]
     },
     {
-      "id": "dokumente",
-      "label": "Dokumente",
+      "id": "aufgaben",
+      "label": "Aufgaben",
       "headerVisible": true,
       "keys": [
-        "workspace"
+        "aufgaben"
       ]
     },
     {
@@ -1459,6 +1447,14 @@
       "headerVisible": true,
       "keys": [
         "sponsoring"
+      ]
+    },
+    {
+      "id": "dokumente",
+      "label": "Dokumente",
+      "headerVisible": true,
+      "keys": [
+        "workspace"
       ]
     }
   ],
