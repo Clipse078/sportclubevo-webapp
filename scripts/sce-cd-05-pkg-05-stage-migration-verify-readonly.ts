@@ -116,11 +116,20 @@ async function main(): Promise<void> {
         },
         pendingClubStrategyMigrations: pendingClubStrategy,
         writePerformed: false,
+        postDeployReconciliation: {
+          coupledTo:
+            "npm run db:migrate:deploy-if-enabled → scripts/post-deploy-tenant-club-admin-reconciliation.ts",
+          migrationOnlyApplyScript: "scripts/sce-cd-05-pkg-05-stage-migration-verify.ts --apply",
+          dryRunInventoryScript:
+            "scripts/sce-cd-05-pkg-05-post-deploy-reconciliation-dry-run.ts",
+          approvalScopeDoc: "docs/planning/SCE-CD-05-PKG-05-MIGRATION-HANDOFF.md#migration-approval-scope-all-potential-writes",
+        },
         scopedApplyProcedure: {
           order: [
             "Confirm STAGE fingerprint and APP_ENV=stage (not production).",
             "Run this script (read-only inventory).",
-            "If migration pending: APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled",
+            "Optional: run post-deploy-reconciliation dry-run inventory (no writes).",
+            "If migration pending (PKG-05 only): scripts/sce-cd-05-pkg-05-stage-migration-verify.ts --apply",
             "Re-run this script; clubStrategyTable and columns must be present.",
             "Re-test PR Preview /vereinsleitung/strategie persistence.",
           ],

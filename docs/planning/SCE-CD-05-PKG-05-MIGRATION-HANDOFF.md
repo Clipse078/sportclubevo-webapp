@@ -22,6 +22,59 @@ Inspect JSON output only — no credentials in logs. `writePerformed` is always 
 
 Alternatively: `APP_ENV=stage npx prisma migrate status` and confirm whether `20261115150000_sce_cd_05_club_strategy_authoring` is pending.
 
+## Migration approval scope (all potential writes)
+
+Operators must approve **every** write below before choosing an apply path.
+
+### Path A — `npm run db:migrate:deploy-if-enabled` (canonical guarded wrapper)
+
+Invoked only when `APPLY_DATABASE_MIGRATIONS=true` with STAGE fingerprint and `assertOperationalMutationAllowed`.
+
+| Step | Target | Write type | Scope |
+|------|--------|------------|--------|
+| 1 | `_prisma_migrations` | INSERT (Prisma) | One row per applied migration in the pending queue (not PKG-05-only unless that is the sole pending migration) |
+| 2 | `ClubStrategyDocumentKind` enum, `ClubStrategy`, `ClubStrategyFocusTarget`, `ClubStrategyDocumentReference` | DDL (CREATE) | Shared STAGE database — **no row backfill** |
+| 3a | `Permission` | INSERT (if missing) | Up to five finance publication/share keys (`finance.publication.view`, `finance.reporting.share`, `finance.reporting.publish`, `finance.reporting.distribute`, `finance.share.manage`) |
+| 3b | `RolePermission` | INSERT (idempotent upsert) | Every discovered **tenant Club Admin** role × full delegatable TENANT catalog (see below) |
+| 3c | `RolePermission` | INSERT | Subset pass for `finance.reporting.distribute` on Club Admin roles (overlap with 3b) |
+
+Post-deploy step: automatic from `lib/server/deploy-migrations-if-enabled.ts` → `scripts/post-deploy-tenant-club-admin-reconciliation.ts` (**no CLI dry-run**; always `dryRun=false`).
+
+**Club Admin reconciliation does not modify:** custom/delegated tenant roles, `super_admin`, governance-withheld keys (`workspace.break_glass`, `workspace.governance.manage`), or any business tables (`ClubStrategy`, initiatives, finance data, etc.).
+
+**Tenants affected (permission writes):** all `Tenant` rows with `status = ACTIVE` on the connected database. Reconciliation discovers materialized `club_admin__*` system roles **and** legacy Club Admin alias keys per tenant (`listTenantClubAdminRoleKeysForReconciliation`).
+
+### Path B — PKG-05 migration only (no post-deploy reconciliation)
+
+| Step | Target | Write type |
+|------|--------|------------|
+| 1–2 | Same as Path A steps 1–2 | `_prisma_migrations` + PKG-05 DDL only |
+
+```bash
+APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE \
+  SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+  APPLY_DATABASE_MIGRATIONS=true DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
+  npx tsx scripts/sce-cd-05-pkg-05-stage-migration-verify.ts --apply
+```
+
+Refuses apply if pending migrations include anything other than `20261115150000_sce_cd_05_club_strategy_authoring`. Reports `postDeployClubAdminReconciliation: SKIPPED_BY_AUTHORIZATION_SCOPE` (same pattern as SCE-CD-04R2).
+
+### Dry-run / drift inventory (read-only, no writes)
+
+| Mechanism | Dry-run? | Purpose |
+|-----------|----------|---------|
+| `scripts/post-deploy-tenant-club-admin-reconciliation.ts` | **No** | Live reconciliation only |
+| `scripts/sync-tenant-club-admin-permissions.ts` | **Yes** (default); `APPLY_PERMISSION_SYNC=true` to apply | Full catalog pass only (not finance pre-passes) |
+| Reconciliation libraries (`reconcile*`, second arg) | **Yes** when `dryRun=true` | Not wired to the post-deploy entrypoint |
+| `scripts/sce-cd-05-pkg-05-post-deploy-reconciliation-dry-run.ts` | **Yes** | STAGE fingerprint-gated pair-count inventory mirroring post-deploy scope |
+
+**STAGE inventory (designated Neon, fingerprint `acd3b37682911890`, 15 Nov 2026 ~17:05 CET):**
+
+- Migration `20261115150000_sce_cd_05_club_strategy_authoring`: **pending** (not applied).
+- `47` active tenants; `20` Club Admin roles targeted for reconciliation.
+- Post-deploy drift: **`0` missing `RolePermission` pairs** (`2900/2900` catalog pairs present); **`0` finance publication keys** missing from `Permission`.
+- A guarded full deploy today would therefore perform **PKG-05 DDL + migration registry** writes; post-deploy reconciliation would be **no-op** on current STAGE drift (still must be in approval scope).
+
 ## Additive changes (existing data impact)
 
 | Object | Change |
@@ -50,8 +103,19 @@ APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE \
   DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
   npx tsx scripts/sce-cd-05-pkg-05-stage-migration-verify-readonly.ts
 
-# If migration pending:
-APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled
+# If migration pending (Path B — PKG-05 DDL only; preferred for PO acceptance):
+APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE \
+  SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 APPLY_DATABASE_MIGRATIONS=true \
+  DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
+  npx tsx scripts/sce-cd-05-pkg-05-stage-migration-verify.ts --apply
+
+# Optional post-deploy drift inventory (read-only):
+APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+  DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
+  npx tsx scripts/sce-cd-05-pkg-05-post-deploy-reconciliation-dry-run.ts
+
+# Path A — full wrapper (also runs Club Admin reconciliation):
+# APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled
 
 # Confirm:
 APP_ENV=stage NODE_ENV=production npx prisma migrate status
