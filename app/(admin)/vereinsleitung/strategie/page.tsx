@@ -32,9 +32,9 @@ export default async function VereinsleitungStrategiePage() {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Strategie"
-        title="Strategische Übersicht"
-        description="Clubstrategie festhalten, Unterlagen verknüpfen und Fortschritt zu Zielen & Vorhaben einsehen."
+        eyebrow="Vereinsentwicklung"
+        title={CD_STRATEGY_AUTHORING_COPY.pageTitle}
+        description={CD_STRATEGY_AUTHORING_COPY.pageDescription}
         breadcrumbs={[
           { label: "Verein", href: "/vereinsleitung" },
           { label: "Vereinsentwicklung", href: "/vereinsleitung" },
