@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { VisibilityScope } from "@prisma/client";
 import type { ActorContext } from "@/lib/visibility/actor-context";
+import { getMeetings } from "@/lib/meetings/queries";
 
 function readSrc(relative: string) {
   return readFileSync(join(process.cwd(), relative), "utf8");
@@ -21,8 +22,12 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/visibility/visibility-filter", () => ({
+const visibilityMocks = vi.hoisted(() => ({
   canSeeEntity: vi.fn(() => true),
+}));
+
+vi.mock("@/lib/visibility/visibility-filter", () => ({
+  canSeeEntity: (...args: unknown[]) => visibilityMocks.canSeeEntity(...args),
   buildVisibilityWhere: vi.fn(() => ({})),
   applyVisibilityFilter: vi.fn((rows: unknown[]) => rows),
 }));
@@ -114,6 +119,45 @@ describe("meeting detail loader regression (SCE-CD-02)", () => {
       });
       const result = await getMeetingBySlug("fixture-board-sitzung", actorWithAccess());
       expect(result?.title).toBe("Fixture Vorstandssitzung");
+    });
+
+    it("returns null when visibility mask denies the actor (404-masked)", async () => {
+      const { getMeetingBySlug } = await import("@/lib/meetings/queries");
+      prismaMocks.meetingFindFirst.mockResolvedValue({
+        id: "m-restricted",
+        slug: "fixture-restricted",
+        title: "Restricted board session",
+        visibilityScope: VisibilityScope.RESTRICTED,
+        createdByUserId: "other-user",
+        visibleRoleRefs: [],
+        visibleUserRefs: [],
+        visibleTeamRefs: [],
+        visibleOrgUnitRefs: [],
+        visiblePersonRefs: [],
+      });
+      visibilityMocks.canSeeEntity.mockReturnValueOnce(false);
+      const result = await getMeetingBySlug("fixture-restricted", actorWithAccess());
+      expect(result).toBeNull();
+    });
+
+    it("scopes slug lookup to actor.tenantId (cross-tenant isolation)", async () => {
+      const { getMeetingBySlug } = await import("@/lib/meetings/queries");
+      prismaMocks.meetingFindFirst.mockResolvedValue(null);
+      await getMeetingBySlug("fixture-board-sitzung", actorWithAccess("tenant-b"));
+      expect(prismaMocks.meetingFindFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "fixture-board-sitzung", tenantId: "tenant-b" },
+        }),
+      );
+    });
+
+    it("returns empty list when actor has tenantId but no meetings permission", async () => {
+      const actor: ActorContext = {
+        ...actorWithAccess(),
+        permissionKeys: [],
+      };
+      await expect(getMeetings(actor)).resolves.toEqual([]);
+      expect(prismaMocks.meetingFindFirst).not.toHaveBeenCalled();
     });
   });
 });

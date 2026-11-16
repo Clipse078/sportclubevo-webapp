@@ -132,6 +132,49 @@ describe("/vereinsleitung/meetings/[slug] page loader", () => {
     expect(getMeetingSubEntities).not.toHaveBeenCalled();
   });
 
+  it("calls notFound when actor retains tenantId but meetings.view is denied", async () => {
+    vi.mocked(getActorContext).mockResolvedValue({
+      tenantId: "tenant-1",
+      userId: "user-1",
+      roleKeys: [],
+      permissionKeys: [],
+      orgUnitIds: [],
+      targetGroupIds: [],
+    });
+    vi.mocked(getMeetingBySlug).mockResolvedValue(null);
+
+    await expect(
+      MeetingDetailPage({ params: Promise.resolve({ slug: "fixture-missing" }) }),
+    ).rejects.toThrow("NOT_FOUND");
+
+    expect(mocks.notFound).toHaveBeenCalled();
+    expect(getMeetingSubEntities).not.toHaveBeenCalled();
+  });
+
+  it("propagates getMeetingBySlug errors instead of rendering sample content", async () => {
+    vi.mocked(getMeetingBySlug).mockRejectedValue(new Error("meetings service outage"));
+
+    await expect(
+      MeetingDetailPage({ params: Promise.resolve({ slug: "fixture-board-sitzung" }) }),
+    ).rejects.toThrow("meetings service outage");
+
+    expect(mocks.notFound).not.toHaveBeenCalled();
+    expect(getMeetingSubEntities).not.toHaveBeenCalled();
+  });
+
+  it("propagates getMeetingSubEntities errors after a successful slug resolve", async () => {
+    vi.mocked(getMeetingBySlug).mockResolvedValue(meetingDetailWorkspaceMeetingFixture);
+    vi.mocked(getMeetingSubEntities).mockRejectedValue(new Error("sub-entity load failed"));
+
+    await expect(
+      MeetingDetailPage({
+        params: Promise.resolve({ slug: meetingDetailWorkspaceMeetingFixture.slug }),
+      }),
+    ).rejects.toThrow("sub-entity load failed");
+
+    expect(mocks.notFound).not.toHaveBeenCalled();
+  });
+
   it("renders MeetingWorkspace with real record identity when load succeeds", async () => {
     vi.mocked(getMeetingBySlug).mockResolvedValue(meetingDetailWorkspaceMeetingFixture);
     vi.mocked(getMeetingSubEntities).mockResolvedValue(meetingDetailWorkspaceSubEntitiesFixture);
