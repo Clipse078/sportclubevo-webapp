@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteTaskPermanently } from "@/lib/tasks/task-delete-service";
-import { ParentHasSubtasksForDeleteError } from "@/lib/tasks/errors";
+import { deleteTaskPermanently, getTaskDeletionImpact } from "@/lib/tasks/task-delete-service";
+import { ParentHasSubtasksForDeleteError, TaskForbiddenError } from "@/lib/tasks/errors";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const requireVisibleTask = vi.fn();
@@ -33,6 +33,14 @@ describe("PKG-03 — task delete service (isolated fixtures)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("cross-tenant visibility denial returns null impact", async () => {
+    requireVisibleTask.mockRejectedValue(new TaskForbiddenError("forbidden"));
+
+    const impact = await getTaskDeletionImpact(ctx, "task-foreign");
+    expect(impact).toBeNull();
+    expect(taskDelete).not.toHaveBeenCalled();
   });
 
   it("blocks parent delete when subtasks remain", async () => {

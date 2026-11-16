@@ -36,6 +36,14 @@ describe("PKG-03 — Umsetzungsphase & Aufgabe deletion (isolated fixtures)", ()
 
   it("exposes deletion permissions and inline confirm surfaces (no Dialog)", () => {
     expect(PERMISSIONS.TASKS_DELETE).toBe("tasks.delete");
+    expect(PERMISSIONS.INITIATIVES_DELETE).toBe("initiatives.delete");
+    expect(readSrc("app/api/club-development/sprints/[id]/permanent/route.ts")).toContain(
+      "INITIATIVES_DELETE",
+    );
+    expect(readSrc("app/api/club-development/sprints/[id]/permanent/route.ts")).toContain(
+      "hasTenantDeletionAuthority",
+    );
+    expect(readSrc("app/api/tasks/[taskId]/permanent/route.ts")).toContain("TASKS_DELETE");
     expect(readSrc("components/sce/club-development/SceInlineDestructiveConfirm.tsx")).not.toMatch(
       /from ["']@\/components\/ui\/Dialog/,
     );
@@ -52,6 +60,18 @@ describe("PKG-03 — Umsetzungsphase & Aufgabe deletion (isolated fixtures)", ()
 
     const impact = await getDevelopmentSprintDeletionImpact("sprint-1", "tenant-1");
     expect(impact).toEqual({ activeMembershipCount: 3, tasksPreserved: true });
+  });
+
+  it("rejects cross-tenant sprint delete (tenant-bound query)", async () => {
+    sprintFindFirst.mockResolvedValue(null);
+
+    const result = await deleteDevelopmentSprintPermanently("sprint-1", "tenant-other");
+    expect(result).toBeNull();
+    expect(sprintDelete).not.toHaveBeenCalled();
+    expect(sprintFindFirst).toHaveBeenCalledWith({
+      where: { id: "sprint-1", tenantId: "tenant-other" },
+      select: { title: true },
+    });
   });
 
   it("deleteDevelopmentSprintPermanently removes sprint only", async () => {
