@@ -48,6 +48,7 @@ describe("Umsetzungsplanung workspace", () => {
     expect(counts).toEqual({ ongoing: 0, planned: 0, completed: 1 });
     const defaults = resolveUmsetzungsplanungSectionOpenDefaults(counts, true);
     expect(defaults.unplanned).toBe(true);
+    expect(defaults.planned).toBe(false);
     expect(defaults.completed).toBe(false);
   });
 

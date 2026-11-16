@@ -71,7 +71,7 @@ export function resolveUmsetzungsplanungSectionOpenDefaults(
   const hasOpen = hasOpenUmsetzungsplanungPhases(counts);
   return {
     ongoing: counts.ongoing > 0,
-    planned: counts.planned > 0 || (canManageSprints && counts.ongoing === 0),
+    planned: counts.planned > 0,
     unplanned: canManageSprints && !hasOpen,
     completed: false,
   };
