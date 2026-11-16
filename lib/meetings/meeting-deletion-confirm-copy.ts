@@ -5,7 +5,7 @@ export function buildMeetingDeletionConfirmDescription(
   impact: MeetingDeletionImpact | null,
 ): string {
   const lines: string[] = [
-    `Die Sitzung „${meetingTitle}" wird dauerhaft entfernt — inklusive Teilnehmerliste, Traktanden, Beschlüssen, Pendenzen (Sitzungsmassnahmen), Freigabe-Stimmen und Lebenszyklus-Einträgen zu dieser Sitzung.`,
+    `Die Sitzung „${meetingTitle}" wird dauerhaft entfernt — inklusive aller Sitzungs-Traktanden, Beschlüsse, Pendenzen (Sitzungsmassnahmen im Protokoll), Protokolldaten (z. B. Teilnehmerliste, Freigabe-Stimmen, Verlauf und Lebenszyklus dieser Sitzung).`,
   ];
 
   if (impact) {
@@ -28,7 +28,7 @@ export function buildMeetingDeletionConfirmDescription(
   }
 
   lines.push(
-    "Eigenständige Aufgaben und Dokumente ausserhalb des Sitzungsprotokolls bleiben erhalten; ein Aufgaben-Kontext (Sitzung) kann danach nicht mehr aufgelöst werden.",
+    "Eigenständige Aufgaben und Dokumente, die nicht zum Sitzungsprotokoll gehören, bleiben erhalten. Sitzungseigene Pendenzen und Massnahmen werden dabei trotzdem gelöscht — das Beibehalten einzelner Aufgaben ausserhalb des Protokolls ersetzt keine Sitzungsinhalte.",
   );
 
   return lines.join(" ");

@@ -65,7 +65,7 @@ export function MeetingDeleteInlineConfirm({
           );
           return;
         }
-        router.push("/vereinsleitung/meetings");
+        router.push("/vereinsleitung/meetings?status=deleted");
         router.refresh();
       } catch {
         setError("Netzwerkfehler. Bitte erneut versuchen.");

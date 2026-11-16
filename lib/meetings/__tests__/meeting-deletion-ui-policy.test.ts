@@ -26,4 +26,12 @@ describe("Meeting deletion UI/API policy alignment", () => {
     expect(lifecycle).toContain('case "cancel"');
     expect(lifecycle).toContain("MeetingStatus.CANCELLED");
   });
+
+  it("shows list feedback after permanent delete via status query param", () => {
+    const listPage = readSrc("app/(admin)/vereinsleitung/meetings/page.tsx");
+    const deleteUi = readSrc("components/admin/meetings/MeetingDeleteButton.tsx");
+    expect(listPage).toContain('status === "deleted"');
+    expect(listPage).toContain("Sitzung wurde gelöscht.");
+    expect(deleteUi).toContain("/vereinsleitung/meetings?status=deleted");
+  });
 });

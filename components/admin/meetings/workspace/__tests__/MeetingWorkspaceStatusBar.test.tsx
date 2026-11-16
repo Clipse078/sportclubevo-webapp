@@ -128,6 +128,33 @@ describe("MeetingWorkspaceStatusBar — secondary menu & deletion", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/meetings/meet-1/permanent", { method: "DELETE" });
   });
 
+  it("navigates to meetings list with deleted feedback after confirm", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          impact: { agendaItems: 0, decisions: 0, actions: 0, participants: 0 },
+          requiresConfirmation: true,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ message: "ok" }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<MeetingWorkspaceStatusBar {...baseProps} />);
+    fireEvent.click(screen.getByTestId("meeting-workspace-secondary-menu"));
+    fireEvent.click(await screen.findByTestId("meeting-delete-trigger"));
+    await screen.findByTestId("meeting-delete-confirm");
+    fireEvent.click(screen.getByTestId("meeting-delete-confirm-confirm"));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/vereinsleitung/meetings?status=deleted");
+    });
+  });
+
   it("cancels inline confirm without deleting", async () => {
     vi.stubGlobal(
       "fetch",
