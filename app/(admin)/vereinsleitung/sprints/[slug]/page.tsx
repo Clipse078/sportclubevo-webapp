@@ -15,6 +15,7 @@ import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { buildDevelopmentSprintBreadcrumbs } from "@/lib/club-development/sprint-workspace-chrome";
+import { resolveSprintDeleteAuthority } from "@/lib/club-development/sprints/sprint-delete-authority";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -30,6 +31,8 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
   const canManage = hasSprintManagePermission(actor);
   const tenantId = actor.tenantId;
   const userId = session.user.id ?? "";
+  const canDelete =
+    tenantId && userId ? await resolveSprintDeleteAuthority(userId, tenantId) : false;
   const taskCtx = tenantId && userId ? await buildTaskServiceContextForActor(userId, tenantId) : null;
   const initialMemberships =
     tenantId && taskCtx
@@ -58,6 +61,7 @@ export default async function DevelopmentSprintDetailPage({ params }: PageProps)
             actorUserId={userId}
             sprint={sprint}
             canManage={canManage}
+            canDelete={canDelete}
             activeTab="planung"
           >
             <DevelopmentSprintDetailWorkspace

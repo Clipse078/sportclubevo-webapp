@@ -3,6 +3,7 @@ import type { TaskDto, TaskServiceContext } from "./types";
 import { canManageTask, canReadTask, hasTaskPermission } from "./visibility";
 import { canMutateTaskOrgVisibility } from "./task-org-mutation-policy";
 import { isTaskOrgVisibilityPropagationLocked } from "./task-org-propagation";
+import { resolveTaskDeletionWorkspaceSignals } from "./task-deletion-workspace-policy";
 
 export type TaskWorkspaceCapabilities = {
   readOnly: boolean;
@@ -20,11 +21,14 @@ export type TaskWorkspaceCapabilities = {
   canEditOrgVisibility: boolean;
   /** Comment / timeline collaboration (readers may participate; server auth remains authoritative). */
   canCollaborate: boolean;
+  canDeletePermanently: boolean;
+  showDeletePermissionGapHint: boolean;
 };
 
 export function resolveTaskWorkspaceCapabilities(
   ctx: TaskServiceContext,
   task: TaskDto,
+  options?: { canDeletePermanently?: boolean },
 ): TaskWorkspaceCapabilities {
   const isAssignee = task.assignees.some((a) => a.userId === ctx.userId);
   const isCreator = task.createdByUserId === ctx.userId;
@@ -65,6 +69,12 @@ export function resolveTaskWorkspaceCapabilities(
       "edit",
     );
 
+  const deletion = resolveTaskDeletionWorkspaceSignals(
+    ctx,
+    task,
+    Boolean(options?.canDeletePermanently),
+  );
+
   const caps: TaskWorkspaceCapabilities = {
     readOnly: false,
     canEditTitle: canEditFields,
@@ -80,6 +90,8 @@ export function resolveTaskWorkspaceCapabilities(
     canLinkDocuments: canEditFields,
     canEditOrgVisibility,
     canCollaborate: canReadTask(ctx, authRecord),
+    canDeletePermanently: deletion.canDeletePermanently,
+    showDeletePermissionGapHint: deletion.showDeletePermissionGapHint,
   };
 
   caps.readOnly =

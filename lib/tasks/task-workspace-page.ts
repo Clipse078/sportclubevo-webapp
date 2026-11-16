@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
+import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
 import {
@@ -50,9 +52,16 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
   const locale = tenant?.locale ?? "de-CH";
   const timeZone = tenant?.timezone ?? "Europe/Zurich";
 
+  const resolver = createEffectivePermissionResolver(prisma);
+  const canDeletePermanently = await resolver.hasTenantDeletionAuthority({
+    userId: currentUserId,
+    permission: PERMISSIONS.TASKS_DELETE,
+    tenantId: ctx.tenantId,
+  });
+
   try {
     const [bundle, assigneeOptions, orgUnitOptions] = await Promise.all([
-      loadTaskWorkspace(ctx, taskId, locale, timeZone),
+      loadTaskWorkspace(ctx, taskId, locale, timeZone, { canDeletePermanently }),
       listEligibleTaskAssignees(ctx.tenantId),
       loadTaskOrgUnitMutationOptions(ctx),
     ]);

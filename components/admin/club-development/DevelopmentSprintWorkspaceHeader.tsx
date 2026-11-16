@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import DevelopmentSprintWorkspaceNav from "./DevelopmentSprintWorkspaceNav";
+import DevelopmentSprintSecondaryDelete from "./DevelopmentSprintSecondaryDelete";
 import { Badge } from "@/components/ui";
 import { CD_SPRINT_STATUS_LABELS, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
@@ -22,6 +23,7 @@ type Props = {
   completedCount: number;
   totalCount: number;
   canManage: boolean;
+  canDelete: boolean;
   activeTab: "planung" | "board" | "rueckblick";
 };
 
@@ -37,6 +39,7 @@ function formatSwissDate(value: string | null) {
 export default function DevelopmentSprintWorkspaceHeader({
   sprintId,
   slug,
+  title,
   goal,
   status,
   owner,
@@ -46,6 +49,7 @@ export default function DevelopmentSprintWorkspaceHeader({
   completedCount,
   totalCount,
   canManage,
+  canDelete,
   activeTab,
 }: Props) {
   const router = useRouter();
@@ -209,6 +213,16 @@ export default function DevelopmentSprintWorkspaceHeader({
         <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {canDelete ? (
+        <div className="flex justify-end border-t border-[var(--border)]/60 pt-2">
+          <DevelopmentSprintSecondaryDelete
+            sprintId={sprintId}
+            sprintTitle={title}
+            canDelete={canDelete}
+          />
+        </div>
       ) : null}
 
       <DevelopmentSprintWorkspaceNav slug={slug} />

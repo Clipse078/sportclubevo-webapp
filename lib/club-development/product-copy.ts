@@ -191,6 +191,11 @@ export const CD_SPRINT_API_COPY = {
   targetPhaseRequiredForTask: (taskTitle: string) =>
     `Für Aufgabe „${taskTitle}" ist eine Ziel-Umsetzungsphase für die Verschiebung erforderlich.`,
   phaseAssignmentFailed: "Zuordnung zur Umsetzungsphase fehlgeschlagen.",
+  deletePhase: "Umsetzungsphase löschen",
+  deletePhaseConfirmTitle: "Umsetzungsphase endgültig löschen?",
+  deletePhaseConfirmBody:
+    "Die Umsetzungsphase wird dauerhaft entfernt. Zugeordnete Aufgaben und Unteraufgaben bleiben im Verein erhalten.",
+  deletePhaseTasksPreserved: "Aufgaben bleiben erhalten",
 } as const;
 
 export const CD_TASK_WORKSPACE_COPY = {
@@ -199,6 +204,14 @@ export const CD_TASK_WORKSPACE_COPY = {
   priorImplementationPhases: "Frühere Umsetzungsphasen",
   returnToImplementationPhase: "Zurück zur Umsetzungsphase",
   dueAt: "Fällig am",
+  deleteTask: "Aufgabe löschen",
+  deleteTaskConfirmTitle: "Aufgabe endgültig löschen?",
+  deleteTaskConfirmBody:
+    "Die Aufgabe wird dauerhaft entfernt. Unteraufgaben werden nicht mitgelöscht — löschen Sie zuerst alle Unteraufgaben.",
+  deleteTaskBlockedSubtasks:
+    "Löschen ist nicht möglich, solange Unteraufgaben an dieser Aufgabe hängen.",
+  deleteTaskPermissionGapHint:
+    "Dauerhaftes Löschen erfordert die Berechtigung «Aufgaben dauerhaft löschen» (tasks.delete). Diese ist in diesem Mandanten noch nicht freigeschaltet.",
 } as const;
 
 export const CD_TARGET_COPY = {

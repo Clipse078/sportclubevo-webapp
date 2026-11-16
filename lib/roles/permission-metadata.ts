@@ -136,6 +136,7 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "tasks.assign": "Aufgaben zuweisen",
   "tasks.view_all": "Alle Aufgaben im Verein ansehen",
   "tasks.manage": "Aufgaben verwalten",
+  "tasks.delete": "Aufgaben dauerhaft löschen",
 
   "templates.view": "Vorlagen ansehen",
   "templates.manage": "Vorlagen verwalten",
@@ -258,6 +259,7 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "tasks.assign": "Aufgaben anderen berechtigten Benutzern zuweisen.",
   "tasks.view_all": "Alle Aufgaben im Verein einsehen (ohne automatische Verwaltungsrechte).",
   "tasks.manage": "Aufgaben bearbeiten, Status verwalten und archivieren (inkl. Sicht auf alle Vereinsaufgaben).",
+  "tasks.delete": "Einzelne Aufgaben endgültig löschen. Erfordert explizite Freigabe — nicht durch Aufgaben verwalten abgedeckt.",
 
   "templates.view": "Kommunikationsvorlagen einsehen.",
   "templates.manage": "Kommunikationsvorlagen erstellen und bearbeiten.",

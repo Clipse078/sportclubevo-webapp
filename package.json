@@ -37,6 +37,7 @@
     "sync-task-permissions": "tsx scripts/sync-task-permissions.ts",
     "sync-requirement-permissions": "tsx scripts/sync-requirement-permissions.ts",
     "sync-teams-delete-permission": "tsx scripts/sync-teams-delete-permission.ts",
+    "sync-tasks-delete-permission": "tsx scripts/sync-tasks-delete-permission.ts",
     "sync-finance-permissions": "tsx scripts/sync-finance-permissions.ts",
     "sync-tenant-club-admin-permissions": "tsx scripts/sync-tenant-club-admin-permissions.ts",
     "check-user-permissions": "tsx scripts/check-user-permissions.ts",

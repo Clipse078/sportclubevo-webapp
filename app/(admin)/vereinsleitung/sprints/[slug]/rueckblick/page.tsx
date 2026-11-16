@@ -13,6 +13,7 @@ import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { buildDevelopmentSprintBreadcrumbs } from "@/lib/club-development/sprint-workspace-chrome";
+import { resolveSprintDeleteAuthority } from "@/lib/club-development/sprints/sprint-delete-authority";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -27,6 +28,9 @@ export default async function DevelopmentSprintReviewPage({ params }: PageProps)
 
   const canManage = hasSprintManagePermission(actor);
   const tenantId = actor.tenantId;
+  const userId = session.user.id ?? "";
+  const canDelete =
+    tenantId && userId ? await resolveSprintDeleteAuthority(userId, tenantId) : false;
 
   return (
     <PageShell fullWidth>
@@ -51,6 +55,7 @@ export default async function DevelopmentSprintReviewPage({ params }: PageProps)
             actorUserId={session.user.id ?? ""}
             sprint={sprint}
             canManage={canManage}
+            canDelete={canDelete}
             activeTab="rueckblick"
           >
             <DevelopmentSprintReviewWorkspace sprintId={sprint.id} sprintStatus={sprint.status} />
