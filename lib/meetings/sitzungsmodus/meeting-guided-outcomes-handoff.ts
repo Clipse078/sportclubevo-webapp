@@ -14,3 +14,12 @@ export const GUIDED_OUTCOMES_ACCEPTANCE_PATH =
 
 /** Updated after push + Vercel Ready check on this branch head. */
 export const GUIDED_OUTCOMES_PULL_REQUEST = 997 as const;
+
+export const GUIDED_OUTCOMES_VERIFIED_HEAD_SHA = "94e43b3e03b9406d38d9271c0d063fc450ea94cd" as const;
+
+export const GUIDED_OUTCOMES_VERIFIED_PREVIEW_URL =
+  "https://sportclubevo-webapp-stage-git-curs-9eff96-mds-projects-462da62c.vercel.app" as const;
+
+export function buildGuidedOutcomesAcceptanceUrl(previewBase: string): string {
+  return `${previewBase.replace(/\/$/, "")}${GUIDED_OUTCOMES_ACCEPTANCE_PATH}`;
+}
