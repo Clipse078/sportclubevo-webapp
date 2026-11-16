@@ -52,6 +52,7 @@
     },
     "programme": {
       "title": "Il mio programma",
+      "todayNextTitle": "Oggi e prossimi",
       "groupToday": "Oggi",
       "groupTomorrow": "Domani",
       "allDay": "Tutto il giorno",
@@ -89,8 +90,9 @@
     },
     "quickAccess": {
       "title": "Accesso rapido",
+      "areasTitle": "Le mie aree",
       "customize": "Personalizza",
-      "sectionAria": "Accesso rapido personale",
+      "sectionAria": "Collegamenti ai moduli personali",
       "customizeTitle": "Personalizza accesso rapido",
       "customizeDescription": "Scegli fino a {max} scorciatoie per la dashboard.",
       "pinnedHeading": "Fissati",

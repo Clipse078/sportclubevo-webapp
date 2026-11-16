@@ -141,6 +141,7 @@ export default async function ClubDashboardCommandCenterAsync({
       totalCount={personal.personalAttention.totalCount}
       viewAllHref={personal.personalAttention.viewAllHref}
       operationalSourcesDegraded={personal.personalAttention.operationalSourcesDegraded}
+      embeddedInSectionShell
     />
   ) : null;
 
@@ -178,7 +179,7 @@ export default async function ClubDashboardCommandCenterAsync({
   }
 
   return (
-    <>
+    <div className="flex min-w-0 flex-col gap-6" data-testid="club-dashboard-command-center">
       <SceHotfixLogin01DashboardClientMarks />
       <PersonalDashboardWorkspace
         groups={personal.programmeFeedGroups}
@@ -189,6 +190,7 @@ export default async function ClubDashboardCommandCenterAsync({
         timeZone={fmtCfg.timezone ?? "Europe/Zurich"}
         navigation={personal.calendarNavigation}
         attentionSlot={attentionSlot}
+        attentionViewAllHref={personal.personalAttention.viewAllHref}
         tasksSlot={tasksSlot}
       />
 
@@ -213,7 +215,7 @@ export default async function ClubDashboardCommandCenterAsync({
         newsItems={personal.newsItems}
         activityItems={activityItems}
       />
-    </>
+    </div>
   );
 }
 

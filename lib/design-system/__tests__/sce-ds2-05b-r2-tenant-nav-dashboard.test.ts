@@ -62,11 +62,11 @@ describe("SCE-DS2-05B-R2 delivery", () => {
     expect(SCE_DS2_HEADER_NAV_TYPOGRAPHY.labelTransform).toBe("uppercase");
   });
 
-  it("removes dashboard Mein Kalender widget and spans Mein Programm full width", () => {
+  it("removes dashboard Mein Kalender widget and links programme section to Mein Kalender", () => {
     const workspace = readRepo("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
     expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");
-    expect(workspace).toContain("md:col-span-2");
-    expect(workspace).toContain('data-testid="personal-programme-open-calendar"');
+    expect(workspace).toContain("SceWorkspaceSectionShell");
+    expect(workspace).toContain('testId="personal-dashboard-programme-section"');
     expect(workspace).toContain("buildMeinProgrammKalenderOpenHref");
     expect(workspace).not.toContain("personal-programme-view-all");
     expect(workspace).not.toContain("personal-calendar-open");

@@ -20,6 +20,8 @@ export type PersonalAttentionProps = {
   totalCount: number;
   viewAllHref: string | null;
   operationalSourcesDegraded?: boolean;
+  /** When true, section shell provides the header link — omit duplicate footer chrome. */
+  embeddedInSectionShell?: boolean;
   className?: string;
 };
 
@@ -153,6 +155,7 @@ export async function PersonalAttention({
   totalCount,
   viewAllHref,
   operationalSourcesDegraded = false,
+  embeddedInSectionShell = false,
   className,
 }: PersonalAttentionProps) {
   const t = await getTranslations("PersonalDashboard.attention");
@@ -177,18 +180,18 @@ export async function PersonalAttention({
   }
 
   const showViewAll =
-    viewAllHref && totalCount > items.length ? (
+    !embeddedInSectionShell && viewAllHref && totalCount > items.length ? (
       <Link href={viewAllHref} className="sce-link-primary text-[0.8125rem] font-medium">
         {t("viewAll")} →
       </Link>
-    ) : viewAllHref ? (
+    ) : !embeddedInSectionShell && viewAllHref ? (
       <Link href={viewAllHref} className="sce-link-primary text-[0.8125rem] font-medium">
         {t("openInbox")} →
       </Link>
     ) : null;
 
   return (
-    <div className={className}>
+    <div className={className} data-testid="personal-attention">
       {showViewAll ? (
         <div className="mb-1 flex justify-end border-b border-[var(--border)] pb-2">{showViewAll}</div>
       ) : null}

@@ -32,21 +32,6 @@ const customizeSource = readFileSync(
   "utf8",
 );
 
-const gridSource = readFileSync(
-  join(process.cwd(), "components/ui/dashboard/DashboardCockpitGrid.tsx"),
-  "utf8",
-);
-
-const cardSource = readFileSync(
-  join(process.cwd(), "components/ui/dashboard/DashboardCockpitCard.tsx"),
-  "utf8",
-);
-
-const surfaceSource = readFileSync(
-  join(process.cwd(), "lib/dashboard/dashboard-cockpit-surface.ts"),
-  "utf8",
-);
-
 const identitySource = readFileSync(
   join(process.cwd(), "components/ui/dashboard/PersonalIdentityHeader.tsx"),
   "utf8",
@@ -70,36 +55,23 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(compactWelcomeSource).not.toContain('after || "!"');
   });
 
-  it("renders four canonical cockpit modules via workspace slots", () => {
+  it("renders attention, programme and tasks via workspace slots", () => {
     expect(clubDashboardDeferredSource).toContain("<PersonalDashboardWorkspace");
     expect(clubDashboardDeferredSource).toContain("attentionSlot=");
     expect(clubDashboardDeferredSource).toContain("tasksSlot=");
     expect(workspaceSource).toContain("PersonalProgrammeFeed");
     expect(workspaceSource).not.toContain("PersonalProgrammeMonthCalendar");
-    expect(workspaceSource).toContain("md:col-span-2");
-    expect(workspaceSource).toContain("attentionSlot");
-    expect(workspaceSource).toContain("tasksSlot");
+    expect(workspaceSource).toContain("personal-dashboard-attention-section");
+    expect(workspaceSource).toContain("personal-dashboard-programme-section");
+    expect(workspaceSource).toContain("personal-dashboard-tasks-section");
   });
 
-  it("exposes desktop 2×2 grid contract", () => {
-    expect(gridSource).toContain('data-testid="dashboard-cockpit-grid"');
-    expect(gridSource).toContain("md:grid-cols-2");
-    expect(gridSource).toContain("repeat(2,minmax(0,1fr))");
-  });
-
-  it("uses shared cockpit glass card surface for all modules", () => {
-    expect(cardSource).toContain("dashboardCockpitSurfaceClassName");
-    expect(surfaceSource).toContain("backdrop-blur");
-    expect(workspaceSource).toContain("DashboardCockpitCard");
-  });
-
-  it("preserves personalized programme and calendar data wiring", () => {
+  it("preserves personalized programme data wiring", () => {
     expect(clubDashboardDeferredSource).toContain("getPersonalCommandCenterData");
     expect(clubDashboardDeferredSource).toContain("programmeFeedGroups");
     expect(clubDashboardDeferredSource).toContain("programmeItems");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
-    expect(workspaceSource).toContain("onSelectedDayChange");
-    expect(workspaceSource).toContain("personal-programme-open-calendar");
+    expect(workspaceSource).toContain("personal-dashboard-programme-section");
   });
 
   it("preserves attention and tasks data sources", () => {
@@ -108,7 +80,7 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("personalTaskPreview");
   });
 
-  it("keeps permission-aware quick access below cockpit", () => {
+  it("keeps permission-aware quick access below primary sections", () => {
     const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
     const quickAccessIndex = clubDashboardDeferredSource.indexOf("<PersonalQuickAccess");
     expect(workspaceIndex).toBeGreaterThan(-1);

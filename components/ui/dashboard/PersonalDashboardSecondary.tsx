@@ -9,6 +9,7 @@ import { DashboardNewsSection } from "./DashboardNewsGrid";
 import { DashboardActivityFeed, type DashboardActivityItem } from "./DashboardActivityFeed";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { cn } from "@/lib/cn";
+import { SCE_WORKSPACE_SECTION_SHELL_CLASS } from "@/lib/sce/sce-workspace-surface-styles";
 
 export type PersonalDashboardSecondaryProps = {
   newsItems: CommandCenterNewsItem[];
@@ -30,17 +31,18 @@ export function PersonalDashboardSecondary({
   return (
     <details
       className={cn(
-        "group rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 py-2 sm:px-5",
+        "group overflow-hidden",
+        SCE_WORKSPACE_SECTION_SHELL_CLASS,
         className,
       )}
       data-testid="personal-dashboard-secondary"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-1.5 text-sm font-medium text-[var(--text-2)] marker:content-none [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-3.5 text-sm font-semibold text-[var(--foreground)] marker:content-none [&::-webkit-details-marker]:hidden">
         <span>{t("summary")}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 motion-safe:transition-transform group-open:rotate-180" aria-hidden />
+        <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-transform group-open:rotate-180" aria-hidden />
       </summary>
 
-      <div className="mt-2 grid grid-cols-1 gap-4 border-t border-[var(--border)] pt-3 lg:grid-cols-2 lg:gap-5">
+      <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-2 lg:gap-5">
         {newsItems.length > 0 ? (
           <section aria-labelledby="dashboard-secondary-news">
             <div className="mb-2 flex items-center gap-2">

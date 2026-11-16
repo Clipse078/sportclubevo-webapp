@@ -55,15 +55,15 @@ describe("DASHBOARD-06 — personal command center composition", () => {
     expect(secondaryIndex).toBeGreaterThan(workspaceIndex);
   });
 
-  it("coordinates calendar selection with programme feed without duplicating day agenda", () => {
-    expect(workspaceSource).toContain("onSelectedDayChange");
-    expect(workspaceSource).toContain("personal-programme-open-calendar");
+  it("links programme section to personal Kalender without embedded month grid", () => {
+    expect(workspaceSource).toContain("buildMeinProgrammKalenderOpenHref");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
-    expect(workspaceSource).toContain("highlightedDayKey={selectedDayKey}");
+    expect(workspaceSource).not.toContain("PersonalProgrammeMonthCalendar");
   });
 
-  it("uses balanced 2×2 cockpit grid on workspace", () => {
-    expect(workspaceSource).toContain("DashboardCockpitGrid");
-    expect(workspaceSource).toContain("DashboardCockpitCard");
+  it("uses SCE workspace section shells for primary dashboard modules", () => {
+    expect(workspaceSource).toContain("SceWorkspaceSectionShell");
+    expect(workspaceSource).toContain('data-sce-dashboard-layout="cd-reference"');
+    expect(workspaceSource).not.toContain("DashboardCockpitGrid");
   });
 });

@@ -52,6 +52,7 @@
     },
     "programme": {
       "title": "Mon programme",
+      "todayNextTitle": "Aujourd'hui et ensuite",
       "groupToday": "Aujourd'hui",
       "groupTomorrow": "Demain",
       "allDay": "Journée entière",
@@ -89,8 +90,9 @@
     },
     "quickAccess": {
       "title": "Accès rapide",
+      "areasTitle": "Mes domaines",
       "customize": "Personnaliser",
-      "sectionAria": "Accès rapide personnel",
+      "sectionAria": "Raccourcis vers vos modules",
       "customizeTitle": "Personnaliser l'accès rapide",
       "customizeDescription": "Choisissez jusqu'à {max} raccourcis pour votre tableau de bord.",
       "pinnedHeading": "Épinglés",

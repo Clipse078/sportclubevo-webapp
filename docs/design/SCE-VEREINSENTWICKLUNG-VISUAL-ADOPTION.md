@@ -8,6 +8,7 @@ Governance: `SCE-DS-GOV-CD-VISUAL-001` (`lib/club-development/sce-vereinsentwick
 
 | Surface | Route / component |
 |---------|-------------------|
+| Persönliches Dashboard | `/dashboard` — `PersonalDashboardWorkspace`, `PersonalQuickAccess`, `PersonalTasksPreview`, `PersonalDashboardSecondary` (via `SceWorkspaceSectionShell` re-export) |
 | Übersicht | `ClubDevelopmentOverview`, governance stale copy |
 | Strategie & Ziele | `StrategieUndZieleWorkspaceClient`, `StrategyAuthoringPanel`, `ZieleWorkspacePanel` |
 | Vorhaben & Umsetzung | `vorhaben-und-umsetzung/page.tsx`, `VorhabenUndUmsetzungWorkspaceClient`, `VorhabenAufgabenWorkspace`, `InitiativeBacklogWorkspace`, `CreateInitiativeWorkspaceCollapsibleCard`, `VorhabenWorkspaceToolbar`, `DevelopmentSprintList`, `VorhabenCollapsibleCard`, `VorhabenPrioritaetenControl` |
