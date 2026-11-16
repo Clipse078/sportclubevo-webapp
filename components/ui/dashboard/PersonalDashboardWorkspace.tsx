@@ -91,6 +91,7 @@ export function PersonalDashboardWorkspace({
           title={tProgramme("todayNextTitle")}
           href={programmeSupported ? calendarOpenHref : undefined}
           linkLabel={programmeLinkLabel}
+          linkTestId="personal-programme-open-calendar"
           testId="personal-dashboard-programme-section"
         >
           <PersonalProgrammeFeed

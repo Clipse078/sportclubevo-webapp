@@ -22,6 +22,7 @@ import {
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import ClubDashboardCommandCenterAsync from "./ClubDashboardCommandCenterAsync";
 import { ClubDashboardCommandCenterSkeleton } from "./ClubDashboardCommandCenterSkeleton";
+import { SCE_PAGE_SHELL_WIDTH_CLASS } from "@/lib/shell/sce-page-layout";
 
 type ClubDashboardViewProps = {
   calendarMonthParam?: string | null;
@@ -103,9 +104,9 @@ export default async function ClubDashboardView({
 
   return (
     <div
-      className="sce-page-shell flex w-full min-w-0 flex-col gap-6"
+      className={`sce-page-shell ${SCE_PAGE_SHELL_WIDTH_CLASS.dashboard} flex w-full min-w-0 flex-col gap-6`}
       data-sce-page-shell
-      data-sce-page-width="full"
+      data-sce-page-width="dashboard"
       data-testid="personal-command-center"
     >
       <PersonalDashboardCockpitGreeting

@@ -41,15 +41,12 @@ function renderWorkspace() {
 }
 
 describe("PersonalDashboardWorkspace", () => {
-  it("spans Mein Programm across the cockpit grid and omits embedded calendar", () => {
+  it("links programme section to Mein Kalender and omits embedded calendar", () => {
     renderWorkspace();
     expect(screen.getByTestId("personal-programme-open-calendar")).toBeTruthy();
+    expect(screen.getByTestId("personal-dashboard-programme-section")).toBeTruthy();
     expect(screen.queryByTestId("mock-select-day")).toBeNull();
     expect(screen.queryByTestId("personal-calendar-open")).toBeNull();
-
-    const grid = screen.getByTestId("dashboard-cockpit-grid");
-    const programmeCard = screen.getByTestId("personal-dashboard-workspace");
-    expect(programmeCard).toBeTruthy();
-    expect(grid.textContent).toContain("Mein Programm");
+    expect(screen.queryByTestId("dashboard-cockpit-grid")).toBeNull();
   });
 });

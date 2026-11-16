@@ -99,8 +99,7 @@ function resolveClubEventDashboardPreviewIdentity(
   model: SceClubEventPresentationModel,
 ): ProgrammeDashboardPreviewClubIdentity | null {
   const crest = resolveSceClubEventPrimaryVisualIdentity(model);
-  const audienceUnit = model.audience?.compactLabel?.trim() || model.audience?.primaryLabel?.trim();
-  return buildPreviewClubIdentity(crest, audienceUnit);
+  return buildPreviewClubIdentity(crest, undefined);
 }
 
 function resolveTournamentDashboardPreviewIdentity(

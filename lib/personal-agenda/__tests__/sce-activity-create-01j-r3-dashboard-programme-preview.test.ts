@@ -136,7 +136,9 @@ describe("SCE-ACTIVITY-CREATE-01J R3 — R2 / Navbar regression sentinels", () =
 
   it("preserves navbar shell markers on dashboard page", () => {
     const club = readRelative("components/admin/dashboard/ClubDashboardView.tsx");
-    expect(club).toContain("sce-page-shell--dashboard");
+    expect(club).toContain("SCE_PAGE_SHELL_WIDTH_CLASS.dashboard");
+    expect(club).toContain("data-sce-page-width=\"dashboard\"");
+    expect(club).toContain("data-testid=\"personal-command-center\"");
     expect(club).not.toContain("DashboardL1");
   });
 });
