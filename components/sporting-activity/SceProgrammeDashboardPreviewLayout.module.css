@@ -1,0 +1,73 @@
+.root {
+  container-type: inline-size;
+  container-name: sce-programme-dashboard-preview;
+  min-width: 0;
+  width: 100%;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "status"
+    "time"
+    "title"
+    "identity"
+    "meta";
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+}
+
+.statusSlot:empty,
+.timeSlot:empty,
+.titleSlot:empty,
+.identitySlot:empty,
+.metaSlot:empty {
+  display: none;
+}
+
+.statusSlot {
+  grid-area: status;
+}
+
+.timeSlot {
+  grid-area: time;
+}
+
+.titleSlot {
+  grid-area: title;
+  min-width: 0;
+}
+
+.identitySlot {
+  grid-area: identity;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.metaSlot {
+  grid-area: meta;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+@container sce-programme-dashboard-preview (min-width: 22rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(5.5rem, 8.75rem);
+    grid-template-areas:
+      "status status"
+      "time identity"
+      "title identity"
+      "meta meta";
+  }
+
+  .identitySlot {
+    grid-row: 2 / span 2;
+    grid-column: 2;
+    justify-self: end;
+    align-self: start;
+    text-align: right;
+  }
+}

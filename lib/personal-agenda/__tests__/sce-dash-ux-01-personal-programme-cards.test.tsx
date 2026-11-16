@@ -52,7 +52,7 @@ describe("SCE-DASH-UX-01 — meeting presentation normalization", () => {
       title: "Test Sitzung",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       location: "Clubhaus",
-      contextLabel: "Meeting · Teilnehmer",
+      organisationalContext: "Vorstand",
       status: "scheduled",
       plannedDurationMin: 90,
     });
@@ -71,7 +71,7 @@ describe("SCE-DASH-UX-01 — meeting presentation normalization", () => {
       title: "Test Sitzung mit sehr langem Titel für Dashboard Programme Karten",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       location: "Sitzungszimmer Nord",
-      contextLabel: "Meeting · Teilnehmer",
+      organisationalContext: "Vorstand",
     });
 
     const item: PersonalProgrammeItem = {

@@ -4,11 +4,15 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalProgrammePreviewRow } from "@/components/ui/dashboard/PersonalProgrammePreviewRow";
 import { PersonalProgrammeCanonicalAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow";
-import { SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
+import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_CONTAINER_NAME,
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_WIDE_MIN_WIDTH,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import { createSceTrainingCardFixtureSession } from "@/components/sporting-activity/__fixtures__/sce-training-card-fixtures";
 import { resolveSceMatchCardFixture } from "@/components/sporting-activity/__fixtures__/sce-match-card-fixtures";
 import { resolveSceMeetingPresentationFromProgramme } from "@/lib/sporting-activity-presentation/canonical/adapters/meeting-programme";
@@ -70,19 +74,20 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     expect(previewRow).toContain("dashboardCockpitPreview");
   });
 
-  it("structural regression: stacked shell without horizontal programme-personal grid on dashboard", () => {
-    const layout = readRelative(
-      "lib/sporting-activity-presentation/canonical/activity-card-reference-layout.ts",
-    );
-    expect(layout).toContain("programmeDashboardPreviewContentStackClass");
-    expect(layout).toContain("sce-programme-dashboard-preview-stack");
-    const training = readRelative("components/sporting-activity/SceTrainingCard.tsx");
+  it("structural regression: container-query layout shell with single identity slot", () => {
+    const css = readRelative("components/sporting-activity/SceProgrammeDashboardPreviewLayout.module.css");
     const stack = readRelative("components/sporting-activity/SceProgrammeDashboardPreviewStack.tsx");
-    expect(training).toContain("SceTrainingListRowDashboardPreviewContent");
-    expect(stack).toContain("data-sce-activity-card-layout=\"dashboard-preview-stack\"");
+    expect(css).toContain(`container-name: ${SCE_PROGRAMME_DASHBOARD_PREVIEW_CONTAINER_NAME}`);
+    expect(css).toContain(`min-width: ${SCE_PROGRAMME_DASHBOARD_PREVIEW_WIDE_MIN_WIDTH}`);
+    expect(css).toContain("grid-area: identity");
+    expect(stack).toContain("SceProgrammeDashboardPreviewBody");
+    expect(stack).toContain("data-sce-programme-dashboard-preview-layout");
+    expect(stack).toContain("identitySlot");
+    expect(stack).not.toContain("identityPlacementWide");
+    expect(stack).not.toContain("identityPlacementNarrow");
   });
 
-  it("training: time, title, team, pill, location and dressing room each on own line", () => {
+  it("training: time, title, club/team identity, pill, location and labelled dressing room", () => {
     render(
       <PersonalProgrammePreviewRow
         item={trainingItem()}
@@ -96,38 +101,33 @@ describe("Dashboard programme preview — stacked layout contract", () => {
 
     const time = screen.getByTestId("sce-training-list-row-time");
     const title = screen.getByTestId("sce-training-title");
-    const team = screen.getByTestId("sce-training-list-row-primary-identity");
+    const identity = screen.getByTestId("sce-training-list-row-primary-identity");
     const pill = screen.getByTestId("sce-training-list-row-activity");
     const location = screen.getByTestId("sce-training-list-row-location");
     const dressing = screen.getByTestId("sce-training-list-row-dressing-room");
 
-    expect(stack.contains(time)).toBe(true);
-    expect(stack.contains(title)).toBe(true);
-    expect(stack.contains(team)).toBe(true);
-    expect(stack.contains(pill)).toBe(true);
-    expect(stack.contains(location)).toBe(true);
-    expect(stack.contains(dressing)).toBe(true);
-
     expect(time.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(title.compareDocumentPosition(team) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(team.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(title.compareDocumentPosition(identity) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(identity.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(pill.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(location.compareDocumentPosition(dressing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    expect(title.textContent?.length ?? 0).toBeGreaterThan(0);
-    expect(team).toHaveTextContent("FC Allschwil Junioren B1");
+    expect(within(identity).getByText("FC Allschwil")).toBeInTheDocument();
+    expect(within(identity).getByText("FC Allschwil Junioren B1")).toBeInTheDocument();
     expect(location).toHaveTextContent(/Im Brüel|Kunstrasen/);
-    expect(dressing).toHaveTextContent("E2");
+    expect(dressing).toHaveTextContent("Garderobe E2");
+    expect(screen.queryAllByTestId("sce-training-list-row-primary-identity")).toHaveLength(1);
   });
 
-  it("meeting: organisational unit line without dressing room", () => {
+  it("meeting: club/org identity with location and no dressing room", () => {
     const model = resolveSceMeetingPresentationFromProgramme({
       meetingId: "m-board",
       slug: "vorstand",
       title: "Vorstandssitzung",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       location: "Clubhaus",
-      contextLabel: "Vorstand",
+      organisationalContext: "Vorstand",
+      tenantClub: buildClubIdentity({ displayName: "FC Musterstadt", logoUrl: "https://cdn/logo.png" }),
     });
     const item: PersonalProgrammeItem = {
       id: "meeting:m-board",
@@ -149,9 +149,41 @@ describe("Dashboard programme preview — stacked layout contract", () => {
       />,
     );
 
-    expect(screen.getByTestId("sce-meeting-context")).toHaveTextContent("Vorstand");
+    const identity = screen.getByTestId("sce-meeting-context");
+    expect(within(identity).getByText("FC Musterstadt")).toBeInTheDocument();
+    expect(within(identity).getByText("Vorstand")).toBeInTheDocument();
     expect(screen.getByTestId("sce-meeting-list-row-location")).toHaveTextContent("Clubhaus");
     expect(screen.queryByTestId("sce-programme-dashboard-preview-dressing-room")).toBeNull();
+  });
+
+  it("meeting without organisational unit renders club identity alone", () => {
+    const model = resolveSceMeetingPresentationFromProgramme({
+      meetingId: "m-none",
+      slug: "alle",
+      title: "Vereinssitzung",
+      meetingDate: new Date("2026-11-15T17:00:00.000Z"),
+      tenantClub: buildClubIdentity({ displayName: "FC Musterstadt" }),
+    });
+    render(
+      <PersonalProgrammeCanonicalAgendaRow
+        item={{
+          id: "meeting:m-none",
+          sourceType: "MEETING",
+          startsAt: new Date(model.schedule.startAt),
+          title: model.meetingTitle,
+          typeLabel: "Sitzung",
+          deepLink: "/vereinsleitung/meetings/alle",
+          ariaLabel: "Sitzung",
+          canonicalPresentation: model,
+        }}
+        fmtCfg={FMT}
+        listRowPresentation={SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW}
+      />,
+    );
+
+    const identity = screen.getByTestId("sce-meeting-context");
+    expect(within(identity).getByText("FC Musterstadt")).toBeInTheDocument();
+    expect(within(identity).queryByText(/Meeting · Organisator/i)).toBeNull();
   });
 
   it("match: preserves programme-fixture identity band with stacked cockpit metadata", () => {
@@ -176,10 +208,11 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     expect(screen.getByTestId("sce-match-location")).toBeInTheDocument();
   });
 
-  it("omits team context line when title already embeds the team name", () => {
+  it("keeps club identity when authored title already embeds the team name", () => {
     const model = createSceTrainingCardFixtureSession({
       team: { name: "FC Allschwil Junioren B1" },
       trainingTitle: "FC Allschwil Junioren B1 Training",
+      tenantClub: buildClubIdentity({ displayName: "FC Allschwil" }),
     });
     const item: PersonalProgrammeItem = {
       id: "training:dup",
@@ -196,7 +229,9 @@ describe("Dashboard programme preview — stacked layout contract", () => {
       <PersonalProgrammePreviewRow item={item} timeLabel="18:00" dashboardCockpitPreview />,
     );
 
-    expect(screen.queryByTestId("sce-training-list-row-primary-identity")).toBeNull();
+    const identity = screen.getByTestId("sce-training-list-row-primary-identity");
+    expect(within(identity).getByText("FC Allschwil")).toBeInTheDocument();
+    expect(within(identity).queryByText(/Junioren B1/)).toBeNull();
     expect(screen.getByTestId("sce-training-title")).toHaveTextContent(/Junioren B1/);
   });
 

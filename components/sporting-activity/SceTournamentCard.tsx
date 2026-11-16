@@ -41,12 +41,12 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import {
   SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
   SceProgrammeDashboardPreviewLocationLine,
-  SceProgrammeDashboardPreviewOrgContextLine,
-  SceProgrammeDashboardPreviewStack,
   SceProgrammeDashboardPreviewTimeLine,
   SceProgrammeDashboardPreviewTitleLine,
 } from "./SceProgrammeDashboardPreviewStack";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
@@ -465,51 +465,52 @@ function SceTournamentListRowDashboardPreviewContent({
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
 }) {
-  const organiser = model.organiser.displayName?.trim();
-  const showOrganiserCrest = Boolean(model.organiser.logoUrl?.trim());
-  const ownTeamsLabel = formatSceTournamentOwnTeamsCompactLabel({
-    teamNames: model.ownTeams ?? (model.hauptteam?.name ? [model.hauptteam.name] : []),
-    organiserDisplayName: organiser,
-  });
-  const orgLabel = ownTeamsLabel ?? (organiser && organiser !== model.tournamentTitle.trim() ? organiser : undefined);
   const timeLabel = formatSessionTimeOnly(model, fmtCfg);
+  const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
   const locationLine = resolveTournamentLocationLine(model, density);
   const status = model.status;
   const showExceptionalStatus =
     showStatus && status?.label && (status.semantic === "cancelled" || status.semantic === "warning");
 
   return (
-    <SceProgrammeDashboardPreviewStack activityKind="TOURNAMENT" testId="sce-tournament-list-row-identity">
-      {showExceptionalStatus ? (
-        <div data-sce-tournament-region="status">
-          <SceTournamentCardStatus status={status} />
-        </div>
-      ) : null}
-      {timeLabel ? (
-        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-tournament-list-row-time" />
-      ) : null}
-      <SceProgrammeDashboardPreviewTitleLine title={model.tournamentTitle} testId="sce-tournament-title" />
-      {orgLabel ? (
-        <SceProgrammeDashboardPreviewOrgContextLine
-          label={orgLabel}
-          crestIdentity={showOrganiserCrest ? model.organiser : undefined}
-          testId="sce-tournament-list-row-primary-identity"
-        />
-      ) : null}
-      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-tournament-list-row-activity">
-        <ActivityTypePill
-          activityKind="TOURNAMENT"
-          label={model.typeLabel}
-          className={cn("shrink-0", sceActivityListRowTypePillClass())}
-        />
-      </SceProgrammeDashboardPreviewActivityPillLine>
-      {locationLine ? (
-        <SceProgrammeDashboardPreviewLocationLine
-          label={locationLine}
-          testId="sce-tournament-list-row-location"
-        />
-      ) : null}
-    </SceProgrammeDashboardPreviewStack>
+    <SceProgrammeDashboardPreviewBody
+      activityKind="TOURNAMENT"
+      testId="sce-tournament-list-row-identity"
+      identity={previewIdentity}
+      identityTestId="sce-tournament-list-row-primary-identity"
+      statusSlot={
+        showExceptionalStatus ? (
+          <div data-sce-tournament-region="status">
+            <SceTournamentCardStatus status={status} />
+          </div>
+        ) : null
+      }
+      timeSlot={
+        timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-tournament-list-row-time" />
+        ) : null
+      }
+      titleSlot={
+        <SceProgrammeDashboardPreviewTitleLine title={model.tournamentTitle} testId="sce-tournament-title" />
+      }
+      metaSlot={
+        <>
+          <SceProgrammeDashboardPreviewActivityPillLine testId="sce-tournament-list-row-activity">
+            <ActivityTypePill
+              activityKind="TOURNAMENT"
+              label={model.typeLabel}
+              className={cn("shrink-0", sceActivityListRowTypePillClass())}
+            />
+          </SceProgrammeDashboardPreviewActivityPillLine>
+          {locationLine ? (
+            <SceProgrammeDashboardPreviewLocationLine
+              label={locationLine}
+              testId="sce-tournament-list-row-location"
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 

@@ -10,6 +10,7 @@ vi.mock("@/lib/db/prisma", () => ({
     tenantSfvConfig: { findUnique: vi.fn().mockResolvedValue(null) },
     teamSeason: { findMany: vi.fn().mockResolvedValue([]) },
     team: { findMany: vi.fn().mockResolvedValue([]) },
+    orgUnit: { findMany: vi.fn().mockResolvedValue([]) },
     trainingSessionAllocation: { findMany: vi.fn() },
     trainingAllocation: { findMany: vi.fn() },
     playerSquadMember: { findFirst: vi.fn().mockResolvedValue(null) },

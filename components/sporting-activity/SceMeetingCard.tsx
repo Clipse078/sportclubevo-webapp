@@ -24,12 +24,12 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import {
   SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
   SceProgrammeDashboardPreviewLocationLine,
-  SceProgrammeDashboardPreviewOrgContextLine,
-  SceProgrammeDashboardPreviewStack,
   SceProgrammeDashboardPreviewTimeLine,
   SceProgrammeDashboardPreviewTitleLine,
 } from "./SceProgrammeDashboardPreviewStack";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 
 export type SceMeetingListRowPresentation =
   | "default"
@@ -73,48 +73,58 @@ function MeetingDashboardPreviewListRow({
 }) {
   const timeLabel = formatSceMeetingTimeLabel(model, fmtCfg);
   const locationLine = resolveMeetingLocationLine(model);
-  const orgContext = model.organisationalContext?.trim();
   const showExceptionalStatus = Boolean(
     model.status?.label &&
       (model.status.semantic === "cancelled" || model.status.semantic === "warning"),
   );
   const typeLabel = resolveMeetingTypeLabel(model);
 
+  const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
+
   return (
-    <SceProgrammeDashboardPreviewStack activityKind="MEETING" testId={testId}>
-      {showExceptionalStatus && model.status?.label ? (
-        <div data-testid="sce-meeting-status">
-          <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
-            {model.status.label}
-          </p>
-        </div>
-      ) : null}
-      {timeLabel ? (
-        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-meeting-list-row-time" />
-      ) : null}
-      <SceProgrammeDashboardPreviewTitleLine title={model.meetingTitle} testId="sce-meeting-title" />
-      {orgContext ? (
-        <SceProgrammeDashboardPreviewOrgContextLine label={orgContext} testId="sce-meeting-context" />
-      ) : null}
-      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-meeting-list-row-primary-identity">
-        <span
-          className={cn(
-            "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em]",
-            "border-teal-500/30 bg-teal-500/10 text-teal-800 dark:text-teal-300",
-            sceActivityListRowTypePillClass(),
-          )}
-          data-activity-type-pill="meeting"
-        >
-          {typeLabel}
-        </span>
-      </SceProgrammeDashboardPreviewActivityPillLine>
-      {locationLine ? (
-        <SceProgrammeDashboardPreviewLocationLine
-          label={locationLine}
-          testId="sce-meeting-list-row-location"
-        />
-      ) : null}
-    </SceProgrammeDashboardPreviewStack>
+    <SceProgrammeDashboardPreviewBody
+      activityKind="MEETING"
+      testId={testId}
+      identity={previewIdentity}
+      identityTestId="sce-meeting-context"
+      statusSlot={
+        showExceptionalStatus && model.status?.label ? (
+          <div data-testid="sce-meeting-status">
+            <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
+              {model.status.label}
+            </p>
+          </div>
+        ) : null
+      }
+      timeSlot={
+        timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-meeting-list-row-time" />
+        ) : null
+      }
+      titleSlot={<SceProgrammeDashboardPreviewTitleLine title={model.meetingTitle} testId="sce-meeting-title" />}
+      metaSlot={
+        <>
+          <SceProgrammeDashboardPreviewActivityPillLine testId="sce-meeting-list-row-activity-pill">
+            <span
+              className={cn(
+                "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em]",
+                "border-teal-500/30 bg-teal-500/10 text-teal-800 dark:text-teal-300",
+                sceActivityListRowTypePillClass(),
+              )}
+              data-activity-type-pill="meeting"
+            >
+              {typeLabel}
+            </span>
+          </SceProgrammeDashboardPreviewActivityPillLine>
+          {locationLine ? (
+            <SceProgrammeDashboardPreviewLocationLine
+              label={locationLine}
+              testId="sce-meeting-list-row-location"
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 

@@ -22,11 +22,11 @@ import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchScorePresentation } from "./SceMatchScorePresentation";
 import {
   SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
   SceProgrammeDashboardPreviewLocationLine,
-  SceProgrammeDashboardPreviewOrgContextLine,
-  SceProgrammeDashboardPreviewStack,
   SceProgrammeDashboardPreviewTimeLine,
 } from "./SceProgrammeDashboardPreviewStack";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 
 export type SceMatchFixtureReferenceLayoutProps = {
   model: SceMatchPresentationModel;
@@ -245,36 +245,43 @@ export function SceMatchFixtureReferenceLayout({
       (model.schedule.allDay
         ? undefined
         : formatFixtureTime(startAt, fmtCfg));
+    const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
+
     return (
-      <SceProgrammeDashboardPreviewStack activityKind="MATCH" testId="sce-match-list-row-identity">
-        <span className="sr-only">{model.typeLabel}</span>
-        {timeLabel ? (
-          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-match-list-row-time" />
-        ) : null}
-        <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>{fixtureBand}</div>
-        {teamContextLabel ? (
-          <SceProgrammeDashboardPreviewOrgContextLine
-            label={teamContextLabel}
-            testId="sce-match-list-row-team-context"
-          />
-        ) : showCompetitionLine && model.competition?.label ? (
-          <SceProgrammeDashboardPreviewOrgContextLine
-            label={model.competition.label}
-            testId="sce-match-list-row-team-context"
-          />
-        ) : null}
-        <SceProgrammeDashboardPreviewActivityPillLine testId="sce-match-list-row-activity-pill">
-          <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
-        </SceProgrammeDashboardPreviewActivityPillLine>
-        {locationLine ? (
-          <SceProgrammeDashboardPreviewLocationLine label={locationLine} testId="sce-match-location" />
-        ) : null}
-        {showStatus && lifecycle?.label ? (
-          <div data-sce-match-region="status">
-            <SceMatchCardStatus status={lifecycle} testId="sce-match-status" />
-          </div>
-        ) : null}
-      </SceProgrammeDashboardPreviewStack>
+      <SceProgrammeDashboardPreviewBody
+        activityKind="MATCH"
+        testId="sce-match-list-row-identity"
+        identity={previewIdentity}
+        identityTestId="sce-match-list-row-team-context"
+        statusSlot={
+          showStatus && lifecycle?.label ? (
+            <div data-sce-match-region="status">
+              <SceMatchCardStatus status={lifecycle} testId="sce-match-status" />
+            </div>
+          ) : null
+        }
+        timeSlot={
+          timeLabel ? (
+            <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-match-list-row-time" />
+          ) : null
+        }
+        titleSlot={
+          <>
+            <span className="sr-only">{model.typeLabel}</span>
+            <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>{fixtureBand}</div>
+          </>
+        }
+        metaSlot={
+          <>
+            <SceProgrammeDashboardPreviewActivityPillLine testId="sce-match-list-row-activity-pill">
+              <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
+            </SceProgrammeDashboardPreviewActivityPillLine>
+            {locationLine ? (
+              <SceProgrammeDashboardPreviewLocationLine label={locationLine} testId="sce-match-location" />
+            ) : null}
+          </>
+        }
+      />
     );
   }
 

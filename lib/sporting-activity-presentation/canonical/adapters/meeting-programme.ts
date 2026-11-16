@@ -1,6 +1,7 @@
 import { buildSportingActivityLocation } from "@/lib/sporting-activity-presentation/location";
 import type { PersonalProgrammePresentationStatus } from "@/lib/personal-agenda/personal-programme-types";
 import { PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL } from "@/lib/personal-agenda/programme-activity-german-labels";
+import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import type { SceMeetingPresentationModel } from "../types";
 
 export type ResolveSceMeetingPresentationInput = {
@@ -9,7 +10,8 @@ export type ResolveSceMeetingPresentationInput = {
   title: string;
   meetingDate: Date;
   location?: string | null;
-  contextLabel?: string;
+  organisationalContext?: string;
+  tenantClub?: ClubIdentity;
   status?: PersonalProgrammePresentationStatus;
   plannedDurationMin?: number | null;
 };
@@ -47,7 +49,8 @@ export function resolveSceMeetingPresentationFromProgramme(
     resourceKey: `meeting:${input.meetingId}`,
     typeLabel: PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL.MEETING,
     meetingTitle: input.title.trim(),
-    organisationalContext: input.contextLabel?.trim() || undefined,
+    organisationalContext: input.organisationalContext?.trim() || undefined,
+    tenantClub: input.tenantClub,
     schedule: {
       startAt: startAt.toISOString(),
       endAt: endsAt?.toISOString() ?? null,

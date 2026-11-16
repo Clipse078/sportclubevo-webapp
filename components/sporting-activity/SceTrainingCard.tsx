@@ -42,13 +42,14 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import {
   SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
   SceProgrammeDashboardPreviewDressingRoomLine,
   SceProgrammeDashboardPreviewLocationLine,
-  SceProgrammeDashboardPreviewOrgContextLine,
-  SceProgrammeDashboardPreviewStack,
   SceProgrammeDashboardPreviewTimeLine,
   SceProgrammeDashboardPreviewTitleLine,
 } from "./SceProgrammeDashboardPreviewStack";
+import { formatProgrammeDashboardPreviewDressingRoomLabel } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-dressing-room";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
@@ -391,8 +392,7 @@ function SceTrainingListRowDashboardPreviewContent({
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
 }) {
-  const { teamName, rawTitle, title, showTeamLine, crestIdentity } =
-    resolveTrainingListRowTitleAndTeamVisibility(model);
+  const { rawTitle, title } = resolveTrainingListRowTitleAndTeamVisibility(model);
   const timeLabel = resolveListRowOperationalTimeLabel(model, fmtCfg);
   const locationLine = resolveListRowOperationalLocationLine(model);
   const dressingRoomLabel = model.dressingRoom?.label?.trim();
@@ -409,47 +409,58 @@ function SceTrainingListRowDashboardPreviewContent({
     rawTitle.localeCompare(model.typeLabel, "de-CH", { sensitivity: "accent" }) === 0;
   const resolvedTitle = titleRedundantWithType ? rawTitle || title : title;
 
+  const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
+
   return (
-    <SceProgrammeDashboardPreviewStack activityKind="TRAINING" testId="sce-training-list-row-identity">
-      <span className="sr-only">{model.typeLabel}</span>
-      {showExceptionalStatus && status?.label ? (
-        <div data-sce-training-region="status">
-          <SceTrainingCardStatus status={status} />
-        </div>
-      ) : null}
-      {timeLabel ? (
-        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-training-list-row-time" />
-      ) : null}
-      {resolvedTitle ? (
-        <SceProgrammeDashboardPreviewTitleLine title={resolvedTitle} testId="sce-training-title" />
-      ) : null}
-      {showTeamLine && teamName ? (
-        <SceProgrammeDashboardPreviewOrgContextLine
-          label={teamName}
-          crestIdentity={crestIdentity}
-          testId="sce-training-list-row-primary-identity"
-        />
-      ) : null}
-      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-training-list-row-activity">
-        <ActivityTypePill
-          activityKind="TRAINING"
-          label={model.typeLabel}
-          className={cn("shrink-0", sceActivityListRowTypePillClass())}
-        />
-      </SceProgrammeDashboardPreviewActivityPillLine>
-      {locationLine ? (
-        <SceProgrammeDashboardPreviewLocationLine
-          label={locationLine}
-          testId="sce-training-list-row-location"
-        />
-      ) : null}
-      {dressingRoomLabel ? (
-        <SceProgrammeDashboardPreviewDressingRoomLine
-          label={dressingRoomLabel}
-          testId="sce-training-list-row-dressing-room"
-        />
-      ) : null}
-    </SceProgrammeDashboardPreviewStack>
+  <SceProgrammeDashboardPreviewBody
+      activityKind="TRAINING"
+      testId="sce-training-list-row-identity"
+      identity={previewIdentity}
+      identityTestId="sce-training-list-row-primary-identity"
+      statusSlot={
+        showExceptionalStatus && status?.label ? (
+          <div data-sce-training-region="status">
+            <SceTrainingCardStatus status={status} />
+          </div>
+        ) : null
+      }
+      timeSlot={
+        timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-training-list-row-time" />
+        ) : null
+      }
+      titleSlot={
+        <>
+          <span className="sr-only">{model.typeLabel}</span>
+          {resolvedTitle ? (
+            <SceProgrammeDashboardPreviewTitleLine title={resolvedTitle} testId="sce-training-title" />
+          ) : null}
+        </>
+      }
+      metaSlot={
+        <>
+          <SceProgrammeDashboardPreviewActivityPillLine testId="sce-training-list-row-activity">
+            <ActivityTypePill
+              activityKind="TRAINING"
+              label={model.typeLabel}
+              className={cn("shrink-0", sceActivityListRowTypePillClass())}
+            />
+          </SceProgrammeDashboardPreviewActivityPillLine>
+          {locationLine ? (
+            <SceProgrammeDashboardPreviewLocationLine
+              label={locationLine}
+              testId="sce-training-list-row-location"
+            />
+          ) : null}
+          {dressingRoomLabel ? (
+            <SceProgrammeDashboardPreviewDressingRoomLine
+              label={formatProgrammeDashboardPreviewDressingRoomLabel(dressingRoomLabel)}
+              testId="sce-training-list-row-dressing-room"
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 

@@ -184,7 +184,12 @@ export function PersonalProgrammeCanonicalAgendaRow({
         data-testid="personal-programme-canonical-agenda-row"
         data-sce-programme-personal-agenda-row
       >
-        <SceProgrammeActivityDateTile startAt={scheduleStartAt} fmtCfg={fmtCfg} />
+        <SceProgrammeActivityDateTile
+          startAt={scheduleStartAt}
+          fmtCfg={fmtCfg}
+          size={listRowPresentation === DASHBOARD_PREVIEW_LIST_ROW ? "compact" : "default"}
+          className={cn(listRowPresentation === DASHBOARD_PREVIEW_LIST_ROW && "min-w-[3.25rem] shrink")}
+        />
         <div className="min-w-0 flex-1 self-stretch">
           <CanonicalAgendaBody
             item={item}

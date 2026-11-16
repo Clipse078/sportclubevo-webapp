@@ -150,7 +150,9 @@ export type SceClubEventPresentationModel = SceActivityPresentationBase & {
 export type SceMeetingPresentationModel = SceActivityPresentationBase & {
   kind: "MEETING";
   meetingTitle: string;
+  /** Linked organisational unit / team names — not personal role labels. */
   organisationalContext?: string;
+  tenantClub?: ClubIdentity;
 };
 
 export type SceActivityPresentationModel =

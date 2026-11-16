@@ -65,7 +65,7 @@ describe("SCE-DASH-UX-01R1 — shared programme card shell", () => {
       title: "Vorstandssitzung November",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       location: "Clubhaus",
-      contextLabel: "Vorstand",
+      organisationalContext: "Vorstand",
     });
     const item: PersonalProgrammeItem = {
       id: "meeting:m-1",

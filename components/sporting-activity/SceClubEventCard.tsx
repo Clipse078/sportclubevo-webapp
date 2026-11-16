@@ -53,12 +53,12 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import {
   SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
   SceProgrammeDashboardPreviewLocationLine,
-  SceProgrammeDashboardPreviewOrgContextLine,
-  SceProgrammeDashboardPreviewStack,
   SceProgrammeDashboardPreviewTimeLine,
   SceProgrammeDashboardPreviewTitleLine,
 } from "./SceProgrammeDashboardPreviewStack";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
 import {
@@ -442,45 +442,52 @@ function SceClubEventListRowDashboardPreviewContent({
 }) {
   const timeLabel = formatSceClubEventTimeLabel(model, fmtCfg);
   const locationLine = resolveClubEventLocationLine(model, density);
-  const audienceLabel = model.audience?.primaryLabel?.trim()
-    ? formatSceClubEventAudienceCompactLabel(model.audience)
-    : undefined;
   const status = model.status;
   const showExceptionalStatus = Boolean(
     showStatus && status?.label && (status.semantic === "cancelled" || status.semantic === "warning"),
   );
 
+  const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
+
   return (
-    <SceProgrammeDashboardPreviewStack activityKind="CLUB_EVENT" testId="sce-club-event-list-row-identity">
-      {showExceptionalStatus && status?.label ? (
-        <div data-sce-club-event-region="status">
-          <SceClubEventCardStatus status={status} />
-        </div>
-      ) : null}
-      {timeLabel ? (
-        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-club-event-list-row-time" />
-      ) : null}
-      <SceProgrammeDashboardPreviewTitleLine title={model.eventTitle} testId="sce-club-event-title" />
-      {audienceLabel ? (
-        <SceProgrammeDashboardPreviewOrgContextLine
-          label={audienceLabel}
-          testId="sce-club-event-audience"
-        />
-      ) : null}
-      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-club-event-list-row-activity">
-        <ActivityTypePill
-          activityKind="EVENT"
-          label={model.typeLabel}
-          className={cn("shrink-0", sceActivityListRowTypePillClass())}
-        />
-      </SceProgrammeDashboardPreviewActivityPillLine>
-      {locationLine ? (
-        <SceProgrammeDashboardPreviewLocationLine
-          label={locationLine}
-          testId="sce-club-event-list-row-location"
-        />
-      ) : null}
-    </SceProgrammeDashboardPreviewStack>
+    <SceProgrammeDashboardPreviewBody
+      activityKind="CLUB_EVENT"
+      testId="sce-club-event-list-row-identity"
+      identity={previewIdentity}
+      identityTestId="sce-club-event-audience"
+      statusSlot={
+        showExceptionalStatus && status?.label ? (
+          <div data-sce-club-event-region="status">
+            <SceClubEventCardStatus status={status} />
+          </div>
+        ) : null
+      }
+      timeSlot={
+        timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-club-event-list-row-time" />
+        ) : null
+      }
+      titleSlot={
+        <SceProgrammeDashboardPreviewTitleLine title={model.eventTitle} testId="sce-club-event-title" />
+      }
+      metaSlot={
+        <>
+          <SceProgrammeDashboardPreviewActivityPillLine testId="sce-club-event-list-row-activity">
+            <ActivityTypePill
+              activityKind="EVENT"
+              label={model.typeLabel}
+              className={cn("shrink-0", sceActivityListRowTypePillClass())}
+            />
+          </SceProgrammeDashboardPreviewActivityPillLine>
+          {locationLine ? (
+            <SceProgrammeDashboardPreviewLocationLine
+              label={locationLine}
+              testId="sce-club-event-list-row-location"
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
 

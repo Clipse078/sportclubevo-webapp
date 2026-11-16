@@ -5,6 +5,12 @@
 
 export const SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW = "programme-dashboard-preview" as const;
 
+/** Inline-size container queried by dashboard preview card bodies. */
+export const SCE_PROGRAMME_DASHBOARD_PREVIEW_CONTAINER_NAME = "sce-programme-dashboard-preview";
+
+/** Minimum card content width before club identity reserves the top-right column. */
+export const SCE_PROGRAMME_DASHBOARD_PREVIEW_WIDE_MIN_WIDTH = "22rem";
+
 export type SceProgrammeDashboardPreviewListRowPresentation =
   typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
