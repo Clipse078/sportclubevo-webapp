@@ -20,11 +20,13 @@ export type TaskWorkspaceCapabilities = {
   canEditOrgVisibility: boolean;
   /** Comment / timeline collaboration (readers may participate; server auth remains authoritative). */
   canCollaborate: boolean;
+  canDeletePermanently: boolean;
 };
 
 export function resolveTaskWorkspaceCapabilities(
   ctx: TaskServiceContext,
   task: TaskDto,
+  options?: { canDeletePermanently?: boolean },
 ): TaskWorkspaceCapabilities {
   const isAssignee = task.assignees.some((a) => a.userId === ctx.userId);
   const isCreator = task.createdByUserId === ctx.userId;
@@ -80,6 +82,7 @@ export function resolveTaskWorkspaceCapabilities(
     canLinkDocuments: canEditFields,
     canEditOrgVisibility,
     canCollaborate: canReadTask(ctx, authRecord),
+    canDeletePermanently: Boolean(options?.canDeletePermanently && canManage),
   };
 
   caps.readOnly =

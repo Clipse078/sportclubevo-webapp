@@ -146,6 +146,8 @@ export const PERMISSIONS = {
   /** Tenant-wide task visibility (read-only operational perspective). */
   TASKS_VIEW_ALL: "tasks.view_all",
   TASKS_MANAGE: "tasks.manage",
+  /** Permanent deletion of operational Aufgaben — separate from tasks.manage. */
+  TASKS_DELETE: "tasks.delete",
 
   // AUFGABEN-06G1 — individual requirement campaigns (separate from tasks.*).
   REQUIREMENTS_VIEW: "requirements.view",

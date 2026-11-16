@@ -147,6 +147,7 @@ export async function loadTaskWorkspace(
   taskId: string,
   locale: string,
   timeZone: string,
+  options?: { canDeletePermanently?: boolean },
 ): Promise<TaskWorkspaceBundle> {
   const visibleTask = await requireVisibleTask(ctx, taskId);
   let task = mapTask(visibleTask);
@@ -269,7 +270,9 @@ export async function loadTaskWorkspace(
           ),
         }
       : null,
-    capabilities: resolveTaskWorkspaceCapabilities(ctx, task),
+    capabilities: resolveTaskWorkspaceCapabilities(ctx, task, {
+      canDeletePermanently: options?.canDeletePermanently,
+    }),
     follow,
     documentReferences,
     accessGrants,

@@ -27,3 +27,12 @@ export class ParentHasOpenSubtasksError extends TaskValidationError {
     this.name = "ParentHasOpenSubtasksError";
   }
 }
+
+export class ParentHasSubtasksForDeleteError extends TaskValidationError {
+  constructor() {
+    super(
+      "Übergeordnete Aufgabe kann nicht gelöscht werden, solange Unteraufgaben bestehen.",
+    );
+    this.name = "ParentHasSubtasksForDeleteError";
+  }
+}

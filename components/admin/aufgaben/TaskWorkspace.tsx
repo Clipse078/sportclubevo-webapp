@@ -66,6 +66,8 @@ import { taskWorkspaceContextSectionLabel } from "@/lib/tasks/task-workspace-con
 import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import { TaskDeleteControl } from "./TaskDeleteControl";
+import SceClubDevelopmentSectionShell from "@/components/admin/club-development/SceClubDevelopmentSectionShell";
 
 function InlineTitle({
   task,
@@ -640,6 +642,15 @@ export function TaskWorkspacePanel({
               Abbrechen
             </button>
           ) : null}
+          <div className="my-1 border-t border-[var(--border)]/70 pt-1">
+            <TaskDeleteControl
+              taskId={task.id}
+              taskTitle={task.title}
+              canDelete={capabilities.canDeletePermanently}
+              hasSubtasks={subtasks.length > 0}
+              backHref={backHref}
+            />
+          </div>
         </div>
       ) : null}
     </div>
@@ -647,20 +658,26 @@ export function TaskWorkspacePanel({
 
   const mainColumn = (
     <div className="min-w-0 space-y-5">
-      <InlineDescription task={task} canEdit={capabilities.canEditDescription} />
+      <SceClubDevelopmentSectionShell title="Beschreibung" testId="task-workspace-description-section">
+        <InlineDescription task={task} canEdit={capabilities.canEditDescription} />
+      </SceClubDevelopmentSectionShell>
 
       {!task.parentTaskId ? (
-        <section aria-labelledby="task-subtasks-heading">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h2 id="task-subtasks-heading" className="text-sm font-semibold text-[var(--foreground)]">
-              Teilaufgaben
-            </h2>
-            {progress.totalCount > 0 ? (
+        <SceClubDevelopmentSectionShell
+          title="Teilaufgaben"
+          testId="task-workspace-subtasks-section"
+          headerAside={
+            progress.totalCount > 0 ? (
               <span className="text-xs text-[var(--muted)]" data-testid="task-workspace-progress">
                 {progress.label}
               </span>
-            ) : null}
-          </div>
+            ) : null
+          }
+        >
+        <section aria-labelledby="task-subtasks-heading">
+          <h2 id="task-subtasks-heading" className="sr-only">
+            Teilaufgaben
+          </h2>
           {progress.totalCount > 0 ? (
             <div
               className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
@@ -725,6 +742,7 @@ export function TaskWorkspacePanel({
           )}
           <SubtaskCreateInline parentTaskId={task.id} canCreate={capabilities.canCreateSubtask} />
         </section>
+        </SceClubDevelopmentSectionShell>
       ) : null}
 
       <TaskContextSection
@@ -756,7 +774,12 @@ export function TaskWorkspacePanel({
   );
 
   const sidebarColumn = (
-    <aside className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
+    <aside
+      className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5"
+      data-testid="task-workspace-summary-aside"
+    >
+      <SceClubDevelopmentSectionShell title="Zusammenfassung" testId="task-workspace-summary-section">
+      <dl className="space-y-3">
       <PropertyRow label="Status">
         {capabilities.canEditStatus ? (
           <select
@@ -890,6 +913,7 @@ export function TaskWorkspacePanel({
           </ul>
         </PropertyRow>
       ) : null}
+      </dl>
 
       <TaskOrgVisibilityEditor
         task={task}
@@ -927,6 +951,7 @@ export function TaskWorkspacePanel({
           Nur-Lese-Zugriff — Änderungen sind nicht erlaubt.
         </p>
       ) : null}
+      </SceClubDevelopmentSectionShell>
     </aside>
   );
 
@@ -965,11 +990,19 @@ export function TaskWorkspacePanel({
             ) : null
           }
           headerBadge={headerStatus}
-          breadcrumbs={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Aufgaben", href: "/dashboard/aufgaben" },
-            { label: task.title },
-          ]}
+          breadcrumbs={
+            returnContextLabel
+              ? [
+                  { label: "Dashboard", href: "/dashboard" },
+                  { label: returnContextLabel, href: backHref },
+                  { label: task.title },
+                ]
+              : [
+                  { label: "Dashboard", href: "/dashboard" },
+                  { label: "Aufgaben", href: "/dashboard/aufgaben" },
+                  { label: task.title },
+                ]
+          }
           headerActions={
             <div className="flex items-center gap-2">
               <Link

@@ -19,6 +19,7 @@ type Props = {
     startedAt: Date | null;
   };
   canManage: boolean;
+  canDelete: boolean;
   activeTab: "planung" | "board" | "rueckblick";
   children: ReactNode;
 };
@@ -28,6 +29,7 @@ export default async function DevelopmentSprintWorkspaceShell({
   actorUserId,
   sprint,
   canManage,
+  canDelete,
   activeTab,
   children,
 }: Props) {
@@ -51,6 +53,7 @@ export default async function DevelopmentSprintWorkspaceShell({
         completedCount={stats.completed}
         totalCount={stats.total}
         canManage={canManage}
+        canDelete={canDelete}
         activeTab={activeTab}
       />
       {children}
