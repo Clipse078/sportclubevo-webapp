@@ -23,6 +23,13 @@ import {
   hasMeetingSecondaryMenuItems,
   meetingShowsCloseInSecondaryMenu,
 } from "@/lib/meetings/meeting-workspace-secondary-menu";
+import {
+  MEETING_WORKSPACE_SECONDARY_MENU_DIVIDER_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_ITEM_MUTED_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS,
+} from "@/lib/meetings/meeting-workspace-secondary-menu-styles";
 
 type Props = {
   meeting: MeetingLiveData;
@@ -161,15 +168,19 @@ export default function MeetingWorkspaceStatusBar({
             constrainHeight={false}
             clipOverflow={false}
             role="dialog"
-            className="min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0 shadow-lg"
+            className={MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS}
           >
-            <div role="menu" className="py-1" data-testid="meeting-workspace-summary-menu-popover">
+            <div
+              role="menu"
+              className={MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS}
+              data-testid="meeting-workspace-summary-menu-popover"
+            >
               {showCloseAction ? (
                 <button
                   type="button"
                   role="menuitem"
                   disabled={loading !== null}
-                  className="block w-full px-3 py-2 text-left text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-50"
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS}
                   onClick={() => callLifecycle("close")}
                   data-testid="meeting-close"
                 >
@@ -182,7 +193,7 @@ export default function MeetingWorkspaceStatusBar({
                   role="menuitem"
                   disabled
                   title={meetingProtocolPrintUnavailableReason(meeting.status) ?? undefined}
-                  className="block w-full cursor-not-allowed px-3 py-2 text-left text-sm text-[var(--muted)]"
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_MUTED_CLASS}
                   data-testid="meeting-print-protocol-unavailable"
                 >
                   Protokoll drucken
@@ -191,7 +202,7 @@ export default function MeetingWorkspaceStatusBar({
                 <Link
                   href={meetingProtocolPrintPath(slug)}
                   role="menuitem"
-                  className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS}
                   onClick={() => setMenuOpen(false)}
                   data-testid="meeting-print-protocol"
                   title={meetingProtocolPrintDraftHint(meeting.status) ?? undefined}
@@ -265,5 +276,5 @@ export default function MeetingWorkspaceStatusBar({
 }
 
 function MenuDivider() {
-  return <div className="my-1 border-t border-[var(--border)]" role="separator" />;
+  return <div className={MEETING_WORKSPACE_SECONDARY_MENU_DIVIDER_CLASS} role="separator" />;
 }

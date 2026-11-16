@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import SceInlineDestructiveConfirm from "@/components/sce/club-development/SceInlineDestructiveConfirm";
 import type { MeetingDeletionImpact } from "@/lib/meetings/meeting-delete-service";
 import { buildMeetingDeletionConfirmDescription } from "@/lib/meetings/meeting-deletion-confirm-copy";
+import { MEETING_WORKSPACE_SECONDARY_MENU_DESTRUCTIVE_ITEM_CLASS } from "@/lib/meetings/meeting-workspace-secondary-menu-styles";
 
 type MeetingDeleteMenuItemProps = {
   onSelect: () => void;
@@ -19,7 +20,7 @@ export function MeetingDeleteMenuItem({ onSelect, disabled }: MeetingDeleteMenuI
       role="menuitem"
       disabled={disabled}
       onClick={() => onSelect()}
-      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+      className={MEETING_WORKSPACE_SECONDARY_MENU_DESTRUCTIVE_ITEM_CLASS}
       data-testid="meeting-delete-trigger"
     >
       <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
