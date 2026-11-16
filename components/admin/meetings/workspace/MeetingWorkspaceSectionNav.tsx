@@ -64,6 +64,7 @@ function MeetingWorkspaceSectionNavLinks() {
 
   return (
     <nav
+      data-meeting-workspace-section-nav
       ref={(el) => registerSectionNav(el)}
       aria-label="Sitzungsbereiche"
       data-testid="meeting-workspace-section-nav"

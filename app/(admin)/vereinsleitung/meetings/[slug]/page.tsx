@@ -120,6 +120,15 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         canDelete={canDelete}
         initialPendenzenOpenCount={initialPendenzenOpenCount}
         initialPendenzenOverdueCount={initialPendenzenOverdueCount}
+        timerScope={
+          canManage && session.user?.id
+            ? {
+                meetingId: dbMeeting.id,
+                tenantId,
+                userId: session.user.id,
+              }
+            : null
+        }
         relatedTasksPanel={
           <ContextRelatedTasksPanel
             contextType="MEETING"

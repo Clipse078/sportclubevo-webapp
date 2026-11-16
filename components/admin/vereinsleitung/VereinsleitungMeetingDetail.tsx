@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
+import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
 
 /**
  * Canonical meeting detail surface — always renders the DB-backed MeetingWorkspace.
@@ -23,6 +24,7 @@ type VereinsleitungMeetingDetailProps = {
   canDelete?: boolean;
   initialPendenzenOpenCount?: number;
   initialPendenzenOverdueCount?: number;
+  timerScope?: MeetingAgendaTimerScope | null;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -38,6 +40,7 @@ export default function VereinsleitungMeetingDetail({
   canDelete = false,
   initialPendenzenOpenCount = 0,
   initialPendenzenOverdueCount = 0,
+  timerScope = null,
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -53,6 +56,7 @@ export default function VereinsleitungMeetingDetail({
       canDelete={canDelete}
       initialPendenzenOpenCount={initialPendenzenOpenCount}
       initialPendenzenOverdueCount={initialPendenzenOverdueCount}
+      timerScope={timerScope}
     />
   );
 }

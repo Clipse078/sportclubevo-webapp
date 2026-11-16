@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Clock3, Loader2, Plus, Trash2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import {
   MeetingInitiativeLinkSelect,
@@ -28,6 +28,11 @@ import type { MeetingActionStatus, MeetingStatus } from "@prisma/client";
 import MeetingDecisionApprovalPanel from "@/components/admin/meetings/approval/MeetingDecisionApprovalPanel";
 import { meetingApprovalAggregateStatusLabel } from "@/lib/meetings/meeting-approval-presentation";
 import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
+import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
+import {
+  MeetingSitzungsmodusPanel,
+  MeetingSitzungsmodusStartButton,
+} from "@/components/admin/meetings/workspace/MeetingSitzungsmodusPanel";
 import {
   workspaceGhostButtonClass,
   workspaceInputClass,
@@ -159,6 +164,12 @@ export function MeetingAgendaSection({
 
   return (
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
+      {canManage ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <MeetingSitzungsmodusStartButton />
+          <MeetingSitzungsmodusPanel />
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">
         <span>
           Geplante Traktandenzeit: <strong className="text-[var(--foreground)]">{agendaTotalMin} min</strong>
@@ -225,6 +236,27 @@ export function MeetingAgendaSection({
         </div>
       ) : null}
     </MeetingSectionBody>
+  );
+}
+
+function AgendaItemTimerStartButton({ itemId }: { itemId: string }) {
+  const timer = useMeetingAgendaTimer();
+  if (!timer) return null;
+
+  return (
+    <button
+      type="button"
+      className={`${workspaceGhostButtonClass} inline-flex shrink-0 items-center gap-1 text-xs`}
+      data-testid={`meeting-agenda-timer-start-${itemId}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!timer.state.modeActive) timer.startMode();
+        timer.selectTopic(itemId);
+      }}
+    >
+      <Clock3 className="h-3.5 w-3.5" aria-hidden />
+      Timer starten
+    </button>
   );
 }
 
@@ -312,6 +344,7 @@ function AgendaItemRow({
             {initiativeFromItem ? (
               <span className="shrink-0 text-xs text-[var(--text-2)]">↗ {initiativeFromItem.title}</span>
             ) : null}
+            {canManage ? <AgendaItemTimerStartButton itemId={item.id} /> : null}
           </div>
           {collapsedMetadata.length > 0 ? (
             <p
