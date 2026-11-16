@@ -93,6 +93,7 @@ export function PersonalProgrammeFeed({
                         item={item}
                         timeLabel={timeLabelById[item.id] ?? "—"}
                         highlighted={nextUpcomingForDay && item.id === nextActivityId}
+                        dashboardCockpitPreview
                       />
                     </li>
                   ))}

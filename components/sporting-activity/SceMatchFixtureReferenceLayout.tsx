@@ -20,6 +20,13 @@ import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-pres
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchScorePresentation } from "./SceMatchScorePresentation";
+import {
+  SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewLocationLine,
+  SceProgrammeDashboardPreviewOrgContextLine,
+  SceProgrammeDashboardPreviewStack,
+  SceProgrammeDashboardPreviewTimeLine,
+} from "./SceProgrammeDashboardPreviewStack";
 
 export type SceMatchFixtureReferenceLayoutProps = {
   model: SceMatchPresentationModel;
@@ -34,6 +41,8 @@ export type SceMatchFixtureReferenceLayoutProps = {
   forceCompetitionLine?: boolean;
   /** When false, date tile is omitted (caller renders external {@link SceDateTile}). */
   showDateTile?: boolean;
+  /** Dashboard cockpit — vertical metadata stack around canonical fixture band. */
+  dashboardPreviewStack?: boolean;
 };
 
 function ReferenceFixtureSide({
@@ -114,6 +123,7 @@ export function SceMatchFixtureReferenceLayout({
   showTypePill = false,
   forceCompetitionLine = false,
   showDateTile = true,
+  dashboardPreviewStack = false,
 }: SceMatchFixtureReferenceLayoutProps) {
   const startAt = new Date(model.schedule.startAt);
   const showCrests = isSceActivityDimensionVisible(density, "crests");
@@ -228,6 +238,45 @@ export function SceMatchFixtureReferenceLayout({
         ) : null}
       </div>
     ) : null;
+
+  if (!showDateTile && dashboardPreviewStack) {
+    const timeLabel =
+      kickoffLabel ??
+      (model.schedule.allDay
+        ? undefined
+        : formatFixtureTime(startAt, fmtCfg));
+    return (
+      <SceProgrammeDashboardPreviewStack activityKind="MATCH" testId="sce-match-list-row-identity">
+        <span className="sr-only">{model.typeLabel}</span>
+        {timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-match-list-row-time" />
+        ) : null}
+        <div className={SCE_ACTIVITY_REFERENCE_LAYOUT.matchupColumnClass}>{fixtureBand}</div>
+        {teamContextLabel ? (
+          <SceProgrammeDashboardPreviewOrgContextLine
+            label={teamContextLabel}
+            testId="sce-match-list-row-team-context"
+          />
+        ) : showCompetitionLine && model.competition?.label ? (
+          <SceProgrammeDashboardPreviewOrgContextLine
+            label={model.competition.label}
+            testId="sce-match-list-row-team-context"
+          />
+        ) : null}
+        <SceProgrammeDashboardPreviewActivityPillLine testId="sce-match-list-row-activity-pill">
+          <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
+        </SceProgrammeDashboardPreviewActivityPillLine>
+        {locationLine ? (
+          <SceProgrammeDashboardPreviewLocationLine label={locationLine} testId="sce-match-location" />
+        ) : null}
+        {showStatus && lifecycle?.label ? (
+          <div data-sce-match-region="status">
+            <SceMatchCardStatus status={lifecycle} testId="sce-match-status" />
+          </div>
+        ) : null}
+      </SceProgrammeDashboardPreviewStack>
+    );
+  }
 
   if (!showDateTile) {
     return (

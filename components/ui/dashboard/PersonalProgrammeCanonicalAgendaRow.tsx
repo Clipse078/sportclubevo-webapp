@@ -22,9 +22,14 @@ import { SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS } from "@/lib/sporting-activ
 import { SceProgrammeActivityDateTile } from "@/components/sporting-activity/SceProgrammeActivityDateTile";
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  type SceProgrammeDashboardPreviewListRowPresentation,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 
 const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 const PERSONAL_LIST_ROW = "programme-personal" as const;
+const DASHBOARD_PREVIEW_LIST_ROW = SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
 function resolveCanonicalScheduleStartAt(
   model: SceActivityPresentationModel,
@@ -49,16 +54,19 @@ export type PersonalProgrammeCanonicalAgendaRowProps = {
   className?: string;
   fmtCfg?: TenantFormatConfig;
   density?: "COMPACT" | "STANDARD";
+  listRowPresentation?: "programme-personal" | SceProgrammeDashboardPreviewListRowPresentation;
 };
 
 function CanonicalAgendaBody({
   item,
   fmtCfg,
   density = "COMPACT",
+  listRowPresentation = PERSONAL_LIST_ROW,
 }: {
   item: PersonalProgrammeItem;
   fmtCfg: TenantFormatConfig;
   density?: "COMPACT" | "STANDARD";
+  listRowPresentation?: "programme-personal" | SceProgrammeDashboardPreviewListRowPresentation;
 }) {
   const model = item.canonicalPresentation;
   if (!model) return null;
@@ -72,7 +80,7 @@ function CanonicalAgendaBody({
         linkToDetail={false}
         showStatus
         surface="list-row"
-        listRowPresentation={PERSONAL_LIST_ROW}
+        listRowPresentation={listRowPresentation}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-training-${item.id}`}
       />
@@ -87,7 +95,11 @@ function CanonicalAgendaBody({
         fmtCfg={fmtCfg}
         linkToDetail={false}
         surface="list-row"
-        listRowPresentation="programme-fixture"
+        listRowPresentation={
+          listRowPresentation === DASHBOARD_PREVIEW_LIST_ROW
+            ? DASHBOARD_PREVIEW_LIST_ROW
+            : "programme-fixture"
+        }
         scopeTeamId={item.programmeScopeTeamId}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-match-${item.id}`}
@@ -104,7 +116,7 @@ function CanonicalAgendaBody({
         linkToDetail={false}
         showStatus
         surface="list-row"
-        listRowPresentation={PERSONAL_LIST_ROW}
+        listRowPresentation={listRowPresentation}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-tournament-${item.id}`}
       />
@@ -120,7 +132,7 @@ function CanonicalAgendaBody({
         linkToDetail={false}
         showStatus
         surface="list-row"
-        listRowPresentation={PERSONAL_LIST_ROW}
+        listRowPresentation={listRowPresentation}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-club-event-${item.id}`}
       />
@@ -135,7 +147,7 @@ function CanonicalAgendaBody({
         fmtCfg={fmtCfg}
         linkToDetail={false}
         surface="list-row"
-        listRowPresentation={PERSONAL_LIST_ROW}
+        listRowPresentation={listRowPresentation}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-meeting-${item.id}`}
       />
@@ -154,6 +166,7 @@ export function PersonalProgrammeCanonicalAgendaRow({
   className,
   fmtCfg = DEFAULT_FMT_CFG,
   density = "COMPACT",
+  listRowPresentation = PERSONAL_LIST_ROW,
 }: PersonalProgrammeCanonicalAgendaRowProps) {
   const shellDensity = density === "COMPACT" ? "COMPACT" : "STANDARD";
 
@@ -173,7 +186,12 @@ export function PersonalProgrammeCanonicalAgendaRow({
       >
         <SceProgrammeActivityDateTile startAt={scheduleStartAt} fmtCfg={fmtCfg} />
         <div className="min-w-0 flex-1 self-stretch">
-          <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} density={density} />
+          <CanonicalAgendaBody
+            item={item}
+            fmtCfg={fmtCfg}
+            density={density}
+            listRowPresentation={listRowPresentation}
+          />
         </div>
         {item.deepLink ? (
           <ChevronRight

@@ -46,6 +46,19 @@ import {
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
+import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  isProgrammeDashboardPreviewListRow,
+  programmeListRowOmitsInlineDateColumn,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
+import {
+  SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewLocationLine,
+  SceProgrammeDashboardPreviewOrgContextLine,
+  SceProgrammeDashboardPreviewStack,
+  SceProgrammeDashboardPreviewTimeLine,
+  SceProgrammeDashboardPreviewTitleLine,
+} from "./SceProgrammeDashboardPreviewStack";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
 import {
@@ -55,7 +68,11 @@ import {
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 
-export type SceClubEventListRowPresentation = "default" | "operational" | "programme-personal";
+export type SceClubEventListRowPresentation =
+  | "default"
+  | "operational"
+  | "programme-personal"
+  | typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
 export type SceClubEventCardSurface =
   | "standalone"
@@ -412,6 +429,61 @@ function SceClubEventRichCardContent({
   );
 }
 
+function SceClubEventListRowDashboardPreviewContent({
+  model,
+  density,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceClubEventPresentationModel;
+  density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const timeLabel = formatSceClubEventTimeLabel(model, fmtCfg);
+  const locationLine = resolveClubEventLocationLine(model, density);
+  const audienceLabel = model.audience?.primaryLabel?.trim()
+    ? formatSceClubEventAudienceCompactLabel(model.audience)
+    : undefined;
+  const status = model.status;
+  const showExceptionalStatus = Boolean(
+    showStatus && status?.label && (status.semantic === "cancelled" || status.semantic === "warning"),
+  );
+
+  return (
+    <SceProgrammeDashboardPreviewStack activityKind="CLUB_EVENT" testId="sce-club-event-list-row-identity">
+      {showExceptionalStatus && status?.label ? (
+        <div data-sce-club-event-region="status">
+          <SceClubEventCardStatus status={status} />
+        </div>
+      ) : null}
+      {timeLabel ? (
+        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-club-event-list-row-time" />
+      ) : null}
+      <SceProgrammeDashboardPreviewTitleLine title={model.eventTitle} testId="sce-club-event-title" />
+      {audienceLabel ? (
+        <SceProgrammeDashboardPreviewOrgContextLine
+          label={audienceLabel}
+          testId="sce-club-event-audience"
+        />
+      ) : null}
+      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-club-event-list-row-activity">
+        <ActivityTypePill
+          activityKind="EVENT"
+          label={model.typeLabel}
+          className={cn("shrink-0", sceActivityListRowTypePillClass())}
+        />
+      </SceProgrammeDashboardPreviewActivityPillLine>
+      {locationLine ? (
+        <SceProgrammeDashboardPreviewLocationLine
+          label={locationLine}
+          testId="sce-club-event-list-row-location"
+        />
+      ) : null}
+    </SceProgrammeDashboardPreviewStack>
+  );
+}
+
 function SceClubEventListRowIdentityContent({
   model,
   density,
@@ -425,6 +497,17 @@ function SceClubEventListRowIdentityContent({
   listRowPresentation?: SceClubEventListRowPresentation;
   showStatus?: boolean;
 }) {
+  if (isProgrammeDashboardPreviewListRow(listRowPresentation) && fmtCfg) {
+    return (
+      <SceClubEventListRowDashboardPreviewContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        showStatus={showStatus}
+      />
+    );
+  }
+
   const timeLabel = fmtCfg ? formatSceClubEventTimeLabel(model, fmtCfg) : undefined;
   const locationLine =
     listRowPresentation === "operational" || listRowPresentation === "programme-personal"
@@ -439,7 +522,7 @@ function SceClubEventListRowIdentityContent({
 
   const operational =
     listRowPresentation === "operational" || listRowPresentation === "programme-personal";
-  const omitDateColumn = listRowPresentation === "programme-personal";
+  const omitDateColumn = programmeListRowOmitsInlineDateColumn(listRowPresentation);
   const audienceLabel = model.audience?.primaryLabel?.trim()
     ? formatSceClubEventAudienceCompactLabel(model.audience)
     : undefined;

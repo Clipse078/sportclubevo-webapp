@@ -72,9 +72,11 @@ describe("SCE-DS2-05B-R2 delivery", () => {
     expect(workspace).not.toContain("personal-calendar-open");
   });
 
-  it("uses spacious horizontal canonical programme rows on the dashboard preview", () => {
+  it("uses stacked dashboard cockpit programme rows on the dashboard preview", () => {
     const previewRow = readRepo("components/ui/dashboard/PersonalProgrammePreviewRow.tsx");
-    expect(previewRow).toContain('density="STANDARD"');
+    expect(previewRow).toContain("dashboardCockpitPreview");
+    expect(previewRow).toContain("programme-dashboard-preview");
+    expect(previewRow).toContain('density="COMPACT"');
   });
 
   it("maps activity-type pills to semantic pastel tokens with bordered pills", () => {

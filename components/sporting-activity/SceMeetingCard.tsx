@@ -17,8 +17,25 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
 import { sceActivityListRowTypePillClass } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { resolveProgrammeActivityDisplayTypeLabel } from "@/lib/personal-agenda/programme-activity-german-labels";
+import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  isProgrammeDashboardPreviewListRow,
+  programmeListRowOmitsInlineDateColumn,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
+import {
+  SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewLocationLine,
+  SceProgrammeDashboardPreviewOrgContextLine,
+  SceProgrammeDashboardPreviewStack,
+  SceProgrammeDashboardPreviewTimeLine,
+  SceProgrammeDashboardPreviewTitleLine,
+} from "./SceProgrammeDashboardPreviewStack";
 
-export type SceMeetingListRowPresentation = "default" | "operational" | "programme-personal";
+export type SceMeetingListRowPresentation =
+  | "default"
+  | "operational"
+  | "programme-personal"
+  | typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
 export type SceMeetingCardSurface = "standalone" | "list-row";
 
@@ -45,6 +62,62 @@ function resolveMeetingTypeLabel(model: SceMeetingPresentationModel): string {
   });
 }
 
+function MeetingDashboardPreviewListRow({
+  model,
+  fmtCfg,
+  testId = "sce-meeting-list-row",
+}: {
+  model: SceMeetingPresentationModel;
+  fmtCfg: TenantFormatConfig;
+  testId?: string;
+}) {
+  const timeLabel = formatSceMeetingTimeLabel(model, fmtCfg);
+  const locationLine = resolveMeetingLocationLine(model);
+  const orgContext = model.organisationalContext?.trim();
+  const showExceptionalStatus = Boolean(
+    model.status?.label &&
+      (model.status.semantic === "cancelled" || model.status.semantic === "warning"),
+  );
+  const typeLabel = resolveMeetingTypeLabel(model);
+
+  return (
+    <SceProgrammeDashboardPreviewStack activityKind="MEETING" testId={testId}>
+      {showExceptionalStatus && model.status?.label ? (
+        <div data-testid="sce-meeting-status">
+          <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
+            {model.status.label}
+          </p>
+        </div>
+      ) : null}
+      {timeLabel ? (
+        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-meeting-list-row-time" />
+      ) : null}
+      <SceProgrammeDashboardPreviewTitleLine title={model.meetingTitle} testId="sce-meeting-title" />
+      {orgContext ? (
+        <SceProgrammeDashboardPreviewOrgContextLine label={orgContext} testId="sce-meeting-context" />
+      ) : null}
+      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-meeting-list-row-primary-identity">
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.06em]",
+            "border-teal-500/30 bg-teal-500/10 text-teal-800 dark:text-teal-300",
+            sceActivityListRowTypePillClass(),
+          )}
+          data-activity-type-pill="meeting"
+        >
+          {typeLabel}
+        </span>
+      </SceProgrammeDashboardPreviewActivityPillLine>
+      {locationLine ? (
+        <SceProgrammeDashboardPreviewLocationLine
+          label={locationLine}
+          testId="sce-meeting-list-row-location"
+        />
+      ) : null}
+    </SceProgrammeDashboardPreviewStack>
+  );
+}
+
 function MeetingOperationalListRow({
   model,
   fmtCfg,
@@ -59,7 +132,7 @@ function MeetingOperationalListRow({
   const dateLabel = formatSceMeetingDateLine(model, fmtCfg);
   const timeLabel = formatSceMeetingTimeLabel(model, fmtCfg);
   const locationLine = resolveMeetingLocationLine(model);
-  const omitDateColumn = listRowPresentation === "programme-personal";
+  const omitDateColumn = programmeListRowOmitsInlineDateColumn(listRowPresentation);
   const rowClass = omitDateColumn
     ? SCE_ACTIVITY_REFERENCE_LAYOUT.programmePersonalContentRowClass
     : SCE_ACTIVITY_REFERENCE_LAYOUT.trainingReferenceRowClass;
@@ -176,14 +249,17 @@ export function SceMeetingCard({
   const href = model.route.consumeHref;
   const listRow = surface === "list-row";
 
-  const content = (
-    <MeetingOperationalListRow
-      model={model}
-      fmtCfg={fmtCfg}
-      listRowPresentation={listRow ? listRowPresentation : "operational"}
-      testId={`${testId}-operational`}
-    />
-  );
+  const content =
+    listRow && isProgrammeDashboardPreviewListRow(listRowPresentation) ? (
+      <MeetingDashboardPreviewListRow model={model} fmtCfg={fmtCfg} testId={`${testId}-dashboard-preview`} />
+    ) : (
+      <MeetingOperationalListRow
+        model={model}
+        fmtCfg={fmtCfg}
+        listRowPresentation={listRow ? listRowPresentation : "operational"}
+        testId={`${testId}-operational`}
+      />
+    );
 
   const shell = (
     <div

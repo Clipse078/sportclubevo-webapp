@@ -49,6 +49,7 @@ import {
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 import { SceMatchStackedFixtureIdentity } from "./SceMatchStackedFixtureIdentity";
+import { SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import { SceTeamName } from "@/components/design-system/typography";
 import { sceTeamNameClassName } from "@/lib/design-system/sce-team-name-typography";
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
@@ -57,6 +58,7 @@ export type SceMatchListRowPresentation =
   | "default"
   | "programme-fixture"
   | "programme-personal"
+  | typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW
   | "dashboard-opponent";
 
 export type SceMatchCardProps = {
@@ -487,8 +489,13 @@ function SceMatchListRowIdentityContent({
         ? "Auswärtsspiel"
         : tenantSide?.label;
   const programmeFixture =
-    listRowPresentation === "programme-fixture" || listRowPresentation === "programme-personal";
-  const externalReferenceDateTile = listRowPresentation === "programme-personal";
+    listRowPresentation === "programme-fixture" ||
+    listRowPresentation === "programme-personal" ||
+    listRowPresentation === SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
+  const externalReferenceDateTile =
+    listRowPresentation === "programme-personal" ||
+    listRowPresentation === SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
+  const dashboardPreviewStack = listRowPresentation === SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
   const lifecycle = model.matchLifecycle ?? model.status;
   const showCancelledStatus =
     lifecycle?.semantic === "cancelled" ||
@@ -519,6 +526,7 @@ function SceMatchListRowIdentityContent({
           showStatus={showCancelledStatus}
           teamContextLabel={teamContextLabel}
           showDateTile={!externalReferenceDateTile}
+          dashboardPreviewStack={dashboardPreviewStack}
         />
       </div>
     );

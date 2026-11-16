@@ -80,7 +80,8 @@ describe("SCE-ACTIVITY-CREATE-01J R3 — Dashboard Mein Programm preview", () =>
     const feed = readRelative("components/ui/dashboard/PersonalProgrammeFeed.tsx");
     expect(feed).toContain("PersonalProgrammePreviewRow");
     expect(previewRow).toContain("PersonalProgrammeCanonicalAgendaRow");
-    expect(previewRow).toContain('density="STANDARD"');
+    expect(previewRow).toContain("dashboardCockpitPreview");
+    expect(previewRow).toContain('density="COMPACT"');
     expect(previewRow).not.toMatch(/Dashboard(Match|Training|Tournament|ClubEvent|Activity)Card/);
     const canonical = readRelative("components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow.tsx");
     expect(canonical).toContain("SceTrainingCard");

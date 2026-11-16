@@ -35,6 +35,19 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  isProgrammeDashboardPreviewListRow,
+  programmeListRowOmitsInlineDateColumn,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
+import {
+  SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewLocationLine,
+  SceProgrammeDashboardPreviewOrgContextLine,
+  SceProgrammeDashboardPreviewStack,
+  SceProgrammeDashboardPreviewTimeLine,
+  SceProgrammeDashboardPreviewTitleLine,
+} from "./SceProgrammeDashboardPreviewStack";
+import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
@@ -53,7 +66,11 @@ import {
 
 export type SceTournamentCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceTournamentListRowPresentation = "default" | "operational" | "programme-personal";
+export type SceTournamentListRowPresentation =
+  | "default"
+  | "operational"
+  | "programme-personal"
+  | typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
 export type SceTournamentCardProps = {
   model: SceTournamentPresentationModel;
@@ -437,6 +454,65 @@ function SceTournamentRichCardContent({
   );
 }
 
+function SceTournamentListRowDashboardPreviewContent({
+  model,
+  density,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceTournamentPresentationModel;
+  density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const organiser = model.organiser.displayName?.trim();
+  const showOrganiserCrest = Boolean(model.organiser.logoUrl?.trim());
+  const ownTeamsLabel = formatSceTournamentOwnTeamsCompactLabel({
+    teamNames: model.ownTeams ?? (model.hauptteam?.name ? [model.hauptteam.name] : []),
+    organiserDisplayName: organiser,
+  });
+  const orgLabel = ownTeamsLabel ?? (organiser && organiser !== model.tournamentTitle.trim() ? organiser : undefined);
+  const timeLabel = formatSessionTimeOnly(model, fmtCfg);
+  const locationLine = resolveTournamentLocationLine(model, density);
+  const status = model.status;
+  const showExceptionalStatus =
+    showStatus && status?.label && (status.semantic === "cancelled" || status.semantic === "warning");
+
+  return (
+    <SceProgrammeDashboardPreviewStack activityKind="TOURNAMENT" testId="sce-tournament-list-row-identity">
+      {showExceptionalStatus ? (
+        <div data-sce-tournament-region="status">
+          <SceTournamentCardStatus status={status} />
+        </div>
+      ) : null}
+      {timeLabel ? (
+        <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-tournament-list-row-time" />
+      ) : null}
+      <SceProgrammeDashboardPreviewTitleLine title={model.tournamentTitle} testId="sce-tournament-title" />
+      {orgLabel ? (
+        <SceProgrammeDashboardPreviewOrgContextLine
+          label={orgLabel}
+          crestIdentity={showOrganiserCrest ? model.organiser : undefined}
+          testId="sce-tournament-list-row-primary-identity"
+        />
+      ) : null}
+      <SceProgrammeDashboardPreviewActivityPillLine testId="sce-tournament-list-row-activity">
+        <ActivityTypePill
+          activityKind="TOURNAMENT"
+          label={model.typeLabel}
+          className={cn("shrink-0", sceActivityListRowTypePillClass())}
+        />
+      </SceProgrammeDashboardPreviewActivityPillLine>
+      {locationLine ? (
+        <SceProgrammeDashboardPreviewLocationLine
+          label={locationLine}
+          testId="sce-tournament-list-row-location"
+        />
+      ) : null}
+    </SceProgrammeDashboardPreviewStack>
+  );
+}
+
 function SceTournamentListRowIdentityContent({
   model,
   density,
@@ -450,6 +526,17 @@ function SceTournamentListRowIdentityContent({
   listRowPresentation?: SceTournamentListRowPresentation;
   showStatus?: boolean;
 }) {
+  if (isProgrammeDashboardPreviewListRow(listRowPresentation) && fmtCfg) {
+    return (
+      <SceTournamentListRowDashboardPreviewContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        showStatus={showStatus}
+      />
+    );
+  }
+
   const organiser = model.organiser.displayName?.trim();
   const showOrganiserCrest = Boolean(model.organiser.logoUrl?.trim());
   const ownTeamsLabel = formatSceTournamentOwnTeamsCompactLabel({
@@ -462,7 +549,7 @@ function SceTournamentListRowIdentityContent({
 
   const operational =
     listRowPresentation === "operational" || listRowPresentation === "programme-personal";
-  const omitDateColumn = listRowPresentation === "programme-personal";
+  const omitDateColumn = programmeListRowOmitsInlineDateColumn(listRowPresentation);
 
   if (operational && fmtCfg) {
     const timeLabel = formatSessionTimeOnly(model, fmtCfg);
