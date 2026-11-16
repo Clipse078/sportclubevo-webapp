@@ -6,12 +6,12 @@ export const UMSETZUNGSPLANUNG_PULL_REQUEST = 990 as const;
 
 /** Last verified Ready preview commit (update when Vercel Ready is re-checked). */
 export const UMSETZUNGSPLANUNG_VERIFIED_PREVIEW_COMMIT =
-  "d02d6ba8318e37f850a687514460b3afadbfd5d3" as const;
-export const UMSETZUNGSPLANUNG_VERIFIED_PREVIEW_COMMIT_SHORT = "d02d6ba83" as const;
+  "50cb7460bd73402c458f65fa1ec1726f5ac2fd86" as const;
+export const UMSETZUNGSPLANUNG_VERIFIED_PREVIEW_COMMIT_SHORT = "50cb7460b" as const;
 
 /**
  * Vercel project `sportclubevo-webapp-stage` — Ready deployment for PR #990 head
- * (GitHub Vercel check success on `d02d6ba83`, 2026-11-16 ~13:15 CET).
+ * (GitHub Vercel check; update timestamp after each verified Ready push).
  */
 export const UMSETZUNGSPLANUNG_VERIFIED_PREVIEW_URL =
   "https://sportclubevo-webapp-stage-git-curs-f53b4e-mds-projects-462da62c.vercel.app" as const;
