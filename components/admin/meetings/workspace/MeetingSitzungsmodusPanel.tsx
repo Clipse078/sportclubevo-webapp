@@ -14,6 +14,8 @@ import {
 import SceClubDevelopmentContextualCreateCollapsibleShell from "@/components/sce/club-development/SceClubDevelopmentContextualCreateCollapsibleShell";
 import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
+import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import { isSitzungsmodusResumable } from "@/lib/meetings/sitzungsmodus/meeting-guided-sitzungsmodus";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
 const CARD_TEST_ID = "meeting-sitzungsmodus-card";
@@ -22,6 +24,9 @@ const FOCUS_TEST_ID = "meeting-sitzungsmodus-focus";
 export function MeetingSitzungsmodusStartButton() {
   const timer = useMeetingAgendaTimer();
   if (!timer || timer.state.modeActive) return null;
+  const label = isSitzungsmodusResumable(timer.state)
+    ? "Sitzungsmodus fortsetzen"
+    : "Sitzungsmodus starten";
   return (
     <button
       type="button"
@@ -30,15 +35,37 @@ export function MeetingSitzungsmodusStartButton() {
       data-testid="meeting-sitzungsmodus-start"
     >
       <Clock3 className="h-4 w-4" aria-hidden />
-      Sitzungsmodus starten
+      {label}
     </button>
   );
 }
 
-export function MeetingSitzungsmodusPanel() {
+type MeetingSitzungsmodusPanelProps = {
+  meetingId?: string;
+  meetingTitle?: string;
+  onDecisionCreated?: () => void | Promise<void>;
+  onActionCreated?: () => void | Promise<void>;
+  onAgendaNotesUpdated?: (agendaItemId: string, notes: string) => void;
+};
+
+export function MeetingSitzungsmodusPanel({
+  meetingId,
+  meetingTitle = "",
+  onDecisionCreated = async () => {},
+  onActionCreated = async () => {},
+  onAgendaNotesUpdated = () => {},
+}: MeetingSitzungsmodusPanelProps = {}) {
   const timer = useMeetingAgendaTimer();
   const [expanded, setExpanded] = useState(true);
   const [tempDuration, setTempDuration] = useState("");
+
+  useEffect(() => {
+    function onReveal() {
+      setExpanded(true);
+    }
+    window.addEventListener("meeting-sitzungsmodus-reveal-focus", onReveal);
+    return () => window.removeEventListener("meeting-sitzungsmodus-reveal-focus", onReveal);
+  }, []);
 
   useEffect(() => {
     const el = timer?.focusCardRef.current;
@@ -300,6 +327,22 @@ export function MeetingSitzungsmodusPanel() {
               Sitzungsmodus beenden
             </button>
           </MotionSafe>
+
+          {meetingId && activeItem && activePosition != null ? (
+            <MeetingTraktandumOutcomeActions
+              meetingId={meetingId}
+              meetingTitle={meetingTitle}
+              agendaItemId={activeItem.id}
+              agendaTitle={activeItem.title}
+              agendaPosition={activePosition}
+              agendaNotes={activeItem.notes ?? null}
+              canManage
+              testIdPrefix="meeting-sitzungsmodus-focus"
+              onDecisionCreated={onDecisionCreated}
+              onActionCreated={onActionCreated}
+              onNotesUpdated={(notes) => onAgendaNotesUpdated(activeItem.id, notes)}
+            />
+          ) : null}
 
           {timer.resetConfirmOpen ? (
             <MotionSafe

@@ -3,6 +3,11 @@ export type MeetingLinkedRefs = {
   decisionId?: string;
 };
 
+export function buildMeetingActionAgendaLinkedRefs(agendaItemId: string): MeetingLinkedRefs {
+  const trimmed = agendaItemId.trim();
+  return trimmed ? { agendaItemId: trimmed } : {};
+}
+
 export function parseMeetingLinkedRefs(raw: unknown): MeetingLinkedRefs {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return {};

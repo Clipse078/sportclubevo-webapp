@@ -40,6 +40,7 @@ import {
   workspacePrimaryButtonClass,
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
+import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
 
 function meetingSectionDomId(title: string): string {
   return `meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
@@ -89,17 +90,23 @@ function MeetingSectionBody({
 
 export function MeetingAgendaSection({
   meetingId,
+  meetingTitle,
   meetingPlannedDurationMin,
   canManage,
   items,
   decisions,
+  actions,
   onItemsChange,
   onDecisionsChange,
+  onActionsChange,
   onDirtyChange,
 }: SectionProps<AgendaItem> & {
+  meetingTitle: string;
   meetingPlannedDurationMin?: number | null;
   decisions: Decision[];
+  actions: MeetingAction[];
   onDecisionsChange: (items: Decision[]) => void;
+  onActionsChange: (items: MeetingAction[]) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -167,7 +174,23 @@ export function MeetingAgendaSection({
       {canManage ? (
         <div className="mb-3 flex w-full min-w-0 flex-col gap-2">
           <MeetingSitzungsmodusStartButton />
-          <MeetingSitzungsmodusPanel />
+          <MeetingSitzungsmodusPanel
+            meetingId={meetingId}
+            meetingTitle={meetingTitle}
+            onDecisionCreated={async () => {
+              const res = await fetch(`/api/meetings/${meetingId}/decisions`);
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.decisions)) onDecisionsChange(data.decisions);
+            }}
+            onActionCreated={async () => {
+              const res = await fetch(`/api/meetings/${meetingId}/actions`);
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.actions)) onActionsChange(data.actions);
+            }}
+            onAgendaNotesUpdated={(agendaItemId, notes) => {
+              onItemsChange(items.map((row) => (row.id === agendaItemId ? { ...row, notes } : row)));
+            }}
+          />
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">
@@ -207,6 +230,7 @@ export function MeetingAgendaSection({
             pending={pending}
             relatedDecisions={decisions.filter((d) => d.sourceAgendaItemId === item.id)}
             meetingId={meetingId}
+            meetingTitle={meetingTitle}
             onSave={(draft) => saveItem(item, draft)}
             onDelete={() => deleteItem(item.id)}
             onDirty={() => onDirtyChange?.(true)}
@@ -214,6 +238,14 @@ export function MeetingAgendaSection({
               const res = await fetch(`/api/meetings/${meetingId}/decisions`);
               const data = await res.json();
               if (res.ok && Array.isArray(data.decisions)) onDecisionsChange(data.decisions);
+            }}
+            onActionCreated={async () => {
+              const res = await fetch(`/api/meetings/${meetingId}/actions`);
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.actions)) onActionsChange(data.actions);
+            }}
+            onNotesUpdated={(notes) => {
+              onItemsChange(items.map((row) => (row.id === item.id ? { ...row, notes } : row)));
             }}
           />
         ))
@@ -266,10 +298,13 @@ function AgendaItemRow({
   pending,
   relatedDecisions,
   meetingId,
+  meetingTitle,
   onSave,
   onDelete,
   onDirty,
   onDecisionCreated,
+  onActionCreated,
+  onNotesUpdated,
 }: {
   index: number;
   item: AgendaItem;
@@ -277,10 +312,13 @@ function AgendaItemRow({
   pending: boolean;
   relatedDecisions: Decision[];
   meetingId: string;
+  meetingTitle: string;
   onSave: (draft: Record<string, unknown>) => void;
   onDelete: () => void;
   onDirty: () => void;
   onDecisionCreated: () => void | Promise<void>;
+  onActionCreated: () => void | Promise<void>;
+  onNotesUpdated: (notes: string) => void;
 }) {
   const [title, setTitle] = useState(item.title);
   const [notes, setNotes] = useState(item.notes ?? "");
@@ -305,27 +343,6 @@ function AgendaItemRow({
   );
 
   const collapsedMetadata = buildAgendaItemCollapsedMetadata(item);
-  const [creatingDecision, setCreatingDecision] = useState(false);
-  const [decisionTitle, setDecisionTitle] = useState("");
-  const [decisionError, setDecisionError] = useState<string | null>(null);
-
-  async function createDecisionFromAgenda() {
-    const trimmed = decisionTitle.trim();
-    if (!trimmed) return;
-    setDecisionError(null);
-    try {
-      await meetingWorkspaceApi.decisions.create(meetingId, {
-        title: trimmed,
-        sourceAgendaItemId: item.id,
-        status: "CONFIRMED",
-      });
-      setDecisionTitle("");
-      setCreatingDecision(false);
-      await onDecisionCreated();
-    } catch (e) {
-      setDecisionError(e instanceof Error ? e.message : "Beschluss konnte nicht gespeichert werden.");
-    }
-  }
 
   return (
     <SceExpandablePanel
@@ -423,36 +440,22 @@ function AgendaItemRow({
               </ul>
             </div>
           ) : null}
-          {decisionError ? (
-            <p className="text-xs text-rose-700" role="alert">
-              {decisionError}
-            </p>
-          ) : null}
-          {creatingDecision ? (
-            <div className="flex flex-wrap items-end gap-2">
-              <input
-                className={workspaceInputClass}
-                value={decisionTitle}
-                onChange={(e) => setDecisionTitle(e.target.value)}
-                placeholder="Beschlusstitel"
-              />
-              <button
-                type="button"
-                className={workspacePrimaryButtonClass}
-                disabled={pending || !decisionTitle.trim()}
-                onClick={() => void createDecisionFromAgenda()}
-              >
-                Beschluss erfassen
-              </button>
-              <button type="button" className={workspaceGhostButtonClass} onClick={() => setCreatingDecision(false)}>
-                Abbrechen
-              </button>
-            </div>
-          ) : (
-            <button type="button" className={workspaceGhostButtonClass} onClick={() => setCreatingDecision(true)}>
-              Beschluss aus Traktandum
-            </button>
-          )}
+          <MeetingTraktandumOutcomeActions
+            meetingId={meetingId}
+            meetingTitle={meetingTitle}
+            agendaItemId={item.id}
+            agendaTitle={item.title}
+            agendaPosition={index}
+            agendaNotes={notes}
+            canManage={canManage}
+            testIdPrefix={`meeting-agenda-item-${item.id}`}
+            onDecisionCreated={onDecisionCreated}
+            onActionCreated={onActionCreated}
+            onNotesUpdated={(merged) => {
+              setNotes(merged);
+              onNotesUpdated(merged);
+            }}
+          />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
