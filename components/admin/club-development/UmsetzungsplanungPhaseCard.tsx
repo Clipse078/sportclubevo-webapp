@@ -8,6 +8,7 @@ import {
 } from "@/lib/club-development/product-copy";
 import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
+import UmsetzungsplanungPhaseAssignedTasksPanel from "./UmsetzungsplanungPhaseAssignedTasksPanel";
 
 export type UmsetzungsplanungPhaseCardItem = {
   id: string;
@@ -69,6 +70,7 @@ export default function UmsetzungsplanungPhaseCard({ sprint }: { sprint: Umsetzu
           </Link>
         ) : null}
       </div>
+      <UmsetzungsplanungPhaseAssignedTasksPanel sprintId={sprint.id} sprintSlug={sprint.slug} />
     </div>
   );
 }

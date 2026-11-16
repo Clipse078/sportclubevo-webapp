@@ -31,6 +31,7 @@ export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
   "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
+  "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
   "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
   "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",

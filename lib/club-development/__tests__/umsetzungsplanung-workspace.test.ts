@@ -49,6 +49,16 @@ describe("Umsetzungsplanung workspace", () => {
     expect(read("components/admin/club-development/UmsetzungsplanungPhaseCard.tsx")).toContain("SprintBoardQuickLink");
     expect(read("lib/club-development/product-copy.ts")).toContain(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY_MARKER);
   });
+
+  it("lazy-loads assigned tasks inline on phase expand", () => {
+    const phaseCard = read("components/admin/club-development/UmsetzungsplanungPhaseCard.tsx");
+    expect(phaseCard).toContain("UmsetzungsplanungPhaseAssignedTasksPanel");
+    const panel = read("components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx");
+    expect(panel).toContain("/api/club-development/sprints/");
+    expect(panel).toContain("SprintTaskTitleLink");
+    expect(panel).toContain("SprintTaskAssigneeDisplay");
+    expect(panel).toContain("initiativeLabel");
+  });
 });
 
 const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY_MARKER = "CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY";

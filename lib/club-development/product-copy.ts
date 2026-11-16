@@ -95,6 +95,9 @@ export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
   assignSelectedAction: "Auswahl zuordnen",
   expandUnplannedAction: "Ungeplante Aufgaben anzeigen",
   planningDetailLink: "Zur Planung",
+  assignedTasksSection: "Zugeordnete Aufgaben",
+  assignedTasksLoading: "Aufgaben werden geladen …",
+  noAssignedTasks: "Noch keine Aufgaben dieser Umsetzungsphase zugeordnet.",
 } as const;
 
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
