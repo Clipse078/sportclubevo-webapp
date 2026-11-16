@@ -2,6 +2,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import { resetTraktandumOutcomeDraftStoreForTests } from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
 
 vi.mock("@/lib/meetings/meeting-workspace-mutations", () => ({
   meetingWorkspaceApi: {
@@ -16,6 +17,7 @@ import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations"
 describe("MeetingTraktandumOutcomeActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetTraktandumOutcomeDraftStoreForTests();
   });
 
   it("shows meeting and Traktandum context on both entry surfaces", () => {
@@ -101,5 +103,56 @@ describe("MeetingTraktandumOutcomeActions", () => {
       );
       expect(onActionCreated).toHaveBeenCalled();
     });
+  });
+
+  it("offers Pendenz dazu erstellen after Beschluss without auto-creating", async () => {
+    render(
+      <MeetingTraktandumOutcomeActions
+        meetingId="m1"
+        meetingTitle="Sitzung"
+        agendaItemId="a1"
+        agendaTitle="Budget"
+        agendaPosition={1}
+        agendaNotes={null}
+        canManage
+        testIdPrefix="test"
+        onDecisionCreated={vi.fn()}
+        onActionCreated={vi.fn()}
+        onNotesUpdated={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
+    fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
+    fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy();
+    });
+    expect(meetingWorkspaceApi.actions.create).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
+    expect(screen.getByDisplayValue("Umsetzung: Budget genehmigt")).toBeTruthy();
+  });
+
+  it("shares draft state between focus and expanded row surfaces", () => {
+    const shared = {
+      meetingId: "m1",
+      meetingTitle: "Sitzung",
+      agendaItemId: "a1",
+      agendaTitle: "Budget",
+      agendaPosition: 1,
+      agendaNotes: null as string | null,
+      canManage: true,
+      onDecisionCreated: vi.fn(),
+      onActionCreated: vi.fn(),
+      onNotesUpdated: vi.fn(),
+    };
+    render(
+      <>
+        <MeetingTraktandumOutcomeActions {...shared} testIdPrefix="focus" />
+        <MeetingTraktandumOutcomeActions {...shared} testIdPrefix="row" />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("focus-outcome-decision-trigger"));
+    fireEvent.change(screen.getAllByPlaceholderText("Kurzform")[0]!, { target: { value: "Geteilter Entwurf" } });
+    expect(screen.getAllByDisplayValue("Geteilter Entwurf")).toHaveLength(2);
   });
 });

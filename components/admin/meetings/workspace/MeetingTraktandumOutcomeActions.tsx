@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { MeetingWorkspacePeopleField, personDisplayLabel } from "@/components/admin/meetings/workspace/MeetingWorkspacePeopleField";
 import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import { buildMeetingActionAgendaLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
 import {
+  useTraktandumOutcomeDraft,
+  type TraktandumOutcomeOwnerDraft,
+} from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
+import {
   workspaceGhostButtonClass,
   workspaceInputClass,
   workspacePrimaryButtonClass,
 } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
-
-type OutcomeForm = "decision" | "pendenz" | "note" | null;
 
 export type MeetingTraktandumOutcomeActionsProps = {
   meetingId: string;
@@ -28,6 +30,28 @@ export type MeetingTraktandumOutcomeActionsProps = {
   onNotesUpdated: (notes: string) => void;
 };
 
+function ownerFromPicker(person: PersonPickerResult | null): TraktandumOutcomeOwnerDraft | null {
+  if (!person) return null;
+  return { id: person.id, displayName: personDisplayLabel(person) };
+}
+
+function ownerToPicker(owner: TraktandumOutcomeOwnerDraft | null): PersonPickerResult | null {
+  if (!owner) return null;
+  const parts = owner.displayName.split(/\s+/).filter(Boolean);
+  return {
+    id: owner.id,
+    firstName: parts[0] ?? owner.displayName,
+    lastName: parts.slice(1).join(" ") || "",
+    displayName: owner.displayName,
+    email: null,
+    phone: null,
+  };
+}
+
+function normalizeNotes(value: string | null | undefined): string {
+  return (value?.trim() ?? "") || "";
+}
+
 export function MeetingTraktandumOutcomeActions({
   meetingId,
   meetingTitle,
@@ -41,99 +65,147 @@ export function MeetingTraktandumOutcomeActions({
   onActionCreated,
   onNotesUpdated,
 }: MeetingTraktandumOutcomeActionsProps) {
-  const [activeForm, setActiveForm] = useState<OutcomeForm>(null);
+  const { draft, patch, reset } = useTraktandumOutcomeDraft(meetingId, agendaItemId);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-
-  const [decisionTitle, setDecisionTitle] = useState("");
-  const [decisionDescription, setDecisionDescription] = useState("");
-  const [decisionRationale, setDecisionRationale] = useState("");
-  const [showDecisionDetails, setShowDecisionDetails] = useState(false);
-
-  const [pendenzTitle, setPendenzTitle] = useState("");
-  const [pendenzOwner, setPendenzOwner] = useState<PersonPickerResult | null>(null);
-  const [pendenzDueDate, setPendenzDueDate] = useState("");
-  const [pendenzDescription, setPendenzDescription] = useState("");
-  const [showPendenzDetails, setShowPendenzDetails] = useState(false);
-
-  const [noteText, setNoteText] = useState("");
+  const inFlightRef = useRef(false);
 
   if (!canManage) return null;
 
-  function resetForms() {
-    setActiveForm(null);
+  function clearOutcomeFormFields() {
+    patch({
+      activeForm: null,
+      decisionTitle: "",
+      decisionDescription: "",
+      decisionRationale: "",
+      showDecisionDetails: false,
+      pendenzTitle: "",
+      pendenzOwner: null,
+      pendenzDueDate: "",
+      pendenzDescription: "",
+      showPendenzDetails: false,
+      noteText: "",
+    });
+  }
+
+  function cancelAll() {
     setError(null);
-    setDecisionTitle("");
-    setDecisionDescription("");
-    setDecisionRationale("");
-    setShowDecisionDetails(false);
-    setPendenzTitle("");
-    setPendenzOwner(null);
-    setPendenzDueDate("");
-    setPendenzDescription("");
-    setShowPendenzDetails(false);
-    setNoteText("");
+    reset();
   }
 
   function saveDecision() {
-    const trimmed = decisionTitle.trim();
-    if (!trimmed) return;
+    const trimmed = draft.decisionTitle.trim();
+    if (!trimmed || inFlightRef.current) return;
     setError(null);
+    inFlightRef.current = true;
     startTransition(async () => {
       try {
         await meetingWorkspaceApi.decisions.create(meetingId, {
           title: trimmed,
-          description: decisionDescription.trim() || null,
-          rationale: decisionRationale.trim() || null,
+          description: draft.decisionDescription.trim() || null,
+          rationale: draft.decisionRationale.trim() || null,
           sourceAgendaItemId: agendaItemId,
           status: "CONFIRMED",
         });
         await onDecisionCreated();
-        resetForms();
+        patch({
+          activeForm: null,
+          decisionTitle: "",
+          decisionDescription: "",
+          decisionRationale: "",
+          showDecisionDetails: false,
+          offerPendenzAfterDecision: true,
+          lastSavedDecisionTitle: trimmed,
+        });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Beschluss konnte nicht gespeichert werden.");
+      } finally {
+        inFlightRef.current = false;
       }
     });
   }
 
   function savePendenz() {
-    const trimmed = pendenzTitle.trim();
-    if (!trimmed) return;
+    const trimmed = draft.pendenzTitle.trim();
+    if (!trimmed || inFlightRef.current) return;
     setError(null);
+    inFlightRef.current = true;
+    const ownerPicker = ownerToPicker(draft.pendenzOwner);
     startTransition(async () => {
       try {
         await meetingWorkspaceApi.actions.create(meetingId, {
           title: trimmed,
-          description: pendenzDescription.trim() || null,
-          ownerPersonId: pendenzOwner?.id ?? null,
-          owner: pendenzOwner ? personDisplayLabel(pendenzOwner) : null,
-          dueDate: pendenzDueDate || null,
+          description: draft.pendenzDescription.trim() || null,
+          ownerPersonId: ownerPicker?.id ?? null,
+          owner: ownerPicker ? personDisplayLabel(ownerPicker) : null,
+          dueDate: draft.pendenzDueDate || null,
           status: "OPEN",
           linkedRefs: buildMeetingActionAgendaLinkedRefs(agendaItemId),
         });
         await onActionCreated();
-        resetForms();
+        patch({
+          offerPendenzAfterDecision: false,
+          lastSavedDecisionTitle: null,
+        });
+        clearOutcomeFormFields();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Pendenz konnte nicht gespeichert werden.");
+      } finally {
+        inFlightRef.current = false;
       }
     });
   }
 
+  function startPendenzAfterDecision() {
+    const seed =
+      draft.lastSavedDecisionTitle?.trim() ?
+        `Umsetzung: ${draft.lastSavedDecisionTitle.trim()}`
+      : "";
+    patch({
+      activeForm: "pendenz",
+      pendenzTitle: seed,
+      offerPendenzAfterDecision: false,
+    });
+  }
+
+  async function loadServerAgendaNotes(): Promise<string | null> {
+    const res = await fetch(`/api/meetings/${meetingId}/agenda`);
+    const data = (await res.json().catch(() => ({}))) as { items?: Array<{ id: string; notes: string | null }> };
+    if (!res.ok || !Array.isArray(data.items)) {
+      throw new Error("Notizen konnten nicht geladen werden.");
+    }
+    const row = data.items.find((item) => item.id === agendaItemId);
+    return row?.notes ?? null;
+  }
+
   function saveNote() {
-    const addition = noteText.trim();
-    if (!addition) return;
+    const addition = draft.noteText.trim();
+    if (!addition || inFlightRef.current) return;
     setError(null);
-    const merged = agendaNotes?.trim() ? `${agendaNotes.trim()}\n\n${addition}` : addition;
+    inFlightRef.current = true;
     startTransition(async () => {
       try {
+        const serverNotes = await loadServerAgendaNotes();
+        if (normalizeNotes(serverNotes) !== normalizeNotes(agendaNotes)) {
+          setError(
+            "Notizen wurden zwischenzeitlich geändert. Die aktuelle Version wurde übernommen — bitte Ergänzung prüfen und erneut speichern.",
+          );
+          if (serverNotes != null) onNotesUpdated(serverNotes);
+          return;
+        }
+        const merged = agendaNotes?.trim() ? `${agendaNotes.trim()}\n\n${addition}` : addition;
         await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { notes: merged });
         onNotesUpdated(merged);
-        resetForms();
+        clearOutcomeFormFields();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Notiz konnte nicht gespeichert werden.");
+      } finally {
+        inFlightRef.current = false;
       }
     });
   }
+
+  const pendenzOwnerPicker = ownerToPicker(draft.pendenzOwner);
 
   return (
     <div
@@ -152,13 +224,32 @@ export function MeetingTraktandumOutcomeActions({
         </p>
       ) : null}
 
+      {draft.offerPendenzAfterDecision ? (
+        <div
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+          data-testid={`${testIdPrefix}-pendenz-follow-up`}
+        >
+          <p className="text-sm text-[var(--foreground)]">Beschluss gespeichert.</p>
+          <button
+            type="button"
+            className={`${workspacePrimaryButtonClass} mt-2`}
+            data-testid={`${testIdPrefix}-pendenz-follow-up-trigger`}
+            onClick={startPendenzAfterDecision}
+          >
+            Pendenz dazu erstellen
+          </button>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           className={workspaceGhostButtonClass}
           data-testid={`${testIdPrefix}-outcome-decision-trigger`}
           disabled={pending}
-          onClick={() => setActiveForm(activeForm === "decision" ? null : "decision")}
+          onClick={() =>
+            patch({ activeForm: draft.activeForm === "decision" ? null : "decision", offerPendenzAfterDecision: false })
+          }
         >
           Beschluss erfassen
         </button>
@@ -167,7 +258,9 @@ export function MeetingTraktandumOutcomeActions({
           className={workspaceGhostButtonClass}
           data-testid={`${testIdPrefix}-outcome-pendenz-trigger`}
           disabled={pending}
-          onClick={() => setActiveForm(activeForm === "pendenz" ? null : "pendenz")}
+          onClick={() =>
+            patch({ activeForm: draft.activeForm === "pendenz" ? null : "pendenz", offerPendenzAfterDecision: false })
+          }
         >
           Pendenz erstellen
         </button>
@@ -176,32 +269,32 @@ export function MeetingTraktandumOutcomeActions({
           className={workspaceGhostButtonClass}
           data-testid={`${testIdPrefix}-outcome-note-trigger`}
           disabled={pending}
-          onClick={() => setActiveForm(activeForm === "note" ? null : "note")}
+          onClick={() => patch({ activeForm: draft.activeForm === "note" ? null : "note" })}
         >
           Notiz ergänzen
         </button>
       </div>
 
-      {activeForm === "decision" ? (
+      {draft.activeForm === "decision" ? (
         <div className="space-y-2 border-t border-[var(--border)] pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
             Beschlusstitel
             <input
               className={`${workspaceInputClass} mt-1`}
-              value={decisionTitle}
-              onChange={(e) => setDecisionTitle(e.target.value)}
+              value={draft.decisionTitle}
+              onChange={(e) => patch({ decisionTitle: e.target.value })}
               placeholder="Kurzform"
             />
           </label>
-          {showDecisionDetails ? (
+          {draft.showDecisionDetails ? (
             <>
               <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
                 Beschlusswortlaut (optional)
                 <textarea
                   className={workspaceInputClass}
                   rows={2}
-                  value={decisionDescription}
-                  onChange={(e) => setDecisionDescription(e.target.value)}
+                  value={draft.decisionDescription}
+                  onChange={(e) => patch({ decisionDescription: e.target.value })}
                 />
               </label>
               <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
@@ -209,8 +302,8 @@ export function MeetingTraktandumOutcomeActions({
                 <textarea
                   className={workspaceInputClass}
                   rows={2}
-                  value={decisionRationale}
-                  onChange={(e) => setDecisionRationale(e.target.value)}
+                  value={draft.decisionRationale}
+                  onChange={(e) => patch({ decisionRationale: e.target.value })}
                 />
               </label>
             </>
@@ -218,7 +311,7 @@ export function MeetingTraktandumOutcomeActions({
             <button
               type="button"
               className={`${workspaceGhostButtonClass} text-xs`}
-              onClick={() => setShowDecisionDetails(true)}
+              onClick={() => patch({ showDecisionDetails: true })}
             >
               <ChevronDown className="h-3.5 w-3.5" aria-hidden />
               <span className="ml-1">Weitere Angaben</span>
@@ -228,62 +321,62 @@ export function MeetingTraktandumOutcomeActions({
             <button
               type="button"
               className={workspacePrimaryButtonClass}
-              disabled={pending || !decisionTitle.trim()}
+              disabled={pending || !draft.decisionTitle.trim()}
               onClick={() => saveDecision()}
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               <span className="ml-1">Speichern</span>
             </button>
-            <button type="button" className={workspaceGhostButtonClass} onClick={resetForms}>
+            <button type="button" className={workspaceGhostButtonClass} onClick={cancelAll}>
               Abbrechen
             </button>
           </div>
         </div>
       ) : null}
 
-      {activeForm === "pendenz" ? (
+      {draft.activeForm === "pendenz" ? (
         <div className="space-y-2 border-t border-[var(--border)] pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
             Massnahme / Pendenz
             <input
               className={`${workspaceInputClass} mt-1`}
-              value={pendenzTitle}
-              onChange={(e) => setPendenzTitle(e.target.value)}
+              value={draft.pendenzTitle}
+              onChange={(e) => patch({ pendenzTitle: e.target.value })}
               placeholder="Was ist zu tun?"
             />
           </label>
           <div className="grid gap-2 sm:grid-cols-2">
             <MeetingWorkspacePeopleField
               label="Verantwortliche/r"
-              selected={pendenzOwner}
-              onSelect={setPendenzOwner}
-              onClear={() => setPendenzOwner(null)}
+              selected={pendenzOwnerPicker}
+              onSelect={(person) => patch({ pendenzOwner: ownerFromPicker(person) })}
+              onClear={() => patch({ pendenzOwner: null })}
             />
             <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
               Fälligkeitsdatum
               <input
                 type="date"
                 className={workspaceInputClass}
-                value={pendenzDueDate}
-                onChange={(e) => setPendenzDueDate(e.target.value)}
+                value={draft.pendenzDueDate}
+                onChange={(e) => patch({ pendenzDueDate: e.target.value })}
               />
             </label>
           </div>
-          {showPendenzDetails ? (
+          {draft.showPendenzDetails ? (
             <label className="block space-y-1 text-xs font-semibold text-[var(--muted)]">
               Beschreibung (optional)
               <textarea
                 className={workspaceInputClass}
                 rows={2}
-                value={pendenzDescription}
-                onChange={(e) => setPendenzDescription(e.target.value)}
+                value={draft.pendenzDescription}
+                onChange={(e) => patch({ pendenzDescription: e.target.value })}
               />
             </label>
           ) : (
             <button
               type="button"
               className={`${workspaceGhostButtonClass} text-xs`}
-              onClick={() => setShowPendenzDetails(true)}
+              onClick={() => patch({ showPendenzDetails: true })}
             >
               <ChevronDown className="h-3.5 w-3.5" aria-hidden />
               <span className="ml-1">Weitere Angaben</span>
@@ -293,27 +386,27 @@ export function MeetingTraktandumOutcomeActions({
             <button
               type="button"
               className={workspacePrimaryButtonClass}
-              disabled={pending || !pendenzTitle.trim()}
+              disabled={pending || !draft.pendenzTitle.trim()}
               onClick={() => savePendenz()}
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               <span className="ml-1">Speichern</span>
             </button>
-            <button type="button" className={workspaceGhostButtonClass} onClick={resetForms}>
+            <button type="button" className={workspaceGhostButtonClass} onClick={cancelAll}>
               Abbrechen
             </button>
           </div>
         </div>
       ) : null}
 
-      {activeForm === "note" ? (
+      {draft.activeForm === "note" ? (
         <div className="space-y-2 border-t border-[var(--border)] pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
             Notiz zu diesem Traktandum
             <textarea
               className={`${workspaceInputClass} mt-1 min-h-[72px]`}
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
+              value={draft.noteText}
+              onChange={(e) => patch({ noteText: e.target.value })}
               placeholder="Ergänzung zum Protokoll"
             />
           </label>
@@ -321,13 +414,13 @@ export function MeetingTraktandumOutcomeActions({
             <button
               type="button"
               className={workspacePrimaryButtonClass}
-              disabled={pending || !noteText.trim()}
+              disabled={pending || !draft.noteText.trim()}
               onClick={() => saveNote()}
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               <span className="ml-1">Notiz speichern</span>
             </button>
-            <button type="button" className={workspaceGhostButtonClass} onClick={resetForms}>
+            <button type="button" className={workspaceGhostButtonClass} onClick={cancelAll}>
               Abbrechen
             </button>
           </div>

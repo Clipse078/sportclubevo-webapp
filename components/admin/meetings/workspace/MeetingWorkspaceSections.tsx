@@ -20,6 +20,7 @@ import {
   sumAgendaPlannedMinutes,
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
+import { buildAgendaItemOutcomeLinkLabels } from "@/lib/meetings/agenda-item-outcome-presentation";
 import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
@@ -177,6 +178,9 @@ export function MeetingAgendaSection({
           <MeetingSitzungsmodusPanel
             meetingId={meetingId}
             meetingTitle={meetingTitle}
+            agendaItems={items}
+            actions={actions}
+            agendaDisplayOrder={agendaDisplayOrder}
             onDecisionCreated={async () => {
               const res = await fetch(`/api/meetings/${meetingId}/decisions`);
               const data = await res.json();
@@ -189,6 +193,10 @@ export function MeetingAgendaSection({
             }}
             onAgendaNotesUpdated={(agendaItemId, notes) => {
               onItemsChange(items.map((row) => (row.id === agendaItemId ? { ...row, notes } : row)));
+            }}
+            onMarkAgendaDiscussed={async (agendaItemId) => {
+              await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { status: "DISCUSSED" });
+              await refreshFromServer();
             }}
           />
         </div>
@@ -229,6 +237,8 @@ export function MeetingAgendaSection({
             canManage={canManage}
             pending={pending}
             relatedDecisions={decisions.filter((d) => d.sourceAgendaItemId === item.id)}
+            decisions={decisions}
+            actions={actions}
             meetingId={meetingId}
             meetingTitle={meetingTitle}
             onSave={(draft) => saveItem(item, draft)}
@@ -297,6 +307,8 @@ function AgendaItemRow({
   canManage,
   pending,
   relatedDecisions,
+  decisions,
+  actions,
   meetingId,
   meetingTitle,
   onSave,
@@ -311,6 +323,8 @@ function AgendaItemRow({
   canManage: boolean;
   pending: boolean;
   relatedDecisions: Decision[];
+  decisions: Decision[];
+  actions: MeetingAction[];
   meetingId: string;
   meetingTitle: string;
   onSave: (draft: Record<string, unknown>) => void;
@@ -342,7 +356,10 @@ function AgendaItemRow({
       : null,
   );
 
-  const collapsedMetadata = buildAgendaItemCollapsedMetadata(item);
+  const collapsedMetadata = [
+    ...buildAgendaItemCollapsedMetadata(item),
+    ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions),
+  ];
 
   return (
     <SceExpandablePanel

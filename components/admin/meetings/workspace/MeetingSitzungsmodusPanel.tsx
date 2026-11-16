@@ -16,6 +16,11 @@ import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/Mee
 import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
 import { isSitzungsmodusResumable } from "@/lib/meetings/sitzungsmodus/meeting-guided-sitzungsmodus";
+import {
+  buildGuidedSitzungsmodusSessionSummary,
+  type GuidedSitzungsmodusSessionSummary,
+} from "@/lib/meetings/sitzungsmodus/meeting-guided-session-summary";
+import type { MeetingSubEntities } from "@/lib/meetings/queries";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
 const CARD_TEST_ID = "meeting-sitzungsmodus-card";
@@ -40,24 +45,37 @@ export function MeetingSitzungsmodusStartButton() {
   );
 }
 
+type AgendaItem = MeetingSubEntities["agendaItems"][number];
+type MeetingAction = MeetingSubEntities["actions"][number];
+
 type MeetingSitzungsmodusPanelProps = {
   meetingId?: string;
   meetingTitle?: string;
+  agendaItems?: AgendaItem[];
+  actions?: MeetingAction[];
+  agendaDisplayOrder?: Map<string, number>;
   onDecisionCreated?: () => void | Promise<void>;
   onActionCreated?: () => void | Promise<void>;
   onAgendaNotesUpdated?: (agendaItemId: string, notes: string) => void;
+  onMarkAgendaDiscussed?: (agendaItemId: string) => void | Promise<void>;
 };
 
 export function MeetingSitzungsmodusPanel({
   meetingId,
   meetingTitle = "",
+  agendaItems = [],
+  actions = [],
+  agendaDisplayOrder,
   onDecisionCreated = async () => {},
   onActionCreated = async () => {},
   onAgendaNotesUpdated = () => {},
+  onMarkAgendaDiscussed = async () => {},
 }: MeetingSitzungsmodusPanelProps = {}) {
   const timer = useMeetingAgendaTimer();
   const [expanded, setExpanded] = useState(true);
   const [tempDuration, setTempDuration] = useState("");
+  const [sessionEndSummary, setSessionEndSummary] = useState<GuidedSitzungsmodusSessionSummary | null>(null);
+  const [discussedPending, setDiscussedPending] = useState(false);
 
   useEffect(() => {
     function onReveal() {
@@ -321,7 +339,26 @@ export function MeetingSitzungsmodusPanel({
             <button
               type="button"
               className="fca-button-ghost text-xs text-[var(--muted)]"
-              onClick={timer.endMode}
+              onClick={() => {
+                const summary = buildGuidedSitzungsmodusSessionSummary({
+                  agendaItems: agendaItems.map((item, idx) => ({
+                    id: item.id,
+                    title: item.title,
+                    status: item.status,
+                    position: agendaDisplayOrder?.get(item.id) ?? idx + 1,
+                  })),
+                  actions: actions.map((action) => ({
+                    id: action.id,
+                    title: action.title,
+                    status: action.status,
+                  })),
+                });
+                if (summary.hasGaps) {
+                  setSessionEndSummary(summary);
+                  return;
+                }
+                timer.endMode();
+              }}
               data-testid="meeting-sitzungsmodus-end"
             >
               Sitzungsmodus beenden
@@ -329,6 +366,11 @@ export function MeetingSitzungsmodusPanel({
           </MotionSafe>
 
           {meetingId && activeItem && activePosition != null ? (
+            <div
+              className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] p-3"
+              data-testid="meeting-sitzungsmodus-topic-wrapup"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ergebnisse erfassen</p>
             <MeetingTraktandumOutcomeActions
               meetingId={meetingId}
               meetingTitle={meetingTitle}
@@ -342,6 +384,95 @@ export function MeetingSitzungsmodusPanel({
               onActionCreated={onActionCreated}
               onNotesUpdated={(notes) => onAgendaNotesUpdated(activeItem.id, notes)}
             />
+              <div className="border-t border-[var(--border)]/60 pt-3 space-y-2" data-testid="meeting-sitzungsmodus-topic-continue">
+                <p className="text-xs font-semibold text-[var(--muted)]">Traktandum abschliessen</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="fca-button-secondary text-sm"
+                    disabled={timer.orderedItemIds.indexOf(activeItem.id) >= timer.orderedItemIds.length - 1}
+                    onClick={() => timer.nextTopic()}
+                    data-testid="meeting-sitzungsmodus-continue-without-outcome"
+                  >
+                    Ohne Ergebnis weiter
+                  </button>
+                  <button
+                    type="button"
+                    className="fca-button-primary text-sm"
+                    disabled={
+                      discussedPending ||
+                      timer.orderedItemIds.indexOf(activeItem.id) >= timer.orderedItemIds.length - 1
+                    }
+                    onClick={async () => {
+                      setDiscussedPending(true);
+                      try {
+                        await onMarkAgendaDiscussed(activeItem.id);
+                        timer.nextTopic();
+                      } finally {
+                        setDiscussedPending(false);
+                      }
+                    }}
+                    data-testid="meeting-sitzungsmodus-mark-discussed-continue"
+                  >
+                    {discussedPending ? "Wird gespeichert…" : "Als besprochen markieren & weiter"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {sessionEndSummary ? (
+            <MotionSafe
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm"
+              role="dialog"
+              aria-labelledby="meeting-guided-session-summary-title"
+              data-testid="meeting-sitzungsmodus-session-summary"
+            >
+              <p id="meeting-guided-session-summary-title" className="font-semibold text-[var(--foreground)]">
+                Sitzungsmodus — Kurzüberblick
+              </p>
+              {sessionEndSummary.openTopics.length > 0 ? (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs font-semibold text-[var(--muted)]">Offene Traktanden</p>
+                  <ul className="list-inside list-disc text-[var(--text-2)]">
+                    {sessionEndSummary.openTopics.map((topic) => (
+                      <li key={topic.id}>
+                        Traktandum {topic.position}: {topic.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {sessionEndSummary.incompleteActions.length > 0 ? (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs font-semibold text-[var(--muted)]">Offene Pendenzen</p>
+                  <ul className="list-inside list-disc text-[var(--text-2)]">
+                    {sessionEndSummary.incompleteActions.map((action) => (
+                      <li key={action.id}>{action.title}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <MotionSafe className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="fca-button-primary text-sm"
+                  onClick={() => {
+                    setSessionEndSummary(null);
+                    timer.endMode();
+                  }}
+                >
+                  Sitzungsmodus beenden
+                </button>
+                <button
+                  type="button"
+                  className="fca-button-secondary text-sm"
+                  onClick={() => setSessionEndSummary(null)}
+                >
+                  Weiter im Modus
+                </button>
+              </MotionSafe>
+            </MotionSafe>
           ) : null}
 
           {timer.resetConfirmOpen ? (
