@@ -1,196 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Trash2 } from "lucide-react";
-import { Dialog } from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
+import { useState, useTransition } from "react";
+import SceInlineDestructiveConfirm from "@/components/sce/club-development/SceInlineDestructiveConfirm";
+import type { MeetingDeletionImpact } from "@/lib/meetings/meeting-delete-service";
+import { buildMeetingDeletionConfirmDescription } from "@/lib/meetings/meeting-deletion-confirm-copy";
 
-type MeetingDeletionImpact = {
-  agendaItems: number;
-  decisions: number;
-  actions: number;
-  participants: number;
+type MeetingDeleteMenuItemProps = {
+  onSelect: () => void;
+  disabled?: boolean;
 };
 
-type MeetingDeleteButtonProps = {
+export function MeetingDeleteMenuItem({ onSelect, disabled }: MeetingDeleteMenuItemProps) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={() => onSelect()}
+      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+      data-testid="meeting-delete-trigger"
+    >
+      <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      Sitzung löschen
+    </button>
+  );
+}
+
+type MeetingDeleteInlineConfirmProps = {
   meetingId: string;
   meetingTitle: string;
-  presentation?: "button" | "menu";
-  onMenuAction?: () => void;
+  impact: MeetingDeletionImpact | null;
+  impactLoading: boolean;
+  onCancel: () => void;
 };
 
-/**
- * MeetingDeleteButton — permanent-delete action for a Meeting (ADMIN-HARD-DELETE-UI).
- *
- * Flow: clicking "Endgültig löschen" opens the confirmation dialog and fetches
- * the current impact from DELETE /api/meetings/[id]/permanent (preview mode).
- * Clicking "Endgültig löschen" (confirm) sends DELETE ?confirm=true to
- * permanently remove the Meeting and all cascade children.
- */
-export default function MeetingDeleteButton({
+export function MeetingDeleteInlineConfirm({
   meetingId,
   meetingTitle,
-  presentation = "button",
-  onMenuAction,
-}: MeetingDeleteButtonProps) {
+  impact,
+  impactLoading,
+  onCancel,
+}: MeetingDeleteInlineConfirmProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [loadingImpact, setLoadingImpact] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [impact, setImpact] = useState<MeetingDeletionImpact | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  async function openConfirmation() {
-    onMenuAction?.();
-    setOpen(true);
+  const description = buildMeetingDeletionConfirmDescription(meetingTitle, impact);
+
+  function performDelete() {
+    if (impactLoading || pending) return;
     setError(null);
-    setImpact(null);
-    setLoadingImpact(true);
-
-    try {
-      const response = await fetch(`/api/meetings/${encodeURIComponent(meetingId)}/permanent`, {
-        method: "DELETE",
-      });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Vorschau nicht verfügbar.");
+    startTransition(async () => {
+      try {
+        const response = await fetch(
+          `/api/meetings/${encodeURIComponent(meetingId)}/permanent?confirm=true`,
+          { method: "DELETE" },
+        );
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(
+            typeof data.error === "string" ? data.error : "Sitzung konnte nicht gelöscht werden.",
+          );
+          return;
+        }
+        router.push("/vereinsleitung/meetings");
+        router.refresh();
+      } catch {
+        setError("Netzwerkfehler. Bitte erneut versuchen.");
       }
-
-      setImpact(data?.impact ?? null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
-    } finally {
-      setLoadingImpact(false);
-    }
+    });
   }
-
-  async function handleConfirmDelete() {
-    setDeleting(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/meetings/${encodeURIComponent(meetingId)}/permanent?confirm=true`,
-        { method: "DELETE" },
-      );
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setError(data?.error ?? "Sitzung konnte nicht gelöscht werden.");
-        return;
-      }
-
-      setOpen(false);
-      router.push("/vereinsleitung/meetings");
-      router.refresh();
-    } catch {
-      setError("Netzwerkfehler. Bitte erneut versuchen.");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  const totalSubItems =
-    (impact?.agendaItems ?? 0) +
-    (impact?.decisions ?? 0) +
-    (impact?.actions ?? 0) +
-    (impact?.participants ?? 0);
-
-  const triggerClass =
-    presentation === "menu"
-      ? "flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50"
-      : "inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-3.5 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50";
 
   return (
-    <>
-      <button
-        type="button"
-        role={presentation === "menu" ? "menuitem" : undefined}
-        onClick={openConfirmation}
-        className={triggerClass}
-        data-testid="meeting-delete-trigger"
-      >
-        <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        Endgültig löschen
-      </button>
-
-      <Dialog
-        open={open}
-        onClose={() => !deleting && setOpen(false)}
-        title="Sitzung endgültig löschen"
-        description={`„${meetingTitle}" dauerhaft und unwiderruflich aus dem System entfernen.`}
-        footer={
-          <div className="flex flex-col gap-2">
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setOpen(false)}
-                disabled={deleting || loadingImpact}
-              >
-                Abbrechen
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmDelete}
-                loading={deleting}
-                disabled={loadingImpact || !!error}
-              >
-                Endgültig löschen
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-4 text-sm text-[var(--text-2)]">
-          {loadingImpact ? (
-            <p className="text-[var(--muted)]">Auswirkungen werden geprüft…</p>
-          ) : impact ? (
-            <>
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                  <p className="font-medium text-red-800">
-                    Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden.
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2 font-medium text-[var(--foreground)]">Wird gelöscht:</p>
-                <ul className="ml-4 list-disc space-y-1">
-                  <li>Sitzungsprotokoll &bdquo;{meetingTitle}&ldquo;</li>
-                  {impact.agendaItems > 0 && (
-                    <li>
-                      {impact.agendaItems} Traktandum{impact.agendaItems !== 1 ? "en" : ""}
-                    </li>
-                  )}
-                  {impact.decisions > 0 && (
-                    <li>
-                      {impact.decisions} Beschluss{impact.decisions !== 1 ? "e" : ""}
-                    </li>
-                  )}
-                  {impact.actions > 0 && (
-                    <li>
-                      {impact.actions} Aufgabe{impact.actions !== 1 ? "n" : ""}
-                    </li>
-                  )}
-                  {impact.participants > 0 && (
-                    <li>
-                      {impact.participants} Teilnehmer{impact.participants !== 1 ? "-Einträge" : "-Eintrag"}
-                    </li>
-                  )}
-                  {totalSubItems === 0 && (
-                    <li className="text-[var(--muted)]">Keine weiteren verknüpften Einträge</li>
-                  )}
-                </ul>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </Dialog>
-    </>
+    <SceInlineDestructiveConfirm
+      title="Sitzung endgültig löschen?"
+      description={impactLoading ? "Auswirkungen werden geprüft…" : description}
+      confirmLabel="Sitzung endgültig löschen"
+      pending={pending || impactLoading}
+      error={error}
+      onConfirm={performDelete}
+      onCancel={() => {
+        if (!pending) onCancel();
+      }}
+      testId="meeting-delete-confirm"
+    />
   );
+}
+
+export async function fetchMeetingDeletionImpact(meetingId: string): Promise<MeetingDeletionImpact> {
+  const response = await fetch(`/api/meetings/${encodeURIComponent(meetingId)}/permanent`, {
+    method: "DELETE",
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(typeof data?.error === "string" ? data.error : "Vorschau nicht verfügbar.");
+  }
+  return data?.impact ?? {
+    agendaItems: 0,
+    decisions: 0,
+    actions: 0,
+    participants: 0,
+  };
 }
