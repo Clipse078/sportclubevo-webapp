@@ -41,6 +41,7 @@ export default async function DevelopmentSprintWorkspaceShell({
       <DevelopmentSprintWorkspaceHeader
         sprintId={sprint.id}
         slug={sprint.slug}
+        title={sprint.title}
         goal={sprint.goal}
         status={sprint.status}
         owner={sprint.owner}

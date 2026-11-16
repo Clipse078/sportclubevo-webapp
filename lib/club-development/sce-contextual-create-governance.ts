@@ -8,12 +8,15 @@ export const SCE_CONTEXTUAL_CREATE_INLINE_ENTRY_PATHS = [
   "components/admin/targets/TargetInitiativeLinksSection.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
   "components/admin/club-development/ZieleWorkspacePanel.tsx",
+  "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
+  "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
 ] as const;
 
 export const SCE_CONTEXTUAL_CREATE_INLINE_CARD_MARKERS = [
   "CreateInitiativeContextualCollapsibleCard",
   "CreateTargetContextualCollapsibleCard",
   "CreateTargetWorkspaceCollapsibleCard",
+  "CreateInitiativeWorkspaceCollapsibleCard",
   "data-sce-contextual-create-flow=\"inline-collapsible\"",
 ] as const;
 
@@ -91,6 +94,7 @@ export function collectContextualCreateEntryViolations(
   }
   if (
     !src.includes("ContextualCollapsibleCard") &&
+    !src.includes("CreateInitiativeWorkspaceCollapsibleCard") &&
     !src.includes('data-sce-contextual-create-flow="inline-collapsible"')
   ) {
     findings.push({

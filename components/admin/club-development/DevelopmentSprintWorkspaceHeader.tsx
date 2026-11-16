@@ -7,10 +7,12 @@ import type { DevelopmentSprintStatus } from "@prisma/client";
 import DevelopmentSprintWorkspaceNav from "./DevelopmentSprintWorkspaceNav";
 import { Badge } from "@/components/ui";
 import { CD_SPRINT_STATUS_LABELS, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 
 type Props = {
   sprintId: string;
   slug: string;
+  title: string;
   goal: string | null;
   status: DevelopmentSprintStatus;
   owner: string | null;
@@ -103,71 +105,18 @@ export default function DevelopmentSprintWorkspaceHeader({
         : null;
 
   return (
-    <header className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm" data-testid="sprint-workspace-header">
+    <header
+      className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}
+      data-testid="sprint-phase-summary"
+    >
+      <p className="sr-only">{CD_SPRINT_WORKSPACE_COPY.phaseGoalLabel}</p>
+
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="info">{CD_SPRINT_STATUS_LABELS[status]}</Badge>
-          </div>
-          {editingGoal ? (
-            <div className="space-y-2">
-              <textarea
-                value={goalDraft}
-                onChange={(e) => setGoalDraft(e.target.value)}
-                rows={2}
-                disabled={pending}
-                className="w-full max-w-xl rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-                placeholder={CD_SPRINT_WORKSPACE_COPY.goalPlaceholder}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={saveGoal}
-                  className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-medium text-white"
-                >
-                  Speichern
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => {
-                    setEditingGoal(false);
-                    setGoalDraft(goal ?? "");
-                  }}
-                  className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs"
-                >
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-          ) : goal ? (
-            <p className="max-w-2xl text-sm text-[var(--text-2)]">{goal}</p>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
-              <span>{CD_SPRINT_WORKSPACE_COPY.noGoalRecorded}</span>
-              {canManage ? (
-                <button
-                  type="button"
-                  onClick={() => setEditingGoal(true)}
-                  className="inline-flex items-center gap-1 text-[var(--sce-primary)] hover:underline"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Ziel bearbeiten
-                </button>
-              ) : null}
-            </div>
-          )}
-          {!editingGoal && goal && canManage ? (
-            <button
-              type="button"
-              onClick={() => setEditingGoal(true)}
-              className="inline-flex items-center gap-1 text-xs text-[var(--sce-primary)] hover:underline"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Ziel bearbeiten
-            </button>
-          ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="info">{CD_SPRINT_STATUS_LABELS[status]}</Badge>
+          <span className="text-xs text-[var(--muted)]">
+            Aufgaben: {completedCount}/{totalCount} erledigt
+          </span>
         </div>
         {primaryAction ? (
           <button
@@ -182,18 +131,78 @@ export default function DevelopmentSprintWorkspaceHeader({
         ) : null}
       </div>
 
-      <dl className="grid gap-2 text-xs text-[var(--muted)] sm:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {CD_SPRINT_WORKSPACE_COPY.phaseGoalLabel}
+        </p>
+        {editingGoal ? (
+          <div className="space-y-2">
+            <textarea
+              value={goalDraft}
+              onChange={(e) => setGoalDraft(e.target.value)}
+              rows={2}
+              disabled={pending}
+              className="w-full max-w-xl rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+              placeholder={CD_SPRINT_WORKSPACE_COPY.goalPlaceholder}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={saveGoal}
+                className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-medium text-white"
+              >
+                Speichern
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setEditingGoal(false);
+                  setGoalDraft(goal ?? "");
+                }}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        ) : goal ? (
+          <p className="max-w-2xl text-sm text-[var(--text-2)]">{goal}</p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
+            <span>{CD_SPRINT_WORKSPACE_COPY.noGoalRecorded}</span>
+            {canManage ? (
+              <button
+                type="button"
+                onClick={() => setEditingGoal(true)}
+                className="inline-flex items-center gap-1 text-[var(--sce-primary)] hover:underline"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {CD_SPRINT_WORKSPACE_COPY.phaseGoalEditAction}
+              </button>
+            ) : null}
+          </div>
+        )}
+        {!editingGoal && goal && canManage ? (
+          <button
+            type="button"
+            onClick={() => setEditingGoal(true)}
+            className="inline-flex items-center gap-1 text-xs text-[var(--sce-primary)] hover:underline"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            {CD_SPRINT_WORKSPACE_COPY.phaseGoalEditAction}
+          </button>
+        ) : null}
+      </div>
+
+      <dl className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
         <div className="flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5" />
+          <Calendar className="h-3.5 w-3.5" aria-hidden />
           <span>Geplant: {period}</span>
         </div>
-        {startedAt ? (
-          <div>Gestartet: {formatSwissDate(startedAt) ?? "—"}</div>
-        ) : null}
+        {startedAt ? <div>Gestartet: {formatSwissDate(startedAt) ?? "—"}</div> : null}
         <div>Verantwortlich: {owner?.trim() || "Nicht erfasst"}</div>
-        <div>
-          Aufgaben: {completedCount}/{totalCount} erledigt
-        </div>
       </dl>
 
       {error ? (

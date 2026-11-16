@@ -74,7 +74,7 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     expect(detail).toContain("SprintBulkTaskPlanningPanel");
     expect(detail).toContain("CD_SPRINT_WORKSPACE_COPY.removeFromPhase");
     expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
-      "Aufgaben hinzufügen",
+      "CD_SPRINT_WORKSPACE_COPY.addExistingTaskToPhase",
     );
     expect(detail).not.toContain("(KEEP)");
     expect(detail).not.toContain("(REMOVE)");
@@ -88,11 +88,9 @@ describe("SCE-CD-04 PO UAT corrections", () => {
 
   it("accessible light-theme errors on club-development forms", () => {
     expect(read("components/admin/club-development/ClubDevelopmentFormError.tsx")).toContain("text-rose-900");
-    expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
-      "ClubDevelopmentFormError",
-    );
-    expect(read("components/admin/club-development/InitiativeBacklogCreateCard.tsx")).toContain(
-      "Vorhaben im Backlog erfassen",
+    expect(read("components/admin/initiatives/InitiativeForm.tsx")).toContain('role="alert"');
+    expect(read("components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx")).toContain(
+      "Vorhaben erstellen",
     );
   });
 

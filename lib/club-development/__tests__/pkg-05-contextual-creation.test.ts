@@ -62,7 +62,7 @@ describe("PKG-05 contextual creation (Ziel ↔ Vorhaben, Strategie ↔ Ziel)", (
     expect(detail).toContain("TargetInitiativeLinksSection");
     expect(edit).toContain("TargetInitiativeLinksSection");
     const card = read("components/admin/initiatives/CreateInitiativeContextualCollapsibleCard.tsx");
-    expect(card).toContain("CD_TARGET_COPY.createInitiativeAndLink");
+    expect(card).toContain("CD_INITIATIVE_COPY.createAction");
     expect(card).toContain('collapseToggleTestId="target-create-initiative-and-link"');
     expect(section).toContain("CD_TARGET_COPY.linkExistingInitiative");
     expect(section).toContain("CreateInitiativeContextualCollapsibleCard");

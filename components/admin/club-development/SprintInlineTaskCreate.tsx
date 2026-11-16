@@ -1,8 +1,10 @@
 "use client";
 
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
+import SceClubDevelopmentContextualCreateCollapsibleShell from "@/components/sce/club-development/SceClubDevelopmentContextualCreateCollapsibleShell";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 
 type Props = {
   sprintId: string;
@@ -34,7 +36,7 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
           return;
         }
         setRetryTaskId(null);
-        setInfo("Aufgabe wurde der Umsetzungsphase zugeordnet.");
+        setInfo(CD_SPRINT_WORKSPACE_COPY.taskAssignedToPhase);
         onCreated();
         return;
       }
@@ -56,7 +58,7 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
         setInfo(
           typeof data.allocationError === "string"
             ? data.allocationError
-            : "Aufgabe erstellt, Zuordnung zur Umsetzungsphase fehlgeschlagen.",
+            : CD_SPRINT_WORKSPACE_COPY.phaseAssignmentFailed,
         );
         setTitle("");
         return;
@@ -72,18 +74,19 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
   };
 
   return (
-    <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium"
+    <div className="mt-3" data-testid="sprint-inline-task-create">
+      <SceClubDevelopmentContextualCreateCollapsibleShell
+        actionLabel={CD_SPRINT_WORKSPACE_COPY.createNewTaskInPhase}
+        expanded={expanded}
+        onExpandedChange={(open) => {
+          if (disabled && open) return;
+          setExpanded(open);
+        }}
+        panelDomId="sprint-inline-task-create-body"
+        cardTestId="sprint-inline-task-create-card"
+        collapseToggleTestId="sprint-inline-task-create-toggle"
       >
-        Neue Aufgabe anlegen
-        <ChevronDown className={`h-4 w-4 transition ${expanded ? "rotate-180" : ""}`} />
-      </button>
-      {expanded ? (
-        <div className="space-y-3 border-t border-[var(--border)] p-3">
+        <div className="space-y-3 p-3">
           {error ? <ClubDevelopmentFormError message={error} /> : null}
           {info ? (
             <p className="rounded-md border border-amber-500/30 bg-amber-50 px-3 py-2 text-sm text-amber-950">
@@ -114,10 +117,10 @@ export default function SprintInlineTaskCreate({ sprintId, disabled, onCreated }
             className="inline-flex items-center gap-2 rounded-lg border border-[var(--sce-primary)] bg-[var(--sce-primary)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Anlegen und zur Umsetzungsphase hinzufügen
+            {CD_SPRINT_WORKSPACE_COPY.addTaskToPhase}
           </button>
         </div>
-      ) : null}
+      </SceClubDevelopmentContextualCreateCollapsibleShell>
     </div>
   );
 }

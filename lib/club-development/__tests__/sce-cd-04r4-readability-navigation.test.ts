@@ -121,12 +121,12 @@ describe("SCE-CD-04R4 sprint workspace and priority presentation", () => {
     );
   });
 
-  it("does not repeat sprint title in workspace header shell", () => {
+  it("centralises sprint title on page chrome (phase summary omits duplicate title)", () => {
     const header = read("components/admin/club-development/DevelopmentSprintWorkspaceHeader.tsx");
     expect(header).not.toMatch(/<h1[^>]*>\{title\}/);
-    expect(read("components/admin/club-development/DevelopmentSprintWorkspaceShell.tsx")).not.toContain(
-      "title={sprint.title}",
-    );
+    expect(header).toContain("sprint-phase-summary");
+    expect(read("app/(admin)/vereinsleitung/sprints/[slug]/page.tsx")).toContain("title={sprint.title}");
+    expect(read("components/admin/club-development/DevelopmentSprintBoard.tsx")).not.toContain("sprintTitle");
   });
 });
 

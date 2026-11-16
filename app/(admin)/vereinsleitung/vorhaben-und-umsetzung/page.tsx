@@ -18,6 +18,7 @@ import {
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import { CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 
@@ -115,6 +116,14 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
     nextMilestone: nextMilestoneById.get(row.id) ?? null,
   }));
 
+  const filterTarget =
+    backlogTargetId && actor.tenantId
+      ? await prisma.target.findFirst({
+          where: { id: backlogTargetId, tenantId: actor.tenantId },
+          select: { id: true, title: true },
+        })
+      : null;
+
   const sprintItems = sprints.map((sprint) => ({
     id: sprint.id,
     slug: sprint.slug,
@@ -147,6 +156,7 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
           backlogCanManage={canManageInitiatives}
           backlogCanView={canViewInitiatives}
           backlogTargetId={backlogTargetId ?? null}
+          filterTarget={filterTarget}
           sprints={sprintItems}
           canManageSprints={hasSprintManagePermission(actor)}
           showPrioritaetenDefault={showPrioritaetenDefault}

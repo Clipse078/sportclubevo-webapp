@@ -9,7 +9,6 @@ import DevelopmentSprintList, {
   type DevelopmentSprintListItem,
 } from "./DevelopmentSprintList";
 import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
-import VorhabenPrioritaetenControl from "./VorhabenPrioritaetenControl";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import {
   buildVorhabenUndUmsetzungHref,
@@ -22,6 +21,11 @@ import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
 
 type BacklogRow = React.ComponentProps<typeof InitiativeBacklogWorkspace>["initialInitiatives"][number];
 
+type FilterTarget = {
+  id: string;
+  title: string;
+};
+
 type Props = {
   snapshot: VorhabenWorkspaceSnapshot;
   initialTargetId: string | null;
@@ -30,6 +34,7 @@ type Props = {
   backlogCanManage: boolean;
   backlogCanView: boolean;
   backlogTargetId: string | null;
+  filterTarget: FilterTarget | null;
   sprints: DevelopmentSprintListItem[];
   canManageSprints: boolean;
   showPrioritaetenDefault: boolean;
@@ -43,6 +48,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
   backlogCanManage,
   backlogCanView,
   backlogTargetId,
+  filterTarget,
   sprints,
   canManageSprints,
   showPrioritaetenDefault,
@@ -70,13 +76,14 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         testId="vorhaben-umsetzung-view-nav"
       />
       <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
-        <VorhabenPrioritaetenControl prioritaetenActive={showPrioritaeten && backlogCanView} />
         {showPrioritaeten && backlogCanView ? (
           <InitiativeBacklogWorkspace
             initialInitiatives={backlogInitiatives}
             canManage={backlogCanManage}
             canView={backlogCanView}
             initialTargetId={backlogTargetId}
+            filterTarget={filterTarget}
+            showPrioritaetenActive
           />
         ) : (
           <VorhabenAufgabenWorkspace
@@ -84,6 +91,9 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
             initialSnapshot={snapshot}
             initialTargetId={initialTargetId}
             initialInitiativeId={initialInitiativeId}
+            filterTarget={filterTarget}
+            showPrioritaetenControl={backlogCanView}
+            showPrioritaetenActive={showPrioritaeten && backlogCanView}
           />
         )}
       </div>

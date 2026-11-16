@@ -11,6 +11,8 @@ import SprintBulkTaskPlanningPanel from "./SprintBulkTaskPlanningPanel";
 import SprintClosePanel from "./SprintClosePanel";
 import SprintInlineTaskCreate from "./SprintInlineTaskCreate";
 import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
+import { SCE_CD_EMPTY_STATE_CLASS, SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
 import { formatTaskPriorityLabel } from "@/lib/tasks/management-labels";
 import type { TaskPriority } from "@prisma/client";
 
@@ -142,24 +144,30 @@ export default function DevelopmentSprintDetailWorkspace({
 
   return (
     <div className="space-y-6" data-testid="sprint-detail-workspace">
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">{CD_SPRINT_WORKSPACE_COPY.tasksInPhase}</h2>
-        <p className="mt-1 text-xs text-[var(--muted)]">
+      <SceClubDevelopmentSectionShell
+        title={CD_SPRINT_WORKSPACE_COPY.tasksInPhase}
+        bodyClassName="p-5 space-y-4"
+        testId="sprint-planning-tasks-section"
+      >
+        <p className="text-xs text-[var(--muted)]">
           Geplante Aufgaben mit Status, Verantwortlichen und Vorhaben.
         </p>
 
         {error ? (
-          <p className="mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900" role="alert">
+          <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900" role="alert">
             {error}
           </p>
         ) : null}
 
-        <ul className="mt-4 divide-y divide-[var(--border)]">
+        <ul className="space-y-2">
           {memberships.length === 0 ? (
-            <li className="py-6 text-center text-sm text-[var(--muted)]">Noch keine Aufgaben zugeordnet.</li>
+            <li className={SCE_CD_EMPTY_STATE_CLASS}>Noch keine Aufgaben zugeordnet.</li>
           ) : (
             memberships.map((row) => (
-              <li key={row.membershipId} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <li
+                key={row.membershipId}
+                className={`flex flex-wrap items-center justify-between gap-3 ${SCE_CD_RECORD_ROW_CLASS}`}
+              >
                 <SprintTaskMembershipLink row={row} />
                 {planningEnabled ? (
                   <button
@@ -196,7 +204,7 @@ export default function DevelopmentSprintDetailWorkspace({
             />
           </>
         ) : null}
-      </section>
+      </SceClubDevelopmentSectionShell>
 
       {canManage && status === "ACTIVE" ? (
         <SprintClosePanel

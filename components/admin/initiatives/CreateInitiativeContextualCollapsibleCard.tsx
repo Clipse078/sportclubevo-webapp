@@ -9,7 +9,11 @@ import {
   useOptionalSceClubDevelopmentInlineDirtyClose,
   useSceInlineDiscardPrompt,
 } from "@/components/sce/club-development/SceClubDevelopmentInlineDirtyCloseProvider";
-import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
+import { CD_INITIATIVE_COPY, CD_TARGET_COPY } from "@/lib/club-development/product-copy";
+import {
+  SCE_VORHABEN_INLINE_CREATE_FORM_INNER_CLASS,
+  SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS,
+} from "@/lib/club-development/vorhaben-inline-create-layout";
 
 type ContextualLinkProps = {
   targetId: string;
@@ -87,9 +91,9 @@ function CreateInitiativeContextualCollapsibleCardInner({
   }, [expanded]);
 
   return (
-    <div ref={cardRef}>
+  <div ref={cardRef} className={SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS} data-testid="vorhaben-inline-create-shell">
       <SceClubDevelopmentContextualCreateCollapsibleShell
-        actionLabel={CD_TARGET_COPY.createInitiativeAndLink}
+        actionLabel={CD_INITIATIVE_COPY.createAction}
         contextLabel={`${CD_TARGET_COPY.preselectedTargetLabel}: ${preselectedTarget.title}`}
         expanded={expanded}
         onExpandedChange={guardedExpandedChange}
@@ -98,12 +102,14 @@ function CreateInitiativeContextualCollapsibleCardInner({
         collapseToggleTestId="target-create-initiative-and-link"
         discardPrompt={discardPrompt}
       >
+        <div className={SCE_VORHABEN_INLINE_CREATE_FORM_INNER_CLASS}>
         <ClubDevelopmentComposerCancelBridge onClose={() => onExpandedChange(false)}>
           {(onCancel) => (
             <InitiativeForm
               key={formKey}
               mode="create"
               layout="composer"
+              composerCompact
               onCancel={onCancel}
               preselectedTargetTitle={preselectedTarget.title}
               onSuccess={async (initiative) => {
@@ -120,6 +126,7 @@ function CreateInitiativeContextualCollapsibleCardInner({
             />
           )}
         </ClubDevelopmentComposerCancelBridge>
+        </div>
       </SceClubDevelopmentContextualCreateCollapsibleShell>
     </div>
   );

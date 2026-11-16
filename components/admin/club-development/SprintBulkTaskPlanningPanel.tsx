@@ -1,6 +1,8 @@
 "use client";
 
 import { ChevronDown, Loader2, Search } from "lucide-react";
+import SceClubDevelopmentContextualCreateCollapsibleShell from "@/components/sce/club-development/SceClubDevelopmentContextualCreateCollapsibleShell";
+import { CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
@@ -165,20 +167,19 @@ export default function SprintBulkTaskPlanningPanel({ sprintId, disabled = false
   };
 
   return (
-    <div className="mt-4 border-t border-[var(--border)] pt-4" data-testid="sprint-bulk-planning-panel">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-left text-sm font-medium text-[var(--foreground)] disabled:opacity-50"
-        aria-expanded={expanded}
+    <div className="mt-3" data-testid="sprint-bulk-planning-panel">
+      <SceClubDevelopmentContextualCreateCollapsibleShell
+        actionLabel={CD_SPRINT_WORKSPACE_COPY.addExistingTaskToPhase}
+        expanded={expanded}
+        onExpandedChange={(open) => {
+          if (disabled && open) return;
+          setExpanded(open);
+        }}
+        panelDomId="sprint-bulk-planning-panel-body"
+        cardTestId="sprint-bulk-planning-card"
+        collapseToggleTestId="sprint-bulk-planning-toggle"
       >
-        <span>Aufgaben hinzufügen</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 transition ${expanded ? "rotate-180" : ""}`} />
-      </button>
-
-      {expanded ? (
-        <div className="mt-3 space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="space-y-4 p-3">
           <p className="text-xs text-[var(--muted)]">
             Vorhaben und Aufgaben auswählen — es wird nur die Aufgabe der Umsetzungsphase zugeordnet, nicht das
             Vorhaben selbst.
@@ -282,7 +283,7 @@ export default function SprintBulkTaskPlanningPanel({ sprintId, disabled = false
             </button>
           </div>
         </div>
-      ) : null}
+      </SceClubDevelopmentContextualCreateCollapsibleShell>
     </div>
   );
 }
