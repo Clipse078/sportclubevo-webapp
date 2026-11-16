@@ -1,6 +1,6 @@
 "use client";
 
-import { GripVertical, Loader2, Search } from "lucide-react";
+import { GripVertical, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { TaskPriority, TaskStatus } from "@prisma/client";
 import { taskPriorityVisual } from "@/lib/tasks/task-priority-visual";
@@ -16,7 +16,12 @@ import {
 } from "@/lib/club-development/sprints/sprint-board-filters";
 import type { SprintBoardCard, SprintBoardColumnKey } from "@/lib/club-development/sprints/sprint-board";
 import SprintInlineTaskCreate from "./SprintInlineTaskCreate";
-import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
+import SprintBoardWorkspaceToolbar from "./SprintBoardWorkspaceToolbar";
+import {
+  SCE_CD_SECTION_BODY_CLASS,
+  SCE_CD_SECTION_HEADER_CLASS,
+  SCE_CD_SECTION_SHELL_CLASS,
+} from "./sce-club-development-surface-styles";
 
 type BoardState = {
   OPEN: SprintBoardCard[];
@@ -64,6 +69,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [filters, setFilters] = useState<SprintBoardFilterState>(EMPTY_BOARD_FILTERS);
+  const [secondaryFiltersOpen, setSecondaryFiltersOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const loadBoard = useCallback(() => {
@@ -172,13 +178,6 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
     if (card.status !== targetStatus) moveCard(taskId, targetStatus);
   };
 
-  const hasActiveFilters =
-    filters.search.trim().length > 0 ||
-    filters.mineOnly ||
-    Boolean(filters.assigneeUserId) ||
-    Boolean(filters.initiativeId) ||
-    filters.groupByInitiative;
-
   if (error && !board) {
     return <BoardErrorState message={error} onRetry={loadBoard} />;
   }
@@ -204,68 +203,19 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
         Aufgaben nach Status — jede Karte bietet Schaltflächen zum Verschieben ohne Ziehen.
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="relative min-w-[12rem] flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-[var(--muted)]" />
-          <input
-            value={filters.search}
-            onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-            placeholder="Aufgaben suchen …"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm"
-          />
-        </label>
-        <label className="inline-flex items-center gap-2 text-sm">
-          <SceCheckbox
-            checked={filters.mineOnly}
-            onChange={(e) => setFilters((f) => ({ ...f, mineOnly: e.target.checked }))}
-          />
-          Meine Aufgaben
-        </label>
-        <select
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-sm"
-          value={filters.assigneeUserId ?? ""}
-          onChange={(e) => setFilters((f) => ({ ...f, assigneeUserId: e.target.value || null }))}
-        >
-          <option value="">Alle Verantwortlichen</option>
-          {assigneeOptions.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.label}
-            </option>
-          ))}
-        </select>
-        <select
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-sm"
-          value={filters.initiativeId ?? ""}
-          onChange={(e) => setFilters((f) => ({ ...f, initiativeId: e.target.value || null }))}
-        >
-          <option value="">Alle Vorhaben</option>
-          <option value="none">Ohne Vorhaben</option>
-          {initiativeOptions.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.label}
-            </option>
-          ))}
-        </select>
-        <label className="inline-flex items-center gap-2 text-sm">
-          <SceCheckbox
-            checked={filters.groupByInitiative}
-            onChange={(e) => setFilters((f) => ({ ...f, groupByInitiative: e.target.checked }))}
-          />
-          Nach Vorhaben gruppieren
-        </label>
-        {hasActiveFilters ? (
-          <button
-            type="button"
-            onClick={() => setFilters(EMPTY_BOARD_FILTERS)}
-            className="rounded-md border border-[var(--border)] px-2 py-1 text-xs"
-          >
-            Filter zurücksetzen
-          </button>
-        ) : null}
-      </div>
+      <SprintBoardWorkspaceToolbar
+        filters={filters}
+        onFiltersChange={setFilters}
+        secondaryFiltersOpen={secondaryFiltersOpen}
+        onSecondaryFiltersToggle={() => setSecondaryFiltersOpen((open) => !open)}
+        assigneeOptions={assigneeOptions}
+        initiativeOptions={initiativeOptions}
+      />
 
       {error ? (
-        <p className="rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-100">{error}</p>
+        <p className="rounded-md border border-amber-500/30 bg-amber-50 px-3 py-2 text-sm text-amber-950" role="alert">
+          {error}
+        </p>
       ) : null}
 
       {totalCards === 0 ? (
@@ -435,7 +385,7 @@ function BoardColumnsGrid({
         return (
           <section
             key={col.key}
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/40 p-3"
+            className={SCE_CD_SECTION_SHELL_CLASS}
             aria-label={col.label}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -444,10 +394,13 @@ function BoardColumnsGrid({
               if (taskId) onDropToColumn(col.key, taskId);
             }}
           >
-            <h2 className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              <span>{col.label}</span>
-              <span className="rounded-full bg-[var(--surface)] px-2 py-0.5 text-[10px]">{fullCount}</span>
-            </h2>
+            <div className={SCE_CD_SECTION_HEADER_CLASS}>
+              <h2 className="text-sm font-semibold text-[var(--foreground)]">{col.label}</h2>
+              <span className="rounded-full bg-[var(--surface)] px-2 py-0.5 text-[10px] text-[var(--muted)]">
+                {fullCount}
+              </span>
+            </div>
+            <div className={SCE_CD_SECTION_BODY_CLASS}>
             {swimlanes ? (
               <div className="space-y-4">
                 {swimlanes.map((lane) => (
@@ -477,10 +430,9 @@ function BoardColumnsGrid({
               />
             )}
             {col.key === "OPEN" && canManage ? (
-              <div className="mt-3">
-                <SprintInlineTaskCreate sprintId={sprintId} disabled={pending} onCreated={onRefresh} />
-              </div>
+              <SprintInlineTaskCreate sprintId={sprintId} disabled={pending} onCreated={onRefresh} />
             ) : null}
+            </div>
           </section>
         );
       })}

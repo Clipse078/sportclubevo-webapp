@@ -142,7 +142,13 @@ export const CD_SPRINT_WORKSPACE_COPY = {
   removeFromPhase: "Aus Phase entfernen",
   taskBoardTitle: "Aufgabenboard",
   goalPlaceholder: "Ziel beschreiben …",
-  noGoalRecorded: "Kein Ziel erfasst.",
+  noGoalRecorded: "Noch kein Phasenziel erfasst.",
+  addExistingTaskToPhase: "Bestehende Aufgabe hinzufügen",
+  createNewTaskInPhase: "Neue Aufgabe erstellen",
+  reviewUnavailablePlanned:
+    "Der Rückblick öffnet sich nach Abschluss der Umsetzungsphase. Starten Sie die Phase zuerst in der Planung.",
+  reviewUnavailableActive:
+    "Der Rückblick ist verfügbar, sobald die Umsetzungsphase abgeschlossen ist.",
   addedAfterStart: "Nach Start hinzugefügt",
   committedAtStart: "Zum Start eingeplant",
   scopeAtStart: "Aufgabenumfang zum Start",

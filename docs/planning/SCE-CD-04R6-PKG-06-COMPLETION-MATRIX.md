@@ -11,8 +11,8 @@ Structural/runtime verification only (no browser UAT). Maps to nine PO screensho
 | 5 | Vorhaben normal workspace chrome | **Done** | Shared toolbar, loading text, card list tokens |
 | 6 | Vorhaben Prioritäten workspace chrome | **Done** | Aligned filters/copy (`Verantwortlich` text filter label) |
 | 7 | Umsetzungsphasen consolidated list | **Done** | `DevelopmentSprintList` record rows + board/Rückblick links (unchanged semantics) |
-| 8 | Phase Planung / Aufgabenboard | **Done** | Shared shell header + `SceSegmentedControl` nav; board sans redundant title/Kanban copy |
-| 9 | Phase Rückblick | **Done** | Shared breadcrumbs/shell; existing review workspace under shell |
+| 8 | Phase Planung / Aufgabenboard | **Done** | Compact `sprint-phase-summary` (page `h1` only); `SceClubDevelopmentSectionShell` planning rows; board `SprintBoardWorkspaceToolbar` + section columns |
+| 9 | Phase Rückblick | **Done** | `sprintReviewUnavailableCopy` for PLANNED/ACTIVE; review sections on `SceClubDevelopmentSectionShell` |
 
 ## Remaining gaps
 

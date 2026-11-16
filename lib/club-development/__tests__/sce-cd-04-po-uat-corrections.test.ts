@@ -74,7 +74,7 @@ describe("SCE-CD-04 PO UAT corrections", () => {
     expect(detail).toContain("SprintBulkTaskPlanningPanel");
     expect(detail).toContain("CD_SPRINT_WORKSPACE_COPY.removeFromPhase");
     expect(read("components/admin/club-development/SprintBulkTaskPlanningPanel.tsx")).toContain(
-      "Aufgaben hinzufügen",
+      "CD_SPRINT_WORKSPACE_COPY.addExistingTaskToPhase",
     );
     expect(detail).not.toContain("(KEEP)");
     expect(detail).not.toContain("(REMOVE)");

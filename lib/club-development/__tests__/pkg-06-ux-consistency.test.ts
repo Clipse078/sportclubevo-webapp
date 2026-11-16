@@ -11,7 +11,7 @@ import {
   SCE_VORHABEN_INLINE_CREATE_FORM_INNER_CLASS,
   SCE_VORHABEN_INLINE_CREATE_SHELL_CLASS,
 } from "../vorhaben-inline-create-layout";
-import { buildDevelopmentSprintBreadcrumbs } from "../sprint-workspace-chrome";
+import { buildDevelopmentSprintBreadcrumbs, sprintReviewUnavailableCopy } from "../sprint-workspace-chrome";
 import { pathnameMatchesVereinsentwicklungNavHref } from "../vereinsentwicklung-nav-path-aliases";
 import { isNavigationHrefActive } from "@/lib/nav/app-navigation-model";
 
@@ -78,11 +78,30 @@ describe("PKG-06 UX consistency (Vorhaben + Umsetzungsphasen)", () => {
     expect(read("components/admin/club-development/DevelopmentSprintWorkspaceNav.tsx")).toContain(
       "SceSegmentedControl",
     );
-    expect(read("components/admin/club-development/DevelopmentSprintWorkspaceHeader.tsx")).toContain(
-      "phaseGoalLabel",
-    );
+    const header = read("components/admin/club-development/DevelopmentSprintWorkspaceHeader.tsx");
+    expect(header).toContain("phaseGoalLabel");
+    expect(header).toContain("sprint-phase-summary");
+    expect(header).not.toMatch(/<h1[^>]*>\{title\}/);
+    expect(read("lib/club-development/product-copy.ts")).toContain("Noch kein Phasenziel erfasst.");
     expect(read("app/(admin)/vereinsleitung/sprints/[slug]/board/page.tsx")).not.toContain("Kanban");
-    expect(read("components/admin/club-development/DevelopmentSprintBoard.tsx")).not.toContain("sprintTitle");
+    expect(read("components/admin/club-development/DevelopmentSprintBoard.tsx")).toContain("SprintBoardWorkspaceToolbar");
+    expect(read("components/admin/club-development/DevelopmentSprintDetailWorkspace.tsx")).toContain(
+      "SceClubDevelopmentSectionShell",
+    );
+    expect(read("components/admin/club-development/DevelopmentSprintReviewWorkspace.tsx")).toContain(
+      "sprintReviewUnavailableCopy",
+    );
+  });
+
+  it("aligns Rückblick unavailable copy with lifecycle (PLANNED vs ACTIVE)", () => {
+    expect(sprintReviewUnavailableCopy("PLANNED")).toContain("Starten");
+    expect(sprintReviewUnavailableCopy("ACTIVE")).toContain("abgeschlossen");
+    expect(read("components/admin/club-development/DevelopmentSprintList.tsx")).toContain(
+      'sprint.status === "COMPLETED" || sprint.status === "ACTIVE"',
+    );
+    expect(read("components/admin/club-development/DevelopmentSprintReviewWorkspace.tsx")).toContain(
+      'sprintStatus !== "COMPLETED"',
+    );
   });
 
   it("keeps Vorhaben & Umsetzung nav active on sprint detail routes", () => {

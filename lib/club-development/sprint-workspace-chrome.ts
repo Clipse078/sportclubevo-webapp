@@ -16,6 +16,11 @@ const TAB_LABELS: Record<DevelopmentSprintBreadcrumbTab, string> = {
   rueckblick: CD_SPRINT_WORKSPACE_COPY.tabReview,
 };
 
+export function sprintReviewUnavailableCopy(status: string): string {
+  if (status === "PLANNED") return CD_SPRINT_WORKSPACE_COPY.reviewUnavailablePlanned;
+  return CD_SPRINT_WORKSPACE_COPY.reviewUnavailableActive;
+}
+
 export function buildDevelopmentSprintBreadcrumbs(
   sprintSlug: string,
   sprintTitle: string,
