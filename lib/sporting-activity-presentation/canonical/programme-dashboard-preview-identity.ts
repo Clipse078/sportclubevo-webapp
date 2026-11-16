@@ -1,6 +1,7 @@
 import { buildClubIdentity, type ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { resolveSceClubEventPrimaryVisualIdentity } from "./club-event-visual-identity";
 import { formatSceTournamentOwnTeamsCompactLabel } from "./tournament-own-teams-display";
+import { resolveSceTournamentHauptteamDisplayName } from "./tournament-hauptteam-display";
 import type {
   SceActivityPresentationModel,
   SceClubEventPresentationModel,
@@ -32,15 +33,32 @@ function clubNameFromIdentity(identity: ClubIdentity | null | undefined): string
   return name || undefined;
 }
 
+function stripClubPrefixFromUnitLabel(
+  unitLabel: string | undefined,
+  clubName: string | undefined,
+): string | undefined {
+  if (!unitLabel?.trim()) return undefined;
+  return resolveSceTournamentHauptteamDisplayName({
+    hauptteamName: unitLabel,
+    organiserDisplayName: clubName,
+  });
+}
+
+/** Personal-programme meeting role lines must never surface on dashboard preview identity. */
+function sanitizeMeetingOrganisationalUnit(label: string | undefined): string | undefined {
+  const trimmed = label?.trim();
+  if (!trimmed) return undefined;
+  if (/^Meeting\s*·\s*/i.test(trimmed)) {
+    return undefined;
+  }
+  return trimmed;
+}
+
 function unitDistinctFromClub(unitLabel: string | undefined, clubName: string | undefined): string | undefined {
   if (!unitLabel?.trim()) return undefined;
   const unit = unitLabel.trim();
-  if (!clubName) return unit;
-  if (normalizeCompare(unit) === normalizeCompare(clubName)) {
+  if (clubName && normalizeCompare(unit) === normalizeCompare(clubName)) {
     return undefined;
-  }
-  if (normalizeCompare(unit).includes(normalizeCompare(clubName))) {
-    return unit;
   }
   return unit;
 }
@@ -62,7 +80,8 @@ function buildPreviewClubIdentity(
   unitCandidate: string | undefined,
 ): ProgrammeDashboardPreviewClubIdentity | null {
   const clubName = clubNameFromIdentity(crestIdentity ?? undefined);
-  const unitLabel = unitDistinctFromClub(unitCandidate, clubName);
+  const unitStripped = stripClubPrefixFromUnitLabel(unitCandidate, clubName);
+  const unitLabel = unitDistinctFromClub(unitStripped, clubName);
 
   if (!clubName && !unitLabel && !crestIdentity) {
     return null;
@@ -92,7 +111,13 @@ function resolveTrainingDashboardPreviewIdentity(
 function resolveMeetingDashboardPreviewIdentity(
   model: SceMeetingPresentationModel,
 ): ProgrammeDashboardPreviewClubIdentity | null {
-  return buildPreviewClubIdentity(model.tenantClub, model.organisationalContext?.trim());
+  const unit = sanitizeMeetingOrganisationalUnit(model.organisationalContext);
+  const base = buildPreviewClubIdentity(model.tenantClub, unit);
+  if (!base) return null;
+  return {
+    ...base,
+    unitLabel: unitDistinctFromTitle(base.unitLabel, model.meetingTitle.trim()),
+  };
 }
 
 function resolveClubEventDashboardPreviewIdentity(

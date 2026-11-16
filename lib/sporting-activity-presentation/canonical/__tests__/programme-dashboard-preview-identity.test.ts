@@ -21,6 +21,26 @@ describe("resolveProgrammeDashboardPreviewClubIdentity", () => {
     });
   });
 
+  it("strips redundant club prefix from team before secondary unit line", () => {
+    const model = createSceTrainingCardFixtureSession({
+      team: { name: "FC Allschwil Junioren F2" },
+      trainingTitle: "Techniktraining",
+      tenantClub: buildClubIdentity({ displayName: "FC Allschwil" }),
+    });
+    expect(resolveProgrammeDashboardPreviewClubIdentity(model)?.unitLabel).toBe("Junioren F2");
+  });
+
+  it("hides secondary unit when authored title already names the team", () => {
+    const model = createSceTrainingCardFixtureSession({
+      team: { name: "FC Allschwil Junioren F2" },
+      trainingTitle: "Junioren F2 Training",
+      tenantClub: buildClubIdentity({ displayName: "FC Allschwil" }),
+    });
+    const identity = resolveProgrammeDashboardPreviewClubIdentity(model);
+    expect(identity?.clubName).toBe("FC Allschwil");
+    expect(identity?.unitLabel).toBeUndefined();
+  });
+
   it("drops organisational unit duplicated in authored title", () => {
     const model = createSceTrainingCardFixtureSession({
       team: { name: "Junioren B1" },
@@ -62,12 +82,26 @@ describe("resolveProgrammeDashboardPreviewClubIdentity", () => {
     const model = resolveSceMeetingPresentationFromProgramme({
       meetingId: "m-1",
       slug: "vorstand",
-      title: "Vorstandssitzung",
+      title: "Monatssitzung",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       organisationalContext: "Vorstand",
       tenantClub: buildClubIdentity({ displayName: "Sportclub Muster" }),
     });
     expect(resolveProgrammeDashboardPreviewClubIdentity(model)?.clubName).toBe("Sportclub Muster");
     expect(resolveProgrammeDashboardPreviewClubIdentity(model)?.unitLabel).toBe("Vorstand");
+  });
+
+  it("never treats meeting personal role copy as dashboard organisational unit", () => {
+    const model = resolveSceMeetingPresentationFromProgramme({
+      meetingId: "m-org",
+      slug: "org",
+      title: "Vorstandssitzung",
+      meetingDate: new Date("2026-11-15T17:00:00.000Z"),
+      organisationalContext: "Meeting · Organisator",
+      tenantClub: buildClubIdentity({ displayName: "FC Allschwil", logoUrl: "https://cdn/x.png" }),
+    });
+    const identity = resolveProgrammeDashboardPreviewClubIdentity(model);
+    expect(identity?.clubName).toBe("FC Allschwil");
+    expect(identity?.unitLabel).toBeUndefined();
   });
 });

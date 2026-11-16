@@ -7,7 +7,6 @@ import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/pl
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
 import { SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
-import { SceTeamName } from "@/components/design-system/typography";
 import { SCE_ACTIVITY_LIST_ROW_SCALE } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import type { ProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 import previewLayoutStyles from "./SceProgrammeDashboardPreviewLayout.module.css";
@@ -94,29 +93,19 @@ export function SceProgrammeDashboardPreviewClubIdentityBlock({
         )}
       >
         {clubName ? (
-          <SceTeamName
-            as="span"
+          <span
             className={cn(
               SCE_ACTIVITY_REFERENCE_LAYOUT.programmeDashboardPreviewWrapMetaClass,
               "font-medium",
             )}
-            density="MICRO"
-            truncate={false}
-            lineClamp={2}
           >
             {clubName}
-          </SceTeamName>
+          </span>
         ) : null}
         {unitLabel ? (
-          <SceTeamName
-            as="span"
-            className={SCE_ACTIVITY_REFERENCE_LAYOUT.programmeDashboardPreviewWrapMetaClass}
-            density="MICRO"
-            truncate={false}
-            lineClamp={2}
-          >
+          <span className={SCE_ACTIVITY_REFERENCE_LAYOUT.programmeDashboardPreviewWrapMetaClass}>
             {unitLabel}
-          </SceTeamName>
+          </span>
         ) : null}
       </div>
     </div>

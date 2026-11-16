@@ -39,6 +39,7 @@ function readRelative(relativePath: string): string {
 function trainingItem(overrides: Partial<PersonalProgrammeItem> = {}): PersonalProgrammeItem {
   const model = createSceTrainingCardFixtureSession({
     team: { name: "FC Allschwil Junioren B1" },
+    trainingTitle: "Training",
     dressingRoom: { label: "E2" },
     location: buildSportingActivityLocation({
       mode: "HOME",
@@ -56,7 +57,7 @@ function trainingItem(overrides: Partial<PersonalProgrammeItem> = {}): PersonalP
     sourceType: "TRAINING",
     startsAt: new Date(model.schedule.startAt),
     endsAt: model.schedule.endAt ? new Date(model.schedule.endAt) : undefined,
-    title: "Training",
+    title: model.trainingTitle,
     typeLabel: "Training",
     deepLink: "/dashboard/training/sessions/session-1",
     ariaLabel: "Training",
@@ -113,7 +114,8 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     expect(location.compareDocumentPosition(dressing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     expect(within(identity).getByText("FC Allschwil")).toBeInTheDocument();
-    expect(within(identity).getByText("FC Allschwil Junioren B1")).toBeInTheDocument();
+    expect(within(identity).getByText("Junioren B1")).toBeInTheDocument();
+    expect(within(identity).queryByText("FC Allschwil Junioren B1")).toBeNull();
     expect(location).toHaveTextContent(/Im Brüel|Kunstrasen/);
     expect(dressing).toHaveTextContent("Garderobe E2");
     expect(screen.queryAllByTestId("sce-training-list-row-primary-identity")).toHaveLength(1);
@@ -123,7 +125,7 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     const model = resolveSceMeetingPresentationFromProgramme({
       meetingId: "m-board",
       slug: "vorstand",
-      title: "Vorstandssitzung",
+      title: "Monatssitzung",
       meetingDate: new Date("2026-11-15T17:00:00.000Z"),
       location: "Clubhaus",
       organisationalContext: "Vorstand",
@@ -206,6 +208,83 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     expect(screen.getByTestId("sce-match-fixture")).toBeInTheDocument();
     expect(screen.getByTestId("sce-match-list-row-team-context")).toBeInTheDocument();
     expect(screen.getByTestId("sce-match-location")).toBeInTheDocument();
+  });
+
+  it("training Junioren F2: club crest/name only when title carries the team", () => {
+    const model = createSceTrainingCardFixtureSession({
+      team: { name: "FC Allschwil Junioren F2" },
+      trainingTitle: "Junioren F2 Training",
+      tenantClub: buildClubIdentity({
+        displayName: "FC Allschwil",
+        logoUrl: "https://cdn.example/fca.png",
+      }),
+    });
+    const item: PersonalProgrammeItem = {
+      id: "training:f2",
+      sourceType: "TRAINING",
+      startsAt: new Date(model.schedule.startAt),
+      title: model.trainingTitle,
+      contextLabel: "Junioren F2 · Trainer/in",
+      typeLabel: "Training",
+      deepLink: "/x",
+      ariaLabel: "Training",
+      canonicalPresentation: model,
+    };
+
+    render(
+      <PersonalProgrammePreviewRow item={item} timeLabel="18:00" dashboardCockpitPreview />,
+    );
+
+    const identity = screen.getByTestId("sce-training-list-row-primary-identity");
+    expect(within(identity).getByText("FC Allschwil")).toBeInTheDocument();
+    expect(within(identity).queryByText(/Junioren F2/)).toBeNull();
+    expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Junioren F2 Training");
+    expect(screen.queryByText(/Meeting · Organisator/i)).toBeNull();
+  });
+
+  it("meeting organizer adapter row: club branding only, role contextLabel not in preview", () => {
+    const model = resolveSceMeetingPresentationFromProgramme({
+      meetingId: "m-org",
+      slug: "org-meet",
+      title: "Vorstandssitzung",
+      meetingDate: new Date("2026-11-15T17:00:00.000Z"),
+      tenantClub: buildClubIdentity({
+        displayName: "FC Allschwil",
+        logoUrl: "https://cdn.example/fca.png",
+      }),
+    });
+    const item: PersonalProgrammeItem = {
+      id: "meeting:m-org",
+      sourceType: "MEETING",
+      startsAt: new Date(model.schedule.startAt),
+      title: model.meetingTitle,
+      contextLabel: "Meeting · Organisator",
+      typeLabel: "Sitzung",
+      deepLink: model.route.consumeHref!,
+      ariaLabel: "Sitzung",
+      canonicalPresentation: model,
+    };
+
+    render(
+      <PersonalProgrammePreviewRow item={item} timeLabel="17:00" dashboardCockpitPreview />,
+    );
+
+    const identity = screen.getByTestId("sce-meeting-context");
+    expect(within(identity).getByText("FC Allschwil")).toBeInTheDocument();
+    expect(screen.queryByText(/Meeting · Organisator/i)).toBeNull();
+    expect(within(identity).queryByText(/Organisator/i)).toBeNull();
+  });
+
+  it("dashboard preview identity uses plain secondary typography (not sce-team-name)", () => {
+    render(
+      <PersonalProgrammePreviewRow
+        item={trainingItem()}
+        timeLabel="18:45"
+        dashboardCockpitPreview
+      />,
+    );
+    const identity = screen.getByTestId("sce-training-list-row-primary-identity");
+    expect(identity.querySelector("[data-sce-team-name]")).toBeNull();
   });
 
   it("keeps club identity when authored title already embeds the team name", () => {
