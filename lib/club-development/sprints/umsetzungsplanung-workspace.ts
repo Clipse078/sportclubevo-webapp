@@ -39,3 +39,69 @@ export function openPhaseAssignmentOptions(
 ): UmsetzungsplanungPhaseOption[] {
   return [...buckets.active, ...buckets.planned];
 }
+
+export type UmsetzungsplanungSectionKey = "ongoing" | "planned" | "unplanned" | "completed";
+
+export type UmsetzungsplanungBucketCounts = {
+  ongoing: number;
+  planned: number;
+  completed: number;
+};
+
+/** Authorised-scope counts derived from server-provided sprint rows (empty means genuinely none). */
+export function countUmsetzungsplanungBuckets<T extends { status: DevelopmentSprintStatus }>(
+  buckets: UmsetzungsplanungSprintBuckets<T>,
+): UmsetzungsplanungBucketCounts {
+  return {
+    ongoing: buckets.active.length,
+    planned: buckets.planned.length,
+    completed: buckets.completed.length,
+  };
+}
+
+export function hasOpenUmsetzungsplanungPhases(counts: UmsetzungsplanungBucketCounts): boolean {
+  return counts.ongoing > 0 || counts.planned > 0;
+}
+
+/** Initial expand state when the user has not chosen section toggles yet (no deep link). */
+export function resolveUmsetzungsplanungSectionOpenDefaults(
+  counts: UmsetzungsplanungBucketCounts,
+  canManageSprints: boolean,
+): Record<UmsetzungsplanungSectionKey, boolean> {
+  const hasOpen = hasOpenUmsetzungsplanungPhases(counts);
+  return {
+    ongoing: counts.ongoing > 0,
+    planned: counts.planned > 0 || (canManageSprints && counts.ongoing === 0),
+    unplanned: canManageSprints && !hasOpen,
+    completed: false,
+  };
+}
+
+const SECTION_FOCUS_ALIASES: Record<string, UmsetzungsplanungSectionKey> = {
+  laufend: "ongoing",
+  ongoing: "ongoing",
+  geplant: "planned",
+  planned: "planned",
+  ungeplant: "unplanned",
+  unplanned: "unplanned",
+  abgeschlossen: "completed",
+  completed: "completed",
+};
+
+export function parseUmsetzungsplanungSectionFocus(
+  raw: string | null | undefined,
+): UmsetzungsplanungSectionKey | null {
+  if (!raw?.trim()) return null;
+  return SECTION_FOCUS_ALIASES[raw.trim().toLowerCase()] ?? null;
+}
+
+export function applyUmsetzungsplanungSectionDeepLink(
+  defaults: Record<UmsetzungsplanungSectionKey, boolean>,
+  focus: UmsetzungsplanungSectionKey | null,
+): Record<UmsetzungsplanungSectionKey, boolean> {
+  if (!focus) return defaults;
+  return {
+    ...defaults,
+    [focus]: true,
+  };
+}

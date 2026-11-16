@@ -7,7 +7,8 @@ import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
-import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleSection";
+import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import SprintTaskAssigneeDisplay from "./SprintTaskAssigneeDisplay";
 import SprintTaskTitleLink from "./SprintTaskTitleLink";
@@ -21,7 +22,17 @@ type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
   disabled?: boolean;
   onAssigned?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
+
+function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
+  let total = catalog.standaloneGroup.tasks.length;
+  for (const group of catalog.initiativeGroups) {
+    total += group.tasks.length;
+  }
+  return total;
+}
 
 function formatDueDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -34,8 +45,13 @@ function formatDueDate(iso: string | null): string | null {
   }).format(date);
 }
 
-export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled = false, onAssigned }: Props) {
-  const [expanded, setExpanded] = useState(false);
+export default function UmsetzungsplanungUnplannedPanel({
+  phaseOptions,
+  disabled = false,
+  onAssigned,
+  open,
+  onOpenChange,
+}: Props) {
   const [catalog, setCatalog] = useState<SprintPlanningCatalogDto | null>(null);
   const [search, setSearch] = useState("");
   const [serverSearch, setServerSearch] = useState("");
@@ -71,15 +87,17 @@ export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled
   }, []);
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!open) return;
     const handle = window.setTimeout(() => setServerSearch(search), 300);
     return () => window.clearTimeout(handle);
-  }, [expanded, search]);
+  }, [open, search]);
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!open) return;
     void loadCatalog(serverSearch);
-  }, [expanded, loadCatalog, serverSearch]);
+  }, [open, loadCatalog, serverSearch]);
+
+  const headerCount = catalog ? countCatalogTasks(catalog) : null;
 
   const filtered = useMemo(() => {
     if (!catalog) return { initiativeGroups: [] as SprintPlanningCatalogDto["initiativeGroups"], standaloneTasks: [] as SprintPlanningTaskDto[] };
@@ -153,24 +171,15 @@ export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled
     !disabled && phaseOptions.length > 0 && targetPhaseId && selectedIds.size > 0 && !pending;
 
   return (
-    <section className="rounded-lg border border-[var(--border)]" data-testid="umsetzungsplanung-unplanned-panel">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((v) => !v)}
-      >
-        <div>
-          <p className="text-sm font-semibold text-[var(--foreground)]">{CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedSection}</p>
-          <p className="text-xs text-[var(--muted)]">{CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedSummary}</p>
-        </div>
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-          aria-hidden
-        />
-      </button>
-      {expanded ? (
-        <div className="space-y-4 border-t border-[var(--border)] p-4">
+    <UmsetzungsplanungCollapsibleSection
+      title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedSection}
+      count={headerCount}
+      open={open}
+      onOpenChange={onOpenChange}
+      testId="umsetzungsplanung-unplanned-panel"
+    >
+      <p className="px-1 text-xs text-[var(--muted)]">{CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedSummary}</p>
+      <div className="space-y-3">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
             <input
@@ -212,21 +221,32 @@ export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled
               </button>
             </div>
           ) : null}
-          {error ? <ClubDevelopmentFormError message={error} /> : null}
+          {error ? (
+            <div className="space-y-2">
+              <ClubDevelopmentFormError message={error || CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedLoadError} />
+              <button
+                type="button"
+                className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
+                onClick={() => void loadCatalog(serverSearch)}
+              >
+                Erneut laden
+              </button>
+            </div>
+          ) : null}
           {info ? <p className="text-sm text-[var(--sce-primary)]">{info}</p> : null}
           {loading ? (
             <p className="flex items-center gap-2 text-sm text-[var(--muted)]" role="status">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Laden …
             </p>
           ) : null}
-          {!loading && catalog && filtered.initiativeGroups.length === 0 && filtered.standaloneTasks.length === 0 ? (
-            <SceClubDevelopmentEmptyState message="Keine ungeplanten Aufgaben für die aktuelle Filterung." />
+          {!loading && !error && catalog && filtered.initiativeGroups.length === 0 && filtered.standaloneTasks.length === 0 ? (
+            <UmsetzungsplanungInlineEmpty message="Keine ungeplanten Aufgaben für die aktuelle Filterung." />
           ) : null}
           {filtered.initiativeGroups.map((group) => {
             const groupState = initiativeGroupSelectionState(group.tasks, selectedIds);
             const isOpen = expandedInitiatives.has(group.initiativeId);
             return (
-              <div key={group.initiativeId} className="rounded-lg border border-[var(--border)]">
+              <div key={group.initiativeId} className="rounded-md bg-[var(--surface-2)]/40">
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 px-3 py-2 text-left"
@@ -271,7 +291,7 @@ export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled
             );
           })}
           {filtered.standaloneTasks.length > 0 ? (
-            <div className="rounded-lg border border-[var(--border)]">
+            <div className="rounded-md bg-[var(--surface-2)]/40">
               <button
                 type="button"
                 className="flex w-full items-center gap-2 px-3 py-2 text-left"
@@ -302,9 +322,8 @@ export default function UmsetzungsplanungUnplannedPanel({ phaseOptions, disabled
               {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.assignSelectedAction}“.
             </p>
           ) : null}
-        </div>
-      ) : null}
-    </section>
+      </div>
+    </UmsetzungsplanungCollapsibleSection>
   );
 }
 

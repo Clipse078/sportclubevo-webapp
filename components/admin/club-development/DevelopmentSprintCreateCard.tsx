@@ -2,7 +2,14 @@
 
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type FormEventHandler } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+  type FormEventHandler,
+} from "react";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 
@@ -11,17 +18,28 @@ type Props = {
   defaultExpanded?: boolean;
 };
 
+export type DevelopmentSprintCreateCardHandle = {
+  openForm: () => void;
+};
+
 type CreateSprintResponse = {
   sprint?: { slug?: string };
   error?: string;
 };
 
-export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded = false }: Props) {
+const DevelopmentSprintCreateCard = forwardRef<DevelopmentSprintCreateCardHandle, Props>(function DevelopmentSprintCreateCard(
+  { canCreate, defaultExpanded = false },
+  ref,
+) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const submittingRef = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    openForm: () => setExpanded(true),
+  }));
 
   if (!canCreate) return null;
 
@@ -141,7 +159,9 @@ export default function DevelopmentSprintCreateCard({ canCreate, defaultExpanded
       ) : null}
     </div>
   );
-}
+});
+
+export default DevelopmentSprintCreateCard;
 
 function SprintCreateCollapsibleHeader({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   return (

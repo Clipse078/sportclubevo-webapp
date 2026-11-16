@@ -1,19 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import DevelopmentSprintCreateCard from "./DevelopmentSprintCreateCard";
-import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
+import DevelopmentSprintCreateCard, {
+  type DevelopmentSprintCreateCardHandle,
+} from "./DevelopmentSprintCreateCard";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import {
   CD_NAV_COPY,
   CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY,
 } from "@/lib/club-development/product-copy";
 import {
+  applyUmsetzungsplanungSectionDeepLink,
+  countUmsetzungsplanungBuckets,
   openPhaseAssignmentOptions,
+  parseUmsetzungsplanungSectionFocus,
   partitionSprintsForUmsetzungsplanung,
+  resolveUmsetzungsplanungSectionOpenDefaults,
+  type UmsetzungsplanungSectionKey,
 } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
+import { CD_UMSETZUNGSPLANUNG_SECTION_QUERY } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import type { UmsetzungsplanungPhaseCardItem } from "./UmsetzungsplanungPhaseCard";
 import { UmsetzungsplanungPhaseList } from "./UmsetzungsplanungPhaseCard";
+import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleSection";
+import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import UmsetzungsplanungUnplannedPanel from "./UmsetzungsplanungUnplannedPanel";
 
 type Props = {
@@ -21,83 +31,115 @@ type Props = {
   canManageSprints: boolean;
 };
 
-function CollapsibleSection({
-  title,
-  defaultOpen,
-  testId,
-  children,
-}: {
-  title: string;
-  defaultOpen: boolean;
-  testId: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <details
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
-      open={defaultOpen}
-      data-testid={testId}
-    >
-      <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--foreground)] marker:content-none">
-        {title}
-      </summary>
-      <div className="space-y-3 border-t border-[var(--border)] p-4">{children}</div>
-    </details>
-  );
-}
-
 export default function UmsetzungsplanungWorkspace({ sprints, canManageSprints }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const createRef = useRef<DevelopmentSprintCreateCardHandle>(null);
   const buckets = partitionSprintsForUmsetzungsplanung(sprints);
+  const counts = countUmsetzungsplanungBuckets(buckets);
   const phaseOptions = openPhaseAssignmentOptions(buckets);
+  const sectionFocus = parseUmsetzungsplanungSectionFocus(searchParams.get(CD_UMSETZUNGSPLANUNG_SECTION_QUERY));
+  const [sectionOpen, setSectionOpen] = useState(() =>
+    applyUmsetzungsplanungSectionDeepLink(
+      resolveUmsetzungsplanungSectionOpenDefaults(counts, canManageSprints),
+      sectionFocus,
+    ),
+  );
+  const touchSection = (key: UmsetzungsplanungSectionKey, open: boolean) => {
+    setSectionOpen((prev) => ({ ...prev, [key]: open }));
+  };
 
   return (
-    <SceClubDevelopmentSectionShell title={CD_NAV_COPY.implementationPlanning} bodyClassName="p-5 space-y-4">
-      <DevelopmentSprintCreateCard canCreate={canManageSprints} />
+    <SceClubDevelopmentSectionShell title={CD_NAV_COPY.implementationPlanning} bodyClassName="p-5 space-y-3">
+      <DevelopmentSprintCreateCard ref={createRef} canCreate={canManageSprints} />
 
-      <CollapsibleSection
+      <UmsetzungsplanungCollapsibleSection
         title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.ongoingSection}
-        defaultOpen
+        count={counts.ongoing}
+        open={sectionOpen.ongoing}
+        onOpenChange={(open) => touchSection("ongoing", open)}
         testId="umsetzungsplanung-ongoing-section"
       >
-        {buckets.active.length > 0 ? (
-          <UmsetzungsplanungPhaseList items={buckets.active} />
+        {counts.ongoing > 0 ? (
+          <UmsetzungsplanungPhaseList
+            items={buckets.active}
+            canManageSprints={canManageSprints}
+            phaseOptions={phaseOptions}
+          />
         ) : (
-          <SceClubDevelopmentEmptyState message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noActivePhase} />
+          <UmsetzungsplanungInlineEmpty
+            message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noActivePhase}
+            testId="umsetzungsplanung-ongoing-empty"
+          />
         )}
-      </CollapsibleSection>
+      </UmsetzungsplanungCollapsibleSection>
 
-      <CollapsibleSection
+      <UmsetzungsplanungCollapsibleSection
         title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.futureSection}
-        defaultOpen
+        count={counts.planned}
+        open={sectionOpen.planned}
+        onOpenChange={(open) => touchSection("planned", open)}
         testId="umsetzungsplanung-future-section"
       >
-        {buckets.planned.length > 0 ? (
-          <UmsetzungsplanungPhaseList items={buckets.planned} />
+        {counts.planned > 0 ? (
+          <UmsetzungsplanungPhaseList
+            items={buckets.planned}
+            canManageSprints={canManageSprints}
+            phaseOptions={phaseOptions}
+          />
         ) : (
-          <SceClubDevelopmentEmptyState message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noFuturePhases} />
+          <UmsetzungsplanungInlineEmpty
+            message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noFuturePhases}
+            testId="umsetzungsplanung-future-empty"
+            action={
+              canManageSprints ? (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                  onClick={() => {
+                    touchSection("planned", true);
+                    createRef.current?.openForm();
+                  }}
+                >
+                  {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.createPhaseAction}
+                </button>
+              ) : null
+            }
+          />
         )}
-      </CollapsibleSection>
+      </UmsetzungsplanungCollapsibleSection>
 
       {canManageSprints ? (
         <UmsetzungsplanungUnplannedPanel
           phaseOptions={phaseOptions}
           disabled={phaseOptions.length === 0}
+          open={sectionOpen.unplanned}
+          onOpenChange={(open) => touchSection("unplanned", open)}
           onAssigned={() => router.refresh()}
         />
       ) : null}
 
-      <CollapsibleSection
+      <UmsetzungsplanungCollapsibleSection
         title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.completedSection}
-        defaultOpen={false}
+        count={counts.completed}
+        open={sectionOpen.completed}
+        onOpenChange={(open) => touchSection("completed", open)}
         testId="umsetzungsplanung-completed-section"
       >
-        {buckets.completed.length > 0 ? (
-          <UmsetzungsplanungPhaseList items={buckets.completed} />
+        {counts.completed > 0 ? (
+          <UmsetzungsplanungPhaseList
+            items={buckets.completed}
+            canManageSprints={canManageSprints}
+            phaseOptions={phaseOptions}
+            readOnlyTasks
+          />
         ) : (
-          <SceClubDevelopmentEmptyState message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noCompletedPhases} />
+          <UmsetzungsplanungInlineEmpty
+            message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noCompletedPhases}
+            testId="umsetzungsplanung-completed-empty"
+          />
         )}
-      </CollapsibleSection>
+      </UmsetzungsplanungCollapsibleSection>
     </SceClubDevelopmentSectionShell>
   );
 }
