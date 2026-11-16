@@ -555,7 +555,7 @@
   --sce-domain-nav-content-max: 80rem;
   --sce-domain-nav-frame-pad-inline: clamp(2.25rem, 5vw, 4rem);
   --sce-domain-nav-frame-pad-block-start: 1.5rem;
-  --sce-domain-nav-frame-pad-block-end: 1.625rem;
+  --sce-domain-nav-frame-pad-block-end: 2rem;
   --sce-domain-nav-column-gap: clamp(2.25rem, 3vw, 3.25rem);
   --sce-domain-nav-col-title: 32;
   --sce-domain-nav-col-categories: 33;

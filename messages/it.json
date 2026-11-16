@@ -50,6 +50,11 @@
       "customizeTitle": "Personalizza dashboard",
       "customizeDescription": "Regola l'immagine di copertina della tua dashboard personale."
     },
+    "sectionStatus": {
+      "loadFailedTitle": "Impossibile caricare la sezione",
+      "programmeUnavailable": "Il mio programma non è disponibile per questo account al momento.",
+      "secondaryFailed": "News e attività non sono state caricati."
+    },
     "programme": {
       "title": "Il mio programma",
       "todayNextTitle": "Oggi e prossimi",

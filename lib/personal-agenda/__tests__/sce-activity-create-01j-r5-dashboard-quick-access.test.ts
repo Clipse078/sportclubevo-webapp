@@ -56,7 +56,7 @@ describe("SCE-ACTIVITY-CREATE-01J R5 — Dashboard Schnellzugriff + Erstellen", 
   });
 
   it("wires canonical SceActivityCreateMenu on dashboard command center", () => {
-    const asyncCenter = read("components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx");
+    const asyncCenter = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
     expect(asyncCenter).toContain("SceActivityCreateMenu");
     expect(asyncCenter).toContain('presentation="dashboard-strip"');
     expect(asyncCenter).toContain('kind: "DASHBOARD"');

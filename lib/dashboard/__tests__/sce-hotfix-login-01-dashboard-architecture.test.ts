@@ -7,6 +7,11 @@ const clubDashboardView = readFileSync(
   "utf8",
 );
 
+const clubDashboardCommandCenter = readFileSync(
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenter.tsx"),
+  "utf8",
+);
+
 const loadPersonalActions = readFileSync(
   join(process.cwd(), "lib/personal-actions/load-personal-actions.ts"),
   "utf8",
@@ -24,9 +29,9 @@ const loginForm = readFileSync(
 
 describe("SCE-HOTFIX-LOGIN-01 R5 dashboard architecture", () => {
   it("streams command center behind Suspense while shell renders first", () => {
-    expect(clubDashboardView).toContain("Suspense");
-    expect(clubDashboardView).toContain("ClubDashboardCommandCenterAsync");
-    expect(clubDashboardView).toContain("ClubDashboardCommandCenterSkeleton");
+    expect(clubDashboardCommandCenter).toContain("Suspense");
+    expect(clubDashboardView).toContain("ClubDashboardCommandCenter");
+    expect(clubDashboardView).not.toContain("ClubDashboardCommandCenterAsync");
     expect(clubDashboardView).not.toContain("getPersonalCommandCenterData");
   });
 

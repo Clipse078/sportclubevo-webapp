@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const read = (rel: string) => readFileSync(join(root, rel), "utf8");
 
-const clubDashboardSource = read("components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx");
+const clubDashboardSource = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
 const clubDashboardShellSource = read("components/admin/dashboard/ClubDashboardView.tsx");
 const loaderSource = read("lib/dashboard/personal-command-center.ts");
 const pageSource = read("app/(admin)/dashboard/(personal-dashboard)/page.tsx");
@@ -17,10 +17,13 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
   });
 
   it("uses canonical loaders for programme, attention, tasks, quick access", () => {
-    expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
-    expect(clubDashboardSource).toContain("resolvePersonalQuickAccess");
-    expect(clubDashboardSource).toContain("formatSecondaryActivityPresentation");
-    expect(clubDashboardShellSource).toContain("Suspense");
+    const quickSection = read(
+      "components/admin/dashboard/sections/ClubDashboardQuickAccessSectionAsync.tsx",
+    );
+    expect(clubDashboardSource).toContain("ClubDashboardProgrammeSectionAsync");
+    expect(quickSection).toContain("resolvePersonalQuickAccess");
+    expect(quickSection).toContain("formatSecondaryActivityPresentation");
+    expect(clubDashboardSource).toContain("Suspense");
     expect(loaderSource).toContain("loadPersonalProgramme");
     expect(loaderSource).toContain("loadDashboardPersonalWork");
     expect(loaderSource).not.toContain("loadPersonalAgendaItems");
@@ -41,14 +44,16 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
 
   it("preserves final information hierarchy in composition", () => {
     const greeting = clubDashboardShellSource.indexOf("<PersonalDashboardCockpitGreeting");
-    const workspace = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
-    const quick = clubDashboardSource.indexOf("<PersonalQuickAccess");
-    const secondary = clubDashboardSource.indexOf("<PersonalDashboardSecondary");
+    const attention = clubDashboardSource.indexOf("ClubDashboardAttentionSectionAsync");
+    const programme = clubDashboardSource.indexOf("ClubDashboardProgrammeSectionAsync");
+    const tasks = clubDashboardSource.indexOf("ClubDashboardTasksSectionAsync");
+    const quick = clubDashboardSource.indexOf("ClubDashboardQuickAccessSectionAsync");
 
     expect(greeting).toBeGreaterThan(-1);
-    expect(workspace).toBeGreaterThan(-1);
-    expect(workspace).toBeLessThan(quick);
-    expect(quick).toBeLessThan(secondary);
+    expect(attention).toBeGreaterThan(-1);
+    expect(programme).toBeGreaterThan(attention);
+    expect(tasks).toBeGreaterThan(programme);
+    expect(quick).toBeGreaterThan(tasks);
   });
 
   it("has no FCA-specific dashboard runtime logic in lib/dashboard", () => {

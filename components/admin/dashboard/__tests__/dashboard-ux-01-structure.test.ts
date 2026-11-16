@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const clubDashboardSource = readFileSync(
-  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenter.tsx"),
   "utf8",
 );
 

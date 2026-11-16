@@ -47,7 +47,8 @@ describe("SCE-PERF-02 navigation route loading", () => {
 
   it("keeps dashboard cockpit skeleton only on personal dashboard route group", () => {
     expect(personalDashboardLoading).toContain('module="dashboard"');
-    expect(moduleLoadingComponent).toContain("ClubDashboardCommandCenterSkeleton");
+    expect(moduleLoadingComponent).toContain("PersonalDashboardCommandCenterLoadingSurface");
+    expect(moduleLoadingComponent).not.toContain("DashboardCockpitGrid");
     expect(adminLoading).toContain('module="admin"');
     expect(websiteLoading).toContain('module="publishing"');
     expect(adminLoading).not.toContain("ClubDashboardCommandCenterSkeleton");
