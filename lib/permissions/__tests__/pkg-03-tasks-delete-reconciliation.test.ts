@@ -5,6 +5,8 @@ const permissionFindUnique = vi.fn();
 const permissionCreate = vi.fn();
 const roleFindFirst = vi.fn();
 const roleFindMany = vi.fn();
+const roleFindUnique = vi.fn();
+const tenantFindUnique = vi.fn();
 const rolePermissionFindFirst = vi.fn();
 const rolePermissionCreate = vi.fn();
 
@@ -20,6 +22,10 @@ const prisma = {
   role: {
     findFirst: (...args: unknown[]) => roleFindFirst(...args),
     findMany: (...args: unknown[]) => roleFindMany(...args),
+    findUnique: (...args: unknown[]) => roleFindUnique(...args),
+  },
+  tenant: {
+    findUnique: (...args: unknown[]) => tenantFindUnique(...args),
   },
   rolePermission: {
     findFirst: (...args: unknown[]) => rolePermissionFindFirst(...args),
@@ -33,6 +39,8 @@ describe("PKG-03 — tasks.delete reconciliation (dry-run default)", () => {
     permissionFindUnique.mockResolvedValue(null);
     roleFindFirst.mockResolvedValue({ id: "role-1" });
     roleFindMany.mockResolvedValue([]);
+    roleFindUnique.mockResolvedValue(null);
+    tenantFindUnique.mockResolvedValue(null);
     rolePermissionFindFirst.mockResolvedValue(null);
   });
 

@@ -597,7 +597,15 @@ export function TaskWorkspacePanel({
   const isModal = presentation === "modal";
   const isPage = presentation === "page";
 
-  const overflowMenu = (
+  const showComplete =
+    capabilities.canComplete && task.status !== "DONE" && task.status !== "CANCELLED";
+  const showCancel = capabilities.canCancel && task.status !== "CANCELLED";
+  const showDelete = capabilities.canDeletePermanently;
+  const showDeleteGapHint = capabilities.showDeletePermissionGapHint;
+  const showDeletionSection = showDelete || showDeleteGapHint;
+  const hasOverflowMenu = showComplete || showCancel || showDeletionSection;
+
+  const overflowMenu = hasOverflowMenu ? (
     <div className="relative">
       <button
         type="button"
@@ -610,7 +618,7 @@ export function TaskWorkspacePanel({
       </button>
       {menuOpen ? (
         <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-          {capabilities.canComplete && task.status !== "DONE" && task.status !== "CANCELLED" ? (
+          {showComplete ? (
             <button
               type="button"
               className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
@@ -626,7 +634,7 @@ export function TaskWorkspacePanel({
               Aufgabe abschließen
             </button>
           ) : null}
-          {capabilities.canCancel && task.status !== "CANCELLED" ? (
+          {showCancel ? (
             <button
               type="button"
               className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
@@ -642,19 +650,35 @@ export function TaskWorkspacePanel({
               Abbrechen
             </button>
           ) : null}
-          <div className="my-1 border-t border-[var(--border)]/70 pt-1">
-            <TaskDeleteControl
-              taskId={task.id}
-              taskTitle={task.title}
-              canDelete={capabilities.canDeletePermanently}
-              hasSubtasks={subtasks.length > 0}
-              backHref={backHref}
-            />
-          </div>
+          {showDeletionSection ? (
+            <div
+              className={cn(
+                (showComplete || showCancel) && "my-1 border-t border-[var(--border)]/70 pt-1",
+              )}
+            >
+              {showDelete ? (
+                <TaskDeleteControl
+                  taskId={task.id}
+                  taskTitle={task.title}
+                  canDelete
+                  hasSubtasks={subtasks.length > 0}
+                  backHref={backHref}
+                />
+              ) : null}
+              {showDeleteGapHint ? (
+                <p
+                  className="rounded-md px-2 py-1.5 text-xs leading-snug text-[var(--muted)]"
+                  data-testid="task-delete-permission-gap-hint"
+                >
+                  {CD_TASK_WORKSPACE_COPY.deleteTaskPermissionGapHint}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
-  );
+  ) : null;
 
   const mainColumn = (
     <div className="min-w-0 space-y-5">

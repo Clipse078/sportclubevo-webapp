@@ -227,6 +227,8 @@ async function main() {
     { key: "tasks.assign", name: "Assign tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "tasks.view_all", name: "View all tasks in tenant", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "tasks.manage", name: "Manage tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    // PKG-03: canonical permanent-deletion permission for Aufgaben — separate from tasks.manage.
+    { key: "tasks.delete", name: "Permanently delete tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-HARD-DELETE-UI: canonical permanent-deletion permission for Initiatives.
     // Deliberately separate from initiatives.manage. Follows the "<module>.delete" convention.
     { key: "initiatives.delete", name: "Permanently delete initiatives", module: PermissionModule.INITIATIVES, scope: PermissionScope.TENANT, grantableByAdmin: true },

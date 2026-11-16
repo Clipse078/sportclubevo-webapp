@@ -52,6 +52,14 @@ describe("PKG-03 — Umsetzungsphase & Aufgabe deletion (isolated fixtures)", ()
     );
     expect(readSrc("components/admin/aufgaben/TaskDeleteControl.tsx")).toContain("returnTo");
     expect(readSrc("lib/tasks/task-workspace-page.ts")).toContain("parseTaskWorkspaceReturnTo");
+    expect(readSrc("components/admin/aufgaben/TaskWorkspace.tsx")).toContain("hasOverflowMenu");
+    expect(readSrc("components/admin/aufgaben/TaskWorkspace.tsx")).toContain(
+      "task-delete-permission-gap-hint",
+    );
+    expect(readSrc("lib/tasks/task-deletion-workspace-policy.ts")).toContain(
+      "resolveTaskDeletionWorkspaceSignals",
+    );
+    expect(readSrc("prisma/seed.ts")).toContain('"tasks.delete"');
   });
 
   it("phase deletion impact reports tasks preserved", async () => {

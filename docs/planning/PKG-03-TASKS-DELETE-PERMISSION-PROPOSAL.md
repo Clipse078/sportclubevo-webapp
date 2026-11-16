@@ -5,10 +5,12 @@
 | Location | `tasks.delete` present? |
 |----------|-------------------------|
 | `lib/permissions/permissions.ts` (`TASKS_DELETE`) | **Yes** |
-| `lib/permissions/task-permission-reconciliation.ts` (`TASK_PERMISSION_DEFS`) | **No** — operational CRUD keys only |
-| `prisma/seed.ts` | **No** |
+| `lib/permissions/task-permission-reconciliation.ts` (`TASK_PERMISSION_DEFS`) | **No** — operational CRUD keys only (delete via dedicated sync) |
+| `prisma/seed.ts` | **Yes** (PKG-03 gap closure) |
 | `lib/roles/permission-metadata.ts` | **Yes** (labels added in PKG-03 gap closure) |
 | Reconciliation helper | `lib/permissions/tasks-delete-permission-reconciliation.ts` (dry-run default) |
+| CLI sync | `scripts/sync-tasks-delete-permission.ts` |
+| STAGE narrow proposal | `scripts/pkg-03-tasks-delete-stage-reconcile.ts` (fc-allschwil administrator roles only) |
 
 Deletion APIs use `hasTenantDeletionAuthority` with `PERMISSIONS.TASKS_DELETE`, matching `initiatives.delete` for phase delete.
 

@@ -69,6 +69,7 @@ describe("ADMIN-HARD-DELETE-UI — new permission constants", () => {
       PERMISSIONS.INITIATIVES_DELETE,
       PERMISSIONS.TARGETS_DELETE,
       PERMISSIONS.ROLES_DELETE,
+      PERMISSIONS.TASKS_DELETE,
     ];
 
     for (const key of deleteKeys) {
