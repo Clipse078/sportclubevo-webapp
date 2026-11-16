@@ -27,6 +27,18 @@ describe("SCE-ACTIVITY-CREATE-01J-R6 integrity", () => {
       expect(workspace).not.toMatch(/w-\[\d{3,}px\]/);
     });
 
+    it("top-aligns programme and tasks panels without row stretch", () => {
+      const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
+      expect(workspace).toContain('data-testid="personal-dashboard-programme-tasks-grid"');
+      expect(workspace).toContain("items-start");
+      expect(workspace).not.toContain("items-stretch");
+      const pairingStart = workspace.indexOf("personal-dashboard-programme-tasks-grid");
+      const pairingSlice = workspace.slice(pairingStart, pairingStart + 220);
+      expect(pairingSlice).not.toContain("h-full");
+      expect(pairingSlice).not.toContain("flex-1");
+      expect(pairingSlice).not.toContain("min-h-");
+    });
+
     it("removes embedded dashboard calendar widget while keeping programme preview", () => {
       const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
       expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");

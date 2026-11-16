@@ -49,4 +49,13 @@ describe("PersonalDashboardWorkspace", () => {
     expect(screen.queryByTestId("personal-calendar-open")).toBeNull();
     expect(screen.queryByTestId("dashboard-cockpit-grid")).toBeNull();
   });
+
+  it("top-aligns programme and tasks grid without stretch height utilities", () => {
+    renderWorkspace();
+    const pairing = screen.getByTestId("personal-dashboard-programme-tasks-grid");
+    expect(pairing.className).toContain("items-start");
+    expect(pairing.className).toContain("xl:grid-cols-2");
+    expect(pairing.className).not.toContain("items-stretch");
+    expect(pairing.className).not.toContain("h-full");
+  });
 });

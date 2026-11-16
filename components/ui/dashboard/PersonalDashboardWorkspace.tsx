@@ -86,7 +86,11 @@ export function PersonalDashboardWorkspace({
         </SceWorkspaceSectionShell>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div
+        className="grid items-start gap-6 xl:grid-cols-2"
+        data-testid="personal-dashboard-programme-tasks-grid"
+        data-sce-dashboard-programme-tasks-pairing
+      >
         <SceWorkspaceSectionShell
           title={tProgramme("todayNextTitle")}
           href={programmeSupported ? calendarOpenHref : undefined}
