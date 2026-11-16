@@ -30,6 +30,8 @@ export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "app/(admin)/vereinsleitung/meetings/page.tsx",
   "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
+  "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
+  "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
   "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
   "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
@@ -202,6 +204,42 @@ export function collectVereinsentwicklungWorkspaceViolations(
       findings.push({
         file: normalized,
         reason: 'Vorhaben surfaces must label tasks as "Aufgaben", not Wurzel-Aufgaben.',
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/UmsetzungsplanungWorkspace.tsx") {
+    if (!src.includes("UmsetzungsplanungCollapsibleSection")) {
+      findings.push({
+        file: normalized,
+        reason: "Umsetzungsplanung workspace sections must use shared collapsible section chrome.",
+      });
+    }
+    if (src.includes("SceClubDevelopmentEmptyState")) {
+      findings.push({
+        file: normalized,
+        reason: "Umsetzungsplanung workspace must use compact inline empty messages.",
+      });
+    }
+    if (!src.includes("countUmsetzungsplanungBuckets")) {
+      findings.push({
+        file: normalized,
+        reason: "Section empty states must follow authorised sprint bucket counts, not assumed placeholders.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx") {
+    if (src.includes("SceClubDevelopmentEmptyState")) {
+      findings.push({
+        file: normalized,
+        reason: "Phase task panel must distinguish empty vs loading vs error with inline copy.",
+      });
+    }
+    if (!src.includes("groupAssignedSprintBoardCards")) {
+      findings.push({
+        file: normalized,
+        reason: "Assigned phase tasks must group by Vorhaben and status in the workspace.",
       });
     }
   }

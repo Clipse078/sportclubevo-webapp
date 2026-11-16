@@ -80,6 +80,32 @@ export const CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY = {
   pageSubtitle: "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
 } as const;
 
+/** Consolidated Umsetzungsplanung tab inside Vorhaben & Umsetzung. */
+export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
+  ongoingSection: "Laufende Umsetzungsphase",
+  futureSection: "Geplante Umsetzungsphasen",
+  completedSection: "Abgeschlossene Umsetzungsphasen",
+  unplannedSection: "Noch nicht eingeplante Aufgaben",
+  unplannedSummary: "Übergeordnete Aufgaben ohne Zuordnung zu einer geplanten oder laufenden Phase.",
+  noActivePhase: "Keine laufende Umsetzungsphase.",
+  noFuturePhases: "Keine geplanten Umsetzungsphasen.",
+  noCompletedPhases: "Noch keine abgeschlossenen Umsetzungsphasen.",
+  createPhaseAction: "Phase erstellen",
+  moveSelectedTasksAction: "Auswahl verschieben",
+  removeAssignmentAction: "Zuordnung entfernen",
+  chooseMoveTargetPhase: "Ziel-Umsetzungsphase",
+  unplannedLoadError: "Ungeplante Aufgaben konnten nicht geladen werden.",
+  sprintsReadyEmptyHint: "Für Ihre Berechtigung sind keine Phasen in dieser Kategorie vorhanden.",
+  assignToPhaseAction: "Zur Umsetzungsphase hinzufügen",
+  choosePhaseTarget: "Ziel-Umsetzungsphase",
+  assignSelectedAction: "Auswahl zuordnen",
+  expandUnplannedAction: "Ungeplante Aufgaben anzeigen",
+  planningDetailLink: "Zur Planung",
+  assignedTasksSection: "Zugeordnete Aufgaben",
+  assignedTasksLoading: "Aufgaben werden geladen …",
+  noAssignedTasks: "Noch keine Aufgaben dieser Umsetzungsphase zugeordnet.",
+} as const;
+
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
 export const CD_VORHABEN_WORKSPACE_COPY = {
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
