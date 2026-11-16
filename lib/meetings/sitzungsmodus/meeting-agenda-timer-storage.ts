@@ -21,7 +21,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function parseMeetingAgendaTimerState(raw: unknown): MeetingAgendaTimerState | null {
   if (!isRecord(raw)) return null;
-  if (raw.v !== MEETING_AGENDA_TIMER_STORAGE_VERSION) return null;
+  const version = raw.v;
+  if (version !== 1 && version !== MEETING_AGENDA_TIMER_STORAGE_VERSION) return null;
   if (!isRecord(raw.scope)) return null;
   const scope = raw.scope;
   if (
@@ -31,7 +32,16 @@ export function parseMeetingAgendaTimerState(raw: unknown): MeetingAgendaTimerSt
   ) {
     return null;
   }
-  return raw as unknown as MeetingAgendaTimerState;
+  const state = raw as unknown as MeetingAgendaTimerState;
+  if (typeof state.activeTopicHasStarted !== "boolean") {
+    state.activeTopicHasStarted =
+      state.phase === "running" ||
+      (state.phase === "paused" && state.remainingAtAnchorSec < state.budgetSec);
+  }
+  if (state.v !== MEETING_AGENDA_TIMER_STORAGE_VERSION) {
+    state.v = MEETING_AGENDA_TIMER_STORAGE_VERSION;
+  }
+  return state;
 }
 
 function getSessionStorage(): Storage | null {

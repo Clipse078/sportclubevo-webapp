@@ -165,7 +165,7 @@ export function MeetingAgendaSection({
   return (
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       {canManage ? (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="mb-3 flex w-full min-w-0 flex-col gap-2">
           <MeetingSitzungsmodusStartButton />
           <MeetingSitzungsmodusPanel />
         </div>
@@ -250,8 +250,7 @@ function AgendaItemTimerStartButton({ itemId }: { itemId: string }) {
       data-testid={`meeting-agenda-timer-start-${itemId}`}
       onClick={(e) => {
         e.stopPropagation();
-        if (!timer.state.modeActive) timer.startMode();
-        timer.selectTopic(itemId);
+        timer.startTopicAndTimer(itemId);
       }}
     >
       <Clock3 className="h-3.5 w-3.5" aria-hidden />

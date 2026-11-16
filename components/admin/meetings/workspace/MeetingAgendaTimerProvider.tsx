@@ -9,10 +9,12 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import {
   buildMeetingAgendaTimerPresentation,
+  deriveMeetingAgendaTimerLifecycle,
   deriveRemainingSec,
   endSitzungsmodus,
   extendAgendaTimerOneMinute,
@@ -31,6 +33,7 @@ import {
   startSitzungsmodus,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-engine";
 import type {
+  MeetingAgendaTimerLifecycle,
   MeetingAgendaTimerScope,
   MeetingAgendaTimerState,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
@@ -43,19 +46,34 @@ import { buildTimerLiveRegionMessage } from "@/lib/meetings/sitzungsmodus/meetin
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 
+export type MeetingAgendaTimerOrderedItem = {
+  id: string;
+  title: string;
+  durationMin: number | null;
+  owner: string | null;
+  position: number;
+};
+
 type MeetingAgendaTimerContextValue = {
   scope: MeetingAgendaTimerScope;
   canManage: boolean;
   state: MeetingAgendaTimerState;
   nowMs: number;
   remainingSec: number;
+  lifecycle: MeetingAgendaTimerLifecycle;
   presentation: ReturnType<typeof buildMeetingAgendaTimerPresentation>;
   activeItem: AgendaItem | null;
+  orderedItems: MeetingAgendaTimerOrderedItem[];
   orderedItemIds: string[];
+  focusCardInView: boolean;
+  setFocusCardInView: (inView: boolean) => void;
+  scrollToFocusCard: () => void;
+  focusCardRef: RefObject<HTMLDivElement | null>;
   startMode: () => void;
   endMode: () => void;
   selectTopic: (agendaItemId: string) => void;
   startTimer: (temporaryDurationMin?: number | null) => void;
+  startTopicAndTimer: (agendaItemId: string, temporaryDurationMin?: number | null) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   extendOneMinute: () => void;
@@ -88,15 +106,29 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   );
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [focusCardInView, setFocusCardInView] = useState(true);
   const liveRegionRef = useRef<HTMLSpanElement | null>(null);
+  const focusCardRef = useRef<HTMLDivElement | null>(null);
 
-  const orderedItemIds = useMemo(
-    () =>
-      [...agendaItems]
-        .sort((a, b) => (displayOrder.get(a.id) ?? 0) - (displayOrder.get(b.id) ?? 0))
-        .map((i) => i.id),
-    [agendaItems, displayOrder],
-  );
+  const orderedItems = useMemo((): MeetingAgendaTimerOrderedItem[] => {
+    return [...agendaItems]
+      .sort((a, b) => (displayOrder.get(a.id) ?? 0) - (displayOrder.get(b.id) ?? 0))
+      .map((item, idx) => ({
+        id: item.id,
+        title: item.title,
+        durationMin: item.durationMin,
+        owner: item.owner,
+        position: idx + 1,
+      }));
+  }, [agendaItems, displayOrder]);
+
+  const orderedItemIds = useMemo(() => orderedItems.map((i) => i.id), [orderedItems]);
+
+  const plannedDurationById = useMemo(() => {
+    const map: Record<string, number | null | undefined> = {};
+    for (const item of agendaItems) map[item.id] = item.durationMin;
+    return map;
+  }, [agendaItems]);
 
   useEffect(() => {
     setState(loadMeetingAgendaTimerState(scope, validIds));
@@ -130,7 +162,8 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   }, []);
 
   const remainingSec = deriveRemainingSec(state, nowMs);
-  const presentation = buildMeetingAgendaTimerPresentation(remainingSec);
+  const lifecycle = deriveMeetingAgendaTimerLifecycle(state, remainingSec);
+  const presentation = buildMeetingAgendaTimerPresentation(remainingSec, lifecycle);
 
   const activeItem = useMemo(
     () => agendaItems.find((a) => a.id === state.activeAgendaItemId) ?? null,
@@ -138,7 +171,7 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   );
 
   useEffect(() => {
-    if (!state.chimeEnabled || state.phase !== "running") return;
+    if (!state.chimeEnabled || state.phase !== "running" || !state.activeTopicHasStarted) return;
     if (shouldChimeAt60(state, remainingSec)) {
       playMeetingAgendaTimerChime();
       setState((s) => markChimeMilestone(s, "at60"));
@@ -149,31 +182,30 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   }, [remainingSec, state]);
 
   useEffect(() => {
-    const message = buildTimerLiveRegionMessage(presentation, activeItem?.title ?? null);
+    const message = buildTimerLiveRegionMessage(presentation, activeItem?.title ?? null, lifecycle);
     if (message && liveRegionRef.current) {
       liveRegionRef.current.textContent = message;
     }
-  }, [presentation.kind, presentation.display, activeItem?.title, presentation]);
+  }, [presentation.kind, presentation.display, activeItem?.title, presentation, lifecycle]);
 
   const commit = useCallback((updater: (s: MeetingAgendaTimerState) => MeetingAgendaTimerState) => {
     setState((s) => updater(s));
     setNowMs(Date.now());
   }, []);
 
-  const value: MeetingAgendaTimerContextValue = {
-    scope,
-    canManage,
-    state,
-    nowMs,
-    remainingSec,
-    presentation,
-    activeItem,
-    orderedItemIds,
-    resetConfirmOpen,
-    startMode: () => commit((s) => startSitzungsmodus(s)),
-    endMode: () => commit((s) => endSitzungsmodus(s, Date.now())),
-    selectTopic: (id) => commit((s) => selectAgendaTopic(s, id, Date.now())),
-    startTimer: (temporaryDurationMin) => {
+  const scrollToFocusCard = useCallback(() => {
+    focusCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const selectTopicWithPlan = useCallback(
+    (id: string) => {
+      commit((s) => selectAgendaTopic(s, id, Date.now(), plannedDurationById[id]));
+    },
+    [commit, plannedDurationById],
+  );
+
+  const startTimerForActive = useCallback(
+    (temporaryDurationMin?: number | null) => {
       commit((s) => {
         const item = agendaItems.find((a) => a.id === s.activeAgendaItemId);
         if (!item) return s;
@@ -185,11 +217,59 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
         return startAgendaTimer(s, Date.now(), budget);
       });
     },
+    [agendaItems, commit],
+  );
+
+  const value: MeetingAgendaTimerContextValue = {
+    scope,
+    canManage,
+    state,
+    nowMs,
+    remainingSec,
+    lifecycle,
+    presentation,
+    activeItem,
+    orderedItems,
+    orderedItemIds,
+    focusCardInView,
+    setFocusCardInView,
+    scrollToFocusCard,
+    focusCardRef,
+    resetConfirmOpen,
+    startMode: () => commit((s) => startSitzungsmodus(s)),
+    endMode: () => commit((s) => endSitzungsmodus(s, Date.now())),
+    selectTopic: selectTopicWithPlan,
+    startTimer: startTimerForActive,
+    startTopicAndTimer: (agendaItemId, temporaryDurationMin) => {
+      commit((s) => {
+        let next = s.modeActive ? s : startSitzungsmodus(s);
+        next = selectAgendaTopic(next, agendaItemId, Date.now(), plannedDurationById[agendaItemId]);
+        const item = agendaItems.find((a) => a.id === agendaItemId);
+        if (!item) return next;
+        const budget = resolveAgendaBudgetSec({
+          plannedDurationMin: item.durationMin,
+          temporaryDurationMin,
+        });
+        if (!budget) return next;
+        return startAgendaTimer(next, Date.now(), budget);
+      });
+    },
     pauseTimer: () => commit((s) => pauseAgendaTimer(s, Date.now())),
     resumeTimer: () => commit((s) => resumeAgendaTimer(s, Date.now())),
     extendOneMinute: () => commit((s) => extendAgendaTimerOneMinute(s, Date.now())),
-    nextTopic: () => commit((s) => goToNextAgendaTopic(s, orderedItemIds, Date.now())),
-    requestReset: () => setResetConfirmOpen(true),
+    nextTopic: () =>
+      commit((s) => goToNextAgendaTopic(s, orderedItemIds, Date.now(), plannedDurationById)),
+    requestReset: () => {
+      if (
+        state.activeTopicHasStarted &&
+        state.budgetSec > 0 &&
+        state.remainingAtAnchorSec < state.budgetSec
+      ) {
+        setResetConfirmOpen(true);
+        return;
+      }
+      commit((s) => resetActiveAgendaTimer(s));
+    },
     confirmReset: () => {
       setResetConfirmOpen(false);
       commit((s) => resetActiveAgendaTimer(s));
