@@ -4,12 +4,9 @@ import { useSearchParams } from "next/navigation";
 import type { VorhabenWorkspaceSnapshot } from "@/lib/club-development/vorhaben-workspace";
 import InitiativeBacklogWorkspace from "./InitiativeBacklogWorkspace";
 import VorhabenAufgabenWorkspace from "./VorhabenAufgabenWorkspace";
-import DevelopmentSprintCreateCard from "./DevelopmentSprintCreateCard";
-import DevelopmentSprintList, {
-  type DevelopmentSprintListItem,
-} from "./DevelopmentSprintList";
+import UmsetzungsplanungWorkspace from "./UmsetzungsplanungWorkspace";
+import type { UmsetzungsplanungPhaseCardItem } from "./UmsetzungsplanungPhaseCard";
 import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
-import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import {
   buildVorhabenUndUmsetzungHref,
   CD_VORHABEN_UMSETZUNG_VIEWS,
@@ -17,7 +14,6 @@ import {
   CD_WORKSPACE_PRIORITAETEN_QUERY,
   parseVorhabenUmsetzungView,
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
-import { CD_NAV_COPY } from "@/lib/club-development/product-copy";
 
 type BacklogRow = React.ComponentProps<typeof InitiativeBacklogWorkspace>["initialInitiatives"][number];
 
@@ -35,7 +31,7 @@ type Props = {
   backlogCanView: boolean;
   backlogTargetId: string | null;
   filterTarget: FilterTarget | null;
-  sprints: DevelopmentSprintListItem[];
+  sprints: UmsetzungsplanungPhaseCardItem[];
   canManageSprints: boolean;
   showPrioritaetenDefault: boolean;
 };
@@ -106,10 +102,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         />
       </div>
       <div hidden={activeView !== "umsetzungsphasen"} aria-hidden={activeView !== "umsetzungsphasen"} className="space-y-4">
-        <SceClubDevelopmentSectionShell title={CD_NAV_COPY.implementationPlanning} bodyClassName="p-5 space-y-4">
-          <DevelopmentSprintCreateCard canCreate={canManageSprints} />
-          <DevelopmentSprintList sprints={sprints} />
-        </SceClubDevelopmentSectionShell>
+        <UmsetzungsplanungWorkspace sprints={sprints} canManageSprints={canManageSprints} />
       </div>
     </>
   );

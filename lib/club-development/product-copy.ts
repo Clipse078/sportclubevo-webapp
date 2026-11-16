@@ -80,6 +80,23 @@ export const CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY = {
   pageSubtitle: "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
 } as const;
 
+/** Consolidated Umsetzungsplanung tab inside Vorhaben & Umsetzung. */
+export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
+  ongoingSection: "Laufende Umsetzungsphase",
+  futureSection: "Geplante Umsetzungsphasen",
+  completedSection: "Abgeschlossene Umsetzungsphasen",
+  unplannedSection: "Noch nicht eingeplante Aufgaben",
+  unplannedSummary: "Übergeordnete Aufgaben ohne Zuordnung zu einer geplanten oder laufenden Phase.",
+  noActivePhase: "Keine laufende Umsetzungsphase — starten Sie eine geplante Phase oder legen Sie oben eine neue an.",
+  noFuturePhases: "Keine geplanten Umsetzungsphasen.",
+  noCompletedPhases: "Noch keine abgeschlossenen Umsetzungsphasen.",
+  assignToPhaseAction: "Zur Umsetzungsphase hinzufügen",
+  choosePhaseTarget: "Ziel-Umsetzungsphase",
+  assignSelectedAction: "Auswahl zuordnen",
+  expandUnplannedAction: "Ungeplante Aufgaben anzeigen",
+  planningDetailLink: "Zur Planung",
+} as const;
+
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
 export const CD_VORHABEN_WORKSPACE_COPY = {
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
