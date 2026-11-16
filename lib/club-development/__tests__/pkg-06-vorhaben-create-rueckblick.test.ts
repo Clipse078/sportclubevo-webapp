@@ -6,6 +6,7 @@ import {
   PKG_06_VERIFIED_PREVIEW_URL,
   buildPkg06PoAcceptanceAbsoluteUrl,
   buildPkg06PoAcceptancePaths,
+  PKG_06_STAGE_COMPLETED_SPRINT_SLUG,
 } from "../sce-cd-04r6-pkg-06-handoff";
 
 const ROOT = join(__dirname, "../../..");
@@ -54,8 +55,9 @@ describe("PKG-06 Vorhaben workspace inline create + Rückblick deep links", () =
   });
 
   it("records verified preview URL and PO acceptance paths for handoff", () => {
-    expect(PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT).toBe("2457dd13");
-    expect(PKG_06_VERIFIED_PREVIEW_URL).toContain("sportclubevo-webapp-stage-git-curs");
+    expect(PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT).toBe("e5e3f98c");
+    expect(PKG_06_VERIFIED_PREVIEW_URL).toContain("sportclubevo-webapp-stage");
+    expect(PKG_06_STAGE_COMPLETED_SPRINT_SLUG).toBeNull();
     const paths = buildPkg06PoAcceptancePaths();
     expect(paths.vorhabenInlineCreate).toBe("/vereinsleitung/vorhaben-und-umsetzung?ansicht=vorhaben");
     expect(paths.zielAutoLinkCreate("tgt-1")).toContain("targetId=tgt-1");

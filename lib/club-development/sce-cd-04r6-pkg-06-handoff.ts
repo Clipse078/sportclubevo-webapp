@@ -4,12 +4,15 @@
 
 export const PKG_06_PULL_REQUEST = 985 as const;
 
-export const PKG_06_VERIFIED_PREVIEW_COMMIT = "2457dd13131f7e8420bc598fbdc2a874e0af0cae" as const;
-export const PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT = "2457dd13" as const;
+export const PKG_06_VERIFIED_PREVIEW_COMMIT = "e5e3f98c1f96809fd52b891aa9ceb175fc927b14" as const;
+export const PKG_06_VERIFIED_PREVIEW_COMMIT_SHORT = "e5e3f98c" as const;
 
-/** Vercel Ready deployment for PR #985 head (verified 2026-11-15T22:52Z UTC). */
+/** Vercel Ready deployment for PR #985 head (verified 2026-11-16T06:27Z UTC, exact SHA e5e3f98c). */
 export const PKG_06_VERIFIED_PREVIEW_URL =
-  "https://sportclubevo-webapp-stage-4yg4fa7qy-mds-projects-462da62c.vercel.app" as const;
+  "https://sportclubevo-webapp-stage-git-curs-87ffcf-mds-projects-462da62c.vercel.app" as const;
+
+/** STAGE has no COMPLETED Umsetzungsphase in tenant data — PO Rückblick walkthrough remains pending. */
+export const PKG_06_STAGE_COMPLETED_SPRINT_SLUG: string | null = null;
 
 /** Agreed Umsetzungsphasen scheduling policy — root parent tasks only; subtasks stay on parent. */
 export const PKG_06_PARENT_TASK_ONLY_PHASE_PLANNING_POLICY =

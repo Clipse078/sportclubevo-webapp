@@ -10,7 +10,17 @@ Close the last **modal-free create gap** in consolidated **Vorhaben & Umsetzung*
 
 `Strategie → Ziele/Kennzahlen → Vorhaben → Aufgaben → Umsetzungsphasen → Rückblick`
 
-## Verified Ready preview (commit `b3d4ce40`)
+## Verified Ready preview (commit `e5e3f98c`)
+
+| Field | Value |
+|-------|--------|
+| Commit | `e5e3f98c1f96809fd52b891aa9ceb175fc927b14` |
+| Vercel status | **Ready** (PR #985 deployment, exact head) |
+| Preview URL | `https://sportclubevo-webapp-stage-git-curs-87ffcf-mds-projects-462da62c.vercel.app` |
+
+**Completed-phase Rückblick:** no `COMPLETED` Umsetzungsphase on shared STAGE tenant data — PO review of finished Rückblick content remains pending (PLANNED/ACTIVE unavailable states are verifiable).
+
+## Verified Ready preview (commit `b3d4ce40`) — superseded
 
 | Field | Value |
 |-------|--------|
