@@ -7,6 +7,10 @@ import type { PersonalEventProjectionActor } from "./event-projection-access";
 import { sortPersonalProgrammeItems } from "./programme-sort";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
 import { loadPersonScopeSportingProgrammeItems } from "./load-person-scope-sporting-programme";
+import {
+  enrichPersonalProgrammeItemsTenantBranding,
+  loadTenantProgrammeBranding,
+} from "./tenant-programme-branding";
 
 export type LoadPersonalCalendarEntryProjectionsArgs = {
   tenantId: string;
@@ -42,12 +46,15 @@ export async function loadPersonalCalendarEntryProjections(
     return [];
   }
 
+  const tenantBranding = await loadTenantProgrammeBranding(args.tenantId);
+
   const adapterCtx: PersonalProgrammeAdapterContext = {
     personal: args.personalContext,
     permissionKeys: args.actor.permissionKeys,
     timeZone: args.timeZone,
     rangeStart: args.rangeStart,
     rangeEnd: args.rangeEnd,
+    tenantBranding,
   };
 
   const canQueryProgramme = hasProgrammeScope && Boolean(args.userId);
@@ -67,8 +74,9 @@ export async function loadPersonalCalendarEntryProjections(
     hasMeetingScope ? loadMeetingProgrammeItems(adapterCtx) : Promise.resolve([]),
   ]);
 
-  const programmeItems = sortPersonalProgrammeItems(
-    dedupeProgrammeItems([...sportingProgramme, ...meetings]),
+  const programmeItems = enrichPersonalProgrammeItemsTenantBranding(
+    sortPersonalProgrammeItems(dedupeProgrammeItems([...sportingProgramme, ...meetings])),
+    tenantBranding,
   );
   return personalProgrammeItemsToCalendarItems(programmeItems);
 }

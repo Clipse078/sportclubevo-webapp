@@ -26,6 +26,11 @@ import {
 import { schedulePersonalDashboardReadModelRebuild } from "./invalidate";
 import { rebuildPersonalDashboardReadModel } from "./rebuild";
 import type { PersonalDashboardReadModelPayloadV1 } from "./types";
+import {
+  enrichPersonalProgrammeItemsTenantBranding,
+  loadTenantProgrammeBranding,
+  personalProgrammeMeetingItemMissingTenantBranding,
+} from "@/lib/personal-agenda/tenant-programme-branding";
 
 function personalProgrammeItemHasLegacyEnglishMeetingLabel(
   item: PersonalDashboardReadModelPayloadV1["programme"]["items"][number],
@@ -55,7 +60,8 @@ export function personalDashboardPayloadNeedsPresentationRefresh(
     payload.programme.items.some(
       (item) => !item.activityPresentation && !item.canonicalPresentation,
     ) ||
-    payload.programme.items.some(personalProgrammeItemHasLegacyEnglishMeetingLabel)
+    payload.programme.items.some(personalProgrammeItemHasLegacyEnglishMeetingLabel) ||
+    payload.programme.items.some(personalProgrammeMeetingItemMissingTenantBranding)
   );
 }
 
@@ -211,11 +217,20 @@ export async function readPersonalDashboardProjection(args: {
     const feedRange = resolvePersonalProgrammeRange({ timeZone, now });
     const monthParam = monthGrid.monthWindow.param;
 
+    const tenantBranding = await loadTenantProgrammeBranding(args.tenantId);
+    const hydratedPayload: PersonalDashboardReadModelPayloadV1 = {
+      ...payload,
+      programme: {
+        ...payload.programme,
+        items: enrichPersonalProgrammeItemsTenantBranding(payload.programme.items, tenantBranding),
+      },
+    };
+
     const authorized = applyLiveAuthorizationToProjection({
       tenantId: args.tenantId,
       userId: args.userId,
       permissionKeys: args.permissionKeys,
-      payload,
+      payload: hydratedPayload,
     });
 
     const programmeFeedItems = filterProgrammeItemsToRange(

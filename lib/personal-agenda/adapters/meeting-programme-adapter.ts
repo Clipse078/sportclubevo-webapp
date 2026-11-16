@@ -9,7 +9,6 @@ import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-c
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import { resolveSceMeetingPresentationFromProgramme } from "@/lib/sporting-activity-presentation/canonical/adapters/meeting-programme";
 import { buildClubIdentity } from "@/lib/sporting-activity-design";
-import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import { loadMeetingOrganisationalLabelsById } from "../meeting-programme-organisational-labels";
 import {
   canIncludeMeetingInPersonalProgramme,
@@ -205,15 +204,11 @@ export async function loadMeetingProgrammeItems(
   }
 
   const meetingRows = [...byId.values()].map((entry) => entry.meeting);
-  const [organisationalLabels, tenant, tenantClubLogoUrl] = await Promise.all([
-    loadMeetingOrganisationalLabelsById(ctx.personal.tenantId, meetingRows),
-    prisma.tenant.findUnique({
-      where: { id: ctx.personal.tenantId },
-      select: { name: true },
-    }),
-    getTenantClubCrestUrlCached(ctx.personal.tenantId),
-  ]);
-  const tenantClubName = tenant?.name?.trim() || "Verein";
+  const organisationalLabels = await loadMeetingOrganisationalLabelsById(
+    ctx.personal.tenantId,
+    meetingRows,
+  );
+  const { displayName: tenantClubName, logoUrl: tenantClubLogoUrl } = ctx.tenantBranding;
 
   const items: PersonalProgrammeItem[] = [];
 

@@ -64,12 +64,15 @@ function buildContext(overrides: Partial<PersonalContext> = {}): PersonalContext
   };
 }
 
+const TENANT_BRANDING = { displayName: "FC Allschwil", logoUrl: null } as const;
+
 const adapterCtx = (ctx: PersonalContext, permissionKeys: string[] = [PERMISSIONS.EVENTS_VIEW]) => ({
   personal: ctx,
   permissionKeys,
   timeZone: TIME_ZONE,
   rangeStart: new Date("2026-09-01T00:00:00.000Z"),
   rangeEnd: new Date("2026-09-30T23:59:59.999Z"),
+  tenantBranding: TENANT_BRANDING,
 });
 
 function eventRow(input: {

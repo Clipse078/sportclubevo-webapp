@@ -275,7 +275,7 @@ describe("Dashboard programme preview — stacked layout contract", () => {
     expect(within(identity).queryByText(/Organisator/i)).toBeNull();
   });
 
-  it("dashboard preview identity uses plain secondary typography (not sce-team-name)", () => {
+  it("dashboard preview club name uses canonical SceTeamName styling", () => {
     render(
       <PersonalProgrammePreviewRow
         item={trainingItem()}
@@ -284,7 +284,9 @@ describe("Dashboard programme preview — stacked layout contract", () => {
       />,
     );
     const identity = screen.getByTestId("sce-training-list-row-primary-identity");
-    expect(identity.querySelector("[data-sce-team-name]")).toBeNull();
+    expect(
+      identity.querySelector("[data-sce-programme-dashboard-preview-club-name][data-sce-team-name]"),
+    ).toBeTruthy();
   });
 
   it("keeps club identity when authored title already embeds the team name", () => {

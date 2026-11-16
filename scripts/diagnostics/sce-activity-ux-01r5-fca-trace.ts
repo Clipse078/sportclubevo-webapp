@@ -114,6 +114,7 @@ async function main(): Promise<void> {
     rangeStart: new Date("2026-09-01T00:00:00.000Z"),
     rangeEnd: new Date("2026-11-30T23:59:59.999Z"),
     timeZone,
+    tenantBranding: { displayName: tenant.name?.trim() || "Verein", logoUrl: null },
   };
 
   const [trainingItems, eventItems] = await Promise.all([
