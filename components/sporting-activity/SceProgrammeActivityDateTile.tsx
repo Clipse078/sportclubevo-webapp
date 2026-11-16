@@ -1,6 +1,6 @@
 "use client";
 
-import { SceDateTile } from "@/components/design-system/date";
+import { SceDateTile, type SceDateTileSize } from "@/components/design-system/date";
 import { formatSceDateTileParts } from "@/lib/design-system/sce-date-tile";
 import type { ProgrammeActivityDateTileParts } from "@/lib/sporting-activity-presentation/canonical/programme-activity-date-tile";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
@@ -14,6 +14,7 @@ export type SceProgrammeActivityDateTileProps = {
   testId?: string;
   /** Precomputed parts avoid duplicate Intl work in lists. */
   parts?: ProgrammeActivityDateTileParts;
+  size?: SceDateTileSize;
 };
 
 /**
@@ -25,6 +26,7 @@ export function SceProgrammeActivityDateTile({
   className,
   testId = "sce-programme-activity-date-tile",
   parts: partsProp,
+  size = "default",
 }: SceProgrammeActivityDateTileProps) {
   const resolvedParts = partsProp
     ? { ...partsProp, accessibleLabel: formatSceDateTileParts(startAt, fmtCfg).accessibleLabel }
@@ -39,6 +41,7 @@ export function SceProgrammeActivityDateTile({
       dayTestId="sce-programme-date-tile-day"
       parts={resolvedParts}
       programmeMarker
+      size={size}
     />
   );
 }

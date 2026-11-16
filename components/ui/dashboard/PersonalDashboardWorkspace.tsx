@@ -4,7 +4,6 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { BellRing, CalendarDays } from "lucide-react";
 import {
   limitProgrammeFeedGroupsToPreview,
   DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT,
@@ -13,8 +12,7 @@ import {
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { buildMeinProgrammKalenderOpenHref } from "@/lib/personal-agenda/mein-programm-url";
 import { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
-import { DashboardCockpitGrid } from "./DashboardCockpitGrid";
-import { DashboardCockpitCard } from "./DashboardCockpitCard";
+import SceWorkspaceSectionShell from "@/components/sce/workspace/SceWorkspaceSectionShell";
 import { cn } from "@/lib/cn";
 
 export type PersonalDashboardWorkspaceProps = {
@@ -31,12 +29,14 @@ export type PersonalDashboardWorkspaceProps = {
     todayHref: string;
   };
   attentionSlot?: ReactNode;
+  attentionViewAllHref?: string | null;
   tasksSlot?: ReactNode;
   className?: string;
 };
 
 /**
- * SCE-DS2-05B-R2 — personal dashboard cockpit: full-width programme, attention + tasks below.
+ * Personal dashboard — ClubDevelopmentOverview-aligned section layout (SCE Übersicht reference).
+ * SCE-DS2-05B-R2 — embedded programme preview; month grid lives on Mein Kalender.
  */
 export function PersonalDashboardWorkspace({
   groups,
@@ -44,6 +44,7 @@ export function PersonalDashboardWorkspace({
   timeLabelById,
   monthParam = null,
   attentionSlot,
+  attentionViewAllHref = null,
   tasksSlot,
   className,
 }: PersonalDashboardWorkspaceProps) {
@@ -66,27 +67,36 @@ export function PersonalDashboardWorkspace({
     [monthParam],
   );
 
+  const programmeLinkLabel = programmeSupported ? tCalendar("openCalendar") : undefined;
+
   return (
-    <div className={cn("min-w-0", className)} data-testid="personal-dashboard-workspace">
-      <DashboardCockpitGrid>
-        <DashboardCockpitCard
-          title={tProgramme("title")}
-          titleId="personal-programme-heading"
-          icon={<CalendarDays className="h-4 w-4" />}
-          iconAccent="primary"
-          orderClassName="order-1 md:col-span-2 md:row-start-1"
-          headerAction={
-            programmeSupported ? (
-              <Link
-                href={calendarOpenHref}
-                className="sce-link-primary text-[0.8125rem] font-medium"
-                data-testid="personal-programme-open-calendar"
-              >
-                {tCalendar("openCalendar")} →
-              </Link>
-            ) : null
-          }
-          bodyClassName="overflow-y-auto"
+    <div
+      className={cn("min-w-0 space-y-6", className)}
+      data-testid="personal-dashboard-workspace"
+      data-sce-dashboard-layout="cd-reference"
+    >
+      {attentionSlot ? (
+        <SceWorkspaceSectionShell
+          title={tAttention("sectionTitle")}
+          href={attentionViewAllHref ?? undefined}
+          linkLabel={attentionViewAllHref ? tAttention("openInbox") : undefined}
+          testId="personal-dashboard-attention-section"
+        >
+          {attentionSlot}
+        </SceWorkspaceSectionShell>
+      ) : null}
+
+      <div
+        className="grid items-start gap-6 xl:grid-cols-2"
+        data-testid="personal-dashboard-programme-tasks-grid"
+        data-sce-dashboard-programme-tasks-pairing
+      >
+        <SceWorkspaceSectionShell
+          title={tProgramme("todayNextTitle")}
+          href={programmeSupported ? calendarOpenHref : undefined}
+          linkLabel={programmeLinkLabel}
+          linkTestId="personal-programme-open-calendar"
+          testId="personal-dashboard-programme-section"
         >
           <PersonalProgrammeFeed
             groups={previewGroups}
@@ -94,43 +104,19 @@ export function PersonalDashboardWorkspace({
             timeLabelById={timeLabelById}
             embedded
           />
-        </DashboardCockpitCard>
-
-        {attentionSlot ? (
-          <DashboardCockpitCard
-            title={tAttention("sectionTitle")}
-            titleId="personal-attention-heading"
-            icon={<BellRing className="h-4 w-4" />}
-            iconAccent="warning"
-            orderClassName="order-2 md:row-start-2"
-            bodyClassName="overflow-y-auto"
-          >
-            {attentionSlot}
-          </DashboardCockpitCard>
-        ) : null}
+        </SceWorkspaceSectionShell>
 
         {tasksSlot ? (
-          <DashboardCockpitCard
+          <SceWorkspaceSectionShell
             title={tTasks("title")}
-            titleId="personal-tasks-heading"
-            icon={<ProductDomainSceIcon name="tasks" size={16} />}
-            iconAccent="info"
-            orderClassName="order-3 md:row-start-2"
-            headerAction={
-              <Link
-                href="/dashboard/aufgaben?bereich=meine"
-                className="sce-link-primary text-[0.8125rem] font-medium"
-                data-testid="personal-tasks-view-all"
-              >
-                {tTasks("viewAll")} →
-              </Link>
-            }
-            bodyClassName="overflow-y-auto"
+            href="/dashboard/aufgaben?bereich=meine"
+            linkLabel={tTasks("viewAll")}
+            testId="personal-dashboard-tasks-section"
           >
             {tasksSlot}
-          </DashboardCockpitCard>
+          </SceWorkspaceSectionShell>
         ) : null}
-      </DashboardCockpitGrid>
+      </div>
     </div>
   );
 }

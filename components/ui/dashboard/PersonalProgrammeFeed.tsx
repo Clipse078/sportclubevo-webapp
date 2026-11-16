@@ -7,6 +7,7 @@ import { CalendarDays } from "lucide-react";
 import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
+import SceWorkspaceEmptyState from "@/components/sce/workspace/SceWorkspaceEmptyState";
 import { PersonalProgrammePreviewRow } from "./PersonalProgrammePreviewRow";
 
 export type PersonalProgrammeFeedProps = {
@@ -44,12 +45,16 @@ export function PersonalProgrammeFeed({
       {!supported ? (
         <p className="text-sm text-[var(--text-2)]">{t("unsupported")}</p>
       ) : groups.length === 0 ? (
-        <DashboardEmptyState
-          icon={<CalendarDays className="h-5 w-5" />}
-          title={t("emptyTitle")}
-          description={t("emptyDescription")}
-          variant="compact"
-        />
+        embedded ? (
+          <SceWorkspaceEmptyState message={t("emptyDescription")} testId="personal-programme-empty" />
+        ) : (
+          <DashboardEmptyState
+            icon={<CalendarDays className="h-5 w-5" />}
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
+            variant="compact"
+          />
+        )
       ) : (
         <div className="space-y-3 md:space-y-4">
           {groups.map((group) => {
@@ -88,6 +93,7 @@ export function PersonalProgrammeFeed({
                         item={item}
                         timeLabel={timeLabelById[item.id] ?? "—"}
                         highlighted={nextUpcomingForDay && item.id === nextActivityId}
+                        dashboardCockpitPreview
                       />
                     </li>
                   ))}

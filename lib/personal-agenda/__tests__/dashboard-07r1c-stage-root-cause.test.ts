@@ -65,12 +65,15 @@ function buildStageLikeContext(): PersonalContext {
   };
 }
 
+const TENANT_BRANDING = { displayName: "FC Allschwil", logoUrl: null } as const;
+
 const adapterCtx = (ctx: PersonalContext) => ({
   personal: ctx,
   permissionKeys: [PERMISSIONS.EVENTS_VIEW],
   timeZone: TIME_ZONE,
   rangeStart: new Date("2026-09-01T00:00:00.000Z"),
   rangeEnd: new Date("2026-09-30T23:59:59.999Z"),
+  tenantBranding: TENANT_BRANDING,
 });
 
 describe("DASHBOARD-07R1C — STAGE root-cause regression", () => {

@@ -109,12 +109,13 @@ describe("SCE-ACTIVITY-CREATE-01J R5 — R2/R4/Navbar regression sentinels", () 
     expect(r4).toContain("personal-programme-open-calendar");
     const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
     expect(workspace).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
-    expect(workspace).toContain("md:col-span-2");
+    expect(workspace).toContain("xl:grid-cols-2");
+    expect(workspace).toContain("SceWorkspaceSectionShell");
   });
 
   it("preserves navbar shell markers on dashboard page", () => {
     const club = read("components/admin/dashboard/ClubDashboardView.tsx");
-    expect(club).toContain("sce-page-shell--dashboard");
+    expect(club).toContain("SCE_PAGE_SHELL_WIDTH_CLASS.dashboard");
     expect(club).not.toContain("DashboardL1");
   });
 });

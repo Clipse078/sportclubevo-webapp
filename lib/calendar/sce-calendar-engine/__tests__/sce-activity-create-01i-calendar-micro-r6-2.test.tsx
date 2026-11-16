@@ -267,6 +267,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R6.2 — personal tournament organiser crest p
     timeZone: "Europe/Zurich",
     rangeStart: new Date("2026-10-01T00:00:00.000Z"),
     rangeEnd: new Date("2026-10-31T23:59:59.999Z"),
+    tenantBranding: { displayName: "FC Allschwil", logoUrl: null },
   };
 
   beforeEach(() => {

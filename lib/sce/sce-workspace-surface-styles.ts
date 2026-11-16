@@ -1,0 +1,11 @@
+/**
+ * SCE workspace surface tokens — shared by Vereinsentwicklung Übersicht and personal /dashboard.
+ */
+export {
+  SCE_CD_EMPTY_STATE_CLASS as SCE_WORKSPACE_EMPTY_STATE_CLASS,
+  SCE_CD_RECORD_ROW_CLASS as SCE_WORKSPACE_RECORD_ROW_CLASS,
+  SCE_CD_SECTION_BODY_CLASS as SCE_WORKSPACE_SECTION_BODY_CLASS,
+  SCE_CD_SECTION_HEADER_CLASS as SCE_WORKSPACE_SECTION_HEADER_CLASS,
+  SCE_CD_SECTION_SHELL_CLASS as SCE_WORKSPACE_SECTION_SHELL_CLASS,
+  SCE_CD_WORKSPACE_PANEL_CLASS as SCE_WORKSPACE_PANEL_CLASS,
+} from "@/components/admin/club-development/sce-club-development-surface-styles";

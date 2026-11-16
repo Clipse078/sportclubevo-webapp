@@ -8,6 +8,8 @@ import {
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import { resolveSceMeetingPresentationFromProgramme } from "@/lib/sporting-activity-presentation/canonical/adapters/meeting-programme";
+import { buildClubIdentity } from "@/lib/sporting-activity-design";
+import { loadMeetingOrganisationalLabelsById } from "../meeting-programme-organisational-labels";
 import {
   canIncludeMeetingInPersonalProgramme,
   type PersonalMeetingProjectionActor,
@@ -88,6 +90,11 @@ function contextLabelForRole(role: MeetingPersonalRole): string {
 function meetingRowToProgrammeItem(
   meeting: MeetingRow,
   role: MeetingPersonalRole,
+  options: {
+    organisationalContext?: string;
+    tenantClubName: string;
+    tenantClubLogoUrl: string | null;
+  },
 ): PersonalProgrammeItem {
   const sourceType = "MEETING" as const;
   const contextLabel = contextLabelForRole(role);
@@ -98,7 +105,11 @@ function meetingRowToProgrammeItem(
     title: meeting.title,
     meetingDate: meeting.meetingDate,
     location: meeting.location ? formatMeetingLocationDisplay(meeting.location) : meeting.location,
-    contextLabel,
+    organisationalContext: options.organisationalContext,
+    tenantClub: buildClubIdentity({
+      displayName: options.tenantClubName,
+      logoUrl: options.tenantClubLogoUrl,
+    }),
     status,
     plannedDurationMin: meeting.plannedDurationMin,
   });
@@ -192,6 +203,13 @@ export async function loadMeetingProgrammeItems(
     }
   }
 
+  const meetingRows = [...byId.values()].map((entry) => entry.meeting);
+  const organisationalLabels = await loadMeetingOrganisationalLabelsById(
+    ctx.personal.tenantId,
+    meetingRows,
+  );
+  const { displayName: tenantClubName, logoUrl: tenantClubLogoUrl } = ctx.tenantBranding;
+
   const items: PersonalProgrammeItem[] = [];
 
   for (const { meeting, role: participantOrOrganizer } of byId.values()) {
@@ -209,7 +227,13 @@ export async function loadMeetingProgrammeItems(
       continue;
     }
 
-    items.push(meetingRowToProgrammeItem(meeting, personalRole));
+    items.push(
+      meetingRowToProgrammeItem(meeting, personalRole, {
+        organisationalContext: organisationalLabels.get(meeting.id),
+        tenantClubName,
+        tenantClubLogoUrl,
+      }),
+    );
   }
 
   return items;

@@ -10,6 +10,7 @@ vi.mock("@/lib/db/prisma", () => ({
     tenantSfvConfig: { findUnique: vi.fn().mockResolvedValue(null) },
     teamSeason: { findMany: vi.fn().mockResolvedValue([]) },
     team: { findMany: vi.fn().mockResolvedValue([]) },
+    orgUnit: { findMany: vi.fn().mockResolvedValue([]) },
     trainingSessionAllocation: { findMany: vi.fn() },
     trainingAllocation: { findMany: vi.fn() },
     playerSquadMember: { findFirst: vi.fn().mockResolvedValue(null) },
@@ -19,7 +20,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 vi.mock("@/lib/server/request-cache", () => ({
-  getTenantClubCrestUrlCached: vi.fn().mockResolvedValue(null),
+  getTenantClubCrestUrlCached: vi.fn().mockResolvedValue("https://cdn.example/fca.png"),
 }));
 
 vi.mock("@/lib/matchcenter/query-service", () => ({
@@ -106,17 +107,24 @@ function buildContext(overrides: Partial<PersonalContext> = {}): PersonalContext
   };
 }
 
+const DEFAULT_TENANT_BRANDING = {
+  displayName: "FC Allschwil",
+  logoUrl: "https://cdn.example/fca.png",
+} as const;
+
 const adapterCtx = (ctx: PersonalContext) => ({
   personal: ctx,
   permissionKeys: [PERMISSIONS.EVENTS_VIEW, PERMISSIONS.TRAININGS_VIEW, PERMISSIONS.MEETINGS_VIEW],
   timeZone: "Europe/Zurich",
   rangeStart: new Date("2026-10-01T00:00:00.000Z"),
   rangeEnd: new Date("2026-10-31T23:59:59.999Z"),
+  tenantBranding: DEFAULT_TENANT_BRANDING,
 });
 
 describe("DASHBOARD-02 — personal programme", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ name: "FC Allschwil" } as never);
     vi.mocked(resolvePersonalContext).mockResolvedValue(buildContext());
     vi.mocked(prisma.meeting.findMany).mockResolvedValue([] as never);
     vi.mocked(canSeeMeeting).mockReturnValue(true);
@@ -370,6 +378,23 @@ describe("DASHBOARD-02 — personal programme", () => {
       expect(items).toHaveLength(1);
       expect(items[0].contextLabel).toBe("Meeting · Teilnehmer");
       expect(items[0].canonicalPresentation?.kind).toBe("MEETING");
+      expect(items[0].canonicalPresentation?.tenantClub?.displayName).toBe("FC Allschwil");
+      expect(items[0].canonicalPresentation?.tenantClub?.logoUrl).toBe(
+        "https://cdn.example/fca.png",
+      );
+    });
+
+    it("attaches tenant club branding on meetings without org/team visibility", async () => {
+      vi.mocked(prisma.meeting.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ ...meetingRow, createdByUserId: "user-a" }] as never)
+        .mockResolvedValueOnce([]);
+
+      const items = await loadMeetingProgrammeItems(adapterCtx(buildContext()));
+      const meeting = items[0].canonicalPresentation;
+      expect(meeting?.kind).toBe("MEETING");
+      expect(meeting?.organisationalContext).toBeUndefined();
+      expect(meeting?.tenantClub?.displayName).toBe("FC Allschwil");
     });
 
     it("includes organizer meetings", async () => {

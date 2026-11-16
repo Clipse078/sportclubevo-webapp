@@ -475,6 +475,7 @@
     },
     "programme": {
       "title": "Mein Programm",
+      "todayNextTitle": "Heute & als Nächstes",
       "groupToday": "Heute",
       "groupTomorrow": "Morgen",
       "allDay": "Ganztägig",
@@ -512,8 +513,9 @@
     },
     "quickAccess": {
       "title": "Schnellzugriff",
+      "areasTitle": "Meine Bereiche",
       "customize": "Anpassen",
-      "sectionAria": "Persönlicher Schnellzugriff",
+      "sectionAria": "Persönliche Modulbereiche",
       "customizeTitle": "Schnellzugriff anpassen",
       "customizeDescription": "Wähle bis zu {max} Shortcuts für dein Dashboard.",
       "pinnedHeading": "Angeheftet",

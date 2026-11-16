@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { LayoutGrid } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import {
   getQuickAccessNavItemKey,
@@ -12,6 +12,8 @@ import {
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import SceWorkspaceSectionShell from "@/components/sce/workspace/SceWorkspaceSectionShell";
+import { SCE_WORKSPACE_RECORD_ROW_CLASS } from "@/lib/sce/sce-workspace-surface-styles";
 import {
   QuickAccessCustomizer,
   type QuickAccessCustomizeEntry,
@@ -28,14 +30,6 @@ type Props = {
   createMenu?: ReactNode;
   className?: string;
 };
-
-const navLinkClassName = cn(
-  "inline-flex min-h-[2.25rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-1 no-underline",
-  "border-[var(--border)] bg-[var(--surface)]/80",
-  "text-[0.8125rem] font-medium text-[var(--foreground)]",
-  "motion-safe:transition-[border-color,background-color] motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)]",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-);
 
 export function PersonalQuickAccess({
   initialItems,
@@ -56,61 +50,64 @@ export function PersonalQuickAccess({
     return null;
   }
 
-  return (
-    <section
-      className={cn(
-        "border-y border-[color-mix(in_srgb,var(--border)_55%,transparent)] py-2 sm:py-2",
-        className,
-      )}
-      aria-label={t("sectionAria")}
-      data-testid="personal-quick-access"
+  const customizeControl = (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      className="h-7 px-2 text-[0.75rem]"
+      onClick={() => setCustomizeOpen(true)}
+      data-testid="personal-quick-access-customize"
     >
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[var(--sce-primary)]"
-            aria-hidden
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-          </span>
-          <h2 className="text-[0.8125rem] font-semibold tracking-tight text-[var(--foreground)]">
-            {t("title")}
-          </h2>
-        </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="h-7 px-2 text-[0.75rem]"
-          onClick={() => setCustomizeOpen(true)}
-        >
-          {t("customize")}
-        </Button>
-      </div>
+      {t("customize")}
+    </Button>
+  );
 
-      <ul className="flex list-none flex-wrap items-center gap-2">
+  return (
+    <SceWorkspaceSectionShell
+      title={t("areasTitle")}
+      headerAside={customizeControl}
+      testId="personal-quick-access"
+      bodyClassName="p-5"
+    >
+      <div
+        className={cn("grid gap-3 sm:grid-cols-2 xl:grid-cols-3", className)}
+        aria-label={t("sectionAria")}
+      >
         {navigationItems.map((item) => {
           const sceIconName = getQuickAccessSceIconName(item.key);
           return (
-            <li key={item.key}>
-              <Link href={item.href} className={navLinkClassName}>
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(
+                SCE_WORKSPACE_RECORD_ROW_CLASS,
+                "flex items-center justify-between gap-3 no-underline",
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
                 {sceIconName ? (
-                  <NavDestinationSceIcon
-                    navItemKey={getQuickAccessNavItemKey(item.key) ?? ""}
-                    size={24}
-                  />
+                  <span className="inline-flex shrink-0 text-[var(--sce-primary)]" aria-hidden>
+                    <NavDestinationSceIcon
+                      navItemKey={getQuickAccessNavItemKey(item.key) ?? ""}
+                      size={20}
+                    />
+                  </span>
                 ) : null}
-                <span>{item.label}</span>
-              </Link>
-            </li>
+                <span className="text-sm font-semibold text-[var(--foreground)] truncate">
+                  {item.label}
+                </span>
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+            </Link>
           );
         })}
         {createMenu ? (
-          <li className="relative shrink-0" data-testid="personal-quick-access-create">
+          <div className="sm:col-span-2 xl:col-span-3" data-testid="personal-quick-access-create">
             {createMenu}
-          </li>
+          </div>
         ) : null}
-      </ul>
+      </div>
 
       <QuickAccessCustomizer
         open={customizeOpen}
@@ -123,6 +120,6 @@ export function PersonalQuickAccess({
           setActiveKeys(nextKeys);
         }}
       />
-    </section>
+    </SceWorkspaceSectionShell>
   );
 }

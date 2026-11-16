@@ -5,6 +5,7 @@ export type PersonalDashboardCockpitGreetingProps = {
   greeting: string;
   highlightName?: string;
   contextLine: string;
+  introLine?: string;
   initialBackgroundImageUrl?: string | null;
   initialBackgroundTransform?: import("@/lib/dashboard/dashboard-hero-position").HeroImageTransform;
   className?: string;
@@ -18,16 +19,20 @@ export function PersonalDashboardCockpitGreeting({
   greeting,
   highlightName,
   contextLine,
+  introLine,
   className,
 }: PersonalDashboardCockpitGreetingProps) {
   return (
     <header
-      className={cn("min-w-0 px-0 py-0.5", className)}
+      className={cn("min-w-0 space-y-1 px-0 py-0.5", className)}
       data-testid="personal-dashboard-greeting"
     >
       <DashboardCompactWelcome greeting={greeting} highlightName={highlightName} />
+      {introLine ? (
+        <p className="text-sm text-[var(--muted)] max-w-3xl">{introLine}</p>
+      ) : null}
       {contextLine ? (
-        <p className="mt-0.5 text-[0.8125rem] font-medium leading-snug text-[var(--text-2)]">
+        <p className="text-[0.8125rem] font-medium leading-snug text-[var(--text-2)]">
           {contextLine}
         </p>
       ) : null}

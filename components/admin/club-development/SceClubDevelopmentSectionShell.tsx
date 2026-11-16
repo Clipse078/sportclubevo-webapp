@@ -15,6 +15,7 @@ type Props = {
   headerAside?: ReactNode;
   bodyClassName?: string;
   testId?: string;
+  linkTestId?: string;
 };
 
 export default function SceClubDevelopmentSectionShell({
@@ -25,6 +26,7 @@ export default function SceClubDevelopmentSectionShell({
   headerAside,
   bodyClassName,
   testId,
+  linkTestId,
 }: Props) {
   return (
     <section className={SCE_CD_SECTION_SHELL_CLASS} data-testid={testId}>
@@ -34,6 +36,7 @@ export default function SceClubDevelopmentSectionShell({
           (href && linkLabel ? (
             <Link
               href={href}
+              data-testid={linkTestId}
               className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
             >
               {linkLabel}

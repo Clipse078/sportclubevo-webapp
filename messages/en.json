@@ -52,6 +52,7 @@
     },
     "programme": {
       "title": "My schedule",
+      "todayNextTitle": "Today & next",
       "groupToday": "Today",
       "groupTomorrow": "Tomorrow",
       "allDay": "All day",
@@ -89,8 +90,9 @@
     },
     "quickAccess": {
       "title": "Quick access",
+      "areasTitle": "My areas",
       "customize": "Customize",
-      "sectionAria": "Personal quick access",
+      "sectionAria": "Personal module shortcuts",
       "customizeTitle": "Customize quick access",
       "customizeDescription": "Choose up to {max} shortcuts for your dashboard.",
       "pinnedHeading": "Pinned",

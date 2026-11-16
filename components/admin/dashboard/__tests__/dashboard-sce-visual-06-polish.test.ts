@@ -6,34 +6,25 @@ const read = (relativePath: string) =>
   readFileSync(join(process.cwd(), relativePath), "utf8");
 
 describe("SCE-VISUAL-06 — dashboard polish", () => {
-  it("keeps 2×2 cockpit with row-aware grid sizing", () => {
-    const grid = read("components/ui/dashboard/DashboardCockpitGrid.tsx");
-    expect(grid).toContain("md:grid-cols-2");
-    expect(grid).toContain("grid-template-rows");
-    expect(grid).toContain('data-testid="dashboard-cockpit-grid"');
-
+  it("uses ClubDevelopmentOverview-aligned section grid for primary modules", () => {
     const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    expect(workspace).toContain("md:row-start-1");
-    expect(workspace).toContain("md:row-start-2");
+    expect(workspace).toContain("xl:grid-cols-2");
+    expect(workspace).toContain("space-y-6");
+    expect(workspace).toContain("SceWorkspaceSectionShell");
   });
 
-  it("allows row 1 and row 2 to use different grid track heights", () => {
-    const grid = read("components/ui/dashboard/DashboardCockpitGrid.tsx");
-    const rowsMatch = grid.match(/grid-template-rows:[^"]+/);
-    expect(rowsMatch?.[0]).toMatch(/_.*minmax/);
+  it("does not rely on legacy cockpit glass grid for primary modules", () => {
+    const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
+    expect(workspace).not.toContain("DashboardCockpitGrid");
+    expect(workspace).not.toContain("DashboardCockpitCard");
   });
 
-  it("does not force a large shared min-height on cockpit cards", () => {
-    const surface = read("lib/dashboard/dashboard-cockpit-surface.ts");
-    expect(surface).not.toContain("min-h-[17.5rem]");
-    expect(surface).toContain("min-h-0");
-  });
-
-  it("uses cockpit empty-state variant for attention and tasks", () => {
-    const attention = read("components/ui/dashboard/PersonalAttention.tsx");
+  it("uses workspace record rows and empty states in embedded previews", () => {
     const tasks = read("components/ui/dashboard/PersonalTasksPreview.tsx");
-    expect(attention).toContain('variant="cockpit"');
-    expect(tasks).toContain('variant="cockpit"');
+    const programme = read("components/ui/dashboard/PersonalProgrammeFeed.tsx");
+    expect(tasks).toContain("SCE_WORKSPACE_RECORD_ROW_CLASS");
+    expect(tasks).toContain("SceWorkspaceEmptyState");
+    expect(programme).toContain("SceWorkspaceEmptyState");
   });
 
   it("keeps Schnellzugriff below cockpit and permission-aware", () => {

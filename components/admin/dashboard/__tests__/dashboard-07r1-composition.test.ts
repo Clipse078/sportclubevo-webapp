@@ -31,7 +31,7 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
     expect(greetingSource).toContain("DashboardCompactWelcome");
   });
 
-  it("keeps Schnellzugriff after cockpit without horizontal scroll strip", () => {
+  it("keeps Meine Bereiche after primary sections without horizontal scroll strip", () => {
     expect(clubDashboardSource).toContain("ClubDashboardCommandCenterAsync");
     expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
     expect(commandCenterSource).toContain("<PersonalQuickAccess");
@@ -41,11 +41,12 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
     expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
 
-    expect(quickAccessSource).toContain("flex-wrap");
+    expect(quickAccessSource).toContain("SceWorkspaceSectionShell");
+    expect(quickAccessSource).toContain("sm:grid-cols-2");
     expect(quickAccessSource).not.toContain("overflow-x-auto");
   });
 
-  it("uses cockpit grid and preserves primary workspace surfaces", () => {
+  it("preserves primary workspace surfaces without legacy metric strip", () => {
     expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
     expect(clubDashboardSource).not.toContain("HeuteImVereinWidget");

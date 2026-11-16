@@ -30,8 +30,8 @@ export default async function DashboardPage({
     : await searchParams;
 
   return (
-    <PageShell fullWidth widthMode="dashboard">
-      <SceWorkspaceChrome breadcrumbs={[{ label: "Dashboard" }]} density="dense">
+    <PageShell fullWidth>
+      <SceWorkspaceChrome breadcrumbs={[{ label: "Dashboard" }]} density="standard">
         <ClubDashboardView
           authenticatedSession={session}
           calendarMonthParam={params.monat ?? null}

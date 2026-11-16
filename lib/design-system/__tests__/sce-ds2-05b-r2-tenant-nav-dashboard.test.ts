@@ -62,19 +62,21 @@ describe("SCE-DS2-05B-R2 delivery", () => {
     expect(SCE_DS2_HEADER_NAV_TYPOGRAPHY.labelTransform).toBe("uppercase");
   });
 
-  it("removes dashboard Mein Kalender widget and spans Mein Programm full width", () => {
+  it("removes dashboard Mein Kalender widget and links programme section to Mein Kalender", () => {
     const workspace = readRepo("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
     expect(workspace).not.toContain("PersonalProgrammeMonthCalendar");
-    expect(workspace).toContain("md:col-span-2");
-    expect(workspace).toContain('data-testid="personal-programme-open-calendar"');
+    expect(workspace).toContain("SceWorkspaceSectionShell");
+    expect(workspace).toContain('testId="personal-dashboard-programme-section"');
     expect(workspace).toContain("buildMeinProgrammKalenderOpenHref");
     expect(workspace).not.toContain("personal-programme-view-all");
     expect(workspace).not.toContain("personal-calendar-open");
   });
 
-  it("uses spacious horizontal canonical programme rows on the dashboard preview", () => {
+  it("uses stacked dashboard cockpit programme rows on the dashboard preview", () => {
     const previewRow = readRepo("components/ui/dashboard/PersonalProgrammePreviewRow.tsx");
-    expect(previewRow).toContain('density="STANDARD"');
+    expect(previewRow).toContain("dashboardCockpitPreview");
+    expect(previewRow).toContain("programme-dashboard-preview");
+    expect(previewRow).toContain('density="COMPACT"');
   });
 
   it("maps activity-type pills to semantic pastel tokens with bordered pills", () => {

@@ -12,6 +12,10 @@ import {
   type PersonalProgrammeRange,
 } from "./programme-range";
 import { sortPersonalProgrammeItems } from "./programme-sort";
+import {
+  enrichPersonalProgrammeItemsTenantBranding,
+  loadTenantProgrammeBranding,
+} from "./tenant-programme-branding";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
 import {
   logSceHotfixLogin01StepFailed,
@@ -117,12 +121,15 @@ export async function loadPersonalProgramme(
     permissionKeys = [...platform, ...tenant];
   }
 
+  const tenantBranding = await loadTenantProgrammeBranding(args.tenantId);
+
   const adapterCtx: PersonalProgrammeAdapterContext = {
     personal: personalContext,
     permissionKeys,
     timeZone: args.timeZone,
     rangeStart: range.rangeStart,
     rangeEnd: range.rangeEnd,
+    tenantBranding,
   };
 
   const loadAdapter = async (step: string, loader: () => Promise<PersonalProgrammeItem[]>) => {
@@ -162,8 +169,9 @@ export async function loadPersonalProgramme(
   if (trace) {
     markSceHotfixLogin01StepStart("programme-merge");
   }
-  let items = sortPersonalProgrammeItems(
-    dedupeProgrammeItems([...programmeQuery, ...meetings]),
+  let items = enrichPersonalProgrammeItemsTenantBranding(
+    sortPersonalProgrammeItems(dedupeProgrammeItems([...programmeQuery, ...meetings])),
+    tenantBranding,
   );
   if (trace) {
     logSceHotfixLogin01StepFinished("programme-merge", { rowCount: items.length });

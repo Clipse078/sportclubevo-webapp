@@ -1,5 +1,6 @@
 ﻿import { Suspense } from "react";
 import { auth } from "@/auth";
+import { getTranslations } from "next-intl/server";
 import type { Session } from "next-auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashboard/greeting";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import ClubDashboardCommandCenterAsync from "./ClubDashboardCommandCenterAsync";
 import { ClubDashboardCommandCenterSkeleton } from "./ClubDashboardCommandCenterSkeleton";
+import { SCE_PAGE_SHELL_WIDTH_CLASS } from "@/lib/shell/sce-page-layout";
 
 type ClubDashboardViewProps = {
   calendarMonthParam?: string | null;
@@ -92,6 +94,8 @@ export default async function ClubDashboardView({
     : undefined;
 
   const contextLine = [todayFormatted, ctx?.name].filter(Boolean).join(" · ");
+  const tWelcome = await getTranslations("PersonalDashboard.welcome");
+  const introLine = tWelcome("subtitle");
 
   if (sceHotfixLogin01TraceEnabled()) {
     logSceHotfixLogin01Milestone("T1_SHELL");
@@ -100,7 +104,7 @@ export default async function ClubDashboardView({
 
   return (
     <div
-      className="sce-page-shell sce-page-shell--dashboard flex w-full min-w-0 flex-col gap-2.5 lg:gap-3"
+      className={`sce-page-shell ${SCE_PAGE_SHELL_WIDTH_CLASS.dashboard} flex w-full min-w-0 flex-col gap-6`}
       data-sce-page-shell
       data-sce-page-width="dashboard"
       data-testid="personal-command-center"
@@ -109,6 +113,7 @@ export default async function ClubDashboardView({
         greeting={greeting}
         highlightName={displayName}
         contextLine={contextLine}
+        introLine={introLine}
         initialBackgroundImageUrl={heroState?.imageUrl ?? null}
         initialBackgroundTransform={heroTransform}
       />

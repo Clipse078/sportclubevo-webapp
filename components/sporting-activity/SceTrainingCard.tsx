@@ -35,6 +35,21 @@ import {
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { SCE_ACTIVITY_REFERENCE_LAYOUT } from "@/lib/sporting-activity-presentation/canonical/activity-card-reference-layout";
+import {
+  SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW,
+  isProgrammeDashboardPreviewListRow,
+  programmeListRowOmitsInlineDateColumn,
+} from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-contract";
+import {
+  SceProgrammeDashboardPreviewActivityPillLine,
+  SceProgrammeDashboardPreviewBody,
+  SceProgrammeDashboardPreviewDressingRoomLine,
+  SceProgrammeDashboardPreviewLocationLine,
+  SceProgrammeDashboardPreviewTimeLine,
+  SceProgrammeDashboardPreviewTitleLine,
+} from "./SceProgrammeDashboardPreviewStack";
+import { formatProgrammeDashboardPreviewDressingRoomLabel } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-dressing-room";
+import { resolveProgrammeDashboardPreviewClubIdentity } from "@/lib/sporting-activity-presentation/canonical/programme-dashboard-preview-identity";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
@@ -54,7 +69,8 @@ export type SceTrainingListRowPresentation =
   | "default"
   | "operational"
   | "dashboard-agenda"
-  | "programme-personal";
+  | "programme-personal"
+  | typeof SCE_PROGRAMME_DASHBOARD_PREVIEW_LIST_ROW;
 
 export type SceTrainingCardProps = {
   model: SceTrainingPresentationModel;
@@ -353,6 +369,101 @@ function SceTrainingRichCardContent({
   );
 }
 
+function resolveTrainingListRowTitleAndTeamVisibility(model: SceTrainingPresentationModel) {
+  const teamName = model.team?.name?.trim();
+  const rawTitle = model.trainingTitle.trim();
+  const title = rawTitle || teamName || model.typeLabel;
+  const showTeamLine =
+    Boolean(teamName) &&
+    teamName!.localeCompare(rawTitle || title, "de-CH", { sensitivity: "accent" }) !== 0 &&
+    !(rawTitle || title)
+      .trim()
+      .toLocaleLowerCase("de-CH")
+      .includes(teamName!.toLocaleLowerCase("de-CH"));
+  return { teamName, rawTitle, title, showTeamLine, crestIdentity: model.tenantClub };
+}
+
+function SceTrainingListRowDashboardPreviewContent({
+  model,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceTrainingPresentationModel;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const { rawTitle, title } = resolveTrainingListRowTitleAndTeamVisibility(model);
+  const timeLabel = resolveListRowOperationalTimeLabel(model, fmtCfg);
+  const locationLine = resolveListRowOperationalLocationLine(model);
+  const dressingRoomLabel = model.dressingRoom?.label?.trim();
+  const status = model.status;
+  const showExceptionalStatus = Boolean(
+    showStatus &&
+      status?.label &&
+      (status.semantic === "cancelled" ||
+        status.semantic === "warning" ||
+        status.domain === "postponed" ||
+        status.domain === "cancelled"),
+  );
+  const titleRedundantWithType =
+    rawTitle.localeCompare(model.typeLabel, "de-CH", { sensitivity: "accent" }) === 0;
+  const resolvedTitle = titleRedundantWithType ? rawTitle || title : title;
+
+  const previewIdentity = resolveProgrammeDashboardPreviewClubIdentity(model);
+
+  return (
+  <SceProgrammeDashboardPreviewBody
+      activityKind="TRAINING"
+      testId="sce-training-list-row-identity"
+      identity={previewIdentity}
+      identityTestId="sce-training-list-row-primary-identity"
+      statusSlot={
+        showExceptionalStatus && status?.label ? (
+          <div data-sce-training-region="status">
+            <SceTrainingCardStatus status={status} />
+          </div>
+        ) : null
+      }
+      timeSlot={
+        timeLabel ? (
+          <SceProgrammeDashboardPreviewTimeLine label={timeLabel} testId="sce-training-list-row-time" />
+        ) : null
+      }
+      titleSlot={
+        <>
+          <span className="sr-only">{model.typeLabel}</span>
+          {resolvedTitle ? (
+            <SceProgrammeDashboardPreviewTitleLine title={resolvedTitle} testId="sce-training-title" />
+          ) : null}
+        </>
+      }
+      metaSlot={
+        <>
+          <SceProgrammeDashboardPreviewActivityPillLine testId="sce-training-list-row-activity">
+            <ActivityTypePill
+              activityKind="TRAINING"
+              label={model.typeLabel}
+              className={cn("shrink-0", sceActivityListRowTypePillClass())}
+            />
+          </SceProgrammeDashboardPreviewActivityPillLine>
+          {locationLine ? (
+            <SceProgrammeDashboardPreviewLocationLine
+              label={locationLine}
+              testId="sce-training-list-row-location"
+            />
+          ) : null}
+          {dressingRoomLabel ? (
+            <SceProgrammeDashboardPreviewDressingRoomLine
+              label={formatProgrammeDashboardPreviewDressingRoomLabel(dressingRoomLabel)}
+              testId="sce-training-list-row-dressing-room"
+            />
+          ) : null}
+        </>
+      }
+    />
+  );
+}
+
 function SceTrainingListRowOperationalContent({
   model,
   density,
@@ -366,7 +477,7 @@ function SceTrainingListRowOperationalContent({
   showStatus: boolean;
   listRowPresentation?: SceTrainingListRowPresentation;
 }) {
-  const omitDateColumn = listRowPresentation === "programme-personal";
+  const omitDateColumn = programmeListRowOmitsInlineDateColumn(listRowPresentation);
   const teamName = model.team?.name?.trim();
   const rawTitle = model.trainingTitle.trim();
   const title = rawTitle || teamName || model.typeLabel;
@@ -775,22 +886,23 @@ export function SceTrainingCard({
   let content: ReactNode;
 
   if (listRow) {
-    content =
-      listRowPresentation === "operational" ||
+    content = isProgrammeDashboardPreviewListRow(listRowPresentation) ? (
+      <SceTrainingListRowDashboardPreviewContent model={model} fmtCfg={fmtCfg} showStatus={showStatus} />
+    ) : listRowPresentation === "operational" ||
       listRowPresentation === "programme-personal" ||
       listRowPresentation === "dashboard-agenda" ? (
-        <SceTrainingListRowOperationalContent
-          model={model}
-          density={density}
-          fmtCfg={fmtCfg}
-          showStatus={showStatus}
-          listRowPresentation={
-            listRowPresentation === "dashboard-agenda" ? "operational" : listRowPresentation
-          }
-        />
-      ) : (
-        <SceTrainingListRowIdentityContent model={model} density={density} />
-      );
+      <SceTrainingListRowOperationalContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        showStatus={showStatus}
+        listRowPresentation={
+          listRowPresentation === "dashboard-agenda" ? "operational" : listRowPresentation
+        }
+      />
+    ) : (
+      <SceTrainingListRowIdentityContent model={model} density={density} />
+    );
   } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">

@@ -1,5 +1,6 @@
 import type { PersonalContext } from "./types";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
+import type { TenantProgrammeBranding } from "@/lib/personal-agenda/tenant-programme-branding";
 
 /**
  * DASHBOARD-02 programme source adapter input contract.
@@ -13,6 +14,8 @@ export type PersonalProgrammeAdapterContext = {
   timeZone: string;
   rangeStart: Date;
   rangeEnd: Date;
+  /** Authorised tenant club branding loaded once per programme request. */
+  tenantBranding: TenantProgrammeBranding;
 };
 
 export type PersonalProgrammeAdapterResult = {
