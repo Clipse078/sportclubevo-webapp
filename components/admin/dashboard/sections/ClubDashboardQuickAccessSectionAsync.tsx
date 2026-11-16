@@ -19,7 +19,8 @@ import {
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { formatDate } from "@/lib/tenant-runtime/formatters";
-import { loadPersonalDashboardSecondarySection } from "@/lib/dashboard/personal-dashboard-section-loaders";
+import { loadPersonalDashboardSecondarySectionOutcome } from "@/lib/dashboard/personal-dashboard-section-status";
+import { PersonalDashboardSectionRetry } from "../PersonalDashboardSectionRetry";
 import {
   toPersonalDashboardSectionContext,
   type ClubDashboardSectionsBaseProps,
@@ -29,17 +30,19 @@ export default async function ClubDashboardQuickAccessSectionAsync(
   props: ClubDashboardSectionsBaseProps,
 ) {
   const tSecondary = await getTranslations("PersonalDashboard.secondary");
+  const tSection = await getTranslations("PersonalDashboard.sectionStatus");
   const locale = props.fmtCfg.locale ?? "de-CH";
 
-  const [quickAccessBundle, secondary] = await Promise.all([
-    resolvePersonalQuickAccess({
-      tenantId: props.tenantId,
-      userId: props.userId,
-      permissionKeys: props.permissionKeys,
-      locale,
-    }),
-    loadPersonalDashboardSecondarySection(toPersonalDashboardSectionContext(props)),
-  ]);
+  const quickAccessBundle = await resolvePersonalQuickAccess({
+    tenantId: props.tenantId,
+    userId: props.userId,
+    permissionKeys: props.permissionKeys,
+    locale,
+  });
+
+  const secondaryOutcome = await loadPersonalDashboardSecondarySectionOutcome(
+    toPersonalDashboardSectionContext(props),
+  );
 
   const activityTagMap: Record<
     PersonalDashboardSecondaryActivity["kind"],
@@ -66,6 +69,11 @@ export default async function ClubDashboardQuickAccessSectionAsync(
       icon: <ReportSceIcon className="h-3.5 w-3.5" />,
     },
   };
+
+  const secondary =
+    secondaryOutcome.kind === "success"
+      ? secondaryOutcome.data
+      : { newsItems: [], activitySources: [] };
 
   const activityItems: DashboardActivityItem[] = secondary.activitySources.map((entry) => {
     const meta = activityTagMap[entry.kind];
@@ -128,10 +136,18 @@ export default async function ClubDashboardQuickAccessSectionAsync(
         maxPins={QUICK_ACCESS_MAX_PINS}
         createMenu={dashboardCreateMenu}
       />
-      <PersonalDashboardSecondary
-        newsItems={secondary.newsItems}
-        activityItems={activityItems}
-      />
+      {secondaryOutcome.kind === "failed" ? (
+        <PersonalDashboardSectionRetry
+          title={tSection("loadFailedTitle")}
+          description={tSection("secondaryFailed")}
+          testId="personal-dashboard-secondary-error"
+        />
+      ) : (
+        <PersonalDashboardSecondary
+          newsItems={secondary.newsItems}
+          activityItems={activityItems}
+        />
+      )}
     </>
   );
 }

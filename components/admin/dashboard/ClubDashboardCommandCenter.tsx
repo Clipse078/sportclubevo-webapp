@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { finishSceHotfixLogin01DashboardTrace } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { SceHotfixLogin01DashboardClientMarks } from "@/components/admin/dashboard/SceHotfixLogin01DashboardClientMarks";
-import { PersonalDashboardCommandCenterLoadingSurface } from "./PersonalDashboardCommandCenterLoadingSurface";
+import { PersonalDashboardSectionPendingFallback } from "./PersonalDashboardSectionPendingFallback";
 import ClubDashboardAttentionSectionAsync from "./sections/ClubDashboardAttentionSectionAsync";
 import ClubDashboardProgrammeSectionAsync from "./sections/ClubDashboardProgrammeSectionAsync";
 import ClubDashboardTasksSectionAsync from "./sections/ClubDashboardTasksSectionAsync";
@@ -22,7 +22,7 @@ export default function ClubDashboardCommandCenter(props: ClubDashboardCommandCe
         data-sce-dashboard-layout="cd-reference"
       >
         <Suspense
-          fallback={<PersonalDashboardCommandCenterLoadingSurface mode="attention" />}
+          fallback={<PersonalDashboardSectionPendingFallback mode="attention" />}
         >
           <ClubDashboardAttentionSectionAsync {...props} />
         </Suspense>
@@ -32,16 +32,16 @@ export default function ClubDashboardCommandCenter(props: ClubDashboardCommandCe
           data-testid="personal-dashboard-programme-tasks-grid"
           data-sce-dashboard-programme-tasks-pairing
         >
-          <Suspense fallback={<PersonalDashboardCommandCenterLoadingSurface mode="programme" />}>
+          <Suspense fallback={<PersonalDashboardSectionPendingFallback mode="programme" />}>
             <ClubDashboardProgrammeSectionAsync {...props} />
           </Suspense>
-          <Suspense fallback={<PersonalDashboardCommandCenterLoadingSurface mode="tasks" />}>
+          <Suspense fallback={<PersonalDashboardSectionPendingFallback mode="tasks" />}>
             <ClubDashboardTasksSectionAsync {...props} />
           </Suspense>
         </div>
       </div>
 
-      <Suspense fallback={<PersonalDashboardCommandCenterLoadingSurface mode="quick-access" />}>
+      <Suspense fallback={<PersonalDashboardSectionPendingFallback mode="quick-access" />}>
         <ClubDashboardQuickAccessSectionAsync {...props} />
       </Suspense>
     </div>

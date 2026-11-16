@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { PersonalTasksPreview } from "@/components/ui/dashboard";
 import SceWorkspaceSectionShell from "@/components/sce/workspace/SceWorkspaceSectionShell";
-import { loadPersonalDashboardWorkSection } from "@/lib/dashboard/personal-dashboard-section-loaders";
+import { loadPersonalDashboardTasksSectionOutcome } from "@/lib/dashboard/personal-dashboard-section-status";
+import { PersonalDashboardSectionRetry } from "../PersonalDashboardSectionRetry";
 import {
   toPersonalDashboardSectionContext,
   type ClubDashboardSectionsBaseProps,
@@ -11,12 +12,30 @@ export default async function ClubDashboardTasksSectionAsync(
   props: ClubDashboardSectionsBaseProps,
 ) {
   const tTasks = await getTranslations("PersonalDashboard.tasks");
-  const work = await loadPersonalDashboardWorkSection(
+  const tSection = await getTranslations("PersonalDashboard.sectionStatus");
+
+  const outcome = await loadPersonalDashboardTasksSectionOutcome(
     toPersonalDashboardSectionContext(props),
   );
 
-  if (!work.tasks.authorized) {
+  if (outcome.kind === "unavailable") {
     return null;
+  }
+
+  if (outcome.kind === "failed") {
+    return (
+      <SceWorkspaceSectionShell
+        title={tTasks("title")}
+        testId="personal-dashboard-tasks-section"
+        bodyClassName="p-5"
+      >
+        <PersonalDashboardSectionRetry
+          title={tSection("loadFailedTitle")}
+          description={outcome.message}
+          testId="personal-dashboard-tasks-error"
+        />
+      </SceWorkspaceSectionShell>
+    );
   }
 
   return (
@@ -26,7 +45,9 @@ export default async function ClubDashboardTasksSectionAsync(
       linkLabel={tTasks("viewAll")}
       testId="personal-dashboard-tasks-section"
     >
-      <PersonalTasksPreview previewItems={work.tasks.preview} embedded />
+      <div data-sce-section-readiness={outcome.isEmpty ? "empty" : "ready"}>
+      <PersonalTasksPreview previewItems={outcome.data.tasks.preview} embedded />
+      </div>
     </SceWorkspaceSectionShell>
   );
 }

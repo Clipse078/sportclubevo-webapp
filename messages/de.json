@@ -473,6 +473,11 @@
       "customizeTitle": "Dashboard anpassen",
       "customizeDescription": "Passe dein persönliches Dashboard-Titelbild an."
     },
+    "sectionStatus": {
+      "loadFailedTitle": "Bereich konnte nicht geladen werden",
+      "programmeUnavailable": "Mein Programm ist für dieses Konto derzeit nicht verfügbar.",
+      "secondaryFailed": "News und Aktivitäten konnten nicht geladen werden."
+    },
     "programme": {
       "title": "Mein Programm",
       "todayNextTitle": "Heute & als Nächstes",

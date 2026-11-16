@@ -50,6 +50,11 @@
       "customizeTitle": "Personnaliser le tableau de bord",
       "customizeDescription": "Ajustez l'image de couverture de votre tableau de bord personnel."
     },
+    "sectionStatus": {
+      "loadFailedTitle": "Impossible de charger la section",
+      "programmeUnavailable": "Mon programme n’est pas disponible pour ce compte pour le moment.",
+      "secondaryFailed": "Les actualités et activités n’ont pas pu être chargées."
+    },
     "programme": {
       "title": "Mon programme",
       "todayNextTitle": "Aujourd'hui et ensuite",

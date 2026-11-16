@@ -33,4 +33,19 @@ describe("Personal dashboard loading UX", () => {
     expect(loaders).toContain("loadPersonalDashboardWorkSectionCached");
     expect(loaders).toContain("readPersonalDashboardCoreCached");
   });
+
+  it("surfaces pending, slow, failure, and retry in the loading path", () => {
+    const pending = read("components/admin/dashboard/PersonalDashboardSectionPendingFallback.tsx");
+    const retry = read("components/admin/dashboard/PersonalDashboardSectionRetry.tsx");
+    const status = read("lib/dashboard/personal-dashboard-section-status.ts");
+    const commandCenter = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
+
+    expect(commandCenter).toContain("PersonalDashboardSectionPendingFallback");
+    expect(pending).toContain("personal-dashboard-section-slow");
+    expect(retry).toContain("router.refresh");
+    expect(status).toContain('kind: "unavailable"');
+    const outcomes = read("lib/dashboard/personal-dashboard-section-outcome.ts");
+    expect(outcomes).toContain('kind: "failed"');
+    expect(status).toContain("sharedReadModelCore");
+  });
 });

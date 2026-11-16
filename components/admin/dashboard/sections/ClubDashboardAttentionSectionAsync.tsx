@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { PersonalAttention } from "@/components/ui/dashboard";
 import SceWorkspaceSectionShell from "@/components/sce/workspace/SceWorkspaceSectionShell";
-import { loadPersonalDashboardWorkSection } from "@/lib/dashboard/personal-dashboard-section-loaders";
+import { loadPersonalDashboardAttentionSectionOutcome } from "@/lib/dashboard/personal-dashboard-section-status";
+import { PersonalDashboardSectionRetry } from "../PersonalDashboardSectionRetry";
 import {
   toPersonalDashboardSectionContext,
   type ClubDashboardSectionsBaseProps,
@@ -11,28 +12,54 @@ export default async function ClubDashboardAttentionSectionAsync(
   props: ClubDashboardSectionsBaseProps,
 ) {
   const tAttention = await getTranslations("PersonalDashboard.attention");
-  const work = await loadPersonalDashboardWorkSection(
+  const tSection = await getTranslations("PersonalDashboard.sectionStatus");
+
+  const outcome = await loadPersonalDashboardAttentionSectionOutcome(
     toPersonalDashboardSectionContext(props),
   );
 
-  if (!work.attention.authorized) {
+  if (outcome.kind === "unavailable") {
     return null;
   }
+
+  if (outcome.kind === "failed") {
+    return (
+      <SceWorkspaceSectionShell
+        title={tAttention("sectionTitle")}
+        testId="personal-dashboard-attention-section"
+        bodyClassName="p-5"
+      >
+        <PersonalDashboardSectionRetry
+          title={tSection("loadFailedTitle")}
+          description={outcome.message}
+          testId="personal-dashboard-attention-error"
+        />
+      </SceWorkspaceSectionShell>
+    );
+  }
+
+  const { attention } = outcome.data;
 
   return (
     <SceWorkspaceSectionShell
       title={tAttention("sectionTitle")}
-      href={work.attention.viewAllHref ?? undefined}
-      linkLabel={work.attention.viewAllHref ? tAttention("openInbox") : undefined}
+      href={attention.viewAllHref ?? undefined}
+      linkLabel={attention.viewAllHref ? tAttention("openInbox") : undefined}
       testId="personal-dashboard-attention-section"
     >
+      <div
+        data-sce-section-readiness={
+          outcome.degraded ? "degraded" : outcome.isEmpty ? "empty" : "ready"
+        }
+      >
       <PersonalAttention
-        items={work.attention.items}
-        totalCount={work.attention.totalCount}
-        viewAllHref={work.attention.viewAllHref}
-        operationalSourcesDegraded={work.attention.operationalSourcesDegraded}
+        items={attention.items}
+        totalCount={attention.totalCount}
+        viewAllHref={attention.viewAllHref}
+        operationalSourcesDegraded={attention.operationalSourcesDegraded}
         embeddedInSectionShell
       />
+      </div>
     </SceWorkspaceSectionShell>
   );
 }

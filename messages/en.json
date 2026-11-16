@@ -50,6 +50,11 @@
       "customizeTitle": "Customize dashboard",
       "customizeDescription": "Adjust your personal dashboard cover image."
     },
+    "sectionStatus": {
+      "loadFailedTitle": "Section could not be loaded",
+      "programmeUnavailable": "My schedule is not available for this account right now.",
+      "secondaryFailed": "News and activity could not be loaded."
+    },
     "programme": {
       "title": "My schedule",
       "todayNextTitle": "Today & next",

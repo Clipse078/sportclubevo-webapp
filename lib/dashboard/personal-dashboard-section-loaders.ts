@@ -1,6 +1,9 @@
 /**
- * Progressive personal-dashboard section loaders (SCE-PERF-02 / navigation-loading-ux).
- * Each section owns its own data boundary for streaming Suspense.
+ * Personal-dashboard section data loaders (SCE-PERF-02 / navigation-loading-ux).
+ *
+ * Suspense boundaries render sections progressively; on the read-model path the
+ * shared `readPersonalDashboardCoreCached` request dedupes one core fetch per
+ * render (see personal-dashboard-section-status.ts).
  */
 import { cache } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
@@ -42,6 +45,10 @@ function mergeProgrammeRanges(
       a.rangeStart.getTime() <= b.rangeStart.getTime() ? a.rangeStart : b.rangeStart,
     rangeEnd: a.rangeEnd.getTime() >= b.rangeEnd.getTime() ? a.rangeEnd : b.rangeEnd,
   };
+}
+
+export function personalDashboardUsesSharedReadModelCore(): boolean {
+  return personalDashboardReadModelEnabled();
 }
 
 const readPersonalDashboardCoreCached = cache(

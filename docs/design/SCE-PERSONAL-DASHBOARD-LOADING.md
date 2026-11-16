@@ -17,9 +17,18 @@ Personal `/dashboard` uses **progressive section Suspense** with skeletons that 
 
 ## Readiness semantics
 
-- **Initial load:** section-level `aria-busy` skeletons; sr-only status text.
-- **Empty vs error:** existing `PersonalAttention` / feed empty states; degraded attention uses partial-empty copy (not zeroed counts).
-- **Read-model path:** `react` `cache()` dedupes core projection between sections on the same request.
+| State | Meaning | UI |
+|-------|---------|-----|
+| **pending** | Suspense fallback active | `PersonalDashboardSectionPendingFallback` (skeleton + slow hint after 8s) |
+| **ready** | Authorised section with data | Section shell + content |
+| **empty** | Authorised, supported, zero rows | `SceWorkspaceEmptyState` / attention empty copy — not an error |
+| **unavailable** | Not supported or not authorised | Programme unsupported copy; attention/tasks hidden or programme unavailable panel |
+| **degraded** | Partial upstream failure with retained rows | Attention `operationalSourcesDegraded` partial-empty copy |
+| **failed** | Section loader threw | `PersonalDashboardSectionRetry` → `router.refresh()` (other sections unchanged) |
+
+**Read-model path:** Suspense streams sections, but programme/work/secondary share one cached `getPersonalCommandCenterData` call per request (`readPersonalDashboardCoreCached`) — not independent backend fetches. Legacy aggregation uses independent programme vs work loaders.
+
+**Refresh:** Stale projection reads still return `success` with last good payload until rebuild; failed sections retry without replacing sibling sections.
 
 ## Inventory (not migrated in this package)
 
