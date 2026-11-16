@@ -1,5 +1,4 @@
-﻿import { Suspense } from "react";
-import { auth } from "@/auth";
+﻿import { auth } from "@/auth";
 import { getTranslations } from "next-intl/server";
 import type { Session } from "next-auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -20,8 +19,7 @@ import {
   runWithSceHotfixLogin01Trace,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
-import ClubDashboardCommandCenterAsync from "./ClubDashboardCommandCenterAsync";
-import { ClubDashboardCommandCenterSkeleton } from "./ClubDashboardCommandCenterSkeleton";
+import ClubDashboardCommandCenter from "./ClubDashboardCommandCenter";
 import { SCE_PAGE_SHELL_WIDTH_CLASS } from "@/lib/shell/sce-page-layout";
 
 type ClubDashboardViewProps = {
@@ -119,17 +117,15 @@ export default async function ClubDashboardView({
       />
 
       {tenantId && session?.user?.id ? (
-        <Suspense fallback={<ClubDashboardCommandCenterSkeleton />}>
-          <ClubDashboardCommandCenterAsync
-            tenantId={tenantId}
-            userId={session.user.effectiveUserId ?? session.user.id}
-            tenantClubName={ctx?.name ?? ""}
-            actor={actor}
-            fmtCfg={fmtCfg}
-            permissionKeys={permissionKeys}
-            calendarMonthParam={calendarMonthParam}
-          />
-        </Suspense>
+        <ClubDashboardCommandCenter
+          tenantId={tenantId}
+          userId={session.user.effectiveUserId ?? session.user.id}
+          tenantClubName={ctx?.name ?? ""}
+          actor={actor}
+          fmtCfg={fmtCfg}
+          permissionKeys={permissionKeys}
+          calendarMonthParam={calendarMonthParam}
+        />
       ) : null}
     </div>
   );

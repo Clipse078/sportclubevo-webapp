@@ -20,9 +20,7 @@ describe("SCE-VISUAL-07 — /dashboard ClubDevelopmentOverview reference", () =>
 
   it("orders sections: attention, programme + tasks, then Meine Bereiche", () => {
     const workspace = read("components/ui/dashboard/PersonalDashboardWorkspace.tsx");
-    const commandCenter = read(
-      "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx",
-    );
+    const commandCenter = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
 
     const attentionIndex = workspace.indexOf("personal-dashboard-attention-section");
     const programmeIndex = workspace.indexOf("personal-dashboard-programme-section");
@@ -31,10 +29,10 @@ describe("SCE-VISUAL-07 — /dashboard ClubDevelopmentOverview reference", () =>
     expect(programmeIndex).toBeGreaterThan(attentionIndex);
     expect(tasksIndex).toBeGreaterThan(programmeIndex);
 
-    const workspaceIndex = commandCenter.indexOf("<PersonalDashboardWorkspace");
-    const quickIndex = commandCenter.indexOf("<PersonalQuickAccess");
-    expect(workspaceIndex).toBeGreaterThan(-1);
-    expect(quickIndex).toBeGreaterThan(workspaceIndex);
+    const cmdAttentionIndex = commandCenter.indexOf("ClubDashboardAttentionSectionAsync");
+    const quickIndex = commandCenter.indexOf("ClubDashboardQuickAccessSectionAsync");
+    expect(cmdAttentionIndex).toBeGreaterThan(-1);
+    expect(quickIndex).toBeGreaterThan(cmdAttentionIndex);
   });
 
   it("matches Vereinsentwicklung Übersicht page width on /dashboard", () => {
@@ -55,13 +53,13 @@ describe("SCE-VISUAL-07 — /dashboard ClubDevelopmentOverview reference", () =>
   });
 
   it("keeps permission-aware data loading and task gating", () => {
-    const commandCenter = read(
-      "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx",
+    const commandCenter = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
+    expect(commandCenter).toContain("ClubDashboardTasksSectionAsync");
+    const attentionSection = read(
+      "components/admin/dashboard/sections/ClubDashboardAttentionSectionAsync.tsx",
     );
-    expect(commandCenter).toContain("getPersonalCommandCenterData");
-    expect(commandCenter).toContain("personalTasksAvailable");
-    expect(commandCenter).toContain("embeddedInSectionShell");
-    expect(commandCenter).toContain("attentionViewAllHref");
+    expect(attentionSection).toContain("embeddedInSectionShell");
+    expect(attentionSection).toContain("viewAllHref");
   });
 
   it("uses SCE record rows for embedded task preview", () => {

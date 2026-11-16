@@ -8,7 +8,7 @@ const clubDashboardSource = readFileSync(
 );
 
 const clubDashboardDeferredSource = readFileSync(
-  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenter.tsx"),
   "utf8",
 );
 
@@ -20,24 +20,36 @@ const workspaceSource = readFileSync(
 describe("DASHBOARD-06 — personal command center composition", () => {
   it("uses personal cockpit greeting and personal command center loader", () => {
     expect(clubDashboardSource).toContain("PersonalDashboardCockpitGreeting");
-    expect(clubDashboardDeferredSource).toContain("getPersonalCommandCenterData");
-    expect(clubDashboardSource).toContain("Suspense");
+    expect(clubDashboardDeferredSource).toContain("ClubDashboardProgrammeSectionAsync");
+    expect(clubDashboardDeferredSource).toContain("Suspense");
     expect(clubDashboardSource).not.toContain("DashboardHeroSection");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
   });
 
   it("orders Schnellzugriff after primary cockpit workspace", () => {
-    const quickAccessIndex = clubDashboardDeferredSource.indexOf("<PersonalQuickAccess");
-    const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
+    const quickAccessIndex = clubDashboardDeferredSource.indexOf(
+      "ClubDashboardQuickAccessSectionAsync",
+    );
+    const workspaceIndex = clubDashboardDeferredSource.indexOf(
+      "ClubDashboardProgrammeSectionAsync",
+    );
     expect(quickAccessIndex).toBeGreaterThan(-1);
     expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
   });
 
   it("includes programme, calendar, attention, and tasks surfaces", () => {
-    expect(clubDashboardDeferredSource).toContain("<PersonalDashboardWorkspace");
-    expect(clubDashboardDeferredSource).toContain("<PersonalAttention");
-    expect(clubDashboardDeferredSource).toContain("<PersonalTasksPreview");
+    const attentionSection = readFileSync(
+      join(process.cwd(), "components/admin/dashboard/sections/ClubDashboardAttentionSectionAsync.tsx"),
+      "utf8",
+    );
+    const tasksSection = readFileSync(
+      join(process.cwd(), "components/admin/dashboard/sections/ClubDashboardTasksSectionAsync.tsx"),
+      "utf8",
+    );
+    expect(clubDashboardDeferredSource).toContain("personal-dashboard-workspace");
+    expect(attentionSection).toContain("<PersonalAttention");
+    expect(tasksSection).toContain("<PersonalTasksPreview");
   });
 
   it("removes legacy primary dashboard widgets", () => {
@@ -49,9 +61,18 @@ describe("DASHBOARD-06 — personal command center composition", () => {
   });
 
   it("demotes secondary content into collapsible section", () => {
-    expect(clubDashboardDeferredSource).toContain("<PersonalDashboardSecondary");
-    const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
-    const secondaryIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardSecondary");
+    const quickSection = readFileSync(
+      join(
+        process.cwd(),
+        "components/admin/dashboard/sections/ClubDashboardQuickAccessSectionAsync.tsx",
+      ),
+      "utf8",
+    );
+    expect(quickSection).toContain("<PersonalDashboardSecondary");
+    const workspaceIndex = clubDashboardDeferredSource.indexOf(
+      "ClubDashboardProgrammeSectionAsync",
+    );
+    const secondaryIndex = quickSection.indexOf("<PersonalDashboardSecondary");
     expect(secondaryIndex).toBeGreaterThan(workspaceIndex);
   });
 

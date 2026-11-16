@@ -8,7 +8,7 @@ const clubDashboardSource = readFileSync(
 );
 
 const commandCenterSource = readFileSync(
-  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenter.tsx"),
   "utf8",
 );
 
@@ -32,12 +32,12 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
   });
 
   it("keeps Meine Bereiche after primary sections without horizontal scroll strip", () => {
-    expect(clubDashboardSource).toContain("ClubDashboardCommandCenterAsync");
-    expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
-    expect(commandCenterSource).toContain("<PersonalQuickAccess");
+    expect(clubDashboardSource).toContain("ClubDashboardCommandCenter");
+    expect(commandCenterSource).toContain("ClubDashboardProgrammeSectionAsync");
+    expect(commandCenterSource).toContain("ClubDashboardQuickAccessSectionAsync");
 
-    const workspaceIndex = commandCenterSource.indexOf("<PersonalDashboardWorkspace");
-    const quickAccessIndex = commandCenterSource.indexOf("<PersonalQuickAccess");
+    const workspaceIndex = commandCenterSource.indexOf("ClubDashboardProgrammeSectionAsync");
+    const quickAccessIndex = commandCenterSource.indexOf("ClubDashboardQuickAccessSectionAsync");
     expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
 
@@ -47,7 +47,7 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
   });
 
   it("preserves primary workspace surfaces without legacy metric strip", () => {
-    expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
+    expect(commandCenterSource).toContain("personal-dashboard-workspace");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
     expect(clubDashboardSource).not.toContain("HeuteImVereinWidget");
     expect(clubDashboardSource).not.toContain("DashboardQuickActionStrip");

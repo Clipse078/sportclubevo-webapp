@@ -1,4 +1,4 @@
-import { ClubDashboardCommandCenterSkeleton } from "@/components/admin/dashboard/ClubDashboardCommandCenterSkeleton";
+import { PersonalDashboardCommandCenterLoadingSurface } from "@/components/admin/dashboard/PersonalDashboardCommandCenterLoadingSurface";
 import {
   SCE_ROUTE_MODULE_LOADING,
   type SceRouteModuleLoadingId,
@@ -20,8 +20,14 @@ export function SceModuleRouteLoading({ module }: SceModuleRouteLoadingProps) {
         data-testid={SCE_ROUTE_MODULE_LOADING.dashboard.testId}
         aria-busy="true"
       >
-        <div className="h-28 animate-pulse rounded-2xl bg-[var(--surface-2)]" />
-        <ClubDashboardCommandCenterSkeleton />
+        <div
+          className="motion-safe:animate-pulse motion-reduce:animate-none rounded-xl bg-[var(--surface-2)] p-5"
+          data-testid="personal-dashboard-greeting-loading"
+        >
+          <div className="mb-2 h-7 w-56 rounded-md bg-[var(--surface-3,var(--surface-2))]" />
+          <div className="h-3.5 w-72 max-w-full rounded-md bg-[var(--surface-3,var(--surface-2))]" />
+        </div>
+        <PersonalDashboardCommandCenterLoadingSurface mode="full" />
       </div>
     );
   }

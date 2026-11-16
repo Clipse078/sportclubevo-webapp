@@ -8,7 +8,7 @@ const clubDashboardSource = readFileSync(
 );
 
 const clubDashboardDeferredSource = readFileSync(
-  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenter.tsx"),
   "utf8",
 );
 

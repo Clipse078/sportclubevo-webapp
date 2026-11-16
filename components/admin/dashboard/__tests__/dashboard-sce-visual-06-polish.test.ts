@@ -28,7 +28,7 @@ describe("SCE-VISUAL-06 — dashboard polish", () => {
   });
 
   it("keeps Schnellzugriff below cockpit and permission-aware", () => {
-    const club = read("components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx");
+    const club = read("components/admin/dashboard/ClubDashboardCommandCenter.tsx");
     const workspaceIndex = club.indexOf("<PersonalDashboardWorkspace");
     const quickIndex = club.indexOf("<PersonalQuickAccess");
     expect(workspaceIndex).toBeGreaterThan(-1);
