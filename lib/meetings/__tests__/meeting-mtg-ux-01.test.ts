@@ -16,6 +16,15 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     expect(workspace).not.toContain("MeetingProtocolApprovalSection");
   });
 
+  it("routes db-backed meetings only through MeetingWorkspace (no legacy mock detail)", () => {
+    const detail = readSrc("components/admin/vereinsleitung/VereinsleitungMeetingDetail.tsx");
+    const page = readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
+    expect(detail).toContain("MeetingWorkspace");
+    expect(detail).not.toContain("VereinsleitungMeetingInfoCard");
+    expect(page).toContain("if (!dbMeeting) notFound()");
+    expect(page).not.toContain('?? "Sitzung"');
+  });
+
   it("uses canonical SceDateTile in meeting header", () => {
     const header = readSrc("components/admin/meetings/workspace/MeetingWorkspaceHeader.tsx");
     expect(header).toContain("SceDateTile");

@@ -1,7 +1,7 @@
 ﻿import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getMeetingBySlug, getMeetingSubEntities } from "@/lib/meetings/queries";
 import { getMeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import { resolvePersonIdForUser } from "@/lib/meetings/meeting-person-payload";
@@ -16,8 +16,7 @@ import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import { getTranslations } from "next-intl/server";
-import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { getActiveTenant, requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 type MeetingDetailPageProps = {
@@ -29,37 +28,32 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   if (!session?.user) redirect("/login");
 
   const { slug } = await params;
-  const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
+  const tenantId = await requireActiveTenantId();
+  const actor = await getActorContext(session.user, tenantId);
 
   // 404-masking: null if actor cannot see this meeting
   const dbMeeting = await getMeetingBySlug(slug, actor);
+  if (!dbMeeting) notFound();
 
-  // Fetch sub-entities in parallel once meeting is confirmed visible
-  const subEntities = dbMeeting
-    ? await getMeetingSubEntities(dbMeeting.id, actor.tenantId)
-    : null;
+  const subEntities = await getMeetingSubEntities(dbMeeting.id, actor.tenantId);
 
   const actorPersonId =
     actor.tenantId && session.user?.id
       ? await resolvePersonIdForUser(actor.tenantId, session.user.id)
       : null;
 
-  const approvalWorkspaceData =
-    dbMeeting && actor.tenantId && subEntities
-      ? await getMeetingApprovalWorkspaceData({
-          tenantId: actor.tenantId,
-          meetingId: dbMeeting.id,
-          protocolApproverPersonIds: dbMeeting.protocolApproverPersonIds,
-          decisionApproverIdsByDecisionId: Object.fromEntries(
-            subEntities.decisions.map((d) => [d.id, d.approverPersonIds]),
-          ),
-        })
-      : null;
+  const approvalWorkspaceData = await getMeetingApprovalWorkspaceData({
+    tenantId,
+    meetingId: dbMeeting.id,
+    protocolApproverPersonIds: dbMeeting.protocolApproverPersonIds,
+    decisionApproverIdsByDecisionId: Object.fromEntries(
+      subEntities.decisions.map((d) => [d.id, d.approverPersonIds]),
+    ),
+  });
 
   // Resolve permanent-delete authority for delete button visibility
-  const tenantId = session.user?.activeTenantId;
   let canDelete = false;
-  if (dbMeeting && tenantId) {
+  if (tenantId) {
     const resolver = createEffectivePermissionResolver(prisma);
     canDelete = await resolver.hasTenantDeletionAuthority({
       userId: session.user.id,
@@ -68,7 +62,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
     });
   }
 
-  const pageTitle = dbMeeting?.title ?? "Sitzung";
+  const pageTitle = dbMeeting.title;
   const canManage = actor.permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
   const tenant = await getActiveTenant();
   const fmtCfg: TenantFormatConfig = {
@@ -78,26 +72,22 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const taskPanelLocale = fmtCfg.locale ?? "de-CH";
   const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
 
-  let initialPendenzenOpenCount = 0;
-  let initialPendenzenOverdueCount = 0;
-  if (dbMeeting) {
-    const taskCtx = await getTaskServiceContext();
-    const snapshot = await loadMeetingPendenzenSnapshot({
-      meeting: {
-        id: dbMeeting.id,
-        title: dbMeeting.title,
-        slug: dbMeeting.slug,
-        meetingDate: dbMeeting.meetingDate,
-      },
-      taskCtx,
-    });
-    initialPendenzenOpenCount = snapshot.openCount;
-    initialPendenzenOverdueCount = snapshot.overdueCount;
-  }
+  const taskCtx = await getTaskServiceContext();
+  const pendenzenSnapshot = await loadMeetingPendenzenSnapshot({
+    meeting: {
+      id: dbMeeting.id,
+      title: dbMeeting.title,
+      slug: dbMeeting.slug,
+      meetingDate: dbMeeting.meetingDate,
+    },
+    taskCtx,
+  });
+  const initialPendenzenOpenCount = pendenzenSnapshot.openCount;
+  const initialPendenzenOverdueCount = pendenzenSnapshot.overdueCount;
 
   const detailPage = (
     <DetailPagePattern
-      className={dbMeeting ? "[&_h1]:sr-only" : undefined}
+      className="[&_h1]:sr-only"
       eyebrow="Vereinsleitung"
       title={pageTitle}
       breadcrumbs={[
@@ -131,15 +121,13 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         initialPendenzenOpenCount={initialPendenzenOpenCount}
         initialPendenzenOverdueCount={initialPendenzenOverdueCount}
         relatedTasksPanel={
-          dbMeeting ? (
-            <ContextRelatedTasksPanel
-              contextType="MEETING"
-              contextId={dbMeeting.id}
-              locale={taskPanelLocale}
-              timeZone={taskPanelTimeZone}
-              pendenzenEmbed
-            />
-          ) : null
+          <ContextRelatedTasksPanel
+            contextType="MEETING"
+            contextId={dbMeeting.id}
+            locale={taskPanelLocale}
+            timeZone={taskPanelTimeZone}
+            pendenzenEmbed
+          />
         }
       />
     </DetailPagePattern>
@@ -147,11 +135,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
 
   return (
     <PageShell fullWidth>
-      {dbMeeting && subEntities ? (
-        <MeetingWorkspaceDirtyShell>{detailPage}</MeetingWorkspaceDirtyShell>
-      ) : (
-        detailPage
-      )}
+      <MeetingWorkspaceDirtyShell>{detailPage}</MeetingWorkspaceDirtyShell>
     </PageShell>
   );
 }

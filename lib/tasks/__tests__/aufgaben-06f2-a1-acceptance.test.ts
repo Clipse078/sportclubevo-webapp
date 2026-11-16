@@ -274,7 +274,7 @@ describe("AUFGABEN-06F2 MEETING gate (R7–R8)", () => {
   it("R7/R8 meeting panel only when dbMeeting visible; loader returns null when forbidden", async () => {
     const meetingPage = read("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
     expect(meetingPage).toMatch(/getMeetingBySlug/);
-    expect(meetingPage).toMatch(/dbMeeting \?/);
+    expect(meetingPage).toMatch(/if \(!dbMeeting\) notFound\(\)/);
 
     const ctx = serviceCtx(USER, [PERMISSIONS.TASKS_VIEW]);
     prismaMocks.resolveEligibility.mockResolvedValue({

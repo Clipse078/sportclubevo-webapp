@@ -15,14 +15,6 @@ type Props = { dbMeeting?: MeetingLiveData | null; participants?: ParticipantSha
 const STATUS_COLOR = { PRESENT: "text-emerald-700", ABSENT: "text-rose-600", EXCUSED: "text-[var(--text-2)]", INVITED: "text-[var(--muted)]" };
 const STATUS_LABEL = { PRESENT: "Anwesend", ABSENT: "Abwesend", EXCUSED: "Entschuldigt", INVITED: "Eingeladen" };
 
-const MOCK_PARTICIPANTS = [
-  { name: "Michael Weber", role: "Präsident", initials: "MW", status: "Anwesend" },
-  { name: "Sarah Meier", role: "Finanzen", initials: "SM", status: "Anwesend" },
-  { name: "Thomas Schmid", role: "Sportlicher Leiter", initials: "TS", status: "Anwesend" },
-  { name: "Elena Rossi", role: "Juniorenfussball", initials: "ER", status: "Entschuldigt" },
-  { name: "David Keller", role: "Aktuar", initials: "DK", status: "Anwesend" },
-];
-
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").substring(0, 2).toUpperCase();
 }
@@ -72,30 +64,5 @@ export default function VereinsleitungMeetingParticipantsCard({ dbMeeting, parti
     );
   }
 
-  return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[#0b4aa2]" />
-          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">Teilnehmer</h3>
-        </div>
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-2)]">4 / 5</span>
-      </div>
-      <div className="mt-5 space-y-4">
-        {MOCK_PARTICIPANTS.map((p) => (
-          <div key={p.name} className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-[11px] font-semibold text-[#0b4aa2]">{p.initials}</div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--foreground)]">{p.name}</p>
-                <p className="truncate text-xs text-[var(--text-2)]">{p.role}</p>
-              </div>
-            </div>
-            <span className={`shrink-0 text-xs font-semibold ${p.status === "Anwesend" ? "text-emerald-700" : "text-[var(--text-2)]"}`}>{p.status}</span>
-          </div>
-        ))}
-      </div>
-      <button type="button" className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-medium text-[var(--text-2)] transition hover:bg-slate-50 hover:text-[var(--foreground)]">Teilnehmer verwalten</button>
-    </section>
-  );
+  return null;
 }
