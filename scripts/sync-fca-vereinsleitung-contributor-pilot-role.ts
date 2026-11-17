@@ -18,6 +18,10 @@ import {
   PILOT_TENANT_KEY,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { FCA_VL_ROLE_CAPABILITY_FLAGS } from "@/lib/roles/fca-vereinsleitung-vl-supplements";
+import {
+  buildVlContributorRoleScopeRepairPlan,
+  type VlContributorRoleSnapshot,
+} from "@/lib/admin/vl-onboarding/vl-contributor-role-sync-diff";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 
@@ -80,11 +84,24 @@ async function main() {
         key: true,
         name: true,
         scope: true,
+        tenantId: true,
         canAccessVereinsleitung: true,
         canAttendVereinsleitungMeetings: true,
         rolePermissions: { select: { permission: { select: { key: true } } } },
       },
     });
+
+    const duplicateTenantScopedRole = role
+      ? await prisma.role.findFirst({
+          where: {
+            tenantId: tenant.id,
+            scope: "TENANT",
+            key: FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.roleKey,
+            id: { not: role.id },
+          },
+          select: { id: true },
+        })
+      : null;
 
     const targetKeys = [...FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.permissionKeys];
     const currentKeys = role?.rolePermissions.map((rp) => rp.permission.key) ?? [];
@@ -131,6 +148,33 @@ async function main() {
     });
     console.log(`Existing memberships with contributor role: ${roleMissing ? 0 : assignmentsWouldUse}`);
 
+    const snapshot: VlContributorRoleSnapshot = role
+      ? {
+          id: role.id,
+          scope: role.scope,
+          tenantId: role.tenantId,
+          permissionKeys: currentKeys,
+          canAccessVereinsleitung: role.canAccessVereinsleitung,
+          canAttendVereinsleitungMeetings: role.canAttendVereinsleitungMeetings,
+          assignmentCount: assignmentsWouldUse,
+          duplicateTenantScopedRoleId: duplicateTenantScopedRole?.id ?? null,
+        }
+      : null;
+
+    const repairPlan = buildVlContributorRoleScopeRepairPlan(snapshot);
+    console.log("\n--- Contributor role scope repair plan (read-only) ---");
+    console.log(JSON.stringify(repairPlan, null, 2));
+    console.log("--- end repair plan ---\n");
+
+    if (repairPlan.ownershipAmbiguous) {
+      console.error(
+        "Ambiguous ownership: a separate TENANT-scoped row already exists — manual review required; APPLY would not create a duplicate.",
+      );
+      if (!DRY_RUN) {
+        process.exit(1);
+      }
+    }
+
     if (DRY_RUN) {
       console.log(
         "\nDRY RUN — apply with APPLY_FCA_VL_CONTRIBUTOR_PILOT_ROLE_SYNC=true (authorised STAGE only)\n",
@@ -161,6 +205,7 @@ async function main() {
           key: true,
           name: true,
           scope: true,
+          tenantId: true,
           canAccessVereinsleitung: true,
           canAttendVereinsleitungMeetings: true,
           rolePermissions: { select: { permission: { select: { key: true } } } },

@@ -35,6 +35,7 @@ import {
 import { findLockedPermissionRemovals, isProtectedRole } from "@/lib/roles/protected";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import { assertTenantDelegationAllowed } from "@/lib/roles/delegation";
+import { deriveTenantRoleVereinsleitungCapabilityFlags } from "@/lib/roles/tenant-role-vl-capability";
 
 const AUDIT_MODULE_KEY = "roles";
 
@@ -160,6 +161,9 @@ export async function createTenantRole(
     permissionKeys: input.permissionKeys,
   });
   const permissions = await resolveTenantPermissions(input.permissionKeys);
+  const vlCapabilityFlags = deriveTenantRoleVereinsleitungCapabilityFlags(
+    permissions.map((p) => p.key),
+  );
 
   const key = `custom_${input.tenantId.slice(0, 8)}_${Date.now().toString(36)}_${Math.random()
     .toString(36)
@@ -176,6 +180,7 @@ export async function createTenantRole(
         isSystem: false,
         isTemplate: false,
         isArchived: !input.isActive,
+        ...vlCapabilityFlags,
       },
       select: { id: true, key: true, name: true, description: true, isSystem: true, isArchived: true },
     });
@@ -202,6 +207,7 @@ export async function createTenantRole(
       name: role.name,
       permissionKeys: permissions.map((p) => p.key),
       isArchived: role.isArchived,
+      ...vlCapabilityFlags,
     },
   });
 
@@ -342,12 +348,19 @@ export async function setTenantRolePermissions(
   }
 
   const permissions = await resolveTenantPermissions(input.permissionKeys);
+  const vlCapabilityFlags = deriveTenantRoleVereinsleitungCapabilityFlags(
+    permissions.map((p) => p.key),
+  );
 
   await prisma.$transaction([
     prisma.rolePermission.deleteMany({ where: { roleId: role.id } }),
     prisma.rolePermission.createMany({
       data: permissions.map((p) => ({ roleId: role.id, permissionId: p.id })),
       skipDuplicates: true,
+    }),
+    prisma.role.update({
+      where: { id: role.id },
+      data: vlCapabilityFlags,
     }),
   ]);
 
@@ -359,7 +372,7 @@ export async function setTenantRolePermissions(
     entityId: role.id,
     action: "PERMISSIONS_CHANGE",
     beforeJson: { permissionKeys: currentKeys },
-    afterJson: { permissionKeys: permissions.map((p) => p.key) },
+    afterJson: { permissionKeys: permissions.map((p) => p.key), ...vlCapabilityFlags },
   });
 
   return { permissionKeys: permissions.map((p) => p.key) };
