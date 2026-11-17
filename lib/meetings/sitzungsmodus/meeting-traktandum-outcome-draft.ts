@@ -81,7 +81,6 @@ export function resetTraktandumAufgabeClientRequestId(meetingId: string, agendaI
   const id = newClientRequestId();
   patchTraktandumOutcomeDraft(meetingId, agendaItemId, {
     aufgabeClientRequestId: id,
-    aufgabeLastTaskId: null,
   });
   return id;
 }

@@ -37,6 +37,10 @@ import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspac
 import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
 import { MeetingGuidedSitzungsmodusController } from "@/components/admin/meetings/workspace/MeetingGuidedSitzungsmodusController";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import {
+  hydrateAgendaLinkedTaskSummaries,
+  type SerializedAgendaLinkedTaskSummary,
+} from "@/lib/meetings/agenda-linked-tasks-serialization";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -62,6 +66,7 @@ type MeetingWorkspaceProps = {
   timerScope?: MeetingAgendaTimerScope | null;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   initialAgendaLinkedTaskCounts?: Record<string, number>;
+  initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
 };
 
 export default function MeetingWorkspace({
@@ -80,10 +85,15 @@ export default function MeetingWorkspace({
   timerScope = null,
   meetingTaskCreate = null,
   initialAgendaLinkedTaskCounts = {},
+  initialAgendaLinkedTasks = [],
 }: MeetingWorkspaceProps) {
   const agendaLinkedTaskCountMap = useMemo(
     () => new Map(Object.entries(initialAgendaLinkedTaskCounts)),
     [initialAgendaLinkedTaskCounts],
+  );
+  const agendaLinkedTasks = useMemo(
+    () => hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
+    [initialAgendaLinkedTasks],
   );
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const agendaDisplayOrder = useMemo(
@@ -295,6 +305,7 @@ export default function MeetingWorkspace({
           >
             <MeetingAgendaSection
               meetingId={meeting.id}
+              meetingSlug={slug}
               meetingTitle={meeting.title}
               meetingPlannedDurationMin={meeting.plannedDurationMin}
               canManage={effectiveCanManage}
@@ -307,6 +318,7 @@ export default function MeetingWorkspace({
               onDirtyChange={setIsDirty}
               meetingTaskCreate={meetingTaskCreate}
               agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
+              agendaLinkedTasks={agendaLinkedTasks}
               onTasksChanged={() => setPendenzenRefresh((n) => n + 1)}
             />
           </MeetingWorkspaceCollapsibleSection>

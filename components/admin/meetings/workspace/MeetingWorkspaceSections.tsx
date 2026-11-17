@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { Clock3, Loader2, Plus, Trash2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
 import { buildAgendaItemOutcomeLinkLabels } from "@/lib/meetings/agenda-item-outcome-presentation";
+import { MEETING_TRAKTANDUM_QUERY_PARAM } from "@/lib/meetings/meeting-traktandum-navigation";
 import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
@@ -92,6 +94,7 @@ function MeetingSectionBody({
 
 export function MeetingAgendaSection({
   meetingId,
+  meetingSlug,
   meetingTitle,
   meetingPlannedDurationMin,
   canManage,
@@ -104,8 +107,10 @@ export function MeetingAgendaSection({
   onDirtyChange,
   meetingTaskCreate,
   agendaLinkedTaskCountMap,
+  agendaLinkedTasks,
   onTasksChanged,
 }: SectionProps<AgendaItem> & {
+  meetingSlug: string;
   meetingTitle: string;
   meetingPlannedDurationMin?: number | null;
   decisions: Decision[];
@@ -114,6 +119,7 @@ export function MeetingAgendaSection({
   onActionsChange: (items: MeetingAction[]) => void;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
+  agendaLinkedTasks: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
   onTasksChanged?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
@@ -184,10 +190,13 @@ export function MeetingAgendaSection({
           <MeetingSitzungsmodusStartButton />
           <MeetingSitzungsmodusPanel
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
             agendaItems={items}
+            decisions={decisions}
             actions={actions}
             agendaDisplayOrder={agendaDisplayOrder}
+            agendaLinkedTasks={agendaLinkedTasks}
             onDecisionCreated={async () => {
               const res = await fetch(`/api/meetings/${meetingId}/decisions`);
               const data = await res.json();
@@ -249,7 +258,9 @@ export function MeetingAgendaSection({
             decisions={decisions}
             actions={actions}
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
+            agendaLinkedTasks={agendaLinkedTasks}
             onSave={(draft) => saveItem(item, draft)}
             onDelete={() => deleteItem(item.id)}
             onDirty={() => onDirtyChange?.(true)}
@@ -322,7 +333,9 @@ function AgendaItemRow({
   decisions,
   actions,
   meetingId,
+  meetingSlug,
   meetingTitle,
+  agendaLinkedTasks,
   onSave,
   onDelete,
   onDirty,
@@ -342,7 +355,9 @@ function AgendaItemRow({
   actions: MeetingAction[];
   agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
   meetingId: string;
+  meetingSlug: string;
   meetingTitle: string;
+  agendaLinkedTasks: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
   onSave: (draft: Record<string, unknown>) => void;
   onDelete: () => void;
   onDirty: () => void;
@@ -378,10 +393,23 @@ function AgendaItemRow({
     ...buildAgendaItemCollapsedMetadata(item),
     ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions, agendaLinkedTaskCountMap),
   ];
+  const searchParams = useSearchParams();
+  const traktandumFocusId = searchParams?.get(MEETING_TRAKTANDUM_QUERY_PARAM);
+  const openFromDeepLink = traktandumFocusId === item.id;
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openFromDeepLink) return;
+  const frame = window.requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [openFromDeepLink]);
 
   return (
+    <div ref={panelRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={openFromDeepLink}
       testId={`meeting-agenda-item-${item.id}`}
       summary={
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -477,6 +505,7 @@ function AgendaItemRow({
           ) : null}
           <MeetingTraktandumOutcomeActions
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
             agendaItemId={item.id}
             agendaTitle={item.title}
@@ -488,6 +517,9 @@ function AgendaItemRow({
             onActionCreated={onActionCreated}
             onTaskCreated={onTaskCreated}
             meetingTaskCreate={meetingTaskCreate}
+            decisions={decisions}
+            actions={actions}
+            agendaLinkedTasks={agendaLinkedTasks}
             onNotesUpdated={(merged) => {
               setNotes(merged);
               onNotesUpdated(merged);
@@ -548,6 +580,7 @@ function AgendaItemRow({
         </div>
       )}
     </SceExpandablePanel>
+    </div>
   );
 }
 

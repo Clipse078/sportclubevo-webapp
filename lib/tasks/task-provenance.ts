@@ -36,6 +36,7 @@ export async function resolveTaskProvenance(
   ctx: TaskServiceContext,
   contextType: TaskContextType | null,
   contextId: string | null,
+  options?: { seriesOccurrenceKey?: string | null },
 ): Promise<TaskProvenance | null> {
   if (!contextType || !contextId) {
     return null;
@@ -54,6 +55,7 @@ export async function resolveTaskProvenance(
           select: {
             id: true,
             title: true,
+            orderIndex: true,
             initiativeId: true,
             initiative: { select: { id: true, slug: true, title: true, visibilityScope: true, createdByUserId: true, visibleRoleRefs: true, visibleUserRefs: true, visibleTeamRefs: true, visibleOrgUnitRefs: true, visiblePersonRefs: true, visibleTargetGroupRefs: true } },
           },
@@ -109,11 +111,13 @@ export async function resolveTaskProvenance(
     }
 
     if (decision.sourceAgendaItem) {
+      const { buildMeetingTraktandumDeepLink } = await import("@/lib/meetings/meeting-traktandum-navigation");
+      const agendaLabel = `Traktandum ${decision.sourceAgendaItem.orderIndex + 1}: ${decision.sourceAgendaItem.title}`;
       links.splice(1, 0, {
         kind: "agenda",
-        label: decision.sourceAgendaItem.title,
+        label: agendaLabel,
         href: meetingVisible
-          ? `/vereinsleitung/meetings/${encodeURIComponent(decision.meeting.slug)}`
+          ? buildMeetingTraktandumDeepLink(decision.meeting.slug, decision.sourceAgendaItem.id)
           : null,
         restricted: !meetingVisible,
       });
@@ -170,8 +174,10 @@ export async function resolveTaskProvenance(
     const meeting = await prisma.meeting.findFirst({
       where: { id: contextId, tenantId: ctx.tenantId },
       select: {
+        id: true,
         slug: true,
         title: true,
+        meetingDate: true,
         visibilityScope: true,
         createdByUserId: true,
         visibleRoleRefs: true,
@@ -185,12 +191,36 @@ export async function resolveTaskProvenance(
     if (!meeting) return { links: [] };
     const actor = await hydrateMeetingActor(ctx);
     const visible = canSeeMeeting(meeting, actor);
+    const { parseAgendaItemIdFromTraktandumTaskOccurrenceKey } = await import(
+      "@/lib/meetings/meeting-traktandum-task-link"
+    );
+    const { buildMeetingTraktandumDeepLink } = await import("@/lib/meetings/meeting-traktandum-navigation");
+    const agendaItemId = options?.seriesOccurrenceKey
+      ? parseAgendaItemIdFromTraktandumTaskOccurrenceKey(options.seriesOccurrenceKey)
+      : null;
+
     links.push({
       kind: "meeting",
       label: visible ? meeting.title : "Sitzung",
       href: visible ? `/vereinsleitung/meetings/${encodeURIComponent(meeting.slug)}` : null,
       restricted: !visible,
     });
+
+    if (agendaItemId && visible) {
+      const agenda = await prisma.meetingAgendaItem.findFirst({
+        where: { id: agendaItemId, meetingId: meeting.id, meeting: { tenantId: ctx.tenantId } },
+        select: { id: true, title: true, orderIndex: true },
+      });
+      if (agenda) {
+        links.push({
+          kind: "agenda",
+          label: `Traktandum ${agenda.orderIndex + 1}: ${agenda.title}`,
+          href: buildMeetingTraktandumDeepLink(meeting.slug, agenda.id),
+          restricted: false,
+        });
+      }
+    }
+
     return { links };
   }
 

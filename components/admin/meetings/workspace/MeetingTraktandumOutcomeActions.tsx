@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { MeetingWorkspacePeopleField, personDisplayLabel } from "@/components/admin/meetings/workspace/MeetingWorkspacePeopleField";
 import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
@@ -8,9 +9,17 @@ import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations"
 import { buildMeetingActionLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
 import { MeetingWorkspaceApiError } from "@/lib/meetings/meeting-workspace-mutations";
 import {
+  resetTraktandumAufgabeClientRequestId,
   useTraktandumOutcomeDraft,
   type TraktandumOutcomeOwnerDraft,
 } from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
+import {
+  buildAgendaItemErgebnisseRows,
+  type AgendaLinkedTaskSummary,
+} from "@/lib/meetings/agenda-item-ergebnisse";
+import { MeetingTraktandumErgebnisseList } from "@/components/admin/meetings/workspace/MeetingTraktandumErgebnisseList";
+import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import {
   MeetingTraktandumAufgabeCreate,
   type MeetingTraktandumTaskCreateBaseProps,
@@ -24,6 +33,7 @@ import {
 
 export type MeetingTraktandumOutcomeActionsProps = {
   meetingId: string;
+  meetingSlug: string;
   meetingTitle: string;
   agendaItemId: string;
   agendaTitle: string;
@@ -36,6 +46,9 @@ export type MeetingTraktandumOutcomeActionsProps = {
   onTaskCreated?: () => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  decisions: MeetingSubEntities["decisions"];
+  actions: MeetingSubEntities["actions"];
+  agendaLinkedTasks: AgendaLinkedTaskSummary[];
 };
 
 function ownerFromPicker(person: PersonPickerResult | null): TraktandumOutcomeOwnerDraft | null {
@@ -62,6 +75,7 @@ function normalizeNotes(value: string | null | undefined): string {
 
 export function MeetingTraktandumOutcomeActions({
   meetingId,
+  meetingSlug,
   meetingTitle,
   agendaItemId,
   agendaTitle,
@@ -74,8 +88,22 @@ export function MeetingTraktandumOutcomeActions({
   onTaskCreated,
   onNotesUpdated,
   meetingTaskCreate,
+  decisions,
+  actions,
+  agendaLinkedTasks,
 }: MeetingTraktandumOutcomeActionsProps) {
   const { draft, patch, reset } = useTraktandumOutcomeDraft(meetingId, agendaItemId);
+  const ergebnisseRows = useMemo(
+    () =>
+      buildAgendaItemErgebnisseRows({
+        agendaItemId,
+        meetingSlug,
+        decisions,
+        actions,
+        tasks: agendaLinkedTasks,
+      }),
+    [actions, agendaItemId, agendaLinkedTasks, decisions, meetingSlug],
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const inFlightRef = useRef(false);
@@ -245,6 +273,17 @@ export function MeetingTraktandumOutcomeActions({
     patch({
       activeForm: "aufgabe",
       offerAufgabeAfterDecision: false,
+      aufgabeLastTaskId: null,
+    });
+    resetTraktandumAufgabeClientRequestId(meetingId, agendaItemId);
+  }
+
+  function startAnotherAufgabe() {
+    resetTraktandumAufgabeClientRequestId(meetingId, agendaItemId);
+    patch({
+      activeForm: "aufgabe",
+      aufgabeLastTaskId: null,
+      offerAufgabeAfterDecision: false,
     });
   }
 
@@ -253,6 +292,7 @@ export function MeetingTraktandumOutcomeActions({
       className="space-y-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 p-3"
       data-testid={`${testIdPrefix}-outcome-actions`}
     >
+      <MeetingTraktandumErgebnisseList rows={ergebnisseRows} testIdPrefix={testIdPrefix} />
       <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-outcome-legend`}>
         <strong>Pendenz</strong> = Sitzungsmassnahme im Protokoll. <strong>Aufgabe</strong> = Umsetzung mit Verantwortlichen
         und Frist im Aufgaben-Center (eine Identität, sichtbar in Pendenzen und Meine Aufgaben).
@@ -268,6 +308,34 @@ export function MeetingTraktandumOutcomeActions({
         <p className="text-xs text-rose-700" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {draft.aufgabeLastTaskId && !draft.activeForm ? (
+        <div
+          className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 space-y-2"
+          data-testid={`${testIdPrefix}-aufgabe-success`}
+          role="status"
+        >
+          <p className="text-sm text-emerald-900">Aufgabe erstellt und mit diesem Traktandum verknüpft.</p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={taskWorkspaceHref(draft.aufgabeLastTaskId)}
+              className={`${workspacePrimaryButtonClass} text-xs`}
+            >
+              Aufgabe öffnen
+            </Link>
+            {meetingTaskCreate ? (
+              <button
+                type="button"
+                className={workspaceGhostButtonClass}
+                data-testid={`${testIdPrefix}-weitere-aufgabe`}
+                onClick={startAnotherAufgabe}
+              >
+                Weitere Aufgabe
+              </button>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
       {draft.offerPendenzAfterDecision || draft.offerAufgabeAfterDecision ? (

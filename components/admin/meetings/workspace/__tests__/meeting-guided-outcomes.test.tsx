@@ -24,6 +24,13 @@ vi.mock("@/lib/meetings/meeting-workspace-mutations", () => ({
 
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 
+const baseOutcomeProps = {
+  meetingSlug: "sitzung",
+  decisions: [] as const,
+  actions: [] as const,
+  agendaLinkedTasks: [] as const,
+};
+
 describe("MeetingTraktandumOutcomeActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,6 +41,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Vereinsleitungssitzung"
         agendaItemId="a1"
         agendaTitle="Finanzen"
@@ -56,6 +64,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -88,6 +97,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -120,6 +130,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -153,6 +164,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -176,9 +188,52 @@ describe("MeetingTraktandumOutcomeActions", () => {
     expect(screen.getByDisplayValue("Umsetzung: Budget genehmigt")).toBeTruthy();
   });
 
+  it("renders Ergebnisse list with linked records", () => {
+    render(
+      <MeetingTraktandumOutcomeActions
+        meetingId="m1"
+        {...baseOutcomeProps}
+        meetingTitle="Sitzung"
+        agendaItemId="a1"
+        agendaTitle="Budget"
+        agendaPosition={1}
+        agendaNotes={null}
+        canManage
+        testIdPrefix="test"
+        onDecisionCreated={vi.fn()}
+        onActionCreated={vi.fn()}
+        onNotesUpdated={vi.fn()}
+        decisions={[
+          {
+            id: "d1",
+            title: "Budget ok",
+            description: null,
+            rationale: null,
+            status: "CONFIRMED",
+            owner: null,
+            ownerPersonId: null,
+            orderIndex: 0,
+            sourceAgendaItemId: "a1",
+            approvalRequired: false,
+            approvalRule: null,
+            approverPersonIds: [],
+            approvalStatus: null,
+            approvalContentRevision: 0,
+            linkedRefs: null,
+          },
+        ]}
+        actions={[]}
+        agendaLinkedTasks={[]}
+      />,
+    );
+    expect(screen.getByTestId("test-ergebnisse")).toBeTruthy();
+    expect(screen.getByTestId("test-ergebnis-BESCHLUSS-d1")).toHaveTextContent("Budget ok");
+  });
+
   it("shares draft state between focus and expanded row surfaces", () => {
     const shared = {
       meetingId: "m1",
+      ...baseOutcomeProps,
       meetingTitle: "Sitzung",
       agendaItemId: "a1",
       agendaTitle: "Budget",

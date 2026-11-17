@@ -48,12 +48,16 @@ export function MeetingSitzungsmodusStartButton() {
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 type MeetingAction = MeetingSubEntities["actions"][number];
+type MeetingDecision = MeetingSubEntities["decisions"][number];
 
 type MeetingSitzungsmodusPanelProps = {
   meetingId?: string;
+  meetingSlug?: string;
   meetingTitle?: string;
   agendaItems?: AgendaItem[];
+  decisions?: MeetingDecision[];
   actions?: MeetingAction[];
+  agendaLinkedTasks?: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
   agendaDisplayOrder?: Map<string, number>;
   onDecisionCreated?: () => void | Promise<void>;
   onActionCreated?: () => void | Promise<void>;
@@ -65,9 +69,12 @@ type MeetingSitzungsmodusPanelProps = {
 
 export function MeetingSitzungsmodusPanel({
   meetingId,
+  meetingSlug = "",
   meetingTitle = "",
   agendaItems = [],
+  decisions = [],
   actions = [],
+  agendaLinkedTasks = [],
   agendaDisplayOrder,
   onDecisionCreated = async () => {},
   onActionCreated = async () => {},
@@ -378,6 +385,7 @@ export function MeetingSitzungsmodusPanel({
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ergebnisse erfassen</p>
             <MeetingTraktandumOutcomeActions
               meetingId={meetingId}
+              meetingSlug={meetingSlug}
               meetingTitle={meetingTitle}
               agendaItemId={activeItem.id}
               agendaTitle={activeItem.title}
@@ -389,6 +397,9 @@ export function MeetingSitzungsmodusPanel({
               onActionCreated={onActionCreated}
               onTaskCreated={onTaskCreated}
               meetingTaskCreate={meetingTaskCreate}
+              decisions={decisions}
+              actions={actions}
+              agendaLinkedTasks={agendaLinkedTasks}
               onNotesUpdated={(notes) => onAgendaNotesUpdated(activeItem.id, notes)}
             />
               <div className="border-t border-[var(--border)]/60 pt-3 space-y-2" data-testid="meeting-sitzungsmodus-topic-continue">

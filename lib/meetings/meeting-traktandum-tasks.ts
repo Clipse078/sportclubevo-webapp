@@ -18,6 +18,7 @@ import {
   isPrismaUniqueConstraintError,
   type MeetingTaskIdempotencyPayload,
 } from "@/lib/meetings/meeting-task-create-idempotency";
+import type { AgendaLinkedTaskSummary } from "@/lib/meetings/agenda-item-ergebnisse";
 
 const IDEMPOTENCY_TASK_SELECT = {
   id: true,
@@ -240,4 +241,110 @@ export async function countAgendaLinkedTasks(
   }
 
   return counts;
+}
+
+const AGENDA_TASK_SUMMARY_SELECT = {
+  id: true,
+  title: true,
+  status: true,
+  dueAt: true,
+  createdAt: true,
+  seriesOccurrenceKey: true,
+  contextType: true,
+  contextId: true,
+  taskSeriesId: true,
+  assignees: {
+    select: {
+      user: { select: { firstName: true, lastName: true } },
+    },
+  },
+} as const;
+
+function assigneeLabelFromTask(
+  assignees: Array<{ user: { firstName: string | null; lastName: string | null } }>,
+): string | null {
+  const labels = assignees
+    .map((a) => `${a.user.firstName ?? ""} ${a.user.lastName ?? ""}`.trim())
+    .filter(Boolean);
+  if (labels.length === 0) return null;
+  if (labels.length === 1) return labels[0]!;
+  return `${labels[0]} +${labels.length - 1}`;
+}
+
+export async function listAgendaLinkedTaskSummaries(
+  tenantId: string,
+  meetingId: string,
+  agendaItemIds: string[],
+): Promise<AgendaLinkedTaskSummary[]> {
+  if (agendaItemIds.length === 0) return [];
+
+  const summaries: AgendaLinkedTaskSummary[] = [];
+  const seen = new Set<string>();
+
+  const prefixes = agendaItemIds.map((id) => traktandumTaskOccurrenceKeyPrefixForAgenda(id));
+  const directTasks = await prisma.task.findMany({
+    where: {
+      tenantId,
+      OR: prefixes.map((prefix) => ({ seriesOccurrenceKey: { startsWith: prefix } })),
+    },
+    select: AGENDA_TASK_SUMMARY_SELECT,
+    orderBy: { createdAt: "asc" },
+  });
+
+  for (const task of directTasks) {
+    if (task.taskSeriesId || seen.has(task.id)) continue;
+    const agendaItemId = parseAgendaItemIdFromTraktandumTaskOccurrenceKey(task.seriesOccurrenceKey);
+    if (!agendaItemId) continue;
+    seen.add(task.id);
+    summaries.push({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      dueAt: task.dueAt,
+      assigneeLabel: assigneeLabelFromTask(task.assignees),
+      agendaItemId,
+      decisionId: null,
+      createdAt: task.createdAt,
+    });
+  }
+
+  const decisions = await prisma.meetingDecision.findMany({
+    where: {
+      meetingId,
+      meeting: { tenantId },
+      sourceAgendaItemId: { in: agendaItemIds },
+    },
+    select: { id: true, sourceAgendaItemId: true },
+  });
+
+  if (decisions.length > 0) {
+    const decisionAgenda = new Map(decisions.map((d) => [d.id, d.sourceAgendaItemId]));
+    const decisionTasks = await prisma.task.findMany({
+      where: {
+        tenantId,
+        contextType: TaskContextType.MEETING_DECISION,
+        contextId: { in: decisions.map((d) => d.id) },
+      },
+      select: AGENDA_TASK_SUMMARY_SELECT,
+      orderBy: { createdAt: "asc" },
+    });
+    for (const task of decisionTasks) {
+      if (seen.has(task.id)) continue;
+      const agendaItemId = task.contextId ? decisionAgenda.get(task.contextId) : null;
+      if (!agendaItemId) continue;
+      seen.add(task.id);
+      summaries.push({
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        dueAt: task.dueAt,
+        assigneeLabel: assigneeLabelFromTask(task.assignees),
+        agendaItemId,
+        decisionId: task.contextId,
+        createdAt: task.createdAt,
+      });
+    }
+  }
+
+  return summaries;
 }

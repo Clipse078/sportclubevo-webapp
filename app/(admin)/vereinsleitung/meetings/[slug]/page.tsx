@@ -16,7 +16,8 @@ import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
 import { TaskContextType } from "@prisma/client";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
-import { countAgendaLinkedTasks } from "@/lib/meetings/meeting-traktandum-tasks";
+import { countAgendaLinkedTasks, listAgendaLinkedTaskSummaries } from "@/lib/meetings/meeting-traktandum-tasks";
+import { serializeAgendaLinkedTaskSummaries } from "@/lib/meetings/agenda-linked-tasks-serialization";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getActiveTenant, requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -107,18 +108,19 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const initialPendenzenOpenCount = pendenzenSnapshot.openCount;
   const initialPendenzenOverdueCount = pendenzenSnapshot.overdueCount;
 
+  const agendaItemIds = subEntities.agendaItems.map((item) => item.id);
   const agendaLinkedTaskCounts =
-    actor.tenantId && subEntities.agendaItems.length > 0
+    actor.tenantId && agendaItemIds.length > 0
       ? Object.fromEntries(
-          (
-            await countAgendaLinkedTasks(
-              actor.tenantId,
-              dbMeeting.id,
-              subEntities.agendaItems.map((item) => item.id),
-            )
-          ).entries(),
+          (await countAgendaLinkedTasks(actor.tenantId, dbMeeting.id, agendaItemIds)).entries(),
         )
       : {};
+  const initialAgendaLinkedTasks =
+    actor.tenantId && agendaItemIds.length > 0
+      ? serializeAgendaLinkedTaskSummaries(
+          await listAgendaLinkedTaskSummaries(actor.tenantId, dbMeeting.id, agendaItemIds),
+        )
+      : [];
 
   const detailPage = (
     <DetailPagePattern
@@ -175,6 +177,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         }
         meetingTaskCreate={meetingTaskCreate}
         initialAgendaLinkedTaskCounts={agendaLinkedTaskCounts}
+        initialAgendaLinkedTasks={initialAgendaLinkedTasks}
       />
     </DetailPagePattern>
   );

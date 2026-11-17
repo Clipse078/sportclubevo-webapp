@@ -81,6 +81,7 @@ export function useMeetingTraktandumTaskCreateForm({
           }
           patchTraktandumOutcomeDraft(meetingId, agendaItemId, {
             aufgabeLastTaskId: result.taskId,
+            activeForm: null,
           });
           clearDraft();
           onCreated?.();
