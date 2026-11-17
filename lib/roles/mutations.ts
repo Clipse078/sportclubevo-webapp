@@ -566,12 +566,6 @@ export async function setTenantUserRoles(
   //    error as "not found" — no existence leakage.
   const deduped = Array.from(new Set(roleIds));
 
-  await assertTenantDelegationAllowed({
-    tenantId,
-    actorUserId,
-    roleIds: deduped,
-  });
-
   const validRoles =
     deduped.length > 0
       ? await prisma.role.findMany({
@@ -609,6 +603,17 @@ export async function setTenantUserRoles(
 
   const toAdd = deduped.filter((id) => !currentRoleIds.has(id));
   const toRemove = current.filter((ur) => !requestedSet.has(ur.roleId));
+
+  // 3b. Grant ceiling: only newly assigned roles must be delegable by the actor.
+  // Unchanged existing assignments are not re-validated — preserving a role the
+  // actor cannot delegate is allowed; adding one they cannot is not.
+  if (toAdd.length > 0) {
+    await assertTenantDelegationAllowed({
+      tenantId,
+      actorUserId,
+      roleIds: toAdd,
+    });
+  }
 
   // 4. Last-Club-Admin guard: protect only the canonical Club Admin role
   //    (`club_admin__<tenantKey>`). Other isSystem roles are not protected here.

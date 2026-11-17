@@ -8,7 +8,8 @@
  *
  * PUT  → { roleIds: string[] } — syncs the user's tenant roles to the given
  *        set. Assignments and removals are applied atomically.
- *        Permission: users.manage.
+ *        Permission: TENANT_USER_ROLES_SYNC (lib/roles/access.ts) — aligned
+ *        with the admin user detail "Rollen & Funktionen" save gate.
  *
  * Tenant isolation: tenantId resolved exclusively from
  * session.user.activeTenantId — never from the request body or URL.
@@ -18,8 +19,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { TENANT_USER_ROLES_SYNC } from "@/lib/roles/access";
 import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { setTenantUserRoles } from "@/lib/roles/mutations";
 import { toRoleApiErrorResponse } from "@/lib/roles/errors";
@@ -69,10 +70,23 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   });
 }
 
+function mapRoleManageApiAuthError(error: string | null, status: number): string {
+  if (status === 403 && (error === "Forbidden" || !error)) {
+    return "Keine Berechtigung, Mandantenrollen für diese Person zu verwalten.";
+  }
+  if (status === 401) {
+    return "Bitte melden Sie sich an, um Rollen zu verwalten.";
+  }
+  return error ?? "Ein Fehler ist aufgetreten.";
+}
+
 export async function PUT(request: NextRequest, { params }: RouteContext) {
-  const access = await requireApiPermission(PERMISSIONS.USERS_MANAGE);
+  const access = await requireApiAnyPermission(TENANT_USER_ROLES_SYNC);
   if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
+    return NextResponse.json(
+      { error: mapRoleManageApiAuthError(access.error, access.status) },
+      { status: access.status },
+    );
   }
 
   const tenantId = access.session.user?.activeTenantId;
