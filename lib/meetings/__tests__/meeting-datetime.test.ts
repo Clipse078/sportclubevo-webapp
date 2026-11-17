@@ -58,4 +58,18 @@ describe("meeting datetime contract", () => {
       expect(meetingDateTimeLocalRoundTrips(gap, parsed, ZURICH)).toBe(false);
     }
   });
+
+  it("documents autumn DST ambiguity policy without changing accepted round-trips", () => {
+    // Europe/Zurich autumn 2026-10-25: 02:00–02:59 local occurs twice (CEST then CET).
+    // PO policy (unchanged): parse via zonedTimeToUtc; reject when round-trip label drifts.
+    const ambiguous = "2026-10-25T02:30";
+    const parsed = parseMeetingDateTimeInput(ambiguous, ZURICH);
+    expect(parsed).not.toBeNull();
+    if (parsed) {
+      const roundTrip = formatMeetingDateTimeLocalValue(parsed, ZURICH);
+      const policyAcceptsWallClock =
+        roundTrip === ambiguous && meetingDateTimeLocalRoundTrips(ambiguous, parsed, ZURICH);
+      expect(policyAcceptsWallClock || roundTrip !== ambiguous).toBe(true);
+    }
+  });
 });
