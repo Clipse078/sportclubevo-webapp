@@ -7,6 +7,9 @@
  */
 
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
+import {
+  FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS,
+} from "@/lib/roles/fca-vereinsleitung-vl-supplements";
 
 export const PILOT_TENANT_KEY = "fc-allschwil";
 
@@ -74,6 +77,7 @@ const PRESIDENT_PILOT_SUPPLEMENTAL_PERMISSIONS: PermissionKey[] = [
   PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
   PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
   PERMISSIONS.NEWS_MANAGE,
+  ...FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS,
 ];
 
 function mergePilotPermissionKeys(
@@ -90,6 +94,12 @@ const patrickRationale: Record<string, string> = {
   "communication.zielgruppen.view": "Zielgruppen lesen (bestehender Präsident-Pilot)",
   "communication.zielgruppen.manage": "Zielgruppen pflegen (bestehender Präsident-Pilot, kein Club-Admin)",
   "news.manage": "News redaktionell (bestehender Präsident-Pilot, kein Website-Manage)",
+  "targets.view": "Vereinsentwicklung — Ziele & Kennzahlen lesen",
+  "targets.manage": "Vereinsentwicklung — Ziele bearbeiten",
+  "meetings.view": "Vereinsentwicklung — Sitzungen lesen",
+  "meetings.manage": "Vereinsentwicklung — Sitzungen mitgestalten",
+  "initiatives.view": "Vereinsentwicklung — Vorhaben lesen",
+  "initiatives.manage": "Vereinsentwicklung — Vorhaben bearbeiten",
 };
 
 /** FCA Human UAT: Sandra Spielbetrieb baseline + Präsident document/registration surfaces. */

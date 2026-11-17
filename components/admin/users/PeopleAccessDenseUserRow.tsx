@@ -47,7 +47,8 @@ export type PeopleAccessDenseUserRowProps = {
   user: TenantUserItem;
   isCurrentUser: boolean;
   status: { label: string; tone: "success" | "warning" | "muted" };
-  onOpenDrawer: (user: TenantUserItem) => void;
+  expanded: boolean;
+  onToggleExpand: () => void;
   actorUserId: string;
   canImpersonateTarget: boolean;
   canManage: boolean;
@@ -59,7 +60,8 @@ export function PeopleAccessDenseUserRow({
   user,
   isCurrentUser,
   status,
-  onOpenDrawer,
+  expanded,
+  onToggleExpand,
   actorUserId,
   canImpersonateTarget,
   canManage,
@@ -110,8 +112,9 @@ export function PeopleAccessDenseUserRow({
   return (
     <SceDenseGridRow
       gridClassName={SCE_PEOPLE_ACCESS_DENSE_GRID}
-      onActivate={() => onOpenDrawer(user)}
-      activateLabel={`${user.name} — Zugriff anzeigen`}
+      onActivate={onToggleExpand}
+      activateLabel={`${user.name} — ${expanded ? "Übersicht schliessen" : "Zugriff anzeigen"}`}
+      selected={expanded}
       data-testid={`people-access-row-${user.userId}`}
       mobileMeta={
         <>

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 import { cn } from "@/lib/cn";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
@@ -21,8 +20,9 @@ import {
 } from "@/components/sce/dense";
 import { SceSearchField } from "@/components/sce/forms/SceSearchField";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
-import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
-import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAccessDrawer";
+import PeopleAccessInlineCreateCard from "@/components/admin/users/people-access/PeopleAccessInlineCreateCard";
+import PersonAccessInlineOverview from "@/components/admin/users/people-access/PersonAccessInlineOverview";
+import PeopleAccessStatusSummary from "@/components/admin/users/people-access/PeopleAccessStatusSummary";
 import { buildPersonDetailZugriffHref } from "@/lib/admin/users/person-quick-view-config";
 import type { WizardRoleOption } from "@/components/admin/users/people-access/PeopleAccessWizard";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
@@ -96,10 +96,10 @@ export default function TenantUsersSearchableList({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [scopeQuery, setScopeQuery] = useState("");
-  const [wizardOpen, setWizardOpen] = useState(false);
+  const [createExpanded, setCreateExpanded] = useState(false);
   const [wizardPersonId, setWizardPersonId] = useState("");
   const [wizardEmail, setWizardEmail] = useState("");
-  const [drawerUser, setDrawerUser] = useState<TenantUserItem | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   const privilegedRoleIds = useMemo(
     () => wizardConfig?.privilegedRoleIds ?? [],
@@ -198,41 +198,45 @@ export default function TenantUsersSearchableList({
   function openWizardForPerson(personId?: string, email?: string) {
     setWizardPersonId(personId ?? "");
     setWizardEmail(email ?? "");
-    setWizardOpen(true);
+    setCreateExpanded(true);
+    setExpandedUserId(null);
+  }
+
+  function toggleExpandedUser(user: TenantUserItem) {
+    setExpandedUserId((prev) => (prev === user.userId ? null : user.userId));
+    setCreateExpanded(false);
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {(
-          [
-            { key: "active" as const, label: "Aktiv", value: activeCount, sub: "aktive Zugänge", color: "text-emerald-600" },
-            { key: "pending" as const, label: "Einladungen", value: pendingCount, sub: "ausstehend", color: "text-amber-500" },
-            { key: "deactivated" as const, label: "Deaktiviert", value: inactiveCount, sub: "ohne Zugriff", color: "text-[var(--muted)]" },
-            { key: "not_invited" as const, label: "Nicht eingeladen", value: noAccountCount, sub: "Personen", color: "text-[var(--foreground)]" },
-            ...(privilegedRoleIds.length > 0
-              ? [{ key: "privileged" as const, label: "Privilegiert", value: privilegedCount, sub: "Admin-Zugänge", color: "text-amber-700" }]
-              : []),
-          ] as const
-        ).map((kpi) => (
-          <button
-            key={kpi.key}
-            type="button"
-            onClick={() => setStatusFilter((prev) => (prev === kpi.key ? "all" : kpi.key))}
-            className={cn(
-              "sce-kpi-card text-left transition ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)]/40",
-              SCE_KPI_CARD_SURFACE,
-              statusFilter === kpi.key ? "ring-2 ring-[var(--blue)]/30" : "",
-            )}
-          >
-            <p className="sce-data-label">{kpi.label}</p>
-            <p className={`mt-1.5 text-2xl font-bold ${kpi.color}`} style={{ fontFamily: "var(--font-display)" }}>
-              {kpi.value}
-            </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">{kpi.sub}</p>
-          </button>
-        ))}
-      </div>
+      <PeopleAccessStatusSummary
+        activeCount={activeCount}
+        pendingCount={pendingCount}
+        inactiveCount={inactiveCount}
+        noAccountCount={noAccountCount}
+        privilegedCount={privilegedCount}
+        showPrivileged={privilegedRoleIds.length > 0}
+        statusFilter={statusFilter}
+        onStatusFilter={setStatusFilter}
+      />
+
+      {wizardConfig && canInvite ? (
+        <PeopleAccessInlineCreateCard
+          expanded={createExpanded}
+          onExpandedChange={setCreateExpanded}
+          availableRoles={wizardConfig.availableRoles}
+          availableOrgUnits={wizardConfig.availableOrgUnits}
+          permissionModuleGroups={wizardConfig.permissionModuleGroups}
+          clubAdminRoleKey={wizardConfig.clubAdminRoleKey}
+          privilegedRoleIds={wizardConfig.privilegedRoleIds}
+          initialPersonId={wizardPersonId}
+          initialEmail={wizardEmail}
+          onComplete={(userId) => {
+            router.push(`/dashboard/admin/users/${userId}`);
+            router.refresh();
+          }}
+        />
+      ) : null}
 
       <SceDenseSurface feedbackSurfaceId="people-access-list" aria-label="Personenliste">
         <SceDenseToolbar
@@ -381,20 +385,35 @@ export default function TenantUsersSearchableList({
                 isPlatformSystemIdentity: user.isPlatformSystemIdentity,
               });
               const status = getAccessStatusLabel(user);
+              const expanded = expandedUserId === user.userId;
 
               return (
-                <PeopleAccessDenseUserRow
-                  key={user.userId}
-                  user={user}
-                  isCurrentUser={isCurrentUser}
-                  status={status}
-                  onOpenDrawer={setDrawerUser}
-                  actorUserId={actorUserId}
-                  canImpersonateTarget={canImpersonateTarget}
-                  canManage={canManage}
-                  canGlobalDelete={canGlobalDelete}
-                  onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
-                />
+                <div key={user.userId} data-testid={`people-access-user-block-${user.userId}`}>
+                  <PeopleAccessDenseUserRow
+                    user={user}
+                    isCurrentUser={isCurrentUser}
+                    status={status}
+                    expanded={expanded}
+                    onToggleExpand={() => toggleExpandedUser(user)}
+                    actorUserId={actorUserId}
+                    canImpersonateTarget={canImpersonateTarget}
+                    canManage={canManage}
+                    canGlobalDelete={canGlobalDelete}
+                    onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
+                  />
+                  {expanded ? (
+                    <PersonAccessInlineOverview
+                      user={user}
+                      currentUserId={currentUserId}
+                      actorUserId={actorUserId}
+                      canImpersonateTenant={canImpersonateTenant}
+                      canManage={canManage}
+                      canInvite={canInvite}
+                      permissionModuleGroups={wizardConfig?.permissionModuleGroups ?? []}
+                      onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
+                    />
+                  ) : null}
+                </div>
               );
             })}
 
@@ -436,41 +455,6 @@ export default function TenantUsersSearchableList({
         )}
       </SceDenseSurface>
 
-      {wizardConfig ? (
-        <PeopleAccessWizardDialog
-          open={wizardOpen}
-          onClose={() => setWizardOpen(false)}
-          availableRoles={wizardConfig.availableRoles}
-          availableOrgUnits={wizardConfig.availableOrgUnits}
-          permissionModuleGroups={wizardConfig.permissionModuleGroups}
-          clubAdminRoleKey={wizardConfig.clubAdminRoleKey}
-          privilegedRoleIds={wizardConfig.privilegedRoleIds}
-          initialPersonId={wizardPersonId}
-          initialEmail={wizardEmail}
-          onComplete={(userId) => {
-            router.push(`/dashboard/admin/users/${userId}`);
-            router.refresh();
-          }}
-        />
-      ) : null}
-
-      <PersonAccessDrawer
-        key={drawerUser?.userId ?? "closed"}
-        user={drawerUser}
-        open={drawerUser !== null}
-        onClose={() => setDrawerUser(null)}
-        currentUserId={currentUserId}
-        actorUserId={actorUserId}
-        canImpersonateTenant={canImpersonateTenant}
-        canManage={canManage}
-        canInvite={canInvite}
-        privilegedRoleIds={privilegedRoleIds}
-        permissionModuleGroups={wizardConfig?.permissionModuleGroups ?? []}
-        onEditAccess={(userId) => {
-          setDrawerUser(null);
-          router.push(buildPersonDetailZugriffHref(userId));
-        }}
-      />
     </div>
   );
 }

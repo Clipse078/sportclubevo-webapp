@@ -17,6 +17,7 @@ import {
   PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE,
   PILOT_TENANT_KEY,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
+import { FCA_VL_ROLE_CAPABILITY_FLAGS } from "@/lib/roles/fca-vereinsleitung-vl-supplements";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 
@@ -79,6 +80,8 @@ async function main() {
         id: true,
         key: true,
         name: true,
+        canAccessVereinsleitung: true,
+        canAttendVereinsleitungMeetings: true,
         rolePermissions: { select: { permission: { select: { key: true } } } },
       },
     });
@@ -108,9 +111,24 @@ async function main() {
     console.log(`Missing to add (${missing.length}): ${missing.join(", ") || "—"}`);
     console.log(`Forbidden extras flagged (${extraForbidden.length}): ${extraForbidden.join(", ") || "—"}`);
 
+    const needsVlFlags =
+      !role.canAccessVereinsleitung || !role.canAttendVereinsleitungMeetings;
+    if (needsVlFlags) {
+      console.log(
+        `VL role flags: canAccessVereinsleitung=${role.canAccessVereinsleitung} → true, canAttendVereinsleitungMeetings=${role.canAttendVereinsleitungMeetings} → true`,
+      );
+    }
+
     if (DRY_RUN) {
       console.log("\nDRY RUN — apply with APPLY_FCA_PRAESIDENT_PILOT_ROLE_SYNC=true\n");
       return;
+    }
+
+    if (needsVlFlags) {
+      await prisma.role.update({
+        where: { id: role.id },
+        data: { ...FCA_VL_ROLE_CAPABILITY_FLAGS },
+      });
     }
 
     for (const permissionKey of missing) {
