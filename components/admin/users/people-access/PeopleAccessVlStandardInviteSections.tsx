@@ -14,7 +14,7 @@ import {
   resolveVlStandardInviteLiveSendBlocker,
   resolveVlStandardInviteWizardBlocker,
 } from "@/lib/admin/vl-onboarding/vl-standard-invite-wizard-policy";
-import { VL_STANDARD_INVITE_PREPARE_STATUS_HINT } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import { resolveVlStandardInvitePrepareStatusHint } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 function VlAccessPreviewTable({ rows }: { rows: VereinsentwicklungAccessRow[] }) {
   return (
@@ -369,7 +369,9 @@ export function PeopleAccessVlReviewStep({
           {ctx.sendBlocker}
         </p>
       ) : (
-        <p className="text-xs text-[var(--muted)]">{VL_STANDARD_INVITE_PREPARE_STATUS_HINT}</p>
+        <p className="text-xs text-[var(--muted)]" data-testid="people-access-vl-prepare-status-hint">
+          {resolveVlStandardInvitePrepareStatusHint(ctx.resolvePayload?.sendMode ?? "DRY_RUN")}
+        </p>
       )}
       {ctx.liveSendBlocker ? (
         <p className="text-xs text-[var(--muted)]" data-testid="people-access-vl-live-send-prerequisite">

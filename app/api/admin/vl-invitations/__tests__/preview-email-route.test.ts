@@ -53,11 +53,12 @@ describe("POST /api/admin/vl-invitations/preview-email", () => {
     return POST(req);
   }
 
-  it("embeds same-origin logo src suitable for in-page preview (not cross-origin canonical)", async () => {
+  it("embeds bundled logo data URI suitable for in-page and sandboxed iframe preview", async () => {
     const res = await postPreview("existing_account");
     expect(res.status).toBe(200);
     const body = (await res.json()) as { html: string };
-    expect(body.html).toContain(`src="${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}"`);
+    expect(body.html).toMatch(/src="data:image\/png;base64,[A-Za-z0-9+/=]+"/);
+    expect(body.html).not.toContain(`src="${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}"`);
     expect(body.html).not.toContain("fcallschwil.sportclubevo.com/images/branding");
     expect(body.html).not.toContain("vercel.app");
   });

@@ -31,6 +31,7 @@ describe("buildVlStandardInvitePersonalizedEmailPreview", () => {
         recipientFirstName: "Irem",
         actorUserId: "actor-1",
         inviteUrlOverride: expect.stringContaining("beispiel-vorschau"),
+        sceLogoAbsoluteUrl: undefined,
       }),
     );
     expect(preview.subject).toContain("Einladung");

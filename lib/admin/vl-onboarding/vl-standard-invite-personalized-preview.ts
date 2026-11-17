@@ -12,6 +12,7 @@ export type VlStandardInvitePersonalizedPreviewInput = {
   recipientFirstName: string;
   actorUserId?: string;
   variant?: InvitationEmailVariant;
+  sceLogoAbsoluteUrl?: string;
 };
 
 export async function buildVlStandardInvitePersonalizedEmailPreview(
@@ -24,6 +25,7 @@ export async function buildVlStandardInvitePersonalizedEmailPreview(
     inviteUrlOverride: INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
     actorUserId: input.actorUserId,
     variant: input.variant,
+    sceLogoAbsoluteUrl: input.sceLogoAbsoluteUrl,
   });
 
   return {

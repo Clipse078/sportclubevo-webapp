@@ -34,6 +34,21 @@ vi.mock("@/lib/server/security-link-url", () => ({
 describe("buildVlInvitationEmailContent", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("uses preview logo override without changing outbound default", async () => {
+    const previewLogo = "data:image/png;base64,previewoverride=";
+    const content = await buildVlInvitationEmailContent({
+      tenantId: "tenant-fca",
+      recipientEmail: "irem.uysal@fcallschwil.ch",
+      recipientFirstName: "Irem",
+      rawToken: "fixture-token",
+      sceLogoAbsoluteUrl: previewLogo,
+    });
+    expect(content.html).toContain(`src="${previewLogo}"`);
+    expect(content.html).not.toContain(
+      `https://fcallschwil.sportclubevo.com${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}`,
+    );
+  });
+
   it("matches reviewed VL copy and CTA token", async () => {
     const content = await buildVlInvitationEmailContent({
       tenantId: "tenant-fca",
