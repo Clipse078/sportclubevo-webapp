@@ -17,7 +17,12 @@ export type AgendaErgebnisRow = {
   statusLabel: string;
   meta: string | null;
   href: string;
+  linkedDecisionId?: string | null;
 };
+
+export type AgendaErgebnisDisplayNode =
+  | { type: "row"; row: AgendaErgebnisRow }
+  | { type: "group"; decision: AgendaErgebnisRow; children: AgendaErgebnisRow[] };
 
 export type AgendaLinkedTaskSummary = {
   id: string;
@@ -91,6 +96,7 @@ export function buildAgendaItemErgebnisseRows(input: {
       statusLabel: MEETING_ACTION_STATUS_LABEL[action.status],
       meta,
       href: buildMeetingPendenzDeepLink(input.meetingSlug, action.id),
+      linkedDecisionId: refs.decisionId ?? null,
       sortKey: `1:${action.createdAt ? action.createdAt.toISOString() : action.id}`,
     });
   }
@@ -106,10 +112,43 @@ export function buildAgendaItemErgebnisseRows(input: {
       statusLabel: TASK_STATUS_LABELS[task.status],
       meta,
       href: taskWorkspaceHref(task.id),
+      linkedDecisionId: task.decisionId,
       sortKey: `2:${task.createdAt.toISOString()}:${task.id}`,
     });
   }
 
   rows.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   return rows.map(({ sortKey: _sortKey, ...row }) => row);
+}
+
+export function buildAgendaItemErgebnisseDisplayNodes(rows: readonly AgendaErgebnisRow[]): AgendaErgebnisDisplayNode[] {
+  const decisionIds = new Set(rows.filter((r) => r.kind === "BESCHLUSS").map((r) => r.id));
+  const childIds = new Set<string>();
+  const childrenByDecision = new Map<string, AgendaErgebnisRow[]>();
+
+  for (const row of rows) {
+    if (row.kind === "BESCHLUSS") continue;
+    const linkId = row.linkedDecisionId?.trim() || null;
+    if (!linkId || !decisionIds.has(linkId)) continue;
+    childIds.add(row.id);
+    const list = childrenByDecision.get(linkId) ?? [];
+    list.push(row);
+    childrenByDecision.set(linkId, list);
+  }
+
+  const nodes: AgendaErgebnisDisplayNode[] = [];
+  for (const row of rows) {
+    if (childIds.has(row.id)) continue;
+    if (row.kind === "BESCHLUSS") {
+      const children = childrenByDecision.get(row.id) ?? [];
+      if (children.length > 0) {
+        nodes.push({ type: "group", decision: row, children });
+      } else {
+        nodes.push({ type: "row", row });
+      }
+    } else {
+      nodes.push({ type: "row", row });
+    }
+  }
+  return nodes;
 }

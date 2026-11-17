@@ -378,11 +378,7 @@ export function MeetingSitzungsmodusPanel({
           </MotionSafe>
 
           {meetingId && activeItem && activePosition != null ? (
-            <div
-              className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] p-3"
-              data-testid="meeting-sitzungsmodus-topic-wrapup"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ergebnisse erfassen</p>
+            <div className="space-y-3" data-testid="meeting-sitzungsmodus-topic-wrapup">
             <MeetingTraktandumOutcomeActions
               meetingId={meetingId}
               meetingSlug={meetingSlug}

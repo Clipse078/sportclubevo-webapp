@@ -160,16 +160,67 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   } catch (e) { console.error(e); return NextResponse.json({ error: "Beschluss konnte nicht aktualisiert werden." }, { status: 500 }); }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+export async function DELETE(req: NextRequest, { params }: RouteContext) {
   const check = await requireSession();
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status });
   const { id, decisionId } = await params;
   const actor = await getActorContext(check.session.user, check.session.user?.activeTenantId ?? undefined);
   const guard = await requireMeetingAccess({ actor, id, access: "write" });
   if (!guard.ok) return guard.response;
-  const existing = await prisma.meetingDecision.findUnique({ where: { id: decisionId, meetingId: id }, select: { id: true } });
-  if (!existing) return NextResponse.json({ error: "Beschluss nicht gefunden." }, { status: 404 });
-  await prisma.meetingDecision.delete({ where: { id: decisionId } });
-  void logAuditEvent({ actorUserId: actor.userId, module: "meetings", entityId: id, action: "DECISION_DELETE", before: { decisionId } });
-  return NextResponse.json({ message: "Beschluss gelöscht." });
+  if (!actor.tenantId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id, tenantId: actor.tenantId },
+    select: { status: true, reviewStage: true, protocolApprovalRequired: true },
+  });
+  if (!meeting) {
+    return NextResponse.json({ error: "Beschluss nicht gefunden." }, { status: 404 });
+  }
+  const { canEditMeetingDocumentation } = await import("@/lib/meetings/meeting-workspace-lock");
+  if (
+    !canEditMeetingDocumentation({
+      status: meeting.status,
+      reviewStage: meeting.reviewStage,
+      protocolApprovalRequired: meeting.protocolApprovalRequired,
+    })
+  ) {
+    return NextResponse.json({ error: "Sitzung ist schreibgeschützt." }, { status: 403 });
+  }
+
+  const decision = await prisma.meetingDecision.findFirst({
+    where: { id: decisionId, meetingId: id, meeting: { tenantId: actor.tenantId } },
+    select: { id: true, title: true },
+  });
+  if (!decision) return NextResponse.json({ error: "Beschluss nicht gefunden." }, { status: 404 });
+
+  const confirmed = req.nextUrl.searchParams.get("confirm") === "true";
+  const {
+    getMeetingDecisionDeletionImpact,
+    deleteMeetingDecisionWithDependencies,
+  } = await import("@/lib/meetings/meeting-outcome-delete-service");
+
+  if (!confirmed) {
+    const impact = await getMeetingDecisionDeletionImpact(id, actor.tenantId, decisionId);
+    if (!impact) return NextResponse.json({ error: "Beschluss nicht gefunden." }, { status: 404 });
+    return NextResponse.json({
+      title: decision.title,
+      impact,
+      requiresConfirmation: true,
+    });
+  }
+
+  const result = await deleteMeetingDecisionWithDependencies(id, actor.tenantId, decisionId);
+  if (!result) {
+    return NextResponse.json({ error: "Beschluss nicht gefunden." }, { status: 404 });
+  }
+  void logAuditEvent({
+    actorUserId: actor.userId,
+    module: "meetings",
+    entityId: id,
+    action: "DECISION_DELETE",
+    before: { decisionId, title: result.title },
+  });
+  return NextResponse.json({ message: "Beschluss gelöscht.", title: result.title });
 }

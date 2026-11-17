@@ -41,7 +41,6 @@ import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/
 import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import {
   MeetingSitzungsmodusPanel,
-  MeetingSitzungsmodusStartButton,
 } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusPanel";
 import {
   workspaceGhostButtonClass,
@@ -51,6 +50,7 @@ import {
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import { MeetingOutcomeMoreActionsMenu } from "@/components/admin/meetings/workspace/MeetingOutcomeMoreActionsMenu";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 function meetingSectionDomId(title: string): string {
@@ -193,8 +193,7 @@ export function MeetingAgendaSection({
   return (
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       {canManage ? (
-        <div className="mb-3 flex w-full min-w-0 flex-col gap-2">
-          <MeetingSitzungsmodusStartButton />
+        <div className="mb-3 w-full min-w-0">
           <MeetingSitzungsmodusPanel
             meetingId={meetingId}
             meetingSlug={meetingSlug}
@@ -817,6 +816,11 @@ export function MeetingDecisionsSection({
           actorPersonId={actorPersonId}
           approvalWorkspaceData={approvalWorkspaceData}
           agendaItems={agendaItems}
+          onRemoved={async () => {
+            const res = await fetch(`/api/meetings/${meetingId}/decisions`);
+            const data = await res.json();
+            if (res.ok && Array.isArray(data.decisions)) onItemsChange(data.decisions);
+          }}
           onDecisionUpdated={(updated) => {
             onItemsChange(items.map((row) => (row.id === d.id ? { ...row, ...updated } : row)));
           }}
@@ -893,6 +897,7 @@ function MeetingDecisionCard({
   agendaItems,
   onDecisionUpdated,
   onSourceAgendaChange,
+  onRemoved,
 }: {
   meetingId: string;
   meetingSlug: string;
@@ -906,6 +911,7 @@ function MeetingDecisionCard({
   agendaItems: AgendaItem[];
   onDecisionUpdated: (updated: Partial<Decision>) => void;
   onSourceAgendaChange: (sourceAgendaItemId: string | null) => void;
+  onRemoved: () => void | Promise<void>;
 }) {
   const [pending, startTransition] = useTransition();
   const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
@@ -984,13 +990,26 @@ function MeetingDecisionCard({
       defaultOpen={isFocused}
       testId={`meeting-decision-${decision.id}`}
       summary={
-        <div className="min-w-0 space-y-0.5">
-          <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
-          {descriptionPreview ? (
-            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
-          ) : null}
-          {summaryMeta.length ? (
-            <p className="text-xs text-[var(--muted)]">{summaryMeta.join(" · ")}</p>
+        <div className="flex w-full min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+            {descriptionPreview ? (
+              <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+            ) : null}
+            {summaryMeta.length ? (
+              <p className="text-xs text-[var(--muted)]">{summaryMeta.join(" · ")}</p>
+            ) : null}
+          </div>
+          {documentationEditable && canManage ? (
+            <MeetingOutcomeMoreActionsMenu
+              meetingId={meetingId}
+              recordId={decision.id}
+              recordTitle={decision.title}
+              kind="decision"
+              canManage={canManage}
+              onDeleted={onRemoved}
+              testIdPrefix={`meeting-decision-${decision.id}`}
+            />
           ) : null}
         </div>
       }
@@ -1191,17 +1210,6 @@ export function MeetingActionRow({
     });
   }
 
-  function remove() {
-    startTransition(async () => {
-      try {
-        await meetingWorkspaceApi.actions.remove(meetingId, action.id);
-        onRemoved();
-      } catch {
-        // no-op
-      }
-    });
-  }
-
   const descriptionPreview = action.description?.trim()
     ? action.description.trim().split(/\n/)[0]?.slice(0, 120)
     : null;
@@ -1238,12 +1246,25 @@ export function MeetingActionRow({
       defaultOpen={isFocused}
       testId={`meeting-action-${action.id}`}
       summary={
-        <div className="min-w-0 space-y-0.5">
-          <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
-          {descriptionPreview ? (
-            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+        <div className="flex w-full min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
+            {descriptionPreview ? (
+              <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+            ) : null}
+            {meta.length ? <p className="text-xs text-[var(--muted)]">{meta.join(" · ")}</p> : null}
+          </div>
+          {canManage ? (
+            <MeetingOutcomeMoreActionsMenu
+              meetingId={meetingId}
+              recordId={action.id}
+              recordTitle={action.title}
+              kind="pendenz"
+              canManage={canManage}
+              onDeleted={onRemoved}
+              testIdPrefix={`meeting-action-${action.id}`}
+            />
           ) : null}
-          {meta.length ? <p className="text-xs text-[var(--muted)]">{meta.join(" · ")}</p> : null}
         </div>
       }
     >
@@ -1287,9 +1308,6 @@ export function MeetingActionRow({
             </button>
             <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(false)}>
               Abbrechen
-            </button>
-            <button type="button" className={workspaceGhostButtonClass} disabled={pending} onClick={remove}>
-              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>

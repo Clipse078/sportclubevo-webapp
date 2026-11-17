@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2, MapPin, Users } from "lucide-react";
+import { Loader2, MapPin, Play, Users } from "lucide-react";
+import { MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS } from "@/lib/meetings/meeting-sitzungsmodus-primary-action-styles";
 import { SceDateTile } from "@/components/design-system/date";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
@@ -182,10 +183,18 @@ export default function MeetingWorkspaceHeader({
                 type="button"
                 onClick={() => void handlePrimaryAction()}
                 disabled={lifecycleLoading}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#0b4aa2] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#093d87] disabled:opacity-50"
+                className={
+                  primary.isGuidedSitzungsmodus
+                    ? MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS
+                    : "inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#0b4aa2] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#093d87] disabled:opacity-50"
+                }
                 data-testid="meeting-primary-action"
               >
-                {lifecycleLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                {lifecycleLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : primary.isGuidedSitzungsmodus ? (
+                  <Play className="h-4 w-4 fill-current" aria-hidden />
+                ) : null}
                 {primary.label}
               </button>
             ) : null}

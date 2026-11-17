@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildAgendaItemErgebnisseRows } from "@/lib/meetings/agenda-item-ergebnisse";
+import {
+  buildAgendaItemErgebnisseDisplayNodes,
+  buildAgendaItemErgebnisseRows,
+} from "@/lib/meetings/agenda-item-ergebnisse";
 import { MeetingActionStatus, MeetingDecisionStatus, TaskStatus } from "@prisma/client";
 
 describe("buildAgendaItemErgebnisseRows", () => {
@@ -64,5 +67,49 @@ describe("buildAgendaItemErgebnisseRows", () => {
       tasks: [],
     });
     expect(rows).toHaveLength(0);
+  });
+
+  it("groups linked Pendenzen and Aufgaben under Beschluss display nodes", () => {
+    const rows = buildAgendaItemErgebnisseRows({
+      agendaItemId: "a1",
+      meetingSlug: "sitzung-nov",
+      decisions: [
+        {
+          id: "d1",
+          title: "Budget",
+          status: MeetingDecisionStatus.CONFIRMED,
+          sourceAgendaItemId: "a1",
+          orderIndex: 0,
+        },
+      ],
+      actions: [
+        {
+          id: "p1",
+          title: "Angebot",
+          status: MeetingActionStatus.OPEN,
+          owner: null,
+          dueDate: null,
+          linkedRefs: { agendaItemId: "a1", decisionId: "d1" },
+        },
+      ],
+      tasks: [
+        {
+          id: "t1",
+          title: "Umsetzung",
+          status: TaskStatus.OPEN,
+          dueAt: null,
+          assigneeLabel: null,
+          agendaItemId: "a1",
+          decisionId: "d1",
+          createdAt: new Date("2026-11-17T12:00:00Z"),
+        },
+      ],
+    });
+    const nodes = buildAgendaItemErgebnisseDisplayNodes(rows);
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]?.type).toBe("group");
+    if (nodes[0]?.type === "group") {
+      expect(nodes[0].children).toHaveLength(2);
+    }
   });
 });
