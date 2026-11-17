@@ -64,6 +64,32 @@ describe("SCE-FCA Person Detail UX", () => {
     expect(document.querySelector("details")).toBeTruthy();
   });
 
+  it("planned access view explains pending activation for invitations", () => {
+    render(
+      <PersonNavEffectiveAccessView
+        pendingInvitation
+        collapsible
+        sections={[
+          {
+            label: "Vereinsentwicklung",
+            modules: ["Vereinsentwicklung"],
+            items: [
+              {
+                label: "Vereinsentwicklung",
+                access: "Ansehen",
+                provenance: "Über Rolle (nach Annahme)",
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText(/Geplanter Zugriff/)).toBeTruthy();
+    expect(screen.getByText(/nach Annahme aktiv/)).toBeTruthy();
+    expect(screen.getByText(/Über Rolle \(nach Annahme\)/)).toBeTruthy();
+  });
+
   it("pending invitation does not show Zugriff gesperrt in membership control", () => {
     render(
       <MembershipAccessControl

@@ -14,9 +14,13 @@ import {
   type PermissionUnit,
 } from "@/lib/roles/nav-permission-presentation";
 import { getUserEffectiveAccessView } from "@/lib/roles/effective-access";
+import { resolveAssignedTenantPermissionKeysForProjection } from "@/lib/admin/users/person-assigned-role-permissions";
+
+export type PersonAccessProjectionMode = "effective" | "planned";
 
 export type PersonNavEffectiveAccessProvenance =
   | "Über Rolle"
+  | "Über Rolle (nach Annahme)"
   | "Individuell erlaubt"
   | "Individuell eingeschränkt";
 
@@ -85,6 +89,19 @@ function resolveProvenanceForKeys(
   return undefined;
 }
 
+function attachPlannedProvenance(
+  sections: PersonNavEffectiveAccessSection[],
+): PersonNavEffectiveAccessSection[] {
+  return sections.map((section) => ({
+    ...section,
+    items: section.items.map((item) => ({
+      ...item,
+      provenance:
+        item.provenance === "Über Rolle" ? ("Über Rolle (nach Annahme)" as const) : item.provenance,
+    })),
+  }));
+}
+
 function attachProvenanceToSections(
   sections: NavPermissionSummarySection[],
   presentationSections: PermissionPresentationSection[],
@@ -119,14 +136,26 @@ export async function getPersonNavEffectiveAccessSections(
   tenantId: string,
   userId: string,
   moduleGroups: PermissionMatrixModuleGroup[],
+  options?: { projectionMode?: PersonAccessProjectionMode },
 ): Promise<PersonNavEffectiveAccessSection[]> {
-  const view = await getUserEffectiveAccessView(tenantId, userId);
-  if (!view) return [];
-
+  const projectionMode = options?.projectionMode ?? "effective";
   const presentation = buildNavPermissionPresentationFromModuleGroups(moduleGroups);
-  const effectiveKeys = new Set(view.effectiveTenantPermissionKeys);
   const overrides = await listUserPermissionOverrides(tenantId, userId);
-  const roleBaseline = deriveRoleBaselineFromEffective(effectiveKeys, overrides);
+
+  let effectiveKeys: Set<string>;
+  let roleBaseline: Set<string>;
+
+  if (projectionMode === "planned") {
+    const assigned = await resolveAssignedTenantPermissionKeysForProjection(tenantId, userId);
+    if (!assigned) return [];
+    effectiveKeys = assigned;
+    roleBaseline = deriveRoleBaselineFromEffective(effectiveKeys, overrides);
+  } else {
+    const view = await getUserEffectiveAccessView(tenantId, userId);
+    if (!view) return [];
+    effectiveKeys = new Set(view.effectiveTenantPermissionKeys);
+    roleBaseline = deriveRoleBaselineFromEffective(effectiveKeys, overrides);
+  }
 
   const summary = buildNavPermissionSummary(presentation, effectiveKeys)
     .map((section) => ({
@@ -135,11 +164,13 @@ export async function getPersonNavEffectiveAccessSections(
     }))
     .filter((section) => section.items.length > 0);
 
-  return attachProvenanceToSections(
+  const withProvenance = attachProvenanceToSections(
     summary,
     presentation.sections,
     effectiveKeys,
     roleBaseline,
     overrides,
   );
+
+  return projectionMode === "planned" ? attachPlannedProvenance(withProvenance) : withProvenance;
 }
