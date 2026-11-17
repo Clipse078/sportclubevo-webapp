@@ -11,10 +11,8 @@ import {
   parseAndValidateBulkInvitationEmails,
   validNormalizedBulkEmails,
 } from "@/lib/admin/vl-onboarding/bulk-invitation-emails";
-import {
-  resolveVlInvitationPresetRoleState,
-  resolveVlInvitationRows,
-} from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
+import { resolveVlInvitationRows } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
+import { loadVlInvitationPresetRoleState } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
 import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { prisma } from "@/lib/db/prisma";
 
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
   const emails = validNormalizedBulkEmails(validationRows);
   const [resolved, presetRole] = await Promise.all([
     resolveVlInvitationRows(tenantId, emails),
-    resolveVlInvitationPresetRoleState(tenantId),
+    loadVlInvitationPresetRoleState(tenantId),
   ]);
 
   return NextResponse.json({
@@ -75,6 +73,8 @@ export async function POST(request: NextRequest) {
     resolved,
     presetLabel: "Vereinsleitung (Pilot) — Mitwirkung",
     contributorRoleProvisioned: presetRole.contributorRoleProvisioned,
+    contributorRoleSyncDiff: presetRole.contributorRoleSyncDiff,
+    permissionKeys: presetRole.permissionKeys,
     contributorRoleProvisioningNote: presetRole.contributorRoleProvisioned
       ? null
       : "Die Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt noch — Modul-Vorschau basiert auf der Vorlage, nicht auf persistierten Rechten.",

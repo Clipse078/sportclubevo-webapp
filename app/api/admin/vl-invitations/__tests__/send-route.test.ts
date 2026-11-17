@@ -2,19 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mockRequireApiPermission = vi.fn();
+const orchestrateMock = vi.fn();
 
 vi.mock("@/lib/permissions/require-api-permission", () => ({
   requireApiPermission: mockRequireApiPermission,
 }));
 
-vi.mock("@/lib/admin/vl-onboarding/resolve-vl-invitation-rows", () => ({
-  resolveVlInvitationRows: vi.fn(async () => [
-    {
-      email: "irem.uysal@fcallschwil.ch",
-      action: "NEW_INVITATION",
-      label: "Neue Einladung",
-    },
-  ]),
+vi.mock("@/lib/admin/vl-onboarding/vl-invitation-orchestration", () => ({
+  orchestrateVlInvitationSend: orchestrateMock,
 }));
 
 const { POST } = await import("../send/route");
@@ -24,11 +19,23 @@ describe("POST /api/admin/vl-invitations/send", () => {
     vi.clearAllMocks();
     mockRequireApiPermission.mockResolvedValue({
       ok: true,
-      session: { user: { activeTenantId: "tenant-fca" } },
+      session: { user: { activeTenantId: "tenant-fca", id: "actor-1" } },
+    });
+    orchestrateMock.mockResolvedValue({
+      sent: false,
+      mode: "DRY_RUN",
+      preservedDraft: true,
+      contributorRoleProvisioned: false,
+      contributorRoleSyncDiff: { permissionKeys: Array(8).fill("tasks.view") },
+      validationRows: [],
+      resolved: [],
+      rows: [],
+      transport: [{ queued: false, mode: "DRY_RUN", recipientEmail: "irem.uysal@fcallschwil.ch", subject: "x" }],
+      error: "Dry-Run",
     });
   });
 
-  it("returns dry-run mock transport without sending", async () => {
+  it("returns orchestration dry-run payload without 501", async () => {
     const req = new NextRequest("http://localhost/api/admin/vl-invitations/send", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -43,5 +50,8 @@ describe("POST /api/admin/vl-invitations/send", () => {
     expect(body.sent).toBe(false);
     expect(body.transport?.[0]?.queued).toBe(false);
     expect(body.preservedDraft).toBe(true);
+    expect(orchestrateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ liveExecution: false }),
+    );
   });
 });

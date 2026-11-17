@@ -28,8 +28,9 @@ export type InvitationEmailData = {
 const NAVY = "#0F172A";
 const BODY = "#334155";
 const MUTED = "#64748B";
+/** Primary email CTA — SCE copper hover token for WCAG AA contrast with white text (≥4.5:1). */
+const CTA_BACKGROUND = "#9A5F28";
 const COPPER = "#B87333";
-const COPPER_HOVER = "#9A5F28";
 const BORDER = "#E2E8F0";
 
 export function buildInvitationEmail(data: InvitationEmailData): {
@@ -111,9 +112,9 @@ export function buildInvitationEmail(data: InvitationEmailData): {
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
                 <tr>
-                  <td style="background:${COPPER};border-radius:8px;">
+                  <td style="background:${CTA_BACKGROUND};border-radius:8px;">
                     <a href="${safeUrl}"
-                       style="display:inline-block;padding:14px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;background:${COPPER};">
+                       style="display:inline-block;padding:14px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;background:${CTA_BACKGROUND};">
                       ${ctaLabel}
                     </a>
                   </td>

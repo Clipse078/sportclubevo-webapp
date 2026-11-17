@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { INVITATION_PREVIEW_SAMPLE_ACCEPT_URL } from "@/lib/email/templates/invitation-preview-samples";
+import { contrastRatio } from "@/lib/email/templates/invitation-cta-contrast";
 
 describe("invitation email template", () => {
-  it("uses FC Allschwil subject and copper CTA", () => {
+  it("uses FC Allschwil subject and #9A5F28 CTA with ≥4.5:1 contrast", () => {
     const { subject, html, text } = buildInvitationEmail({
       inviteUrl: INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
       recipientEmail: "irem.uysal@fcallschwil.ch",
@@ -17,7 +18,8 @@ describe("invitation email template", () => {
     });
     expect(subject).toBe("Einladung zu FC Allschwil auf SportClubEvo");
     expect(html).toContain("Einladung annehmen");
-    expect(html).toContain("#B87333");
+    expect(html).toContain("#9A5F28");
+    expect(contrastRatio("#FFFFFF", "#9A5F28")).toBeGreaterThanOrEqual(4.5);
     expect(html).not.toContain("Konto aktivieren");
     expect(text).toContain("kein neues Konto");
     expect(html).toContain("SportClubEvo");

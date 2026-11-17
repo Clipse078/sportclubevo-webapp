@@ -207,10 +207,14 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
             Club-Admin, kein Präsidenten-Rollenklon.
           </p>
           {contributorRoleProvisioned === false ? (
-            <p className="mt-2 flex items-start gap-1 text-xs text-amber-700">
+            <p
+              className="mt-2 flex items-start gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-xs text-amber-800"
+              data-testid="vl-contributor-role-missing-blocker"
+              role="status"
+            >
               <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden />
               {contributorRoleNote ??
-                "Die Mandanten-Rolle fehlt — Modulzeilen zeigen die Vorlage, nicht wirksame Datenbankrechte."}
+                "Blocker: Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt — Live-Versand und wirksame Rechtevorschau erst nach autorisiertem Rollen-Sync."}
             </p>
           ) : null}
         </section>

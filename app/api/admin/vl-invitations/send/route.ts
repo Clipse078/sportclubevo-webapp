@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/vl-invitations/send
  *
- * Explicit send endpoint — blocked by default (dry-run). Never queues live mail in this package.
+ * Explicit send endpoint — blocked by default (dry-run). Live path uses canonical onboarding mutations.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,13 +9,46 @@ import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   assertVlInvitationSendAllowed,
-  mockInvitationTransport,
+  resolveVlInvitationSendMode,
 } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
-import { buildInvitationEmail } from "@/lib/email/templates/invitation";
-import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
-import { INVITATION_PREVIEW_SAMPLE_ACCEPT_URL } from "@/lib/email/templates/invitation-preview-samples";
-import { parseAndValidateBulkInvitationEmails, validNormalizedBulkEmails } from "@/lib/admin/vl-onboarding/bulk-invitation-emails";
-import { resolveVlInvitationRows } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
+import {
+  parseAndValidateBulkInvitationEmails,
+} from "@/lib/admin/vl-onboarding/bulk-invitation-emails";
+import {
+  createLiveVlInvitationTransport,
+  createMockVlInvitationTransport,
+} from "@/lib/admin/vl-onboarding/vl-invitation-transport";
+import { orchestrateVlInvitationSend } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
+import type { VlInvitationRecipientIdentity } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
+
+function parseRecipientIdentities(body: Record<string, unknown>): VlInvitationRecipientIdentity[] {
+  const raw = body.recipients;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as { email?: unknown }).email === "string",
+    )
+    .map((item) => {
+      const row = item as {
+        email: string;
+        firstName?: string;
+        lastName?: string;
+        functionKey?: string | null;
+      };
+      return {
+        email: row.email.trim().toLowerCase(),
+        firstName: typeof row.firstName === "string" ? row.firstName.trim() : undefined,
+        lastName: typeof row.lastName === "string" ? row.lastName.trim() : undefined,
+        functionKey:
+          row.functionKey === null || typeof row.functionKey === "string"
+            ? row.functionKey
+            : undefined,
+      };
+    });
+}
 
 export async function POST(request: NextRequest) {
   const access = await requireApiPermission(PERMISSIONS.USERS_INVITE);
@@ -28,6 +61,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Kein Mandanten-Kontext." }, { status: 403 });
   }
 
+  const actorUserId = access.session.user?.effectiveUserId ?? access.session.user?.id;
+  if (!actorUserId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -37,38 +75,52 @@ export async function POST(request: NextRequest) {
 
   const confirmLiveSend = (body as { confirmLiveSend?: unknown })?.confirmLiveSend === true;
   const sendCheck = assertVlInvitationSendAllowed(confirmLiveSend);
-  if (!sendCheck.ok) {
-    const raw = typeof (body as { raw?: unknown })?.raw === "string" ? (body as { raw: string }).raw : "";
-    const validationRows = raw ? parseAndValidateBulkInvitationEmails(raw) : [];
-    const emails = validNormalizedBulkEmails(validationRows);
-    const resolved = await resolveVlInvitationRows(tenantId, emails);
+  const liveExecution = sendCheck.ok;
 
-    const mockResults = emails.map((email) => {
-      const sample = buildInvitationEmail({
-        inviteUrl: INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
-        recipientEmail: email,
-        recipientFirstName: "…",
-        tenantName: "FC Allschwil",
-        expiryHours: INVITATION_EXPIRY_HOURS,
-        variant: "new_account",
-        accessSummary: "Vereinsleitung — Vereinsentwicklung",
-      });
-      return mockInvitationTransport({ recipientEmail: email, subject: sample.subject });
+  const raw = typeof (body as { raw?: unknown })?.raw === "string" ? (body as { raw: string }).raw : "";
+  const validationRows = raw ? parseAndValidateBulkInvitationEmails(raw) : [];
+  const identities = parseRecipientIdentities(
+    typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {},
+  );
+
+  try {
+    const transport = liveExecution
+      ? createLiveVlInvitationTransport()
+      : createMockVlInvitationTransport();
+
+    const result = await orchestrateVlInvitationSend({
+      tenantId,
+      actorUserId,
+      validationRows,
+      identities,
+      transport,
+      liveExecution,
+      sendPolicyError: sendCheck.error,
+      sendPolicyMode: resolveVlInvitationSendMode(),
     });
+
+    if (liveExecution && !result.contributorRoleProvisioned) {
+      return NextResponse.json(
+        {
+          ...result,
+          sent: false,
+          error:
+            "Live-Versand blockiert — Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt. Rollen-Sync zuerst ausführen.",
+        },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json({
-      sent: false,
-      mode: sendCheck.mode,
-      error: sendCheck.error,
-      validationRows,
-      resolved,
-      transport: mockResults,
-      preservedDraft: true,
+      ...result,
+      permissionKeys: result.contributorRoleSyncDiff.permissionKeys,
+      contributorRoleProvisioningNote: result.contributorRoleProvisioned
+        ? null
+        : "Die Mandanten-Rolle fehlt — Modul-Vorschau basiert auf der Vorlage, nicht auf persistierten Rechten.",
     });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Interner Serverfehler.";
+    const status = message.includes("FC Allschwil") ? 403 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
-
-  return NextResponse.json(
-    { error: "Live-Versand ist in diesem Release nicht aktiviert." },
-    { status: 501 },
-  );
 }
