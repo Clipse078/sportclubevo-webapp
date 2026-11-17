@@ -116,13 +116,25 @@ async function main(): Promise<void> {
         },
         pendingClubStrategyMigrations: pendingClubStrategy,
         writePerformed: false,
+        postDeployReconciliation: {
+          coupledTo:
+            "npm run db:migrate:deploy-if-enabled → scripts/post-deploy-tenant-club-admin-reconciliation.ts",
+          migrationOnlyApplyScript:
+            "scripts/sce-cd-05-pkg-05-stage-migration-verify.ts --apply (only when migration pending)",
+          dryRunInventoryScript:
+            "scripts/sce-cd-05-pkg-05-post-deploy-reconciliation-dry-run.ts",
+          approvalScopeDoc:
+            "docs/planning/SCE-CD-05-PKG-05-MIGRATION-HANDOFF.md#migration-approval-scope-all-potential-writes",
+          stageAcceptanceUrl: "https://fcallschwil.sportclubevo.com",
+          pkg05OnDesignatedStage: "APPLIED — do not re-run apply on acd3b37682911890",
+        },
         scopedApplyProcedure: {
           order: [
             "Confirm STAGE fingerprint and APP_ENV=stage (not production).",
             "Run this script (read-only inventory).",
-            "If migration pending: APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled",
-            "Re-run this script; clubStrategyTable and columns must be present.",
-            "Re-test PR Preview /vereinsleitung/strategie persistence.",
+            "On designated STAGE: PKG-05 should already be applied — if pending, use guarded Path B in handoff (not db push).",
+            "Optional: post-deploy-reconciliation dry-run inventory (no writes).",
+            "Re-test STAGE acceptance /vereinsleitung/strategie on https://fcallschwil.sportclubevo.com",
           ],
           recovery:
             "Additive-only migration: rollback is forward-fix only (new migration). Do not truncate ClubStrategy on shared STAGE.",
