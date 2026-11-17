@@ -64,7 +64,7 @@ type MeetingSitzungsmodusPanelProps = {
   onAgendaNotesUpdated?: (agendaItemId: string, notes: string) => void;
   onMarkAgendaDiscussed?: (agendaItemId: string) => void | Promise<void>;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
-  onTaskCreated?: () => void | Promise<void>;
+  onTaskCreated?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void | Promise<void>;
 };
 
 export function MeetingSitzungsmodusPanel({

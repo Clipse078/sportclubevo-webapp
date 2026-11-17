@@ -6,6 +6,7 @@ import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approv
 import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 import type { SerializedAgendaLinkedTaskSummary } from "@/lib/meetings/agenda-linked-tasks-serialization";
+import type { MeetingOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-types";
 
 /**
  * Canonical meeting detail surface — always renders the DB-backed MeetingWorkspace.
@@ -30,6 +31,7 @@ type VereinsleitungMeetingDetailProps = {
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   initialAgendaLinkedTaskCounts?: Record<string, number>;
   initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
+  meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -49,6 +51,7 @@ export default function VereinsleitungMeetingDetail({
   meetingTaskCreate = null,
   initialAgendaLinkedTaskCounts = {},
   initialAgendaLinkedTasks = [],
+  meetingActionOrigins = {},
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -68,6 +71,7 @@ export default function VereinsleitungMeetingDetail({
       meetingTaskCreate={meetingTaskCreate}
       initialAgendaLinkedTaskCounts={initialAgendaLinkedTaskCounts}
       initialAgendaLinkedTasks={initialAgendaLinkedTasks}
+      meetingActionOrigins={meetingActionOrigins}
     />
   );
 }

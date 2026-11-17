@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export type SceExpandablePanelProps = {
@@ -22,6 +22,10 @@ export function SceExpandablePanel({
 }: SceExpandablePanelProps) {
   const [open, setOpen] = useState(defaultOpen);
   const regionId = useId();
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
 
   return (
     <div className={cn("min-w-0", className)} data-sce-expandable-panel data-testid={testId}>

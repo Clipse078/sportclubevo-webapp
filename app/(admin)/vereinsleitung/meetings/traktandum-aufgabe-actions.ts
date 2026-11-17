@@ -7,16 +7,42 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import {
   createMeetingTraktandumTask,
   createMeetingTraktandumTaskForDecision,
+  getAgendaLinkedTaskSummaryById,
 } from "@/lib/meetings/meeting-traktandum-tasks";
+import type { AgendaLinkedTaskSummary } from "@/lib/meetings/agenda-item-ergebnisse";
 import { parseTaskReminderFieldsFromForm } from "@/lib/tasks/parse-task-reminder-form";
 import { parseTaskDueAtFromForm } from "@/lib/tasks/task-reminder-schedule";
 import { parseTaskVisibilityScope } from "@/lib/tasks/task-org-mutation-policy";
 import { parseIdListFromForm } from "@/lib/tasks/task-access-grants";
 import { prisma } from "@/lib/db/prisma";
 
+export type TraktandumAufgabeCreatedSummary = {
+  id: string;
+  title: string;
+  status: AgendaLinkedTaskSummary["status"];
+  dueAt: string | null;
+  assigneeLabel: string | null;
+  agendaItemId: string;
+  decisionId: string | null;
+  createdAt: string;
+};
+
 export type TraktandumAufgabeActionResult =
-  | { ok: true; taskId: string; deduplicated?: boolean }
+  | { ok: true; taskId: string; deduplicated?: boolean; summary: TraktandumAufgabeCreatedSummary }
   | { ok: false; message: string };
+
+function serializeAgendaLinkedTaskSummary(row: AgendaLinkedTaskSummary): TraktandumAufgabeCreatedSummary {
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    dueAt: row.dueAt ? row.dueAt.toISOString() : null,
+    assigneeLabel: row.assigneeLabel,
+    agendaItemId: row.agendaItemId,
+    decisionId: row.decisionId,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
 
 function parsePriority(raw: FormDataEntryValue | null): string | undefined {
   if (typeof raw !== "string") return undefined;
@@ -98,9 +124,26 @@ export async function createTraktandumAufgabeAction(input: {
           )
         : await createMeetingTraktandumTask(actor, input.meetingId, input.agendaItemId, payload);
 
+    const decisionId = input.contextType === "MEETING_DECISION" ? input.contextId : null;
+    const summary = await getAgendaLinkedTaskSummaryById(
+      actor,
+      input.meetingId,
+      input.agendaItemId,
+      result.taskId,
+      decisionId,
+    );
+    if (!summary) {
+      return { ok: false, message: "Aufgabe wurde erstellt, konnte aber nicht geladen werden." };
+    }
+
     revalidatePath(`/vereinsleitung/meetings/${input.meetingId}`);
     revalidatePath("/dashboard/aufgaben");
-    return { ok: true, taskId: result.taskId, deduplicated: result.deduplicated };
+    return {
+      ok: true,
+      taskId: result.taskId,
+      deduplicated: result.deduplicated,
+      summary: serializeAgendaLinkedTaskSummary(summary),
+    };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Aufgabe konnte nicht erstellt werden." };
   }

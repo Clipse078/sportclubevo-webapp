@@ -29,6 +29,7 @@ import {
 import { MEETING_ACTION_STATUS_LABEL } from "@/lib/meetings/meeting-protocol-labels";
 import { MeetingActionRow } from "@/components/admin/meetings/workspace/MeetingWorkspaceSections";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
+import type { MeetingOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-types";
 import {
   workspaceGhostButtonClass,
   workspaceInputClass,
@@ -57,6 +58,7 @@ type Props = {
     overdueCount: number;
     items: PendenzListItem[];
   }) => void;
+  actionOrigins?: Record<string, MeetingOutcomeOrigin>;
 };
 
 function formatDate(iso: string | null): string {
@@ -123,6 +125,7 @@ export default function MeetingPendenzenPanel({
   relatedTasksCreateSlot,
   refreshToken = 0,
   onSnapshot,
+  actionOrigins = {},
 }: Props) {
   const [items, setItems] = useState<SerializedPendenz[]>([]);
   const [filter, setFilter] = useState<PendenzListFilter>("open");
@@ -413,6 +416,7 @@ export default function MeetingPendenzenPanel({
                   action={action}
                   meetingId={meetingId}
                   canManage={canManage}
+                  origin={actionOrigins[action.id]}
                   onUpdated={(updated) => {
                     onActionsChange(
                       actions.map((entry) => (entry.id === action.id ? { ...entry, ...updated } : entry)),

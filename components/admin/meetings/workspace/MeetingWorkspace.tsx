@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { MeetingWorkspaceDirtyStateSync } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
@@ -41,6 +41,13 @@ import {
   hydrateAgendaLinkedTaskSummaries,
   type SerializedAgendaLinkedTaskSummary,
 } from "@/lib/meetings/agenda-linked-tasks-serialization";
+import type { AgendaLinkedTaskSummary } from "@/lib/meetings/agenda-item-ergebnisse";
+import {
+  countAgendaLinkedTasksByAgendaId,
+  mergeAgendaLinkedTaskSummaries,
+  reconcileAgendaLinkedTasksWithServer,
+} from "@/lib/meetings/agenda-linked-task-state";
+import type { MeetingOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-types";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -67,6 +74,7 @@ type MeetingWorkspaceProps = {
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   initialAgendaLinkedTaskCounts?: Record<string, number>;
   initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
+  meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
 };
 
 export default function MeetingWorkspace({
@@ -86,15 +94,25 @@ export default function MeetingWorkspace({
   meetingTaskCreate = null,
   initialAgendaLinkedTaskCounts = {},
   initialAgendaLinkedTasks = [],
+  meetingActionOrigins = {},
 }: MeetingWorkspaceProps) {
+  const [agendaLinkedTasks, setAgendaLinkedTasks] = useState<AgendaLinkedTaskSummary[]>(() =>
+    hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
+  );
+  useEffect(() => {
+    const serverRows = hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks);
+    setAgendaLinkedTasks((prev) => reconcileAgendaLinkedTasksWithServer(prev, serverRows));
+  }, [initialAgendaLinkedTasks]);
+
   const agendaLinkedTaskCountMap = useMemo(
-    () => new Map(Object.entries(initialAgendaLinkedTaskCounts)),
-    [initialAgendaLinkedTaskCounts],
+    () => countAgendaLinkedTasksByAgendaId(agendaLinkedTasks),
+    [agendaLinkedTasks],
   );
-  const agendaLinkedTasks = useMemo(
-    () => hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
-    [initialAgendaLinkedTasks],
-  );
+
+  const handleTraktandumAufgabeCreated = useCallback((summary: AgendaLinkedTaskSummary) => {
+    setAgendaLinkedTasks((prev) => mergeAgendaLinkedTaskSummaries(prev, [summary]));
+    setPendenzenRefresh((n) => n + 1);
+  }, []);
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const agendaDisplayOrder = useMemo(
     () => buildCanonicalAgendaDisplayOrderMap(agendaItems),
@@ -319,7 +337,7 @@ export default function MeetingWorkspace({
               meetingTaskCreate={meetingTaskCreate}
               agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
               agendaLinkedTasks={agendaLinkedTasks}
-              onTasksChanged={() => setPendenzenRefresh((n) => n + 1)}
+              onTasksChanged={handleTraktandumAufgabeCreated}
             />
           </MeetingWorkspaceCollapsibleSection>
 
@@ -330,6 +348,7 @@ export default function MeetingWorkspace({
             <MeetingDecisionsSection
               meetingId={meeting.id}
               meetingSlug={slug}
+              meetingTitle={meeting.title}
               meetingStatus={meeting.status}
               canManage={canManage}
               documentationEditable={effectiveCanManage}
@@ -353,6 +372,7 @@ export default function MeetingWorkspace({
               meetingDate={meeting.meetingDate}
               canManage={effectiveCanManage}
               actions={actions}
+              actionOrigins={meetingActionOrigins}
               onActionsChange={(next) => {
                 setActions(next);
                 setPendenzenRefresh((n) => n + 1);

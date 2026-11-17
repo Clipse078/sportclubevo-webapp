@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition, type FormEventHandler } from "react";
 import type { TaskContextType } from "@prisma/client";
+import type { TraktandumAufgabeCreatedSummary } from "@/app/(admin)/vereinsleitung/meetings/traktandum-aufgabe-actions";
+import { hydrateAgendaLinkedTaskSummaries } from "@/lib/meetings/agenda-linked-tasks-serialization";
 import { createTraktandumAufgabeAction } from "@/app/(admin)/vereinsleitung/meetings/traktandum-aufgabe-actions";
 import {
   ensureTraktandumAufgabeClientRequestId,
@@ -19,7 +20,7 @@ export type UseMeetingTraktandumTaskCreateFormOptions = {
   agendaItemId: string;
   contextType: TaskContextType;
   contextId: string;
-  onCreated?: () => void;
+  onCreated?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void;
   initialTitle?: string;
 };
 
@@ -31,7 +32,6 @@ export function useMeetingTraktandumTaskCreateForm({
   onCreated,
   initialTitle = "",
 }: UseMeetingTraktandumTaskCreateFormOptions) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(initialTitle);
   const [pending, startTransition] = useTransition();
@@ -84,13 +84,15 @@ export function useMeetingTraktandumTaskCreateForm({
             activeForm: null,
           });
           clearDraft();
-          onCreated?.();
-          router.refresh();
+          const hydrated = hydrateAgendaLinkedTaskSummaries([result.summary as TraktandumAufgabeCreatedSummary])[0];
+          if (hydrated) {
+            onCreated?.(hydrated);
+          }
           return { taskId: result.taskId, deduplicated: result.deduplicated };
         }).catch(() => undefined);
       });
     },
-    [agendaItemId, assigneeUserIds, clearDraft, contextId, contextType, meetingId, onCreated, router],
+    [agendaItemId, assigneeUserIds, clearDraft, contextId, contextType, meetingId, onCreated],
   );
 
   return {

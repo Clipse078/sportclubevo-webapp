@@ -18,6 +18,7 @@ import { TaskContextType } from "@prisma/client";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
 import { countAgendaLinkedTasks, listAgendaLinkedTaskSummaries } from "@/lib/meetings/meeting-traktandum-tasks";
 import { serializeAgendaLinkedTaskSummaries } from "@/lib/meetings/agenda-linked-tasks-serialization";
+import { loadMeetingActionOriginMap } from "@/lib/meetings/meeting-outcome-origin";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getActiveTenant, requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -122,6 +123,25 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         )
       : [];
 
+  const meetingActionOrigins = await loadMeetingActionOriginMap(
+    actor,
+    {
+      id: dbMeeting.id,
+      slug: dbMeeting.slug,
+      title: dbMeeting.title,
+      visibilityScope: dbMeeting.visibilityScope,
+      createdByUserId: dbMeeting.createdByUserId,
+      visibleRoleRefs: dbMeeting.visibleRoleRefs,
+      visibleUserRefs: dbMeeting.visibleUserRefs,
+      visibleTeamRefs: dbMeeting.visibleTeamRefs,
+      visibleOrgUnitRefs: dbMeeting.visibleOrgUnitRefs,
+      visiblePersonRefs: dbMeeting.visiblePersonRefs,
+      visibleTargetGroupRefs: dbMeeting.visibleTargetGroupRefs,
+    },
+    subEntities.actions.map((action) => ({ id: action.id, linkedRefs: action.linkedRefs })),
+    subEntities.agendaItems.map((item) => ({ id: item.id, orderIndex: item.orderIndex })),
+  );
+
   const detailPage = (
     <DetailPagePattern
       className="[&_h1]:sr-only"
@@ -178,6 +198,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         meetingTaskCreate={meetingTaskCreate}
         initialAgendaLinkedTaskCounts={agendaLinkedTaskCounts}
         initialAgendaLinkedTasks={initialAgendaLinkedTasks}
+        meetingActionOrigins={meetingActionOrigins}
       />
     </DetailPagePattern>
   );

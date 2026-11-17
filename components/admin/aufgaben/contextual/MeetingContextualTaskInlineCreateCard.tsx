@@ -20,7 +20,7 @@ export type MeetingContextualTaskInlineCreateCardHandle = ContextualTaskInlineCr
 type TraktandumProps = UseMeetingTraktandumTaskCreateFormOptions & {
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
-  onCreated?: () => void;
+  onCreated?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void;
   initialTitle?: string;
   presentation: ContextualTaskCreateDialogProps["presentation"];
   orgUnitOptions: ContextualTaskCreateDialogProps["orgUnitOptions"];
@@ -100,8 +100,8 @@ const MeetingContextualTaskInlineCreateCard = forwardRef<
     contextType,
     contextId,
     initialTitle,
-    onCreated: () => {
-      onCreated?.();
+    onCreated: (summary) => {
+      onCreated?.(summary);
       onExpandedChange(false);
     },
   });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import type { TaskContextType } from "@prisma/client";
+import type { AgendaLinkedTaskSummary } from "@/lib/meetings/agenda-item-ergebnisse";
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import MeetingContextualTaskInlineCreateCard from "@/components/admin/aufgaben/contextual/MeetingContextualTaskInlineCreateCard";
 
@@ -19,7 +19,7 @@ type Props = {
   contextId: string;
   createBase: MeetingTraktandumTaskCreateBaseProps;
   initialTitle?: string;
-  onCreated?: () => void;
+  onCreated?: (summary: AgendaLinkedTaskSummary) => void;
   testIdPrefix: string;
 };
 
@@ -34,7 +34,6 @@ export function MeetingTraktandumAufgabeCreate({
   initialTitle,
   onCreated,
 }: Props) {
-  const router = useRouter();
   return (
     <MeetingContextualTaskInlineCreateCard
       meetingId={meetingId}
@@ -48,9 +47,8 @@ export function MeetingTraktandumAufgabeCreate({
       timeZone={createBase.timeZone}
       tenantWideVisibility={createBase.tenantWideVisibility}
       initialTitle={initialTitle}
-      onCreated={() => {
-        onCreated?.();
-        router.refresh();
+      onCreated={(summary) => {
+        onCreated?.(summary);
       }}
     />
   );

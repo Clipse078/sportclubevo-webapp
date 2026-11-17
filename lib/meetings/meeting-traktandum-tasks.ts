@@ -260,6 +260,50 @@ const AGENDA_TASK_SUMMARY_SELECT = {
   },
 } as const;
 
+export function mapPrismaTaskToAgendaLinkedSummary(
+  task: {
+    id: string;
+    title: string;
+    status: import("@prisma/client").TaskStatus;
+    dueAt: Date | null;
+    createdAt: Date;
+    seriesOccurrenceKey: string | null;
+    contextType: import("@prisma/client").TaskContextType | null;
+    contextId: string | null;
+    assignees: Array<{ user: { firstName: string | null; lastName: string | null } }>;
+  },
+  agendaItemId: string,
+  decisionId: string | null,
+): AgendaLinkedTaskSummary {
+  return {
+    id: task.id,
+    title: task.title,
+    status: task.status,
+    dueAt: task.dueAt,
+    assigneeLabel: assigneeLabelFromTask(task.assignees),
+    agendaItemId,
+    decisionId,
+    createdAt: task.createdAt,
+  };
+}
+
+export async function getAgendaLinkedTaskSummaryById(
+  actor: ActorContext,
+  meetingId: string,
+  agendaItemId: string,
+  taskId: string,
+  decisionId: string | null,
+): Promise<AgendaLinkedTaskSummary | null> {
+  if (!actor.tenantId) return null;
+  const task = await prisma.task.findFirst({
+    where: { id: taskId, tenantId: actor.tenantId },
+    select: AGENDA_TASK_SUMMARY_SELECT,
+  });
+  if (!task) return null;
+  await assertAgendaInMeeting(actor, meetingId, agendaItemId);
+  return mapPrismaTaskToAgendaLinkedSummary(task, agendaItemId, decisionId);
+}
+
 function assigneeLabelFromTask(
   assignees: Array<{ user: { firstName: string | null; lastName: string | null } }>,
 ): string | null {

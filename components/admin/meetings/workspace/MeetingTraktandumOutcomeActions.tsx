@@ -43,7 +43,7 @@ export type MeetingTraktandumOutcomeActionsProps = {
   testIdPrefix: string;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
-  onTaskCreated?: () => void | Promise<void>;
+  onTaskCreated?: (summary: AgendaLinkedTaskSummary) => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   decisions: MeetingSubEntities["decisions"];
@@ -561,8 +561,8 @@ export function MeetingTraktandumOutcomeActions({
           createBase={meetingTaskCreate}
           initialTitle={taskInitialTitle}
           testIdPrefix={testIdPrefix}
-          onCreated={async () => {
-            await onTaskCreated?.();
+          onCreated={async (summary) => {
+            await onTaskCreated?.(summary);
             patch({
               offerAufgabeAfterDecision: false,
               lastSavedDecisionTitle: null,

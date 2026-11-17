@@ -22,7 +22,14 @@ import {
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
 import { buildAgendaItemOutcomeLinkLabels } from "@/lib/meetings/agenda-item-outcome-presentation";
-import { MEETING_TRAKTANDUM_QUERY_PARAM } from "@/lib/meetings/meeting-traktandum-navigation";
+import {
+  MEETING_FOCUS_DECISION_QUERY,
+  MEETING_FOCUS_ACTION_QUERY,
+  MEETING_TRAKTANDUM_QUERY_PARAM,
+} from "@/lib/meetings/meeting-traktandum-navigation";
+import { buildDecisionOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-client";
+import { MeetingOutcomeOriginLinks } from "@/components/admin/meetings/workspace/MeetingOutcomeOriginLinks";
+import { useMeetingWorkspaceRecordFocus } from "@/components/admin/meetings/workspace/useMeetingWorkspaceRecordFocus";
 import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
@@ -120,7 +127,7 @@ export function MeetingAgendaSection({
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
   agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
   agendaLinkedTasks: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
-  onTasksChanged?: () => void;
+  onTasksChanged?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -363,7 +370,9 @@ function AgendaItemRow({
   onDirty: () => void;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
-  onTaskCreated?: () => void | Promise<void>;
+  onTaskCreated?: (
+    summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary,
+  ) => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 }) {
@@ -724,6 +733,7 @@ export function MeetingParticipantsSection({
 export function MeetingDecisionsSection({
   meetingId,
   meetingSlug,
+  meetingTitle,
   meetingStatus,
   canManage,
   documentationEditable,
@@ -734,6 +744,7 @@ export function MeetingDecisionsSection({
   onItemsChange,
 }: SectionProps<Decision> & {
   meetingSlug: string;
+  meetingTitle: string;
   meetingStatus: MeetingStatus;
   documentationEditable: boolean;
   actorPersonId: string | null;
@@ -798,6 +809,7 @@ export function MeetingDecisionsSection({
           key={d.id}
           meetingId={meetingId}
           meetingSlug={meetingSlug}
+          meetingTitle={meetingTitle}
           meetingStatus={meetingStatus}
           decision={d}
           canManage={canManage}
@@ -871,6 +883,7 @@ export function MeetingDecisionsSection({
 function MeetingDecisionCard({
   meetingId,
   meetingSlug,
+  meetingTitle,
   meetingStatus,
   decision,
   canManage,
@@ -883,6 +896,7 @@ function MeetingDecisionCard({
 }: {
   meetingId: string;
   meetingSlug: string;
+  meetingTitle: string;
   meetingStatus: MeetingStatus;
   decision: Decision;
   canManage: boolean;
@@ -899,6 +913,26 @@ function MeetingDecisionCard({
   const [descriptionDraft, setDescriptionDraft] = useState(decision.description ?? "");
   const [rationaleDraft, setRationaleDraft] = useState(decision.rationale ?? "");
   const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
+  const searchParams = useSearchParams();
+  const isFocused = searchParams?.get(MEETING_FOCUS_DECISION_QUERY) === decision.id;
+  const focusRef = useMeetingWorkspaceRecordFocus(decision.id, "decision");
+  const decisionOrigin = useMemo(
+    () =>
+      buildDecisionOutcomeOrigin({
+        meetingSlug,
+        meetingTitle,
+        agendaItems,
+        sourceAgendaItemId: decision.sourceAgendaItemId,
+        decisionTitle: decision.title,
+      }),
+    [
+      agendaItems,
+      decision.sourceAgendaItemId,
+      decision.title,
+      meetingSlug,
+      meetingTitle,
+    ],
+  );
 
   function saveAgendaLink(nextId: string) {
     setSourceAgendaItemId(nextId);
@@ -945,8 +979,9 @@ function MeetingDecisionCard({
   }
 
   return (
+    <div ref={focusRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={isFocused}
       testId={`meeting-decision-${decision.id}`}
       summary={
         <div className="min-w-0 space-y-0.5">
@@ -1011,6 +1046,10 @@ function MeetingDecisionCard({
           ? `Freigabe: ${meetingApprovalAggregateStatusLabel(decision.approvalStatus)}`
           : "Freigabe: Nicht erforderlich"}
       </p>
+      <MeetingOutcomeOriginLinks
+        origin={decisionOrigin}
+        testId={`meeting-decision-origin-${decision.id}`}
+      />
       {editingDetails || documentationEditable ? (
         <div>
           <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Zugehöriges Traktandum</label>
@@ -1085,6 +1124,7 @@ function MeetingDecisionCard({
         canManage={documentationEditable}
       />
     </SceExpandablePanel>
+    </div>
   );
 }
 
@@ -1101,12 +1141,14 @@ export function MeetingActionRow({
   canManage,
   onUpdated,
   onRemoved,
+  origin,
 }: {
   action: MeetingAction;
   meetingId: string;
   canManage: boolean;
   onUpdated: (patch: Partial<MeetingAction>) => void;
   onRemoved: () => void;
+  origin?: import("@/lib/meetings/meeting-outcome-origin-types").MeetingOutcomeOrigin | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -1121,6 +1163,9 @@ export function MeetingActionRow({
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
     personPickerFromIds(action.ownerPersonId, action.owner),
   );
+  const searchParams = useSearchParams();
+  const isFocused = searchParams?.get(MEETING_FOCUS_ACTION_QUERY) === action.id;
+  const focusRef = useMeetingWorkspaceRecordFocus(action.id, "action");
 
   function save() {
     startTransition(async () => {
@@ -1188,8 +1233,9 @@ export function MeetingActionRow({
   }
 
   return (
+    <div ref={focusRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={isFocused}
       testId={`meeting-action-${action.id}`}
       summary={
         <div className="min-w-0 space-y-0.5">
@@ -1329,9 +1375,14 @@ export function MeetingActionRow({
               )}
             </div>
           ) : null}
+          <MeetingOutcomeOriginLinks
+            origin={origin}
+            testId={`meeting-action-origin-${action.id}`}
+          />
         </div>
       )}
     </SceExpandablePanel>
+    </div>
   );
 }
 

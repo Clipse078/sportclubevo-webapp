@@ -51,7 +51,7 @@ type SectionsContextValue = {
   counts: Counts;
 };
 
-const MeetingWorkspaceSectionsContext = createContext<SectionsContextValue | null>(null);
+export const MeetingWorkspaceSectionsContext = createContext<SectionsContextValue | null>(null);
 
 function resolveDeepLinkTab(
   hash: string,
