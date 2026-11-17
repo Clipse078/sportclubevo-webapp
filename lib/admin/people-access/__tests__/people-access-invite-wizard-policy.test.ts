@@ -33,4 +33,20 @@ describe("people-access invite wizard policy", () => {
       resolvePeopleAccessInviteLiveSendBlocker({ ...base, sendMode: "LIVE_ALLOWED" }),
     ).toBeNull();
   });
+
+  it("surfaces policy load errors instead of pretending live is disabled", () => {
+    expect(
+      resolvePeopleAccessInviteLiveSendBlocker({
+        ...base,
+        sendMode: null,
+        sendPolicyLoadError: "Netzwerkfehler beim Laden der Versandfreigabe.",
+      }),
+    ).toBe("Netzwerkfehler beim Laden der Versandfreigabe.");
+  });
+
+  it("blocks live send while policy is loading", () => {
+    expect(
+      resolvePeopleAccessInviteLiveSendBlocker({ ...base, sendMode: null }),
+    ).toMatch(/wird geladen/);
+  });
 });

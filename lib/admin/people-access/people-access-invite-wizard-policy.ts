@@ -1,4 +1,4 @@
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 import {
   resolveVlStandardInviteLiveSendBlocker,
   resolveVlStandardInviteWizardBlocker,
@@ -11,7 +11,8 @@ export type PeopleAccessInviteWizardInput = {
   firstName: string;
   lastName: string;
   selectedRoleIds: string[];
-  sendMode: VlInvitationSendMode;
+  sendMode: VlInvitationSendMode | null;
+  sendPolicyLoadError?: string | null;
   contributorRoleProvisioned?: boolean | null;
 };
 
@@ -35,6 +36,12 @@ export function resolvePeopleAccessInviteLiveSendBlocker(
 ): string | null {
   const prepareBlocker = resolvePeopleAccessInvitePrepareBlocker(input);
   if (prepareBlocker) return prepareBlocker;
+  if (input.sendPolicyLoadError) {
+    return input.sendPolicyLoadError;
+  }
+  if (input.sendMode === null) {
+    return "Versandfreigabe wird geladen…";
+  }
   if (input.sendMode !== "LIVE_ALLOWED") {
     return "Live-Versand ist auf dieser Umgebung nicht freigeschaltet.";
   }

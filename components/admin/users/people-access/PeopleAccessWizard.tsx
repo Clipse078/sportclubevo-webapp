@@ -34,6 +34,7 @@ import { isValidVlOrgFunctionKey } from "@/lib/admin/vl-onboarding/vl-org-functi
 import {
   PEOPLE_ACCESS_INVITE_LIVE_SEND_BUTTON_LABEL,
   PEOPLE_ACCESS_INVITE_PREPARE_BUTTON_LABEL,
+  PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE,
   VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL,
   VL_STANDARD_INVITE_LIVE_SEND_BUTTON_LABEL,
 } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
@@ -117,6 +118,7 @@ export default function PeopleAccessWizard({
     step,
   });
   const [liveSendConfirmed, setLiveSendConfirmed] = useState(false);
+  const [vlPrepareSuccessMessage, setVlPrepareSuccessMessage] = useState<string | null>(null);
   const [linkedPersonId, setLinkedPersonId] = useState(initialPersonId);
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
@@ -347,18 +349,22 @@ export default function PeopleAccessWizard({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? vlWizard.sendBlocker ?? "Einladung fehlgeschlagen.");
+        setVlPrepareSuccessMessage(null);
         return;
       }
       const row = data.rows?.[0];
       const userId = row?.userId ?? data.userId;
       if (data.dryRun && row?.status === "planned") {
-        onComplete(typeof userId === "string" ? userId : "");
+        setVlPrepareSuccessMessage(PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE);
+        setError(null);
         return;
       }
       if (typeof userId === "string") {
+        setVlPrepareSuccessMessage(null);
         onComplete(userId);
         return;
       }
+      setVlPrepareSuccessMessage(null);
       setError(row?.reason ?? "Einladung konnte nicht abgeschlossen werden.");
     } catch {
       setError("Netzwerkfehler. Bitte versuche es erneut.");
@@ -404,16 +410,20 @@ export default function PeopleAccessWizard({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? standardInviteWizard.sendBlocker ?? "Einladung fehlgeschlagen.");
-        return;
-      }
-      if (typeof data.userId === "string") {
-        onComplete(data.userId);
+        standardInviteWizard.setPrepareSuccessMessage(null);
         return;
       }
       if (data.dryRun && data.status === "planned") {
-        onComplete("");
+        standardInviteWizard.setPrepareSuccessMessage(PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE);
+        setError(null);
         return;
       }
+      if (typeof data.userId === "string") {
+        standardInviteWizard.setPrepareSuccessMessage(null);
+        onComplete(data.userId);
+        return;
+      }
+      standardInviteWizard.setPrepareSuccessMessage(null);
       setError(data.reason ?? "Einladung konnte nicht abgeschlossen werden.");
     } catch {
       setError("Netzwerkfehler. Bitte versuche es erneut.");
@@ -913,6 +923,7 @@ export default function PeopleAccessWizard({
             firstName={firstName}
             lastName={lastName}
             email={email}
+            prepareSuccessMessage={vlPrepareSuccessMessage}
           />
         ) : null}
 
@@ -1062,8 +1073,8 @@ export default function PeopleAccessWizard({
                   </button>
                 ) : null}
                 {(vlPresetActive
-                  ? !vlWizard.liveSendBlocker
-                  : !standardInviteWizard.liveSendBlocker) ? (
+                  ? vlWizard.liveSendBlocker === null
+                  : standardInviteWizard.liveSendBlocker === null) ? (
                   <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
                     <input
                       type="checkbox"
@@ -1075,8 +1086,8 @@ export default function PeopleAccessWizard({
                   </label>
                 ) : null}
                 {(vlPresetActive
-                  ? !vlWizard.liveSendBlocker
-                  : !standardInviteWizard.liveSendBlocker) ? (
+                  ? vlWizard.liveSendBlocker === null
+                  : standardInviteWizard.liveSendBlocker === null) ? (
                   <button
                     type="button"
                     onClick={() => submit(true, true)}

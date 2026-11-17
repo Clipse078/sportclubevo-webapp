@@ -2,9 +2,13 @@
  * Guards live VL invitation sends — default is dry-run / mock transport only.
  */
 
-export const VL_INVITATION_LIVE_SEND_ENV = "VL_INVITATION_LIVE_SEND";
+import "server-only";
 
-export type VlInvitationSendMode = "DRY_RUN" | "LIVE_BLOCKED" | "LIVE_ALLOWED";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
+
+export type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
+
+export const VL_INVITATION_LIVE_SEND_ENV = "VL_INVITATION_LIVE_SEND";
 
 export function resolveVlInvitationSendMode(): VlInvitationSendMode {
   if (process.env[VL_INVITATION_LIVE_SEND_ENV] === "true") {

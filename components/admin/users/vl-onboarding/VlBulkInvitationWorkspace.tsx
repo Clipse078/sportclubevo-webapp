@@ -8,7 +8,7 @@ import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
 import { FCA_VL_INVITATION_CONFIRMED_EMAILS } from "@/lib/admin/vl-onboarding/fca-vl-confirmed-invitee-emails";
 import type { VereinsentwicklungAccessRow } from "@/lib/admin/people-access/vereinsentwicklung-access-presentation";
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 import { resolveVlInvitationSendUiState } from "@/lib/admin/vl-onboarding/vl-invitation-send-ui-policy";
 import { VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
