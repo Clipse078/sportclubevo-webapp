@@ -35,6 +35,7 @@ import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-displ
 import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
 import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
+import { MeetingGuidedSitzungsmodusController } from "@/components/admin/meetings/workspace/MeetingGuidedSitzungsmodusController";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -247,6 +248,7 @@ export default function MeetingWorkspace({
             pendingDecisionApprovals={pendingDecisionApprovals}
             hasInvitedParticipants={participants.some((p) => p.status === "INVITED")}
             onNavigateToSection={navigateToSection}
+            hasTimerScope={Boolean(timerScope)}
           />
 
           <MeetingWorkspaceStatusBar
@@ -284,12 +286,15 @@ export default function MeetingWorkspace({
           >
             <MeetingAgendaSection
               meetingId={meeting.id}
+              meetingTitle={meeting.title}
               meetingPlannedDurationMin={meeting.plannedDurationMin}
               canManage={effectiveCanManage}
               items={agendaItems}
               decisions={decisions}
+              actions={actions}
               onItemsChange={setAgendaItems}
               onDecisionsChange={setDecisions}
+              onActionsChange={setActions}
               onDirtyChange={setIsDirty}
             />
           </MeetingWorkspaceCollapsibleSection>
@@ -375,6 +380,7 @@ export default function MeetingWorkspace({
           agendaItems={agendaItems}
           displayOrder={agendaDisplayOrder}
         >
+          <MeetingGuidedSitzungsmodusController />
           <MeetingSitzungsmodusStickyTimer />
           {workspaceBody}
         </MeetingAgendaTimerProvider>

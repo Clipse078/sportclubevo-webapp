@@ -11,6 +11,12 @@ import {
   getMeetingLifecyclePresentation,
   getMeetingPrimaryAction,
 } from "@/lib/meetings/meeting-lifecycle";
+import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
+import {
+  dispatchMeetingGuidedEnterSitzungsmodus,
+  getSitzungsmodusSummaryActionLabel,
+} from "@/lib/meetings/sitzungsmodus/meeting-guided-sitzungsmodus";
+import { shouldOfferGuidedSitzungsmodusSummary } from "@/lib/meetings/sitzungsmodus/meeting-guided-summary-action";
 import { protocolReviewStageStatusLabel } from "@/lib/meetings/meeting-approval-presentation";
 import {
   formatMeetingPresenceLabel,
@@ -30,6 +36,7 @@ type Props = {
   pendingDecisionApprovals: number;
   hasInvitedParticipants?: boolean;
   onNavigateToSection?: (sectionId: string) => void;
+  hasTimerScope?: boolean;
 };
 
 function formatTime(date: Date, timeZone: string) {
@@ -53,8 +60,10 @@ export default function MeetingWorkspaceHeader({
   pendingDecisionApprovals,
   hasInvitedParticipants,
   onNavigateToSection,
+  hasTimerScope = false,
 }: Props) {
   const router = useRouter();
+  const agendaTimer = useMeetingAgendaTimer();
   const [lifecycleLoading, setLifecycleLoading] = useState(false);
   const [lifecycleError, setLifecycleError] = useState<string | null>(null);
   const presence = parseMeetingLocation(meeting.location);
@@ -73,7 +82,7 @@ export default function MeetingWorkspaceHeader({
     protocolApprovalRequired: meeting.protocolApprovalRequired,
   });
 
-  const primary = getMeetingPrimaryAction({
+  const lifecyclePrimary = getMeetingPrimaryAction({
     status: meeting.status ?? "PLANNED",
     meetingDate: meeting.meetingDate,
     participantCount,
@@ -84,12 +93,34 @@ export default function MeetingWorkspaceHeader({
     conductedAt: meeting.conductedAt,
   });
 
+  const guidedSitzungsmodusPrimary =
+    shouldOfferGuidedSitzungsmodusSummary({
+      canManage,
+      hasTimerScope,
+      agendaCount,
+      status: meeting.status ?? "PLANNED",
+    }) && agendaTimer
+      ? {
+          label: getSitzungsmodusSummaryActionLabel(agendaTimer.state),
+          isGuidedSitzungsmodus: true as const,
+        }
+      : null;
+
+  const primary = guidedSitzungsmodusPrimary ?? {
+    ...lifecyclePrimary,
+    isGuidedSitzungsmodus: false as const,
+  };
+
   const protocolSummary = meeting.protocolApprovalRequired
     ? protocolReviewStageStatusLabel(meeting.reviewStage, true)
     : null;
 
   async function handlePrimaryAction() {
-    if (primary.lifecycleAction && canManage) {
+    if (primary.isGuidedSitzungsmodus) {
+      dispatchMeetingGuidedEnterSitzungsmodus({ revealFocus: true });
+      return;
+    }
+    if (!primary.isGuidedSitzungsmodus && primary.lifecycleAction && canManage) {
       setLifecycleError(null);
       setLifecycleLoading(true);
       try {
@@ -111,17 +142,22 @@ export default function MeetingWorkspaceHeader({
       }
       return;
     }
-    if (!primary.targetSectionId) return;
-    if (onNavigateToSection) {
+    if (!primary.isGuidedSitzungsmodus && !primary.targetSectionId) return;
+    if (onNavigateToSection && primary.targetSectionId) {
       onNavigateToSection(primary.targetSectionId);
       return;
     }
-    const el = document.getElementById(primary.targetSectionId);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (primary.targetSectionId) {
+      const el = document.getElementById(primary.targetSectionId);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   const showPrimary =
-    canManage && (primary.lifecycleAction !== undefined || primary.targetSectionId !== null);
+    canManage &&
+    (primary.isGuidedSitzungsmodus ||
+      ("lifecycleAction" in primary && primary.lifecycleAction !== undefined) ||
+      ("targetSectionId" in primary && primary.targetSectionId !== null));
 
   return (
     <header className="space-y-2" data-testid="meeting-workspace-header">

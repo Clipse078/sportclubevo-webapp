@@ -8,6 +8,10 @@ import { logAuditEvent } from "@/lib/audit/audit-log";
 import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
 import { resolveMeetingAgendaInitiativeLink } from "@/lib/meetings/meeting-initiative-link";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
+import {
+  mergeAgendaNotesAppend,
+  normalizeAgendaNotesForCompare,
+} from "@/lib/meetings/meeting-agenda-notes-append";
 
 async function requireSession() {
   const session = await auth();
@@ -26,11 +30,79 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const guard = await requireMeetingAccess({ actor, id, access: "write" });
   if (!guard.ok) return guard.response;
 
-  const existing = await prisma.meetingAgendaItem.findUnique({ where: { id: itemId, meetingId: id }, select: { id: true } });
+  const existing = await prisma.meetingAgendaItem.findUnique({
+    where: { id: itemId, meetingId: id },
+    select: { id: true, notes: true },
+  });
   if (!existing) return NextResponse.json({ error: "Traktandum nicht gefunden." }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
   const validStatuses = Object.values(MeetingAgendaItemStatus);
+
+  if (body?.notesAppend !== undefined) {
+    if (body?.notes !== undefined) {
+      return NextResponse.json({ error: "notesAppend und notes schliessen sich aus." }, { status: 400 });
+    }
+    const addition = String(body.notesAppend ?? "").trim();
+    if (!addition) {
+      return NextResponse.json({ error: "Notiz ist leer." }, { status: 400 });
+    }
+    const expectedNorm =
+      body.expectedNotes !== undefined
+        ? normalizeAgendaNotesForCompare(body.expectedNotes)
+        : undefined;
+    const currentNorm = normalizeAgendaNotesForCompare(existing.notes);
+    if (expectedNorm !== undefined && currentNorm !== expectedNorm) {
+      return NextResponse.json(
+        {
+          error:
+            "Notizen wurden zwischenzeitlich geändert. Aktuelle Version übernommen — bitte Ergänzung prüfen und erneut speichern.",
+          code: "NOTES_CONFLICT",
+          currentNotes: existing.notes,
+        },
+        { status: 409 },
+      );
+    }
+    const merged = mergeAgendaNotesAppend(existing.notes, addition);
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const updated = await tx.meetingAgendaItem.updateMany({
+          where: { id: itemId, meetingId: id, notes: existing.notes },
+          data: { notes: merged },
+        });
+        if (updated.count !== 1) {
+          const fresh = await tx.meetingAgendaItem.findUnique({
+            where: { id: itemId, meetingId: id },
+            select: { notes: true },
+          });
+          return { ok: false as const, currentNotes: fresh?.notes ?? null };
+        }
+        return { ok: true as const, notes: merged };
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          {
+            error:
+              "Notizen wurden zwischenzeitlich geändert. Aktuelle Version übernommen — bitte Ergänzung prüfen und erneut speichern.",
+            code: "NOTES_CONFLICT",
+            currentNotes: result.currentNotes,
+          },
+          { status: 409 },
+        );
+      }
+      void logAuditEvent({
+        actorUserId: actor.userId,
+        module: "meetings",
+        entityId: id,
+        action: "AGENDA_UPDATE",
+        after: { itemId, notesAppend: true },
+      });
+      return NextResponse.json({ item: { id: itemId, notes: result.notes } });
+    } catch (e) {
+      console.error(e);
+      return NextResponse.json({ error: "Notiz konnte nicht gespeichert werden." }, { status: 500 });
+    }
+  }
 
   const patch: Record<string, unknown> = {
     title: body?.title?.trim() || undefined,

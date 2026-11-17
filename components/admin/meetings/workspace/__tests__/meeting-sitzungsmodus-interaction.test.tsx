@@ -17,6 +17,11 @@ import {
   saveMeetingAgendaTimerState,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-storage";
 import { createMeetingAgendaTimerState, startSitzungsmodus } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-engine";
+import {
+  patchTraktandumOutcomeDraft,
+  readTraktandumOutcomeDraft,
+  resetTraktandumOutcomeDraftStoreForTests,
+} from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
 
 const SCOPE = { meetingId: "m-nov", tenantId: "t1", userId: "u1" };
 
@@ -69,6 +74,7 @@ function Harness({ children }: { children: React.ReactNode }) {
 
 describe("Sitzungsmodus interaction (PO screenshots)", () => {
   beforeEach(() => {
+    resetTraktandumOutcomeDraftStoreForTests();
     const store = new Map<string, string>();
     vi.stubGlobal("sessionStorage", {
       getItem: (key: string) => store.get(key) ?? null,
@@ -280,6 +286,22 @@ describe("Sitzungsmodus interaction (PO screenshots)", () => {
     fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-next"));
     fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-collapse"));
     expect(screen.getByTestId("meeting-unsaved-draft")).toHaveValue("Protokoll-Entwurf November");
+  });
+
+  it("retains Traktandum outcome draft across topic switch and timer pause", () => {
+    render(
+      <Harness>
+        <MeetingSitzungsmodusStartButton />
+        <MeetingSitzungsmodusPanel />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-start"));
+    fireEvent.change(screen.getByLabelText("Traktandum wählen"), { target: { value: "ag-1" } });
+    patchTraktandumOutcomeDraft("m-nov", "ag-1", { decisionTitle: "Offener Beschluss-Entwurf", activeForm: "decision" });
+    fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-primary-start"));
+    fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-pause"));
+    fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-next"));
+    expect(readTraktandumOutcomeDraft("m-nov", "ag-1").decisionTitle).toBe("Offener Beschluss-Entwurf");
   });
 
   it("collapse preserves timer state in session storage", () => {

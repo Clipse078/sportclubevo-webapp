@@ -3,6 +3,22 @@ export type MeetingLinkedRefs = {
   decisionId?: string;
 };
 
+export function buildMeetingActionAgendaLinkedRefs(agendaItemId: string): MeetingLinkedRefs {
+  return buildMeetingActionLinkedRefs({ agendaItemId });
+}
+
+export function buildMeetingActionLinkedRefs(input: {
+  agendaItemId?: string | null;
+  decisionId?: string | null;
+}): MeetingLinkedRefs {
+  const refs: MeetingLinkedRefs = {};
+  const agendaItemId = input.agendaItemId?.trim();
+  const decisionId = input.decisionId?.trim();
+  if (agendaItemId) refs.agendaItemId = agendaItemId;
+  if (decisionId) refs.decisionId = decisionId;
+  return refs;
+}
+
 export function parseMeetingLinkedRefs(raw: unknown): MeetingLinkedRefs {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return {};
