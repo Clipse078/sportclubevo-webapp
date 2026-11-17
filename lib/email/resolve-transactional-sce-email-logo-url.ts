@@ -23,7 +23,7 @@ export const TRANSACTIONAL_SCE_EMAIL_LOGO_DISPLAY_HEIGHT_PX = Math.round(
     SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_ASPECT,
 );
 
-function isVercelSsoProtectedDeploymentHost(hostname: string): boolean {
+export function isVercelSsoProtectedDeploymentHost(hostname: string): boolean {
   const normalized = hostname.trim().toLowerCase().replace(/\.$/, "");
   return normalized === "vercel.app" || normalized.endsWith(".vercel.app");
 }

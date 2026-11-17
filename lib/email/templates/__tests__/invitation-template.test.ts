@@ -17,7 +17,7 @@ describe("invitation email template", () => {
       recipientEmail: "irem.uysal@fcallschwil.ch",
       recipientFirstName: "Irem",
       tenantName: "FC Allschwil",
-      inviterDisplayName: "Patrick Scotton",
+      inviterDisplayName: "Einladende Person",
       expiryHours: 72,
       appBaseUrl: "https://fcallschwil.sportclubevo.com",
       sceLogoAbsoluteUrl: CANONICAL_LOGO_URL,

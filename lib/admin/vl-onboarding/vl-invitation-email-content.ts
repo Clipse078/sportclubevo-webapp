@@ -7,6 +7,7 @@ import { buildInvitationEmail, type InvitationEmailVariant } from "@/lib/email/t
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import { buildPasswordResetLink, resolveSecurityLinkBaseUrl } from "@/lib/server/security-link-url";
 import { prisma } from "@/lib/db/prisma";
+import { resolveInvitationInviterDisplayName } from "@/lib/admin/vl-onboarding/resolve-invitation-inviter-display-name";
 export const VL_INVITATION_ACCESS_SUMMARY = "Vereinsleitung — Vereinsentwicklung";
 
 export type VlInvitationEmailInput = {
@@ -16,6 +17,8 @@ export type VlInvitationEmailInput = {
   rawToken?: string;
   inviteUrlOverride?: string;
   inviterDisplayName?: string;
+  /** When set and `inviterDisplayName` is omitted, resolves the recorded inviter. */
+  actorUserId?: string;
   variant?: InvitationEmailVariant;
 };
 
@@ -59,12 +62,16 @@ export async function buildVlInvitationEmailContent(
   }
   const sceLogoAbsoluteUrl = resolveTransactionalSceEmailLogoAbsoluteUrl();
 
+  const inviterDisplayName =
+    input.inviterDisplayName?.trim() ||
+    (await resolveInvitationInviterDisplayName(input.actorUserId));
+
   const { subject, html, text } = buildInvitationEmail({
     inviteUrl,
     recipientEmail: input.recipientEmail,
     recipientFirstName: input.recipientFirstName,
     tenantName,
-    inviterDisplayName: input.inviterDisplayName,
+    inviterDisplayName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl,
     sceLogoAbsoluteUrl,

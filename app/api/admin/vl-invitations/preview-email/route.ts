@@ -7,17 +7,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
+import { resolveAdminInvitationEmailPreviewLogoUrl } from "@/lib/email/resolve-admin-invitation-email-preview-logo-url";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import {
   INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
   INVITATION_PREVIEW_SAMPLE_FIRST_NAME_EXISTING,
   INVITATION_PREVIEW_SAMPLE_FIRST_NAME_NEW,
-  INVITATION_PREVIEW_SAMPLE_INVITER,
   INVITATION_PREVIEW_SAMPLE_RECIPIENT,
   INVITATION_PREVIEW_SAMPLE_TENANT,
 } from "@/lib/email/templates/invitation-preview-samples";
+import {
+  resolveInvitationInviterDisplayName,
+  resolveInvitationPreviewInviterDisplayName,
+} from "@/lib/admin/vl-onboarding/resolve-invitation-inviter-display-name";
 import { resolveSecurityLinkBaseUrl } from "@/lib/server/security-link-url";
 
 export async function POST(request: NextRequest) {
@@ -43,12 +46,20 @@ export async function POST(request: NextRequest) {
   } catch {
     appBaseUrl = "https://fcallschwil.sportclubevo.com";
   }
-  const sceLogoAbsoluteUrl = resolveTransactionalSceEmailLogoAbsoluteUrl();
+  const sceLogoAbsoluteUrl = resolveAdminInvitationEmailPreviewLogoUrl(request);
 
-  const inviterName =
+  const bodyInviter =
     typeof (body as { inviterDisplayName?: unknown })?.inviterDisplayName === "string"
       ? (body as { inviterDisplayName: string }).inviterDisplayName.trim()
-      : INVITATION_PREVIEW_SAMPLE_INVITER;
+      : "";
+
+  const effectiveUserId =
+    access.session.user?.effectiveUserId ?? access.session.user?.id ?? undefined;
+
+  const resolvedActorInviter =
+    bodyInviter || (await resolveInvitationInviterDisplayName(effectiveUserId));
+
+  const inviterName = resolveInvitationPreviewInviterDisplayName(resolvedActorInviter);
 
   const firstName =
     variant === "existing_account"

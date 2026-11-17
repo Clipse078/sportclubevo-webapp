@@ -148,6 +148,7 @@ function identityForRow(
 
 async function deliverDryRunEmail(
   tenantId: string,
+  actorUserId: string,
   email: string,
   firstName: string,
   transport: VlInvitationTransport,
@@ -157,6 +158,7 @@ async function deliverDryRunEmail(
     recipientEmail: email,
     recipientFirstName: firstName,
     inviteUrlOverride: INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
+    actorUserId,
   });
   return transport.deliver({
     recipientEmail: email,
@@ -246,6 +248,7 @@ export async function orchestrateVlInvitationSend(input: {
           recipientFirstName: previewFirstName || "du",
           rawToken: inviteResult.rawToken,
           variant: inviteResult.variant,
+          actorUserId: input.actorUserId,
         });
 
         const delivery = await input.transport.deliver({
@@ -287,6 +290,7 @@ export async function orchestrateVlInvitationSend(input: {
       row.action === "NEW_INVITATION" && !previewFirstName;
     const delivery = await deliverDryRunEmail(
       input.tenantId,
+      input.actorUserId,
       row.email,
       previewFirstName || "…",
       input.transport,

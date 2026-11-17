@@ -4,6 +4,15 @@ import { buildVlInvitationEmailContent } from "@/lib/admin/vl-onboarding/vl-invi
 
 vi.mock("server-only", () => ({}));
 
+const prismaUserFindUnique = vi.hoisted(() =>
+  vi.fn(async () => ({
+    firstName: "Live",
+    lastName: "Sender",
+    email: "sender@fcallschwil.ch",
+    person: null,
+  })),
+);
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     tenant: {
@@ -11,6 +20,7 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     user: {
       findFirst: vi.fn(async () => null),
+      findUnique: prismaUserFindUnique,
     },
   },
 }));
@@ -30,6 +40,7 @@ describe("buildVlInvitationEmailContent", () => {
       recipientEmail: "irem.uysal@fcallschwil.ch",
       recipientFirstName: "Irem",
       rawToken: "fixture-token",
+      actorUserId: "actor-sender",
     });
     expect(content.subject).toBe("Einladung zu FC Allschwil auf SportClubEvo");
     expect(content.html).toContain("#9A5F28");
@@ -39,5 +50,7 @@ describe("buildVlInvitationEmailContent", () => {
       `https://fcallschwil.sportclubevo.com${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}`,
     );
     expect(content.html).not.toContain("vercel.app");
+    expect(content.html).toContain("Live Sender hat dich eingeladen");
+    expect(content.html).not.toContain("Patrick Scotton");
   });
 });
