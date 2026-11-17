@@ -1,102 +1,140 @@
 /**
- * Invitation email template — SportClubEvo branding.
+ * Invitation email template — SportClubEvo × club branding.
  *
  * Sent when an admin invites a person to join a tenant. The link
  * uses the same password-reset infrastructure (PasswordResetToken
  * with isInvitation=true) so the recipient can set their own password
- * on first login.
+ * on first login, or accept into an existing account.
  */
+
+import { escapeHtml } from "@/lib/email/escape-html";
+
+export type InvitationEmailVariant = "new_account" | "existing_account";
 
 export type InvitationEmailData = {
   inviteUrl: string;
   recipientEmail: string;
   recipientFirstName: string;
   tenantName: string;
+  inviterDisplayName?: string;
   expiryHours: number;
   /** Absolute HTTPS base URL. Must not end with a slash. */
   appBaseUrl?: string;
+  variant?: InvitationEmailVariant;
+  /** Short German summary of offered access (no permission keys). */
+  accessSummary?: string;
 };
+
+const NAVY = "#0F172A";
+const BODY = "#334155";
+const MUTED = "#64748B";
+const COPPER = "#B87333";
+const COPPER_HOVER = "#9A5F28";
+const BORDER = "#E2E8F0";
 
 export function buildInvitationEmail(data: InvitationEmailData): {
   subject: string;
   html: string;
   text: string;
 } {
-  const { inviteUrl, recipientFirstName, tenantName, expiryHours, appBaseUrl } = data;
+  const {
+    inviteUrl,
+    recipientFirstName,
+    tenantName,
+    inviterDisplayName,
+    expiryHours,
+    appBaseUrl,
+    variant = "new_account",
+    accessSummary,
+  } = data;
 
   const logoUrl = appBaseUrl
     ? `${appBaseUrl}/images/branding/sportclubevo_logo.png`
     : "";
 
-  const subject = `Einladung zu ${tenantName} — SportClubEvo`;
+  const subject = `Einladung zu ${tenantName} auf SportClubEvo`;
+
+  const safeTenant = escapeHtml(tenantName);
+  const safeFirst = escapeHtml(recipientFirstName || "du");
+  const safeInviter = inviterDisplayName ? escapeHtml(inviterDisplayName) : null;
+  const safeUrl = escapeHtml(inviteUrl);
+  const safeSummary = accessSummary ? escapeHtml(accessSummary) : null;
+
+  const introExisting = safeInviter
+    ? `${safeInviter} hat dich eingeladen, dem Vereinsbereich <strong style="color:${NAVY};">${safeTenant}</strong> auf SportClubEvo beizutreten.`
+    : `Du wurdest eingeladen, dem Vereinsbereich <strong style="color:${NAVY};">${safeTenant}</strong> auf SportClubEvo beizutreten.`;
+
+  const activationCopy =
+    variant === "existing_account"
+      ? `Mit deinem bestehenden SportClubEvo-Konto kannst du die Einladung annehmen — es ist <strong>kein neues Konto</strong> nötig.`
+      : `Klicke auf den Button, um dein Konto zu aktivieren und dein Passwort festzulegen.`;
+
+  const ctaLabel = "Einladung annehmen";
 
   const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${subject}</title>
+  <meta name="color-scheme" content="light" />
+  <title>${escapeHtml(subject)}</title>
 </head>
-<body style="margin:0;padding:0;background:#F8FAFC;font-family:system-ui,-apple-system,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;padding:40px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:${BODY};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 16px;">
     <tr>
       <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;">
-
-          <!-- Header -->
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
           <tr>
-            <td style="padding:24px 40px;border-bottom:1px solid #F3F4F6;">
-              ${logoUrl ? `<img src="${logoUrl}" alt="SportClubEvo" width="160" style="display:block;height:auto;" />` : `<span style="font-size:20px;font-weight:700;color:#1E293B;">SportClubEvo</span>`}
+            <td style="padding:24px 32px;border-bottom:1px solid ${BORDER};">
+              ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="SportClubEvo" width="148" height="auto" style="display:block;height:auto;" />` : `<span style="font-size:18px;font-weight:700;color:${NAVY};">SportClubEvo</span>`}
+              <p style="margin:12px 0 0;font-size:13px;color:${MUTED};line-height:1.5;">${safeTenant}</p>
             </td>
           </tr>
-
-          <!-- Body -->
           <tr>
-            <td style="padding:40px;">
-              <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1E293B;line-height:1.3;">
-                Einladung zu ${tenantName}
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:${NAVY};line-height:1.35;">
+                Einladung zu ${safeTenant}
               </h1>
-              <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
-                Hallo ${recipientFirstName},
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${BODY};">
+                Hallo ${safeFirst},
               </p>
-              <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
-                Du wurdest eingeladen, dem <strong>${tenantName}</strong>-Bereich auf SportClubEvo beizutreten.
-                Klicke auf den untenstehenden Button, um dein Konto zu aktivieren und dein Passwort festzulegen.
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${BODY};">
+                ${introExisting}
               </p>
-
-              <!-- CTA -->
-              <table cellpadding="0" cellspacing="0" style="margin:28px 0;">
+              ${
+                safeSummary
+                  ? `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${BODY};"><strong style="color:${NAVY};">Zugang:</strong> ${safeSummary}</p>`
+                  : ""
+              }
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${BODY};">
+                ${activationCopy}
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
                 <tr>
-                  <td style="background:#2563EB;border-radius:10px;">
-                    <a href="${inviteUrl}"
-                       style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px;">
-                      Konto aktivieren
+                  <td style="background:${COPPER};border-radius:8px;">
+                    <a href="${safeUrl}"
+                       style="display:inline-block;padding:14px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;background:${COPPER};">
+                      ${ctaLabel}
                     </a>
                   </td>
                 </tr>
               </table>
-
-              <p style="margin:0 0 12px;font-size:13px;color:#94A3B8;line-height:1.6;">
+              <p style="margin:0 0 12px;font-size:13px;line-height:1.55;color:${MUTED};">
                 Dieser Link ist ${expiryHours} Stunden gültig und kann nur einmal verwendet werden.
               </p>
-              <p style="margin:0 0 20px;font-size:13px;color:#94A3B8;line-height:1.6;">
+              <p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:${MUTED};">
                 Falls du diese Einladung nicht erwartest, kannst du diese E-Mail ignorieren.
-                Dein Konto wird ohne Aktivierung nicht zugänglich sein.
               </p>
-
-              <!-- Fallback URL -->
-              <p style="margin:20px 0 0;font-size:12px;color:#CBD5E1;line-height:1.6;">
-                Link funktioniert nicht? Kopiere diese URL in deinen Browser:<br />
-                <span style="word-break:break-all;color:#94A3B8;">${inviteUrl}</span>
+              <p style="margin:16px 0 0;font-size:12px;line-height:1.55;color:${MUTED};">
+                Link funktioniert nicht? Kopiere diese Adresse in deinen Browser:<br />
+                <span style="word-break:break-all;color:${BODY};">${safeUrl}</span>
               </p>
             </td>
           </tr>
-
-          <!-- Footer -->
           <tr>
-            <td style="padding:20px 40px;border-top:1px solid #F3F4F6;background:#F8FAFC;">
-              <p style="margin:0;font-size:12px;color:#94A3B8;text-align:center;">
-                SportClubEvo · Vereinsverwaltung einfach gemacht
+            <td style="padding:20px 32px;border-top:1px solid ${BORDER};background:#FAFAFA;">
+              <p style="margin:0;font-size:12px;color:${MUTED};text-align:center;line-height:1.5;">
+                SportClubEvo · Vereinsverwaltung für ${safeTenant}
               </p>
             </td>
           </tr>
@@ -107,20 +145,31 @@ export function buildInvitationEmail(data: InvitationEmailData): {
 </body>
 </html>`;
 
-  const text = `Einladung zu ${tenantName} — SportClubEvo
+  const textExisting =
+    variant === "existing_account"
+      ? "Mit deinem bestehenden SportClubEvo-Konto kannst du die Einladung annehmen — kein neues Konto nötig."
+      : "Lege mit dem Link dein Passwort fest, um dein Konto zu aktivieren.";
 
-Hallo ${recipientFirstName},
+  const textInviter = inviterDisplayName
+    ? `${inviterDisplayName} hat dich eingeladen.\n`
+    : "";
 
-Du wurdest eingeladen, dem ${tenantName}-Bereich auf SportClubEvo beizutreten.
+  const text = `${subject}
 
-Klicke auf den folgenden Link, um dein Konto zu aktivieren:
+Hallo ${recipientFirstName || "du"},
+
+${textInviter}Du wurdest eingeladen, dem ${tenantName}-Bereich auf SportClubEvo beizutreten.
+${accessSummary ? `Zugang: ${accessSummary}\n` : ""}
+${textExisting}
+
+${ctaLabel}:
 ${inviteUrl}
 
-Dieser Link ist ${expiryHours} Stunden gültig und kann nur einmal verwendet werden.
+Gültigkeit: ${expiryHours} Stunden, einmalige Verwendung.
 
-Falls du diese Einladung nicht erwartest, kannst du diese E-Mail ignorieren.
+Falls du diese Einladung nicht erwartest, ignoriere diese E-Mail.
 
-SportClubEvo · Vereinsverwaltung einfach gemacht
+SportClubEvo · ${tenantName}
 `;
 
   return { subject, html, text };

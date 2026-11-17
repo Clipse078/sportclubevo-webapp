@@ -263,6 +263,11 @@ async function _sendInvitationEmail(
   });
   const tenantName = tenant?.name ?? "Ihrem Club";
 
+  const existingGlobalUser = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" }, isActive: true },
+    select: { id: true },
+  });
+
   const { subject, html, text } = buildInvitationEmail({
     inviteUrl,
     recipientEmail: email,
@@ -270,6 +275,8 @@ async function _sendInvitationEmail(
     tenantName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl: appBaseUrl || undefined,
+    variant: existingGlobalUser ? "existing_account" : "new_account",
+    accessSummary: "Personen & Zugänge in deinem Verein",
   });
 
   await sendMail({ to: email, subject, html, text });

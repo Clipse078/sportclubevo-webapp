@@ -343,6 +343,30 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/vl-invitations/prepare/route.ts",
+    "urlPattern": "/api/admin/vl-invitations/prepare",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/vl-invitations/preview-email/route.ts",
+    "urlPattern": "/api/admin/vl-invitations/preview-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/vl-invitations/resolve/route.ts",
+    "urlPattern": "/api/admin/vl-invitations/resolve",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/vl-invitations/send/route.ts",
+    "urlPattern": "/api/admin/vl-invitations/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/audit-logs/route.ts",
     "urlPattern": "/api/audit-logs",
     "audience": "API"

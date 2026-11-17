@@ -115,6 +115,34 @@ export const PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE: PilotRoleDefinition = {
   permissionRationale: patrickRationale,
 };
 
+const vlContributorRationale: Record<string, string> = {
+  "tasks.view": "Eigene Aufgaben im Vereinsentwicklungs-Kontext",
+  "workspace.view": "Geteilte Dokumente (ACL)",
+  "targets.view": "Vereinsentwicklung — Ziele & Kennzahlen lesen",
+  "targets.manage": "Vereinsentwicklung — Ziele mitgestalten",
+  "meetings.view": "Vereinsentwicklung — Sitzungen lesen",
+  "meetings.manage": "Vereinsentwicklung — Sitzungen mitgestalten",
+  "initiatives.view": "Vereinsentwicklung — Vorhaben lesen",
+  "initiatives.manage": "Vereinsentwicklung — Vorhaben bearbeiten",
+};
+
+/**
+ * Least-privilege Vereinsleitung preset for new VL invitees (not Präsident / Club-Admin).
+ * Tenant-scoped role template — assign per membership, never platform-wide.
+ */
+export const FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE: PilotRoleDefinition = {
+  roleKey: "pilot_vereinsleitung_mitglied",
+  name: "Vereinsleitung (Pilot)",
+  description:
+    "Vereinsentwicklung mitgestalten: strategische Module und VL-Sitzungen; minimale Rechte, kein Club-Admin.",
+  permissionKeys: [
+    PERMISSIONS.TASKS_VIEW,
+    PERMISSIONS.WORKSPACE_VIEW,
+    ...FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS,
+  ],
+  permissionRationale: vlContributorRationale,
+};
+
 /** @deprecated Prefer PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE — retained for import stability. */
 export const PATRICK_SCOTTON_PILOT_VIEWER_ROLE = PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE;
 
