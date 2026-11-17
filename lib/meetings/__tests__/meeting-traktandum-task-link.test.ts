@@ -1,17 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildSeriesOccurrenceKey,
+} from "@/lib/tasks/recurrence-dates";
+import {
+  buildMeetingDecisionTaskOccurrenceKey,
   buildTraktandumTaskOccurrenceKey,
-  parseAgendaItemIdFromTraktandumTaskOccurrenceKey,
-  traktandumTaskOccurrenceKeyPrefixForAgenda,
+  isMeetingBridgeOccurrenceKey,
 } from "@/lib/meetings/meeting-traktandum-task-link";
 
-describe("meeting-traktandum-task-link", () => {
-  it("round-trips agenda id in occurrence key", () => {
-    const key = buildTraktandumTaskOccurrenceKey("agenda-1", "client-abc");
-    expect(key).toBe("sce-mtg-traktandum-task:v1:agenda-1:client-abc");
-    expect(parseAgendaItemIdFromTraktandumTaskOccurrenceKey(key)).toBe("agenda-1");
-    expect(traktandumTaskOccurrenceKeyPrefixForAgenda("agenda-1")).toBe(
-      "sce-mtg-traktandum-task:v1:agenda-1:",
-    );
+describe("meeting bridge occurrence keys", () => {
+  it("uses a dedicated namespace distinct from TaskSeries occurrence keys", () => {
+    const seriesKey = buildSeriesOccurrenceKey("series-1", "2026-09-21");
+    const traktandumKey = buildTraktandumTaskOccurrenceKey("agenda-1", "req-1");
+    const decisionKey = buildMeetingDecisionTaskOccurrenceKey("decision-1", "req-1");
+    expect(isMeetingBridgeOccurrenceKey(seriesKey)).toBe(false);
+    expect(isMeetingBridgeOccurrenceKey(traktandumKey)).toBe(true);
+    expect(isMeetingBridgeOccurrenceKey(decisionKey)).toBe(true);
+    expect(traktandumKey.startsWith("sce-mtg-traktandum-task:v1:")).toBe(true);
+    expect(decisionKey.startsWith("sce-mtg-decision-task:v1:")).toBe(true);
   });
 });

@@ -11,8 +11,24 @@ import { updateTask } from "@/lib/tasks/task-service";
 import { TaskValidationError } from "@/lib/tasks/errors";
 import type { ContextRelatedTaskSummaryDto } from "@/lib/tasks/context-related-task-types";
 import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
+import { buildMeetingDecisionTaskOccurrenceKey } from "@/lib/meetings/meeting-traktandum-task-link";
+import {
+  assertMeetingTaskIdempotencyPayloadMatches,
+  isPrismaUniqueConstraintError,
+  type MeetingTaskIdempotencyPayload,
+} from "@/lib/meetings/meeting-task-create-idempotency";
 
 export type MeetingDecisionTaskSummary = ContextRelatedTaskSummaryDto;
+
+const IDEMPOTENCY_TASK_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  dueAt: true,
+  priority: true,
+  orgUnitId: true,
+  assignees: { select: { userId: true } },
+} as const;
 
 async function assertDecisionInMeeting(actor: ActorContext, meetingId: string, decisionId: string) {
   const guard = await requireMeetingAccess({ actor, id: meetingId, access: "read" });
@@ -27,6 +43,13 @@ async function assertDecisionInMeeting(actor: ActorContext, meetingId: string, d
     throw new Error("Beschluss nicht gefunden.");
   }
   return decision;
+}
+
+async function loadTaskForIdempotency(tenantId: string, occurrenceKey: string) {
+  return prisma.task.findFirst({
+    where: { tenantId, seriesOccurrenceKey: occurrenceKey },
+    select: IDEMPOTENCY_TASK_SELECT,
+  });
 }
 
 export async function listMeetingDecisionTasks(
@@ -58,6 +81,7 @@ export type CreateMeetingDecisionTaskInput = {
   orgUnitId?: string | null;
   assigneeUserIds?: string[];
   idempotencyKey?: string | null;
+  clientRequestId?: string | null;
 };
 
 export async function createMeetingDecisionTask(
@@ -82,46 +106,62 @@ export async function createMeetingDecisionTask(
     throw new TaskValidationError("Titel ist erforderlich.");
   }
 
-  if (input.idempotencyKey?.trim()) {
-    const existing = await prisma.task.findFirst({
-      where: {
-        tenantId: ctx.tenantId,
-        contextType: TaskContextType.MEETING_DECISION,
-        contextId: decisionId,
-        title,
-      },
-      select: { id: true },
-    });
+  const clientRequestId = input.clientRequestId?.trim() || input.idempotencyKey?.trim() || null;
+  const dueAt =
+    input.dueAt && !Number.isNaN(Date.parse(input.dueAt)) ? new Date(input.dueAt) : null;
+  const payload: MeetingTaskIdempotencyPayload = {
+    title,
+    description: input.description,
+    dueAt,
+    priority: input.priority,
+    orgUnitId: input.orgUnitId,
+    assigneeUserIds: input.assigneeUserIds,
+  };
+
+  let occurrenceKey: string | null = null;
+  if (clientRequestId) {
+    occurrenceKey = buildMeetingDecisionTaskOccurrenceKey(decisionId, clientRequestId);
+    const existing = await loadTaskForIdempotency(ctx.tenantId, occurrenceKey);
     if (existing) {
+      assertMeetingTaskIdempotencyPayloadMatches(payload, existing);
       return { taskId: existing.id, deduplicated: true as const };
     }
   }
 
-  const dueAt =
-    input.dueAt && !Number.isNaN(Date.parse(input.dueAt)) ? new Date(input.dueAt) : null;
+  try {
+    const task = await createTaskWithContextDefaults(ctx, {
+      task: {
+        title,
+        description: input.description?.trim() || null,
+        dueAt,
+        priority: (input.priority as never) ?? undefined,
+        orgUnitId: input.orgUnitId ?? null,
+        assigneeUserIds: input.assigneeUserIds ?? [],
+        seriesOccurrenceKey: occurrenceKey,
+      },
+      trustedContext: {
+        contextType: TaskContextType.MEETING_DECISION,
+        contextId: decisionId,
+      },
+    });
 
-  const task = await createTaskWithContextDefaults(ctx, {
-    task: {
-      title,
-      description: input.description?.trim() || null,
-      dueAt,
-      priority: (input.priority as never) ?? undefined,
-      orgUnitId: input.orgUnitId ?? null,
-      assigneeUserIds: input.assigneeUserIds ?? [],
-    },
-    trustedContext: {
-      contextType: TaskContextType.MEETING_DECISION,
-      contextId: decisionId,
-    },
-  });
+    await refreshInitiativeProgressForTaskContext(
+      ctx.tenantId,
+      TaskContextType.MEETING_DECISION,
+      decisionId,
+    );
 
-  await refreshInitiativeProgressForTaskContext(
-    ctx.tenantId,
-    TaskContextType.MEETING_DECISION,
-    decisionId,
-  );
-
-  return { taskId: task.id, deduplicated: false as const };
+    return { taskId: task.id, deduplicated: false as const };
+  } catch (error) {
+    if (occurrenceKey && isPrismaUniqueConstraintError(error)) {
+      const raced = await loadTaskForIdempotency(ctx.tenantId, occurrenceKey);
+      if (raced) {
+        assertMeetingTaskIdempotencyPayloadMatches(payload, raced);
+        return { taskId: raced.id, deduplicated: true as const };
+      }
+    }
+    throw error;
+  }
 }
 
 export async function linkExistingTaskToMeetingDecision(

@@ -4,6 +4,15 @@
  */
 
 const KEY_PREFIX = "sce-mtg-traktandum-task:v1" as const;
+const DECISION_KEY_PREFIX = "sce-mtg-decision-task:v1" as const;
+
+/** Bridge keys are namespaced; they must never match Aufgaben series keys (`seriesId:YYYY-MM-DD`). */
+export function isMeetingBridgeOccurrenceKey(occurrenceKey: string | null | undefined): boolean {
+  if (!occurrenceKey) return false;
+  return (
+    occurrenceKey.startsWith(`${KEY_PREFIX}:`) || occurrenceKey.startsWith(`${DECISION_KEY_PREFIX}:`)
+  );
+}
 
 export function buildTraktandumTaskOccurrenceKey(agendaItemId: string, clientRequestId: string): string {
   const agenda = agendaItemId.trim();
@@ -27,4 +36,13 @@ export function parseAgendaItemIdFromTraktandumTaskOccurrenceKey(
   if (parts.length < 4) return null;
   const agendaId = parts[2]?.trim();
   return agendaId || null;
+}
+
+export function buildMeetingDecisionTaskOccurrenceKey(decisionId: string, clientRequestId: string): string {
+  const decision = decisionId.trim();
+  const client = clientRequestId.trim();
+  if (!decision || !client) {
+    throw new Error("Beschluss-Aufgabe-Link erfordert Beschluss und Idempotenz-ID.");
+  }
+  return `${DECISION_KEY_PREFIX}:${decision}:${client}`;
 }

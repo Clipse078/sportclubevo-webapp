@@ -82,6 +82,8 @@ export type CreateTaskInput = {
   orgUnitGrantIds?: string[];
   viewerUserGrantIds?: string[];
   visibilityScope?: TaskVisibilityScope;
+  /** AUFGABEN-03B occurrence idempotency or meeting bridge keys (must be unique per tenant). */
+  seriesOccurrenceKey?: string | null;
 };
 
 /** AUFGABEN-06P — compact Meine Aufgaben creation (canonical Task, CLUB visibility default). */
