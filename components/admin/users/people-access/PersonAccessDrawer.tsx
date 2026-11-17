@@ -67,6 +67,7 @@ export function PersonAccessQuickViewBody({
   overrideSaving,
   onOverrideDraftChange,
   onResetOverrides,
+  profileHeaderMode = "full",
 }: {
   user: TenantUserItem;
   isSelf: boolean;
@@ -83,6 +84,7 @@ export function PersonAccessQuickViewBody({
   overrideSaving: boolean;
   onOverrideDraftChange: (next: Record<string, PermissionOverrideEffect>) => void;
   onResetOverrides: () => void;
+  profileHeaderMode?: "full" | "compact";
 }) {
   const { activeTab } = useContextDetailTab<PersonQuickViewTabId>();
 
@@ -95,29 +97,37 @@ export function PersonAccessQuickViewBody({
         testId="person-quick-view-panel-uebersicht"
       >
         <div className="space-y-4">
-          <p className="text-xs text-[var(--muted)]">
-            Schnellüberblick — für vollständige Verwaltung die Detailseite öffnen.
-          </p>
-          <div className="flex items-center gap-3">
-            <AdminAvatar name={user.name} size="md" />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold">{user.name}</p>
-                {isSelf ? (
-                  <span className="rounded-full border border-amber-500/40 bg-amber-950/30 px-2 text-[0.65rem] font-semibold text-amber-200">
-                    Ich
-                  </span>
-                ) : null}
-                {user.isPlatformSystemIdentity ? (
-                  <span className="rounded-full border border-slate-500/30 bg-slate-900/40 px-2 text-[0.65rem] font-semibold text-slate-200">
-                    Systemzugang
-                  </span>
-                ) : null}
+          {profileHeaderMode === "full" ? (
+            <>
+              <p className="text-xs text-[var(--muted)]">
+                Schnellüberblick — Verwaltung über «Zugriff bearbeiten» oder die Detailseite.
+              </p>
+              <div className="flex items-center gap-3">
+                <AdminAvatar name={user.name} size="md" />
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold">{user.name}</p>
+                    {isSelf ? (
+                      <span className="rounded-full border border-amber-500/40 bg-amber-950/30 px-2 text-[0.65rem] font-semibold text-amber-200">
+                        Ich
+                      </span>
+                    ) : null}
+                    {user.isPlatformSystemIdentity ? (
+                      <span className="rounded-full border border-slate-500/30 bg-slate-900/40 px-2 text-[0.65rem] font-semibold text-slate-200">
+                        Systemzugang
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="text-sm text-[var(--muted)]">{user.email}</p>
+                </div>
               </div>
-              <p className="text-sm text-[var(--muted)]">{user.email}</p>
-            </div>
-          </div>
-          <AdminStatusPill label={status.label} tone={status.tone} />
+              <AdminStatusPill label={status.label} tone={status.tone} />
+            </>
+          ) : (
+            <p className="text-xs text-[var(--muted)]">
+              Kontoaktivität und Mitgliedschaft — Rollen und Module in den weiteren Registerkarten.
+            </p>
+          )}
           <dl className="space-y-2 text-sm text-[var(--text-2)]">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -357,16 +367,11 @@ export default function PersonAccessDrawer({
       footer={
         canImpersonateTarget || (canManage && !user.isPlatformSystemIdentity) ? (
           <div className="flex flex-wrap gap-2">
-            {canImpersonateTarget ? (
-              <ImpersonateButton userId={user.userId} variant="person-detail" />
-            ) : null}
             {canManage && !user.isPlatformSystemIdentity ? (
               <>
                 <Link
                   href={zugriffHref}
-                  className={
-                    canImpersonateTarget ? "fca-button-secondary text-sm" : "fca-button-primary text-sm"
-                  }
+                  className="fca-button-primary text-sm"
                   data-testid="person-quick-view-edit-access"
                   onClick={() => {
                     onClose();
@@ -384,6 +389,9 @@ export default function PersonAccessDrawer({
                   Detailseite
                 </Link>
               </>
+            ) : null}
+            {canImpersonateTarget ? (
+              <ImpersonateButton userId={user.userId} variant="person-detail" />
             ) : null}
           </div>
         ) : user.isPlatformSystemIdentity ? (

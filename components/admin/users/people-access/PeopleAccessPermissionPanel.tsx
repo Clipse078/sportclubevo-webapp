@@ -171,9 +171,22 @@ export default function PeopleAccessPermissionPanel({
             const summary =
               itemsWithAccess.length === 0
                 ? "Kein Zugriff"
-                : itemsWithAccess.length === section.items.length
-                  ? "Vollständig"
-                  : `${itemsWithAccess.length} von ${section.items.length} freigegeben`;
+                : (() => {
+                    const viewOnly = itemsWithAccess.some(
+                      (i) =>
+                        !i.advanced &&
+                        i.access.includes("Ansehen") &&
+                        !i.access.includes("Bearbeiten"),
+                    );
+                    const allModulesCovered = itemsWithAccess.length === section.items.length;
+                    if (allModulesCovered && viewOnly) {
+                      return "Modulzugriff teilweise (nur Ansehen)";
+                    }
+                    if (allModulesCovered && !viewOnly) {
+                      return "Modulberechtigungen — Ansehen & bearbeiten";
+                    }
+                    return `${itemsWithAccess.length} von ${section.items.length} Modulen`;
+                  })();
             return (
               <li key={section.label}>
                 <span className="font-medium text-[var(--foreground)]">{section.label}</span>: {summary}
