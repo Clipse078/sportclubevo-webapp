@@ -10,8 +10,7 @@ export const MEETING_MENU_ACCEPTANCE_PATH =
 export const STAGE_APP_URL = "https://sportclubevo-webapp-stage.vercel.app" as const;
 
 /** Updated after push — Vercel Ready SHA from GitHub check. */
-export const MEETING_MENU_VERIFIED_HEAD_SHA_PLACEHOLDER =
-  "pending-push" as const;
+export const MEETING_MENU_VERIFIED_HEAD_SHA = "14cb063c1684c0405ce8cbbd6fb2b07a2203f776" as const;
 
 /**
  * Menu styling cause (PO):
