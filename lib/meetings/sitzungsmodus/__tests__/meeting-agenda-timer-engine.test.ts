@@ -120,7 +120,7 @@ describe("meeting agenda timer engine", () => {
     expect(buildMeetingAgendaTimerPresentation(30, "ready", false).kind).toBe("normal");
   });
 
-  it("chime milestones at 10,3,2,1,0 with deduplication and pause guard", () => {
+  it("chime milestones at each second 10→0 with deduplication and pause guard", () => {
     let state = createMeetingAgendaTimerState(SCOPE);
     state = startSitzungsmodus(state);
     state = setChimeEnabled(state, true);
@@ -130,11 +130,13 @@ describe("meeting agenda timer engine", () => {
     expect(shouldChimeAtSecond(state, 10, 10)).toBe(true);
     state = markChimeMilestone(state, 10);
     expect(shouldChimeAtSecond(state, 10, 10)).toBe(false);
-    expect(collectDueChimeMilestones(state, 3)).toEqual([3]);
+    expect(collectDueChimeMilestones(state, 9.8, 10)).toEqual([9]);
+    expect(collectDueChimeMilestones(state, 3.2, 11)).toEqual([3]);
     state = markChimeMilestone(state, 3);
     expect(shouldChimeAtSecond(state, 0, 0)).toBe(true);
     state = pauseAgendaTimer(state, 0);
     expect(shouldChimeAtSecond(state, 0, 0)).toBe(false);
+    expect(collectDueChimeMilestones(state, 0, 0)).toEqual([]);
   });
 
   it("short ready topics stay neutral until started", () => {

@@ -9,8 +9,12 @@ import {
   MEETING_AGENDA_TIMER_CHIME_SECONDS,
   MEETING_AGENDA_TIMER_STORAGE_VERSION,
 } from "./meeting-agenda-timer-types";
+import {
+  chimeMilestoneSecondFromCue,
+  collectDueChimeCues,
+} from "./meeting-agenda-timer-chime-scheduler";
 
-const FINISHING_CHIME_SECONDS = new Set([10, 3, 2, 1, 0]);
+const FINISHING_CHIME_SECONDS = new Set([10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
 
 function emptyChimedMilestones(): Record<string, number[]> {
   return {};
@@ -350,8 +354,10 @@ export function shouldChimeAtSecond(
 export function collectDueChimeMilestones(
   state: MeetingAgendaTimerState,
   remainingSec: number,
+  lastObservedFloorSec: number | null = null,
 ): number[] {
-  return MEETING_AGENDA_TIMER_CHIME_SECONDS.filter((s) => shouldChimeAtSecond(state, remainingSec, s));
+  const { cues } = collectDueChimeCues(state, remainingSec, lastObservedFloorSec);
+  return cues.map(chimeMilestoneSecondFromCue);
 }
 
 /** @deprecated Use shouldChimeAtSecond / collectDueChimeMilestones */

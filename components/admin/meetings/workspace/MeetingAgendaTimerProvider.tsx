@@ -19,7 +19,6 @@ import {
   endSitzungsmodus,
   extendAgendaTimerOneMinute,
   goToNextAgendaTopic,
-  collectDueChimeMilestones,
   markChimeMilestone,
   pauseAgendaTimer,
   resetActiveAgendaTimer,
@@ -40,7 +39,16 @@ import {
   loadMeetingAgendaTimerState,
   saveMeetingAgendaTimerState,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-storage";
-import { playMeetingAgendaTimerChime } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-chime";
+import {
+  playMeetingAgendaTimerCompletionCue,
+  playMeetingAgendaTimerCountdownCue,
+  stopMeetingAgendaTimerAudio,
+} from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-chime";
+import {
+  chimeMilestoneSecondFromCue,
+  collectDueChimeCues,
+  remainingSecDisplayFloor,
+} from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-chime-scheduler";
 import {
   buildTimerLiveRegionMessage,
   resolveTimerLiveRegionMilestone,
@@ -112,6 +120,8 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   const liveRegionRef = useRef<HTMLSpanElement | null>(null);
   const lastAnnouncedMilestoneRef = useRef<string | null>(null);
   const focusCardRef = useRef<HTMLDivElement | null>(null);
+  const lastObservedFloorRef = useRef<number | null>(null);
+  const prevPhaseRef = useRef<MeetingAgendaTimerState["phase"]>("idle");
 
   const orderedItems = useMemo((): MeetingAgendaTimerOrderedItem[] => {
     return [...agendaItems]
@@ -139,6 +149,8 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
 
   useEffect(() => {
     lastAnnouncedMilestoneRef.current = null;
+    stopMeetingAgendaTimerAudio();
+    lastObservedFloorRef.current = null;
   }, [state.activeAgendaItemId]);
 
   useEffect(() => {
@@ -182,12 +194,36 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   );
 
   useEffect(() => {
+    if (state.phase === "idle") {
+      lastObservedFloorRef.current = null;
+    } else if (prevPhaseRef.current === "idle" && state.phase === "running") {
+      lastObservedFloorRef.current = null;
+    } else if (prevPhaseRef.current === "paused" && state.phase === "running") {
+      lastObservedFloorRef.current = remainingSecDisplayFloor(remainingSec);
+    }
+    if (state.phase === "paused") {
+      stopMeetingAgendaTimerAudio();
+    }
+    prevPhaseRef.current = state.phase;
+  }, [state.phase, remainingSec]);
+
+  useEffect(() => {
     if (!state.chimeEnabled || state.phase !== "running" || !state.activeTopicHasStarted) return;
-    const due = collectDueChimeMilestones(state, remainingSec);
-    if (due.length === 0) return;
-    playMeetingAgendaTimerChime();
-    setState((s) => due.reduce((acc, milestone) => markChimeMilestone(acc, milestone), s));
-  }, [remainingSec, state]);
+    const { cues, nextObservedFloorSec } = collectDueChimeCues(
+      state,
+      remainingSec,
+      lastObservedFloorRef.current,
+    );
+    lastObservedFloorRef.current = nextObservedFloorSec;
+    if (cues.length === 0) return;
+    for (const cue of cues) {
+      if (cue.kind === "completion") playMeetingAgendaTimerCompletionCue();
+      else playMeetingAgendaTimerCountdownCue();
+    }
+    setState((s) =>
+      cues.reduce((acc, cue) => markChimeMilestone(acc, chimeMilestoneSecondFromCue(cue)), s),
+    );
+  }, [remainingSec, state.chimeEnabled, state.phase, state.activeTopicHasStarted, state.activeAgendaItemId, state.chimedMilestonesByTopicId]);
 
   useEffect(() => {
     const milestone = resolveTimerLiveRegionMilestone(presentation, lifecycle, remainingSec);
