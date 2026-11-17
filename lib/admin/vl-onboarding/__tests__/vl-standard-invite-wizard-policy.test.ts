@@ -39,6 +39,6 @@ describe("vl standard invite wizard policy", () => {
       sendMode: "LIVE_ALLOWED",
       contributorRoleProvisioned: false,
     });
-    expect(blocker).toContain("Vereinsleitung (Pilot)");
+    expect(blocker).toContain("eingerichtet");
   });
 });

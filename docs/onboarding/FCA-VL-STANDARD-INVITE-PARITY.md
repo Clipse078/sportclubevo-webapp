@@ -18,17 +18,31 @@
 
 | Route | Purpose |
 | --- | --- |
-| `POST /api/admin/people-access/vl-invite/resolve` | Einzelempfänger + Rollen-Sync-Diff |
+| `POST /api/admin/people-access/vl-invite/resolve` | Einzelempfänger + Contributor-Rollen-Diff (Diagnose) |
 | `POST /api/admin/people-access/vl-invite/preview-email` | `buildVlInvitationEmailContent` (inert link) |
 | `POST /api/admin/people-access/vl-invite/send` | `orchestrateVlInvitationSend` (Dry-Run default) |
 
-## Contributor role (nicht angewendet in diesem Lauf)
+## Contributor role (operator / release)
 
 ```bash
 npx tsx scripts/sync-fca-vereinsleitung-contributor-pilot-role.ts
 ```
 
-Live-Versand bleibt blockiert bis Rolle `pilot_vereinsleitung_mitglied` im Mandant existiert.
+Apply (STAGE only, fingerprint `acd3b37682911890`):
+
+```bash
+APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+SCE_OPERATION_AUTHORIZATION=sync-fca-vereinsleitung-contributor-pilot-role:stage \
+APPLY_FCA_VL_CONTRIBUTOR_PILOT_ROLE_SYNC=true npx tsx scripts/sync-fca-vereinsleitung-contributor-pilot-role.ts
+```
+
+## Live send (canonical STAGE only)
+
+- Vercel project: `sportclubevo-webapp-stage`
+- Scope: **Production** (serves `https://fcallschwil.sportclubevo.com`)
+- Set `VL_INVITATION_LIVE_SEND=true` — **not** on Preview scopes or the separate production project
+- Verify: `GET https://fcallschwil.sportclubevo.com/api/health/diag` → `operationalPolicy.vlInvitationSendMode` = `LIVE_ALLOWED`
+- Sending still requires `users.invite`, `confirmLiveSend: true`, contributor role provisioned, and final UI confirmation
 
 ## Tests
 

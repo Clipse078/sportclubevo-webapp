@@ -14,10 +14,7 @@ import {
   resolveVlStandardInviteLiveSendBlocker,
   resolveVlStandardInviteWizardBlocker,
 } from "@/lib/admin/vl-onboarding/vl-standard-invite-wizard-policy";
-import {
-  VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_SYNC_HINT_PREFIX,
-  VL_STANDARD_INVITE_PREPARE_STATUS_HINT,
-} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import { VL_STANDARD_INVITE_PREPARE_STATUS_HINT } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 function VlAccessPreviewTable({ rows }: { rows: VereinsentwicklungAccessRow[] }) {
   return (
@@ -320,12 +317,6 @@ export function PeopleAccessVlAccessStep({ ctx }: { ctx: PeopleAccessVlWizardCon
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" aria-hidden />
           <p>{ctx.resolvePayload.contributorRoleProvisioningNote}</p>
         </div>
-      ) : null}
-      {ctx.contributorRoleSyncDiff?.roleMissing ? (
-        <p className="text-xs text-[var(--muted)]" data-testid="vl-contributor-role-sync-hint">
-          {VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_SYNC_HINT_PREFIX}{" "}
-          <code className="text-[11px]">npx tsx scripts/sync-fca-vereinsleitung-contributor-pilot-role.ts</code>
-        </p>
       ) : null}
     </div>
   );

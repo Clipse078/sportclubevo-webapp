@@ -13,6 +13,7 @@ import {
 import { resolveDeploymentIdentity } from "@/lib/server/deployment-identity";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,9 @@ export async function GET(): Promise<NextResponse> {
       identityViolations: identity.identityViolations,
     },
     checks: identity.authConfigured,
+    operationalPolicy: {
+      vlInvitationSendMode: resolveVlInvitationSendMode(),
+    },
     database: {
       host: identity.databaseHost,
       fingerprint: identity.databaseFingerprint,

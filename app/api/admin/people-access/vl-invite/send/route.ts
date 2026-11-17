@@ -18,7 +18,10 @@ import {
   createMockVlInvitationTransport,
 } from "@/lib/admin/vl-onboarding/vl-invitation-transport";
 import { orchestrateVlInvitationSend } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
-import { VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import {
+  VL_LIVE_SEND_CONTRIBUTOR_ROLE_BLOCKED,
+  VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
+} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import { normalizePeopleAccessEmail } from "@/lib/admin/people-access/email-normalize";
 import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 import { isValidVlOrgFunctionKey } from "@/lib/admin/vl-onboarding/vl-org-function-options";
@@ -123,8 +126,7 @@ export async function POST(request: NextRequest) {
         {
           ...result,
           sent: false,
-          error:
-            "Live-Versand blockiert — Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt. Rollen-Sync zuerst ausführen.",
+          error: VL_LIVE_SEND_CONTRIBUTOR_ROLE_BLOCKED,
         },
         { status: 409 },
       );

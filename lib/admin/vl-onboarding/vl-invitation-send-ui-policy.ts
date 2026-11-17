@@ -1,3 +1,4 @@
+import { VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
 
 export type VlInvitationSendUiRecipient = {
@@ -48,7 +49,7 @@ export function resolveVlInvitationLiveSendBlocker(
     return "Keine Berechtigung zum Einladen.";
   }
   if (input.contributorRoleProvisioned === false) {
-    return "Die Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt — Rollen-Sync zuerst abschließen.";
+    return VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED;
   }
   if (input.invalidEmailCount > 0) {
     return "Ungültige oder doppelte E-Mail-Zeilen beheben.";

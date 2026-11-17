@@ -30,7 +30,7 @@ describe("vl invitation send ui policy", () => {
       invalidEmailCount: 0,
       resolved: baseResolved,
     });
-    expect(blocker).toContain("Vereinsleitung (Pilot)");
+    expect(blocker).toContain("eingerichtet");
   });
 
   it("enables live send only when prerequisites are satisfied", () => {
