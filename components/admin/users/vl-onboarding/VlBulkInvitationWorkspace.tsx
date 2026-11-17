@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Mail, Send } from "lucide-react";
 import SceClubDevelopmentContextualCreateCollapsibleShell from "@/components/sce/club-development/SceClubDevelopmentContextualCreateCollapsibleShell";
 import { Button } from "@/components/ui/Button";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
 import { FCA_VL_INVITATION_CONFIRMED_EMAILS } from "@/lib/admin/vl-onboarding/fca-vl-confirmed-invitee-emails";
 import type { VereinsentwicklungAccessRow } from "@/lib/admin/people-access/vereinsentwicklung-access-presentation";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import { resolveVlInvitationSendUiState } from "@/lib/admin/vl-onboarding/vl-invitation-send-ui-policy";
 
 type ValidationRow = {
   raw: string;
@@ -63,7 +66,6 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
   const [resolved, setResolved] = useState<ResolvedRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sendNote, setSendNote] = useState<string | null>(null);
   const [previewVariant, setPreviewVariant] = useState<"new_account" | "existing_account">(
     "new_account",
   );
@@ -73,6 +75,9 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
     null,
   );
   const [contributorRoleNote, setContributorRoleNote] = useState<string | null>(null);
+  const [sendMode, setSendMode] = useState<VlInvitationSendMode>("DRY_RUN");
+  const [liveSendConfirmed, setLiveSendConfirmed] = useState(false);
+  const [actionNote, setActionNote] = useState<string | null>(null);
 
   const resolveRows = useCallback(async () => {
     if (!canInvite) return;
@@ -90,6 +95,7 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
         resolved?: ResolvedRow[];
         contributorRoleProvisioned?: boolean;
         contributorRoleProvisioningNote?: string | null;
+        sendMode?: VlInvitationSendMode;
       };
       if (!res.ok) {
         setError(data.error ?? "Auflösung fehlgeschlagen.");
@@ -99,6 +105,9 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
       setResolved(data.resolved ?? []);
       setContributorRoleProvisioned(data.contributorRoleProvisioned ?? null);
       setContributorRoleNote(data.contributorRoleProvisioningNote ?? null);
+      if (data.sendMode) {
+        setSendMode(data.sendMode);
+      }
     } catch {
       setError("Netzwerkfehler bei der Auflösung.");
     } finally {
@@ -146,26 +155,49 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
     [validationRows],
   );
 
-  const handleDryRunSend = async () => {
-    setSendNote(null);
+  const sendUi = useMemo(
+    () =>
+      resolveVlInvitationSendUiState({
+        sendMode,
+        canInvite,
+        contributorRoleProvisioned,
+        invalidEmailCount: invalidCount,
+        resolved,
+      }),
+    [sendMode, canInvite, contributorRoleProvisioned, invalidCount, resolved],
+  );
+
+  const refreshPreview = useCallback(async () => {
+    setActionNote(null);
+    setError(null);
+    await resolveRows();
+    await loadEmailPreview();
+    setActionNote("Vorschau aktualisiert — keine Einladungen erzeugt, keine E-Mails versendet.");
+  }, [resolveRows, loadEmailPreview]);
+
+  const handleLiveSend = async () => {
+    if (!liveSendConfirmed) return;
+    setActionNote(null);
     setError(null);
     const res = await fetch("/api/admin/vl-invitations/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ raw: rawEmails, confirmLiveSend: false }),
+      body: JSON.stringify({ raw: rawEmails, confirmLiveSend: true }),
     });
     const data = (await res.json()) as {
       error?: string;
       sent?: boolean;
-      preservedDraft?: boolean;
       resolved?: ResolvedRow[];
     };
     if (data.resolved) {
       setResolved(data.resolved);
     }
-    setSendNote(
-      data.error ?? (data.sent ? "Versendet." : "Vorschau abgeschlossen — keine E-Mails versendet."),
-    );
+    if (!res.ok) {
+      setError(data.error ?? "Versand fehlgeschlagen.");
+      return;
+    }
+    setActionNote(data.sent ? "Einladungen versendet." : (data.error ?? "Versand abgeschlossen."));
+    setLiveSendConfirmed(false);
   };
 
   if (!canInvite) return null;
@@ -305,23 +337,64 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
           ) : null}
         </section>
 
-        <section className="space-y-2 border-t border-border pt-4">
+        <section className="space-y-3 border-t border-border pt-4">
           <Button
             type="button"
-            data-testid="vl-invitation-dry-run-send"
-            onClick={() => void handleDryRunSend()}
+            data-testid="vl-invitation-preview-refresh"
+            variant="secondary"
+            onClick={() => void refreshPreview()}
+            disabled={!sendUi.primaryButtonEnabled || loading || previewLoading}
             className="gap-2"
           >
-            <Send className="size-4" aria-hidden />
-            Einladungen senden
+            {loading || previewLoading ? "Wird aktualisiert…" : sendUi.primaryButtonLabel}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            In diesem Paket werden keine Einladungen erzeugt oder versendet — nur die Vorschau wird aktualisiert.
-          </p>
-          {sendNote ? (
-            <p className="flex items-center gap-1 text-xs text-foreground">
+          {sendUi.previewStatusHint ? (
+            <p className="text-xs text-muted-foreground" data-testid="vl-invitation-preview-hint">
+              {sendUi.previewStatusHint}
+            </p>
+          ) : null}
+          {sendUi.liveSendVisible ? (
+            <div className="space-y-2">
+              {sendUi.liveSendEnabled ? (
+                <div data-testid="vl-invitation-live-send-confirm">
+                  <SwitchToggle
+                    id="vl-invitation-live-send-confirm-switch"
+                    label="Live-Versand bestätigen"
+                    description="Ich bestätige den Live-Versand an die gültigen Empfänger."
+                    checked={liveSendConfirmed}
+                    onChange={setLiveSendConfirmed}
+                  />
+                </div>
+              ) : null}
+              <Button
+                type="button"
+                data-testid="vl-invitation-live-send"
+                onClick={() => void handleLiveSend()}
+                disabled={!sendUi.liveSendEnabled || !liveSendConfirmed}
+                className="gap-2"
+              >
+                <Send className="size-4" aria-hidden />
+                Einladungen senden
+              </Button>
+              {sendUi.blockerMessage ? (
+                <p
+                  className="text-xs text-muted-foreground"
+                  data-testid="vl-invitation-live-send-blocker"
+                  role="status"
+                >
+                  {sendUi.blockerMessage}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {actionNote ? (
+            <p
+              className="flex items-center gap-1 text-xs text-foreground"
+              data-testid="vl-invitation-action-note"
+              role="status"
+            >
               <CheckCircle2 className="size-3 text-emerald-600" aria-hidden />
-              {sendNote}
+              {actionNote}
             </p>
           ) : null}
           {error ? <p className="text-xs text-destructive">{error}</p> : null}

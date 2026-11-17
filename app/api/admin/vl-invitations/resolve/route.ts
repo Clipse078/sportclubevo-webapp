@@ -15,6 +15,7 @@ import { resolveVlInvitationRows } from "@/lib/admin/vl-onboarding/resolve-vl-in
 import { loadVlInvitationPresetRoleState } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
 import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { prisma } from "@/lib/db/prisma";
+import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
 
 export async function POST(request: NextRequest) {
   const access = await requireApiPermission(PERMISSIONS.USERS_INVITE);
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     validationRows,
     resolved,
+    sendMode: resolveVlInvitationSendMode(),
     presetLabel: "Vereinsleitung (Pilot) — Mitwirkung",
     contributorRoleProvisioned: presetRole.contributorRoleProvisioned,
     contributorRoleSyncDiff: presetRole.contributorRoleSyncDiff,

@@ -34,7 +34,7 @@ export function assertVlInvitationSendAllowed(explicitConfirm?: boolean): {
     ok: false,
     mode: "DRY_RUN",
     error:
-      "Einladungen werden in diesem Paket nur vorbereitet (Dry-Run). Live-Versand ist deaktiviert.",
+      "Live-Versand ist deaktiviert — es wurden keine Einladungen erzeugt und keine E-Mails versendet.",
   };
 }
 
