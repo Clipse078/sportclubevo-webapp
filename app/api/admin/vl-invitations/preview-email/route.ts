@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import {
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
   } catch {
     appBaseUrl = "https://fcallschwil.sportclubevo.com";
   }
+  const sceLogoAbsoluteUrl = resolveTransactionalSceEmailLogoAbsoluteUrl();
 
   const inviterName =
     typeof (body as { inviterDisplayName?: unknown })?.inviterDisplayName === "string"
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
     inviterDisplayName: inviterName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl,
+    sceLogoAbsoluteUrl,
     variant,
     accessSummary: "Vereinsleitung — Vereinsentwicklung mitgestalten",
   });

@@ -40,6 +40,7 @@ import {
   type OnboardPersonOptions,
 } from "@/lib/users/mutations";
 import { sendMail, MailConfigurationError } from "@/lib/email/mailer";
+import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import { prisma } from "@/lib/db/prisma";
@@ -275,6 +276,7 @@ async function _sendInvitationEmail(
     tenantName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl: appBaseUrl || undefined,
+    sceLogoAbsoluteUrl: resolveTransactionalSceEmailLogoAbsoluteUrl(),
     variant: existingGlobalUser ? "existing_account" : "new_account",
     accessSummary: "Personen & Zugänge in deinem Verein",
   });

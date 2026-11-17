@@ -9,6 +9,10 @@
 
 import { escapeHtml } from "@/lib/email/escape-html";
 
+/** Display dimensions for {@link SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC} in email HTML. */
+export const INVITATION_EMAIL_SCE_LOGO_WIDTH_PX = 147;
+export const INVITATION_EMAIL_SCE_LOGO_HEIGHT_PX = 32;
+
 export type InvitationEmailVariant = "new_account" | "existing_account";
 
 export type InvitationEmailData = {
@@ -20,6 +24,11 @@ export type InvitationEmailData = {
   expiryHours: number;
   /** Absolute HTTPS base URL. Must not end with a slash. */
   appBaseUrl?: string;
+  /**
+   * Absolute HTTPS SportClubEvo wordmark for email clients.
+   * Must be publicly reachable (not Vercel SSO preview hosts).
+   */
+  sceLogoAbsoluteUrl?: string;
   variant?: InvitationEmailVariant;
   /** Short German summary of offered access (no permission keys). */
   accessSummary?: string;
@@ -45,13 +54,15 @@ export function buildInvitationEmail(data: InvitationEmailData): {
     inviterDisplayName,
     expiryHours,
     appBaseUrl,
+    sceLogoAbsoluteUrl,
     variant = "new_account",
     accessSummary,
   } = data;
 
-  const logoUrl = appBaseUrl
-    ? `${appBaseUrl}/images/branding/sportclubevo_logo.png`
-    : "";
+  const logoUrl =
+    sceLogoAbsoluteUrl?.trim() ||
+    (appBaseUrl ? `${appBaseUrl}/images/branding/sportclubevo_logo.png` : "");
+  const safeLogoUrl = logoUrl ? escapeHtml(logoUrl) : "";
 
   const subject = `Einladung zu ${tenantName} auf SportClubEvo`;
 
@@ -87,7 +98,11 @@ export function buildInvitationEmail(data: InvitationEmailData): {
         <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
           <tr>
             <td style="padding:24px 32px;border-bottom:1px solid ${BORDER};">
-              ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="SportClubEvo" width="148" height="auto" style="display:block;height:auto;" />` : `<span style="font-size:18px;font-weight:700;color:${NAVY};">SportClubEvo</span>`}
+              ${
+                safeLogoUrl
+                  ? `<img src="${safeLogoUrl}" alt="SportClubEvo" width="${INVITATION_EMAIL_SCE_LOGO_WIDTH_PX}" height="${INVITATION_EMAIL_SCE_LOGO_HEIGHT_PX}" style="display:block;width:${INVITATION_EMAIL_SCE_LOGO_WIDTH_PX}px;height:${INVITATION_EMAIL_SCE_LOGO_HEIGHT_PX}px;border:0;outline:none;" />`
+                  : `<span style="font-size:18px;font-weight:700;color:${NAVY};">SportClubEvo</span>`
+              }
               <p style="margin:12px 0 0;font-size:13px;color:${MUTED};line-height:1.5;">${safeTenant}</p>
             </td>
           </tr>

@@ -2,6 +2,7 @@
  * Shared VL invitation email content — used by dry-run transport and live sends.
  */
 
+import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
 import { buildInvitationEmail, type InvitationEmailVariant } from "@/lib/email/templates/invitation";
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import { buildPasswordResetLink, resolveSecurityLinkBaseUrl } from "@/lib/server/security-link-url";
@@ -56,6 +57,7 @@ export async function buildVlInvitationEmailContent(
   } catch {
     appBaseUrl = undefined;
   }
+  const sceLogoAbsoluteUrl = resolveTransactionalSceEmailLogoAbsoluteUrl();
 
   const { subject, html, text } = buildInvitationEmail({
     inviteUrl,
@@ -65,6 +67,7 @@ export async function buildVlInvitationEmailContent(
     inviterDisplayName: input.inviterDisplayName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl,
+    sceLogoAbsoluteUrl,
     variant,
     accessSummary: VL_INVITATION_ACCESS_SUMMARY,
   });

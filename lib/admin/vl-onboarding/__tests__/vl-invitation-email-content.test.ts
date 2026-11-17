@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC } from "@/lib/branding/sportclubevo-platform-wordmark";
 import { buildVlInvitationEmailContent } from "@/lib/admin/vl-onboarding/vl-invitation-email-content";
+
+vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -32,5 +35,9 @@ describe("buildVlInvitationEmailContent", () => {
     expect(content.html).toContain("#9A5F28");
     expect(content.html).toContain("Vereinsleitung — Vereinsentwicklung");
     expect(content.text).toContain("Einladung annehmen");
+    expect(content.html).toContain(
+      `https://fcallschwil.sportclubevo.com${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}`,
+    );
+    expect(content.html).not.toContain("vercel.app");
   });
 });
