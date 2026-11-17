@@ -1,5 +1,5 @@
 import { VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 
 export type VlInvitationSendUiRecipient = {
   displayName?: string;

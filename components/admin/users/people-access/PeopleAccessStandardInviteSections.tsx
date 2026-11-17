@@ -5,16 +5,20 @@ import {
   resolvePeopleAccessInviteLiveSendBlocker,
   resolvePeopleAccessInvitePrepareBlocker,
 } from "@/lib/admin/people-access/people-access-invite-wizard-policy";
-import { resolvePeopleAccessInvitePrepareStatusHint } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
-import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import {
+  resolvePeopleAccessInvitePrepareStatusHint,
+  PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE,
+} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 
 export type PeopleAccessStandardWizardContext = {
   emailPreview: { subject: string; html: string; variant: string } | null;
   emailPreviewLoading: boolean;
   sendBlocker: string | null;
   liveSendBlocker: string | null;
-  sendMode: VlInvitationSendMode;
+  sendMode: VlInvitationSendMode | null;
+  sendPolicyLoadError: string | null;
+  prepareSuccessMessage: string | null;
 };
 
 export function usePeopleAccessStandardWizardContext(input: {
@@ -25,15 +29,50 @@ export function usePeopleAccessStandardWizardContext(input: {
   lastName: string;
   selectedRoleIds: string[];
   step: number;
-}): PeopleAccessStandardWizardContext {
+}): PeopleAccessStandardWizardContext & {
+  setPrepareSuccessMessage: (message: string | null) => void;
+} {
   const [emailPreview, setEmailPreview] = useState<{
     subject: string;
     html: string;
     variant: string;
   } | null>(null);
   const [emailPreviewLoading, setEmailPreviewLoading] = useState(false);
+  const [sendMode, setSendMode] = useState<VlInvitationSendMode | null>(null);
+  const [sendPolicyLoadError, setSendPolicyLoadError] = useState<string | null>(null);
+  const [prepareSuccessMessage, setPrepareSuccessMessage] = useState<string | null>(null);
 
-  const sendMode = resolveVlInvitationSendMode();
+  const loadSendPolicy = useCallback(async () => {
+    if (!input.enabled || !input.canInvite) return;
+    setSendPolicyLoadError(null);
+    try {
+      const res = await fetch("/api/admin/people-access/invite/policy");
+      const data = (await res.json()) as { error?: string; sendMode?: VlInvitationSendMode };
+      if (!res.ok) {
+        setSendMode(null);
+        setSendPolicyLoadError(data.error ?? "Versandfreigabe konnte nicht geladen werden.");
+        return;
+      }
+      if (
+        data.sendMode === "DRY_RUN" ||
+        data.sendMode === "LIVE_ALLOWED" ||
+        data.sendMode === "LIVE_BLOCKED"
+      ) {
+        setSendMode(data.sendMode);
+      } else {
+        setSendMode(null);
+        setSendPolicyLoadError("Ungültige Versandfreigabe vom Server.");
+      }
+    } catch {
+      setSendMode(null);
+      setSendPolicyLoadError("Netzwerkfehler beim Laden der Versandfreigabe.");
+    }
+  }, [input.enabled, input.canInvite]);
+
+  useEffect(() => {
+    if (!input.enabled) return;
+    void loadSendPolicy();
+  }, [input.enabled, loadSendPolicy]);
 
   const refreshEmailPreview = useCallback(async () => {
     if (!input.enabled || !input.email.trim()) return;
@@ -74,13 +113,14 @@ export function usePeopleAccessStandardWizardContext(input: {
   const policyInput = useMemo(
     () => ({
       sendMode,
+      sendPolicyLoadError,
       canInvite: input.canInvite,
       email: input.email,
       firstName: input.firstName,
       lastName: input.lastName,
       selectedRoleIds: input.selectedRoleIds,
     }),
-    [input, sendMode],
+    [input, sendMode, sendPolicyLoadError],
   );
 
   const sendBlocker = useMemo(() => {
@@ -99,6 +139,9 @@ export function usePeopleAccessStandardWizardContext(input: {
     sendBlocker,
     liveSendBlocker,
     sendMode,
+    sendPolicyLoadError,
+    prepareSuccessMessage,
+    setPrepareSuccessMessage,
   };
 }
 
@@ -113,8 +156,17 @@ export function PeopleAccessStandardReviewStep({
   lastName: string;
   email: string;
 }) {
+  const statusHint =
+    ctx.prepareSuccessMessage ??
+    (ctx.sendMode ? resolvePeopleAccessInvitePrepareStatusHint(ctx.sendMode) : null);
+
   return (
     <div className="space-y-4" data-testid="people-access-standard-review-email">
+      {ctx.sendPolicyLoadError ? (
+        <p className="text-sm text-red-600" role="alert" data-testid="people-access-send-policy-error">
+          {ctx.sendPolicyLoadError}
+        </p>
+      ) : null}
       {ctx.emailPreviewLoading ? (
         <p className="text-sm text-[var(--muted)]">E-Mail-Vorschau wird geladen…</p>
       ) : null}
@@ -132,16 +184,25 @@ export function PeopleAccessStandardReviewStep({
           />
         </div>
       ) : null}
+      {ctx.prepareSuccessMessage ? (
+        <p
+          className="text-sm text-emerald-700"
+          role="status"
+          data-testid="people-access-prepare-success"
+        >
+          {ctx.prepareSuccessMessage}
+        </p>
+      ) : null}
       {ctx.sendBlocker ? (
         <p className="text-sm text-amber-700" role="alert" data-testid="people-access-send-blocker">
           {ctx.sendBlocker}
         </p>
-      ) : (
+      ) : statusHint ? (
         <p className="text-xs text-[var(--muted)]" data-testid="people-access-prepare-status-hint">
-          {resolvePeopleAccessInvitePrepareStatusHint(ctx.sendMode)}
+          {statusHint}
         </p>
-      )}
-      {ctx.liveSendBlocker ? (
+      ) : null}
+      {ctx.liveSendBlocker && !ctx.sendPolicyLoadError ? (
         <p className="text-xs text-[var(--muted)]" data-testid="people-access-live-send-prerequisite">
           Live-Versand: {ctx.liveSendBlocker}
         </p>
@@ -152,3 +213,5 @@ export function PeopleAccessStandardReviewStep({
     </div>
   );
 }
+
+export { PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE };

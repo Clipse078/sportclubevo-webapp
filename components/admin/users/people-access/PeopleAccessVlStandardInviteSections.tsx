@@ -9,7 +9,7 @@ import { FCA_VL_INVITATION_PRESET } from "@/lib/admin/vl-onboarding/fca-vl-invit
 import type { VereinsentwicklungAccessRow } from "@/lib/admin/people-access/vereinsentwicklung-access-presentation";
 import type { VlInvitationResolvedRow } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
 import type { VlContributorRoleSyncDiff } from "@/lib/admin/vl-onboarding/vl-contributor-role-sync-diff";
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 import {
   resolveVlStandardInviteLiveSendBlocker,
   resolveVlStandardInviteWizardBlocker,
@@ -327,11 +327,13 @@ export function PeopleAccessVlReviewStep({
   firstName,
   lastName,
   email,
+  prepareSuccessMessage,
 }: {
   ctx: PeopleAccessVlWizardContext;
   firstName: string;
   lastName: string;
   email: string;
+  prepareSuccessMessage?: string | null;
 }) {
   return (
     <div className="space-y-4" data-testid="people-access-vl-review-step">
@@ -363,6 +365,11 @@ export function PeopleAccessVlReviewStep({
             sandbox=""
           />
         </div>
+      ) : null}
+      {prepareSuccessMessage ? (
+        <p className="text-sm text-emerald-700" role="status" data-testid="people-access-vl-prepare-success">
+          {prepareSuccessMessage}
+        </p>
       ) : null}
       {ctx.sendBlocker ? (
         <p className="text-sm text-amber-700" role="alert" data-testid="people-access-vl-send-blocker">

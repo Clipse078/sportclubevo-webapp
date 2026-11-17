@@ -1,5 +1,5 @@
 import type { VlInvitationResolvedRow } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 import {
   resolveVlInvitationLiveSendBlocker,
   type VlInvitationSendUiInput,

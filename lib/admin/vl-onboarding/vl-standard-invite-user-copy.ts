@@ -1,6 +1,6 @@
 /** Administrator-facing copy for the standard People & Access VL invite wizard (no developer jargon). */
 
-import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-mode";
 
 export const VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED =
   "Der Vereinsleitungszugang muss zuerst eingerichtet werden.";
@@ -21,6 +21,9 @@ export const PEOPLE_ACCESS_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED =
 
 export const PEOPLE_ACCESS_INVITE_PREPARE_BUTTON_LABEL = "Einladung vorbereiten";
 export const PEOPLE_ACCESS_INVITE_LIVE_SEND_BUTTON_LABEL = "Einladung senden";
+
+export const PEOPLE_ACCESS_INVITE_PREPARE_SUCCESS_MESSAGE =
+  "Vorschau geprüft. Es wurde noch keine Einladung versendet.";
 
 export function resolvePeopleAccessInvitePrepareStatusHint(
   sendMode: VlInvitationSendMode,
