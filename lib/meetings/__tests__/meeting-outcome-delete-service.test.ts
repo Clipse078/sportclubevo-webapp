@@ -13,7 +13,8 @@ const prismaMock = vi.hoisted(() => ({
   },
   task: {
     count: vi.fn(),
-    updateMany: vi.fn(),
+    findMany: vi.fn(),
+    update: vi.fn(),
   },
   meetingDecisionApprovalVote: {
     deleteMany: vi.fn(),
@@ -59,7 +60,7 @@ describe("meeting-outcome-delete-service", () => {
   it("relinks tasks and clears decision refs before deleting Beschluss", async () => {
     const tx = {
       meetingDecision: {
-        findFirst: vi.fn().mockResolvedValue({ id: "d1" }),
+        findFirst: vi.fn().mockResolvedValue({ id: "d1", sourceAgendaItemId: "a1" }),
         delete: vi.fn(),
       },
       meetingAction: {
@@ -68,10 +69,17 @@ describe("meeting-outcome-delete-service", () => {
           .mockResolvedValue([{ id: "act1", linkedRefs: { agendaItemId: "a1", decisionId: "d1" } }]),
         update: vi.fn(),
       },
-      task: { updateMany: vi.fn() },
+      task: {
+        findMany: vi.fn().mockResolvedValue([{ id: "t1", seriesOccurrenceKey: null }]),
+        update: vi.fn(),
+      },
       meetingDecisionApprovalVote: { deleteMany: vi.fn() },
     };
-    prismaMock.meetingDecision.findFirst.mockResolvedValue({ id: "d1", title: "Budget" });
+    prismaMock.meetingDecision.findFirst.mockResolvedValue({
+      id: "d1",
+      title: "Budget",
+      sourceAgendaItemId: "a1",
+    });
     prismaMock.meetingAction.findMany.mockResolvedValue([
       { linkedRefs: { agendaItemId: "a1", decisionId: "d1" } },
     ]);
@@ -82,12 +90,9 @@ describe("meeting-outcome-delete-service", () => {
 
     const result = await deleteMeetingDecisionWithDependencies("m1", "t1", "d1");
     expect(result?.title).toBe("Budget");
-    expect(tx.task.updateMany).toHaveBeenCalledWith({
-      where: {
-        tenantId: "t1",
-        contextType: TaskContextType.MEETING_DECISION,
-        contextId: "d1",
-      },
+    expect(tx.task.findMany).toHaveBeenCalled();
+    expect(tx.task.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
       data: {
         contextType: TaskContextType.MEETING,
         contextId: "m1",

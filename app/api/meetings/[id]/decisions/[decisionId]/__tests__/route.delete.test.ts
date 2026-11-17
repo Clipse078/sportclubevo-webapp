@@ -96,4 +96,23 @@ describe("DELETE /api/meetings/[id]/decisions/[decisionId]", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("returns 403 when meeting documentation is locked", async () => {
+    mocks.canEditMeetingDocumentation.mockReturnValue(false);
+    const res = await DELETE(new NextRequest("http://localhost"), {
+      params: Promise.resolve({ id: MEETING_ID, decisionId: DECISION_ID }),
+    });
+    expect(res.status).toBe(403);
+    expect(mocks.deleteMeetingDecisionWithDependencies).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when decision is outside actor tenant", async () => {
+    mocks.meetingFindFirst.mockResolvedValue({ status: "PLANNED", reviewStage: null, protocolApprovalRequired: false });
+    mocks.decisionFindFirst.mockResolvedValue(null);
+    const res = await DELETE(new NextRequest("http://localhost?confirm=true"), {
+      params: Promise.resolve({ id: MEETING_ID, decisionId: DECISION_ID }),
+    });
+    expect(res.status).toBe(404);
+    expect(mocks.deleteMeetingDecisionWithDependencies).not.toHaveBeenCalled();
+  });
 });

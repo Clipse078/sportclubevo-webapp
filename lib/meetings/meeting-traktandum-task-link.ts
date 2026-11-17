@@ -46,3 +46,28 @@ export function buildMeetingDecisionTaskOccurrenceKey(decisionId: string, client
   }
   return `${DECISION_KEY_PREFIX}:${decision}:${client}`;
 }
+
+/** Client idempotency segment after decision id (may contain colons). */
+export function parseClientRequestIdFromMeetingDecisionTaskOccurrenceKey(
+  occurrenceKey: string | null | undefined,
+): string | null {
+  if (!occurrenceKey?.startsWith(`${DECISION_KEY_PREFIX}:`)) return null;
+  const parts = occurrenceKey.split(":");
+  // sce-mtg-decision-task : v1 : decisionId : client…
+  if (parts.length < 4) return null;
+  const client = parts.slice(3).join(":").trim();
+  return client || null;
+}
+
+/**
+ * After Beschluss deletion, preserve idempotency identity on the Traktandum bridge key
+ * so agenda-scoped lists and «Entstanden in» keep working without a new Task row.
+ */
+export function rehomeMeetingDecisionTaskOccurrenceKeyToTraktandum(
+  agendaItemId: string,
+  occurrenceKey: string | null | undefined,
+): string | null {
+  const client = parseClientRequestIdFromMeetingDecisionTaskOccurrenceKey(occurrenceKey);
+  if (!client) return occurrenceKey ?? null;
+  return buildTraktandumTaskOccurrenceKey(agendaItemId, client);
+}

@@ -3,6 +3,7 @@ import "server-only";
 import { TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { parseMeetingLinkedRefs, buildMeetingActionLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
+import { rehomeMeetingDecisionTaskOccurrenceKeyToTraktandum } from "@/lib/meetings/meeting-traktandum-task-link";
 
 export type MeetingDecisionDeletionImpact = {
   linkedPendenzCount: number;
@@ -46,7 +47,7 @@ export async function deleteMeetingDecisionWithDependencies(
 ): Promise<{ title: string } | null> {
   const decision = await prisma.meetingDecision.findFirst({
     where: { id: decisionId, meetingId, meeting: { tenantId } },
-    select: { id: true, title: true },
+    select: { id: true, title: true, sourceAgendaItemId: true },
   });
   if (!decision) return null;
 
@@ -56,9 +57,18 @@ export async function deleteMeetingDecisionWithDependencies(
   await prisma.$transaction(async (tx) => {
     const stillThere = await tx.meetingDecision.findFirst({
       where: { id: decisionId, meetingId, meeting: { tenantId } },
-      select: { id: true },
+      select: { id: true, sourceAgendaItemId: true },
     });
     if (!stillThere) return;
+
+    const linkedTasks = await tx.task.findMany({
+      where: {
+        tenantId,
+        contextType: TaskContextType.MEETING_DECISION,
+        contextId: decisionId,
+      },
+      select: { id: true, seriesOccurrenceKey: true },
+    });
 
     const actions = await tx.meetingAction.findMany({
       where: { meetingId },
@@ -78,17 +88,23 @@ export async function deleteMeetingDecisionWithDependencies(
       });
     }
 
-    await tx.task.updateMany({
-      where: {
-        tenantId,
-        contextType: TaskContextType.MEETING_DECISION,
-        contextId: decisionId,
-      },
-      data: {
-        contextType: TaskContextType.MEETING,
-        contextId: meetingId,
-      },
-    });
+    const agendaItemId = stillThere.sourceAgendaItemId?.trim() || decision.sourceAgendaItemId?.trim() || null;
+    for (const task of linkedTasks) {
+      const seriesOccurrenceKey =
+        agendaItemId != null
+          ? rehomeMeetingDecisionTaskOccurrenceKeyToTraktandum(agendaItemId, task.seriesOccurrenceKey)
+          : task.seriesOccurrenceKey;
+      await tx.task.update({
+        where: { id: task.id },
+        data: {
+          contextType: TaskContextType.MEETING,
+          contextId: meetingId,
+          ...(seriesOccurrenceKey && seriesOccurrenceKey !== task.seriesOccurrenceKey
+            ? { seriesOccurrenceKey }
+            : {}),
+        },
+      });
+    }
 
     await tx.meetingDecisionApprovalVote.deleteMany({ where: { decisionId } });
     await tx.meetingDecision.delete({ where: { id: decisionId } });
