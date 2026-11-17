@@ -5,7 +5,8 @@ import { ChevronDown, Loader2 } from "lucide-react";
 import { MeetingWorkspacePeopleField, personDisplayLabel } from "@/components/admin/meetings/workspace/MeetingWorkspacePeopleField";
 import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
-import { buildMeetingActionAgendaLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
+import { buildMeetingActionLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
+import { MeetingWorkspaceApiError } from "@/lib/meetings/meeting-workspace-mutations";
 import {
   useTraktandumOutcomeDraft,
   type TraktandumOutcomeOwnerDraft,
@@ -100,13 +101,14 @@ export function MeetingTraktandumOutcomeActions({
     inFlightRef.current = true;
     startTransition(async () => {
       try {
-        await meetingWorkspaceApi.decisions.create(meetingId, {
+        const created = await meetingWorkspaceApi.decisions.create(meetingId, {
           title: trimmed,
           description: draft.decisionDescription.trim() || null,
           rationale: draft.decisionRationale.trim() || null,
           sourceAgendaItemId: agendaItemId,
           status: "CONFIRMED",
         });
+        const decisionId = created.decision?.id ?? null;
         await onDecisionCreated();
         patch({
           activeForm: null,
@@ -116,6 +118,8 @@ export function MeetingTraktandumOutcomeActions({
           showDecisionDetails: false,
           offerPendenzAfterDecision: true,
           lastSavedDecisionTitle: trimmed,
+          lastSavedDecisionId: decisionId,
+          linkedDecisionIdForPendenz: decisionId,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Beschluss konnte nicht gespeichert werden.");
@@ -133,6 +137,7 @@ export function MeetingTraktandumOutcomeActions({
     const ownerPicker = ownerToPicker(draft.pendenzOwner);
     startTransition(async () => {
       try {
+        const decisionId = draft.linkedDecisionIdForPendenz ?? draft.lastSavedDecisionId;
         await meetingWorkspaceApi.actions.create(meetingId, {
           title: trimmed,
           description: draft.pendenzDescription.trim() || null,
@@ -140,12 +145,17 @@ export function MeetingTraktandumOutcomeActions({
           owner: ownerPicker ? personDisplayLabel(ownerPicker) : null,
           dueDate: draft.pendenzDueDate || null,
           status: "OPEN",
-          linkedRefs: buildMeetingActionAgendaLinkedRefs(agendaItemId),
+          linkedRefs: buildMeetingActionLinkedRefs({
+            agendaItemId,
+            decisionId,
+          }),
         });
         await onActionCreated();
         patch({
           offerPendenzAfterDecision: false,
           lastSavedDecisionTitle: null,
+          lastSavedDecisionId: null,
+          linkedDecisionIdForPendenz: null,
         });
         clearOutcomeFormFields();
       } catch (e) {
@@ -165,17 +175,8 @@ export function MeetingTraktandumOutcomeActions({
       activeForm: "pendenz",
       pendenzTitle: seed,
       offerPendenzAfterDecision: false,
+      linkedDecisionIdForPendenz: draft.lastSavedDecisionId ?? draft.linkedDecisionIdForPendenz,
     });
-  }
-
-  async function loadServerAgendaNotes(): Promise<string | null> {
-    const res = await fetch(`/api/meetings/${meetingId}/agenda`);
-    const data = (await res.json().catch(() => ({}))) as { items?: Array<{ id: string; notes: string | null }> };
-    if (!res.ok || !Array.isArray(data.items)) {
-      throw new Error("Notizen konnten nicht geladen werden.");
-    }
-    const row = data.items.find((item) => item.id === agendaItemId);
-    return row?.notes ?? null;
   }
 
   function saveNote() {
@@ -185,18 +186,31 @@ export function MeetingTraktandumOutcomeActions({
     inFlightRef.current = true;
     startTransition(async () => {
       try {
-        const serverNotes = await loadServerAgendaNotes();
-        if (normalizeNotes(serverNotes) !== normalizeNotes(agendaNotes)) {
-          setError(
-            "Notizen wurden zwischenzeitlich geändert. Die aktuelle Version wurde übernommen — bitte Ergänzung prüfen und erneut speichern.",
-          );
-          if (serverNotes != null) onNotesUpdated(serverNotes);
-          return;
+        try {
+          const result = await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, {
+            notesAppend: addition,
+            expectedNotes: agendaNotes,
+          });
+          const merged =
+            typeof (result as { item?: { notes?: string } }).item?.notes === "string"
+              ? (result as { item: { notes: string } }).item.notes
+              : normalizeNotes(agendaNotes)
+                ? `${normalizeNotes(agendaNotes)}\n\n${addition}`
+                : addition;
+          onNotesUpdated(merged);
+          clearOutcomeFormFields();
+        } catch (err) {
+          if (err instanceof MeetingWorkspaceApiError && err.code === "NOTES_CONFLICT") {
+            const current =
+              typeof err.payload.currentNotes === "string" || err.payload.currentNotes === null
+                ? (err.payload.currentNotes as string | null)
+                : null;
+            setError(err.message);
+            if (current !== undefined) onNotesUpdated(current ?? "");
+            return;
+          }
+          throw err;
         }
-        const merged = agendaNotes?.trim() ? `${agendaNotes.trim()}\n\n${addition}` : addition;
-        await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { notes: merged });
-        onNotesUpdated(merged);
-        clearOutcomeFormFields();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Notiz konnte nicht gespeichert werden.");
       } finally {
@@ -229,7 +243,10 @@ export function MeetingTraktandumOutcomeActions({
           className="rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
           data-testid={`${testIdPrefix}-pendenz-follow-up`}
         >
-          <p className="text-sm text-[var(--foreground)]">Beschluss gespeichert.</p>
+          <p className="text-sm text-[var(--foreground)]">
+            Beschluss gespeichert. Eine <strong>Pendenz</strong> ist eine Sitzungsmassnahme im Protokoll; eine{" "}
+            <strong>Aufgabe</strong> ist eine eigenständige Umsetzung im Aufgaben-Center.
+          </p>
           <button
             type="button"
             className={`${workspacePrimaryButtonClass} mt-2`}

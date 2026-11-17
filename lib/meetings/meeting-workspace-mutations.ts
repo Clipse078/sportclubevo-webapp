@@ -3,15 +3,33 @@
  * Thin wrappers around existing REST routes — no duplicate persistence.
  */
 
+export class MeetingWorkspaceApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+  readonly payload: Record<string, unknown>;
+
+  constructor(message: string, status: number, payload: Record<string, unknown> = {}) {
+    super(message);
+    this.name = "MeetingWorkspaceApiError";
+    this.status = status;
+    this.payload = payload;
+    this.code = typeof payload.code === "string" ? payload.code : undefined;
+  }
+}
+
 export async function postJson<T>(url: string, method: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-  const data = await res.json().catch(() => ({}));
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
-    throw new Error((data as { error?: string })?.error ?? "Anfrage fehlgeschlagen.");
+    throw new MeetingWorkspaceApiError(
+      typeof data.error === "string" ? data.error : "Anfrage fehlgeschlagen.",
+      res.status,
+      data,
+    );
   }
   return data as T;
 }

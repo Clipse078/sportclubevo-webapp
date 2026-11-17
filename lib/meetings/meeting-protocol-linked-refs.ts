@@ -4,8 +4,19 @@ export type MeetingLinkedRefs = {
 };
 
 export function buildMeetingActionAgendaLinkedRefs(agendaItemId: string): MeetingLinkedRefs {
-  const trimmed = agendaItemId.trim();
-  return trimmed ? { agendaItemId: trimmed } : {};
+  return buildMeetingActionLinkedRefs({ agendaItemId });
+}
+
+export function buildMeetingActionLinkedRefs(input: {
+  agendaItemId?: string | null;
+  decisionId?: string | null;
+}): MeetingLinkedRefs {
+  const refs: MeetingLinkedRefs = {};
+  const agendaItemId = input.agendaItemId?.trim();
+  const decisionId = input.decisionId?.trim();
+  if (agendaItemId) refs.agendaItemId = agendaItemId;
+  if (decisionId) refs.decisionId = decisionId;
+  return refs;
 }
 
 export function parseMeetingLinkedRefs(raw: unknown): MeetingLinkedRefs {

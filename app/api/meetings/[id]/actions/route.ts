@@ -7,7 +7,7 @@ import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { resolveMeetingPersonSnapshot } from "@/lib/meetings/meeting-person-payload";
 import { parseOptionalMeetingDocumentationText } from "@/lib/meetings/meeting-documentation-text";
-import { resolveMeetingActionAgendaLink } from "@/lib/meetings/meeting-action-agenda-link";
+import { resolveMeetingActionLinkedRefs } from "@/lib/meetings/meeting-action-linked-refs";
 
 async function requireSession() {
   const session = await auth();
@@ -75,12 +75,15 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   let linkedRefs: Record<string, string> | undefined;
   if (body?.linkedRefs !== undefined) {
     try {
-      const agendaItemId =
+      const raw =
         typeof body.linkedRefs === "object" && body.linkedRefs
-          ? (body.linkedRefs as { agendaItemId?: string }).agendaItemId
-          : undefined;
-      const resolved = await resolveMeetingActionAgendaLink(actor, id, agendaItemId);
-      linkedRefs = Object.keys(resolved).length > 0 ? resolved : {};
+          ? (body.linkedRefs as { agendaItemId?: string; decisionId?: string })
+          : {};
+      const resolved = await resolveMeetingActionLinkedRefs(actor, id, {
+        agendaItemId: raw.agendaItemId,
+        decisionId: raw.decisionId,
+      });
+      linkedRefs = Object.keys(resolved).length > 0 ? (resolved as Record<string, string>) : {};
     } catch (e) {
       return NextResponse.json(
         { error: e instanceof Error ? e.message : "Ungültiges Traktandum." },

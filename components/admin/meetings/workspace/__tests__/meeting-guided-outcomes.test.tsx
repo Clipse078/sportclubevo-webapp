@@ -5,10 +5,20 @@ import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/wor
 import { resetTraktandumOutcomeDraftStoreForTests } from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
 
 vi.mock("@/lib/meetings/meeting-workspace-mutations", () => ({
+  MeetingWorkspaceApiError: class MeetingWorkspaceApiError extends Error {
+    status = 409;
+    code = "NOTES_CONFLICT";
+    payload: Record<string, unknown>;
+    constructor(message: string, status: number, payload: Record<string, unknown>) {
+      super(message);
+      this.status = status;
+      this.payload = payload;
+    }
+  },
   meetingWorkspaceApi: {
-    decisions: { create: vi.fn().mockResolvedValue({}) },
+    decisions: { create: vi.fn().mockResolvedValue({ decision: { id: "d1" } }) },
     actions: { create: vi.fn().mockResolvedValue({}) },
-    agenda: { update: vi.fn().mockResolvedValue({}) },
+    agenda: { update: vi.fn().mockResolvedValue({ item: { notes: "merged" } }) },
   },
 }));
 
@@ -102,6 +112,40 @@ describe("MeetingTraktandumOutcomeActions", () => {
         }),
       );
       expect(onActionCreated).toHaveBeenCalled();
+    });
+  });
+
+  it("links Pendenz after Beschluss with agenda and decision refs", async () => {
+    const onActionCreated = vi.fn();
+    render(
+      <MeetingTraktandumOutcomeActions
+        meetingId="m1"
+        meetingTitle="Sitzung"
+        agendaItemId="a1"
+        agendaTitle="Budget"
+        agendaPosition={1}
+        agendaNotes={null}
+        canManage
+        testIdPrefix="test"
+        onDecisionCreated={vi.fn()}
+        onActionCreated={onActionCreated}
+        onNotesUpdated={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
+    fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
+    fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
+    await vi.waitFor(() => expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
+    fireEvent.change(screen.getByPlaceholderText("Was ist zu tun?"), { target: { value: "Umsetzen" } });
+    fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
+    await vi.waitFor(() => {
+      expect(meetingWorkspaceApi.actions.create).toHaveBeenCalledWith(
+        "m1",
+        expect.objectContaining({
+          linkedRefs: { agendaItemId: "a1", decisionId: "d1" },
+        }),
+      );
     });
   });
 

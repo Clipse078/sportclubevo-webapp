@@ -23,6 +23,8 @@ export type TraktandumOutcomeDraft = {
   noteText: string;
   offerPendenzAfterDecision: boolean;
   lastSavedDecisionTitle: string | null;
+  lastSavedDecisionId: string | null;
+  linkedDecisionIdForPendenz: string | null;
 };
 
 const listeners = new Set<() => void>();
@@ -47,6 +49,8 @@ export function createEmptyTraktandumOutcomeDraft(): TraktandumOutcomeDraft {
     noteText: "",
     offerPendenzAfterDecision: false,
     lastSavedDecisionTitle: null,
+    lastSavedDecisionId: null,
+    linkedDecisionIdForPendenz: null,
   };
 }
 
