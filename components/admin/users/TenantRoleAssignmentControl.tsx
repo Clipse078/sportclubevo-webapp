@@ -1,9 +1,9 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Shield } from "lucide-react";
+import { AlertTriangle, Save, Shield } from "lucide-react";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 type RoleOption = {
@@ -36,6 +36,20 @@ export default function TenantRoleAssignmentControl({
     selectedIds.size !== initialRoleIds.length ||
     initialRoleIds.some((id) => !selectedIds.has(id));
 
+  useEffect(() => {
+    if (!isDirty) {
+      setSelectedIds(new Set(initialRoleIds));
+    }
+  }, [initialRoleIds, isDirty]);
+
+  function resolveSaveErrorMessage(raw: string | undefined, status: number): string {
+    if (raw && raw !== "Forbidden") return raw;
+    if (status === 403) {
+      return "Keine Berechtigung, Mandantenrollen für diese Person zu verwalten.";
+    }
+    return "Die Rollenänderung konnte nicht gespeichert werden.";
+  }
+
   function toggle(roleId: string, checked: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -60,7 +74,11 @@ export default function TenantRoleAssignmentControl({
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error ?? "Ein Fehler ist aufgetreten.");
+          const message =
+            typeof data?.error === "string"
+              ? resolveSaveErrorMessage(data.error, res.status)
+              : resolveSaveErrorMessage(undefined, res.status);
+          setError(message);
           return;
         }
         router.refresh();
@@ -125,7 +143,21 @@ export default function TenantRoleAssignmentControl({
         })}
       </ul>
 
-      {error ? <p className="text-sm text-red-400">{error}</p> : null}
+      {isDirty ? (
+        <p className="text-[0.78rem] font-medium text-amber-800">
+          Nicht gespeicherte Auswahl — gespeicherte Rollen bleiben bis zum Speichern unverändert.
+        </p>
+      ) : null}
+
+      {error ? (
+        <div
+          className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5"
+          role="alert"
+        >
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" aria-hidden="true" />
+          <p className="text-[0.78rem] font-medium text-rose-700">{error}</p>
+        </div>
+      ) : null}
 
       {canManage ? (
         <button

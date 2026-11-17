@@ -11,7 +11,7 @@
  *   RT-01  GET: requires users.view OR users.manage; returns roles + assignedRoleIds
  *   RT-02  GET: 403 when unauthenticated
  *   RT-03  GET: 404 when user is not a member of the active tenant
- *   RT-04  PUT: requires users.manage; 403 for users.view-only caller
+ *   RT-04  PUT: requires role-manage permission set; 403 for users.view-only caller
  *   RT-05  PUT: delegates to setTenantUserRoles with session-derived tenantId
  *   RT-06  PUT: tenantId in body is ignored; only session tenantId is used
  *   RT-07  PUT: maps LastRequiredAdminError → 409 LAST_REQUIRED_ADMIN
@@ -24,7 +24,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireApiAnyPermission: vi.fn(),
-  requireApiPermission: vi.fn(),
   getTenantRolesOverview: vi.fn(),
   setTenantUserRoles: vi.fn(),
   findUnique: vi.fn(),
@@ -33,10 +32,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/permissions/require-api-any-permission", () => ({
   requireApiAnyPermission: mocks.requireApiAnyPermission,
-}));
-
-vi.mock("@/lib/permissions/require-api-permission", () => ({
-  requireApiPermission: mocks.requireApiPermission,
 }));
 
 vi.mock("@/lib/roles/tenant-queries", () => ({
@@ -86,7 +81,7 @@ function mockViewAccess() {
 }
 
 function mockManageAccess() {
-  mocks.requireApiPermission.mockResolvedValue({
+  mocks.requireApiAnyPermission.mockResolvedValue({
     ok: true,
     status: 200,
     error: null,
@@ -161,8 +156,8 @@ describe("GET /api/admin/users/[userId]/roles", () => {
 // ---------------------------------------------------------------------------
 
 describe("PUT /api/admin/users/[userId]/roles", () => {
-  it("RT-04: 403 for a caller without users.manage", async () => {
-    mocks.requireApiPermission.mockResolvedValue({
+  it("RT-04: 403 with German message for a caller without role-manage permissions", async () => {
+    mocks.requireApiAnyPermission.mockResolvedValue({
       ok: false,
       status: 403,
       error: "Forbidden",
@@ -178,7 +173,9 @@ describe("PUT /api/admin/users/[userId]/roles", () => {
       },
     );
     const res = await PUT(req, ctx());
+    const body = await res.json();
     expect(res.status).toBe(403);
+    expect(body.error).toMatch(/Keine Berechtigung/i);
     expect(mocks.setTenantUserRoles).not.toHaveBeenCalled();
   });
 
@@ -281,7 +278,7 @@ describe("PUT /api/admin/users/[userId]/roles", () => {
   });
 
   it("RT-10: 401 for unauthenticated request", async () => {
-    mocks.requireApiPermission.mockResolvedValue({
+    mocks.requireApiAnyPermission.mockResolvedValue({
       ok: false,
       status: 401,
       error: "Unauthorized",
