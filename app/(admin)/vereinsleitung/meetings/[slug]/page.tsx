@@ -113,6 +113,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           (
             await countAgendaLinkedTasks(
               actor.tenantId,
+              dbMeeting.id,
               subEntities.agendaItems.map((item) => item.id),
             )
           ).entries(),

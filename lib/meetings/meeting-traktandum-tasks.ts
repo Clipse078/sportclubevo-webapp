@@ -157,12 +157,16 @@ export async function createMeetingTraktandumTaskForDecision(
   });
 }
 
-export async function countAgendaLinkedTasks(tenantId: string, agendaItemIds: string[]): Promise<Map<string, number>> {
+export async function countAgendaLinkedTasks(
+  tenantId: string,
+  meetingId: string,
+  agendaItemIds: string[],
+): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (agendaItemIds.length === 0) return counts;
 
   const prefixes = agendaItemIds.map((id) => traktandumTaskOccurrenceKeyPrefixForAgenda(id));
-  const tasks = await prisma.task.findMany({
+  const directTasks = await prisma.task.findMany({
     where: {
       tenantId,
       OR: prefixes.map((prefix) => ({ seriesOccurrenceKey: { startsWith: prefix } })),
@@ -170,10 +174,42 @@ export async function countAgendaLinkedTasks(tenantId: string, agendaItemIds: st
     select: { seriesOccurrenceKey: true },
   });
 
-  for (const task of tasks) {
+  for (const task of directTasks) {
     const agendaItemId = parseAgendaItemIdFromTraktandumTaskOccurrenceKey(task.seriesOccurrenceKey);
     if (!agendaItemId) continue;
     counts.set(agendaItemId, (counts.get(agendaItemId) ?? 0) + 1);
+  }
+
+  const decisions = await prisma.meetingDecision.findMany({
+    where: {
+      meetingId,
+      meeting: { tenantId },
+      sourceAgendaItemId: { in: agendaItemIds },
+    },
+    select: { id: true, sourceAgendaItemId: true },
+  });
+  if (decisions.length > 0) {
+    const byAgenda = new Map<string, string[]>();
+    for (const decision of decisions) {
+      if (!decision.sourceAgendaItemId) continue;
+      const list = byAgenda.get(decision.sourceAgendaItemId) ?? [];
+      list.push(decision.id);
+      byAgenda.set(decision.sourceAgendaItemId, list);
+    }
+    const decisionTasks = await prisma.task.findMany({
+      where: {
+        tenantId,
+        contextType: TaskContextType.MEETING_DECISION,
+        contextId: { in: decisions.map((d) => d.id) },
+      },
+      select: { contextId: true },
+    });
+    const decisionAgenda = new Map(decisions.map((d) => [d.id, d.sourceAgendaItemId]));
+    for (const task of decisionTasks) {
+      const agendaItemId = task.contextId ? decisionAgenda.get(task.contextId) : null;
+      if (!agendaItemId) continue;
+      counts.set(agendaItemId, (counts.get(agendaItemId) ?? 0) + 1);
+    }
   }
 
   return counts;
