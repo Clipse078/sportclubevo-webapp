@@ -6,19 +6,26 @@ import type { PersonNavEffectiveAccessSection } from "@/lib/admin/users/person-n
 type Props = {
   sections: PersonNavEffectiveAccessSection[];
   emptyMessage?: string;
+  pendingInvitation?: boolean;
   /** When true, sections start collapsed for progressive disclosure. */
   collapsible?: boolean;
 };
 
 export default function PersonNavEffectiveAccessView({
   sections,
-  emptyMessage = "Keine freigegebenen Produktbereiche aus den zugewiesenen Rollen.",
+  emptyMessage,
+  pendingInvitation = false,
   collapsible = false,
 }: Props) {
+  const resolvedEmptyMessage =
+    emptyMessage ??
+    (pendingInvitation
+      ? "Kein geplanter Produktzugriff aus den zugewiesenen Rollen — prüfen Sie die Rollenkonfiguration."
+      : "Keine freigegebenen Produktbereiche aus den zugewiesenen Rollen.");
   const listId = useId();
 
   if (sections.length === 0) {
-    return <p className="text-sm text-[var(--muted)]">{emptyMessage}</p>;
+    return <p className="text-sm text-[var(--muted)]">{resolvedEmptyMessage}</p>;
   }
 
   const totalItems = sections.reduce((sum, section) => sum + section.items.length, 0);
@@ -26,10 +33,11 @@ export default function PersonNavEffectiveAccessView({
   return (
     <div className="space-y-4" data-testid="person-effective-access">
       <p className="text-sm text-[var(--text-2)]">
-        Effektiver Zugriff ist das Ergebnis aus Rollen, Zuständigkeiten und individuellen
-        Anpassungen ({sections.length} Bereich
+        {pendingInvitation ? "Geplanter Zugriff" : "Effektiver Zugriff"} (
+        {sections.length} Bereich
         {sections.length === 1 ? "" : "e"}, {totalItems} Eintrag
-        {totalItems === 1 ? "" : "e"}).
+        {totalItems === 1 ? "" : "e"}
+        {pendingInvitation ? " — nach Annahme aktiv" : ""}).
       </p>
 
       <ul className="space-y-3" aria-label="Effektiver Zugriff nach Produktbereich" id={listId}>

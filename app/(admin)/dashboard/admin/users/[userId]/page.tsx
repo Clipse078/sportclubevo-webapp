@@ -152,8 +152,13 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
       ? loadSceActivityClubGovernancePolicy(tenantId)
       : Promise.resolve(null),
   ]);
-  const accessSections = await getPersonNavEffectiveAccessSections(tenantId, userId, moduleGroups);
-  const accessOverviewLine = buildPersonDetailAccessOverviewLine(accessSections);
+  const accessProjectionMode = pendingInvitation ? ("planned" as const) : ("effective" as const);
+  const accessSections = await getPersonNavEffectiveAccessSections(tenantId, userId, moduleGroups, {
+    projectionMode: accessProjectionMode,
+  });
+  const accessOverviewLine = buildPersonDetailAccessOverviewLine(accessSections, {
+    pendingInvitation,
+  });
   const clubEventTypePolicy = governancePolicy?.activityTypes.find(
     (row) => row.activityType === "CLUB_EVENT",
   );
@@ -306,6 +311,12 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   <p className="text-sm text-[var(--text-2)]">
                     Clubweite Rollen und Funktionen für diese Person.
                   </p>
+                  {accessStatus.isPendingInvitation ? (
+                    <p className="text-xs text-[var(--muted)] leading-relaxed">
+                      Zugewiesene Rollen sind bereits gespeichert, werden aber erst nach Annahme der
+                      Einladung produktiv wirksam.
+                    </p>
+                  ) : null}
                 </div>
                 <TenantRoleAssignmentControl
                   userId={userId}
@@ -334,7 +345,7 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                     canManage
                   />
                 ) : scopedItems.length === 0 ? (
-                  <PersonBereicheEmptyState />
+                  <PersonBereicheEmptyState pendingInvitation={accessStatus.isPendingInvitation} />
                 ) : (
                   <ScopedRoleManagementControl
                     userId={userId}
@@ -351,7 +362,12 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                 <PersonActivityGovernanceTabContent personId={linkedPerson.id} canManage={canManage} />
               ) : null
             }
-            zugriff={<PersonNavEffectiveAccessPanel sections={accessSections} />}
+            zugriff={
+              <PersonNavEffectiveAccessPanel
+                sections={accessSections}
+                pendingInvitation={accessStatus.isPendingInvitation}
+              />
+            }
           />
         </div>
       </div>
