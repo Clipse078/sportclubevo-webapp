@@ -38,17 +38,18 @@ describe("invitation email branding regression", () => {
     },
   );
 
-  it("admin preview HTML can use same-origin relative logo src", () => {
+  it("admin preview HTML can use embedded data-uri logo src", () => {
+    const previewLogo = "data:image/png;base64,previewfixture=";
     const { html } = buildInvitationEmail({
       inviteUrl: INVITATION_PREVIEW_SAMPLE_ACCEPT_URL,
       recipientEmail: "x@example.test",
       recipientFirstName: "Test",
       tenantName: "FC Allschwil",
       expiryHours: 72,
-      sceLogoAbsoluteUrl: SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC,
+      sceLogoAbsoluteUrl: previewLogo,
       variant: "existing_account",
     });
-    expect(html).toContain(`src="${SPORTCLUBEVO_WORDMARK_ON_LIGHT_SURFACE_SRC}"`);
+    expect(html).toContain(`src="${previewLogo}"`);
     expect(html).not.toMatch(
       /src="https:\/\/fcallschwil\.sportclubevo\.com\/images\/branding\/sportclubevo_logo\.png"/,
     );

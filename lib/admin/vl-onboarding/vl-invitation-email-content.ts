@@ -20,6 +20,8 @@ export type VlInvitationEmailInput = {
   /** When set and `inviterDisplayName` is omitted, resolves the recorded inviter. */
   actorUserId?: string;
   variant?: InvitationEmailVariant;
+  /** Administrator HTML preview only — must not be set for live transport. */
+  sceLogoAbsoluteUrl?: string;
 };
 
 export async function resolveVlInvitationEmailVariant(
@@ -60,7 +62,8 @@ export async function buildVlInvitationEmailContent(
   } catch {
     appBaseUrl = undefined;
   }
-  const sceLogoAbsoluteUrl = resolveTransactionalSceEmailLogoAbsoluteUrl();
+  const sceLogoAbsoluteUrl =
+    input.sceLogoAbsoluteUrl?.trim() || resolveTransactionalSceEmailLogoAbsoluteUrl();
 
   const inviterDisplayName =
     input.inviterDisplayName?.trim() ||

@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db/prisma";
 import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 import { buildVlStandardInvitePersonalizedEmailPreview } from "@/lib/admin/vl-onboarding/vl-standard-invite-personalized-preview";
 import { resolveVlInvitationEmailVariant } from "@/lib/admin/vl-onboarding/vl-invitation-email-content";
+import { resolveAdminInvitationEmailPreviewLogoSrc } from "@/lib/email/admin-invitation-email-preview-logo-src";
 
 export async function POST(request: NextRequest) {
   const access = await requireApiPermission(PERMISSIONS.USERS_INVITE);
@@ -67,12 +68,15 @@ export async function POST(request: NextRequest) {
 
   const actorUserId = access.session.user?.effectiveUserId ?? access.session.user?.id;
 
+  const sceLogoAbsoluteUrl = resolveAdminInvitationEmailPreviewLogoSrc(request);
+
   const preview = await buildVlStandardInvitePersonalizedEmailPreview({
     tenantId,
     recipientEmail: email,
     recipientFirstName: firstName || "…",
     actorUserId,
     variant,
+    sceLogoAbsoluteUrl,
   });
 
   return NextResponse.json(preview);

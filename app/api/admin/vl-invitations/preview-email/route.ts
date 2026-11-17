@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { resolveAdminInvitationEmailPreviewLogoUrl } from "@/lib/email/resolve-admin-invitation-email-preview-logo-url";
+import { resolveAdminInvitationEmailPreviewLogoSrc } from "@/lib/email/admin-invitation-email-preview-logo-src";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { INVITATION_EXPIRY_HOURS } from "@/lib/users/mutations";
 import {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   } catch {
     appBaseUrl = "https://fcallschwil.sportclubevo.com";
   }
-  const sceLogoAbsoluteUrl = resolveAdminInvitationEmailPreviewLogoUrl(request);
+  const sceLogoAbsoluteUrl = resolveAdminInvitationEmailPreviewLogoSrc(request);
 
   const bodyInviter =
     typeof (body as { inviterDisplayName?: unknown })?.inviterDisplayName === "string"

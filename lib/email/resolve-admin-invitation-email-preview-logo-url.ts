@@ -8,8 +8,8 @@ import { isVercelSsoProtectedDeploymentHost } from "@/lib/email/resolve-transact
  * Outbound email uses `resolveTransactionalSceEmailLogoAbsoluteUrl()` (canonical
  * tenant origin). That URL sets Cross-Origin-Resource-Policy: same-origin, so
  * embedding it from a Vercel preview deployment breaks the &lt;img&gt; in the
- * in-page preview. Admin preview therefore uses the current deployment origin
- * (or a same-origin relative path when the host is SSO-gated).
+ * in-page preview. HTML previews now use {@link resolveAdminInvitationEmailPreviewLogoSrc}
+ * (bundled data URI). This resolver remains for callers that need a fetchable URL.
  */
 export function resolveAdminInvitationEmailPreviewLogoUrl(
   request: Pick<NextRequest, "nextUrl" | "headers">,

@@ -6,8 +6,10 @@ import {
   VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED,
   VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_NOTE,
   VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL,
-  VL_STANDARD_INVITE_PREPARE_STATUS_HINT,
+  VL_STANDARD_INVITE_PREPARE_STATUS_HINT_DRY_RUN,
+  VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED,
   VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
+  resolveVlStandardInvitePrepareStatusHint,
 } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -20,7 +22,8 @@ describe("vl standard invite user copy", () => {
   it("uses club-language strings without Dry-Run jargon", () => {
     for (const value of [
       VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_NOTE,
-      VL_STANDARD_INVITE_PREPARE_STATUS_HINT,
+      VL_STANDARD_INVITE_PREPARE_STATUS_HINT_DRY_RUN,
+      VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED,
       VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL,
       VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
     ]) {
@@ -44,6 +47,17 @@ describe("vl standard invite user copy", () => {
       expect(value.toLowerCase()).not.toContain("rollen-sync");
       expect(value).not.toContain("npx tsx");
     }
+  });
+
+  it("matches send policy for prepare status hint", () => {
+    expect(resolveVlStandardInvitePrepareStatusHint("DRY_RUN")).toBe(
+      VL_STANDARD_INVITE_PREPARE_STATUS_HINT_DRY_RUN,
+    );
+    expect(resolveVlStandardInvitePrepareStatusHint("LIVE_ALLOWED")).toBe(
+      VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED,
+    );
+    expect(VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED).toContain("Live-Versand");
+    expect(VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED).toContain("keine E-Mail");
   });
 
   it("keeps Dry-Run out of wizard UI surfaces", () => {
