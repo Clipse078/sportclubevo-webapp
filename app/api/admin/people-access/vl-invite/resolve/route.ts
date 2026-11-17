@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizePeopleAccessEmail } from "@/lib/admin/people-access/email-normalize";
 import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 import { resolveVlStandardInvitePresentation } from "@/lib/admin/vl-onboarding/vl-standard-invite-resolve-presentation";
+import { VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_NOTE } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import { loadVlInvitationPresetRoleState } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
 import { FCA_VL_INVITATION_PRESET } from "@/lib/admin/vl-onboarding/fca-vl-invitation-preset";
 import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     permissionKeys: presetRole.permissionKeys,
     contributorRoleProvisioningNote: presetRole.contributorRoleProvisioned
       ? null
-      : "Die Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt noch — Live-Versand blockiert. Rollen-Sync zuerst als Dry-Run prüfen.",
+      : VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_NOTE,
     ...presentation,
     resolved: {
       ...presentation.resolved,

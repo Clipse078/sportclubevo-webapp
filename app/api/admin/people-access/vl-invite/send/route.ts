@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/people-access/vl-invite/send
  *
- * Canonical single-recipient VL invitation via orchestrateVlInvitationSend (dry-run default).
+ * Canonical single-recipient VL invitation via orchestrateVlInvitationSend (preview mode by default).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,6 +18,7 @@ import {
   createMockVlInvitationTransport,
 } from "@/lib/admin/vl-onboarding/vl-invitation-transport";
 import { orchestrateVlInvitationSend } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
+import { VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import { normalizePeopleAccessEmail } from "@/lib/admin/people-access/email-normalize";
 import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 import { isValidVlOrgFunctionKey } from "@/lib/admin/vl-onboarding/vl-org-function-options";
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
       permissionKeys: result.contributorRoleSyncDiff.permissionKeys,
       contributorRoleProvisioningNote: result.contributorRoleProvisioned
         ? null
-        : "Die Mandanten-Rolle fehlt — Vorschau und Dry-Run nutzen die Vorlage; Live-Versand blockiert.",
+        : VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
       dryRun: !liveExecution,
     });
   } catch (error) {

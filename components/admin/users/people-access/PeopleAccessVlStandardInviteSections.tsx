@@ -14,6 +14,10 @@ import {
   resolveVlStandardInviteLiveSendBlocker,
   resolveVlStandardInviteWizardBlocker,
 } from "@/lib/admin/vl-onboarding/vl-standard-invite-wizard-policy";
+import {
+  VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_SYNC_HINT_PREFIX,
+  VL_STANDARD_INVITE_PREPARE_STATUS_HINT,
+} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 function VlAccessPreviewTable({ rows }: { rows: VereinsentwicklungAccessRow[] }) {
   return (
@@ -318,8 +322,8 @@ export function PeopleAccessVlAccessStep({ ctx }: { ctx: PeopleAccessVlWizardCon
         </div>
       ) : null}
       {ctx.contributorRoleSyncDiff?.roleMissing ? (
-        <p className="text-xs text-[var(--muted)]" data-testid="vl-contributor-role-dry-run-hint">
-          Rollen-Sync (Dry-Run):{" "}
+        <p className="text-xs text-[var(--muted)]" data-testid="vl-contributor-role-sync-hint">
+          {VL_STANDARD_INVITE_CONTRIBUTOR_ROLE_SYNC_HINT_PREFIX}{" "}
           <code className="text-[11px]">npx tsx scripts/sync-fca-vereinsleitung-contributor-pilot-role.ts</code>
         </p>
       ) : null}
@@ -374,9 +378,7 @@ export function PeopleAccessVlReviewStep({
           {ctx.sendBlocker}
         </p>
       ) : (
-        <p className="text-xs text-[var(--muted)]">
-          Dry-Run: «Einladung vorbereiten» nutzt denselben Transport wie Bulk-VL — ohne Live-Zustellung.
-        </p>
+        <p className="text-xs text-[var(--muted)]">{VL_STANDARD_INVITE_PREPARE_STATUS_HINT}</p>
       )}
       {ctx.liveSendBlocker ? (
         <p className="text-xs text-[var(--muted)]" data-testid="people-access-vl-live-send-prerequisite">

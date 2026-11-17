@@ -31,6 +31,7 @@ import {
   usePeopleAccessVlWizardContext,
 } from "@/components/admin/users/people-access/PeopleAccessVlStandardInviteSections";
 import { isValidVlOrgFunctionKey } from "@/lib/admin/vl-onboarding/vl-org-function-options";
+import { VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 export type WizardRoleOption = {
   id: string;
@@ -958,7 +959,7 @@ export default function PeopleAccessWizard({
                   {pending
                     ? "Wird gesendet…"
                     : vlPresetActive
-                      ? "Einladung vorbereiten (Dry-Run)"
+                      ? VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL
                       : "Einladung senden"}
                 </button>
               </>
