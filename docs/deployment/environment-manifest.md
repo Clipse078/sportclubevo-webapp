@@ -138,6 +138,12 @@ in every deployed runtime scope.
 | `SCE_SUPER_ADMIN_BOOTSTRAP_PASSWORD` | Temporary platform-admin bootstrap credential | Yes | Forbidden | Forbidden | Conditional | One approved bootstrap only | Bootstrap refuses the relevant write | Never persist |
 | `FCA_CLUB_ADMIN_BOOTSTRAP_PASSWORD` | Temporary legacy FCA club-admin bootstrap credential | Yes | Forbidden | Forbidden | Conditional | One approved bootstrap only | Bootstrap refuses the relevant write | FCA-specific and temporary; not a Tenant #2 pattern |
 
+## Vereinsleitung onboarding (FCA pilot)
+
+| Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `VL_INVITATION_LIVE_SEND` | Enables live VL invitation delivery on canonical STAGE when set to `true` | No | Conditional (canonical STAGE project `sportclubevo-webapp-stage` **Production** scope only) | **Forbidden** | Optional | Optional; default unset | Live send remains dry-run/mock transport; `confirmLiveSend` still required on send requests | Never enable on Preview deployments or production (`main`) project. Exposed as `operationalPolicy.vlInvitationSendMode` on `GET /api/health/diag` (`DRY_RUN` vs `LIVE_ALLOWED`). |
+
 ## Preview policy
 
 Preview is intentionally credential-poor. It may build and deploy while runtime

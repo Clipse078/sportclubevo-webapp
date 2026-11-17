@@ -17,6 +17,7 @@ import {
 } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
 import { FCA_VL_INVITATION_PRESET } from "@/lib/admin/vl-onboarding/fca-vl-invitation-preset";
 import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
+import { VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { prisma } from "@/lib/db/prisma";
 
@@ -61,7 +62,7 @@ export async function POST() {
     contributorRoleProvisioned: presetRole.contributorRoleProvisioned,
     contributorRoleProvisioningNote: presetRole.contributorRoleProvisioned
       ? null
-      : "Mandanten-Rolle fehlt — vor Live-Versand sync-fca-vereinsleitung-contributor-pilot-role (STAGE) ausführen.",
+      : VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED,
     recipients: resolved,
     missingIdentityFields: resolved.map((r) => ({
       email: r.email,

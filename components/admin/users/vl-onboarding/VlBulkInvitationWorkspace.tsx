@@ -10,6 +10,7 @@ import { FCA_VL_INVITATION_CONFIRMED_EMAILS } from "@/lib/admin/vl-onboarding/fc
 import type { VereinsentwicklungAccessRow } from "@/lib/admin/people-access/vereinsentwicklung-access-presentation";
 import type { VlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
 import { resolveVlInvitationSendUiState } from "@/lib/admin/vl-onboarding/vl-invitation-send-ui-policy";
+import { VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 
 type ValidationRow = {
   raw: string;
@@ -249,8 +250,7 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
               role="status"
             >
               <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden />
-              {contributorRoleNote ??
-                "Blocker: Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt — Live-Versand und wirksame Rechtevorschau erst nach autorisiertem Rollen-Sync."}
+              {contributorRoleNote ?? VL_CONTRIBUTOR_ROLE_SETUP_REQUIRED}
             </p>
           ) : null}
         </section>

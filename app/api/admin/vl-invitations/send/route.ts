@@ -18,6 +18,10 @@ import {
   createLiveVlInvitationTransport,
   createMockVlInvitationTransport,
 } from "@/lib/admin/vl-onboarding/vl-invitation-transport";
+import {
+  VL_LIVE_SEND_CONTRIBUTOR_ROLE_BLOCKED,
+  VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
+} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
 import { orchestrateVlInvitationSend } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
 import type { VlInvitationRecipientIdentity } from "@/lib/admin/vl-onboarding/vl-invitation-orchestration";
 
@@ -104,8 +108,7 @@ export async function POST(request: NextRequest) {
         {
           ...result,
           sent: false,
-          error:
-            "Live-Versand blockiert — Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt. Rollen-Sync zuerst ausführen.",
+          error: VL_LIVE_SEND_CONTRIBUTOR_ROLE_BLOCKED,
         },
         { status: 409 },
       );
@@ -116,7 +119,7 @@ export async function POST(request: NextRequest) {
       permissionKeys: result.contributorRoleSyncDiff.permissionKeys,
       contributorRoleProvisioningNote: result.contributorRoleProvisioned
         ? null
-        : "Die Mandanten-Rolle fehlt — Modul-Vorschau basiert auf der Vorlage, nicht auf persistierten Rechten.",
+        : VL_STANDARD_INVITE_SEND_CONTRIBUTOR_ROLE_NOTE,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Interner Serverfehler.";

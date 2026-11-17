@@ -259,6 +259,24 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/people-access/vl-invite/preview-email/route.ts",
+    "urlPattern": "/api/admin/people-access/vl-invite/preview-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/people-access/vl-invite/resolve/route.ts",
+    "urlPattern": "/api/admin/people-access/vl-invite/resolve",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/people-access/vl-invite/send/route.ts",
+    "urlPattern": "/api/admin/people-access/vl-invite/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/admin/sce/activity-governance/club-event/route.ts",
     "urlPattern": "/api/admin/sce/activity-governance/club-event",
     "audience": "API"
