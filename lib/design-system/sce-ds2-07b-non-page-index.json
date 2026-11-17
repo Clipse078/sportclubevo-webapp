@@ -259,6 +259,18 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/people-access/invite/preview-email/route.ts",
+    "urlPattern": "/api/admin/people-access/invite/preview-email",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/admin/people-access/invite/send/route.ts",
+    "urlPattern": "/api/admin/people-access/invite/send",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/admin/people-access/vl-invite/preview-email/route.ts",
     "urlPattern": "/api/admin/people-access/vl-invite/preview-email",
     "audience": "API"
