@@ -32,6 +32,7 @@ import {
   INVITATION_EXPIRY_HOURS,
 } from "@/lib/users/mutations";
 import { sendMail, MailConfigurationError } from "@/lib/email/mailer";
+import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
 import { buildInvitationEmail } from "@/lib/email/templates/invitation";
 import { prisma } from "@/lib/db/prisma";
 import { RoleDomainError } from "@/lib/roles/errors";
@@ -211,6 +212,7 @@ async function _sendInvitationEmail(
     tenantName,
     expiryHours: INVITATION_EXPIRY_HOURS,
     appBaseUrl: appBaseUrl || undefined,
+    sceLogoAbsoluteUrl: resolveTransactionalSceEmailLogoAbsoluteUrl(),
   });
 
   await sendMail({ to: email, subject, html, text });

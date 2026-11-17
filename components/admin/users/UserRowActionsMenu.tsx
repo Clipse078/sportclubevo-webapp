@@ -216,16 +216,6 @@ export default function UserRowActionsMenu({
         menuLabel="Benutzeraktionen"
         triggerIcon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
       >
-          {showImpersonate ? (
-            <div onClick={(event) => event.stopPropagation()}>
-              <ImpersonateButton
-                userId={userId}
-                variant="row-menu"
-                onActivate={closeMenu}
-              />
-            </div>
-          ) : null}
-
           {showAdminShortcuts ? (
             <>
               {onEditAccess ? (
@@ -247,6 +237,16 @@ export default function UserRowActionsMenu({
                 onSelect={closeMenu}
               />
             </>
+          ) : null}
+
+          {showImpersonate ? (
+            <div onClick={(event) => event.stopPropagation()}>
+              <ImpersonateButton
+                userId={userId}
+                variant="row-menu"
+                onActivate={closeMenu}
+              />
+            </div>
           ) : null}
 
           {hasNormalActions && hasDestructiveSection ? <SceOverflowMenuDivider /> : null}

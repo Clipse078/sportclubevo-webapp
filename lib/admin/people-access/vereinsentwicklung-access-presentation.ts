@@ -38,10 +38,10 @@ export function buildVereinsentwicklungAccessRows(
 
     if (hasManage) {
       state = "allow";
-      detail = manage ? "Bearbeiten" : "Ansehen";
+      detail = "Ansehen & bearbeiten";
     } else if (hasView) {
       state = "partial";
-      detail = "Ansehen";
+      detail = "Nur ansehen";
     }
 
     return {

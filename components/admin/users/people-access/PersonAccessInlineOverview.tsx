@@ -148,10 +148,7 @@ export default function PersonAccessInlineOverview({
       data-testid={`people-access-inline-overview-${user.userId}`}
       data-sce-people-access-flow="inline-expand"
     >
-      <SceClubDevelopmentSectionShell title="Profil & effektiver Zugriff">
-        <p className="mb-3 text-xs text-[var(--muted)]">
-          Person, Konto, Mitgliedschaft und Module — ohne Overlay.
-        </p>
+      <SceClubDevelopmentSectionShell title="Effektiver Zugriff">
         <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
           <AdminStatusPill label={accountStatus.label} tone={accountStatus.tone} />
           {!accountStatus.loginActive ? (
@@ -170,14 +167,17 @@ export default function PersonAccessInlineOverview({
             {vlRows.map((row) => (
               <li key={row.navLabel} className="flex justify-between gap-3">
                 <span>{row.navLabel}</span>
-                <span className="text-[var(--muted)]">
-                  {row.state === "deny"
-                    ? "Kein Zugriff"
-                    : row.detail}
+                <span className="text-right text-[var(--muted)]">
+                  {row.state === "deny" ? "Kein Zugriff" : row.detail}
                 </span>
               </li>
             ))}
           </ul>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Modulberechtigungen steuern Menüs und Bearbeitung. Einzelne Inhalte (z. B. Sitzungen)
+            können zusätzlich über Sichtbarkeitsregeln eingeschränkt sein — ohne Titel oder Anzahl
+            preiszugeben.
+          </p>
         </div>
 
         <SceContextTabsBoundary
@@ -209,6 +209,7 @@ export default function PersonAccessInlineOverview({
               void persistOverrides(next);
             }}
             onResetOverrides={() => void persistOverrides({})}
+            profileHeaderMode="compact"
           />
         </SceContextTabsBoundary>
 
@@ -216,9 +217,6 @@ export default function PersonAccessInlineOverview({
           className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)]/60 pt-3"
           aria-label="Person Aktionen"
         >
-          {canImpersonateTarget ? (
-            <ImpersonateButton userId={user.userId} variant="person-detail" />
-          ) : null}
           {canManage && !user.isPlatformSystemIdentity ? (
             <>
               <Link
@@ -237,6 +235,9 @@ export default function PersonAccessInlineOverview({
                 Detailseite
               </Link>
             </>
+          ) : null}
+          {canImpersonateTarget ? (
+            <ImpersonateButton userId={user.userId} variant="person-detail" />
           ) : null}
         </nav>
       </SceClubDevelopmentSectionShell>

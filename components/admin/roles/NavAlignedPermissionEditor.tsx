@@ -573,8 +573,8 @@ function PermissionSection({
       ? grantedInSection === 0
         ? "Kein Zugriff"
         : grantedInSection === grantableInSection.length
-          ? "Vollständig"
-          : `${grantedInSection} von ${grantableInSection.length} freigegeben`
+          ? "Alle Modulberechtigungen"
+          : `${grantedInSection} von ${grantableInSection.length} Berechtigungen`
       : null;
 
   return (

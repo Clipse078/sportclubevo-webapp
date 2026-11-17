@@ -22,7 +22,7 @@ export default function PeopleAccessInlineCreateCard({
   return (
     <SceClubDevelopmentContextualCreateCollapsibleShell
       actionLabel="Person hinzufügen"
-      contextLabel="Einladung und Zugriff inline — ohne Dialog"
+      contextLabel="Neue Person einladen und Zugriff zuweisen"
       expanded={expanded}
       onExpandedChange={onExpandedChange}
       panelDomId={panelId}

@@ -171,6 +171,8 @@ export async function getOrgUnitById(id: string) {
  * - Enforces endsAt: memberships with a past endsAt are excluded so expired
  *   memberships do not grant visibility access.
  * - Includes person-based memberships when personId is provided.
+ * - Includes ACTIVE tenant PersonAssignment rows for the linked Person (org staff /
+ *   functions), so visibleOrgUnitRefs match authoritative Vereinsleitung assignments.
  *
  * Phase 2 (org-based permissions):
  * - Excludes memberships pointing to archived org units. When an OrgUnit is
@@ -194,7 +196,7 @@ export async function loadOrgUnitIds(
   // Exclude memberships for archived org units — archived units must not grant visibility.
   const activeOrgUnitFilter = { orgUnit: { status: { not: "ARCHIVED" as const } } };
 
-  const [userMemberships, personMemberships] = await Promise.all([
+  const [userMemberships, personMemberships, staffAssignments] = await Promise.all([
     prisma.orgUnitMembership.findMany({
       where: { userId, status: "ACTIVE", ...tenantFilter, ...expiryFilter, ...activeOrgUnitFilter },
       select: { orgUnitId: true },
@@ -205,11 +207,23 @@ export async function loadOrgUnitIds(
           select: { orgUnitId: true },
         })
       : Promise.resolve([]),
+    tenantId
+      ? prisma.personAssignment.findMany({
+          where: {
+            tenantId,
+            status: "ACTIVE",
+            person: { userId, isActive: true },
+            ...activeOrgUnitFilter,
+          },
+          select: { orgUnitId: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   const ids = new Set<string>();
   for (const m of userMemberships) ids.add(m.orgUnitId);
   for (const m of personMemberships) ids.add(m.orgUnitId);
+  for (const assignment of staffAssignments) ids.add(assignment.orgUnitId);
   return Array.from(ids);
 }
 

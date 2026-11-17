@@ -293,12 +293,27 @@ export type OnboardScopedRoleInput = {
 };
 
 export type OnboardPersonOptions = {
-  /** When false, creates access without issuing an invitation token or email. */
+  /**
+   * When false, skips invitation token issuance unless {@link issueInvitationToken} is true.
+   * Mutations never send email — callers own delivery (admin invite routes, VL orchestrator).
+   */
   sendInvitation?: boolean;
+  /**
+   * Issues a tenant invitation token without implying outbound email (VL orchestrator transport).
+   * Defaults to {@link sendInvitation} when omitted.
+   */
+  issueInvitationToken?: boolean;
   roleIds?: string[];
   scopedRoles?: OnboardScopedRoleInput[];
   permissionOverrides?: Array<{ permissionKey: string; effect: "ALLOW" | "DENY" }>;
 };
+
+function shouldIssueInvitationToken(options?: OnboardPersonOptions): boolean {
+  if (options?.issueInvitationToken !== undefined) {
+    return options.issueInvitationToken;
+  }
+  return options?.sendInvitation ?? true;
+}
 
 async function assertOnboardRoleDelegation(
   tenantId: string,
@@ -379,7 +394,7 @@ export async function invitePersonToTenant(
   actorUserId: string,
   options?: OnboardPersonOptions,
 ): Promise<InvitePersonResult> {
-  const sendInvitation = options?.sendInvitation ?? true;
+  const issueInvitationToken = shouldIssueInvitationToken(options);
   await assertOnboardRoleDelegation(tenantId, actorUserId, options);
   // 1. Load the Person — must belong to this tenant.
   const person = await prisma.person.findUnique({
@@ -417,7 +432,7 @@ export async function invitePersonToTenant(
         existingUser.id,
         personId,
         actorUserId,
-        sendInvitation,
+        issueInvitationToken,
       );
       await applyOnboardRoleAssignments(tenantId, existingUser.id, actorUserId, options);
       return result;
@@ -466,7 +481,7 @@ export async function invitePersonToTenant(
         emailConflict.id,
         personId,
         actorUserId,
-        sendInvitation,
+        issueInvitationToken,
       );
       await applyOnboardRoleAssignments(tenantId, emailConflict.id, actorUserId, options);
       return result;
@@ -508,7 +523,7 @@ export async function invitePersonToTenant(
 
   // 7. Create invitation token when requested.
   let rawToken: string | undefined;
-  if (sendInvitation) {
+  if (issueInvitationToken) {
     rawToken = await _createInvitationToken(newUser.id, tenantId);
   }
 
@@ -518,7 +533,7 @@ export async function invitePersonToTenant(
     moduleKey: "users",
     entityType: "User",
     entityId: newUser.id,
-    action: sendInvitation ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
+    action: issueInvitationToken ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
     afterJson: { tenantId, personId, email },
     metadataJson: { tenantId },
   });
@@ -547,7 +562,7 @@ export async function createPersonAndInvite(
   actorUserId: string,
   options?: OnboardPersonOptions,
 ): Promise<InvitePersonResult & { personId: string }> {
-  const sendInvitation = options?.sendInvitation ?? true;
+  const issueInvitationToken = shouldIssueInvitationToken(options);
   await assertOnboardRoleDelegation(tenantId, actorUserId, options);
   const { firstName, lastName, email } = personData;
   const normalizedEmail = email.toLowerCase().trim();
@@ -590,7 +605,7 @@ export async function createPersonAndInvite(
       existingUser.id,
       person.id,
       actorUserId,
-      sendInvitation,
+      issueInvitationToken,
     );
 
     await applyOnboardRoleAssignments(tenantId, existingUser.id, actorUserId, options);
@@ -601,7 +616,7 @@ export async function createPersonAndInvite(
       moduleKey: "users",
       entityType: "User",
       entityId: existingUser.id,
-      action: sendInvitation ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
+      action: issueInvitationToken ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
       afterJson: { tenantId, personId: person.id, email: normalizedEmail, existingUser: true },
       metadataJson: { tenantId },
     });
@@ -643,7 +658,7 @@ export async function createPersonAndInvite(
 
   // 6. Create invitation token when requested.
   let rawToken: string | undefined;
-  if (sendInvitation) {
+  if (issueInvitationToken) {
     rawToken = await _createInvitationToken(newUser.id, tenantId);
   }
 
@@ -655,7 +670,7 @@ export async function createPersonAndInvite(
     moduleKey: "users",
     entityType: "User",
     entityId: newUser.id,
-    action: sendInvitation ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
+    action: issueInvitationToken ? "INVITATION_SENT" : "ACCESS_CREATED_WITHOUT_INVITATION",
     afterJson: { tenantId, personId: person.id, email: normalizedEmail, newPerson: true },
     metadataJson: { tenantId },
   });
@@ -816,7 +831,7 @@ async function _ensureMembershipAndResendInvitation(
   userId: string,
   personId: string,
   actorUserId: string,
-  sendInvitation = true,
+  issueInvitationToken = true,
 ): Promise<InvitePersonResult> {
   if (await isPlatformSuperAdmin(prisma, userId)) {
     throw new InvitationDomainError("PLATFORM_ACCOUNT_PROTECTED");
@@ -842,7 +857,7 @@ async function _ensureMembershipAndResendInvitation(
         "User is already an active member of this tenant.",
       );
     }
-    if (!sendInvitation) {
+    if (!issueInvitationToken) {
       return { userId };
     }
     // Has a pending invitation — resend it.
@@ -868,7 +883,7 @@ async function _ensureMembershipAndResendInvitation(
     });
   }
 
-  if (!sendInvitation) {
+  if (!issueInvitationToken) {
     return { userId };
   }
 

@@ -21,6 +21,7 @@ import {
 import { SceSearchField } from "@/components/sce/forms/SceSearchField";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import PeopleAccessInlineCreateCard from "@/components/admin/users/people-access/PeopleAccessInlineCreateCard";
+import VlBulkInvitationWorkspace from "@/components/admin/users/vl-onboarding/VlBulkInvitationWorkspace";
 import PersonAccessInlineOverview from "@/components/admin/users/people-access/PersonAccessInlineOverview";
 import PeopleAccessStatusSummary from "@/components/admin/users/people-access/PeopleAccessStatusSummary";
 import { buildPersonDetailZugriffHref } from "@/lib/admin/users/person-quick-view-config";
@@ -52,6 +53,7 @@ type Props = {
   canManage?: boolean;
   canGlobalDelete?: boolean;
   wizardConfig?: PeopleAccessWizardConfig;
+  vlOnboardingEnabled?: boolean;
 };
 
 type StatusFilter = "all" | "active" | "deactivated" | "pending" | "not_invited" | "privileged";
@@ -90,6 +92,7 @@ export default function TenantUsersSearchableList({
   canManage = false,
   canGlobalDelete = false,
   wizardConfig,
+  vlOnboardingEnabled = false,
 }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -237,6 +240,8 @@ export default function TenantUsersSearchableList({
           }}
         />
       ) : null}
+
+      {vlOnboardingEnabled && canInvite ? <VlBulkInvitationWorkspace canInvite={canInvite} /> : null}
 
       <SceDenseSurface feedbackSurfaceId="people-access-list" aria-label="Personenliste">
         <SceDenseToolbar

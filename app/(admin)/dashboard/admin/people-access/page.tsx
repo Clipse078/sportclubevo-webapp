@@ -8,6 +8,7 @@ import { getTenantUsersListData, getTenantPersonsWithoutUser } from "@/lib/users
 import { getTenantPermissionCatalog, getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { getOrgUnitsForTenant } from "@/lib/people/queries";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
+import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { getPrivilegedTenantRoleIds } from "@/lib/admin/people-access/privileged";
 import { prisma } from "@/lib/db/prisma";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
@@ -171,6 +172,7 @@ export default async function PeopleAccessPage({ searchParams }: PageProps) {
           canManage={canManage}
           canGlobalDelete={canGlobalDelete}
           wizardConfig={wizardConfig}
+          vlOnboardingEnabled={tenant.key === PILOT_TENANT_KEY}
         />
       </ListPagePattern>
     </PageShell>

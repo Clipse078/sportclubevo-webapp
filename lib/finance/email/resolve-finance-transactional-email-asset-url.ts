@@ -1,7 +1,6 @@
 import { isVercelBlobUrl } from "@/lib/assets/storage";
+import { resolveTransactionalSceEmailLogoAbsoluteUrl } from "@/lib/email/resolve-transactional-sce-email-logo-url";
 import { buildNotificationAbsoluteHref } from "@/lib/notifications/internal-href";
-
-const SCE_EMAIL_FOOTER_LOGO_PATH = "/images/branding/sportclubevo_logo.png";
 
 /**
  * Email clients require absolute HTTPS (or trusted blob) image URLs.
@@ -34,5 +33,5 @@ export function resolveFinanceTransactionalEmailAssetUrl(
 }
 
 export function resolveFinancePublicationDistributionSceEmailLogoUrl(): string {
-  return buildNotificationAbsoluteHref(SCE_EMAIL_FOOTER_LOGO_PATH);
+  return resolveTransactionalSceEmailLogoAbsoluteUrl();
 }

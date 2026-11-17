@@ -47,6 +47,7 @@ describe("SECURITY-GO-LIVE-01K-A invite delegation", () => {
     await expect(
       invitePersonToTenant("tenant-a", "person-a", "actor-a", {
         sendInvitation: false,
+        issueInvitationToken: false,
         roleIds: ["strong-role"],
         scopedRoles: [
           { roleId: "foreign-role", orgUnitId: "org-unit-a" },
