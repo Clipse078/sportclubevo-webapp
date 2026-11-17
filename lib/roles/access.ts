@@ -27,3 +27,14 @@ export const TENANT_ROLES_ASSIGN: PermissionKey[] = [
   PERMISSIONS.ROLES_MANAGE,
   PERMISSIONS.ROLES_ASSIGN,
 ];
+
+/**
+ * Bulk sync of a member's tenant-wide roles (`setTenantUserRoles` /
+ * PUT /api/admin/users/[userId]/roles). Matches person-detail `canAssign` and
+ * the admin user detail "Rollen & Funktionen" save gate — never a subset.
+ */
+export const TENANT_USER_ROLES_SYNC: PermissionKey[] = [
+  PERMISSIONS.USERS_MANAGE,
+  PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+  ...TENANT_ROLES_ASSIGN,
+];

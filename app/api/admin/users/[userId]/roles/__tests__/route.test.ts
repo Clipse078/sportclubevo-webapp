@@ -18,9 +18,14 @@
  *   RT-08  PUT: maps RoleNotFoundError → 404 ROLE_NOT_FOUND (cross-tenant/platform)
  *   RT-09  PUT: 400 when roleIds is not an array
  *   RT-10  PUT: 401 for unauthenticated request
+ *   RT-11  PUT: passes TENANT_USER_ROLES_SYNC to requireApiAnyPermission
+ *   RT-12  PUT: maps DelegationForbiddenError → 403 DELEGATION_FORBIDDEN
+ *   RT-13  PUT: service rejection still runs after route allows roles.assign-only caller
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { TENANT_USER_ROLES_SYNC } from "@/lib/roles/access";
 
 const mocks = vi.hoisted(() => ({
   requireApiAnyPermission: vi.fn(),
@@ -50,7 +55,11 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { GET, PUT } from "@/app/api/admin/users/[userId]/roles/route";
-import { LastRequiredAdminError, RoleNotFoundError } from "@/lib/roles/errors";
+import {
+  DelegationForbiddenError,
+  LastRequiredAdminError,
+  RoleNotFoundError,
+} from "@/lib/roles/errors";
 import { NextRequest } from "next/server";
 
 const SESSION_TENANT_ID = "tenant-session";
@@ -275,6 +284,65 @@ describe("PUT /api/admin/users/[userId]/roles", () => {
     const res = await PUT(req, ctx());
     expect(res.status).toBe(400);
     expect(mocks.setTenantUserRoles).not.toHaveBeenCalled();
+  });
+
+  it("RT-11: authorize PUT with TENANT_USER_ROLES_SYNC (route guard only)", async () => {
+    mockManageAccess();
+
+    const req = new NextRequest(
+      `http://localhost/api/admin/users/${TARGET_USER_ID}/roles`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ roleIds: [] }),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+    await PUT(req, ctx());
+
+    const [permissionKeys] = mocks.requireApiAnyPermission.mock.calls.at(-1) ?? [];
+    expect(permissionKeys).toEqual(TENANT_USER_ROLES_SYNC);
+    expect(permissionKeys).toContain(PERMISSIONS.ROLES_ASSIGN);
+    expect(permissionKeys).toContain(PERMISSIONS.USERS_MANAGE_MEMBERSHIPS);
+  });
+
+  it("RT-12: maps DelegationForbiddenError to 403 with DELEGATION_FORBIDDEN code", async () => {
+    mockManageAccess();
+    mocks.setTenantUserRoles.mockRejectedValue(
+      new DelegationForbiddenError(undefined, ["users.invite"]),
+    );
+
+    const req = new NextRequest(
+      `http://localhost/api/admin/users/${TARGET_USER_ID}/roles`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ roleIds: ["role-new"] }),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+    const res = await PUT(req, ctx());
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.code).toBe("DELEGATION_FORBIDDEN");
+    expect(body.missingPermissionKeys).toEqual(["users.invite"]);
+  });
+
+  it("RT-13: broadened route guard does not skip service delegation checks", async () => {
+    mockManageAccess();
+    mocks.setTenantUserRoles.mockRejectedValue(new DelegationForbiddenError());
+
+    const req = new NextRequest(
+      `http://localhost/api/admin/users/${TARGET_USER_ID}/roles`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ roleIds: ["role-1", "role-2"] }),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+    const res = await PUT(req, ctx());
+
+    expect(res.status).toBe(403);
+    expect(mocks.setTenantUserRoles).toHaveBeenCalled();
   });
 
   it("RT-10: 401 for unauthenticated request", async () => {

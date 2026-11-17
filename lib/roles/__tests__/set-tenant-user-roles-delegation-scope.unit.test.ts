@@ -91,4 +91,42 @@ describe("setTenantUserRoles — delegation unit", () => {
     expect(delegationMock).not.toHaveBeenCalled();
     expect(prismaMocks.transaction).not.toHaveBeenCalled();
   });
+
+  it("delegates each batch of newly added roles in one assertTenantDelegationAllowed call", async () => {
+    prismaMocks.roleFindMany.mockImplementation(
+      async ({ where }: { where: { id: { in: string[] } } }) =>
+        where.id.in.map((id) => ({
+          id,
+          name: id,
+          isSystem: false,
+          isArchived: false,
+        })),
+    );
+
+    await setTenantUserRoles({
+      tenantId: "tenant-a",
+      userId: "user-target",
+      roleIds: ["role-existing", "role-new-a", "role-new-b"],
+      actorUserId: "actor-a",
+    });
+
+    expect(delegationMock).toHaveBeenCalledTimes(1);
+    expect(delegationMock).toHaveBeenCalledWith({
+      tenantId: "tenant-a",
+      actorUserId: "actor-a",
+      roleIds: ["role-new-a", "role-new-b"],
+    });
+  });
+
+  it("does not re-delegate when only removing roles (removal authority is route-level)", async () => {
+    await setTenantUserRoles({
+      tenantId: "tenant-a",
+      userId: "user-target",
+      roleIds: [],
+      actorUserId: "actor-a",
+    });
+
+    expect(delegationMock).not.toHaveBeenCalled();
+    expect(prismaMocks.transaction).toHaveBeenCalled();
+  });
 });

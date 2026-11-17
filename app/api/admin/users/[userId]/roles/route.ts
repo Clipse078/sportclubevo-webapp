@@ -8,8 +8,8 @@
  *
  * PUT  → { roleIds: string[] } — syncs the user's tenant roles to the given
  *        set. Assignments and removals are applied atomically.
- *        Permission: users.manage OR users.manage_memberships OR roles.assign
- *        OR roles.manage (same boundary as tenant role assignment elsewhere).
+ *        Permission: TENANT_USER_ROLES_SYNC (lib/roles/access.ts) — aligned
+ *        with the admin user detail "Rollen & Funktionen" save gate.
  *
  * Tenant isolation: tenantId resolved exclusively from
  * session.user.activeTenantId — never from the request body or URL.
@@ -20,7 +20,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { TENANT_ROLES_ASSIGN } from "@/lib/roles/access";
+import { TENANT_USER_ROLES_SYNC } from "@/lib/roles/access";
 import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { setTenantUserRoles } from "@/lib/roles/mutations";
 import { toRoleApiErrorResponse } from "@/lib/roles/errors";
@@ -70,12 +70,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   });
 }
 
-const TENANT_USER_ROLES_MANAGE: (typeof PERMISSIONS)[keyof typeof PERMISSIONS][] = [
-  PERMISSIONS.USERS_MANAGE,
-  PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
-  ...TENANT_ROLES_ASSIGN,
-];
-
 function mapRoleManageApiAuthError(error: string | null, status: number): string {
   if (status === 403 && (error === "Forbidden" || !error)) {
     return "Keine Berechtigung, Mandantenrollen für diese Person zu verwalten.";
@@ -87,7 +81,7 @@ function mapRoleManageApiAuthError(error: string | null, status: number): string
 }
 
 export async function PUT(request: NextRequest, { params }: RouteContext) {
-  const access = await requireApiAnyPermission(TENANT_USER_ROLES_MANAGE);
+  const access = await requireApiAnyPermission(TENANT_USER_ROLES_SYNC);
   if (!access.ok) {
     return NextResponse.json(
       { error: mapRoleManageApiAuthError(access.error, access.status) },

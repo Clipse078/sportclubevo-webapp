@@ -28,6 +28,7 @@ import PersonDetailWorkspace from "@/components/admin/users/PersonDetailWorkspac
 import PersonDetailOverviewTab from "@/components/admin/users/PersonDetailOverviewTab";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
 import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
+import { TENANT_USER_ROLES_SYNC } from "@/lib/roles/access";
 import {
   buildPersonDetailTabHref,
   buildPersonDetailTabNavigationConfig,
@@ -97,6 +98,9 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
   const canManage =
     hasPermission(session, PERMISSIONS.USERS_MANAGE_MEMBERSHIPS) ||
     hasPermission(session, PERMISSIONS.USERS_MANAGE);
+  const canManageTenantRoles = TENANT_USER_ROLES_SYNC.some((key) =>
+    hasPermission(session, key),
+  );
   const canInvite = hasPermission(session, PERMISSIONS.USERS_INVITE);
   const actorUserId = session.user.actorUserId ?? session.user.id;
   const canImpersonate =
@@ -307,7 +311,7 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   userId={userId}
                   availableRoles={availableRoles}
                   initialRoleIds={user.userRoles.map((ur) => ur.role.id)}
-                  canManage={canManage && !accessStatus.isPendingInvitation}
+                  canManage={canManageTenantRoles && !accessStatus.isPendingInvitation}
                 />
               </div>
             }

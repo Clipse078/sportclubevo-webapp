@@ -110,6 +110,102 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
     );
   });
 
+  it("allows removing a high-ceiling role without re-delegating its permissions", async () => {
+    const actor = await createTestUser("deleg-actor-rem");
+    const target = await createTestUser("deleg-target-rem");
+    createdUserIds.push(actor.id, target.id);
+    await createTestMembership(tenant.id, actor.id, true);
+    await createTestMembership(tenant.id, target.id, true);
+
+    const actorRole = await createTenantRoleFixture({
+      tenantId: tenant.id,
+      name: "Limited Remover",
+      permissionKeys: [TEAMS_VIEW, ROLES_ASSIGN],
+    });
+    const elevated = await createTenantRoleFixture({
+      tenantId: tenant.id,
+      name: "Präsident Rem Fixture",
+      permissionKeys: [USERS_INVITE],
+    });
+    await assignUserRoleFixture({ userId: actor.id, roleId: actorRole.id, tenantId: tenant.id });
+    await assignUserRoleFixture({
+      userId: target.id,
+      roleId: elevated.id,
+      tenantId: tenant.id,
+    });
+
+    delegationSpy.mockClear();
+
+    const result = await setTenantUserRoles({
+      tenantId: tenant.id,
+      userId: target.id,
+      roleIds: [],
+      actorUserId: actor.id,
+    });
+
+    expect(result.removed).toEqual([elevated.name]);
+    expect(delegationSpy).not.toHaveBeenCalled();
+  });
+
+  it("parallel sync calls on different members each enforce delegation (no bypass)", async () => {
+    const actor = await createTestUser("deleg-actor-par");
+    const targetAllowed = await createTestUser("deleg-target-par-a");
+    const targetForbidden = await createTestUser("deleg-target-par-b");
+    createdUserIds.push(actor.id, targetAllowed.id, targetForbidden.id);
+    await createTestMembership(tenant.id, actor.id, true);
+    await createTestMembership(tenant.id, targetAllowed.id, true);
+    await createTestMembership(tenant.id, targetForbidden.id, true);
+
+    const actorRole = await createTenantRoleFixture({
+      tenantId: tenant.id,
+      name: "Parallel Actor",
+      permissionKeys: [TEAMS_VIEW, ROLES_ASSIGN],
+    });
+    const allowedRole = await createTenantRoleFixture({
+      tenantId: tenant.id,
+      name: "Parallel Allowed",
+      permissionKeys: [TEAMS_VIEW],
+    });
+    const forbiddenRole = await createTenantRoleFixture({
+      tenantId: tenant.id,
+      name: "Parallel Forbidden",
+      permissionKeys: [USERS_INVITE],
+    });
+    await assignUserRoleFixture({ userId: actor.id, roleId: actorRole.id, tenantId: tenant.id });
+
+    const [allowedOutcome, forbiddenOutcome] = await Promise.allSettled([
+      setTenantUserRoles({
+        tenantId: tenant.id,
+        userId: targetAllowed.id,
+        roleIds: [allowedRole.id],
+        actorUserId: actor.id,
+      }),
+      setTenantUserRoles({
+        tenantId: tenant.id,
+        userId: targetForbidden.id,
+        roleIds: [forbiddenRole.id],
+        actorUserId: actor.id,
+      }),
+    ]);
+
+    expect(allowedOutcome.status).toBe("fulfilled");
+    expect(forbiddenOutcome.status).toBe("rejected");
+    if (forbiddenOutcome.status === "rejected") {
+      expect(forbiddenOutcome.reason).toBeInstanceOf(DelegationForbiddenError);
+    }
+
+    const allowedRows = await prisma.userRole.findMany({
+      where: { userId: targetAllowed.id, tenantId: tenant.id, orgUnitId: null },
+      select: { roleId: true },
+    });
+    expect(allowedRows.map((r) => r.roleId)).toEqual([allowedRole.id]);
+
+    const forbiddenRows = await prisma.userRole.findMany({
+      where: { userId: targetForbidden.id, tenantId: tenant.id, orgUnitId: null },
+    });
+    expect(forbiddenRows).toHaveLength(0);
+  });
+
   it("still rejects adding a role above the actor grant ceiling", async () => {
     const actor = await createTestUser("deleg-actor-block");
     const target = await createTestUser("deleg-target-block");
