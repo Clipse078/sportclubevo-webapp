@@ -22,4 +22,15 @@ describe("Meeting workspace summary menu clipping boundary", () => {
     expect(statusBar).toContain("meeting-workspace-summary-menu-popover");
     expect(statusBar).not.toMatch(/className="absolute right-0 top-full/);
   });
+
+  it("portals Beschluss/Pendenz overflow menus outside expandable panels", () => {
+    const menu = readSrc("components/admin/meetings/workspace/MeetingOutcomeMoreActionsMenu.tsx");
+    const expandable = readSrc("components/sce/page/SceExpandablePanel.tsx");
+
+    expect(expandable).toContain("data-sce-expandable-panel");
+    expect(menu).toContain("PopoverContent");
+    expect(menu).toContain("event.stopPropagation()");
+    expect(menu).not.toMatch(/className="absolute right-0/);
+    expect(menu).toContain("SceInlineDestructiveConfirm");
+  });
 });

@@ -1,8 +1,9 @@
 "use client";
 
 import { MoreHorizontal, Trash2 } from "lucide-react";
-import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import SceInlineDestructiveConfirm from "@/components/sce/club-development/SceInlineDestructiveConfirm";
+import { PopoverContent } from "@/components/ui/Popover";
 import { meetingWorkspaceApi, MeetingWorkspaceApiError } from "@/lib/meetings/meeting-workspace-mutations";
 import {
   buildMeetingActionDeletionConfirmDescription,
@@ -15,6 +16,12 @@ import type {
 import { workspaceGhostButtonClass } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
 
 type OutcomeKind = "decision" | "pendenz";
+
+const OUTCOME_MENU_SURFACE_CLASS =
+  "min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-md";
+
+const OUTCOME_MENU_DESTRUCTIVE_ITEM_CLASS =
+  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50 focus:bg-red-50 focus:outline-none";
 
 type MeetingOutcomeMoreActionsMenuProps = {
   meetingId: string;
@@ -47,18 +54,6 @@ export function MeetingOutcomeMoreActionsMenu({
   const [error, setError] = useState<string | null>(null);
   const [decisionImpact, setDecisionImpact] = useState<MeetingDecisionDeletionImpact | null>(null);
   const [actionImpact, setActionImpact] = useState<MeetingActionDeletionImpact | null>(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        setConfirmOpen(false);
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
 
   if (!canManage || !showDelete) return null;
 
@@ -119,7 +114,7 @@ export function MeetingOutcomeMoreActionsMenu({
       : buildMeetingActionDeletionConfirmDescription(recordTitle, actionImpact);
 
   return (
-    <div className="relative shrink-0" data-testid={`${testIdPrefix}-more-actions-${recordId}`}>
+    <div className="shrink-0" data-testid={`${testIdPrefix}-more-actions-${recordId}`}>
       {!confirmOpen ? (
         <>
           <button
@@ -130,21 +125,38 @@ export function MeetingOutcomeMoreActionsMenu({
             aria-expanded={menuOpen}
             aria-controls={menuId}
             data-testid={`${testIdPrefix}-more-actions-trigger-${recordId}`}
-            onClick={() => setMenuOpen((open) => !open)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
           >
             <MoreHorizontal className="h-4 w-4" aria-hidden />
             <span className="sr-only">Weitere Aktionen</span>
           </button>
-          {menuOpen ? (
+          <PopoverContent
+            open={menuOpen}
+            onOpenChange={(open) => {
+              setMenuOpen(open);
+              if (!open) triggerRef.current?.focus();
+            }}
+            anchorRef={triggerRef}
+            placement="bottom-end"
+            matchAnchorWidth={false}
+            constrainHeight={false}
+            clipOverflow={false}
+            role="dialog"
+            id={menuId}
+            className={OUTCOME_MENU_SURFACE_CLASS}
+          >
             <div
-              id={menuId}
               role="menu"
-              className="absolute right-0 z-20 mt-1 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-md"
+              data-testid={`${testIdPrefix}-more-actions-popover-${recordId}`}
             >
               <button
                 type="button"
                 role="menuitem"
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50"
+                className={OUTCOME_MENU_DESTRUCTIVE_ITEM_CLASS}
                 onClick={() => void openDeleteConfirm()}
                 data-testid={`${testIdPrefix}-delete-trigger-${recordId}`}
               >
@@ -152,7 +164,7 @@ export function MeetingOutcomeMoreActionsMenu({
                 {deleteLabel}
               </button>
             </div>
-          ) : null}
+          </PopoverContent>
         </>
       ) : (
         <SceInlineDestructiveConfirm
