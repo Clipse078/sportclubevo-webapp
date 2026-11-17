@@ -31,7 +31,16 @@ import {
   usePeopleAccessVlWizardContext,
 } from "@/components/admin/users/people-access/PeopleAccessVlStandardInviteSections";
 import { isValidVlOrgFunctionKey } from "@/lib/admin/vl-onboarding/vl-org-function-options";
-import { VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL } from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import {
+  PEOPLE_ACCESS_INVITE_LIVE_SEND_BUTTON_LABEL,
+  PEOPLE_ACCESS_INVITE_PREPARE_BUTTON_LABEL,
+  VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL,
+  VL_STANDARD_INVITE_LIVE_SEND_BUTTON_LABEL,
+} from "@/lib/admin/vl-onboarding/vl-standard-invite-user-copy";
+import {
+  PeopleAccessStandardReviewStep,
+  usePeopleAccessStandardWizardContext,
+} from "@/components/admin/users/people-access/PeopleAccessStandardInviteSections";
 
 export type WizardRoleOption = {
   id: string;
@@ -107,9 +116,19 @@ export default function PeopleAccessWizard({
     setFunctionKey: setVlOrgFunctionKey,
     step,
   });
+  const [liveSendConfirmed, setLiveSendConfirmed] = useState(false);
   const [linkedPersonId, setLinkedPersonId] = useState(initialPersonId);
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const standardInviteWizard = usePeopleAccessStandardWizardContext({
+    enabled: mode === "invite" && !vlPresetActive,
+    canInvite,
+    email,
+    firstName,
+    lastName,
+    selectedRoleIds,
+    step,
+  });
   const [scopedDrafts, setScopedDrafts] = useState<ScopedDraft[]>([]);
   const [privilegedConfirmed, setPrivilegedConfirmed] = useState(false);
   const [previewGroups, setPreviewGroups] = useState<EffectiveAccessModuleGroup[]>([]);
@@ -309,7 +328,8 @@ export default function PeopleAccessWizard({
     setScopedDrafts((prev) => [...prev, { roleId, orgUnitId, scopeMode: "THIS_ORG_UNIT" }]);
   }
 
-  async function submitVlStandardInvite() {
+  async function submitVlStandardInvite(confirmLiveSend: boolean) {
+    if (confirmLiveSend && !liveSendConfirmed) return;
     setError(null);
     setPending(true);
     try {
@@ -321,7 +341,7 @@ export default function PeopleAccessWizard({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           functionKey: vlOrgFunctionKey,
-          confirmLiveSend: false,
+          confirmLiveSend,
         }),
       });
       const data = await res.json();
@@ -347,9 +367,68 @@ export default function PeopleAccessWizard({
     }
   }
 
-  async function submit(sendInvitation: boolean) {
-    if (vlPresetActive && sendInvitation) {
-      await submitVlStandardInvite();
+  async function submitStandardInvite(confirmLiveSend: boolean) {
+    if (confirmLiveSend && !liveSendConfirmed) return;
+    setError(null);
+    setPending(true);
+    try {
+      const normalizedRoleIds = normalizeRoleIdsForAssignment(
+        selectedRoleIds,
+        availableRoles,
+        clubAdminRoleKey,
+      );
+      const res = await fetch("/api/admin/people-access/invite/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          personId: linkedPersonId || undefined,
+          confirmLiveSend,
+          roleIds: normalizedRoleIds,
+          availableRoles,
+          clubAdminRoleKey,
+          scopedRoles: scopedDrafts.map((d) => ({
+            ...d,
+            roleId:
+              normalizeRoleIdsForAssignment([d.roleId], availableRoles, clubAdminRoleKey)[0] ??
+              d.roleId,
+          })),
+          permissionOverrides: Object.entries(overrideDraft).map(([permissionKey, effect]) => ({
+            permissionKey,
+            effect,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? standardInviteWizard.sendBlocker ?? "Einladung fehlgeschlagen.");
+        return;
+      }
+      if (typeof data.userId === "string") {
+        onComplete(data.userId);
+        return;
+      }
+      if (data.dryRun && data.status === "planned") {
+        onComplete("");
+        return;
+      }
+      setError(data.reason ?? "Einladung konnte nicht abgeschlossen werden.");
+    } catch {
+      setError("Netzwerkfehler. Bitte versuche es erneut.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function submit(sendInvitation: boolean, confirmLiveSend = false) {
+    if (mode === "invite" && vlPresetActive && sendInvitation) {
+      await submitVlStandardInvite(confirmLiveSend);
+      return;
+    }
+    if (mode === "invite" && sendInvitation) {
+      await submitStandardInvite(confirmLiveSend);
       return;
     }
     setError(null);
@@ -361,7 +440,7 @@ export default function PeopleAccessWizard({
         clubAdminRoleKey,
       );
       const body: Record<string, unknown> = {
-        sendInvitation,
+        sendInvitation: false,
         roleIds: normalizedRoleIds,
         scopedRoles: scopedDrafts.map((d) => ({
           ...d,
@@ -842,6 +921,14 @@ export default function PeopleAccessWizard({
             <div>
               <h3 className="text-lg font-semibold">Prüfen & Einladen</h3>
             </div>
+            {mode === "invite" ? (
+              <PeopleAccessStandardReviewStep
+                ctx={standardInviteWizard}
+                firstName={firstName}
+                lastName={lastName}
+                email={email}
+              />
+            ) : null}
             <div className="space-y-4 rounded-[var(--radius-xl)] bg-[var(--surface-2)] p-4 text-sm">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Person</p>
@@ -939,29 +1026,77 @@ export default function PeopleAccessWizard({
           <div className="flex flex-wrap gap-2">
             {mode === "invite" ? (
               <>
-                {vlPresetActive ? null : (
+                {vlPresetActive || mode === "invite" ? null : (
                   <button type="button" onClick={() => submit(false)} disabled={pending} className="fca-button-secondary text-sm">
                     Speichern ohne Einladung
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => submit(true)}
-                  disabled={
-                    pending ||
-                    !email.trim() ||
-                    existingAccessBlocksInvite ||
-                    (vlPresetActive && Boolean(vlWizard.sendBlocker))
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  <ProductDomainSceIcon name="communication" size={12} />
-                  {pending
-                    ? "Wird gesendet…"
-                    : vlPresetActive
-                      ? VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL
-                      : "Einladung senden"}
-                </button>
+                {!vlPresetActive ? (
+                  <button
+                    type="button"
+                    onClick={() => submit(true, false)}
+                    disabled={
+                      pending ||
+                      !email.trim() ||
+                      existingAccessBlocksInvite ||
+                      Boolean(standardInviteWizard.sendBlocker)
+                    }
+                    className="fca-button-secondary text-sm"
+                  >
+                    {pending ? "Wird vorbereitet…" : PEOPLE_ACCESS_INVITE_PREPARE_BUTTON_LABEL}
+                  </button>
+                ) : null}
+                {vlPresetActive ? (
+                  <button
+                    type="button"
+                    onClick={() => submit(true, false)}
+                    disabled={
+                      pending ||
+                      !email.trim() ||
+                      existingAccessBlocksInvite ||
+                      Boolean(vlWizard.sendBlocker)
+                    }
+                    className="fca-button-secondary text-sm"
+                  >
+                    {pending ? "Wird vorbereitet…" : VL_STANDARD_INVITE_PREPARE_BUTTON_LABEL}
+                  </button>
+                ) : null}
+                {(vlPresetActive
+                  ? !vlWizard.liveSendBlocker
+                  : !standardInviteWizard.liveSendBlocker) ? (
+                  <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                    <input
+                      type="checkbox"
+                      checked={liveSendConfirmed}
+                      onChange={(e) => setLiveSendConfirmed(e.target.checked)}
+                      data-testid="people-access-live-send-confirm"
+                    />
+                    Live-Versand mit geprüfter E-Mail bestätigen
+                  </label>
+                ) : null}
+                {(vlPresetActive
+                  ? !vlWizard.liveSendBlocker
+                  : !standardInviteWizard.liveSendBlocker) ? (
+                  <button
+                    type="button"
+                    onClick={() => submit(true, true)}
+                    disabled={
+                      pending ||
+                      !email.trim() ||
+                      !liveSendConfirmed ||
+                      existingAccessBlocksInvite
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    data-testid="people-access-live-send-button"
+                  >
+                    <ProductDomainSceIcon name="communication" size={12} />
+                    {pending
+                      ? "Wird gesendet…"
+                      : vlPresetActive
+                        ? VL_STANDARD_INVITE_LIVE_SEND_BUTTON_LABEL
+                        : PEOPLE_ACCESS_INVITE_LIVE_SEND_BUTTON_LABEL}
+                  </button>
+                ) : null}
               </>
             ) : (
               <button type="button" onClick={() => submit(false)} disabled={pending} className="fca-button-primary text-sm">
