@@ -7,6 +7,11 @@ import { resolveMeetingVisibilityOnCreate } from "@/lib/meetings/meeting-visibil
 import { meetingAllowlistsForPrisma } from "@/lib/meetings/meeting-visibility";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import {
+  loadMeetingTenantTimezone,
+  meetingDateTimeLocalRoundTrips,
+  parseMeetingDateTimeInput,
+} from "@/lib/meetings/meeting-datetime";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -32,13 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     const rawDate = body?.meetingDate;
-    if (!rawDate) {
+    if (!rawDate || typeof rawDate !== "string") {
       return NextResponse.json({ error: "Datum ist erforderlich." }, { status: 400 });
     }
 
-    const meetingDate = new Date(rawDate);
-    if (isNaN(meetingDate.getTime())) {
+    const tenantTimeZone = await loadMeetingTenantTimezone(tenantId);
+    const meetingDate = parseMeetingDateTimeInput(rawDate, tenantTimeZone);
+    if (!meetingDate) {
       return NextResponse.json({ error: "Ungültiges Datum." }, { status: 400 });
+    }
+    if (!meetingDateTimeLocalRoundTrips(rawDate, meetingDate, tenantTimeZone)) {
+      return NextResponse.json(
+        { error: "Die gewählte Uhrzeit existiert in der Vereinszeitzone nicht (Sommerzeitumstellung)." },
+        { status: 400 },
+      );
     }
 
     const rawSlug = (body?.slug ?? "").trim();

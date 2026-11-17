@@ -8,6 +8,8 @@ import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-developm
 import type { VisibilityScopeValue } from "@/components/admin/shared/VisibilityScopeSelect";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
+import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
+import { formatMeetingDateTimeLocalValue, loadMeetingTenantTimezone } from "@/lib/meetings/meeting-datetime";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -21,6 +23,9 @@ export default async function EditMeetingPage({ params }: PageProps) {
 
   if (!meeting) notFound();
 
+  const tenantId = await requireActiveTenantId();
+  const tenantTimeZone = await loadMeetingTenantTimezone(tenantId);
+
   function parseStringArray(raw: unknown): string[] {
     if (!Array.isArray(raw)) return [];
     return raw.filter((v): v is string => typeof v === "string");
@@ -29,7 +34,7 @@ export default async function EditMeetingPage({ params }: PageProps) {
   const defaultValues = {
     title: meeting.title,
     description: meeting.description ?? "",
-    meetingDate: new Date(meeting.meetingDate).toISOString().slice(0, 16),
+    meetingDate: formatMeetingDateTimeLocalValue(meeting.meetingDate, tenantTimeZone),
     location: meeting.location ?? "",
     plannedDurationMin:
       meeting.plannedDurationMin != null ? String(meeting.plannedDurationMin) : "",

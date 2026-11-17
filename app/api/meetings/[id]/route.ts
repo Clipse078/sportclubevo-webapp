@@ -8,6 +8,11 @@ import { requireMeetingAccess } from "@/lib/visibility/visibility-guards";
 import { logAuditEvent } from "@/lib/audit/audit-log";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+import {
+  loadMeetingTenantTimezone,
+  meetingDateTimeLocalRoundTrips,
+  parseMeetingDateTimeInput,
+} from "@/lib/meetings/meeting-datetime";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -51,12 +56,31 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
     const visibilityPatch = visibilityResolved.payload;
 
+    let meetingDatePatch: Date | undefined;
+    if (body?.meetingDate !== undefined && body?.meetingDate !== null && body?.meetingDate !== "") {
+      if (typeof body.meetingDate !== "string") {
+        return NextResponse.json({ error: "Ungültiges Datum." }, { status: 400 });
+      }
+      const tenantTimeZone = await loadMeetingTenantTimezone(tenantId);
+      const parsed = parseMeetingDateTimeInput(body.meetingDate, tenantTimeZone);
+      if (!parsed) {
+        return NextResponse.json({ error: "Ungültiges Datum." }, { status: 400 });
+      }
+      if (!meetingDateTimeLocalRoundTrips(body.meetingDate, parsed, tenantTimeZone)) {
+        return NextResponse.json(
+          { error: "Die gewählte Uhrzeit existiert in der Vereinszeitzone nicht (Sommerzeitumstellung)." },
+          { status: 400 },
+        );
+      }
+      meetingDatePatch = parsed;
+    }
+
     const updated = await prisma.meeting.update({
       where: { id, tenantId },
       data: {
         title: body?.title?.trim() || undefined,
         description: body?.description?.trim() || null,
-        meetingDate: body?.meetingDate ? new Date(body.meetingDate) : undefined,
+        meetingDate: meetingDatePatch,
         location: body?.location?.trim() || null,
         attendeeCount: body?.attendeeCount !== undefined ? Number(body.attendeeCount) || null : undefined,
         plannedDurationMin:
