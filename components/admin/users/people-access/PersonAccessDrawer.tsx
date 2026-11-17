@@ -51,7 +51,7 @@ function getStatus(user: TenantUserItem) {
   return { label: "Deaktiviert", tone: "muted" as const };
 }
 
-function PersonQuickViewPanels({
+export function PersonAccessQuickViewBody({
   user,
   isSelf,
   status,
@@ -398,7 +398,7 @@ export default function PersonAccessDrawer({
         testId="person-quick-view-nav"
         idPrefix={QUICK_VIEW_TAB_PREFIX}
       >
-        <PersonQuickViewPanels
+        <PersonAccessQuickViewBody
           user={user}
           isSelf={isSelf}
           status={status}

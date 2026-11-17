@@ -6,6 +6,7 @@ import {
   PILOT_FORBIDDEN_PERMISSION_KEYS,
   SANDRA_FISCHER_SPIELBETRIEB_ROLE,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
+import { FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS } from "@/lib/roles/fca-vereinsleitung-vl-supplements";
 
 const SANDRA_KEYS = new Set(SANDRA_FISCHER_SPIELBETRIEB_ROLE.permissionKeys);
 const PATRICK_KEYS = [...PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE.permissionKeys];
@@ -16,6 +17,12 @@ function diff(a: Set<string>, b: Set<string>) {
 
 describe("P1_PRESIDENT_PILOT_ACCESS_01 — Präsident (Pilot) access model", () => {
   const patrickSet = new Set(PATRICK_KEYS);
+
+  it("PRESIDENT_VEREINSLEITUNG — includes strategic Vereinsentwicklung permissions", () => {
+    for (const key of FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS) {
+      expect(patrickSet.has(key)).toBe(true);
+    }
+  });
 
   it("PRESIDENT_BASELINE — includes Sandra operational capability set", () => {
     for (const key of SANDRA_FISCHER_SPIELBETRIEB_ROLE.permissionKeys) {
@@ -96,10 +103,16 @@ describe("P1_PRESIDENT_PILOT_ACCESS_01 — Präsident (Pilot) access model", () 
       [
         PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
         PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
+        PERMISSIONS.INITIATIVES_MANAGE,
+        PERMISSIONS.INITIATIVES_VIEW,
+        PERMISSIONS.MEETINGS_MANAGE,
+        PERMISSIONS.MEETINGS_VIEW,
         PERMISSIONS.NEWS_MANAGE,
         PERMISSIONS.ORG_VIEW,
         PERMISSIONS.REGISTRATIONS_EDIT,
         PERMISSIONS.REGISTRATIONS_VIEW,
+        PERMISSIONS.TARGETS_MANAGE,
+        PERMISSIONS.TARGETS_VIEW,
       ].sort(),
     );
   });

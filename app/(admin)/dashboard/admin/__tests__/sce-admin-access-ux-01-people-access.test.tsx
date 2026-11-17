@@ -97,9 +97,9 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
       />,
     );
 
-    expect(screen.getByText("aktive Zugänge")).toBeTruthy();
-    expect(screen.getByText("Admin-Zugänge")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Person hinzufügen/i }));
+    expect(screen.getByTestId("people-access-status-summary")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("people-access-add-person"));
+    expect(screen.getByTestId("people-access-inline-create")).toBeTruthy();
     expect(screen.getByText("Funktion & Bereich")).toBeTruthy();
     expect(screen.getByText("Prüfen & Einladen")).toBeTruthy();
   });
@@ -234,7 +234,14 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
     expect(isClubAdminRoleKey("club_admin__test", "club_admin__test")).toBe(true);
   });
 
-  it("opens access drawer on row click", () => {
+  it("opens inline overview on row click", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ summary: [], permissionKeys: [] }),
+      })) as unknown as typeof fetch,
+    );
     render(
       <TenantUsersSearchableList
         initialUsers={[baseUser]}
@@ -252,8 +259,8 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("people-access-row-u1"));
-    expect(screen.getByText("Übersicht")).toBeTruthy();
-    expect(screen.getByText("Rollen")).toBeTruthy();
+    expect(screen.getByTestId("people-access-inline-overview-u1")).toBeTruthy();
+    expect(screen.getAllByText("Übersicht").length).toBeGreaterThan(0);
   });
 
   it("protected platform user shows Systemzugang badge", () => {
