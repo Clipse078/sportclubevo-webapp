@@ -47,4 +47,11 @@ describe("Vereinsentwicklung visual surfaces — interaction regressions", () =>
     const workspace = read("components/admin/meetings/workspace/MeetingWorkspace.tsx");
     expect(workspace).toContain("meeting-workspace-summary");
   });
+
+  it("meeting Sitzungsübersicht keeps rounded shell overflow while actions menu uses Popover", () => {
+    const styles = read("components/admin/club-development/sce-club-development-surface-styles.ts");
+    const statusBar = read("components/admin/meetings/workspace/MeetingWorkspaceStatusBar.tsx");
+    expect(styles).toContain("overflow-hidden");
+    expect(statusBar).toContain("PopoverContent");
+  });
 });

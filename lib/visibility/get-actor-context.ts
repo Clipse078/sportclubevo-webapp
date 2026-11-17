@@ -101,6 +101,7 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
           { id: user.id, roleKeys: [], permissionKeys: [] },
           [],
           [],
+          tenantId,
         );
         if (trace) {
           logSceHotfixLogin01StepDone("actor-context");
@@ -135,6 +136,7 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
         { id: user.id, roleKeys: [], permissionKeys: [] },
         [],
         [],
+        tenantId,
       );
     }
   }

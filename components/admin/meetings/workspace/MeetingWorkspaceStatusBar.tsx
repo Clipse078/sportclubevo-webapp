@@ -7,12 +7,29 @@ import { Loader2, MoreHorizontal } from "lucide-react";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
 import { buildMeetingWorkspaceStatusSummary } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
-import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
+import {
+  MeetingDeleteInlineConfirm,
+  MeetingDeleteMenuItem,
+  fetchMeetingDeletionImpact,
+} from "@/components/admin/meetings/MeetingDeleteButton";
 import {
   meetingProtocolPrintDraftHint,
   meetingProtocolPrintPath,
   meetingProtocolPrintUnavailableReason,
 } from "@/lib/meetings/meeting-protocol-print";
+import { PopoverContent } from "@/components/ui/Popover";
+import type { MeetingDeletionImpact } from "@/lib/meetings/meeting-delete-service";
+import {
+  hasMeetingSecondaryMenuItems,
+  meetingShowsCloseInSecondaryMenu,
+} from "@/lib/meetings/meeting-workspace-secondary-menu";
+import {
+  MEETING_WORKSPACE_SECONDARY_MENU_DIVIDER_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_ITEM_MUTED_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS,
+} from "@/lib/meetings/meeting-workspace-secondary-menu-styles";
 
 type Props = {
   meeting: MeetingLiveData;
@@ -43,27 +60,23 @@ export default function MeetingWorkspaceStatusBar({
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const [reopenReason, setReopenReason] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteImpactLoading, setDeleteImpactLoading] = useState(false);
+  const [deleteImpact, setDeleteImpact] = useState<MeetingDeletionImpact | null>(null);
+  const [deleteImpactError, setDeleteImpactError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
-    function onPointerDown(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setMenuOpen(false);
+        menuTriggerRef.current?.focus();
       }
     }
-    window.addEventListener("mousedown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
   const summary = buildMeetingWorkspaceStatusSummary({
@@ -76,6 +89,9 @@ export default function MeetingWorkspaceStatusBar({
     openPendenzenCount,
     overduePendenzenCount,
   });
+
+  const showSecondaryMenu = hasMeetingSecondaryMenuItems({ canManage });
+  const showCloseAction = meetingShowsCloseInSecondaryMenu(meeting.status);
 
   async function callLifecycle(action: string, extra?: Record<string, unknown>) {
     setError(null);
@@ -100,6 +116,23 @@ export default function MeetingWorkspaceStatusBar({
     }
   }
 
+  async function beginDeleteConfirm() {
+    setMenuOpen(false);
+    menuTriggerRef.current?.focus();
+    setDeleteConfirmOpen(true);
+    setDeleteImpact(null);
+    setDeleteImpactError(null);
+    setDeleteImpactLoading(true);
+    try {
+      const impact = await fetchMeetingDeletionImpact(meeting.id);
+      setDeleteImpact(impact);
+    } catch (err) {
+      setDeleteImpactError(err instanceof Error ? err.message : "Vorschau nicht verfügbar.");
+    } finally {
+      setDeleteImpactLoading(false);
+    }
+  }
+
   return (
     <section className="flex flex-col gap-1.5" data-testid="meeting-workspace-status-bar">
       {summary.attentionLine ? (
@@ -108,76 +141,107 @@ export default function MeetingWorkspaceStatusBar({
         </p>
       ) : null}
 
-      {canManage ? (
+      {showSecondaryMenu ? (
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <div ref={menuRef} className="relative">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-              aria-expanded={menuOpen}
-              aria-haspopup="menu"
-              data-testid="meeting-workspace-secondary-menu"
-              onClick={() => setMenuOpen((v) => !v)}
+          <button
+            ref={menuTriggerRef}
+            type="button"
+            className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            data-testid="meeting-workspace-secondary-menu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <MoreHorizontal className="h-4 w-4" aria-hidden />
+            Weitere Aktionen
+          </button>
+
+          <PopoverContent
+            open={menuOpen}
+            onOpenChange={(open) => {
+              setMenuOpen(open);
+              if (!open) menuTriggerRef.current?.focus();
+            }}
+            anchorRef={menuTriggerRef}
+            placement="bottom-end"
+            matchAnchorWidth={false}
+            constrainHeight={false}
+            clipOverflow={false}
+            role="dialog"
+            className={MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS}
+          >
+            <div
+              role="menu"
+              className={MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS}
+              data-testid="meeting-workspace-summary-menu-popover"
             >
-              <MoreHorizontal className="h-4 w-4" aria-hidden />
-              Weitere Aktionen
-            </button>
-            {menuOpen ? (
-              <div
-                role="menu"
-                className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg"
-              >
-                {meeting.status === "PLANNED" ? (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={loading !== null}
-                    className="block w-full px-3 py-2 text-left text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-50"
-                    onClick={() => callLifecycle("close")}
-                    data-testid="meeting-close"
-                  >
-                    {loading === "close" ? "Wird geschlossen…" : "Sitzung abschliessen"}
-                  </button>
-                ) : null}
-                {meetingProtocolPrintUnavailableReason(meeting.status) ? (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled
-                    title={meetingProtocolPrintUnavailableReason(meeting.status) ?? undefined}
-                    className="block w-full cursor-not-allowed px-3 py-2 text-left text-sm text-[var(--muted)]"
-                    data-testid="meeting-print-protocol-unavailable"
-                  >
-                    Protokoll drucken
-                  </button>
-                ) : (
-                  <Link
-                    href={meetingProtocolPrintPath(slug)}
-                    role="menuitem"
-                    className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-                    onClick={() => setMenuOpen(false)}
-                    data-testid="meeting-print-protocol"
-                    title={meetingProtocolPrintDraftHint(meeting.status) ?? undefined}
-                  >
-                    Protokoll drucken
-                  </Link>
-                )}
-                {canDelete ? (
-                  <>
-                    <MenuDivider />
-                    <div className="px-1 py-1" role="none">
-                      <MeetingDeleteButton
-                        meetingId={meeting.id}
-                        meetingTitle={meeting.title}
-                        presentation="menu"
-                        onMenuAction={() => setMenuOpen(false)}
-                      />
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+              {showCloseAction ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={loading !== null}
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS}
+                  onClick={() => callLifecycle("close")}
+                  data-testid="meeting-close"
+                >
+                  {loading === "close" ? "Wird geschlossen…" : "Sitzung abschliessen"}
+                </button>
+              ) : null}
+              {meetingProtocolPrintUnavailableReason(meeting.status) ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled
+                  title={meetingProtocolPrintUnavailableReason(meeting.status) ?? undefined}
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_MUTED_CLASS}
+                  data-testid="meeting-print-protocol-unavailable"
+                >
+                  Protokoll drucken
+                </button>
+              ) : (
+                <Link
+                  href={meetingProtocolPrintPath(slug)}
+                  role="menuitem"
+                  className={MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS}
+                  onClick={() => setMenuOpen(false)}
+                  data-testid="meeting-print-protocol"
+                  title={meetingProtocolPrintDraftHint(meeting.status) ?? undefined}
+                >
+                  Protokoll drucken
+                </Link>
+              )}
+              {canDelete ? (
+                <>
+                  <MenuDivider />
+                  <MeetingDeleteMenuItem
+                    onSelect={beginDeleteConfirm}
+                    disabled={loading !== null || deleteImpactLoading}
+                  />
+                </>
+              ) : null}
+            </div>
+          </PopoverContent>
+        </div>
+      ) : null}
+
+      {deleteConfirmOpen ? (
+        <div data-testid="meeting-delete-inline-confirm-host">
+          {deleteImpactError ? (
+            <p className="text-xs text-rose-600" role="alert">
+              {deleteImpactError}
+            </p>
+          ) : null}
+          <MeetingDeleteInlineConfirm
+            meetingId={meeting.id}
+            meetingTitle={meeting.title}
+            impact={deleteImpact}
+            impactLoading={deleteImpactLoading}
+            onCancel={() => {
+              setDeleteConfirmOpen(false);
+              setDeleteImpact(null);
+              setDeleteImpactError(null);
+            }}
+          />
         </div>
       ) : null}
 
@@ -212,5 +276,5 @@ export default function MeetingWorkspaceStatusBar({
 }
 
 function MenuDivider() {
-  return <div className="my-1 border-t border-[var(--border)]" role="separator" />;
+  return <div className={MEETING_WORKSPACE_SECONDARY_MENU_DIVIDER_CLASS} role="separator" />;
 }

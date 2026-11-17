@@ -12,9 +12,13 @@ import { ListPagePattern } from "@/components/ui/patterns";
 import { CD_MEETINGS_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import { getVereinsleitungMeetingCreateDefaults } from "@/lib/meetings/meeting-create-defaults";
 
-export default async function VereinsleitungMeetingsPage() {
+type PageProps = { searchParams?: Promise<{ status?: string }> };
+
+export default async function VereinsleitungMeetingsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const params = (await searchParams) ?? {};
 
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
   const tenantContext = await getTenantContextFromSession(session.user?.activeTenantId);
@@ -54,6 +58,19 @@ export default async function VereinsleitungMeetingsPage() {
         emptyHeading="Keine zugänglichen Sitzungen"
         emptyDescription="Noch keine Sitzungen erfasst oder keine für dich sichtbaren Einträge."
       >
+        {params.status === "deleted" ? (
+          <div
+            className="mb-4 rounded-[20px] border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800"
+            data-testid="meetings-list-feedback-deleted"
+          >
+            Sitzung wurde gelöscht.
+          </div>
+        ) : null}
+        {params.status === "saved" ? (
+          <div className="mb-4 rounded-[20px] border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800">
+            Sitzung gespeichert.
+          </div>
+        ) : null}
         <VereinsleitungMeetingsWorkspaceClient
           meetings={meetings}
           canManage={canManage}

@@ -16,6 +16,15 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     expect(workspace).not.toContain("MeetingProtocolApprovalSection");
   });
 
+  it("routes db-backed meetings only through MeetingWorkspace (no legacy mock detail)", () => {
+    const detail = readSrc("components/admin/vereinsleitung/VereinsleitungMeetingDetail.tsx");
+    const page = readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
+    expect(detail).toContain("MeetingWorkspace");
+    expect(detail).not.toContain("VereinsleitungMeetingInfoCard");
+    expect(page).toContain("if (!dbMeeting) notFound()");
+    expect(page).not.toContain('?? "Sitzung"');
+  });
+
   it("uses canonical SceDateTile in meeting header", () => {
     const header = readSrc("components/admin/meetings/workspace/MeetingWorkspaceHeader.tsx");
     expect(header).toContain("SceDateTile");
@@ -31,17 +40,21 @@ describe("SCE-MTG-UX-01 meeting workspace redesign", () => {
     );
   });
 
-  it("dismisses secondary actions menu on outside press and Escape", () => {
+  it("portals secondary actions menu and wires inline delete from Weitere Aktionen", () => {
     const statusBar = readSrc("components/admin/meetings/workspace/MeetingWorkspaceStatusBar.tsx");
-    expect(statusBar).toContain('addEventListener("mousedown"');
+    expect(statusBar).toContain("PopoverContent");
     expect(statusBar).toContain('event.key === "Escape"');
     expect(statusBar).not.toContain("meeting-mark-conducted");
-    expect(statusBar).toContain('presentation="menu"');
+    expect(statusBar).toContain("MeetingDeleteMenuItem");
+    expect(statusBar).toContain("MeetingDeleteInlineConfirm");
+    expect(statusBar).not.toContain("@/components/ui/Dialog");
   });
 
   it("keeps destructive delete out of page header actions", () => {
     const page = readSrc("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
-    expect(page).not.toContain("MeetingDeleteButton");
+    expect(page).not.toContain("MeetingDeleteMenuItem");
+    expect(page).toContain("canDelete");
+    expect(page).toContain("MEETINGS_DELETE");
   });
 
   it("uses progressive disclosure for participants and decisions", () => {
