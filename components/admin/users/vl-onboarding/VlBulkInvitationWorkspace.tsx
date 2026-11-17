@@ -67,6 +67,10 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
   );
   const [emailPreview, setEmailPreview] = useState<EmailPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [contributorRoleProvisioned, setContributorRoleProvisioned] = useState<boolean | null>(
+    null,
+  );
+  const [contributorRoleNote, setContributorRoleNote] = useState<string | null>(null);
 
   const resolveRows = useCallback(async () => {
     if (!canInvite) return;
@@ -82,6 +86,8 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
         error?: string;
         validationRows?: ValidationRow[];
         resolved?: ResolvedRow[];
+        contributorRoleProvisioned?: boolean;
+        contributorRoleProvisioningNote?: string | null;
       };
       if (!res.ok) {
         setError(data.error ?? "Auflösung fehlgeschlagen.");
@@ -89,6 +95,8 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
       }
       setValidationRows(data.validationRows ?? []);
       setResolved(data.resolved ?? []);
+      setContributorRoleProvisioned(data.contributorRoleProvisioned ?? null);
+      setContributorRoleNote(data.contributorRoleProvisioningNote ?? null);
     } catch {
       setError("Netzwerkfehler bei der Auflösung.");
     } finally {
@@ -151,7 +159,9 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
     if (data.resolved) {
       setResolved(data.resolved);
     }
-    setSendNote(data.error ?? (data.sent ? "Versendet." : "Dry-Run abgeschlossen — keine E-Mails."));
+    setSendNote(
+      data.error ?? (data.sent ? "Versendet." : "Vorschau abgeschlossen — keine E-Mails versendet."),
+    );
   };
 
   if (!canInvite) return null;
@@ -159,7 +169,7 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
   return (
     <SceClubDevelopmentContextualCreateCollapsibleShell
       actionLabel="VL-Einladungen vorbereiten"
-      contextLabel="Mehrere E-Mail-Adressen inline — Validierung, Vorschau und Dry-Run"
+      contextLabel="Mehrere E-Mail-Adressen inline — Validierung, Vorschau und Versandfreigabe"
       expanded={expanded}
       onExpandedChange={setExpanded}
       panelDomId="vl-bulk-invitation-panel"
@@ -185,7 +195,7 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
           ) : null}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" size="sm" onClick={() => void resolveRows()} disabled={loading}>
-              {loading ? "Wird geprüft…" : "Adressen prüfen"}
+              {loading ? "Wird geprüft…" : "Vorschau prüfen"}
             </Button>
           </div>
         </section>
@@ -196,6 +206,13 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
             Vereinsleitung (Pilot) — Mitwirkung · minimale Rechte für Vereinsentwicklung, kein
             Club-Admin, kein Präsidenten-Rollenklon.
           </p>
+          {contributorRoleProvisioned === false ? (
+            <p className="mt-2 flex items-start gap-1 text-xs text-amber-700">
+              <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden />
+              {contributorRoleNote ??
+                "Die Mandanten-Rolle fehlt — Modulzeilen zeigen die Vorlage, nicht wirksame Datenbankrechte."}
+            </p>
+          ) : null}
         </section>
 
         {resolved.length > 0 ? (
@@ -281,10 +298,10 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
             className="gap-2"
           >
             <Send className="size-4" aria-hidden />
-            Einladungen senden (explizit)
+            Einladungen senden
           </Button>
           <p className="text-xs text-muted-foreground">
-            Dry-Run in diesem Paket — es werden keine Live-Einladungen erzeugt oder versendet.
+            In diesem Paket werden keine Einladungen erzeugt oder versendet — nur die Vorschau wird aktualisiert.
           </p>
           {sendNote ? (
             <p className="flex items-center gap-1 text-xs text-foreground">

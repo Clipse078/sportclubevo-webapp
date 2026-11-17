@@ -11,7 +11,10 @@ import {
   FCA_VL_INVITATION_CONFIRMED_EMAILS,
   FCA_VL_INVITATION_EXCLUDED_FROM_BULK_PREPARE,
 } from "@/lib/admin/vl-onboarding/fca-vl-confirmed-invitee-emails";
-import { resolveVlInvitationRows } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
+import {
+  resolveVlInvitationPresetRoleState,
+  resolveVlInvitationRows,
+} from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
 import { FCA_VL_INVITATION_PRESET } from "@/lib/admin/vl-onboarding/fca-vl-invitation-preset";
 import { resolveVlInvitationSendMode } from "@/lib/admin/vl-onboarding/vl-invitation-send-policy";
 import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
@@ -46,12 +49,19 @@ export async function POST() {
     (e) => !excluded.has(e.toLowerCase()),
   );
 
-  const resolved = await resolveVlInvitationRows(tenantId, emails);
+  const [resolved, presetRole] = await Promise.all([
+    resolveVlInvitationRows(tenantId, emails),
+    resolveVlInvitationPresetRoleState(tenantId),
+  ]);
 
   return NextResponse.json({
     mode: resolveVlInvitationSendMode(),
     tenant: { key: tenant.key, name: tenant.name },
     preset: FCA_VL_INVITATION_PRESET,
+    contributorRoleProvisioned: presetRole.contributorRoleProvisioned,
+    contributorRoleProvisioningNote: presetRole.contributorRoleProvisioned
+      ? null
+      : "Mandanten-Rolle fehlt — vor Live-Versand sync-fca-vereinsleitung-contributor-pilot-role (STAGE) ausführen.",
     recipients: resolved,
     missingIdentityFields: resolved.map((r) => ({
       email: r.email,

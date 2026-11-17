@@ -108,11 +108,29 @@ async function buildPreviewForUser(userId: string, tenantId: string, roleIds: st
   return buildVereinsentwicklungAccessRows(new Set(preview.keys));
 }
 
+function buildTemplateOnlyPreview() {
+  return buildVereinsentwicklungAccessRows(
+    new Set(FCA_VL_INVITATION_PRESET.permissionKeys),
+  ).map((row) => ({
+    ...row,
+    state: "inherit" as const,
+    detail: "Vorlage — Rolle noch nicht im Mandant",
+  }));
+}
+
 async function buildPreviewForPreset(tenantId: string, presetRoleId: string | null) {
   if (!presetRoleId) {
-    return buildVereinsentwicklungAccessRows(new Set(FCA_VL_INVITATION_PRESET.permissionKeys));
+    return buildTemplateOnlyPreview();
   }
   return buildPreviewForUser("", tenantId, [presetRoleId]);
+}
+
+export async function resolveVlInvitationPresetRoleState(tenantId: string): Promise<{
+  presetRoleId: string | null;
+  contributorRoleProvisioned: boolean;
+}> {
+  const presetRoleId = await resolvePresetRoleId(tenantId);
+  return { presetRoleId, contributorRoleProvisioned: presetRoleId !== null };
 }
 
 function strategicPermissionsSatisfied(keySet: ReadonlySet<string>): boolean {

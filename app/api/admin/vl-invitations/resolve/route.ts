@@ -11,7 +11,10 @@ import {
   parseAndValidateBulkInvitationEmails,
   validNormalizedBulkEmails,
 } from "@/lib/admin/vl-onboarding/bulk-invitation-emails";
-import { resolveVlInvitationRows } from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
+import {
+  resolveVlInvitationPresetRoleState,
+  resolveVlInvitationRows,
+} from "@/lib/admin/vl-onboarding/resolve-vl-invitation-rows";
 import { PILOT_TENANT_KEY } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { prisma } from "@/lib/db/prisma";
 
@@ -62,11 +65,18 @@ export async function POST(request: NextRequest) {
       }));
 
   const emails = validNormalizedBulkEmails(validationRows);
-  const resolved = await resolveVlInvitationRows(tenantId, emails);
+  const [resolved, presetRole] = await Promise.all([
+    resolveVlInvitationRows(tenantId, emails),
+    resolveVlInvitationPresetRoleState(tenantId),
+  ]);
 
   return NextResponse.json({
     validationRows,
     resolved,
     presetLabel: "Vereinsleitung (Pilot) — Mitwirkung",
+    contributorRoleProvisioned: presetRole.contributorRoleProvisioned,
+    contributorRoleProvisioningNote: presetRole.contributorRoleProvisioned
+      ? null
+      : "Die Mandanten-Rolle «Vereinsleitung (Pilot)» fehlt noch — Modul-Vorschau basiert auf der Vorlage, nicht auf persistierten Rechten.",
   });
 }

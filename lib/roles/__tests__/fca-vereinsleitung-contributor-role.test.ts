@@ -4,7 +4,10 @@ import {
   PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE,
   PILOT_FORBIDDEN_PERMISSION_KEYS,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
-import { FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS } from "@/lib/roles/fca-vereinsleitung-vl-supplements";
+import {
+  FCA_VEREINSLEITUNG_STRATEGIC_PERMISSION_KEYS,
+  FCA_VL_ROLE_CAPABILITY_FLAGS,
+} from "@/lib/roles/fca-vereinsleitung-vl-supplements";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 describe("FCA Vereinsleitung contributor preset", () => {
@@ -24,6 +27,11 @@ describe("FCA Vereinsleitung contributor preset", () => {
     expect(FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.permissionKeys).not.toContain(
       PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     );
+  });
+
+  it("materialises VL workspace and restricted-meeting gates on the tenant role row", () => {
+    expect(FCA_VL_ROLE_CAPABILITY_FLAGS.canAccessVereinsleitung).toBe(true);
+    expect(FCA_VL_ROLE_CAPABILITY_FLAGS.canAttendVereinsleitungMeetings).toBe(true);
   });
 
   it("president role remains a separate superset", () => {

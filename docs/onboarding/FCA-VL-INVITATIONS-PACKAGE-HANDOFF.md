@@ -21,14 +21,14 @@
 
 ## Confirmed invitees (emails only)
 
-| Email | Proposed action (dry-run) |
-| --- | --- |
-| irem.uysal@fcallschwil.ch | Resolve via prepare API — typically `NEW_INVITATION` or `UPDATE_ACCESS` |
-| nicole.nussli@fcallschwil.ch | same |
-| andreas.gaedt@fcallschwil.ch | same |
-| rene.leupi@fcallschwil.ch | same |
+| Email | STAGE state (verified) | Action |
+| --- | --- | --- |
+| irem.uysal@fcallschwil.ch | No account, person, membership, or pending invitation | `NEW_INVITATION` |
+| nicole.nussli@fcallschwil.ch | same | `NEW_INVITATION` |
+| andreas.gaedt@fcallschwil.ch | same | `NEW_INVITATION` |
+| rene.leupi@fcallschwil.ch | same | `NEW_INVITATION` |
 
-`POST /api/admin/vl-invitations/prepare` returns the concrete matrix against live STAGE data **without sending**.
+Read-only script: `npx tsx scripts/fca-vl-invitations-prepare-readonly.ts`. PO package: `docs/onboarding/FCA-VL-INVITATIONS-PO-REVIEW.md`.
 
 Missing until PO confirms: **display names**, **organisational function keys** (optional in preset; flagged per row).
 
@@ -41,8 +41,13 @@ Missing until PO confirms: **display names**, **organisational function keys** (
 
 ## Send policy
 
-- Default: **DRY_RUN** — `POST /api/admin/vl-invitations/send` returns mock transport, no tokens, no mail
-- Live: requires `VL_INVITATION_LIVE_SEND=true` **and** `confirmLiveSend: true` (not enabled in this run)
+- **Vorschau prüfen** / **Einladungen senden** — administrator labels; `POST /api/admin/vl-invitations/send` returns mock transport, no tokens, no mail in this package
+- Live production send: `VL_INVITATION_LIVE_SEND=true` + `confirmLiveSend` (not enabled in this run)
+
+## Contributor role prerequisite
+
+- Dry-run: `npx tsx scripts/sync-fca-vereinsleitung-contributor-pilot-role.ts`
+- STAGE finding: role `pilot_vereinsleitung_mitglied` missing until authorised APPLY run
 
 ## Tests
 
