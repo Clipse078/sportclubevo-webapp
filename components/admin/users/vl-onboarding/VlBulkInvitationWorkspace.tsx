@@ -28,6 +28,8 @@ type EmailPreview = {
   subject: string;
   html: string;
   variant: string;
+  preview?: boolean;
+  disclaimer?: string;
 };
 
 const ACTION_TONE: Record<string, string> = {
@@ -118,6 +120,8 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
           subject: data.subject,
           html: data.html,
           variant: data.variant,
+          preview: data.preview,
+          disclaimer: data.disclaimer,
         });
       }
     } finally {
@@ -281,14 +285,21 @@ export default function VlBulkInvitationWorkspace({ canInvite }: { canInvite: bo
           </div>
           {emailPreview ? (
             <div className="space-y-2">
+              {emailPreview.disclaimer ? (
+                <p className="text-xs text-muted-foreground" role="note">
+                  {emailPreview.disclaimer}
+                </p>
+              ) : null}
               <p className="text-xs text-muted-foreground">
                 Betreff: <span className="font-medium text-foreground">{emailPreview.subject}</span>
               </p>
-              <iframe
-                title="Einladungs-E-Mail Vorschau"
-                className="h-[420px] w-full rounded border border-border bg-white"
-                srcDoc={emailPreview.html}
-                sandbox=""
+              <div
+                role="document"
+                lang="de"
+                aria-label="Einladungs-E-Mail Vorschau mit Beispieldaten"
+                className="max-h-[420px] overflow-auto rounded border border-border bg-white p-0"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{ __html: emailPreview.html }}
               />
             </div>
           ) : null}

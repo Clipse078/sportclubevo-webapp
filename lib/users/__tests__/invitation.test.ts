@@ -336,6 +336,17 @@ describe("createPersonAndInvite", () => {
     expect(mockTokenCreate).toHaveBeenCalledOnce();
   });
 
+  it("CREATE-1b. issueInvitationToken without sendInvitation still issues token (VL orchestrator owns mail)", async () => {
+    const result = await createPersonAndInvite(
+      TENANT_ID,
+      { firstName: "Anna", lastName: "Müller", email: "anna@example.invalid" },
+      ACTOR_ID,
+      { sendInvitation: false, issueInvitationToken: true },
+    );
+    expect(typeof result.rawToken).toBe("string");
+    expect(mockTokenCreate).toHaveBeenCalledOnce();
+  });
+
   it("CREATE-2. reuses existing global User when email belongs to User with no same-tenant Person", async () => {
     // Multi-tenant: User exists but their Person is in a DIFFERENT tenant.
     // Expected: create new Person in this tenant, link to existing User, resend path.

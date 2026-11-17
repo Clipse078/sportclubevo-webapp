@@ -4,11 +4,9 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { FCA_VL_INVITATION_PRESET } from "@/lib/admin/vl-onboarding/fca-vl-invitation-preset";
-import { PERSON_FUNCTIONS } from "@/lib/people/functions";
-
 export class VlPersonOrgAssignmentError extends Error {
   constructor(
-    readonly code: "VL_ORG_UNIT_MISSING",
+    readonly code: "VL_ORG_UNIT_MISSING" | "VL_ORG_FUNCTION_UNCONFIRMED",
     message: string,
   ) {
     super(message);
@@ -45,10 +43,14 @@ export async function ensureVlPersonOrgAssignment(input: {
     return { created: false, assignmentId: existing.id };
   }
 
-  const functionKey =
-    input.functionKey ??
-    FCA_VL_INVITATION_PRESET.functionKey ??
-    PERSON_FUNCTIONS.BOARD_MEMBER;
+  const functionKey = input.functionKey?.trim();
+  if (!functionKey) {
+    throw new VlPersonOrgAssignmentError(
+      "VL_ORG_FUNCTION_UNCONFIRMED",
+      "Organisationsfunktion muss vor der VL-Zuweisung bestätigt werden.",
+    );
+  }
+
   const created = await prisma.personAssignment.create({
     data: {
       tenantId: input.tenantId,

@@ -6,7 +6,7 @@ Stack parent: **#1001** (`cursor/vl-access-people-workspace`).
 
 | Field | Value |
 | --- | --- |
-| Final SHA | `4e39381b6d7d149d707dff8991472e7a6b2fb7b4` |
+| Final SHA | _(see PR #1002 checks after verification commit)_ |
 | GitHub checks (exact head) | `design-system-governance` ✅ · `route-lifecycle-governance` ✅ · `Vercel` ✅ (Deployment has completed) |
 | Vercel Ready (deployment) | https://vercel.com/mds-projects-462da62c/sportclubevo-webapp-stage/GxkT7KeUrz9MV3DDXUK1GhMdQ659 |
 | Vercel Preview app URL | https://sportclubevo-webapp-stage-git-curs-c7ecf7-mds-projects-462da62c.vercel.app |

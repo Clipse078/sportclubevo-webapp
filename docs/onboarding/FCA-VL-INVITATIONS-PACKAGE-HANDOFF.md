@@ -30,7 +30,7 @@
 
 Read-only script: `npx tsx scripts/fca-vl-invitations-prepare-readonly.ts`. PO package: `docs/onboarding/FCA-VL-INVITATIONS-PO-REVIEW.md`.
 
-Missing until PO confirms: **display names**, **organisational function keys** (optional in preset; flagged per row).
+Missing until PO confirms: **display names**, **organisational function keys** (required for live send; flagged per row).
 
 ## Preset access (least privilege)
 

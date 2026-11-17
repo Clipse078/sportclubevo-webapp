@@ -21,7 +21,10 @@ import {
   InvitationDomainError,
   type OnboardPersonOptions,
 } from "@/lib/users/mutations";
-import { ensureVlPersonOrgAssignment } from "@/lib/admin/vl-onboarding/ensure-vl-person-org-assignment";
+import {
+  ensureVlPersonOrgAssignment,
+  VlPersonOrgAssignmentError,
+} from "@/lib/admin/vl-onboarding/ensure-vl-person-org-assignment";
 import { buildVlInvitationEmailContent } from "@/lib/admin/vl-onboarding/vl-invitation-email-content";
 import type {
   VlInvitationTransport,
@@ -230,7 +233,11 @@ export async function orchestrateVlInvitationSend(input: {
           actorUserId: input.actorUserId,
           row,
           identity,
-          onboardOptions: { ...onboardOptions, sendInvitation: true },
+          onboardOptions: {
+            ...onboardOptions,
+            sendInvitation: false,
+            issueInvitationToken: true,
+          },
         });
 
         const emailContent = await buildVlInvitationEmailContent({
@@ -260,9 +267,11 @@ export async function orchestrateVlInvitationSend(input: {
         const message =
           error instanceof InvitationDomainError
             ? error.code
-            : error instanceof Error
-              ? error.message
-              : "failed";
+            : error instanceof VlPersonOrgAssignmentError
+              ? error.code
+              : error instanceof Error
+                ? error.message
+                : "failed";
         rows.push({
           email: row.email,
           action: row.action,
@@ -310,6 +319,17 @@ export async function orchestrateVlInvitationSend(input: {
   };
 }
 
+function requireConfirmedOrgFunction(identity?: VlInvitationRecipientIdentity): string {
+  const functionKey = identity?.functionKey?.trim();
+  if (!functionKey) {
+    throw new VlPersonOrgAssignmentError(
+      "VL_ORG_FUNCTION_UNCONFIRMED",
+      "Organisationsfunktion erforderlich vor Live-Versand.",
+    );
+  }
+  return functionKey;
+}
+
 async function executeLiveInvitationRow(input: {
   tenantId: string;
   actorUserId: string;
@@ -333,6 +353,7 @@ async function executeLiveInvitationRow(input: {
         "Anzeigename (Vor- und Nachname) erforderlich.",
       );
     }
+    const functionKey = requireConfirmedOrgFunction(input.identity);
     const result = await createPersonAndInvite(
       tenantId,
       { firstName, lastName, email: row.email },
@@ -342,7 +363,7 @@ async function executeLiveInvitationRow(input: {
     await ensureVlPersonOrgAssignment({
       tenantId,
       personId: result.personId,
-      functionKey: input.identity?.functionKey,
+      functionKey,
     });
     return {
       userId: result.userId,
@@ -353,6 +374,7 @@ async function executeLiveInvitationRow(input: {
   }
 
   if (row.action === "PERSON_LINK_ACCESS" && row.personId) {
+    const functionKey = requireConfirmedOrgFunction(input.identity);
     const result = await invitePersonToTenant(
       tenantId,
       row.personId,
@@ -362,7 +384,7 @@ async function executeLiveInvitationRow(input: {
     await ensureVlPersonOrgAssignment({
       tenantId,
       personId: row.personId,
-      functionKey: input.identity?.functionKey,
+      functionKey,
     });
     return {
       userId: result.userId,
@@ -376,12 +398,14 @@ async function executeLiveInvitationRow(input: {
     (row.action === "INVITATION_PENDING" || row.action === "UPDATE_ACCESS") &&
     row.userId
   ) {
+    const functionKey =
+      row.personId != null ? requireConfirmedOrgFunction(input.identity) : undefined;
     const rawToken = await resendTenantInvitation(tenantId, row.userId, actorUserId);
-    if (row.personId) {
+    if (row.personId && functionKey) {
       await ensureVlPersonOrgAssignment({
         tenantId,
         personId: row.personId,
-        functionKey: input.identity?.functionKey,
+        functionKey,
       });
     }
     return {

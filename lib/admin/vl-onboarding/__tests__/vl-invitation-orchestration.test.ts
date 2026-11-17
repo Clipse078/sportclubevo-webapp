@@ -166,7 +166,14 @@ describe("vl invitation orchestration", () => {
           duplicate: false,
         },
       ],
-      identities: [{ email: "irem.uysal@fcallschwil.ch", firstName: "Irem", lastName: "Uysal" }],
+      identities: [
+        {
+          email: "irem.uysal@fcallschwil.ch",
+          firstName: "Irem",
+          lastName: "Uysal",
+          functionKey: "VORSTANDSMITGLIED",
+        },
+      ],
       transport,
       liveExecution: true,
       sendPolicyMode: "LIVE_ALLOWED",
@@ -177,7 +184,11 @@ describe("vl invitation orchestration", () => {
       TENANT_ID,
       expect.objectContaining({ email: "irem.uysal@fcallschwil.ch" }),
       ACTOR_ID,
-      expect.objectContaining({ roleIds: [ROLE_ID] }),
+      expect.objectContaining({
+        roleIds: [ROLE_ID],
+        sendInvitation: false,
+        issueInvitationToken: true,
+      }),
     );
     expect(ensureVlPersonOrgAssignment).toHaveBeenCalled();
     expect(buildVlInvitationEmailContent).toHaveBeenCalledWith(
