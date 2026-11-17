@@ -32,5 +32,7 @@ describe("Meeting workspace summary menu clipping boundary", () => {
     expect(menu).toContain("event.stopPropagation()");
     expect(menu).not.toMatch(/className="absolute right-0/);
     expect(menu).toContain("SceInlineDestructiveConfirm");
+    expect(menu).toContain("MEETING_WORKSPACE_MENU_POPOVER_SURFACE_CLASS");
+    expect(menu).toContain("meeting-workspace-secondary-menu-styles");
   });
 });

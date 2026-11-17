@@ -50,6 +50,7 @@ import {
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import { MeetingTraktandumAgendaNotes } from "@/components/admin/meetings/workspace/MeetingTraktandumAgendaNotes";
 import { MeetingOutcomeMoreActionsMenu } from "@/components/admin/meetings/workspace/MeetingOutcomeMoreActionsMenu";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
@@ -565,7 +566,17 @@ function AgendaItemRow({
         </div>
       ) : (
         <div className="space-y-2 text-sm text-[var(--text-2)]">
-          {item.notes ? <p>{item.notes}</p> : null}
+          <MeetingTraktandumAgendaNotes
+            meetingId={meetingId}
+            agendaItemId={item.id}
+            agendaItem={item}
+            canManage={canManage}
+            testIdPrefix={`meeting-agenda-item-${item.id}`}
+            onNotesSaved={(merged) => {
+              setNotes(merged ?? "");
+              onNotesUpdated(merged ?? "");
+            }}
+          />
           {item.owner ? <p>Verantwortlich: {item.owner}</p> : null}
           {item.durationMin ? <p>Dauer: {item.durationMin} min</p> : null}
           {initiativeFromItem ? (

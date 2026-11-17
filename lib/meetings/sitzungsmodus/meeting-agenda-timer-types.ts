@@ -1,4 +1,4 @@
-export const MEETING_AGENDA_TIMER_STORAGE_VERSION = 2 as const;
+export const MEETING_AGENDA_TIMER_STORAGE_VERSION = 3 as const;
 
 export type MeetingAgendaTimerPhase = "idle" | "running" | "paused";
 
@@ -35,13 +35,19 @@ export type MeetingAgendaTimerState = {
   temporaryDurationSec: number | null;
   topicSnapshots: Record<string, MeetingAgendaTopicTimerSnapshot>;
   chimeEnabled: boolean;
-  chimedAt60ForTopicId: string | null;
-  chimedAtZeroForTopicId: string | null;
+  /** Per-topic milestone seconds already chimed this run (10, 3, 2, 1, 0). */
+  chimedMilestonesByTopicId: Record<string, number[]>;
+  /** @deprecated v2 — migrated into chimedMilestonesByTopicId */
+  chimedAt60ForTopicId?: string | null;
+  /** @deprecated v2 */
+  chimedAtZeroForTopicId?: string | null;
   /** True once the active topic timer has been started at least once this session. */
   activeTopicHasStarted: boolean;
 };
 
-export type MeetingAgendaTimerVisualKind = "normal" | "warning" | "expired" | "overtime";
+export type MeetingAgendaTimerVisualKind = "normal" | "warning" | "final" | "expired" | "overtime";
+
+export const MEETING_AGENDA_TIMER_CHIME_SECONDS = [10, 3, 2, 1, 0] as const;
 
 export type MeetingAgendaTimerPresentation = {
   kind: MeetingAgendaTimerVisualKind;

@@ -5,7 +5,34 @@ import type {
   MeetingAgendaTimerState,
   MeetingAgendaTopicTimerSnapshot,
 } from "./meeting-agenda-timer-types";
-import { MEETING_AGENDA_TIMER_STORAGE_VERSION } from "./meeting-agenda-timer-types";
+import {
+  MEETING_AGENDA_TIMER_CHIME_SECONDS,
+  MEETING_AGENDA_TIMER_STORAGE_VERSION,
+} from "./meeting-agenda-timer-types";
+
+const FINISHING_CHIME_SECONDS = new Set([10, 3, 2, 1, 0]);
+
+function emptyChimedMilestones(): Record<string, number[]> {
+  return {};
+}
+
+function clearChimeMilestonesForTopic(state: MeetingAgendaTimerState, topicId: string | null): MeetingAgendaTimerState {
+  if (!topicId) return state;
+  const next = { ...state.chimedMilestonesByTopicId };
+  delete next[topicId];
+  return { ...state, chimedMilestonesByTopicId: next };
+}
+
+function clearFinishingChimeMilestones(state: MeetingAgendaTimerState): MeetingAgendaTimerState {
+  const topicId = state.activeAgendaItemId;
+  if (!topicId) return state;
+  const played = state.chimedMilestonesByTopicId[topicId] ?? [];
+  const filtered = played.filter((s) => !FINISHING_CHIME_SECONDS.has(s));
+  return {
+    ...state,
+    chimedMilestonesByTopicId: { ...state.chimedMilestonesByTopicId, [topicId]: filtered },
+  };
+}
 
 export function createMeetingAgendaTimerState(scope: MeetingAgendaTimerScope): MeetingAgendaTimerState {
   return {
@@ -20,8 +47,7 @@ export function createMeetingAgendaTimerState(scope: MeetingAgendaTimerScope): M
     temporaryDurationSec: null,
     topicSnapshots: {},
     chimeEnabled: false,
-    chimedAt60ForTopicId: null,
-    chimedAtZeroForTopicId: null,
+    chimedMilestonesByTopicId: emptyChimedMilestones(),
     activeTopicHasStarted: false,
   };
 }
@@ -37,21 +63,23 @@ function applyPlannedBudgetToIdleTopic(
 ): MeetingAgendaTimerState {
   const budget = resolveAgendaBudgetSec({ plannedDurationMin });
   if (!budget) {
-    return {
-      ...state,
-      activeAgendaItemId: agendaItemId,
-      phase: "idle",
-      remainingAtAnchorSec: 0,
-      anchorMs: null,
-      budgetSec: 0,
-      temporaryDurationSec: null,
-      activeTopicHasStarted: false,
-      chimedAt60ForTopicId: null,
-      chimedAtZeroForTopicId: null,
-    };
+    return clearChimeMilestonesForTopic(
+      {
+        ...state,
+        activeAgendaItemId: agendaItemId,
+        phase: "idle",
+        remainingAtAnchorSec: 0,
+        anchorMs: null,
+        budgetSec: 0,
+        temporaryDurationSec: null,
+        activeTopicHasStarted: false,
+      },
+      agendaItemId,
+    );
   }
+  const cleared = clearChimeMilestonesForTopic(state, agendaItemId);
   return {
-    ...state,
+    ...cleared,
     activeAgendaItemId: agendaItemId,
     phase: "idle",
     remainingAtAnchorSec: budget.budgetSec,
@@ -59,8 +87,6 @@ function applyPlannedBudgetToIdleTopic(
     budgetSec: budget.budgetSec,
     temporaryDurationSec: budget.temporaryDurationSec,
     activeTopicHasStarted: false,
-    chimedAt60ForTopicId: null,
-    chimedAtZeroForTopicId: null,
   };
 }
 
@@ -156,8 +182,7 @@ export function selectAgendaTopic(
       budgetSec: snapshot.budgetSec,
       temporaryDurationSec: snapshot.temporaryDurationSec,
       activeTopicHasStarted: hasStarted,
-      chimedAt60ForTopicId: null,
-      chimedAtZeroForTopicId: null,
+      chimedMilestonesByTopicId: next.chimedMilestonesByTopicId,
     };
   }
 
@@ -199,8 +224,9 @@ export function startAgendaTimer(
     budgetSec: budget.budgetSec,
     temporaryDurationSec: budget.temporaryDurationSec,
     activeTopicHasStarted: true,
-    chimedAt60ForTopicId: resumed ? next.chimedAt60ForTopicId : null,
-    chimedAtZeroForTopicId: resumed ? next.chimedAtZeroForTopicId : null,
+    chimedMilestonesByTopicId: resumed
+      ? next.chimedMilestonesByTopicId
+      : clearChimeMilestonesForTopic(next, next.activeAgendaItemId).chimedMilestonesByTopicId,
   };
 }
 
@@ -238,13 +264,15 @@ export function extendAgendaTimerOneMinute(
       anchorMs: nowMs,
     };
   }
-  return {
+  let extended = {
     ...base,
     remainingAtAnchorSec: base.remainingAtAnchorSec + 60,
     anchorMs: base.phase === "running" ? nowMs : base.anchorMs,
-    chimedAt60ForTopicId:
-      base.remainingAtAnchorSec + 60 > 60 ? null : base.chimedAt60ForTopicId,
   };
+  if (extended.remainingAtAnchorSec > 10) {
+    extended = clearFinishingChimeMilestones(extended);
+  }
+  return extended;
 }
 
 export function resetActiveAgendaTimer(state: MeetingAgendaTimerState): MeetingAgendaTimerState {
@@ -257,8 +285,8 @@ export function resetActiveAgendaTimer(state: MeetingAgendaTimerState): MeetingA
     anchorMs: null,
     remainingAtAnchorSec: budget,
     activeTopicHasStarted: false,
-    chimedAt60ForTopicId: null,
-    chimedAtZeroForTopicId: null,
+    chimedMilestonesByTopicId: clearChimeMilestonesForTopic(state, state.activeAgendaItemId)
+      .chimedMilestonesByTopicId,
     topicSnapshots: rest,
   };
 }
@@ -286,39 +314,54 @@ export function setChimeEnabled(state: MeetingAgendaTimerState, enabled: boolean
 
 export function markChimeMilestone(
   state: MeetingAgendaTimerState,
-  milestone: "at60" | "atZero",
+  milestoneSecond: number,
 ): MeetingAgendaTimerState {
-  if (!state.activeAgendaItemId) return state;
-  if (milestone === "at60") {
-    return { ...state, chimedAt60ForTopicId: state.activeAgendaItemId };
-  }
-  return { ...state, chimedAtZeroForTopicId: state.activeAgendaItemId };
+  const topicId = state.activeAgendaItemId;
+  if (!topicId) return state;
+  const played = state.chimedMilestonesByTopicId[topicId] ?? [];
+  if (played.includes(milestoneSecond)) return state;
+  return {
+    ...state,
+    chimedMilestonesByTopicId: {
+      ...state.chimedMilestonesByTopicId,
+      [topicId]: [...played, milestoneSecond],
+    },
+  };
 }
 
+export function shouldChimeAtSecond(
+  state: MeetingAgendaTimerState,
+  remainingSec: number,
+  milestoneSecond: number,
+): boolean {
+  if (
+    !state.chimeEnabled ||
+    !state.activeAgendaItemId ||
+    state.phase !== "running" ||
+    !state.activeTopicHasStarted
+  ) {
+    return false;
+  }
+  const played = state.chimedMilestonesByTopicId[state.activeAgendaItemId] ?? [];
+  if (played.includes(milestoneSecond)) return false;
+  return Math.floor(remainingSec) === milestoneSecond;
+}
+
+export function collectDueChimeMilestones(
+  state: MeetingAgendaTimerState,
+  remainingSec: number,
+): number[] {
+  return MEETING_AGENDA_TIMER_CHIME_SECONDS.filter((s) => shouldChimeAtSecond(state, remainingSec, s));
+}
+
+/** @deprecated Use shouldChimeAtSecond / collectDueChimeMilestones */
 export function shouldChimeAt60(state: MeetingAgendaTimerState, remainingSec: number): boolean {
-  if (
-    !state.chimeEnabled ||
-    !state.activeAgendaItemId ||
-    state.phase !== "running" ||
-    !state.activeTopicHasStarted
-  ) {
-    return false;
-  }
-  if (state.chimedAt60ForTopicId === state.activeAgendaItemId) return false;
-  return remainingSec <= 60 && remainingSec > 0;
+  return shouldChimeAtSecond(state, remainingSec, 60);
 }
 
+/** @deprecated Use shouldChimeAtSecond(…, 0) */
 export function shouldChimeAtZero(state: MeetingAgendaTimerState, remainingSec: number): boolean {
-  if (
-    !state.chimeEnabled ||
-    !state.activeAgendaItemId ||
-    state.phase !== "running" ||
-    !state.activeTopicHasStarted
-  ) {
-    return false;
-  }
-  if (state.chimedAtZeroForTopicId === state.activeAgendaItemId) return false;
-  return remainingSec <= 0;
+  return shouldChimeAtSecond(state, remainingSec, 0);
 }
 
 function pad2(n: number): string {
@@ -333,12 +376,13 @@ export function formatCountdownDisplay(remainingSec: number): string {
 }
 
 export function formatOvertimeDisplay(overtimeSec: number): string {
-  return `+${formatCountdownDisplay(overtimeSec)} überzogen`;
+  return `+${formatCountdownDisplay(Math.abs(overtimeSec))}`;
 }
 
 export function buildMeetingAgendaTimerPresentation(
   remainingSec: number,
   lifecycle: MeetingAgendaTimerLifecycle,
+  activeTopicHasStarted = true,
 ): MeetingAgendaTimerPresentation {
   if (lifecycle === "none") {
     return {
@@ -358,6 +402,19 @@ export function buildMeetingAgendaTimerPresentation(
     };
   }
   const effective = remainingSec;
+  const countdownActive =
+    activeTopicHasStarted &&
+    (lifecycle === "running" || lifecycle === "paused" || lifecycle === "expired");
+
+  if (!countdownActive) {
+    const displaySec = Math.max(0, effective);
+    return {
+      kind: "normal",
+      label: lifecycle === "paused" ? "Pausiert" : "Geplante Zeit",
+      display: displaySec > 0 ? formatCountdownDisplay(displaySec) : "—",
+      remainingSec: effective,
+    };
+  }
   if (effective > 60) {
     return {
       kind: "normal",
@@ -366,10 +423,18 @@ export function buildMeetingAgendaTimerPresentation(
       remainingSec: effective,
     };
   }
-  if (effective > 0) {
+  if (effective >= 11) {
     return {
       kind: "warning",
       label: "Letzte Minute",
+      display: formatCountdownDisplay(effective),
+      remainingSec: effective,
+    };
+  }
+  if (effective >= 1) {
+    return {
+      kind: "final",
+      label: "Letzte Sekunden",
       display: formatCountdownDisplay(effective),
       remainingSec: effective,
     };
@@ -385,7 +450,7 @@ export function buildMeetingAgendaTimerPresentation(
   return {
     kind: "overtime",
     label: "Überzogen",
-    display: formatOvertimeDisplay(Math.abs(effective)),
+    display: formatOvertimeDisplay(effective),
     remainingSec: effective,
   };
 }
@@ -404,8 +469,7 @@ export function sanitizeTimerStateForAgendaItems(
       budgetSec: 0,
       temporaryDurationSec: null,
       activeTopicHasStarted: false,
-      chimedAt60ForTopicId: null,
-      chimedAtZeroForTopicId: null,
+      chimedMilestonesByTopicId: emptyChimedMilestones(),
     };
   }
   const topicSnapshots: Record<string, MeetingAgendaTopicTimerSnapshot> = {};

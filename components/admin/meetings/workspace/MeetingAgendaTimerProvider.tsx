@@ -19,6 +19,7 @@ import {
   endSitzungsmodus,
   extendAgendaTimerOneMinute,
   goToNextAgendaTopic,
+  collectDueChimeMilestones,
   markChimeMilestone,
   pauseAgendaTimer,
   resetActiveAgendaTimer,
@@ -26,8 +27,6 @@ import {
   resumeAgendaTimer,
   selectAgendaTopic,
   setChimeEnabled,
-  shouldChimeAt60,
-  shouldChimeAtZero,
   sanitizeTimerStateForAgendaItems,
   startAgendaTimer,
   startSitzungsmodus,
@@ -42,7 +41,10 @@ import {
   saveMeetingAgendaTimerState,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-storage";
 import { playMeetingAgendaTimerChime } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-chime";
-import { buildTimerLiveRegionMessage } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-a11y";
+import {
+  buildTimerLiveRegionMessage,
+  resolveTimerLiveRegionMilestone,
+} from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-a11y";
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 
@@ -108,6 +110,7 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [focusCardInView, setFocusCardInView] = useState(true);
   const liveRegionRef = useRef<HTMLSpanElement | null>(null);
+  const lastAnnouncedMilestoneRef = useRef<string | null>(null);
   const focusCardRef = useRef<HTMLDivElement | null>(null);
 
   const orderedItems = useMemo((): MeetingAgendaTimerOrderedItem[] => {
@@ -133,6 +136,10 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   useEffect(() => {
     setState(loadMeetingAgendaTimerState(scope, validIds));
   }, [scope.meetingId, scope.tenantId, scope.userId]);
+
+  useEffect(() => {
+    lastAnnouncedMilestoneRef.current = null;
+  }, [state.activeAgendaItemId]);
 
   useEffect(() => {
     setState((s) => sanitizeTimerStateForAgendaItems(s, validIds));
@@ -163,7 +170,11 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
 
   const remainingSec = deriveRemainingSec(state, nowMs);
   const lifecycle = deriveMeetingAgendaTimerLifecycle(state, remainingSec);
-  const presentation = buildMeetingAgendaTimerPresentation(remainingSec, lifecycle);
+  const presentation = buildMeetingAgendaTimerPresentation(
+    remainingSec,
+    lifecycle,
+    state.activeTopicHasStarted,
+  );
 
   const activeItem = useMemo(
     () => agendaItems.find((a) => a.id === state.activeAgendaItemId) ?? null,
@@ -172,21 +183,37 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
 
   useEffect(() => {
     if (!state.chimeEnabled || state.phase !== "running" || !state.activeTopicHasStarted) return;
-    if (shouldChimeAt60(state, remainingSec)) {
-      playMeetingAgendaTimerChime();
-      setState((s) => markChimeMilestone(s, "at60"));
-    } else if (shouldChimeAtZero(state, remainingSec)) {
-      playMeetingAgendaTimerChime();
-      setState((s) => markChimeMilestone(s, "atZero"));
-    }
+    const due = collectDueChimeMilestones(state, remainingSec);
+    if (due.length === 0) return;
+    playMeetingAgendaTimerChime();
+    setState((s) => due.reduce((acc, milestone) => markChimeMilestone(acc, milestone), s));
   }, [remainingSec, state]);
 
   useEffect(() => {
-    const message = buildTimerLiveRegionMessage(presentation, activeItem?.title ?? null, lifecycle);
-    if (message && liveRegionRef.current) {
+    const milestone = resolveTimerLiveRegionMilestone(presentation, lifecycle, remainingSec);
+    if (!milestone) return;
+    const topicKey = state.activeAgendaItemId ?? "none";
+    const dedupeKey = `${topicKey}:${milestone}`;
+    if (lastAnnouncedMilestoneRef.current === dedupeKey) return;
+    lastAnnouncedMilestoneRef.current = dedupeKey;
+    const message = buildTimerLiveRegionMessage(
+      presentation,
+      activeItem?.title ?? null,
+      lifecycle,
+      milestone,
+    );
+    if (liveRegionRef.current) {
       liveRegionRef.current.textContent = message;
     }
-  }, [presentation.kind, presentation.display, activeItem?.title, presentation, lifecycle]);
+  }, [
+    presentation.kind,
+    presentation.display,
+    activeItem?.title,
+    presentation,
+    lifecycle,
+    remainingSec,
+    state.activeAgendaItemId,
+  ]);
 
   const commit = useCallback((updater: (s: MeetingAgendaTimerState) => MeetingAgendaTimerState) => {
     setState((s) => updater(s));

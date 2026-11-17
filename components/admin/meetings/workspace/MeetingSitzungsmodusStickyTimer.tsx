@@ -31,13 +31,17 @@ export function MeetingSitzungsmodusStickyTimer() {
   const countdownToneClass =
     presentation.kind === "warning"
       ? "text-amber-800"
+      : presentation.kind === "final"
+        ? "text-red-900"
       : presentation.kind === "expired" || presentation.kind === "overtime"
         ? "text-red-700"
         : "text-[var(--foreground)]";
 
   const toneClass =
-    presentation.kind === "warning"
-      ? "border-amber-200/90 bg-white/95"
+    presentation.kind === "final"
+      ? "border-red-200/90 bg-red-50/95"
+      : presentation.kind === "warning"
+        ? "border-amber-200/90 bg-white/95"
       : presentation.kind === "expired" || presentation.kind === "overtime"
         ? "border-red-200/90 bg-white/95"
         : "border-[var(--border)] bg-[var(--surface-1)]/95";

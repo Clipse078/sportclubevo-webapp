@@ -22,6 +22,7 @@ import {
 } from "@/lib/meetings/sitzungsmodus/meeting-guided-session-summary";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import { MeetingTraktandumAgendaNotes } from "@/components/admin/meetings/workspace/MeetingTraktandumAgendaNotes";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
 const CARD_TEST_ID = "meeting-sitzungsmodus-card";
@@ -133,17 +134,21 @@ export function MeetingSitzungsmodusPanel({
   const hasDuration = state.budgetSec > 0 || Boolean(state.temporaryDurationSec);
 
   const toneClass =
-    lifecycle === "running" || lifecycle === "paused" || lifecycle === "expired"
-      ? presentation.kind === "warning"
-        ? "border-amber-200 bg-white text-[var(--foreground)]"
-        : presentation.kind === "expired" || presentation.kind === "overtime"
-          ? "border-red-200 bg-white text-[var(--foreground)]"
-          : "border-[var(--border)] bg-white text-[var(--foreground)]"
-      : "border-[var(--border)] bg-white text-[var(--foreground)]";
+    presentation.kind === "final"
+      ? "border-red-200 bg-red-50 text-[var(--foreground)]"
+      : lifecycle === "running" || lifecycle === "paused" || lifecycle === "expired"
+        ? presentation.kind === "warning"
+          ? "border-amber-200 bg-white text-[var(--foreground)]"
+          : presentation.kind === "expired" || presentation.kind === "overtime"
+            ? "border-red-200 bg-white text-[var(--foreground)]"
+            : "border-[var(--border)] bg-white text-[var(--foreground)]"
+        : "border-[var(--border)] bg-white text-[var(--foreground)]";
 
   const countdownToneClass =
     presentation.kind === "warning"
       ? "text-amber-800"
+      : presentation.kind === "final"
+        ? "text-red-900"
       : presentation.kind === "expired" || presentation.kind === "overtime"
         ? "text-red-700"
         : "text-[var(--foreground)]";
@@ -208,6 +213,18 @@ export function MeetingSitzungsmodusPanel({
                     <p className="text-base font-semibold leading-snug">{activeItem.title}</p>
                     {activeItem.owner ? (
                       <p className="text-sm text-[var(--text-2)]">Verantwortlich: {activeItem.owner}</p>
+                    ) : null}
+                    {meetingId ? (
+                      <div className="pt-2">
+                        <MeetingTraktandumAgendaNotes
+                          meetingId={meetingId}
+                          agendaItemId={activeItem.id}
+                          agendaItem={activeItem}
+                          canManage
+                          testIdPrefix="meeting-sitzungsmodus-focus"
+                          onNotesSaved={(notes) => onAgendaNotesUpdated(activeItem.id, notes ?? "")}
+                        />
+                      </div>
                     ) : null}
                   </>
                 ) : lifecycle === "none" ? (

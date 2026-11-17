@@ -14,14 +14,13 @@ import type {
   MeetingDecisionDeletionImpact,
 } from "@/lib/meetings/meeting-outcome-delete-service";
 import { workspaceGhostButtonClass } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
+import {
+  MEETING_WORKSPACE_MENU_POPOVER_SURFACE_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_DESTRUCTIVE_ITEM_CLASS,
+  MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS,
+} from "@/lib/meetings/meeting-workspace-secondary-menu-styles";
 
 type OutcomeKind = "decision" | "pendenz";
-
-const OUTCOME_MENU_SURFACE_CLASS =
-  "min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1 shadow-md";
-
-const OUTCOME_MENU_DESTRUCTIVE_ITEM_CLASS =
-  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-800 hover:bg-red-50 focus:bg-red-50 focus:outline-none";
 
 type MeetingOutcomeMoreActionsMenuProps = {
   meetingId: string;
@@ -147,16 +146,17 @@ export function MeetingOutcomeMoreActionsMenu({
             clipOverflow={false}
             role="dialog"
             id={menuId}
-            className={OUTCOME_MENU_SURFACE_CLASS}
+            className={MEETING_WORKSPACE_MENU_POPOVER_SURFACE_CLASS}
           >
             <div
               role="menu"
+              className={MEETING_WORKSPACE_SECONDARY_MENU_PANEL_CLASS}
               data-testid={`${testIdPrefix}-more-actions-popover-${recordId}`}
             >
               <button
                 type="button"
                 role="menuitem"
-                className={OUTCOME_MENU_DESTRUCTIVE_ITEM_CLASS}
+                className={MEETING_WORKSPACE_SECONDARY_MENU_DESTRUCTIVE_ITEM_CLASS}
                 onClick={() => void openDeleteConfirm()}
                 data-testid={`${testIdPrefix}-delete-trigger-${recordId}`}
               >

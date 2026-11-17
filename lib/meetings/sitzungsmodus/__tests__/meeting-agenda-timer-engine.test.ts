@@ -19,6 +19,8 @@ import {
   startAgendaTimer,
   startSitzungsmodus,
   markChimeMilestone,
+  collectDueChimeMilestones,
+  shouldChimeAtSecond,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-engine";
 
 const SCOPE = { meetingId: "m1", tenantId: "t1", userId: "u1" };
@@ -105,37 +107,59 @@ describe("meeting agenda timer engine", () => {
     expect(temp?.temporaryDurationSec).toBe(420);
   });
 
-  it("presentation states for warning, zero, overtime only after running", () => {
-    expect(buildMeetingAgendaTimerPresentation(90, "running").kind).toBe("normal");
-    expect(buildMeetingAgendaTimerPresentation(45, "running").kind).toBe("warning");
-    expect(buildMeetingAgendaTimerPresentation(0, "running").kind).toBe("expired");
-    expect(buildMeetingAgendaTimerPresentation(-84, "expired").display).toBe("+01:24 überzogen");
-    expect(buildMeetingAgendaTimerPresentation(300, "ready").display).toBe("05:00");
+  it("presentation boundaries: 61, 60, 11, 10, 1, zero, overtime", () => {
+    expect(buildMeetingAgendaTimerPresentation(61, "running", true).kind).toBe("normal");
+    expect(buildMeetingAgendaTimerPresentation(60, "running", true).kind).toBe("warning");
+    expect(buildMeetingAgendaTimerPresentation(11, "running", true).kind).toBe("warning");
+    expect(buildMeetingAgendaTimerPresentation(10, "running", true).kind).toBe("final");
+    expect(buildMeetingAgendaTimerPresentation(10, "running", true).label).toBe("Letzte Sekunden");
+    expect(buildMeetingAgendaTimerPresentation(1, "running", true).kind).toBe("final");
+    expect(buildMeetingAgendaTimerPresentation(0, "running", true).kind).toBe("expired");
+    expect(buildMeetingAgendaTimerPresentation(-84, "expired", true).display).toBe("+01:24");
+    expect(buildMeetingAgendaTimerPresentation(300, "ready", false).kind).toBe("normal");
+    expect(buildMeetingAgendaTimerPresentation(30, "ready", false).kind).toBe("normal");
   });
 
-  it("chime deduplication per topic and only while running", () => {
+  it("chime milestones at 10,3,2,1,0 with deduplication and pause guard", () => {
     let state = createMeetingAgendaTimerState(SCOPE);
     state = startSitzungsmodus(state);
     state = setChimeEnabled(state, true);
     state = selectAgendaTopic(state, "a1", 0, 2);
-    expect(shouldChimeAtZero(state, 0)).toBe(false);
+    expect(shouldChimeAtSecond(state, 10, 10)).toBe(false);
     state = startAgendaTimer(state, 0, resolveAgendaBudgetSec({ plannedDurationMin: 2 })!);
-    expect(shouldChimeAt60(state, 55)).toBe(true);
-    state = markChimeMilestone(state, "at60");
-    expect(shouldChimeAt60(state, 55)).toBe(false);
-    expect(shouldChimeAtZero(state, 0)).toBe(true);
-    state = markChimeMilestone(state, "atZero");
-    expect(shouldChimeAtZero(state, -1)).toBe(false);
+    expect(shouldChimeAtSecond(state, 10, 10)).toBe(true);
+    state = markChimeMilestone(state, 10);
+    expect(shouldChimeAtSecond(state, 10, 10)).toBe(false);
+    expect(collectDueChimeMilestones(state, 3)).toEqual([3]);
+    state = markChimeMilestone(state, 3);
+    expect(shouldChimeAtSecond(state, 0, 0)).toBe(true);
+    state = pauseAgendaTimer(state, 0);
+    expect(shouldChimeAtSecond(state, 0, 0)).toBe(false);
   });
 
-  it("topics starting at <=60s begin in warning band once running", () => {
+  it("short ready topics stay neutral until started", () => {
     let state = createMeetingAgendaTimerState(SCOPE);
     state = startSitzungsmodus(state);
-    state = setChimeEnabled(state, true);
     state = selectAgendaTopic(state, "a1", 0, null);
     state = startAgendaTimer(state, 0, resolveAgendaBudgetSec({ temporaryDurationMin: 1 })!);
-    expect(buildMeetingAgendaTimerPresentation(deriveRemainingSec(state, 0), "running").kind).toBe("warning");
-    expect(shouldChimeAt60(state, deriveRemainingSec(state, 0))).toBe(true);
+    const remaining = deriveRemainingSec(state, 0);
+    expect(buildMeetingAgendaTimerPresentation(remaining, "running", true).kind).toBe("warning");
+    state = resetActiveAgendaTimer(state);
+    expect(buildMeetingAgendaTimerPresentation(state.remainingAtAnchorSec, "ready", false).kind).toBe(
+      "normal",
+    );
+  });
+
+  it("+1 minute clears finishing chime milestones", () => {
+    let state = createMeetingAgendaTimerState(SCOPE);
+    state = startSitzungsmodus(state);
+    state = selectAgendaTopic(state, "a1", 0, 1);
+    state = startAgendaTimer(state, 0, resolveAgendaBudgetSec({ plannedDurationMin: 1 })!);
+    state = markChimeMilestone(state, 10);
+    state = pauseAgendaTimer(state, 0);
+    state = { ...state, remainingAtAnchorSec: 5, activeAgendaItemId: "a1" };
+    state = extendAgendaTimerOneMinute(state, 0);
+    expect(state.chimedMilestonesByTopicId.a1 ?? []).not.toContain(10);
   });
 
   it("reset restores budget elapsed only after confirm flow sets idle", () => {

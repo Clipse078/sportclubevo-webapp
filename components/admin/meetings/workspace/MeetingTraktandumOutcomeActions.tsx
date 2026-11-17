@@ -578,7 +578,7 @@ export function MeetingTraktandumOutcomeActions({
       {draft.activeForm === "note" ? (
         <div className="space-y-2 border-t border-[var(--border)]/60 pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
-            Notiz zu diesem Traktandum
+            Notiz ergänzen (Protokoll)
             <textarea
               className={`${workspaceInputClass} mt-1 min-h-[72px]`}
               value={draft.noteText}

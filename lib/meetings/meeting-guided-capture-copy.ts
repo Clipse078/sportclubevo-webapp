@@ -6,9 +6,9 @@ export type MeetingCaptureKind = Exclude<TraktandumOutcomeForm, null>;
 
 export const MEETING_CAPTURE_KIND_LABEL: Record<MeetingCaptureKind, string> = {
   decision: "Beschluss",
-  aufgabe: "Aufgabe",
+  aufgabe: "Aufgabe erstellen",
   pendenz: "Pendenz",
-  note: "Notiz",
+  note: "Notiz ergänzen",
 };
 
 export const MEETING_CAPTURE_KIND_HINT: Record<MeetingCaptureKind, string> = {
