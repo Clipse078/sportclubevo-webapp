@@ -57,7 +57,7 @@ describe("vl standard invite user copy", () => {
       VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED,
     );
     expect(VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED).toContain("Live-Versand");
-    expect(VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED).toContain("keine E-Mail");
+    expect(VL_STANDARD_INVITE_PREPARE_STATUS_HINT_LIVE_ALLOWED).not.toContain("VL-Bulk");
   });
 
   it("keeps Dry-Run out of wizard UI surfaces", () => {

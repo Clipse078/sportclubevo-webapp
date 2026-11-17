@@ -565,6 +565,44 @@ function groupChildrenUnits(
 ): PermissionUnit[] {
   const units: PermissionUnit[] = [];
 
+  if (parentItem.key === "club-entwicklung") {
+    const childPermissionMap: Record<string, string[]> = {
+      "club-entwicklung-uebersicht": [PERMISSIONS.WORKSPACE_VIEW, PERMISSIONS.WORKSPACE_MANAGE],
+      "club-entwicklung-strategie-ziele": [PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE],
+      "club-entwicklung-vorhaben-umsetzung": [
+        PERMISSIONS.INITIATIVES_VIEW,
+        PERMISSIONS.INITIATIVES_MANAGE,
+      ],
+      "club-entwicklung-sitzungen": [PERMISSIONS.MEETINGS_VIEW, PERMISSIONS.MEETINGS_MANAGE],
+    };
+  const VL_ASSIGNMENT_NOTE =
+    "Zugang zu Sitzungen setzt eine aktive Vereinsleitungs-Zuweisung voraus; die Rolle allein ist keine Mitgliedschaft.";
+  for (const child of children) {
+    const keys = filterGrantableKeys(childPermissionMap[child.key] ?? child.permissionKeys, catalog);
+    if (keys.length === 0) continue;
+    const unit = createUnit(
+      `${parentItem.key}-${child.key}`,
+      child.label,
+      keys,
+      catalog,
+      {
+        description:
+          child.key === "club-entwicklung-sitzungen"
+            ? VL_ASSIGNMENT_NOTE
+            : undefined,
+        iconLabel: child.label,
+        parentLabel: parentItem.label,
+        sharedNote:
+          child.key !== "club-entwicklung-uebersicht"
+            ? "Workspace-Gate canAccessVereinsleitung wird mit Zielen/Vorhaben/Sitzungen gemeinsam gespeichert."
+            : undefined,
+      },
+    );
+    if (unit) units.push(unit);
+  }
+  return units;
+  }
+
   if (parentItem.key === "infoboard") {
     const keys = new Set<string>();
     for (const child of children) {

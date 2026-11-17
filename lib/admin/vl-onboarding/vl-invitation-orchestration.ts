@@ -93,6 +93,7 @@ async function buildContributorSyncDiff(tenantId: string): Promise<{
   const presetRoleId = await prisma.role.findFirst({
     where: {
       tenantId,
+      scope: "TENANT",
       isArchived: false,
       OR: [
         { key: FCA_VL_INVITATION_PRESET.roleMatch.key },

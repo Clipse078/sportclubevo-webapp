@@ -40,6 +40,7 @@ async function resolvePresetRoleId(tenantId: string): Promise<string | null> {
   const role = await prisma.role.findFirst({
     where: {
       tenantId,
+      scope: "TENANT",
       isArchived: false,
       OR: [
         { key: FCA_VL_INVITATION_PRESET.roleMatch.key },

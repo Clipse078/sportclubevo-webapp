@@ -43,6 +43,7 @@ export default async function TenantRolesOverviewPage() {
             <CreateTenantRoleTrigger
               moduleGroups={moduleGroups}
               actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}
+              inlineOnly
             />
           }
           data-testid="roles-empty-first-use"

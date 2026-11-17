@@ -79,6 +79,7 @@ async function main() {
         id: true,
         key: true,
         name: true,
+        scope: true,
         canAccessVereinsleitung: true,
         canAttendVereinsleitungMeetings: true,
         rolePermissions: { select: { permission: { select: { key: true } } } },
@@ -137,10 +138,19 @@ async function main() {
       return;
     }
 
+    if (role !== null && role.scope !== "TENANT") {
+      console.log(`Repairing scope ${role.scope} → TENANT for ${role.key ?? role.id}`);
+      await prisma.role.update({
+        where: { id: role.id },
+        data: { scope: "TENANT", tenantId: tenant.id },
+      });
+    }
+
     if (roleMissing) {
       role = await prisma.role.create({
         data: {
           tenantId: tenant.id,
+          scope: "TENANT",
           key: FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.roleKey,
           name: FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.name,
           description: FCA_VEREINSLEITUNG_CONTRIBUTOR_PILOT_ROLE.description,
@@ -150,12 +160,13 @@ async function main() {
           id: true,
           key: true,
           name: true,
+          scope: true,
           canAccessVereinsleitung: true,
           canAttendVereinsleitungMeetings: true,
           rolePermissions: { select: { permission: { select: { key: true } } } },
         },
       });
-      console.log(`Created role ${role.id}`);
+      console.log(`Created role ${role?.id}`);
     } else if (needsVlFlags && role) {
       await prisma.role.update({
         where: { id: role.id },
