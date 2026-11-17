@@ -184,6 +184,7 @@ export async function getMeetingSubEntities(
         dueDate: true,
         status: true,
         linkedRefs: true,
+        createdAt: true,
       },
     }),
     prisma.meetingParticipant.findMany({

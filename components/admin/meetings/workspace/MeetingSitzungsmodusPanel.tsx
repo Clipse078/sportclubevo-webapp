@@ -21,6 +21,7 @@ import {
   type GuidedSitzungsmodusSessionSummary,
 } from "@/lib/meetings/sitzungsmodus/meeting-guided-session-summary";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
 const CARD_TEST_ID = "meeting-sitzungsmodus-card";
@@ -47,29 +48,40 @@ export function MeetingSitzungsmodusStartButton() {
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 type MeetingAction = MeetingSubEntities["actions"][number];
+type MeetingDecision = MeetingSubEntities["decisions"][number];
 
 type MeetingSitzungsmodusPanelProps = {
   meetingId?: string;
+  meetingSlug?: string;
   meetingTitle?: string;
   agendaItems?: AgendaItem[];
+  decisions?: MeetingDecision[];
   actions?: MeetingAction[];
+  agendaLinkedTasks?: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
   agendaDisplayOrder?: Map<string, number>;
   onDecisionCreated?: () => void | Promise<void>;
   onActionCreated?: () => void | Promise<void>;
   onAgendaNotesUpdated?: (agendaItemId: string, notes: string) => void;
   onMarkAgendaDiscussed?: (agendaItemId: string) => void | Promise<void>;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  onTaskCreated?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void | Promise<void>;
 };
 
 export function MeetingSitzungsmodusPanel({
   meetingId,
+  meetingSlug = "",
   meetingTitle = "",
   agendaItems = [],
+  decisions = [],
   actions = [],
+  agendaLinkedTasks = [],
   agendaDisplayOrder,
   onDecisionCreated = async () => {},
   onActionCreated = async () => {},
   onAgendaNotesUpdated = () => {},
   onMarkAgendaDiscussed = async () => {},
+  meetingTaskCreate = null,
+  onTaskCreated = async () => {},
 }: MeetingSitzungsmodusPanelProps = {}) {
   const timer = useMeetingAgendaTimer();
   const [expanded, setExpanded] = useState(true);
@@ -366,13 +378,10 @@ export function MeetingSitzungsmodusPanel({
           </MotionSafe>
 
           {meetingId && activeItem && activePosition != null ? (
-            <div
-              className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] p-3"
-              data-testid="meeting-sitzungsmodus-topic-wrapup"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ergebnisse erfassen</p>
+            <div className="space-y-3" data-testid="meeting-sitzungsmodus-topic-wrapup">
             <MeetingTraktandumOutcomeActions
               meetingId={meetingId}
+              meetingSlug={meetingSlug}
               meetingTitle={meetingTitle}
               agendaItemId={activeItem.id}
               agendaTitle={activeItem.title}
@@ -382,6 +391,11 @@ export function MeetingSitzungsmodusPanel({
               testIdPrefix="meeting-sitzungsmodus-focus"
               onDecisionCreated={onDecisionCreated}
               onActionCreated={onActionCreated}
+              onTaskCreated={onTaskCreated}
+              meetingTaskCreate={meetingTaskCreate}
+              decisions={decisions}
+              actions={actions}
+              agendaLinkedTasks={agendaLinkedTasks}
               onNotesUpdated={(notes) => onAgendaNotesUpdated(activeItem.id, notes)}
             />
               <div className="border-t border-[var(--border)]/60 pt-3 space-y-2" data-testid="meeting-sitzungsmodus-topic-continue">

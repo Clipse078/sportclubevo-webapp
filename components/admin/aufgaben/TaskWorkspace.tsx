@@ -921,7 +921,7 @@ export function TaskWorkspacePanel({
       ) : null}
 
       {provenance && provenance.links.length > 0 ? (
-        <PropertyRow label="Entstanden aus">
+        <PropertyRow label="Entstanden in">
           <ul className="space-y-1 text-sm text-[var(--text-2)]">
             {provenance.links.map((link) => (
               <li key={`${link.kind}-${link.label}`}>

@@ -1,16 +1,37 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
+import {
+  MEETING_CAPTURE_KIND_HINT,
+  MEETING_CAPTURE_KIND_LABEL,
+  MEETING_CAPTURE_SURFACE_HEADING,
+  MEETING_DECISION_DECISION_FIELD_LABEL,
+  type MeetingCaptureKind,
+} from "@/lib/meetings/meeting-guided-capture-copy";
 import { MeetingWorkspacePeopleField, personDisplayLabel } from "@/components/admin/meetings/workspace/MeetingWorkspacePeopleField";
 import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import { buildMeetingActionLinkedRefs } from "@/lib/meetings/meeting-protocol-linked-refs";
 import { MeetingWorkspaceApiError } from "@/lib/meetings/meeting-workspace-mutations";
 import {
+  resetTraktandumAufgabeClientRequestId,
   useTraktandumOutcomeDraft,
   type TraktandumOutcomeOwnerDraft,
 } from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
+import {
+  buildAgendaItemErgebnisseRows,
+  type AgendaLinkedTaskSummary,
+} from "@/lib/meetings/agenda-item-ergebnisse";
+import { MeetingTraktandumErgebnisseList } from "@/components/admin/meetings/workspace/MeetingTraktandumErgebnisseList";
+import type { MeetingSubEntities } from "@/lib/meetings/queries";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
+import {
+  MeetingTraktandumAufgabeCreate,
+  type MeetingTraktandumTaskCreateBaseProps,
+} from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import type { TaskContextType } from "@prisma/client";
 import {
   workspaceGhostButtonClass,
   workspaceInputClass,
@@ -19,6 +40,7 @@ import {
 
 export type MeetingTraktandumOutcomeActionsProps = {
   meetingId: string;
+  meetingSlug: string;
   meetingTitle: string;
   agendaItemId: string;
   agendaTitle: string;
@@ -28,7 +50,14 @@ export type MeetingTraktandumOutcomeActionsProps = {
   testIdPrefix: string;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
+  onDecisionRemoved?: () => void | Promise<void>;
+  onActionRemoved?: () => void | Promise<void>;
+  onTaskCreated?: (summary: AgendaLinkedTaskSummary) => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  decisions: MeetingSubEntities["decisions"];
+  actions: MeetingSubEntities["actions"];
+  agendaLinkedTasks: AgendaLinkedTaskSummary[];
 };
 
 function ownerFromPicker(person: PersonPickerResult | null): TraktandumOutcomeOwnerDraft | null {
@@ -55,6 +84,7 @@ function normalizeNotes(value: string | null | undefined): string {
 
 export function MeetingTraktandumOutcomeActions({
   meetingId,
+  meetingSlug,
   meetingTitle,
   agendaItemId,
   agendaTitle,
@@ -64,12 +94,36 @@ export function MeetingTraktandumOutcomeActions({
   testIdPrefix,
   onDecisionCreated,
   onActionCreated,
+  onDecisionRemoved,
+  onActionRemoved,
+  onTaskCreated,
   onNotesUpdated,
+  meetingTaskCreate,
+  decisions,
+  actions,
+  agendaLinkedTasks,
 }: MeetingTraktandumOutcomeActionsProps) {
   const { draft, patch, reset } = useTraktandumOutcomeDraft(meetingId, agendaItemId);
+  const ergebnisseRows = useMemo(
+    () =>
+      buildAgendaItemErgebnisseRows({
+        agendaItemId,
+        meetingSlug,
+        decisions,
+        actions,
+        tasks: agendaLinkedTasks,
+      }),
+    [actions, agendaItemId, agendaLinkedTasks, decisions, meetingSlug],
+  );
   const [error, setError] = useState<string | null>(null);
+  const [quietSuccess, setQuietSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const inFlightRef = useRef(false);
+
+  const captureKinds: MeetingCaptureKind[] = ["decision", "pendenz", "aufgabe", "note"];
+  if (!meetingTaskCreate) {
+    captureKinds.splice(captureKinds.indexOf("aufgabe"), 1);
+  }
 
   if (!canManage) return null;
 
@@ -110,6 +164,7 @@ export function MeetingTraktandumOutcomeActions({
         });
         const decisionId = created.decision?.id ?? null;
         await onDecisionCreated();
+        setQuietSuccess("Beschluss gespeichert.");
         patch({
           activeForm: null,
           decisionTitle: "",
@@ -117,6 +172,7 @@ export function MeetingTraktandumOutcomeActions({
           decisionRationale: "",
           showDecisionDetails: false,
           offerPendenzAfterDecision: true,
+          offerAufgabeAfterDecision: Boolean(meetingTaskCreate && decisionId),
           lastSavedDecisionTitle: trimmed,
           lastSavedDecisionId: decisionId,
           linkedDecisionIdForPendenz: decisionId,
@@ -151,6 +207,7 @@ export function MeetingTraktandumOutcomeActions({
           }),
         });
         await onActionCreated();
+        setQuietSuccess("Pendenz gespeichert.");
         patch({
           offerPendenzAfterDecision: false,
           lastSavedDecisionTitle: null,
@@ -198,6 +255,7 @@ export function MeetingTraktandumOutcomeActions({
                 ? `${normalizeNotes(agendaNotes)}\n\n${addition}`
                 : addition;
           onNotesUpdated(merged);
+          setQuietSuccess("Notiz gespeichert.");
           clearOutcomeFormFields();
         } catch (err) {
           if (err instanceof MeetingWorkspaceApiError && err.code === "NOTES_CONFLICT") {
@@ -220,17 +278,45 @@ export function MeetingTraktandumOutcomeActions({
   }
 
   const pendenzOwnerPicker = ownerToPicker(draft.pendenzOwner);
+  const taskContextType: TaskContextType =
+    draft.activeForm === "aufgabe" && (draft.lastSavedDecisionId ?? draft.linkedDecisionIdForPendenz)
+      ? "MEETING_DECISION"
+      : "MEETING";
+  const taskContextId =
+    taskContextType === "MEETING_DECISION"
+      ? (draft.lastSavedDecisionId ?? draft.linkedDecisionIdForPendenz)!
+      : meetingId;
+  const taskInitialTitle =
+    draft.lastSavedDecisionTitle?.trim() ? `Umsetzung: ${draft.lastSavedDecisionTitle.trim()}` : "";
+
+  function startAufgabeAfterDecision() {
+    patch({
+      activeForm: "aufgabe",
+      offerAufgabeAfterDecision: false,
+      aufgabeLastTaskId: null,
+    });
+    resetTraktandumAufgabeClientRequestId(meetingId, agendaItemId);
+  }
+
+  function startAnotherAufgabe() {
+    resetTraktandumAufgabeClientRequestId(meetingId, agendaItemId);
+    patch({
+      activeForm: "aufgabe",
+      aufgabeLastTaskId: null,
+      offerAufgabeAfterDecision: false,
+    });
+  }
 
   return (
-    <div
-      className="space-y-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 p-3"
-      data-testid={`${testIdPrefix}-outcome-actions`}
-    >
-      <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-outcome-context`}>
-        <span className="font-semibold text-[var(--foreground)]">{meetingTitle}</span>
-        {" · "}
-        Traktandum {agendaPosition}: <span className="font-medium text-[var(--foreground)]">{agendaTitle}</span>
-      </p>
+    <div className="space-y-3" data-testid={`${testIdPrefix}-outcome-actions`}>
+      <MeetingTraktandumErgebnisseList
+        rows={ergebnisseRows}
+        testIdPrefix={testIdPrefix}
+        meetingId={meetingId}
+        canManage={canManage}
+        onDecisionRemoved={onDecisionRemoved ?? onDecisionCreated}
+        onActionRemoved={onActionRemoved ?? onActionCreated}
+      />
 
       {error ? (
         <p className="text-xs text-rose-700" role="alert">
@@ -238,69 +324,113 @@ export function MeetingTraktandumOutcomeActions({
         </p>
       ) : null}
 
-      {draft.offerPendenzAfterDecision ? (
-        <div
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-          data-testid={`${testIdPrefix}-pendenz-follow-up`}
-        >
-          <p className="text-sm text-[var(--foreground)]">
-            Beschluss gespeichert. Eine <strong>Pendenz</strong> ist eine Sitzungsmassnahme im Protokoll; eine{" "}
-            <strong>Aufgabe</strong> ist eine eigenständige Umsetzung im Aufgaben-Center.
-          </p>
-          <button
-            type="button"
-            className={`${workspacePrimaryButtonClass} mt-2`}
-            data-testid={`${testIdPrefix}-pendenz-follow-up-trigger`}
-            onClick={startPendenzAfterDecision}
-          >
-            Pendenz dazu erstellen
-          </button>
+      {quietSuccess ? (
+        <p className="text-xs text-[var(--text-2)]" role="status" data-testid={`${testIdPrefix}-quiet-success`}>
+          {quietSuccess}
+        </p>
+      ) : null}
+
+      {draft.aufgabeLastTaskId && !draft.activeForm ? (
+        <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-aufgabe-success`}>
+          Aufgabe verknüpft.{" "}
+          <Link href={taskWorkspaceHref(draft.aufgabeLastTaskId)} className="font-semibold text-[#0b4aa2] hover:underline">
+            Aufgabe öffnen
+          </Link>
+          {meetingTaskCreate ? (
+            <>
+              {" · "}
+              <button
+                type="button"
+                className="font-semibold text-[#0b4aa2] hover:underline"
+                data-testid={`${testIdPrefix}-weitere-aufgabe`}
+                onClick={startAnotherAufgabe}
+              >
+                Weitere Aufgabe
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
+
+      {(draft.offerPendenzAfterDecision || draft.offerAufgabeAfterDecision) && !draft.activeForm ? (
+        <div className="flex flex-wrap items-center gap-2 text-xs" data-testid={`${testIdPrefix}-beschluss-follow-up`}>
+          <span className="text-[var(--text-2)]">Massnahmen zum Beschluss:</span>
+          {draft.offerPendenzAfterDecision ? (
+            <button
+              type="button"
+              className={workspaceGhostButtonClass}
+              data-testid={`${testIdPrefix}-pendenz-follow-up-trigger`}
+              onClick={startPendenzAfterDecision}
+            >
+              Pendenz dazu erstellen
+            </button>
+          ) : null}
+          {draft.offerAufgabeAfterDecision && meetingTaskCreate ? (
+            <button
+              type="button"
+              className={workspaceGhostButtonClass}
+              data-testid={`${testIdPrefix}-aufgabe-follow-up-trigger`}
+              onClick={startAufgabeAfterDecision}
+            >
+              Aufgabe dazu erstellen
+            </button>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={workspaceGhostButtonClass}
-          data-testid={`${testIdPrefix}-outcome-decision-trigger`}
-          disabled={pending}
-          onClick={() =>
-            patch({ activeForm: draft.activeForm === "decision" ? null : "decision", offerPendenzAfterDecision: false })
-          }
+      <div className="space-y-2 rounded-lg border border-[var(--border)]/70 bg-[var(--surface-1)]/60 p-3">
+        <p className="text-sm font-semibold text-[var(--foreground)]">{MEETING_CAPTURE_SURFACE_HEADING}</p>
+        <div
+          className="flex flex-wrap gap-2"
+          role="tablist"
+          aria-label={MEETING_CAPTURE_SURFACE_HEADING}
         >
-          Beschluss erfassen
-        </button>
-        <button
-          type="button"
-          className={workspaceGhostButtonClass}
-          data-testid={`${testIdPrefix}-outcome-pendenz-trigger`}
-          disabled={pending}
-          onClick={() =>
-            patch({ activeForm: draft.activeForm === "pendenz" ? null : "pendenz", offerPendenzAfterDecision: false })
-          }
-        >
-          Pendenz erstellen
-        </button>
-        <button
-          type="button"
-          className={workspaceGhostButtonClass}
-          data-testid={`${testIdPrefix}-outcome-note-trigger`}
-          disabled={pending}
-          onClick={() => patch({ activeForm: draft.activeForm === "note" ? null : "note" })}
-        >
-          Notiz ergänzen
-        </button>
-      </div>
+          {captureKinds.map((kind) => {
+            const active = draft.activeForm === kind;
+            return (
+              <button
+                key={kind}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={
+                  active
+                    ? "rounded-lg border border-[#0b4aa2]/30 bg-[#0b4aa2]/10 px-2.5 py-1.5 text-xs font-semibold text-[#0b4aa2]"
+                    : `${workspaceGhostButtonClass} px-2.5 py-1.5 text-xs`
+                }
+                data-testid={`${testIdPrefix}-outcome-${kind}-trigger`}
+                disabled={pending}
+                onClick={() =>
+                  patch({
+                    activeForm: active ? null : kind,
+                    offerPendenzAfterDecision: kind === "decision" ? draft.offerPendenzAfterDecision : false,
+                    offerAufgabeAfterDecision:
+                      kind === "decision" ? draft.offerAufgabeAfterDecision : false,
+                  })
+                }
+              >
+                {MEETING_CAPTURE_KIND_LABEL[kind]}
+              </button>
+            );
+          })}
+        </div>
+
+        {draft.activeForm ? (
+          <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-capture-hint-${draft.activeForm}`}>
+            {MEETING_CAPTURE_KIND_HINT[draft.activeForm]}
+          </p>
+        ) : null}
 
       {draft.activeForm === "decision" ? (
-        <div className="space-y-2 border-t border-[var(--border)] pt-2">
+        <div className="space-y-2 border-t border-[var(--border)]/60 pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
-            Beschlusstitel
+            {MEETING_DECISION_DECISION_FIELD_LABEL}
             <input
               className={`${workspaceInputClass} mt-1`}
               value={draft.decisionTitle}
               onChange={(e) => patch({ decisionTitle: e.target.value })}
-              placeholder="Kurzform"
+              placeholder="Kurzfassung des Beschlusses"
+              data-testid={`${testIdPrefix}-decision-title`}
             />
           </label>
           {draft.showDecisionDetails ? (
@@ -352,9 +482,9 @@ export function MeetingTraktandumOutcomeActions({
       ) : null}
 
       {draft.activeForm === "pendenz" ? (
-        <div className="space-y-2 border-t border-[var(--border)] pt-2">
+        <div className="space-y-2 border-t border-[var(--border)]/60 pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
-            Massnahme / Pendenz
+            Pendenz
             <input
               className={`${workspaceInputClass} mt-1`}
               value={draft.pendenzTitle}
@@ -416,8 +546,37 @@ export function MeetingTraktandumOutcomeActions({
         </div>
       ) : null}
 
+      {draft.activeForm === "aufgabe" && meetingTaskCreate ? (
+        <div className="border-t border-[var(--border)]/60 pt-2">
+        <MeetingTraktandumAufgabeCreate
+          meetingId={meetingId}
+          agendaItemId={agendaItemId}
+          expanded
+          onExpandedChange={(open) => {
+            if (!open) patch({ activeForm: null });
+          }}
+          contextType={taskContextType}
+          contextId={taskContextId}
+          createBase={meetingTaskCreate}
+          initialTitle={taskInitialTitle}
+          testIdPrefix={testIdPrefix}
+          onCreated={async (summary) => {
+            await onTaskCreated?.(summary);
+            setQuietSuccess("Aufgabe gespeichert.");
+            patch({
+              offerAufgabeAfterDecision: false,
+              lastSavedDecisionTitle: null,
+              lastSavedDecisionId: null,
+              activeForm: null,
+              aufgabeLastTaskId: summary.id,
+            });
+          }}
+        />
+        </div>
+      ) : null}
+
       {draft.activeForm === "note" ? (
-        <div className="space-y-2 border-t border-[var(--border)] pt-2">
+        <div className="space-y-2 border-t border-[var(--border)]/60 pt-2">
           <label className="block text-xs font-semibold text-[var(--muted)]">
             Notiz zu diesem Traktandum
             <textarea
@@ -443,6 +602,7 @@ export function MeetingTraktandumOutcomeActions({
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

@@ -373,6 +373,7 @@ export async function createTask(
         visibilityScope: orgVisibility.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
+        seriesOccurrenceKey: input.seriesOccurrenceKey?.trim() || null,
       },
       include: TASK_INCLUDE,
     });

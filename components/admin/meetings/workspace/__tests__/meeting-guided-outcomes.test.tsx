@@ -24,16 +24,24 @@ vi.mock("@/lib/meetings/meeting-workspace-mutations", () => ({
 
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 
+const baseOutcomeProps = {
+  meetingSlug: "sitzung",
+  decisions: [] as const,
+  actions: [] as const,
+  agendaLinkedTasks: [] as const,
+};
+
 describe("MeetingTraktandumOutcomeActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetTraktandumOutcomeDraftStoreForTests();
   });
 
-  it("shows meeting and Traktandum context on both entry surfaces", () => {
+  it("shows unified capture heading on entry surfaces", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Vereinsleitungssitzung"
         agendaItemId="a1"
         agendaTitle="Finanzen"
@@ -46,9 +54,9 @@ describe("MeetingTraktandumOutcomeActions", () => {
         onNotesUpdated={vi.fn()}
       />,
     );
-    expect(screen.getByTestId("test-outcome-context")).toHaveTextContent("Vereinsleitungssitzung");
-    expect(screen.getByTestId("test-outcome-context")).toHaveTextContent("Traktandum 2");
-    expect(screen.getByTestId("test-outcome-context")).toHaveTextContent("Finanzen");
+    expect(screen.getByText("Was halten wir fest?")).toBeTruthy();
+    expect(screen.queryByTestId("test-outcome-legend")).toBeNull();
+    expect(screen.queryByTestId("test-outcome-context")).toBeNull();
   });
 
   it("creates Beschluss with sourceAgendaItemId", async () => {
@@ -56,6 +64,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -69,7 +78,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
-    fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
+    fireEvent.change(screen.getByTestId("test-decision-title"), { target: { value: "Budget genehmigt" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
     await vi.waitFor(() => {
       expect(meetingWorkspaceApi.decisions.create).toHaveBeenCalledWith("m1", {
@@ -88,6 +97,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -120,6 +130,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -133,9 +144,9 @@ describe("MeetingTraktandumOutcomeActions", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
-    fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
+    fireEvent.change(screen.getByTestId("test-decision-title"), { target: { value: "Budget genehmigt" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
-    await vi.waitFor(() => expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy());
+    await vi.waitFor(() => expect(screen.getByTestId("test-beschluss-follow-up")).toBeTruthy());
     fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
     fireEvent.change(screen.getByPlaceholderText("Was ist zu tun?"), { target: { value: "Umsetzen" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
@@ -153,6 +164,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     render(
       <MeetingTraktandumOutcomeActions
         meetingId="m1"
+        {...baseOutcomeProps}
         meetingTitle="Sitzung"
         agendaItemId="a1"
         agendaTitle="Budget"
@@ -166,19 +178,87 @@ describe("MeetingTraktandumOutcomeActions", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
-    fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
+    fireEvent.change(screen.getByTestId("test-decision-title"), { target: { value: "Budget genehmigt" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
     await vi.waitFor(() => {
-      expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy();
+      expect(screen.getByTestId("test-beschluss-follow-up")).toBeTruthy();
     });
     expect(meetingWorkspaceApi.actions.create).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
     expect(screen.getByDisplayValue("Umsetzung: Budget genehmigt")).toBeTruthy();
   });
 
+  it("renders Ergebnisse list with linked records", () => {
+    render(
+      <MeetingTraktandumOutcomeActions
+        meetingId="m1"
+        {...baseOutcomeProps}
+        meetingTitle="Sitzung"
+        agendaItemId="a1"
+        agendaTitle="Budget"
+        agendaPosition={1}
+        agendaNotes={null}
+        canManage
+        testIdPrefix="test"
+        onDecisionCreated={vi.fn()}
+        onActionCreated={vi.fn()}
+        onNotesUpdated={vi.fn()}
+        decisions={[
+          {
+            id: "d1",
+            title: "Budget ok",
+            description: null,
+            rationale: null,
+            status: "CONFIRMED",
+            owner: null,
+            ownerPersonId: null,
+            orderIndex: 0,
+            sourceAgendaItemId: "a1",
+            approvalRequired: false,
+            approvalRule: null,
+            approverPersonIds: [],
+            approvalStatus: null,
+            approvalContentRevision: 0,
+            linkedRefs: null,
+          },
+        ]}
+        actions={[]}
+        agendaLinkedTasks={[]}
+      />,
+    );
+    expect(screen.getByTestId("test-ergebnisse")).toBeTruthy();
+    expect(screen.getByTestId("test-ergebnis-BESCHLUSS-d1")).toHaveTextContent("Budget ok");
+  });
+
+  it("retains per-type drafts when switching capture kind", () => {
+    render(
+      <MeetingTraktandumOutcomeActions
+        meetingId="m1"
+        {...baseOutcomeProps}
+        meetingTitle="Sitzung"
+        agendaItemId="a1"
+        agendaTitle="Budget"
+        agendaPosition={1}
+        agendaNotes={null}
+        canManage
+        testIdPrefix="test"
+        onDecisionCreated={vi.fn()}
+        onActionCreated={vi.fn()}
+        onNotesUpdated={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
+    fireEvent.change(screen.getByTestId("test-decision-title"), { target: { value: "Entwurf A" } });
+    fireEvent.click(screen.getByTestId("test-outcome-pendenz-trigger"));
+    fireEvent.change(screen.getByPlaceholderText("Was ist zu tun?"), { target: { value: "Pendenz B" } });
+    fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
+    expect(screen.getByDisplayValue("Entwurf A")).toBeTruthy();
+  });
+
   it("shares draft state between focus and expanded row surfaces", () => {
     const shared = {
       meetingId: "m1",
+      ...baseOutcomeProps,
       meetingTitle: "Sitzung",
       agendaItemId: "a1",
       agendaTitle: "Budget",
@@ -196,7 +276,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
       </>,
     );
     fireEvent.click(screen.getByTestId("focus-outcome-decision-trigger"));
-    fireEvent.change(screen.getAllByPlaceholderText("Kurzform")[0]!, { target: { value: "Geteilter Entwurf" } });
+    fireEvent.change(screen.getAllByTestId("focus-decision-title")[0]!, { target: { value: "Geteilter Entwurf" } });
     expect(screen.getAllByDisplayValue("Geteilter Entwurf")).toHaveLength(2);
   });
 });

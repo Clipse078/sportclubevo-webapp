@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export type TraktandumOutcomeForm = "decision" | "pendenz" | "note" | null;
+export type TraktandumOutcomeForm = "decision" | "pendenz" | "aufgabe" | "note" | null;
 
 export type TraktandumOutcomeOwnerDraft = {
   id: string;
@@ -22,9 +22,12 @@ export type TraktandumOutcomeDraft = {
   showPendenzDetails: boolean;
   noteText: string;
   offerPendenzAfterDecision: boolean;
+  offerAufgabeAfterDecision: boolean;
   lastSavedDecisionTitle: string | null;
   lastSavedDecisionId: string | null;
   linkedDecisionIdForPendenz: string | null;
+  aufgabeClientRequestId: string | null;
+  aufgabeLastTaskId: string | null;
 };
 
 const listeners = new Set<() => void>();
@@ -48,10 +51,38 @@ export function createEmptyTraktandumOutcomeDraft(): TraktandumOutcomeDraft {
     showPendenzDetails: false,
     noteText: "",
     offerPendenzAfterDecision: false,
+    offerAufgabeAfterDecision: false,
     lastSavedDecisionTitle: null,
     lastSavedDecisionId: null,
     linkedDecisionIdForPendenz: null,
+    aufgabeClientRequestId: null,
+    aufgabeLastTaskId: null,
   };
+}
+
+function newClientRequestId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `aufgabe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function ensureTraktandumAufgabeClientRequestId(meetingId: string, agendaItemId: string): string {
+  const draft = readTraktandumOutcomeDraft(meetingId, agendaItemId);
+  if (draft.aufgabeClientRequestId?.trim()) {
+    return draft.aufgabeClientRequestId;
+  }
+  const id = newClientRequestId();
+  patchTraktandumOutcomeDraft(meetingId, agendaItemId, { aufgabeClientRequestId: id });
+  return id;
+}
+
+export function resetTraktandumAufgabeClientRequestId(meetingId: string, agendaItemId: string): string {
+  const id = newClientRequestId();
+  patchTraktandumOutcomeDraft(meetingId, agendaItemId, {
+    aufgabeClientRequestId: id,
+  });
+  return id;
 }
 
 function emit(): void {

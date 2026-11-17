@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { MeetingWorkspaceDirtyStateSync } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import MeetingWorkspaceHeader from "@/components/admin/meetings/workspace/MeetingWorkspaceHeader";
@@ -36,6 +36,18 @@ import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeti
 import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
 import { MeetingGuidedSitzungsmodusController } from "@/components/admin/meetings/workspace/MeetingGuidedSitzungsmodusController";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import {
+  hydrateAgendaLinkedTaskSummaries,
+  type SerializedAgendaLinkedTaskSummary,
+} from "@/lib/meetings/agenda-linked-tasks-serialization";
+import type { AgendaLinkedTaskSummary } from "@/lib/meetings/agenda-item-ergebnisse";
+import {
+  countAgendaLinkedTasksByAgendaId,
+  mergeAgendaLinkedTaskSummaries,
+  reconcileAgendaLinkedTasksWithServer,
+} from "@/lib/meetings/agenda-linked-task-state";
+import type { MeetingOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-types";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -59,6 +71,10 @@ type MeetingWorkspaceProps = {
   initialPendenzenOverdueCount?: number;
   canDelete?: boolean;
   timerScope?: MeetingAgendaTimerScope | null;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  initialAgendaLinkedTaskCounts?: Record<string, number>;
+  initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
+  meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
 };
 
 export default function MeetingWorkspace({
@@ -75,7 +91,28 @@ export default function MeetingWorkspace({
   initialPendenzenOverdueCount = 0,
   canDelete = false,
   timerScope = null,
+  meetingTaskCreate = null,
+  initialAgendaLinkedTaskCounts = {},
+  initialAgendaLinkedTasks = [],
+  meetingActionOrigins = {},
 }: MeetingWorkspaceProps) {
+  const [agendaLinkedTasks, setAgendaLinkedTasks] = useState<AgendaLinkedTaskSummary[]>(() =>
+    hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
+  );
+  useEffect(() => {
+    const serverRows = hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks);
+    setAgendaLinkedTasks((prev) => reconcileAgendaLinkedTasksWithServer(prev, serverRows));
+  }, [initialAgendaLinkedTasks]);
+
+  const agendaLinkedTaskCountMap = useMemo(
+    () => countAgendaLinkedTasksByAgendaId(agendaLinkedTasks),
+    [agendaLinkedTasks],
+  );
+
+  const handleTraktandumAufgabeCreated = useCallback((summary: AgendaLinkedTaskSummary) => {
+    setAgendaLinkedTasks((prev) => mergeAgendaLinkedTaskSummaries(prev, [summary]));
+    setPendenzenRefresh((n) => n + 1);
+  }, []);
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const agendaDisplayOrder = useMemo(
     () => buildCanonicalAgendaDisplayOrderMap(agendaItems),
@@ -286,6 +323,7 @@ export default function MeetingWorkspace({
           >
             <MeetingAgendaSection
               meetingId={meeting.id}
+              meetingSlug={slug}
               meetingTitle={meeting.title}
               meetingPlannedDurationMin={meeting.plannedDurationMin}
               canManage={effectiveCanManage}
@@ -296,6 +334,10 @@ export default function MeetingWorkspace({
               onDecisionsChange={setDecisions}
               onActionsChange={setActions}
               onDirtyChange={setIsDirty}
+              meetingTaskCreate={meetingTaskCreate}
+              agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
+              agendaLinkedTasks={agendaLinkedTasks}
+              onTasksChanged={handleTraktandumAufgabeCreated}
             />
           </MeetingWorkspaceCollapsibleSection>
 
@@ -306,6 +348,7 @@ export default function MeetingWorkspace({
             <MeetingDecisionsSection
               meetingId={meeting.id}
               meetingSlug={slug}
+              meetingTitle={meeting.title}
               meetingStatus={meeting.status}
               canManage={canManage}
               documentationEditable={effectiveCanManage}
@@ -329,6 +372,7 @@ export default function MeetingWorkspace({
               meetingDate={meeting.meetingDate}
               canManage={effectiveCanManage}
               actions={actions}
+              actionOrigins={meetingActionOrigins}
               onActionsChange={(next) => {
                 setActions(next);
                 setPendenzenRefresh((n) => n + 1);

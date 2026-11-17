@@ -1,0 +1,3 @@
+/** Dominant guided Sitzungsmodus summary action (SCE copper, WCAG AA on white text). */
+export const MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS =
+  "inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#99501F] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#7f4319] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#99501F] disabled:opacity-50";

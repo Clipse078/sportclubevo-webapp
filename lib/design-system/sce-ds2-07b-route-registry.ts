@@ -9229,7 +9229,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "authenticatedRedirectCount": 21,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 665,
+  "routeHandlerCount": 666,
   "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 220,

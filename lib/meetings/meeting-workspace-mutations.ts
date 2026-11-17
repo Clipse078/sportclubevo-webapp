@@ -34,6 +34,20 @@ export async function postJson<T>(url: string, method: string, body?: unknown): 
   return data as T;
 }
 
+async function deleteWithOptionalConfirm<T>(baseUrl: string, confirm: boolean): Promise<T> {
+  const url = confirm ? `${baseUrl}?confirm=true` : baseUrl;
+  const res = await fetch(url, { method: "DELETE" });
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    throw new MeetingWorkspaceApiError(
+      typeof data.error === "string" ? data.error : "Anfrage fehlgeschlagen.",
+      res.status,
+      data,
+    );
+  }
+  return data as T;
+}
+
 export const meetingWorkspaceApi = {
   agenda: {
     create: (meetingId: string, body: Record<string, unknown>) =>
@@ -56,15 +70,33 @@ export const meetingWorkspaceApi = {
       postJson<{ decision: { id: string } }>(`/api/meetings/${meetingId}/decisions`, "POST", body),
     update: (meetingId: string, decisionId: string, body: Record<string, unknown>) =>
       postJson(`/api/meetings/${meetingId}/decisions/${decisionId}`, "PATCH", body),
+    previewRemove: (meetingId: string, decisionId: string) =>
+      deleteWithOptionalConfirm<{
+        title: string;
+        impact: { linkedPendenzCount: number; linkedTaskCount: number };
+        requiresConfirmation: true;
+      }>(`/api/meetings/${meetingId}/decisions/${decisionId}`, false),
     remove: (meetingId: string, decisionId: string) =>
-      postJson(`/api/meetings/${meetingId}/decisions/${decisionId}`, "DELETE"),
+      deleteWithOptionalConfirm<{ message: string; title: string }>(
+        `/api/meetings/${meetingId}/decisions/${decisionId}`,
+        true,
+      ),
   },
   actions: {
     create: (meetingId: string, body: Record<string, unknown>) =>
       postJson<{ action: { id: string } }>(`/api/meetings/${meetingId}/actions`, "POST", body),
     update: (meetingId: string, actionId: string, body: Record<string, unknown>) =>
       postJson(`/api/meetings/${meetingId}/actions/${actionId}`, "PATCH", body),
+    previewRemove: (meetingId: string, actionId: string) =>
+      deleteWithOptionalConfirm<{
+        title: string;
+        impact: { linkedDecisionId: string | null; linkedDecisionTitle: string | null };
+        requiresConfirmation: true;
+      }>(`/api/meetings/${meetingId}/actions/${actionId}`, false),
     remove: (meetingId: string, actionId: string) =>
-      postJson(`/api/meetings/${meetingId}/actions/${actionId}`, "DELETE"),
+      deleteWithOptionalConfirm<{ message: string; title: string }>(
+        `/api/meetings/${meetingId}/actions/${actionId}`,
+        true,
+      ),
   },
 };

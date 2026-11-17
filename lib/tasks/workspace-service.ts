@@ -188,7 +188,9 @@ export async function loadTaskWorkspace(
       locale,
       timeZone,
     ),
-    resolveTaskProvenance(ctx, task.contextType, task.contextId),
+    resolveTaskProvenance(ctx, task.contextType, task.contextId, {
+      seriesOccurrenceKey: visibleTask.seriesOccurrenceKey,
+    }),
     getTaskFollowStateForVisibleTask(ctx, visibleTask),
     listTaskDocumentReferencesForVisibleTask(ctx, visibleTask),
     loadTaskAccessGrantSnapshot(ctx.tenantId, task.id),

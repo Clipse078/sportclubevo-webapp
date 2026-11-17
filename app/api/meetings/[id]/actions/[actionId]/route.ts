@@ -115,16 +115,66 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+export async function DELETE(req: NextRequest, { params }: RouteContext) {
   const check = await requireSession();
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status });
   const { id, actionId } = await params;
   const actor = await getActorContext(check.session.user, check.session.user?.activeTenantId ?? undefined);
   const guard = await requireMeetingAccess({ actor, id, access: "write" });
   if (!guard.ok) return guard.response;
-  const existing = await prisma.meetingAction.findUnique({ where: { id: actionId, meetingId: id }, select: { id: true } });
-  if (!existing) return NextResponse.json({ error: "Massnahme nicht gefunden." }, { status: 404 });
-  await prisma.meetingAction.delete({ where: { id: actionId } });
-  void logAuditEvent({ actorUserId: actor.userId, module: "meetings", entityId: id, action: "ACTION_DELETE", before: { actionId } });
-  return NextResponse.json({ message: "Massnahme gelöscht." });
+  if (!actor.tenantId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const meeting = await prisma.meeting.findFirst({
+    where: { id, tenantId: actor.tenantId },
+    select: { status: true, reviewStage: true, protocolApprovalRequired: true },
+  });
+  if (!meeting) {
+    return NextResponse.json({ error: "Massnahme nicht gefunden." }, { status: 404 });
+  }
+  const { canEditMeetingDocumentation } = await import("@/lib/meetings/meeting-workspace-lock");
+  if (
+    !canEditMeetingDocumentation({
+      status: meeting.status,
+      reviewStage: meeting.reviewStage,
+      protocolApprovalRequired: meeting.protocolApprovalRequired,
+    })
+  ) {
+    return NextResponse.json({ error: "Sitzung ist schreibgeschützt." }, { status: 403 });
+  }
+
+  const action = await prisma.meetingAction.findFirst({
+    where: { id: actionId, meetingId: id, meeting: { tenantId: actor.tenantId } },
+    select: { id: true, title: true },
+  });
+  if (!action) return NextResponse.json({ error: "Massnahme nicht gefunden." }, { status: 404 });
+
+  const confirmed = req.nextUrl.searchParams.get("confirm") === "true";
+  const { getMeetingActionDeletionImpact, deleteMeetingActionRecord } = await import(
+    "@/lib/meetings/meeting-outcome-delete-service"
+  );
+
+  if (!confirmed) {
+    const impact = await getMeetingActionDeletionImpact(id, actor.tenantId, actionId);
+    if (!impact) return NextResponse.json({ error: "Massnahme nicht gefunden." }, { status: 404 });
+    return NextResponse.json({
+      title: action.title,
+      impact,
+      requiresConfirmation: true,
+    });
+  }
+
+  const result = await deleteMeetingActionRecord(id, actor.tenantId, actionId);
+  if (!result) {
+    return NextResponse.json({ error: "Massnahme nicht gefunden." }, { status: 404 });
+  }
+  void logAuditEvent({
+    actorUserId: actor.userId,
+    module: "meetings",
+    entityId: id,
+    action: "ACTION_DELETE",
+    before: { actionId, title: result.title },
+  });
+  return NextResponse.json({ message: "Massnahme gelöscht.", title: result.title });
 }

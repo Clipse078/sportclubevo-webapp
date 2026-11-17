@@ -4,6 +4,9 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import type { SerializedAgendaLinkedTaskSummary } from "@/lib/meetings/agenda-linked-tasks-serialization";
+import type { MeetingOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-types";
 
 /**
  * Canonical meeting detail surface — always renders the DB-backed MeetingWorkspace.
@@ -25,6 +28,10 @@ type VereinsleitungMeetingDetailProps = {
   initialPendenzenOpenCount?: number;
   initialPendenzenOverdueCount?: number;
   timerScope?: MeetingAgendaTimerScope | null;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  initialAgendaLinkedTaskCounts?: Record<string, number>;
+  initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
+  meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -41,6 +48,10 @@ export default function VereinsleitungMeetingDetail({
   initialPendenzenOpenCount = 0,
   initialPendenzenOverdueCount = 0,
   timerScope = null,
+  meetingTaskCreate = null,
+  initialAgendaLinkedTaskCounts = {},
+  initialAgendaLinkedTasks = [],
+  meetingActionOrigins = {},
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -57,6 +68,10 @@ export default function VereinsleitungMeetingDetail({
       initialPendenzenOpenCount={initialPendenzenOpenCount}
       initialPendenzenOverdueCount={initialPendenzenOverdueCount}
       timerScope={timerScope}
+      meetingTaskCreate={meetingTaskCreate}
+      initialAgendaLinkedTaskCounts={initialAgendaLinkedTaskCounts}
+      initialAgendaLinkedTasks={initialAgendaLinkedTasks}
+      meetingActionOrigins={meetingActionOrigins}
     />
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { Clock3, Loader2, Plus, Trash2 } from "lucide-react";
 import { SceExpandablePanel } from "@/components/sce/page/SceExpandablePanel";
 import {
@@ -21,6 +22,14 @@ import {
 } from "@/lib/meetings/agenda-duration";
 import { buildAgendaItemCollapsedMetadata } from "@/lib/meetings/agenda-item-presentation";
 import { buildAgendaItemOutcomeLinkLabels } from "@/lib/meetings/agenda-item-outcome-presentation";
+import {
+  MEETING_FOCUS_DECISION_QUERY,
+  MEETING_FOCUS_ACTION_QUERY,
+  MEETING_TRAKTANDUM_QUERY_PARAM,
+} from "@/lib/meetings/meeting-traktandum-navigation";
+import { buildDecisionOutcomeOrigin } from "@/lib/meetings/meeting-outcome-origin-client";
+import { MeetingOutcomeOriginLinks } from "@/components/admin/meetings/workspace/MeetingOutcomeOriginLinks";
+import { useMeetingWorkspaceRecordFocus } from "@/components/admin/meetings/workspace/useMeetingWorkspaceRecordFocus";
 import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
 import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
@@ -32,7 +41,6 @@ import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/
 import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import {
   MeetingSitzungsmodusPanel,
-  MeetingSitzungsmodusStartButton,
 } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusPanel";
 import {
   workspaceGhostButtonClass,
@@ -42,6 +50,8 @@ import {
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import { MeetingOutcomeMoreActionsMenu } from "@/components/admin/meetings/workspace/MeetingOutcomeMoreActionsMenu";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 function meetingSectionDomId(title: string): string {
   return `meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
@@ -91,6 +101,7 @@ function MeetingSectionBody({
 
 export function MeetingAgendaSection({
   meetingId,
+  meetingSlug,
   meetingTitle,
   meetingPlannedDurationMin,
   canManage,
@@ -101,13 +112,22 @@ export function MeetingAgendaSection({
   onDecisionsChange,
   onActionsChange,
   onDirtyChange,
+  meetingTaskCreate,
+  agendaLinkedTaskCountMap,
+  agendaLinkedTasks,
+  onTasksChanged,
 }: SectionProps<AgendaItem> & {
+  meetingSlug: string;
   meetingTitle: string;
   meetingPlannedDurationMin?: number | null;
   decisions: Decision[];
   actions: MeetingAction[];
   onDecisionsChange: (items: Decision[]) => void;
   onActionsChange: (items: MeetingAction[]) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
+  agendaLinkedTasks: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
+  onTasksChanged?: (summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -173,14 +193,16 @@ export function MeetingAgendaSection({
   return (
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       {canManage ? (
-        <div className="mb-3 flex w-full min-w-0 flex-col gap-2">
-          <MeetingSitzungsmodusStartButton />
+        <div className="mb-3 w-full min-w-0">
           <MeetingSitzungsmodusPanel
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
             agendaItems={items}
+            decisions={decisions}
             actions={actions}
             agendaDisplayOrder={agendaDisplayOrder}
+            agendaLinkedTasks={agendaLinkedTasks}
             onDecisionCreated={async () => {
               const res = await fetch(`/api/meetings/${meetingId}/decisions`);
               const data = await res.json();
@@ -198,6 +220,8 @@ export function MeetingAgendaSection({
               await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { status: "DISCUSSED" });
               await refreshFromServer();
             }}
+            meetingTaskCreate={meetingTaskCreate}
+            onTaskCreated={onTasksChanged}
           />
         </div>
       ) : null}
@@ -240,7 +264,9 @@ export function MeetingAgendaSection({
             decisions={decisions}
             actions={actions}
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
+            agendaLinkedTasks={agendaLinkedTasks}
             onSave={(draft) => saveItem(item, draft)}
             onDelete={() => deleteItem(item.id)}
             onDirty={() => onDirtyChange?.(true)}
@@ -257,6 +283,9 @@ export function MeetingAgendaSection({
             onNotesUpdated={(notes) => {
               onItemsChange(items.map((row) => (row.id === item.id ? { ...row, notes } : row)));
             }}
+            meetingTaskCreate={meetingTaskCreate}
+            agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
+            onTaskCreated={onTasksChanged}
           />
         ))
       )}
@@ -310,13 +339,18 @@ function AgendaItemRow({
   decisions,
   actions,
   meetingId,
+  meetingSlug,
   meetingTitle,
+  agendaLinkedTasks,
   onSave,
   onDelete,
   onDirty,
   onDecisionCreated,
   onActionCreated,
+  onTaskCreated,
   onNotesUpdated,
+  meetingTaskCreate,
+  agendaLinkedTaskCountMap,
 }: {
   index: number;
   item: AgendaItem;
@@ -325,14 +359,21 @@ function AgendaItemRow({
   relatedDecisions: Decision[];
   decisions: Decision[];
   actions: MeetingAction[];
+  agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
   meetingId: string;
+  meetingSlug: string;
   meetingTitle: string;
+  agendaLinkedTasks: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary[];
   onSave: (draft: Record<string, unknown>) => void;
   onDelete: () => void;
   onDirty: () => void;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
+  onTaskCreated?: (
+    summary: import("@/lib/meetings/agenda-item-ergebnisse").AgendaLinkedTaskSummary,
+  ) => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 }) {
   const [title, setTitle] = useState(item.title);
   const [notes, setNotes] = useState(item.notes ?? "");
@@ -358,12 +399,25 @@ function AgendaItemRow({
 
   const collapsedMetadata = [
     ...buildAgendaItemCollapsedMetadata(item),
-    ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions),
+    ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions, agendaLinkedTaskCountMap),
   ];
+  const searchParams = useSearchParams();
+  const traktandumFocusId = searchParams?.get(MEETING_TRAKTANDUM_QUERY_PARAM);
+  const openFromDeepLink = traktandumFocusId === item.id;
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openFromDeepLink) return;
+  const frame = window.requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [openFromDeepLink]);
 
   return (
+    <div ref={panelRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={openFromDeepLink}
       testId={`meeting-agenda-item-${item.id}`}
       summary={
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -459,6 +513,7 @@ function AgendaItemRow({
           ) : null}
           <MeetingTraktandumOutcomeActions
             meetingId={meetingId}
+            meetingSlug={meetingSlug}
             meetingTitle={meetingTitle}
             agendaItemId={item.id}
             agendaTitle={item.title}
@@ -468,6 +523,11 @@ function AgendaItemRow({
             testIdPrefix={`meeting-agenda-item-${item.id}`}
             onDecisionCreated={onDecisionCreated}
             onActionCreated={onActionCreated}
+            onTaskCreated={onTaskCreated}
+            meetingTaskCreate={meetingTaskCreate}
+            decisions={decisions}
+            actions={actions}
+            agendaLinkedTasks={agendaLinkedTasks}
             onNotesUpdated={(merged) => {
               setNotes(merged);
               onNotesUpdated(merged);
@@ -528,6 +588,7 @@ function AgendaItemRow({
         </div>
       )}
     </SceExpandablePanel>
+    </div>
   );
 }
 
@@ -671,6 +732,7 @@ export function MeetingParticipantsSection({
 export function MeetingDecisionsSection({
   meetingId,
   meetingSlug,
+  meetingTitle,
   meetingStatus,
   canManage,
   documentationEditable,
@@ -681,6 +743,7 @@ export function MeetingDecisionsSection({
   onItemsChange,
 }: SectionProps<Decision> & {
   meetingSlug: string;
+  meetingTitle: string;
   meetingStatus: MeetingStatus;
   documentationEditable: boolean;
   actorPersonId: string | null;
@@ -745,6 +808,7 @@ export function MeetingDecisionsSection({
           key={d.id}
           meetingId={meetingId}
           meetingSlug={meetingSlug}
+          meetingTitle={meetingTitle}
           meetingStatus={meetingStatus}
           decision={d}
           canManage={canManage}
@@ -752,6 +816,11 @@ export function MeetingDecisionsSection({
           actorPersonId={actorPersonId}
           approvalWorkspaceData={approvalWorkspaceData}
           agendaItems={agendaItems}
+          onRemoved={async () => {
+            const res = await fetch(`/api/meetings/${meetingId}/decisions`);
+            const data = await res.json();
+            if (res.ok && Array.isArray(data.decisions)) onItemsChange(data.decisions);
+          }}
           onDecisionUpdated={(updated) => {
             onItemsChange(items.map((row) => (row.id === d.id ? { ...row, ...updated } : row)));
           }}
@@ -818,6 +887,7 @@ export function MeetingDecisionsSection({
 function MeetingDecisionCard({
   meetingId,
   meetingSlug,
+  meetingTitle,
   meetingStatus,
   decision,
   canManage,
@@ -827,9 +897,11 @@ function MeetingDecisionCard({
   agendaItems,
   onDecisionUpdated,
   onSourceAgendaChange,
+  onRemoved,
 }: {
   meetingId: string;
   meetingSlug: string;
+  meetingTitle: string;
   meetingStatus: MeetingStatus;
   decision: Decision;
   canManage: boolean;
@@ -839,6 +911,7 @@ function MeetingDecisionCard({
   agendaItems: AgendaItem[];
   onDecisionUpdated: (updated: Partial<Decision>) => void;
   onSourceAgendaChange: (sourceAgendaItemId: string | null) => void;
+  onRemoved: () => void | Promise<void>;
 }) {
   const [pending, startTransition] = useTransition();
   const [sourceAgendaItemId, setSourceAgendaItemId] = useState(decision.sourceAgendaItemId ?? "");
@@ -846,6 +919,26 @@ function MeetingDecisionCard({
   const [descriptionDraft, setDescriptionDraft] = useState(decision.description ?? "");
   const [rationaleDraft, setRationaleDraft] = useState(decision.rationale ?? "");
   const linkedAgenda = agendaItems.find((a) => a.id === decision.sourceAgendaItemId);
+  const searchParams = useSearchParams();
+  const isFocused = searchParams?.get(MEETING_FOCUS_DECISION_QUERY) === decision.id;
+  const focusRef = useMeetingWorkspaceRecordFocus(decision.id, "decision");
+  const decisionOrigin = useMemo(
+    () =>
+      buildDecisionOutcomeOrigin({
+        meetingSlug,
+        meetingTitle,
+        agendaItems,
+        sourceAgendaItemId: decision.sourceAgendaItemId,
+        decisionTitle: decision.title,
+      }),
+    [
+      agendaItems,
+      decision.sourceAgendaItemId,
+      decision.title,
+      meetingSlug,
+      meetingTitle,
+    ],
+  );
 
   function saveAgendaLink(nextId: string) {
     setSourceAgendaItemId(nextId);
@@ -892,17 +985,31 @@ function MeetingDecisionCard({
   }
 
   return (
+    <div ref={focusRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={isFocused}
       testId={`meeting-decision-${decision.id}`}
       summary={
-        <div className="min-w-0 space-y-0.5">
-          <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
-          {descriptionPreview ? (
-            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
-          ) : null}
-          {summaryMeta.length ? (
-            <p className="text-xs text-[var(--muted)]">{summaryMeta.join(" · ")}</p>
+        <div className="flex w-full min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-semibold text-[var(--foreground)]">{decision.title}</p>
+            {descriptionPreview ? (
+              <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+            ) : null}
+            {summaryMeta.length ? (
+              <p className="text-xs text-[var(--muted)]">{summaryMeta.join(" · ")}</p>
+            ) : null}
+          </div>
+          {documentationEditable && canManage ? (
+            <MeetingOutcomeMoreActionsMenu
+              meetingId={meetingId}
+              recordId={decision.id}
+              recordTitle={decision.title}
+              kind="decision"
+              canManage={canManage}
+              onDeleted={onRemoved}
+              testIdPrefix={`meeting-decision-${decision.id}`}
+            />
           ) : null}
         </div>
       }
@@ -958,6 +1065,10 @@ function MeetingDecisionCard({
           ? `Freigabe: ${meetingApprovalAggregateStatusLabel(decision.approvalStatus)}`
           : "Freigabe: Nicht erforderlich"}
       </p>
+      <MeetingOutcomeOriginLinks
+        origin={decisionOrigin}
+        testId={`meeting-decision-origin-${decision.id}`}
+      />
       {editingDetails || documentationEditable ? (
         <div>
           <label className="mb-1 block text-xs font-semibold text-[var(--muted)]">Zugehöriges Traktandum</label>
@@ -1032,6 +1143,7 @@ function MeetingDecisionCard({
         canManage={documentationEditable}
       />
     </SceExpandablePanel>
+    </div>
   );
 }
 
@@ -1048,12 +1160,14 @@ export function MeetingActionRow({
   canManage,
   onUpdated,
   onRemoved,
+  origin,
 }: {
   action: MeetingAction;
   meetingId: string;
   canManage: boolean;
   onUpdated: (patch: Partial<MeetingAction>) => void;
   onRemoved: () => void;
+  origin?: import("@/lib/meetings/meeting-outcome-origin-types").MeetingOutcomeOrigin | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -1068,6 +1182,9 @@ export function MeetingActionRow({
   const [ownerPerson, setOwnerPerson] = useState<PersonPickerResult | null>(
     personPickerFromIds(action.ownerPersonId, action.owner),
   );
+  const searchParams = useSearchParams();
+  const isFocused = searchParams?.get(MEETING_FOCUS_ACTION_QUERY) === action.id;
+  const focusRef = useMeetingWorkspaceRecordFocus(action.id, "action");
 
   function save() {
     startTransition(async () => {
@@ -1087,17 +1204,6 @@ export function MeetingActionRow({
           ownerPersonId: ownerPerson?.id ?? null,
         });
         setEditing(false);
-      } catch {
-        // no-op
-      }
-    });
-  }
-
-  function remove() {
-    startTransition(async () => {
-      try {
-        await meetingWorkspaceApi.actions.remove(meetingId, action.id);
-        onRemoved();
       } catch {
         // no-op
       }
@@ -1135,16 +1241,30 @@ export function MeetingActionRow({
   }
 
   return (
+    <div ref={focusRef}>
     <SceExpandablePanel
-      defaultOpen={false}
+      defaultOpen={isFocused}
       testId={`meeting-action-${action.id}`}
       summary={
-        <div className="min-w-0 space-y-0.5">
-          <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
-          {descriptionPreview ? (
-            <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+        <div className="flex w-full min-w-0 items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="font-semibold text-[var(--foreground)]">{action.title}</p>
+            {descriptionPreview ? (
+              <p className="text-xs text-[var(--text-2)] line-clamp-1">{descriptionPreview}</p>
+            ) : null}
+            {meta.length ? <p className="text-xs text-[var(--muted)]">{meta.join(" · ")}</p> : null}
+          </div>
+          {canManage ? (
+            <MeetingOutcomeMoreActionsMenu
+              meetingId={meetingId}
+              recordId={action.id}
+              recordTitle={action.title}
+              kind="pendenz"
+              canManage={canManage}
+              onDeleted={onRemoved}
+              testIdPrefix={`meeting-action-${action.id}`}
+            />
           ) : null}
-          {meta.length ? <p className="text-xs text-[var(--muted)]">{meta.join(" · ")}</p> : null}
         </div>
       }
     >
@@ -1188,9 +1308,6 @@ export function MeetingActionRow({
             </button>
             <button type="button" className={workspaceGhostButtonClass} onClick={() => setEditing(false)}>
               Abbrechen
-            </button>
-            <button type="button" className={workspaceGhostButtonClass} disabled={pending} onClick={remove}>
-              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -1276,9 +1393,14 @@ export function MeetingActionRow({
               )}
             </div>
           ) : null}
+          <MeetingOutcomeOriginLinks
+            origin={origin}
+            testId={`meeting-action-origin-${action.id}`}
+          />
         </div>
       )}
     </SceExpandablePanel>
+    </div>
   );
 }
 

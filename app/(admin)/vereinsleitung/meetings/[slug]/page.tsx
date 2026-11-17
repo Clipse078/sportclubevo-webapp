@@ -13,7 +13,12 @@ import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/Verei
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
+import { TaskContextType } from "@prisma/client";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
+import { countAgendaLinkedTasks, listAgendaLinkedTaskSummaries } from "@/lib/meetings/meeting-traktandum-tasks";
+import { serializeAgendaLinkedTaskSummaries } from "@/lib/meetings/agenda-linked-tasks-serialization";
+import { loadMeetingActionOriginMap } from "@/lib/meetings/meeting-outcome-origin";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getActiveTenant, requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -73,6 +78,25 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
 
   const taskCtx = await getTaskServiceContext();
+  const meetingTaskCreateView = taskCtx
+    ? await loadContextualTaskCreateView(
+        taskCtx,
+        TaskContextType.MEETING,
+        dbMeeting.id,
+        taskPanelLocale,
+        taskPanelTimeZone,
+      )
+    : null;
+  const meetingTaskCreate =
+    meetingTaskCreateView?.canCreate
+      ? {
+          presentation: meetingTaskCreateView.presentation,
+          orgUnitOptions: meetingTaskCreateView.orgUnitOptions,
+          timeZone: meetingTaskCreateView.timeZone,
+          tenantWideVisibility: meetingTaskCreateView.tenantWideVisibility,
+        }
+      : null;
+
   const pendenzenSnapshot = await loadMeetingPendenzenSnapshot({
     meeting: {
       id: dbMeeting.id,
@@ -84,6 +108,39 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   });
   const initialPendenzenOpenCount = pendenzenSnapshot.openCount;
   const initialPendenzenOverdueCount = pendenzenSnapshot.overdueCount;
+
+  const agendaItemIds = subEntities.agendaItems.map((item) => item.id);
+  const agendaLinkedTaskCounts =
+    actor.tenantId && agendaItemIds.length > 0
+      ? Object.fromEntries(
+          (await countAgendaLinkedTasks(actor.tenantId, dbMeeting.id, agendaItemIds)).entries(),
+        )
+      : {};
+  const initialAgendaLinkedTasks =
+    actor.tenantId && agendaItemIds.length > 0
+      ? serializeAgendaLinkedTaskSummaries(
+          await listAgendaLinkedTaskSummaries(actor.tenantId, dbMeeting.id, agendaItemIds),
+        )
+      : [];
+
+  const meetingActionOrigins = await loadMeetingActionOriginMap(
+    actor,
+    {
+      id: dbMeeting.id,
+      slug: dbMeeting.slug,
+      title: dbMeeting.title,
+      visibilityScope: dbMeeting.visibilityScope,
+      createdByUserId: dbMeeting.createdByUserId,
+      visibleRoleRefs: dbMeeting.visibleRoleRefs,
+      visibleUserRefs: dbMeeting.visibleUserRefs,
+      visibleTeamRefs: dbMeeting.visibleTeamRefs,
+      visibleOrgUnitRefs: dbMeeting.visibleOrgUnitRefs,
+      visiblePersonRefs: dbMeeting.visiblePersonRefs,
+      visibleTargetGroupRefs: dbMeeting.visibleTargetGroupRefs,
+    },
+    subEntities.actions.map((action) => ({ id: action.id, linkedRefs: action.linkedRefs })),
+    subEntities.agendaItems.map((item) => ({ id: item.id, orderIndex: item.orderIndex })),
+  );
 
   const detailPage = (
     <DetailPagePattern
@@ -138,6 +195,10 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
             pendenzenEmbed
           />
         }
+        meetingTaskCreate={meetingTaskCreate}
+        initialAgendaLinkedTaskCounts={agendaLinkedTaskCounts}
+        initialAgendaLinkedTasks={initialAgendaLinkedTasks}
+        meetingActionOrigins={meetingActionOrigins}
       />
     </DetailPagePattern>
   );
