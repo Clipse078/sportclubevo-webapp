@@ -6,11 +6,12 @@ Stack parent: **#1001** (`cursor/vl-access-people-workspace`).
 
 | Field | Value |
 | --- | --- |
-| Final SHA | _populated at package close-out_ |
-| GitHub checks | design-system-governance, route-lifecycle-governance, Vercel |
-| Vercel Ready URL | _commit-bound preview URL when Vercel reports success on final SHA_ |
+| Final SHA | `4e39381b6d7d149d707dff8991472e7a6b2fb7b4` |
+| GitHub checks (exact head) | `design-system-governance` ✅ · `route-lifecycle-governance` ✅ · `Vercel` ✅ (Deployment has completed) |
+| Vercel Ready (deployment) | https://vercel.com/mds-projects-462da62c/sportclubevo-webapp-stage/GxkT7KeUrz9MV3DDXUK1GhMdQ659 |
+| Vercel Preview app URL | https://sportclubevo-webapp-stage-git-curs-c7ecf7-mds-projects-462da62c.vercel.app |
 | Canonical STAGE app | https://fcallschwil.sportclubevo.com |
-| People-access preview path | `/dashboard/admin/people-access` → **VL-Einladungen vorbereiten** |
+| People-access preview | https://sportclubevo-webapp-stage-git-curs-c7ecf7-mds-projects-462da62c.vercel.app/dashboard/admin/people-access → **VL-Einladungen vorbereiten** |
 
 ## Recipient matrix (STAGE, read-only)
 
