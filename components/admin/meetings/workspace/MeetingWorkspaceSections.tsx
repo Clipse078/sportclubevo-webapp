@@ -103,6 +103,7 @@ export function MeetingAgendaSection({
   onActionsChange,
   onDirtyChange,
   meetingTaskCreate,
+  agendaLinkedTaskCountMap,
   onTasksChanged,
 }: SectionProps<AgendaItem> & {
   meetingTitle: string;
@@ -112,6 +113,7 @@ export function MeetingAgendaSection({
   onDecisionsChange: (items: Decision[]) => void;
   onActionsChange: (items: MeetingAction[]) => void;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
   onTasksChanged?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
@@ -265,6 +267,7 @@ export function MeetingAgendaSection({
               onItemsChange(items.map((row) => (row.id === item.id ? { ...row, notes } : row)));
             }}
             meetingTaskCreate={meetingTaskCreate}
+            agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
             onTaskCreated={onTasksChanged}
           />
         ))
@@ -328,6 +331,7 @@ function AgendaItemRow({
   onTaskCreated,
   onNotesUpdated,
   meetingTaskCreate,
+  agendaLinkedTaskCountMap,
 }: {
   index: number;
   item: AgendaItem;
@@ -336,6 +340,7 @@ function AgendaItemRow({
   relatedDecisions: Decision[];
   decisions: Decision[];
   actions: MeetingAction[];
+  agendaLinkedTaskCountMap?: ReadonlyMap<string, number>;
   meetingId: string;
   meetingTitle: string;
   onSave: (draft: Record<string, unknown>) => void;
@@ -371,7 +376,7 @@ function AgendaItemRow({
 
   const collapsedMetadata = [
     ...buildAgendaItemCollapsedMetadata(item),
-    ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions),
+    ...buildAgendaItemOutcomeLinkLabels(item.id, decisions, actions, agendaLinkedTaskCountMap),
   ];
 
   return (

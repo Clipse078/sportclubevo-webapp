@@ -27,6 +27,7 @@ type VereinsleitungMeetingDetailProps = {
   initialPendenzenOverdueCount?: number;
   timerScope?: MeetingAgendaTimerScope | null;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  initialAgendaLinkedTaskCounts?: Record<string, number>;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -44,6 +45,7 @@ export default function VereinsleitungMeetingDetail({
   initialPendenzenOverdueCount = 0,
   timerScope = null,
   meetingTaskCreate = null,
+  initialAgendaLinkedTaskCounts = {},
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -61,6 +63,7 @@ export default function VereinsleitungMeetingDetail({
       initialPendenzenOverdueCount={initialPendenzenOverdueCount}
       timerScope={timerScope}
       meetingTaskCreate={meetingTaskCreate}
+      initialAgendaLinkedTaskCounts={initialAgendaLinkedTaskCounts}
     />
   );
 }

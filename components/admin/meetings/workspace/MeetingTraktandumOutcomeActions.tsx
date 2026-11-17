@@ -482,6 +482,8 @@ export function MeetingTraktandumOutcomeActions({
 
       {draft.activeForm === "aufgabe" && meetingTaskCreate ? (
         <MeetingTraktandumAufgabeCreate
+          meetingId={meetingId}
+          agendaItemId={agendaItemId}
           expanded
           onExpandedChange={(open) => {
             if (!open) patch({ activeForm: null });

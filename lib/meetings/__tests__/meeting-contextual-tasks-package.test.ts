@@ -17,6 +17,14 @@ describe("meeting contextual Aufgabe package", () => {
     expect(read("lib/meetings/load-meeting-pendenzen.ts")).toContain("TaskContextType.MEETING");
   });
 
+  it("persists Traktandum linkage via occurrence key + shared submit guard", () => {
+    expect(read("lib/meetings/meeting-traktandum-task-link.ts")).toContain("sce-mtg-traktandum-task");
+    expect(read("lib/meetings/meeting-traktandum-aufgabe-submit.ts")).toContain("inflight");
+    expect(read("components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate.tsx")).toContain(
+      "agendaItemId",
+    );
+  });
+
   it("surfaces Aufgabe erstellen on guided Traktandum surfaces", () => {
     const outcomes = read("components/admin/meetings/workspace/MeetingTraktandumOutcomeActions.tsx");
     expect(outcomes).toContain("Aufgabe erstellen");

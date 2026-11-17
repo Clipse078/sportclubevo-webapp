@@ -1705,6 +1705,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/meetings/[id]/agenda/[itemId]/tasks/route.ts",
+    "urlPattern": "/api/meetings/[id]/agenda/[itemId]/tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/meetings/[id]/agenda/route.ts",
     "urlPattern": "/api/meetings/[id]/agenda",
     "audience": "API"

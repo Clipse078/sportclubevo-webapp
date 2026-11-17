@@ -61,6 +61,7 @@ type MeetingWorkspaceProps = {
   canDelete?: boolean;
   timerScope?: MeetingAgendaTimerScope | null;
   meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  initialAgendaLinkedTaskCounts?: Record<string, number>;
 };
 
 export default function MeetingWorkspace({
@@ -78,7 +79,12 @@ export default function MeetingWorkspace({
   canDelete = false,
   timerScope = null,
   meetingTaskCreate = null,
+  initialAgendaLinkedTaskCounts = {},
 }: MeetingWorkspaceProps) {
+  const agendaLinkedTaskCountMap = useMemo(
+    () => new Map(Object.entries(initialAgendaLinkedTaskCounts)),
+    [initialAgendaLinkedTaskCounts],
+  );
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const agendaDisplayOrder = useMemo(
     () => buildCanonicalAgendaDisplayOrderMap(agendaItems),
@@ -300,6 +306,7 @@ export default function MeetingWorkspace({
               onActionsChange={setActions}
               onDirtyChange={setIsDirty}
               meetingTaskCreate={meetingTaskCreate}
+              agendaLinkedTaskCountMap={agendaLinkedTaskCountMap}
               onTasksChanged={() => setPendenzenRefresh((n) => n + 1)}
             />
           </MeetingWorkspaceCollapsibleSection>

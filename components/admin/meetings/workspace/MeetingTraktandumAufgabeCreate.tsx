@@ -11,6 +11,8 @@ export type MeetingTraktandumTaskCreateBaseProps = Omit<
 >;
 
 type Props = {
+  meetingId: string;
+  agendaItemId: string;
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   contextType: TaskContextType;
@@ -22,6 +24,8 @@ type Props = {
 };
 
 export function MeetingTraktandumAufgabeCreate({
+  meetingId,
+  agendaItemId,
   expanded,
   onExpandedChange,
   contextType,
@@ -33,6 +37,8 @@ export function MeetingTraktandumAufgabeCreate({
   const router = useRouter();
   return (
     <MeetingContextualTaskInlineCreateCard
+      meetingId={meetingId}
+      agendaItemId={agendaItemId}
       expanded={expanded}
       onExpandedChange={onExpandedChange}
       contextType={contextType}
@@ -42,7 +48,6 @@ export function MeetingTraktandumAufgabeCreate({
       timeZone={createBase.timeZone}
       tenantWideVisibility={createBase.tenantWideVisibility}
       initialTitle={initialTitle}
-      successMode="refresh"
       onCreated={() => {
         onCreated?.();
         router.refresh();

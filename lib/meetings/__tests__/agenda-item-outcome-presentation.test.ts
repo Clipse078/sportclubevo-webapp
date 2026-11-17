@@ -16,4 +16,14 @@ describe("buildAgendaItemOutcomeLinkLabels", () => {
     );
     expect(labels).toEqual(["1 Beschluss", "2 Pendenzen"]);
   });
+
+  it("includes Aufgabe counts when provided", () => {
+    const labels = buildAgendaItemOutcomeLinkLabels(
+      "a1",
+      [],
+      [],
+      new Map([["a1", 2]]),
+    );
+    expect(labels).toEqual(["2 Aufgaben"]);
+  });
 });

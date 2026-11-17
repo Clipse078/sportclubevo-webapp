@@ -16,6 +16,7 @@ import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
 import { TaskContextType } from "@prisma/client";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
+import { countAgendaLinkedTasks } from "@/lib/meetings/meeting-traktandum-tasks";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { getActiveTenant, requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -106,6 +107,18 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const initialPendenzenOpenCount = pendenzenSnapshot.openCount;
   const initialPendenzenOverdueCount = pendenzenSnapshot.overdueCount;
 
+  const agendaLinkedTaskCounts =
+    actor.tenantId && subEntities.agendaItems.length > 0
+      ? Object.fromEntries(
+          (
+            await countAgendaLinkedTasks(
+              actor.tenantId,
+              subEntities.agendaItems.map((item) => item.id),
+            )
+          ).entries(),
+        )
+      : {};
+
   const detailPage = (
     <DetailPagePattern
       className="[&_h1]:sr-only"
@@ -160,6 +173,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           />
         }
         meetingTaskCreate={meetingTaskCreate}
+        initialAgendaLinkedTaskCounts={agendaLinkedTaskCounts}
       />
     </DetailPagePattern>
   );
