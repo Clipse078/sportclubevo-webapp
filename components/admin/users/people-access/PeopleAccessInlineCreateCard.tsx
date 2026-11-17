@@ -33,7 +33,9 @@ export default function PeopleAccessInlineCreateCard({
         {...wizardProps}
         onCancel={() => onExpandedChange(false)}
         onComplete={(userId) => {
-          onComplete(userId);
+          if (userId) {
+            onComplete(userId);
+          }
           onExpandedChange(false);
         }}
       />

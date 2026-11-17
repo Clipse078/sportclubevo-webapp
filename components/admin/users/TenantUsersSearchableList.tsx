@@ -235,9 +235,13 @@ export default function TenantUsersSearchableList({
           initialPersonId={wizardPersonId}
           initialEmail={wizardEmail}
           onComplete={(userId) => {
-            router.push(`/dashboard/admin/users/${userId}`);
+            if (userId) {
+              router.push(`/dashboard/admin/users/${userId}`);
+            }
             router.refresh();
           }}
+          vlOnboardingEnabled={vlOnboardingEnabled}
+          canInvite={canInvite}
         />
       ) : null}
 
