@@ -27,7 +27,9 @@ describe("meeting contextual Aufgabe package", () => {
 
   it("surfaces Aufgabe erstellen on guided Traktandum surfaces", () => {
     const outcomes = read("components/admin/meetings/workspace/MeetingTraktandumOutcomeActions.tsx");
-    expect(outcomes).toContain("Aufgabe erstellen");
+    const captureCopy = read("lib/meetings/meeting-guided-capture-copy.ts");
+    expect(outcomes).toContain("MEETING_CAPTURE_KIND_LABEL");
+    expect(captureCopy).toContain("Aufgabe erstellen");
     expect(outcomes).toContain("Aufgabe dazu erstellen");
     expect(outcomes).not.toContain("Dialog");
   });

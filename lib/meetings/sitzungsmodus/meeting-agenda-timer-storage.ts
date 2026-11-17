@@ -38,6 +38,19 @@ export function parseMeetingAgendaTimerState(raw: unknown): MeetingAgendaTimerSt
       state.phase === "running" ||
       (state.phase === "paused" && state.remainingAtAnchorSec < state.budgetSec);
   }
+  if (!state.chimedMilestonesByTopicId || typeof state.chimedMilestonesByTopicId !== "object") {
+    state.chimedMilestonesByTopicId = {};
+    const legacy60 = state.chimedAt60ForTopicId;
+    const legacyZero = state.chimedAtZeroForTopicId;
+    if (legacy60) {
+      const arr = state.chimedMilestonesByTopicId[legacy60] ?? [];
+      state.chimedMilestonesByTopicId[legacy60] = [...new Set([...arr, 60])];
+    }
+    if (legacyZero) {
+      const arr = state.chimedMilestonesByTopicId[legacyZero] ?? [];
+      state.chimedMilestonesByTopicId[legacyZero] = [...new Set([...arr, 0])];
+    }
+  }
   if (state.v !== MEETING_AGENDA_TIMER_STORAGE_VERSION) {
     state.v = MEETING_AGENDA_TIMER_STORAGE_VERSION;
   }

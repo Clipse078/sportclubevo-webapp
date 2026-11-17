@@ -13,9 +13,9 @@ function readSrc(relative: string) {
 
 describe("meeting workspace secondary menu styling (scoped)", () => {
   it("keeps SCE navy neutral items and destructive danger tokens with focus-visible", () => {
-    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("text-[var(--foreground)]");
-    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("hover:bg-[var(--surface-2)]");
-    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("focus-visible:bg-[var(--surface-2)]");
+    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("text-[#0b1f3b]");
+    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("hover:bg-slate-50");
+    expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain("focus-visible:bg-slate-50");
     expect(MEETING_WORKSPACE_SECONDARY_MENU_ITEM_CLASS).toContain(
       "focus-visible:ring-[var(--sce-primary)]",
     );
@@ -30,8 +30,8 @@ describe("meeting workspace secondary menu styling (scoped)", () => {
       "focus-visible:bg-[var(--sce-danger-light)]",
     );
 
-    expect(MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS).not.toContain("shadow-lg");
-    expect(MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS).not.toContain("rounded-lg");
+    expect(MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS).toContain("!bg-white");
+    expect(MEETING_WORKSPACE_SECONDARY_MENU_POPOVER_CLASS).toContain("!shadow-md");
   });
 
   it("wires scoped styles into status bar without overriding global popover chrome", () => {

@@ -104,9 +104,68 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
   }
 
+  if (body?.notes !== undefined && body?.notesAppend === undefined && body?.expectedNotes !== undefined) {
+    const expectedNorm = normalizeAgendaNotesForCompare(body.expectedNotes);
+    const currentNorm = normalizeAgendaNotesForCompare(existing.notes);
+    if (expectedNorm !== currentNorm) {
+      return NextResponse.json(
+        {
+          error:
+            "Notizen wurden zwischenzeitlich geändert. Aktuelle Version übernommen — bitte anpassen und erneut speichern.",
+          code: "NOTES_CONFLICT",
+          currentNotes: existing.notes,
+        },
+        { status: 409 },
+      );
+    }
+    const nextNotes =
+      typeof body.notes === "string" ? body.notes.trim() || null : body.notes === null ? null : existing.notes;
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const updated = await tx.meetingAgendaItem.updateMany({
+          where: { id: itemId, meetingId: id, notes: existing.notes },
+          data: { notes: nextNotes },
+        });
+        if (updated.count !== 1) {
+          const fresh = await tx.meetingAgendaItem.findUnique({
+            where: { id: itemId, meetingId: id },
+            select: { notes: true },
+          });
+          return { ok: false as const, currentNotes: fresh?.notes ?? null };
+        }
+        return { ok: true as const, notes: nextNotes };
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          {
+            error:
+              "Notizen wurden zwischenzeitlich geändert. Aktuelle Version übernommen — bitte anpassen und erneut speichern.",
+            code: "NOTES_CONFLICT",
+            currentNotes: result.currentNotes,
+          },
+          { status: 409 },
+        );
+      }
+      void logAuditEvent({
+        actorUserId: actor.userId,
+        module: "meetings",
+        entityId: id,
+        action: "AGENDA_UPDATE",
+        after: { itemId, notesReplace: true },
+      });
+      return NextResponse.json({ item: { id: itemId, notes: result.notes } });
+    } catch (e) {
+      console.error(e);
+      return NextResponse.json({ error: "Notizen konnten nicht gespeichert werden." }, { status: 500 });
+    }
+  }
+
   const patch: Record<string, unknown> = {
     title: body?.title?.trim() || undefined,
-    notes: body?.notes !== undefined ? body?.notes?.trim() || null : undefined,
+    notes:
+      body?.notes !== undefined && body?.notesAppend === undefined && body?.expectedNotes === undefined
+        ? body?.notes?.trim() || null
+        : undefined,
     orderIndex: body?.orderIndex !== undefined ? Number(body.orderIndex) : undefined,
     status: validStatuses.includes(body?.status) ? body.status : undefined,
   };
