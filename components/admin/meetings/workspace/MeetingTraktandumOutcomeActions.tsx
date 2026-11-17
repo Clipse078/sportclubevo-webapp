@@ -12,6 +12,11 @@ import {
   type TraktandumOutcomeOwnerDraft,
 } from "@/lib/meetings/sitzungsmodus/meeting-traktandum-outcome-draft";
 import {
+  MeetingTraktandumAufgabeCreate,
+  type MeetingTraktandumTaskCreateBaseProps,
+} from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
+import type { TaskContextType } from "@prisma/client";
+import {
   workspaceGhostButtonClass,
   workspaceInputClass,
   workspacePrimaryButtonClass,
@@ -28,7 +33,9 @@ export type MeetingTraktandumOutcomeActionsProps = {
   testIdPrefix: string;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
+  onTaskCreated?: () => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 };
 
 function ownerFromPicker(person: PersonPickerResult | null): TraktandumOutcomeOwnerDraft | null {
@@ -64,7 +71,9 @@ export function MeetingTraktandumOutcomeActions({
   testIdPrefix,
   onDecisionCreated,
   onActionCreated,
+  onTaskCreated,
   onNotesUpdated,
+  meetingTaskCreate,
 }: MeetingTraktandumOutcomeActionsProps) {
   const { draft, patch, reset } = useTraktandumOutcomeDraft(meetingId, agendaItemId);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +126,7 @@ export function MeetingTraktandumOutcomeActions({
           decisionRationale: "",
           showDecisionDetails: false,
           offerPendenzAfterDecision: true,
+          offerAufgabeAfterDecision: Boolean(meetingTaskCreate && decisionId),
           lastSavedDecisionTitle: trimmed,
           lastSavedDecisionId: decisionId,
           linkedDecisionIdForPendenz: decisionId,
@@ -220,12 +230,34 @@ export function MeetingTraktandumOutcomeActions({
   }
 
   const pendenzOwnerPicker = ownerToPicker(draft.pendenzOwner);
+  const taskContextType: TaskContextType =
+    draft.activeForm === "aufgabe" && (draft.lastSavedDecisionId ?? draft.linkedDecisionIdForPendenz)
+      ? "MEETING_DECISION"
+      : "MEETING";
+  const taskContextId =
+    taskContextType === "MEETING_DECISION"
+      ? (draft.lastSavedDecisionId ?? draft.linkedDecisionIdForPendenz)!
+      : meetingId;
+  const taskInitialTitle =
+    draft.lastSavedDecisionTitle?.trim() ? `Umsetzung: ${draft.lastSavedDecisionTitle.trim()}` : "";
+
+  function startAufgabeAfterDecision() {
+    patch({
+      activeForm: "aufgabe",
+      offerAufgabeAfterDecision: false,
+    });
+  }
 
   return (
     <div
       className="space-y-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 p-3"
       data-testid={`${testIdPrefix}-outcome-actions`}
     >
+      <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-outcome-legend`}>
+        <strong>Pendenz</strong> = Sitzungsmassnahme im Protokoll. <strong>Aufgabe</strong> = Umsetzung mit Verantwortlichen
+        und Frist im Aufgaben-Center (eine Identität, sichtbar in Pendenzen und Meine Aufgaben).
+      </p>
+
       <p className="text-xs text-[var(--text-2)]" data-testid={`${testIdPrefix}-outcome-context`}>
         <span className="font-semibold text-[var(--foreground)]">{meetingTitle}</span>
         {" · "}
@@ -238,23 +270,34 @@ export function MeetingTraktandumOutcomeActions({
         </p>
       ) : null}
 
-      {draft.offerPendenzAfterDecision ? (
+      {draft.offerPendenzAfterDecision || draft.offerAufgabeAfterDecision ? (
         <div
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-          data-testid={`${testIdPrefix}-pendenz-follow-up`}
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 space-y-2"
+          data-testid={`${testIdPrefix}-beschluss-follow-up`}
         >
-          <p className="text-sm text-[var(--foreground)]">
-            Beschluss gespeichert. Eine <strong>Pendenz</strong> ist eine Sitzungsmassnahme im Protokoll; eine{" "}
-            <strong>Aufgabe</strong> ist eine eigenständige Umsetzung im Aufgaben-Center.
-          </p>
-          <button
-            type="button"
-            className={`${workspacePrimaryButtonClass} mt-2`}
-            data-testid={`${testIdPrefix}-pendenz-follow-up-trigger`}
-            onClick={startPendenzAfterDecision}
-          >
-            Pendenz dazu erstellen
-          </button>
+          <p className="text-sm text-[var(--foreground)]">Beschluss gespeichert.</p>
+          <div className="flex flex-wrap gap-2">
+            {draft.offerPendenzAfterDecision ? (
+              <button
+                type="button"
+                className={workspacePrimaryButtonClass}
+                data-testid={`${testIdPrefix}-pendenz-follow-up-trigger`}
+                onClick={startPendenzAfterDecision}
+              >
+                Pendenz dazu erstellen
+              </button>
+            ) : null}
+            {draft.offerAufgabeAfterDecision && meetingTaskCreate ? (
+              <button
+                type="button"
+                className={workspacePrimaryButtonClass}
+                data-testid={`${testIdPrefix}-aufgabe-follow-up-trigger`}
+                onClick={startAufgabeAfterDecision}
+              >
+                Aufgabe dazu erstellen
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -276,11 +319,32 @@ export function MeetingTraktandumOutcomeActions({
           data-testid={`${testIdPrefix}-outcome-pendenz-trigger`}
           disabled={pending}
           onClick={() =>
-            patch({ activeForm: draft.activeForm === "pendenz" ? null : "pendenz", offerPendenzAfterDecision: false })
+            patch({
+              activeForm: draft.activeForm === "pendenz" ? null : "pendenz",
+              offerPendenzAfterDecision: false,
+              offerAufgabeAfterDecision: false,
+            })
           }
         >
           Pendenz erstellen
         </button>
+        {meetingTaskCreate ? (
+          <button
+            type="button"
+            className={workspaceGhostButtonClass}
+            data-testid={`${testIdPrefix}-outcome-aufgabe-trigger`}
+            disabled={pending}
+            onClick={() =>
+              patch({
+                activeForm: draft.activeForm === "aufgabe" ? null : "aufgabe",
+                offerPendenzAfterDecision: false,
+                offerAufgabeAfterDecision: false,
+              })
+            }
+          >
+            Aufgabe erstellen
+          </button>
+        ) : null}
         <button
           type="button"
           className={workspaceGhostButtonClass}
@@ -414,6 +478,29 @@ export function MeetingTraktandumOutcomeActions({
             </button>
           </div>
         </div>
+      ) : null}
+
+      {draft.activeForm === "aufgabe" && meetingTaskCreate ? (
+        <MeetingTraktandumAufgabeCreate
+          expanded
+          onExpandedChange={(open) => {
+            if (!open) patch({ activeForm: null });
+          }}
+          contextType={taskContextType}
+          contextId={taskContextId}
+          createBase={meetingTaskCreate}
+          initialTitle={taskInitialTitle}
+          testIdPrefix={testIdPrefix}
+          onCreated={async () => {
+            await onTaskCreated?.();
+            patch({
+              offerAufgabeAfterDecision: false,
+              lastSavedDecisionTitle: null,
+              lastSavedDecisionId: null,
+              activeForm: null,
+            });
+          }}
+        />
       ) : null}
 
       {draft.activeForm === "note" ? (

@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export type TraktandumOutcomeForm = "decision" | "pendenz" | "note" | null;
+export type TraktandumOutcomeForm = "decision" | "pendenz" | "aufgabe" | "note" | null;
 
 export type TraktandumOutcomeOwnerDraft = {
   id: string;
@@ -22,6 +22,7 @@ export type TraktandumOutcomeDraft = {
   showPendenzDetails: boolean;
   noteText: string;
   offerPendenzAfterDecision: boolean;
+  offerAufgabeAfterDecision: boolean;
   lastSavedDecisionTitle: string | null;
   lastSavedDecisionId: string | null;
   linkedDecisionIdForPendenz: string | null;
@@ -48,6 +49,7 @@ export function createEmptyTraktandumOutcomeDraft(): TraktandumOutcomeDraft {
     showPendenzDetails: false,
     noteText: "",
     offerPendenzAfterDecision: false,
+    offerAufgabeAfterDecision: false,
     lastSavedDecisionTitle: null,
     lastSavedDecisionId: null,
     linkedDecisionIdForPendenz: null,

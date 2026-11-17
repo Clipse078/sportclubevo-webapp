@@ -36,6 +36,7 @@ import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeti
 import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
 import { MeetingGuidedSitzungsmodusController } from "@/components/admin/meetings/workspace/MeetingGuidedSitzungsmodusController";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -59,6 +60,7 @@ type MeetingWorkspaceProps = {
   initialPendenzenOverdueCount?: number;
   canDelete?: boolean;
   timerScope?: MeetingAgendaTimerScope | null;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 };
 
 export default function MeetingWorkspace({
@@ -75,6 +77,7 @@ export default function MeetingWorkspace({
   initialPendenzenOverdueCount = 0,
   canDelete = false,
   timerScope = null,
+  meetingTaskCreate = null,
 }: MeetingWorkspaceProps) {
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
   const agendaDisplayOrder = useMemo(
@@ -296,6 +299,8 @@ export default function MeetingWorkspace({
               onDecisionsChange={setDecisions}
               onActionsChange={setActions}
               onDirtyChange={setIsDirty}
+              meetingTaskCreate={meetingTaskCreate}
+              onTasksChanged={() => setPendenzenRefresh((n) => n + 1)}
             />
           </MeetingWorkspaceCollapsibleSection>
 

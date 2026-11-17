@@ -4,6 +4,7 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingApprovalWorkspaceData } from "@/lib/meetings/meeting-approval-workspace-data";
 import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 /**
  * Canonical meeting detail surface — always renders the DB-backed MeetingWorkspace.
@@ -25,6 +26,7 @@ type VereinsleitungMeetingDetailProps = {
   initialPendenzenOpenCount?: number;
   initialPendenzenOverdueCount?: number;
   timerScope?: MeetingAgendaTimerScope | null;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -41,6 +43,7 @@ export default function VereinsleitungMeetingDetail({
   initialPendenzenOpenCount = 0,
   initialPendenzenOverdueCount = 0,
   timerScope = null,
+  meetingTaskCreate = null,
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -57,6 +60,7 @@ export default function VereinsleitungMeetingDetail({
       initialPendenzenOpenCount={initialPendenzenOpenCount}
       initialPendenzenOverdueCount={initialPendenzenOverdueCount}
       timerScope={timerScope}
+      meetingTaskCreate={meetingTaskCreate}
     />
   );
 }

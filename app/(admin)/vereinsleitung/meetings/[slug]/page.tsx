@@ -13,6 +13,8 @@ import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/Verei
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { MeetingWorkspaceDirtyShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceDirtyShell";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
+import { TaskContextType } from "@prisma/client";
 import { loadMeetingPendenzenSnapshot } from "@/lib/meetings/load-meeting-pendenzen";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
@@ -73,6 +75,25 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   const taskPanelTimeZone = fmtCfg.timezone ?? "Europe/Zurich";
 
   const taskCtx = await getTaskServiceContext();
+  const meetingTaskCreateView = taskCtx
+    ? await loadContextualTaskCreateView(
+        taskCtx,
+        TaskContextType.MEETING,
+        dbMeeting.id,
+        taskPanelLocale,
+        taskPanelTimeZone,
+      )
+    : null;
+  const meetingTaskCreate =
+    meetingTaskCreateView?.canCreate
+      ? {
+          presentation: meetingTaskCreateView.presentation,
+          orgUnitOptions: meetingTaskCreateView.orgUnitOptions,
+          timeZone: meetingTaskCreateView.timeZone,
+          tenantWideVisibility: meetingTaskCreateView.tenantWideVisibility,
+        }
+      : null;
+
   const pendenzenSnapshot = await loadMeetingPendenzenSnapshot({
     meeting: {
       id: dbMeeting.id,
@@ -138,6 +159,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
             pendenzenEmbed
           />
         }
+        meetingTaskCreate={meetingTaskCreate}
       />
     </DetailPagePattern>
   );

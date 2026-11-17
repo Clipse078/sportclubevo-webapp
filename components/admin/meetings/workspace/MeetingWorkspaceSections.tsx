@@ -42,6 +42,7 @@ import {
 } from "./meetingWorkspaceFieldClasses";
 import { MeetingDecisionTasksPanel } from "@/components/admin/meetings/workspace/MeetingDecisionTasksPanel";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
+import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 
 function meetingSectionDomId(title: string): string {
   return `meeting-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
@@ -101,6 +102,8 @@ export function MeetingAgendaSection({
   onDecisionsChange,
   onActionsChange,
   onDirtyChange,
+  meetingTaskCreate,
+  onTasksChanged,
 }: SectionProps<AgendaItem> & {
   meetingTitle: string;
   meetingPlannedDurationMin?: number | null;
@@ -108,6 +111,8 @@ export function MeetingAgendaSection({
   actions: MeetingAction[];
   onDecisionsChange: (items: Decision[]) => void;
   onActionsChange: (items: MeetingAction[]) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
+  onTasksChanged?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -198,6 +203,8 @@ export function MeetingAgendaSection({
               await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { status: "DISCUSSED" });
               await refreshFromServer();
             }}
+            meetingTaskCreate={meetingTaskCreate}
+            onTaskCreated={onTasksChanged}
           />
         </div>
       ) : null}
@@ -257,6 +264,8 @@ export function MeetingAgendaSection({
             onNotesUpdated={(notes) => {
               onItemsChange(items.map((row) => (row.id === item.id ? { ...row, notes } : row)));
             }}
+            meetingTaskCreate={meetingTaskCreate}
+            onTaskCreated={onTasksChanged}
           />
         ))
       )}
@@ -316,7 +325,9 @@ function AgendaItemRow({
   onDirty,
   onDecisionCreated,
   onActionCreated,
+  onTaskCreated,
   onNotesUpdated,
+  meetingTaskCreate,
 }: {
   index: number;
   item: AgendaItem;
@@ -332,7 +343,9 @@ function AgendaItemRow({
   onDirty: () => void;
   onDecisionCreated: () => void | Promise<void>;
   onActionCreated: () => void | Promise<void>;
+  onTaskCreated?: () => void | Promise<void>;
   onNotesUpdated: (notes: string) => void;
+  meetingTaskCreate?: MeetingTraktandumTaskCreateBaseProps | null;
 }) {
   const [title, setTitle] = useState(item.title);
   const [notes, setNotes] = useState(item.notes ?? "");
@@ -468,6 +481,8 @@ function AgendaItemRow({
             testIdPrefix={`meeting-agenda-item-${item.id}`}
             onDecisionCreated={onDecisionCreated}
             onActionCreated={onActionCreated}
+            onTaskCreated={onTaskCreated}
+            meetingTaskCreate={meetingTaskCreate}
             onNotesUpdated={(merged) => {
               setNotes(merged);
               onNotesUpdated(merged);

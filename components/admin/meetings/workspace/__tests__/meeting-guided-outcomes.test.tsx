@@ -135,7 +135,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     fireEvent.click(screen.getByTestId("test-outcome-decision-trigger"));
     fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
-    await vi.waitFor(() => expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy());
+    await vi.waitFor(() => expect(screen.getByTestId("test-beschluss-follow-up")).toBeTruthy());
     fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
     fireEvent.change(screen.getByPlaceholderText("Was ist zu tun?"), { target: { value: "Umsetzen" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
@@ -169,7 +169,7 @@ describe("MeetingTraktandumOutcomeActions", () => {
     fireEvent.change(screen.getByPlaceholderText("Kurzform"), { target: { value: "Budget genehmigt" } });
     fireEvent.click(screen.getByRole("button", { name: /Speichern/i }));
     await vi.waitFor(() => {
-      expect(screen.getByTestId("test-pendenz-follow-up")).toBeTruthy();
+      expect(screen.getByTestId("test-beschluss-follow-up")).toBeTruthy();
     });
     expect(meetingWorkspaceApi.actions.create).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("test-pendenz-follow-up-trigger"));
