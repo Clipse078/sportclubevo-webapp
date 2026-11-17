@@ -31,6 +31,10 @@ import { formatMeetingParticipantsCollapsedPreview } from "@/lib/meetings/meetin
 import { countDecisionsAwaitingReview } from "@/lib/meetings/meeting-workspace-status-summary";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { ReactNode } from "react";
+import { buildCanonicalAgendaDisplayOrderMap } from "@/lib/meetings/agenda-display-order";
+import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-types";
+import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
+import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
 
 const LEGACY_SECTION_INLINE_CONTROL: Record<string, string> = {
   "meeting-section-teilnehmer": "meeting-participants-add-toggle",
@@ -53,6 +57,7 @@ type MeetingWorkspaceProps = {
   initialPendenzenOpenCount?: number;
   initialPendenzenOverdueCount?: number;
   canDelete?: boolean;
+  timerScope?: MeetingAgendaTimerScope | null;
 };
 
 export default function MeetingWorkspace({
@@ -68,8 +73,13 @@ export default function MeetingWorkspace({
   initialPendenzenOpenCount = 0,
   initialPendenzenOverdueCount = 0,
   canDelete = false,
+  timerScope = null,
 }: MeetingWorkspaceProps) {
   const [agendaItems, setAgendaItems] = useState(initialSubEntities.agendaItems);
+  const agendaDisplayOrder = useMemo(
+    () => buildCanonicalAgendaDisplayOrderMap(agendaItems),
+    [agendaItems],
+  );
   const [participants, setParticipants] = useState(initialSubEntities.participants);
   const [decisions, setDecisions] = useState(initialSubEntities.decisions);
   const [actions, setActions] = useState(initialSubEntities.actions);
@@ -217,10 +227,8 @@ export default function MeetingWorkspace({
     [participants],
   );
 
-  return (
-    <>
-      <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
-      <div className="space-y-4" data-testid="meeting-workspace">
+  const workspaceBody = (
+    <div className="space-y-4" data-testid="meeting-workspace">
         <SceClubDevelopmentSectionShell
           title={CD_MEETINGS_WORKSPACE_COPY.summarySectionTitle}
           bodyClassName="p-4 space-y-2"
@@ -354,7 +362,25 @@ export default function MeetingWorkspace({
             />
           </MeetingWorkspaceCollapsibleSection>
         </MeetingWorkspaceSectionNav>
-      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
+      {timerScope && canManage ? (
+        <MeetingAgendaTimerProvider
+          scope={timerScope}
+          canManage={canManage}
+          agendaItems={agendaItems}
+          displayOrder={agendaDisplayOrder}
+        >
+          <MeetingSitzungsmodusStickyTimer />
+          {workspaceBody}
+        </MeetingAgendaTimerProvider>
+      ) : (
+        workspaceBody
+      )}
     </>
   );
 }
