@@ -14,6 +14,8 @@ export type OrgLayoutBoundingBox = {
 };
 
 const DEFAULT_MARGIN = 36;
+/** Extra left inset so reparent handles inside cards still clear the viewport gutter. */
+const REPARENT_HANDLE_GUTTER = 12;
 
 export function computeOrgLayoutBoundingBox(
   nodes: Pick<OrgHierarchyLayoutNode, "x" | "y" | "width" | "height">[],
@@ -33,11 +35,11 @@ export function computeOrgLayoutBoundingBox(
     maxY = Math.max(maxY, n.y + n.height);
   }
   return {
-    minX: minX - margin,
+    minX: minX - margin - REPARENT_HANDLE_GUTTER,
     minY: minY - margin,
     maxX: maxX + margin,
     maxY: maxY + margin,
-    width: maxX - minX + margin * 2,
+    width: maxX - minX + margin * 2 + REPARENT_HANDLE_GUTTER,
     height: maxY - minY + margin * 2,
   };
 }

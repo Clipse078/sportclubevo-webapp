@@ -100,11 +100,16 @@ export default function OrgUnitCanvasView({
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const didInitialFit = useRef(false);
+  const onSelectIdRef = useRef(onSelectId);
+  onSelectIdRef.current = onSelectId;
+  const searchFocusKeyRef = useRef<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [manualPositions, setManualPositions] = useState<OrgLayoutPositionMap>(() =>
     loadOrgLayoutPositions(tenantId),
   );
   const [scale, setScale] = useState(1);
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
   const [pan, setPan] = useState({ x: 24, y: 24 });
   const [isPanning, setIsPanning] = useState(false);
   const [spacePan, setSpacePan] = useState(false);
@@ -264,19 +269,21 @@ export default function OrgUnitCanvasView({
       if (!node || !viewport) return;
       const vw = viewport.clientWidth;
       const vh = viewport.clientHeight;
-      const targetScale = clampOrgCanvasScale(
-        Math.max(scale, orgCanvasReadableMinScale()),
-      );
+      const readableMin = orgCanvasReadableMinScale();
+      const targetScale = clampOrgCanvasScale(Math.max(scaleRef.current, readableMin));
       const cx = node.x + node.width / 2;
       const cy = node.y + node.height / 2;
-      setScale(targetScale);
-      setPan({
-        x: vw / 2 - cx * targetScale,
-        y: vh / 2 - cy * targetScale,
+      const panX = vw / 2 - cx * targetScale;
+      const panY = vh / 2 - cy * targetScale;
+
+      setScale((prev) => (prev === targetScale ? prev : targetScale));
+      setPan((prev) => {
+        if (Math.abs(prev.x - panX) < 0.25 && Math.abs(prev.y - panY) < 0.25) return prev;
+        return { x: panX, y: panY };
       });
-      onSelectId(id);
+      onSelectIdRef.current(id);
     },
-    [layoutNodesInContent, onSelectId, scale],
+    [layoutNodesInContent],
   );
 
   useEffect(() => {
@@ -326,7 +333,10 @@ export default function OrgUnitCanvasView({
   }, [focusNodeLegible, onRegisterFocusHandler]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      searchFocusKeyRef.current = null;
+      return;
+    }
     const q = searchQuery.trim().toLowerCase();
     const match = orgUnits.find((u) => {
       if (u.name.toLowerCase().includes(q) || u.key.toLowerCase().includes(q)) return true;
@@ -335,6 +345,9 @@ export default function OrgUnitCanvasView({
       return names.some((n) => n.toLowerCase().includes(q));
     });
     if (!match) return;
+    const focusKey = `${q}::${match.id}`;
+    if (searchFocusKeyRef.current === focusKey) return;
+    searchFocusKeyRef.current = focusKey;
     setCollapsed((prev) => expandCollapsedAncestors(match.id, hierarchyUnits, prev));
     focusNodeLegible(match.id);
   }, [searchQuery, orgUnits, hierarchyUnits, focusNodeLegible, builderEnrichment]);

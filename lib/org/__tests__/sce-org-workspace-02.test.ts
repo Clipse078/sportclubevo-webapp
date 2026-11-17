@@ -42,10 +42,10 @@ describe("SCE-ORG-WORKSPACE-02 organisation canvas workspace", () => {
   it("does not reset viewport when search is cleared", () => {
     const canvas = readSrc("components/admin/org/OrgUnitCanvasView.tsx");
     const searchEffect = canvas.match(
-      /useEffect\(\(\) => \{\n    if \(!searchQuery\.trim\(\)\) return;[\s\S]*?\n  \}, \[searchQuery[^\]]*\]\);/,
+      /useEffect\(\(\) => \{\n    if \(!searchQuery\.trim\(\)\) \{[\s\S]*?\n  \}, \[searchQuery[^\]]*\]\);/,
     )?.[0];
     expect(searchEffect).toBeTruthy();
-    expect(searchEffect).toContain("if (!searchQuery.trim()) return");
+    expect(searchEffect).toMatch(/if \(!searchQuery\.trim\(\)\) \{[\s\S]*?return;/);
     expect(searchEffect).not.toContain("applyFitToView");
   });
 

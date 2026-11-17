@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deriveOrgUnitPeopleFromAssignments } from "@/lib/org/org-unit-people";
 import OrgUnitSearchableList from "@/components/admin/org/OrgUnitSearchableList";
@@ -48,10 +48,24 @@ export default function OrgUnitBuilderWorkspace({
   const [createOpen, setCreateOpen] = useState(false);
   const [createParentId, setCreateParentId] = useState<string | undefined>();
 
-  function selectOrgUnit(id: string | null, options?: { openPeople?: boolean }) {
+  const selectOrgUnit = useCallback((id: string | null, options?: { openPeople?: boolean }) => {
     setSelectedId(id);
     setInspectorPeopleOpen(Boolean(options?.openPeople));
-  }
+  }, []);
+
+  const handleCanvasSelectId = useCallback(
+    (id: string | null) => selectOrgUnit(id),
+    [selectOrgUnit],
+  );
+
+  const handleViewAllStaff = useCallback(
+    (id: string) => selectOrgUnit(id, { openPeople: true }),
+    [selectOrgUnit],
+  );
+
+  const handleRegisterFocusHandler = useCallback((fn: (unitId: string) => void) => {
+    focusOrgUnitRef.current = fn;
+  }, []);
 
   const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
 
@@ -176,11 +190,9 @@ export default function OrgUnitBuilderWorkspace({
               roleKeyToName={roleKeyToName}
               canManage={canManage}
               selectedId={selectedId}
-              onSelectId={(id) => selectOrgUnit(id)}
-              onViewAllStaff={(id) => selectOrgUnit(id, { openPeople: true })}
-              onRegisterFocusHandler={(fn) => {
-                focusOrgUnitRef.current = fn;
-              }}
+              onSelectId={handleCanvasSelectId}
+              onViewAllStaff={handleViewAllStaff}
+              onRegisterFocusHandler={handleRegisterFocusHandler}
               onAddChild={(parentId) => openCreate(parentId)}
               onReparentSuccess={() => router.refresh()}
               parentOptions={parentOptions}
