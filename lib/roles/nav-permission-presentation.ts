@@ -295,7 +295,10 @@ function presentationForNavChild(child: NavItemChild): UnitPresentation {
 function presentationForChildGroup(children: NavItemChild[]): UnitPresentation {
   const keys = new Set(children.map((child) => child.key));
 
-  if (keys.has("org-units") && keys.has("vereine")) {
+  if (
+    (keys.has("org-units") || keys.has("organisation")) &&
+    (keys.has("vereine") || keys.size === 1)
+  ) {
     return {
       label: "Vereinsdaten",
       description: "Organisationseinheiten und Vereinsstruktur",
@@ -380,6 +383,13 @@ function presentationForTopLevelItem(item: NavItem): UnitPresentation {
   const description = UNIT_DESCRIPTION_BY_NAV_KEY[item.key];
   if (item.key === "workspace") {
     return { label: "Dokumente", description, iconLabel: "Dokumente" };
+  }
+  if (item.key === "organisation") {
+    return {
+      label: "Vereinsdaten",
+      description: "Organisationseinheiten und Vereinsstruktur",
+      iconLabel: "Organisationseinheiten",
+    };
   }
   return {
     label: item.label,
