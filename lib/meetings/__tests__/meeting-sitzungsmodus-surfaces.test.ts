@@ -9,13 +9,13 @@ function read(rel: string): string {
 }
 
 describe("meeting sitzungsmodus surfaces", () => {
-  it("uses inline collapsible focus card without modal primitives", () => {
-    const panel = read("components/admin/meetings/workspace/MeetingSitzungsmodusPanel.tsx");
-    expect(panel).toContain("SceClubDevelopmentContextualCreateCollapsibleShell");
-    expect(panel).not.toMatch(/\bDialog\b/);
-    expect(panel).not.toContain("fixed inset-0");
-    expect(panel).toContain("meeting-sitzungsmodus-topic-select");
-    expect(panel).toContain("w-full min-w-0");
+  it("uses page-wide focus experience without modal primitives", () => {
+    const focus = read("components/admin/meetings/workspace/MeetingSitzungsmodusFocusExperience.tsx");
+    expect(focus).not.toMatch(/\bDialog\b/);
+    expect(focus).not.toContain("fixed inset-0");
+    expect(focus).toContain("meeting-sitzungsmodus-topic-select");
+    expect(focus).toContain("meeting-sitzungsmodus-agenda-sidebar");
+    expect(focus).toContain("meeting-sitzungsmodus-exit-focus");
   });
 
   it("sticky timer defers to focus-card visibility", () => {

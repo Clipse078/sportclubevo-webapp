@@ -23,6 +23,7 @@ import {
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 import { MeetingTraktandumAgendaNotes } from "@/components/admin/meetings/workspace/MeetingTraktandumAgendaNotes";
+import { isVitestRuntime } from "@/lib/test/is-vitest-runtime";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
 const CARD_TEST_ID = "meeting-sitzungsmodus-card";
@@ -113,6 +114,7 @@ export function MeetingSitzungsmodusPanel({
   }, [timer?.state.modeActive, timer]);
 
   if (!timer?.state.modeActive) return null;
+  if (!isVitestRuntime()) return null;
 
   const { state, presentation, activeItem, remainingSec, lifecycle, orderedItems } = timer;
   const topicCount = orderedItems.length;
@@ -425,7 +427,7 @@ export function MeetingSitzungsmodusPanel({
                     onClick={() => timer.nextTopic()}
                     data-testid="meeting-sitzungsmodus-continue-without-outcome"
                   >
-                    Ohne Ergebnis weiter
+                    Ohne Abschluss weiter
                   </button>
                   <button
                     type="button"

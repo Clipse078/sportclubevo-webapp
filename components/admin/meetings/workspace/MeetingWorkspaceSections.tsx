@@ -40,8 +40,9 @@ import { meetingApprovalAggregateStatusLabel } from "@/lib/meetings/meeting-appr
 import { MeetingCarryForwardPanel } from "@/components/admin/meetings/workspace/MeetingCarryForwardPanel";
 import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import {
-  MeetingSitzungsmodusPanel,
+  MeetingSitzungsmodusStartButton,
 } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusPanel";
+import { MeetingSitzungsmodusCompactResume } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusCompactResume";
 import {
   workspaceGhostButtonClass,
   workspaceInputClass,
@@ -195,35 +196,8 @@ export function MeetingAgendaSection({
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       {canManage ? (
         <div className="mb-3 w-full min-w-0">
-          <MeetingSitzungsmodusPanel
-            meetingId={meetingId}
-            meetingSlug={meetingSlug}
-            meetingTitle={meetingTitle}
-            agendaItems={items}
-            decisions={decisions}
-            actions={actions}
-            agendaDisplayOrder={agendaDisplayOrder}
-            agendaLinkedTasks={agendaLinkedTasks}
-            onDecisionCreated={async () => {
-              const res = await fetch(`/api/meetings/${meetingId}/decisions`);
-              const data = await res.json();
-              if (res.ok && Array.isArray(data.decisions)) onDecisionsChange(data.decisions);
-            }}
-            onActionCreated={async () => {
-              const res = await fetch(`/api/meetings/${meetingId}/actions`);
-              const data = await res.json();
-              if (res.ok && Array.isArray(data.actions)) onActionsChange(data.actions);
-            }}
-            onAgendaNotesUpdated={(agendaItemId, notes) => {
-              onItemsChange(items.map((row) => (row.id === agendaItemId ? { ...row, notes } : row)));
-            }}
-            onMarkAgendaDiscussed={async (agendaItemId) => {
-              await meetingWorkspaceApi.agenda.update(meetingId, agendaItemId, { status: "DISCUSSED" });
-              await refreshFromServer();
-            }}
-            meetingTaskCreate={meetingTaskCreate}
-            onTaskCreated={onTasksChanged}
-          />
+          <MeetingSitzungsmodusCompactResume />
+          <MeetingSitzungsmodusStartButton />
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-2)]">

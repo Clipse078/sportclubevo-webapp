@@ -36,6 +36,9 @@ import type { MeetingAgendaTimerScope } from "@/lib/meetings/sitzungsmodus/meeti
 import { MeetingAgendaTimerProvider } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { MeetingSitzungsmodusStickyTimer } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusStickyTimer";
 import { MeetingGuidedSitzungsmodusController } from "@/components/admin/meetings/workspace/MeetingGuidedSitzungsmodusController";
+import { MeetingSitzungsmodusFocusChrome } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusFocusChrome";
+import { MeetingWorkspaceSitzungsmodusShell } from "@/components/admin/meetings/workspace/MeetingWorkspaceSitzungsmodusShell";
+import { meetingWorkspaceApi } from "@/lib/meetings/meeting-workspace-mutations";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 import {
   hydrateAgendaLinkedTaskSummaries,
@@ -75,6 +78,7 @@ type MeetingWorkspaceProps = {
   initialAgendaLinkedTaskCounts?: Record<string, number>;
   initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
   meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
+  clubName?: string;
 };
 
 export default function MeetingWorkspace({
@@ -95,6 +99,7 @@ export default function MeetingWorkspace({
   initialAgendaLinkedTaskCounts = {},
   initialAgendaLinkedTasks = [],
   meetingActionOrigins = {},
+  clubName = "",
 }: MeetingWorkspaceProps) {
   const [agendaLinkedTasks, setAgendaLinkedTasks] = useState<AgendaLinkedTaskSummary[]>(() =>
     hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
@@ -266,7 +271,7 @@ export default function MeetingWorkspace({
   );
 
   const workspaceBody = (
-    <div className="space-y-4" data-testid="meeting-workspace">
+    <div className="space-y-4" data-testid="meeting-workspace" data-meeting-workspace>
         <SceClubDevelopmentSectionShell
           title={CD_MEETINGS_WORKSPACE_COPY.summarySectionTitle}
           bodyClassName="p-4 space-y-2"
@@ -414,6 +419,57 @@ export default function MeetingWorkspace({
     </div>
   );
 
+  const sitzungsmodusFocusProps = useMemo(
+    () => ({
+      clubName,
+      meeting,
+      meetingSlug: slug,
+      meetingTitle: meeting.title,
+      fmtCfg,
+      participantCount: participants.length,
+      agendaItems,
+      decisions,
+      actions,
+      agendaLinkedTasks,
+      agendaDisplayOrder,
+      onDecisionCreated: async () => {
+        const res = await fetch(`/api/meetings/${meeting.id}/decisions`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.decisions)) setDecisions(data.decisions);
+      },
+      onActionCreated: async () => {
+        const res = await fetch(`/api/meetings/${meeting.id}/actions`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.actions)) setActions(data.actions);
+      },
+      onAgendaNotesUpdated: (agendaItemId: string, notes: string) => {
+        setAgendaItems((items) => items.map((row) => (row.id === agendaItemId ? { ...row, notes } : row)));
+      },
+      onMarkAgendaDiscussed: async (agendaItemId: string) => {
+        await meetingWorkspaceApi.agenda.update(meeting.id, agendaItemId, { status: "DISCUSSED" });
+        setAgendaItems((items) =>
+          items.map((row) => (row.id === agendaItemId ? { ...row, status: "DISCUSSED" } : row)),
+        );
+      },
+      meetingTaskCreate,
+      onTaskCreated: handleTraktandumAufgabeCreated,
+    }),
+    [
+      actions,
+      agendaDisplayOrder,
+      agendaItems,
+      agendaLinkedTasks,
+      clubName,
+      decisions,
+      fmtCfg,
+      handleTraktandumAufgabeCreated,
+      meeting,
+      meetingTaskCreate,
+      participants.length,
+      slug,
+    ],
+  );
+
   return (
     <>
       <MeetingWorkspaceDirtyStateSync isDirty={isDirty} />
@@ -424,9 +480,15 @@ export default function MeetingWorkspace({
           agendaItems={agendaItems}
           displayOrder={agendaDisplayOrder}
         >
+          <MeetingSitzungsmodusFocusChrome />
           <MeetingGuidedSitzungsmodusController />
           <MeetingSitzungsmodusStickyTimer />
-          {workspaceBody}
+          <MeetingWorkspaceSitzungsmodusShell
+            canManage={effectiveCanManage}
+            focusProps={sitzungsmodusFocusProps}
+          >
+            {workspaceBody}
+          </MeetingWorkspaceSitzungsmodusShell>
         </MeetingAgendaTimerProvider>
       ) : (
         workspaceBody

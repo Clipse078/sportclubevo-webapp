@@ -75,3 +75,17 @@
 [data-sce-modal-background].sce-authenticated-app-shell .sce-impersonation-safety-banner {
   background: var(--sce-warning-light);
 }
+
+/* Sitzungsmodus — full-width focus: hide global nav, keep impersonation banner. */
+html[data-meeting-sitzungsmodus-focus] .sce-global-app-header,
+html[data-meeting-sitzungsmodus-focus] .sce-mobile-bottom-nav {
+  display: none !important;
+}
+
+html[data-meeting-sitzungsmodus-focus] [data-meeting-detail-outer-chrome] [data-sce-workspace-chrome] {
+  display: none !important;
+}
+
+html[data-meeting-sitzungsmodus-focus] .sce-app-main-with-mobile-nav {
+  padding-bottom: 0;
+}

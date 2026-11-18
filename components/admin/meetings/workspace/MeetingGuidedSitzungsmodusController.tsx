@@ -34,10 +34,7 @@ export function MeetingGuidedSitzungsmodusController() {
       }
 
       if (revealFocus) {
-        window.dispatchEvent(new CustomEvent("meeting-sitzungsmodus-reveal-focus"));
-        window.setTimeout(() => {
-          ctx.scrollToFocusCard();
-        }, 120);
+        ctx.enterFocusPresentation();
       }
     }
 
