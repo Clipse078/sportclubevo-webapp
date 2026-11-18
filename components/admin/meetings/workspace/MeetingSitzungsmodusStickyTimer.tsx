@@ -22,6 +22,7 @@ export function MeetingSitzungsmodusStickyTimer() {
   }, []);
 
   if (!timer?.state.modeActive) return null;
+  if (timer.focusPresentationActive) return null;
   if (!timer.activeItem) return null;
   if (!STICKY_ELIGIBLE_LIFECYCLES.has(timer.lifecycle)) return null;
   if (timer.focusCardInView) return null;

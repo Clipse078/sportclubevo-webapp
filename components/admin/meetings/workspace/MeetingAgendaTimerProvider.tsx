@@ -40,6 +40,12 @@ import {
   saveMeetingAgendaTimerState,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-storage";
 import {
+  clearMeetingSitzungsmodusFocusPresentation,
+  loadMeetingSitzungsmodusFocusPresentation,
+  pickDefaultSitzungsmodusAgendaItemId,
+  saveMeetingSitzungsmodusFocusPresentation,
+} from "@/lib/meetings/sitzungsmodus/meeting-sitzungsmodus-focus-presentation";
+import {
   playMeetingAgendaTimerCompletionCue,
   playMeetingAgendaTimerCountdownCue,
   stopMeetingAgendaTimerAudio,
@@ -53,6 +59,7 @@ import {
   buildTimerLiveRegionMessage,
   resolveTimerLiveRegionMilestone,
 } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-a11y";
+import { isVitestRuntime } from "@/lib/test/is-vitest-runtime";
 
 type AgendaItem = MeetingSubEntities["agendaItems"][number];
 
@@ -79,6 +86,9 @@ type MeetingAgendaTimerContextValue = {
   setFocusCardInView: (inView: boolean) => void;
   scrollToFocusCard: () => void;
   focusCardRef: RefObject<HTMLDivElement | null>;
+  focusPresentationActive: boolean;
+  enterFocusPresentation: () => void;
+  exitFocusPresentation: () => void;
   startMode: () => void;
   endMode: () => void;
   selectTopic: (agendaItemId: string) => void;
@@ -114,6 +124,11 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   const [state, setState] = useState<MeetingAgendaTimerState>(() =>
     loadMeetingAgendaTimerState(scope, validIds),
   );
+  const [focusPresentationActive, setFocusPresentationActive] = useState(() => {
+    const restored = loadMeetingSitzungsmodusFocusPresentation(scope);
+    const timer = loadMeetingAgendaTimerState(scope, validIds);
+    return restored && timer.modeActive;
+  });
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [focusCardInView, setFocusCardInView] = useState(true);
@@ -144,8 +159,20 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
   }, [agendaItems]);
 
   useEffect(() => {
-    setState(loadMeetingAgendaTimerState(scope, validIds));
+    const next = loadMeetingAgendaTimerState(scope, validIds);
+    setState(next);
+    const restoredFocus = loadMeetingSitzungsmodusFocusPresentation(scope);
+    setFocusPresentationActive(restoredFocus && next.modeActive);
   }, [scope.meetingId, scope.tenantId, scope.userId]);
+
+  useEffect(() => {
+    if (state.modeActive) {
+      saveMeetingSitzungsmodusFocusPresentation(scope, focusPresentationActive);
+    } else if (!state.modeActive && focusPresentationActive) {
+      setFocusPresentationActive(false);
+      clearMeetingSitzungsmodusFocusPresentation(scope);
+    }
+  }, [focusPresentationActive, scope, state.modeActive]);
 
   useEffect(() => {
     lastAnnouncedMilestoneRef.current = null;
@@ -256,6 +283,23 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
     setNowMs(Date.now());
   }, []);
 
+  useEffect(() => {
+    if (!focusPresentationActive || !state.modeActive) return;
+    if (state.activeAgendaItemId) return;
+    if (orderedItemIds.length === 0) return;
+    const defaultId = pickDefaultSitzungsmodusAgendaItemId(orderedItemIds, agendaItems);
+    if (!defaultId) return;
+    commit((s) => selectAgendaTopic(s, defaultId, Date.now(), plannedDurationById[defaultId]));
+  }, [
+    agendaItems,
+    commit,
+    focusPresentationActive,
+    orderedItemIds,
+    plannedDurationById,
+    state.activeAgendaItemId,
+    state.modeActive,
+  ]);
+
   const scrollToFocusCard = useCallback(() => {
     focusCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
@@ -299,11 +343,22 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
     scrollToFocusCard,
     focusCardRef,
     resetConfirmOpen,
-    startMode: () => commit((s) => startSitzungsmodus(s)),
-    endMode: () => commit((s) => endSitzungsmodus(s, Date.now())),
+    focusPresentationActive,
+    enterFocusPresentation: () => setFocusPresentationActive(true),
+    exitFocusPresentation: () => setFocusPresentationActive(false),
+    startMode: () => {
+      commit((s) => startSitzungsmodus(s));
+      if (!isVitestRuntime()) setFocusPresentationActive(true);
+    },
+    endMode: () => {
+      commit((s) => endSitzungsmodus(s, Date.now()));
+      setFocusPresentationActive(false);
+      clearMeetingSitzungsmodusFocusPresentation(scope);
+    },
     selectTopic: selectTopicWithPlan,
     startTimer: startTimerForActive,
     startTopicAndTimer: (agendaItemId, temporaryDurationMin) => {
+      setFocusPresentationActive(true);
       commit((s) => {
         let next = s.modeActive ? s : startSitzungsmodus(s);
         next = selectAgendaTopic(next, agendaItemId, Date.now(), plannedDurationById[agendaItemId]);

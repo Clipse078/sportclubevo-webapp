@@ -58,6 +58,8 @@ export type MeetingTraktandumOutcomeActionsProps = {
   decisions: MeetingSubEntities["decisions"];
   actions: MeetingSubEntities["actions"];
   agendaLinkedTasks: AgendaLinkedTaskSummary[];
+  /** When parent already shows a capture heading (Sitzungsmodus focus). */
+  omitCaptureHeading?: boolean;
 };
 
 function ownerFromPicker(person: PersonPickerResult | null): TraktandumOutcomeOwnerDraft | null {
@@ -102,6 +104,7 @@ export function MeetingTraktandumOutcomeActions({
   decisions,
   actions,
   agendaLinkedTasks,
+  omitCaptureHeading = false,
 }: MeetingTraktandumOutcomeActionsProps) {
   const { draft, patch, reset } = useTraktandumOutcomeDraft(meetingId, agendaItemId);
   const ergebnisseRows = useMemo(
@@ -379,7 +382,9 @@ export function MeetingTraktandumOutcomeActions({
       ) : null}
 
       <div className="space-y-2 rounded-lg border border-[var(--border)]/70 bg-[var(--surface-1)]/60 p-3">
-        <p className="text-sm font-semibold text-[var(--foreground)]">{MEETING_CAPTURE_SURFACE_HEADING}</p>
+        {!omitCaptureHeading ? (
+          <p className="text-sm font-semibold text-[var(--foreground)]">{MEETING_CAPTURE_SURFACE_HEADING}</p>
+        ) : null}
         <div
           className="flex flex-wrap gap-2"
           role="tablist"

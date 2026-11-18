@@ -75,3 +75,27 @@
 [data-sce-modal-background].sce-authenticated-app-shell .sce-impersonation-safety-banner {
   background: var(--sce-warning-light);
 }
+
+/* Sitzungsmodus — full-width focus: hide global nav, keep impersonation banner. */
+html[data-meeting-sitzungsmodus-focus] .sce-global-app-header,
+html[data-meeting-sitzungsmodus-focus] .sce-mobile-bottom-nav {
+  display: none !important;
+}
+
+/* Hide meeting detail chrome only — never the workspace main landmark (focus lives there). */
+html[data-meeting-sitzungsmodus-focus] [data-meeting-detail-outer-chrome] [data-sce-workspace-chrome] > :not(main) {
+  display: none !important;
+}
+
+html[data-meeting-sitzungsmodus-focus] .sce-app-main-with-mobile-nav {
+  padding-bottom: 0;
+}
+
+/* Explicit topic navigation scroll offset (impersonation banner stays visible in focus). */
+html[data-meeting-sitzungsmodus-focus] .sce-sitzungsmodus-topic-heading {
+  scroll-margin-top: 0.75rem;
+}
+
+html[data-meeting-sitzungsmodus-focus]:has(.sce-impersonation-safety-banner) .sce-sitzungsmodus-topic-heading {
+  scroll-margin-top: 3.25rem;
+}

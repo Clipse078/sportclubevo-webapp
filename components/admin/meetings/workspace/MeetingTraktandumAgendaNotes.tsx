@@ -21,6 +21,10 @@ type Props = {
   canManage: boolean;
   testIdPrefix: string;
   onNotesSaved: (notes: string | null) => void;
+  /** Override default small-caps label (e.g. Sitzungsmodus focus). */
+  notesSectionTitle?: string;
+  /** Primary save button styling (default workspace blue; Sitzungsmodus passes copper). */
+  notesSavePrimaryButtonClass?: string;
 };
 
 function normalizeNotes(value: string | null | undefined): string | null {
@@ -35,6 +39,8 @@ export function MeetingTraktandumAgendaNotes({
   canManage,
   testIdPrefix,
   onNotesSaved,
+  notesSectionTitle = "Traktanden-Notizen (Protokoll)",
+  notesSavePrimaryButtonClass = workspacePrimaryButtonClass,
 }: Props) {
   const { draft, patch } = useTraktandumAgendaNotesDraft(meetingId, agendaItemId);
   const [pending, startTransition] = useTransition();
@@ -130,8 +136,14 @@ export function MeetingTraktandumAgendaNotes({
 
       {draft.editing ? (
         <div className="space-y-2" data-testid={`${testIdPrefix}-notes-edit`}>
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Traktanden-Notizen (Protokoll)
+          <label
+            className={
+              notesSectionTitle === "Protokollnotizen"
+                ? "block text-sm font-semibold text-[var(--foreground)]"
+                : "block text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]"
+            }
+          >
+            {notesSectionTitle}
             <textarea
               className={`${workspaceInputClass} mt-1 min-h-[88px]`}
               value={draft.draftText}
@@ -148,7 +160,7 @@ export function MeetingTraktandumAgendaNotes({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className={workspacePrimaryButtonClass}
+              className={notesSavePrimaryButtonClass}
               disabled={pending}
               onClick={saveEdit}
               data-testid={`${testIdPrefix}-notes-save`}
@@ -164,8 +176,15 @@ export function MeetingTraktandumAgendaNotes({
       ) : displayNotes || canManage ? (
         <div className="space-y-1" data-testid={`${testIdPrefix}-notes-read`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Traktanden-Notizen (Protokoll)
+            <p
+              className={
+                notesSectionTitle === "Protokollnotizen"
+                  ? "text-sm font-semibold text-[var(--foreground)]"
+                  : "text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]"
+              }
+              data-testid={`${testIdPrefix}-notes-section-title`}
+            >
+              {notesSectionTitle}
             </p>
             {canManage ? (
               <button

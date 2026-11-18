@@ -9,13 +9,16 @@ function read(rel: string): string {
 }
 
 describe("meeting sitzungsmodus surfaces", () => {
-  it("uses inline collapsible focus card without modal primitives", () => {
-    const panel = read("components/admin/meetings/workspace/MeetingSitzungsmodusPanel.tsx");
-    expect(panel).toContain("SceClubDevelopmentContextualCreateCollapsibleShell");
-    expect(panel).not.toMatch(/\bDialog\b/);
-    expect(panel).not.toContain("fixed inset-0");
-    expect(panel).toContain("meeting-sitzungsmodus-topic-select");
-    expect(panel).toContain("w-full min-w-0");
+  it("uses page-wide focus experience without modal primitives", () => {
+    const focus = read("components/admin/meetings/workspace/MeetingSitzungsmodusFocusExperience.tsx");
+    expect(focus).not.toMatch(/\bDialog\b/);
+    expect(focus).not.toContain("fixed inset-0");
+    expect(focus).toContain("meeting-sitzungsmodus-topic-select");
+    expect(focus).toContain("lg:hidden");
+    expect(focus).toContain("meeting-sitzungsmodus-focus-meeting-title");
+    expect(focus).not.toContain("meeting-sitzungsmodus-end");
+    expect(focus).toContain("meeting-sitzungsmodus-agenda-sidebar");
+    expect(focus).toContain("meeting-sitzungsmodus-exit-focus");
   });
 
   it("sticky timer defers to focus-card visibility", () => {
@@ -28,5 +31,11 @@ describe("meeting sitzungsmodus surfaces", () => {
     const workspace = read("components/admin/meetings/workspace/MeetingWorkspace.tsx");
     expect(workspace).toContain("MeetingAgendaTimerProvider");
     expect(workspace).toContain("timerScope && canManage");
+  });
+
+  it("renders focus inside workspace shell, not instead of provider children tree", () => {
+    const shell = read("components/admin/meetings/workspace/MeetingWorkspaceSitzungsmodusShell.tsx");
+    expect(shell).toContain("MeetingSitzungsmodusFocusExperience");
+    expect(shell).toContain("<>{children}</>");
   });
 });
