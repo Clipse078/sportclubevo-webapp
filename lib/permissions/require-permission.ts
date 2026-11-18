@@ -32,9 +32,10 @@ export async function requirePermission(permissionKey: PermissionKey, tenantId?:
   }
 
   const effectiveTenantId = tenantId ?? session.user.activeTenantId ?? undefined;
+  const effectiveUserId = session.user.effectiveUserId ?? session.user.id;
 
   const { platform, tenant } = await getRequestEffectivePermissions(
-    session.user.id,
+    effectiveUserId,
     effectiveTenantId,
   );
 

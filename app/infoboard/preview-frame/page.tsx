@@ -11,8 +11,9 @@ import {
 } from "@/lib/infoboard/preview-data";
 import { parseInfoboardPreviewDisplayTheme } from "@/lib/infoboard/preview-display-theme";
 import { parseInfoboardPreviewMoment } from "@/lib/infoboard/preview-time";
-import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { InfoboardPreviewEmbedState } from "@/components/infoboard/preview/InfoboardPreviewEmbedState";
+import { INFOBOARD_READ_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
+import { resolveRequestAnyPermission } from "@/lib/permissions/resolve-request-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 
 export const metadata: Metadata = {
@@ -31,10 +32,15 @@ function first(value: string | string[] | undefined) {
 export default async function InfoboardPreviewFramePage({
   searchParams,
 }: PageProps) {
-  await requireAnyPermission([
-    PERMISSIONS.INFOBOARD_MANAGE,
-    PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
-  ]);
+  const access = await resolveRequestAnyPermission([...INFOBOARD_READ_PERMISSIONS]);
+  if (access.kind !== "granted") {
+    return (
+      <InfoboardPreviewEmbedState
+        kind={access.kind === "unauthenticated" ? "unauthenticated" : "forbidden"}
+      />
+    );
+  }
+
   const tenant = await getActiveTenant();
   if (!tenant?.timezone) notFound();
   const previewTenant = { ...tenant, timezone: tenant.timezone };

@@ -1,6 +1,5 @@
 ﻿import { redirect } from "next/navigation";
-import { getRequestAuthSession } from "@/lib/auth/get-request-auth-session";
-import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import { resolveRequestAnyPermission } from "@/lib/permissions/resolve-request-any-permission";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 
 /**
@@ -11,26 +10,15 @@ import type { PermissionKey } from "@/lib/permissions/permissions";
  * tenant (`tenantId` ?? session.activeTenantId) bucket.
  */
 export async function requireAnyPermission(permissionKeys: PermissionKey[], tenantId?: string) {
-  const session = await getRequestAuthSession();
+  const access = await resolveRequestAnyPermission(permissionKeys, tenantId);
 
-  if (!session?.user) {
+  if (access.kind === "unauthenticated") {
     redirect("/login");
   }
 
-  const effectiveTenantId = tenantId ?? session.user.activeTenantId ?? undefined;
-
-  const { platform, tenant } = await getRequestEffectivePermissions(
-    session.user.id,
-    effectiveTenantId,
-  );
-
-  const allowed = permissionKeys.some(
-    (key) => platform.includes(key) || tenant.includes(key),
-  );
-
-  if (!allowed) {
+  if (access.kind === "forbidden") {
     redirect("/dashboard");
   }
 
-  return session;
+  return access.session;
 }

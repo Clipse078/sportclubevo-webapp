@@ -27,6 +27,7 @@ type PreviewStudioProps = {
   timeZone: string;
   screen1BoardId?: string | null;
   initialStudio?: Screen1StudioConfig;
+  canManageStudio?: boolean;
 };
 
 const DISPLAY_THEME_OPTIONS: ReadonlyArray<{
@@ -48,6 +49,7 @@ export function PreviewStudio({
   timeZone,
   screen1BoardId = null,
   initialStudio,
+  canManageStudio = false,
 }: PreviewStudioProps) {
   const router = useRouter();
   const autoRotateSwitchId = useId();
@@ -344,7 +346,7 @@ export function PreviewStudio({
           </div>
         </div>
 
-        {screen === "1" && screen1BoardId != null && (
+        {screen === "1" && screen1BoardId != null && canManageStudio && (
           <Screen1Studio
             boardId={screen1BoardId}
             initialStudio={studio}

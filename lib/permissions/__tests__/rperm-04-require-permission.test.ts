@@ -168,6 +168,27 @@ describe("requireAnyPermission", () => {
       requireAnyPermission(["website.manage" as never, "news.manage" as never]),
     ).rejects.toThrow("REDIRECT:/dashboard");
   });
+
+  it("A-02: resolves permissions for effectiveUserId during Benutzeransicht", async () => {
+    mocks.auth.mockResolvedValue({
+      user: {
+        id: "actor-admin",
+        effectiveUserId: "viewer-user",
+        activeTenantId: "tenant-1",
+      },
+    });
+    mocks.getEffectivePermissions.mockResolvedValue({
+      platform: [],
+      tenant: ["infoboard.view"],
+    });
+
+    await requireAnyPermission(["infoboard.view" as never]);
+
+    expect(mocks.getEffectivePermissions).toHaveBeenCalledWith({
+      userId: "viewer-user",
+      tenantId: "tenant-1",
+    });
+  });
 });
 
 describe("requireApiPermission", () => {
