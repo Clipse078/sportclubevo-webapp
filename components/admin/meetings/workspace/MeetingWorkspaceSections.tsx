@@ -196,7 +196,7 @@ export function MeetingAgendaSection({
     <MeetingSectionBody legacySectionId={meetingSectionDomId("Traktanden")}>
       {canManage ? (
         <div className="mb-3 w-full min-w-0">
-          <MeetingSitzungsmodusCompactResume />
+          <MeetingSitzungsmodusCompactResume agendaItems={items} actions={actions} />
           <MeetingSitzungsmodusStartButton />
         </div>
       ) : null}

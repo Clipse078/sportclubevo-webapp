@@ -23,6 +23,7 @@ import {
 import type { MeetingSubEntities } from "@/lib/meetings/queries";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
 import { MeetingTraktandumAgendaNotes } from "@/components/admin/meetings/workspace/MeetingTraktandumAgendaNotes";
+import { MeetingSitzungsmodusSessionEndSummary } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusSessionEndSummary";
 import { isVitestRuntime } from "@/lib/test/is-vitest-runtime";
 
 const PANEL_ID = "meeting-sitzungsmodus-panel";
@@ -455,57 +456,14 @@ export function MeetingSitzungsmodusPanel({
           ) : null}
 
           {sessionEndSummary ? (
-            <MotionSafe
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm"
-              role="dialog"
-              aria-labelledby="meeting-guided-session-summary-title"
-              data-testid="meeting-sitzungsmodus-session-summary"
-            >
-              <p id="meeting-guided-session-summary-title" className="font-semibold text-[var(--foreground)]">
-                Sitzungsmodus — Kurzüberblick
-              </p>
-              {sessionEndSummary.openTopics.length > 0 ? (
-                <div className="mt-2 space-y-1">
-                  <p className="text-xs font-semibold text-[var(--muted)]">Offene Traktanden</p>
-                  <ul className="list-inside list-disc text-[var(--text-2)]">
-                    {sessionEndSummary.openTopics.map((topic) => (
-                      <li key={topic.id}>
-                        Traktandum {topic.position}: {topic.title}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {sessionEndSummary.incompleteActions.length > 0 ? (
-                <div className="mt-2 space-y-1">
-                  <p className="text-xs font-semibold text-[var(--muted)]">Offene Pendenzen</p>
-                  <ul className="list-inside list-disc text-[var(--text-2)]">
-                    {sessionEndSummary.incompleteActions.map((action) => (
-                      <li key={action.id}>{action.title}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              <MotionSafe className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="fca-button-primary text-sm"
-                  onClick={() => {
-                    setSessionEndSummary(null);
-                    timer.endMode();
-                  }}
-                >
-                  Sitzungsmodus beenden
-                </button>
-                <button
-                  type="button"
-                  className="fca-button-secondary text-sm"
-                  onClick={() => setSessionEndSummary(null)}
-                >
-                  Weiter im Modus
-                </button>
-              </MotionSafe>
-            </MotionSafe>
+            <MeetingSitzungsmodusSessionEndSummary
+              summary={sessionEndSummary}
+              onConfirmEnd={() => {
+                setSessionEndSummary(null);
+                timer.endMode();
+              }}
+              onDismiss={() => setSessionEndSummary(null)}
+            />
           ) : null}
 
           {timer.resetConfirmOpen ? (

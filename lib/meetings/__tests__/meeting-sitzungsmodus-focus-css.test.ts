@@ -17,4 +17,13 @@ describe("Sitzungsmodus focus shell CSS", () => {
     );
     expect(css).toContain("display: none !important");
   });
+
+  it("meeting detail page scopes workspace title sr-only, not focus headings", () => {
+    const page = readFileSync(
+      join(process.cwd(), "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("[&_[data-meeting-workspace-detail-header]_h1]:sr-only");
+    expect(page).not.toMatch(/\[&_h1\]:sr-only/);
+  });
 });

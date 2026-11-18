@@ -79,6 +79,7 @@ type MeetingWorkspaceProps = {
   initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
   meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
   clubName?: string;
+  clubLogoUrl?: string | null;
 };
 
 export default function MeetingWorkspace({
@@ -100,6 +101,7 @@ export default function MeetingWorkspace({
   initialAgendaLinkedTasks = [],
   meetingActionOrigins = {},
   clubName = "",
+  clubLogoUrl = null,
 }: MeetingWorkspaceProps) {
   const [agendaLinkedTasks, setAgendaLinkedTasks] = useState<AgendaLinkedTaskSummary[]>(() =>
     hydrateAgendaLinkedTaskSummaries(initialAgendaLinkedTasks),
@@ -422,6 +424,7 @@ export default function MeetingWorkspace({
   const sitzungsmodusFocusProps = useMemo(
     () => ({
       clubName,
+      clubLogoUrl,
       meeting,
       meetingSlug: slug,
       meetingTitle: meeting.title,
@@ -460,6 +463,7 @@ export default function MeetingWorkspace({
       agendaItems,
       agendaLinkedTasks,
       clubName,
+      clubLogoUrl,
       decisions,
       fmtCfg,
       handleTraktandumAufgabeCreated,

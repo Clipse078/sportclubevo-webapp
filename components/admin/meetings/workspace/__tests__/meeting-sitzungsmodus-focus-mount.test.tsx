@@ -53,6 +53,7 @@ function MeetingDetailFixture() {
             canManage
             focusProps={{
               clubName: "FC Test",
+              clubLogoUrl: null,
               meeting,
               meetingSlug: meeting.slug,
               meetingTitle: meeting.title,

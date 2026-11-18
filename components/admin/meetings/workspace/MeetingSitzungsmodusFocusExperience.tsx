@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
+import TenantLogo from "@/components/admin/branding/TenantLogo";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -37,6 +38,7 @@ type MeetingDecision = MeetingSubEntities["decisions"][number];
 
 export type MeetingSitzungsmodusFocusExperienceProps = {
   clubName: string;
+  clubLogoUrl?: string | null;
   meeting: MeetingLiveData;
   meetingSlug: string;
   meetingTitle: string;
@@ -80,6 +82,8 @@ function formatMeetingScheduleLine(meeting: MeetingLiveData, fmtCfg: TenantForma
 
 export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusFocusExperienceProps) {
   const timer = useMeetingAgendaTimer();
+  const topicHeadingRef = useRef<HTMLDivElement>(null);
+  const lastScrolledTopicRef = useRef<string | null>(null);
   const [tempDuration, setTempDuration] = useState("");
   const [discussedPending, setDiscussedPending] = useState(false);
   const [discussedError, setDiscussedError] = useState<string | null>(null);
@@ -110,6 +114,15 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
     props.meeting.id,
     props.meetingSlug,
   ]);
+
+  useEffect(() => {
+    const id = activeItem?.id;
+    if (!id || lastScrolledTopicRef.current === id) return;
+    lastScrolledTopicRef.current = id;
+    requestAnimationFrame(() => {
+      topicHeadingRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+  }, [activeItem?.id]);
 
   useEffect(() => {
     const el = timer?.focusCardRef.current;
@@ -157,6 +170,12 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
 
   const scheduleLine = formatMeetingScheduleLine(props.meeting, props.fmtCfg);
   const displayMeetingTitle = (props.meetingTitle || props.meeting.title || "").trim();
+  const displayClubName = props.clubName.trim();
+  const tenantCrestAlt = displayClubName ? `${displayClubName} Logo` : "Club logo";
+
+  function selectAgendaTopic(id: string) {
+    timer?.selectTopic(id);
+  }
   const timerCaption = buildSitzungsmodusFocusTimerCaption({
     presentation,
     lifecycle,
@@ -193,21 +212,49 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
       className="mx-auto w-full max-w-[1200px] px-3 pb-10 pt-2 sm:px-4 lg:px-6"
       data-testid="meeting-sitzungsmodus-focus-root"
     >
-      <header className="mb-4 flex flex-col gap-3 border-b border-[var(--border)]/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          {props.clubName ? (
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{props.clubName}</p>
+      <header
+        className="mb-4 flex flex-col gap-3 border-b border-[var(--border)]/70 pb-4 sm:flex-row sm:items-start sm:justify-between"
+        data-testid="meeting-sitzungsmodus-focus-header"
+      >
+        <div className="min-w-0 flex-1">
+          {displayClubName ? (
+            <div
+              className="flex flex-wrap items-center gap-2.5 sm:gap-3"
+              data-testid="meeting-sitzungsmodus-focus-tenant-identity"
+            >
+              <span className="shrink-0 lg:hidden">
+                <TenantLogo
+                  logoUrl={props.clubLogoUrl}
+                  size={46}
+                  variant="header-crest"
+                  displayName={displayClubName}
+                  alt={tenantCrestAlt}
+                />
+              </span>
+              <span className="hidden shrink-0 lg:inline-flex">
+                <TenantLogo
+                  logoUrl={props.clubLogoUrl}
+                  size={68}
+                  variant="header-crest"
+                  displayName={displayClubName}
+                  alt={tenantCrestAlt}
+                />
+              </span>
+              <p className="sce-tenant-header-identity-name min-w-0 break-words text-base leading-tight [overflow-wrap:anywhere] lg:text-lg">
+                {displayClubName}
+              </p>
+            </div>
           ) : null}
           {displayMeetingTitle ? (
-            <p
-              className="text-lg font-semibold text-[var(--foreground)] sm:text-xl"
+            <h1
+              className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl"
               data-testid="meeting-sitzungsmodus-focus-meeting-title"
             >
               {displayMeetingTitle}
-            </p>
+            </h1>
           ) : null}
           {scheduleLine ? (
-            <p className="text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-focus-schedule">
+            <p className="mt-0.5 text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-focus-schedule">
               {scheduleLine}
             </p>
           ) : null}
@@ -248,14 +295,14 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
       </header>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-        <aside className="hidden w-full min-w-[240px] max-w-[280px] shrink-0 rounded-xl border border-[var(--border)] bg-[#f4f7fb] p-3 lg:block">
+        <aside className="hidden w-full min-w-[260px] max-w-[280px] shrink-0 lg:block">
           <AgendaSidebar
             orderedItems={orderedItems}
             agendaById={agendaById}
             activeItemId={activeItem?.id ?? null}
             activePosition={activePosition}
             topicCount={topicCount}
-            onSelectTopic={(id) => timer.selectTopic(id)}
+            onSelectTopic={selectAgendaTopic}
             agendaItemStatusLabel={agendaItemStatusLabel}
             participantCount={props.participantCount}
             scheduleLine={scheduleLine}
@@ -282,7 +329,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                 activePosition={activePosition}
                 topicCount={topicCount}
                 onSelectTopic={(id) => {
-                  timer.selectTopic(id);
+                  selectAgendaTopic(id);
                   setAgendaMobileOpen(false);
                 }}
                 agendaItemStatusLabel={agendaItemStatusLabel}
@@ -327,7 +374,11 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
             ) : null}
 
             {activeItem ? (
-              <div className="space-y-1">
+              <div
+                ref={topicHeadingRef}
+                className="scroll-mt-3 space-y-1 lg:sticky lg:top-2 lg:z-[1] lg:-mx-1 lg:bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] lg:px-1 lg:pb-2 lg:backdrop-blur-[2px]"
+                data-testid="meeting-sitzungsmodus-topic-heading"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-2)]">
                   <span className="rounded-full border border-[var(--border)] bg-[var(--surface-1)] px-2 py-0.5">
                     {lifecycle === "expired"
@@ -354,7 +405,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
               className="rounded-xl border border-[#d8e3ef] bg-[#eef4fa] px-4 py-4 sm:px-5"
               data-testid="meeting-sitzungsmodus-timer-surface"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   {timerCaption ? (
                     <p className="text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-timer-caption">
@@ -473,6 +524,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   agendaItem={activeItem}
                   canManage={props.canManage}
                   testIdPrefix="meeting-sitzungsmodus-focus"
+                  notesSectionTitle="Protokollnotizen"
                   onNotesSaved={(notes) => props.onAgendaNotesUpdated?.(activeItem.id, notes ?? "")}
                 />
               </MotionSafe>
@@ -504,6 +556,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   actions={props.actions}
                   agendaLinkedTasks={props.agendaLinkedTasks ?? []}
                   onNotesUpdated={(notes) => props.onAgendaNotesUpdated?.(activeItem.id, notes)}
+                  omitCaptureHeading
                 />
 
                 <MotionSafe
@@ -609,11 +662,11 @@ function AgendaSidebar({
   scheduleLine,
 }: AgendaSidebarProps) {
   return (
-    <nav aria-label="Traktanden" className="space-y-3" data-testid="meeting-sitzungsmodus-agenda-sidebar">
-      <p className="text-sm font-semibold text-[var(--foreground)]">
+    <nav aria-label="Traktanden" className="space-y-2" data-testid="meeting-sitzungsmodus-agenda-sidebar">
+      <p className="text-xs font-semibold text-[var(--text-2)]">
         Traktanden {activePosition ?? "—"} von {topicCount}
       </p>
-      <ul className="space-y-2">
+      <ul className="space-y-0.5">
         {orderedItems.map((row) => {
           const item = agendaById.get(row.id);
           if (!item) return null;
@@ -623,22 +676,30 @@ function AgendaSidebar({
             <li key={row.id}>
               <button
                 type="button"
-                className={`w-full rounded-lg border px-3 py-2.5 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#99501F] ${
+                className={`relative w-full rounded-md border py-2 pl-2.5 pr-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#99501F] ${
                   isActive
-                    ? "border-[#99501F] bg-white shadow-sm"
-                    : "border-transparent bg-white/70 hover:border-[var(--border)]"
+                    ? "border-[color-mix(in_srgb,#99501F_28%,var(--border))] bg-white"
+                    : "border-transparent bg-transparent hover:bg-white/70"
                 }`}
                 onClick={() => onSelectTopic(row.id)}
                 data-testid={`meeting-sitzungsmodus-agenda-item-${row.id}`}
                 aria-current={isActive ? "step" : undefined}
               >
+                <span
+                  className={`absolute bottom-1.5 left-0 top-1.5 w-[3px] rounded-full ${isActive ? "bg-[#99501F]" : "bg-transparent"}`}
+                  aria-hidden
+                />
                 <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-semibold text-[var(--muted)]">
-                    {discussed ? <Check className="h-4 w-4 text-emerald-700" aria-hidden /> : String(row.position).padStart(2, "0")}
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-semibold tabular-nums text-[var(--muted)]">
+                    {discussed ? <Check className="h-3.5 w-3.5 text-emerald-700" aria-hidden /> : String(row.position).padStart(2, "0")}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-[var(--foreground)]">{row.title}</span>
-                    <span className="block text-xs text-[var(--text-2)]">{agendaItemStatusLabel(item, isActive)}</span>
+                    <span className="block text-sm font-medium leading-snug text-[var(--foreground)] [overflow-wrap:anywhere]">
+                      {row.title}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-[var(--text-2)]">
+                      {agendaItemStatusLabel(item, isActive)}
+                    </span>
                   </span>
                 </div>
               </button>
@@ -647,11 +708,11 @@ function AgendaSidebar({
         })}
       </ul>
       {scheduleLine ? (
-        <p className="border-t border-[var(--border)]/60 pt-2 text-xs text-[var(--text-2)]">
+        <p className="border-t border-[var(--border)]/50 pt-2 text-[11px] text-[var(--text-2)]">
           Geplante Sitzung: {scheduleLine}
         </p>
       ) : null}
-      <p className="text-xs text-[var(--text-2)]">{participantCount} Teilnehmende</p>
+      <p className="text-[11px] text-[var(--text-2)]">{participantCount} Teilnehmende</p>
     </nav>
   );
 }

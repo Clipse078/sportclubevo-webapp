@@ -152,9 +152,70 @@ describe("Sitzungsmodus focus experience", () => {
       </MeetingAgendaTimerProvider>,
     );
     fireEvent.click(screen.getByTestId("start-focus"));
-    expect(screen.getByTestId("meeting-sitzungsmodus-focus-meeting-title")).toHaveTextContent(
-      "Vereinsleitungssitzung · November 2026",
+    const title = screen.getByTestId("meeting-sitzungsmodus-focus-meeting-title");
+    expect(title).toHaveTextContent("Vereinsleitungssitzung · November 2026");
+    expect(title.tagName).toBe("H1");
+  });
+
+  it("renders tenant crest fallback and club typography without hardcoded asset", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="Testverein Musterstadt"
+          clubLogoUrl={null}
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
     );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    expect(screen.getByTestId("meeting-sitzungsmodus-focus-tenant-identity")).toBeInTheDocument();
+    expect(screen.getAllByTestId("tenant-header-crest").length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId("tenant-logo-header-initials")[0]).toHaveTextContent("TM");
+    expect(screen.queryByTestId("tenant-logo-image")).toBeNull();
+  });
+
+  it("shows Protokollnotizen heading and omits duplicate capture heading in focus", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    expect(screen.getByTestId("meeting-sitzungsmodus-focus-notes-section-title")).toHaveTextContent(
+      "Protokollnotizen",
+    );
+    expect(screen.queryByText("Was halten wir fest?")).toBeNull();
   });
 
   it("enters focus layout and exits to overview without ending mode", () => {

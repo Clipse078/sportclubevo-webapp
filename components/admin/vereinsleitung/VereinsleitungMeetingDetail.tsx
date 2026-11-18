@@ -33,6 +33,7 @@ type VereinsleitungMeetingDetailProps = {
   initialAgendaLinkedTasks?: SerializedAgendaLinkedTaskSummary[];
   meetingActionOrigins?: Record<string, MeetingOutcomeOrigin>;
   clubName?: string;
+  clubLogoUrl?: string | null;
 };
 
 export default function VereinsleitungMeetingDetail({
@@ -54,6 +55,7 @@ export default function VereinsleitungMeetingDetail({
   initialAgendaLinkedTasks = [],
   meetingActionOrigins = {},
   clubName = "",
+  clubLogoUrl = null,
 }: VereinsleitungMeetingDetailProps) {
   return (
     <MeetingWorkspace
@@ -75,6 +77,7 @@ export default function VereinsleitungMeetingDetail({
       initialAgendaLinkedTasks={initialAgendaLinkedTasks}
       meetingActionOrigins={meetingActionOrigins}
       clubName={clubName}
+      clubLogoUrl={clubLogoUrl}
     />
   );
 }

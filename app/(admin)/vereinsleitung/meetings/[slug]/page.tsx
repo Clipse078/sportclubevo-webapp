@@ -144,7 +144,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
 
   const detailPage = (
     <DetailPagePattern
-      className="meeting-detail-outer-chrome [&_h1]:sr-only"
+      className="meeting-detail-outer-chrome [&_[data-meeting-workspace-detail-header]_h1]:sr-only"
       eyebrow="Vereinsleitung"
       title={pageTitle}
       breadcrumbs={[
@@ -200,6 +200,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         initialAgendaLinkedTasks={initialAgendaLinkedTasks}
         meetingActionOrigins={meetingActionOrigins}
         clubName={tenant?.name ?? ""}
+        clubLogoUrl={tenant?.logoUrl ?? null}
       />
     </DetailPagePattern>
   );

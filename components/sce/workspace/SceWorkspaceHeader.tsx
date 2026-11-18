@@ -33,7 +33,7 @@ export function SceWorkspaceHeader({
   const hasActions = Boolean(primaryAction || secondaryActions);
 
   return (
-    <div className={cn("mb-6 space-y-3", className)}>
+    <div className={cn("mb-6 space-y-3", className)} data-meeting-workspace-detail-header>
       <div
         className={cn(
           "flex flex-col gap-4",
