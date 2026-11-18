@@ -38,8 +38,10 @@ describe("guided meeting capture UX", () => {
     expect(list).toContain("buildAgendaItemErgebnisseDisplayNodes");
   });
 
-  it("does not duplicate Sitzungsmodus start inside Traktanden toolbar", () => {
+  it("keeps Traktanden Sitzungsmodus entry compact after focus extraction", () => {
     const sections = read("components/admin/meetings/workspace/MeetingWorkspaceSections.tsx");
-    expect(sections).not.toContain("MeetingSitzungsmodusStartButton");
+    expect(sections).toContain("MeetingSitzungsmodusStartButton");
+    expect(sections).toContain("MeetingSitzungsmodusCompactResume");
+    expect(sections).not.toMatch(/<MeetingSitzungsmodusPanel\b/);
   });
 });
