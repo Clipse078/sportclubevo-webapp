@@ -8,6 +8,8 @@ import {
 import { MeetingSitzungsmodusFocusExperience } from "@/components/admin/meetings/workspace/MeetingSitzungsmodusFocusExperience";
 import type { MeetingLiveData, MeetingSubEntities } from "@/lib/meetings/queries";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import { createMeetingAgendaTimerState, startSitzungsmodus, startAgendaTimer, selectAgendaTopic, resolveAgendaBudgetSec } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-engine";
+import { saveMeetingAgendaTimerState } from "@/lib/meetings/sitzungsmodus/meeting-agenda-timer-storage";
 
 const SCOPE = { meetingId: "m-nov", tenantId: "t1", userId: "u1" };
 
@@ -95,6 +97,66 @@ describe("Sitzungsmodus focus experience", () => {
     document.documentElement.removeAttribute("data-meeting-sitzungsmodus-focus");
   });
 
+  it("auto-selects first topic on fresh focus entry with ready timer", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    expect(screen.getByTestId("meeting-sitzungsmodus-context-line")).toHaveTextContent("Traktandum 1 von 2");
+    expect(screen.getByTestId("meeting-sitzungsmodus-countdown")).toHaveTextContent("05:00");
+    expect(screen.getByTestId("meeting-sitzungsmodus-timer-caption")).toHaveTextContent("Geplante Dauer · 5 Min.");
+    expect(screen.getByTestId("meeting-sitzungsmodus-lifecycle")).toHaveTextContent("ready");
+    expect(screen.queryByTestId("meeting-sitzungsmodus-topic-select")).toBeNull();
+  });
+
+  it("shows meeting title in focus header", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle="Vereinsleitungssitzung · November 2026"
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    expect(screen.getByTestId("meeting-sitzungsmodus-focus-meeting-title")).toHaveTextContent(
+      "Vereinsleitungssitzung · November 2026",
+    );
+  });
+
   it("enters focus layout and exits to overview without ending mode", () => {
     render(
       <MeetingAgendaTimerProvider
@@ -156,6 +218,40 @@ describe("Sitzungsmodus focus experience", () => {
     fireEvent.click(screen.getByTestId("start-focus"));
     expect(screen.getByTestId("meeting-sitzungsmodus-agenda-item-ag-1")).toBeInTheDocument();
     expect(screen.getByTestId("meeting-sitzungsmodus-agenda-item-ag-2")).toBeInTheDocument();
+  });
+
+  it("preserves restored topic selection over default pick", () => {
+    let state = startSitzungsmodus(createMeetingAgendaTimerState(SCOPE));
+    state = selectAgendaTopic(state, "ag-2", Date.now(), 15);
+    const budget = resolveAgendaBudgetSec({ plannedDurationMin: 15 });
+    if (budget) state = startAgendaTimer(state, Date.now(), budget);
+    saveMeetingAgendaTimerState(state);
+
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    expect(screen.getByTestId("meeting-sitzungsmodus-context-line")).toHaveTextContent("Traktandum 2 von 2");
+    expect(screen.getByTestId("meeting-sitzungsmodus-lifecycle")).toHaveTextContent("running");
   });
 
   it("selecting a sidebar topic does not require completion", () => {

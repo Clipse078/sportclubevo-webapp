@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from "react";
 import {
   AlertTriangle,
+  ArrowLeft,
   Check,
   ChevronDown,
   Pause,
@@ -14,10 +15,6 @@ import {
 import { useMeetingAgendaTimer } from "@/components/admin/meetings/workspace/MeetingAgendaTimerProvider";
 import { normalizeAgendaDurationMin } from "@/lib/meetings/agenda-duration";
 import { MeetingTraktandumOutcomeActions } from "@/components/admin/meetings/workspace/MeetingTraktandumOutcomeActions";
-import {
-  buildGuidedSitzungsmodusSessionSummary,
-  type GuidedSitzungsmodusSessionSummary,
-} from "@/lib/meetings/sitzungsmodus/meeting-guided-session-summary";
 import { MEETING_AGENDA_ITEM_STATUS_LABEL } from "@/lib/meetings/agenda-item-presentation";
 import type { MeetingSubEntities, MeetingLiveData } from "@/lib/meetings/queries";
 import type { MeetingTraktandumTaskCreateBaseProps } from "@/components/admin/meetings/workspace/MeetingTraktandumAufgabeCreate";
@@ -25,6 +22,7 @@ import { MeetingTraktandumAgendaNotes } from "@/components/admin/meetings/worksp
 import { MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS } from "@/lib/meetings/meeting-sitzungsmodus-primary-action-styles";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import {
+  buildSitzungsmodusFocusTimerCaption,
   deriveSitzungsmodusTimerProgressRatio,
   formatAgendaDurationMinLabel,
 } from "@/lib/meetings/sitzungsmodus/meeting-sitzungsmodus-focus-presentation";
@@ -83,7 +81,6 @@ function formatMeetingScheduleLine(meeting: MeetingLiveData, fmtCfg: TenantForma
 export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusFocusExperienceProps) {
   const timer = useMeetingAgendaTimer();
   const [tempDuration, setTempDuration] = useState("");
-  const [sessionEndSummary, setSessionEndSummary] = useState<GuidedSitzungsmodusSessionSummary | null>(null);
   const [discussedPending, setDiscussedPending] = useState(false);
   const [discussedError, setDiscussedError] = useState<string | null>(null);
   const [agendaMobileOpen, setAgendaMobileOpen] = useState(false);
@@ -159,6 +156,14 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
           : "text-[var(--foreground)]";
 
   const scheduleLine = formatMeetingScheduleLine(props.meeting, props.fmtCfg);
+  const displayMeetingTitle = (props.meetingTitle || props.meeting.title || "").trim();
+  const timerCaption = buildSitzungsmodusFocusTimerCaption({
+    presentation,
+    lifecycle,
+    plannedDurationMin: plannedMin,
+    topicCount,
+    hasActiveTopic: Boolean(activeItem),
+  });
 
   function agendaItemStatusLabel(item: AgendaItem, isActive: boolean): string {
     if (item.status === "DISCUSSED") {
@@ -190,10 +195,21 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
     >
       <header className="mb-4 flex flex-col gap-3 border-b border-[var(--border)]/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{props.clubName}</p>
-          <h1 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">{props.meetingTitle}</h1>
+          {props.clubName ? (
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{props.clubName}</p>
+          ) : null}
+          {displayMeetingTitle ? (
+            <p
+              className="text-lg font-semibold text-[var(--foreground)] sm:text-xl"
+              data-testid="meeting-sitzungsmodus-focus-meeting-title"
+            >
+              {displayMeetingTitle}
+            </p>
+          ) : null}
           {scheduleLine ? (
-            <p className="text-sm text-[var(--text-2)]">{scheduleLine}</p>
+            <p className="text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-focus-schedule">
+              {scheduleLine}
+            </p>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -225,7 +241,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
             }}
             data-testid="meeting-sitzungsmodus-exit-focus"
           >
-            <Check className="h-4 w-4 text-emerald-700" aria-hidden />
+            <ArrowLeft className="h-4 w-4" aria-hidden />
             Zur Sitzungsübersicht
           </button>
         </div>
@@ -279,8 +295,8 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
 
         <main className="min-w-0 flex-1">
           <div ref={timer.focusCardRef} className="space-y-4" data-testid={FOCUS_TEST_ID}>
-            {lifecycle === "none" && topicCount > 0 ? (
-              <MotionSafe className="space-y-2" data-testid="meeting-sitzungsmodus-topic-select">
+            {!activeItem && topicCount > 0 ? (
+              <MotionSafe className="space-y-2 lg:hidden" data-testid="meeting-sitzungsmodus-topic-select">
                 <label className="block text-xs font-semibold text-[var(--muted)]" htmlFor="meeting-sitzungsmodus-topic">
                   Traktandum wählen
                 </label>
@@ -302,6 +318,12 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   ))}
                 </select>
               </MotionSafe>
+            ) : null}
+
+            {topicCount === 0 ? (
+              <p className="text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-empty-agenda">
+                Keine Traktanden in dieser Sitzung.
+              </p>
             ) : null}
 
             {activeItem ? (
@@ -327,16 +349,18 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
               </div>
             ) : null}
 
+            {topicCount > 0 && activeItem ? (
             <div
               className="rounded-xl border border-[#d8e3ef] bg-[#eef4fa] px-4 py-4 sm:px-5"
               data-testid="meeting-sitzungsmodus-timer-surface"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm text-[var(--text-2)]">
-                    {presentation.label}
-                    {plannedMin ? ` · geplant ${plannedMin} Min.` : ""}
-                  </p>
+                  {timerCaption ? (
+                    <p className="text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-timer-caption">
+                      {timerCaption}
+                    </p>
+                  ) : null}
                   <div className="mt-1 flex items-center gap-2">
                     {presentation.kind === "warning" ? (
                       <AlertTriangle className="h-5 w-5 shrink-0 text-amber-700" aria-hidden />
@@ -439,6 +463,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                 </MotionSafe>
               ) : null}
             </div>
+            ) : null}
 
             {props.meeting.id && activeItem ? (
               <MotionSafe>
@@ -531,11 +556,11 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
               </MotionSafe>
             ) : null}
 
-            <MotionSafe
-              className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[var(--border)]/60 pt-3 text-sm"
-              data-testid="meeting-sitzungsmodus-secondary"
-            >
-              {activeItem && (lifecycle === "running" || lifecycle === "paused" || lifecycle === "expired") ? (
+            {activeItem && (lifecycle === "running" || lifecycle === "paused" || lifecycle === "expired") ? (
+              <MotionSafe
+                className="border-t border-[var(--border)]/60 pt-3"
+                data-testid="meeting-sitzungsmodus-secondary"
+              >
                 <button
                   type="button"
                   className="fca-button-ghost inline-flex items-center gap-1 text-xs"
@@ -544,45 +569,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                   Zurücksetzen
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="fca-button-ghost text-xs text-[var(--muted)]"
-                onClick={() => {
-                  const summary = buildGuidedSitzungsmodusSessionSummary({
-                    agendaItems: props.agendaItems.map((item, idx) => ({
-                      id: item.id,
-                      title: item.title,
-                      status: item.status,
-                      position: props.agendaDisplayOrder?.get(item.id) ?? idx + 1,
-                    })),
-                    actions: props.actions.map((action) => ({
-                      id: action.id,
-                      title: action.title,
-                      status: action.status,
-                    })),
-                  });
-                  if (summary.hasGaps) {
-                    setSessionEndSummary(summary);
-                    return;
-                  }
-                  timer.endMode();
-                }}
-                data-testid="meeting-sitzungsmodus-end"
-              >
-                Sitzungsmodus beenden
-              </button>
-            </MotionSafe>
-
-            {sessionEndSummary ? (
-              <SessionSummaryDialog
-                summary={sessionEndSummary}
-                onDismiss={() => setSessionEndSummary(null)}
-                onConfirmEnd={() => {
-                  setSessionEndSummary(null);
-                  timer.endMode();
-                }}
-              />
+              </MotionSafe>
             ) : null}
 
             {timer.resetConfirmOpen ? <ResetConfirmDialog timer={timer} /> : null}
@@ -666,59 +653,6 @@ function AgendaSidebar({
       ) : null}
       <p className="text-xs text-[var(--text-2)]">{participantCount} Teilnehmende</p>
     </nav>
-  );
-}
-
-function SessionSummaryDialog({
-  summary,
-  onDismiss,
-  onConfirmEnd,
-}: {
-  summary: GuidedSitzungsmodusSessionSummary;
-  onDismiss: () => void;
-  onConfirmEnd: () => void;
-}) {
-  return (
-    <MotionSafe
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm"
-      role="dialog"
-      aria-labelledby="meeting-guided-session-summary-title"
-      data-testid="meeting-sitzungsmodus-session-summary"
-    >
-      <p id="meeting-guided-session-summary-title" className="font-semibold text-[var(--foreground)]">
-        Sitzungsmodus — Kurzüberblick
-      </p>
-      {summary.openTopics.length > 0 ? (
-        <MotionSafe className="mt-2 space-y-1">
-          <p className="text-xs font-semibold text-[var(--muted)]">Offene Traktanden</p>
-          <ul className="list-inside list-disc text-[var(--text-2)]">
-            {summary.openTopics.map((topic) => (
-              <li key={topic.id}>
-                Traktandum {topic.position}: {topic.title}
-              </li>
-            ))}
-          </ul>
-        </MotionSafe>
-      ) : null}
-      {summary.incompleteActions.length > 0 ? (
-        <MotionSafe className="mt-2 space-y-1">
-          <p className="text-xs font-semibold text-[var(--muted)]">Offene Pendenzen</p>
-          <ul className="list-inside list-disc text-[var(--text-2)]">
-            {summary.incompleteActions.map((action) => (
-              <li key={action.id}>{action.title}</li>
-            ))}
-          </ul>
-        </MotionSafe>
-      ) : null}
-      <MotionSafe className="mt-3 flex flex-wrap gap-2">
-        <button type="button" className="fca-button-primary text-sm" onClick={onConfirmEnd}>
-          Sitzungsmodus beenden
-        </button>
-        <button type="button" className="fca-button-secondary text-sm" onClick={onDismiss}>
-          Weiter im Modus
-        </button>
-      </MotionSafe>
-    </MotionSafe>
   );
 }
 

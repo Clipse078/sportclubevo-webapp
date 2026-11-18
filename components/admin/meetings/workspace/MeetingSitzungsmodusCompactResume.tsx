@@ -26,15 +26,25 @@ export function MeetingSitzungsmodusCompactResume() {
             : "Kein Traktandum ausgewählt"}
         </p>
       </div>
-      <button
-        type="button"
-        className="fca-button-primary inline-flex shrink-0 items-center gap-2 text-sm"
-        onClick={timer.enterFocusPresentation}
-        data-testid="meeting-sitzungsmodus-resume-focus"
-      >
-        <Clock3 className="h-4 w-4" aria-hidden />
-        Sitzungsmodus fortsetzen
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="fca-button-primary inline-flex shrink-0 items-center gap-2 text-sm"
+          onClick={timer.enterFocusPresentation}
+          data-testid="meeting-sitzungsmodus-resume-focus"
+        >
+          <Clock3 className="h-4 w-4" aria-hidden />
+          Sitzungsmodus fortsetzen
+        </button>
+        <button
+          type="button"
+          className="fca-button-secondary text-sm"
+          onClick={() => timer.endMode()}
+          data-testid="meeting-sitzungsmodus-end"
+        >
+          Sitzungsmodus beenden
+        </button>
+      </div>
     </MotionSafe>
   );
 }

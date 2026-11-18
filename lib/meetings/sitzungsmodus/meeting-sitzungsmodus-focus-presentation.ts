@@ -1,4 +1,9 @@
-import type { MeetingAgendaTimerScope, MeetingAgendaTimerState } from "./meeting-agenda-timer-types";
+import type {
+  MeetingAgendaTimerLifecycle,
+  MeetingAgendaTimerPresentation,
+  MeetingAgendaTimerScope,
+  MeetingAgendaTimerState,
+} from "./meeting-agenda-timer-types";
 
 const FOCUS_STORAGE_PREFIX = "sce-meeting-sitzungsmodus-focus";
 export const MEETING_SITZUNGSMODUS_FOCUS_DOM_ATTR = "data-meeting-sitzungsmodus-focus" as const;
@@ -55,4 +60,35 @@ export function deriveSitzungsmodusTimerProgressRatio(
 export function formatAgendaDurationMinLabel(durationMin: number | null | undefined): string {
   if (typeof durationMin === "number" && durationMin > 0) return `${durationMin} Min.`;
   return "—";
+}
+
+type AgendaItemPickInput = { id: string; status: string };
+
+/** First OPEN item in display order, otherwise first item. */
+export function pickDefaultSitzungsmodusAgendaItemId(
+  orderedItemIds: readonly string[],
+  agendaItems: readonly AgendaItemPickInput[],
+): string | null {
+  if (orderedItemIds.length === 0) return null;
+  const byId = new Map(agendaItems.map((item) => [item.id, item]));
+  const firstOpen = orderedItemIds.find((id) => byId.get(id)?.status !== "DISCUSSED");
+  return firstOpen ?? orderedItemIds[0] ?? null;
+}
+
+export function buildSitzungsmodusFocusTimerCaption(input: {
+  presentation: MeetingAgendaTimerPresentation;
+  lifecycle: MeetingAgendaTimerLifecycle;
+  plannedDurationMin: number | null;
+  topicCount: number;
+  hasActiveTopic: boolean;
+}): string | null {
+  if (input.topicCount === 0) return "Keine Traktanden";
+  if (!input.hasActiveTopic) return null;
+  if (input.lifecycle === "ready" && input.plannedDurationMin) {
+    return `Geplante Dauer · ${input.plannedDurationMin} Min.`;
+  }
+  if (input.presentation.kind === "overtime") {
+    return input.presentation.label;
+  }
+  return input.presentation.label;
 }

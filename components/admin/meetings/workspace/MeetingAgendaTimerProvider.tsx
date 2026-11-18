@@ -42,6 +42,7 @@ import {
 import {
   clearMeetingSitzungsmodusFocusPresentation,
   loadMeetingSitzungsmodusFocusPresentation,
+  pickDefaultSitzungsmodusAgendaItemId,
   saveMeetingSitzungsmodusFocusPresentation,
 } from "@/lib/meetings/sitzungsmodus/meeting-sitzungsmodus-focus-presentation";
 import {
@@ -281,6 +282,23 @@ export function MeetingAgendaTimerProvider({ scope, canManage, agendaItems, disp
     setState((s) => updater(s));
     setNowMs(Date.now());
   }, []);
+
+  useEffect(() => {
+    if (!focusPresentationActive || !state.modeActive) return;
+    if (state.activeAgendaItemId) return;
+    if (orderedItemIds.length === 0) return;
+    const defaultId = pickDefaultSitzungsmodusAgendaItemId(orderedItemIds, agendaItems);
+    if (!defaultId) return;
+    commit((s) => selectAgendaTopic(s, defaultId, Date.now(), plannedDurationById[defaultId]));
+  }, [
+    agendaItems,
+    commit,
+    focusPresentationActive,
+    orderedItemIds,
+    plannedDurationById,
+    state.activeAgendaItemId,
+    state.modeActive,
+  ]);
 
   const scrollToFocusCard = useCallback(() => {
     focusCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

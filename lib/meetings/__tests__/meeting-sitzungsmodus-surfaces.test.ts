@@ -14,6 +14,9 @@ describe("meeting sitzungsmodus surfaces", () => {
     expect(focus).not.toMatch(/\bDialog\b/);
     expect(focus).not.toContain("fixed inset-0");
     expect(focus).toContain("meeting-sitzungsmodus-topic-select");
+    expect(focus).toContain("lg:hidden");
+    expect(focus).toContain("meeting-sitzungsmodus-focus-meeting-title");
+    expect(focus).not.toContain("meeting-sitzungsmodus-end");
     expect(focus).toContain("meeting-sitzungsmodus-agenda-sidebar");
     expect(focus).toContain("meeting-sitzungsmodus-exit-focus");
   });
