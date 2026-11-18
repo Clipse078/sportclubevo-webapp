@@ -17,14 +17,15 @@ export function MeetingSitzungsmodusSessionEndSummary({
 }: Props) {
   return (
     <MotionSafe
+      as="section"
       className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm"
-      role="alertdialog"
       aria-labelledby="meeting-guided-session-summary-title"
+      aria-live="polite"
       data-testid="meeting-sitzungsmodus-session-summary"
     >
-      <p id="meeting-guided-session-summary-title" className="font-semibold text-[var(--foreground)]">
+      <h2 id="meeting-guided-session-summary-title" className="text-sm font-semibold text-[var(--foreground)]">
         Sitzungsmodus — Kurzüberblick
-      </p>
+      </h2>
       {summary.openTopics.length > 0 ? (
         <div className="mt-2 space-y-1">
           <p className="text-xs font-semibold text-[var(--muted)]">Offene Traktanden</p>
@@ -62,11 +63,16 @@ export function MeetingSitzungsmodusSessionEndSummary({
 function MotionSafe({
   children,
   className,
+  as: Component = "div",
   ...rest
-}: { children: ReactNode; className?: string } & React.HTMLAttributes<HTMLDivElement>) {
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: "div" | "section";
+} & React.HTMLAttributes<HTMLElement>) {
   return (
-    <div className={className} data-reduced-motion-safe="true" {...rest}>
+    <Component className={className} data-reduced-motion-safe="true" {...rest}>
       {children}
-    </div>
+    </Component>
   );
 }

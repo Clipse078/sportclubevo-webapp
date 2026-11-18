@@ -83,7 +83,6 @@ function formatMeetingScheduleLine(meeting: MeetingLiveData, fmtCfg: TenantForma
 export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusFocusExperienceProps) {
   const timer = useMeetingAgendaTimer();
   const topicHeadingRef = useRef<HTMLDivElement>(null);
-  const lastScrolledTopicRef = useRef<string | null>(null);
   const [tempDuration, setTempDuration] = useState("");
   const [discussedPending, setDiscussedPending] = useState(false);
   const [discussedError, setDiscussedError] = useState<string | null>(null);
@@ -114,15 +113,6 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
     props.meeting.id,
     props.meetingSlug,
   ]);
-
-  useEffect(() => {
-    const id = activeItem?.id;
-    if (!id || lastScrolledTopicRef.current === id) return;
-    lastScrolledTopicRef.current = id;
-    requestAnimationFrame(() => {
-      topicHeadingRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
-    });
-  }, [activeItem?.id]);
 
   useEffect(() => {
     const el = timer?.focusCardRef.current;
@@ -173,8 +163,22 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
   const displayClubName = props.clubName.trim();
   const tenantCrestAlt = displayClubName ? `${displayClubName} Logo` : "Club logo";
 
-  function selectAgendaTopic(id: string) {
+  function scrollTopicHeadingIntoView() {
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => {
+      topicHeadingRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "auto",
+        block: "start",
+      });
+    });
+  }
+
+  function selectAgendaTopic(id: string, scrollToTopic = false) {
     timer?.selectTopic(id);
+    if (scrollToTopic) scrollTopicHeadingIntoView();
   }
   const timerCaption = buildSitzungsmodusFocusTimerCaption({
     presentation,
@@ -213,15 +217,15 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
       data-testid="meeting-sitzungsmodus-focus-root"
     >
       <header
-        className="mb-4 flex flex-col gap-3 border-b border-[var(--border)]/70 pb-4 sm:flex-row sm:items-start sm:justify-between"
+        className="mb-3 flex flex-col gap-2 border-b border-[var(--border)]/70 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
         data-testid="meeting-sitzungsmodus-focus-header"
       >
-        <div className="min-w-0 flex-1">
+        <div
+          className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3"
+          data-testid="meeting-sitzungsmodus-focus-tenant-identity"
+        >
           {displayClubName ? (
-            <div
-              className="flex flex-wrap items-center gap-2.5 sm:gap-3"
-              data-testid="meeting-sitzungsmodus-focus-tenant-identity"
-            >
+            <>
               <span className="shrink-0 lg:hidden">
                 <TenantLogo
                   logoUrl={props.clubLogoUrl}
@@ -234,32 +238,36 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
               <span className="hidden shrink-0 lg:inline-flex">
                 <TenantLogo
                   logoUrl={props.clubLogoUrl}
-                  size={68}
+                  size={66}
                   variant="header-crest"
                   displayName={displayClubName}
                   alt={tenantCrestAlt}
                 />
               </span>
-              <p className="sce-tenant-header-identity-name min-w-0 break-words text-base leading-tight [overflow-wrap:anywhere] lg:text-lg">
+            </>
+          ) : null}
+          <div className="min-w-0 flex-1 space-y-0.5">
+            {displayClubName ? (
+              <p className="sce-tenant-header-identity-name min-w-0 break-words text-sm leading-tight [overflow-wrap:anywhere] lg:text-base">
                 {displayClubName}
               </p>
-            </div>
-          ) : null}
-          {displayMeetingTitle ? (
-            <h1
-              className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl"
-              data-testid="meeting-sitzungsmodus-focus-meeting-title"
-            >
-              {displayMeetingTitle}
-            </h1>
-          ) : null}
-          {scheduleLine ? (
-            <p className="mt-0.5 text-sm text-[var(--text-2)]" data-testid="meeting-sitzungsmodus-focus-schedule">
-              {scheduleLine}
-            </p>
-          ) : null}
+            ) : null}
+            {displayMeetingTitle ? (
+              <h1
+                className="text-base font-semibold text-[var(--foreground)] lg:text-lg"
+                data-testid="meeting-sitzungsmodus-focus-meeting-title"
+              >
+                {displayMeetingTitle}
+              </h1>
+            ) : null}
+            {scheduleLine ? (
+              <p className="text-xs text-[var(--text-2)] lg:text-sm" data-testid="meeting-sitzungsmodus-focus-schedule">
+                {scheduleLine}
+              </p>
+            ) : null}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           <button
             type="button"
             className="fca-button-secondary text-sm"
@@ -295,14 +303,14 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
       </header>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-        <aside className="hidden w-full min-w-[260px] max-w-[280px] shrink-0 lg:block">
+        <aside className="hidden w-full min-w-[260px] max-w-[280px] shrink-0 rounded-lg border border-[var(--border)]/50 bg-[#f4f7fb]/95 p-2.5 lg:block">
           <AgendaSidebar
             orderedItems={orderedItems}
             agendaById={agendaById}
             activeItemId={activeItem?.id ?? null}
             activePosition={activePosition}
             topicCount={topicCount}
-            onSelectTopic={selectAgendaTopic}
+            onSelectTopic={(id) => selectAgendaTopic(id, true)}
             agendaItemStatusLabel={agendaItemStatusLabel}
             participantCount={props.participantCount}
             scheduleLine={scheduleLine}
@@ -329,7 +337,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                 activePosition={activePosition}
                 topicCount={topicCount}
                 onSelectTopic={(id) => {
-                  selectAgendaTopic(id);
+                  selectAgendaTopic(id, true);
                   setAgendaMobileOpen(false);
                 }}
                 agendaItemStatusLabel={agendaItemStatusLabel}
@@ -353,7 +361,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   value=""
                   onChange={(e) => {
                     const id = e.target.value;
-                    if (id) timer.selectTopic(id);
+                    if (id) selectAgendaTopic(id, true);
                   }}
                 >
                   <option value="">— Traktandum auswählen —</option>
@@ -376,7 +384,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
             {activeItem ? (
               <div
                 ref={topicHeadingRef}
-                className="scroll-mt-3 space-y-1 lg:sticky lg:top-2 lg:z-[1] lg:-mx-1 lg:bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] lg:px-1 lg:pb-2 lg:backdrop-blur-[2px]"
+                className="sce-sitzungsmodus-topic-heading space-y-1"
                 data-testid="meeting-sitzungsmodus-topic-heading"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-2)]">

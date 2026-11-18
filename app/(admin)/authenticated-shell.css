@@ -90,3 +90,12 @@ html[data-meeting-sitzungsmodus-focus] [data-meeting-detail-outer-chrome] [data-
 html[data-meeting-sitzungsmodus-focus] .sce-app-main-with-mobile-nav {
   padding-bottom: 0;
 }
+
+/* Explicit topic navigation scroll offset (impersonation banner stays visible in focus). */
+html[data-meeting-sitzungsmodus-focus] .sce-sitzungsmodus-topic-heading {
+  scroll-margin-top: 0.75rem;
+}
+
+html[data-meeting-sitzungsmodus-focus]:has(.sce-impersonation-safety-banner) .sce-sitzungsmodus-topic-heading {
+  scroll-margin-top: 3.25rem;
+}

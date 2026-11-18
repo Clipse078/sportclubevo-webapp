@@ -74,6 +74,7 @@ describe("MeetingSitzungsmodusCompactResume", () => {
     fireEvent.click(screen.getByTestId("start-mode"));
     fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-end"));
     expect(screen.getByTestId("meeting-sitzungsmodus-session-summary")).toBeInTheDocument();
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByRole("region", { name: /Kurzüberblick/i })).toBeInTheDocument();
   });
 });

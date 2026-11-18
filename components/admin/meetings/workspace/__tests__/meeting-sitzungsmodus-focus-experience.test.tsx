@@ -315,6 +315,96 @@ describe("Sitzungsmodus focus experience", () => {
     expect(screen.getByTestId("meeting-sitzungsmodus-lifecycle")).toHaveTextContent("running");
   });
 
+  it("does not pin topic heading with sticky positioning", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    const heading = screen.getByTestId("meeting-sitzungsmodus-topic-heading");
+    expect(heading.className).not.toMatch(/sticky/);
+    expect(heading).toHaveClass("sce-sitzungsmodus-topic-heading");
+  });
+
+  it("scrolls topic heading only on explicit agenda selection", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle={meeting.title}
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    const callsAfterEntry = scrollIntoView.mock.calls.length;
+    fireEvent.click(screen.getByTestId("meeting-sitzungsmodus-agenda-item-ag-2"));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    expect(scrollIntoView.mock.calls.length).toBeGreaterThan(callsAfterEntry);
+  });
+
+  it("compact header groups crest beside meeting meta", () => {
+    render(
+      <MeetingAgendaTimerProvider
+        scope={SCOPE}
+        canManage
+        agendaItems={agendaItems}
+        displayOrder={displayOrder}
+      >
+        <StartFocusHarness />
+        <MeetingSitzungsmodusFocusExperience
+          clubName="FC ALLSCHWIL"
+          meeting={meeting}
+          meetingSlug={meeting.slug}
+          meetingTitle="Vereinsleitungssitzung"
+          fmtCfg={fmtCfg}
+          participantCount={6}
+          agendaItems={agendaItems}
+          decisions={[]}
+          actions={[]}
+          canManage
+        />
+      </MeetingAgendaTimerProvider>,
+    );
+    fireEvent.click(screen.getByTestId("start-focus"));
+    const identity = screen.getByTestId("meeting-sitzungsmodus-focus-tenant-identity");
+    expect(identity.querySelector("h1")).toHaveTextContent("Vereinsleitungssitzung");
+    expect(screen.getByTestId("meeting-sitzungsmodus-exit-focus")).toBeInTheDocument();
+  });
+
   it("selecting a sidebar topic does not require completion", () => {
     render(
       <MeetingAgendaTimerProvider

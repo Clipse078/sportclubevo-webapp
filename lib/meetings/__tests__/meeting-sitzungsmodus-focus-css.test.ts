@@ -18,6 +18,18 @@ describe("Sitzungsmodus focus shell CSS", () => {
     expect(css).toContain("display: none !important");
   });
 
+  it("focus topic heading uses document scroll offset, not sticky pinning", () => {
+    const css = readFileSync(join(process.cwd(), "app/(admin)/authenticated-shell.css"), "utf8");
+    expect(css).toContain(".sce-sitzungsmodus-topic-heading");
+    expect(css).toContain("scroll-margin-top");
+    const focus = readFileSync(
+      join(process.cwd(), "components/admin/meetings/workspace/MeetingSitzungsmodusFocusExperience.tsx"),
+      "utf8",
+    );
+    expect(focus).not.toMatch(/sce-sitzungsmodus-topic-heading[\s\S]*sticky/);
+    expect(focus).not.toMatch(/meeting-sitzungsmodus-topic-heading[\s\S]*lg:sticky/);
+  });
+
   it("meeting detail page scopes workspace title sr-only, not focus headings", () => {
     const page = readFileSync(
       join(process.cwd(), "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx"),
