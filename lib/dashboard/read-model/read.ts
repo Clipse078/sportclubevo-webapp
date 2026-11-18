@@ -31,6 +31,8 @@ import {
   loadTenantProgrammeBranding,
   personalProgrammeMeetingItemMissingTenantBranding,
 } from "@/lib/personal-agenda/tenant-programme-branding";
+import { filterMeetingProgrammeItemsForLiveActor } from "@/lib/personal-agenda/meeting-projection-access";
+import { getActorContext } from "@/lib/visibility/get-actor-context";
 
 function personalProgrammeItemHasLegacyEnglishMeetingLabel(
   item: PersonalDashboardReadModelPayloadV1["programme"]["items"][number],
@@ -218,11 +220,27 @@ export async function readPersonalDashboardProjection(args: {
     const monthParam = monthGrid.monthWindow.param;
 
     const tenantBranding = await loadTenantProgrammeBranding(args.tenantId);
+    const visibilityActor = await getActorContext(
+      {
+        id: args.userId,
+        roleKeys: [],
+        permissionKeys: [...args.permissionKeys],
+      },
+      args.tenantId,
+    );
+    const brandingEnriched = enrichPersonalProgrammeItemsTenantBranding(
+      payload.programme.items,
+      tenantBranding,
+    );
+  const visibilitySafeProgrammeItems = await filterMeetingProgrammeItemsForLiveActor(
+      brandingEnriched,
+      visibilityActor,
+    );
     const hydratedPayload: PersonalDashboardReadModelPayloadV1 = {
       ...payload,
       programme: {
         ...payload.programme,
-        items: enrichPersonalProgrammeItemsTenantBranding(payload.programme.items, tenantBranding),
+        items: visibilitySafeProgrammeItems,
       },
     };
 

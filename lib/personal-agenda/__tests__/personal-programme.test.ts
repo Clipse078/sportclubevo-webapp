@@ -72,6 +72,17 @@ vi.mock("@/lib/meetings/queries", () => ({
   canSeeMeeting: vi.fn(() => true),
 }));
 
+vi.mock("@/lib/visibility/get-actor-context", () => ({
+  getActorContext: vi.fn(async (_user: { id: string }, tenantId?: string) => ({
+    userId: _user.id,
+    tenantId,
+    permissionKeys: [PERMISSIONS.MEETINGS_VIEW],
+    roleKeys: [],
+    orgUnitIds: [],
+    targetGroupIds: [],
+  })),
+}));
+
 import { prisma } from "@/lib/db/prisma";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import { resolvePersonalContext } from "@/lib/dashboard/personal-context";
