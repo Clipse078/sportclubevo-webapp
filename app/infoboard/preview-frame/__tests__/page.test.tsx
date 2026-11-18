@@ -5,15 +5,20 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireAnyPermission: vi.fn(),
+  resolveRequestAnyPermission: vi.fn(),
   getActiveTenant: vi.fn(),
   buildScreen1PreviewData: vi.fn(),
   buildScreen2PreviewData: vi.fn(),
   notFound: vi.fn(),
 }));
 
-vi.mock("@/lib/permissions/require-any-permission", () => ({
-  requireAnyPermission: mocks.requireAnyPermission,
+vi.mock("@/lib/permissions/resolve-request-any-permission", () => ({
+  resolveRequestAnyPermission: mocks.resolveRequestAnyPermission,
+}));
+vi.mock("@/components/infoboard/preview/InfoboardPreviewEmbedState", () => ({
+  InfoboardPreviewEmbedState: ({ kind }: { kind: string }) => (
+    <div data-testid={`embed-denied-${kind}`} />
+  ),
 }));
 vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: mocks.getActiveTenant,
@@ -60,7 +65,10 @@ async function renderPage(params: Record<string, string>) {
 describe("authenticated Infoboard Preview frame", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireAnyPermission.mockResolvedValue({ user: { id: "admin" } });
+    mocks.resolveRequestAnyPermission.mockResolvedValue({
+      kind: "granted",
+      session: { user: { id: "admin" } },
+    });
     mocks.getActiveTenant.mockResolvedValue(tenant);
     mocks.buildScreen1PreviewData.mockResolvedValue(screen1Data);
     mocks.buildScreen2PreviewData.mockResolvedValue({
@@ -75,9 +83,9 @@ describe("authenticated Infoboard Preview frame", () => {
     });
   });
 
-  it("uses the admin guard and tenant-zoned simulated time", async () => {
+  it("uses INFOBOARD read permissions and tenant-zoned simulated time", async () => {
     await renderPage({ screen: "1", date: "2026-08-29", time: "08:30" });
-    expect(mocks.requireAnyPermission).toHaveBeenCalledOnce();
+    expect(mocks.resolveRequestAnyPermission).toHaveBeenCalledOnce();
     expect(mocks.buildScreen1PreviewData).toHaveBeenCalledWith(
       tenant,
       new Date("2026-08-29T06:30:00.000Z"),
@@ -105,6 +113,13 @@ describe("authenticated Infoboard Preview frame", () => {
     expect(mocks.buildScreen2PreviewData).toHaveBeenCalledOnce();
     expect(screen.getByTestId("screen-2-renderer")).toBeTruthy();
     expect(screen.queryByTestId("screen-1-renderer")).toBeNull();
+  });
+
+  it("renders an explicit embed denial instead of the dashboard fallback", async () => {
+    mocks.resolveRequestAnyPermission.mockResolvedValueOnce({ kind: "forbidden" });
+    await renderPage({ screen: "1", date: "2026-08-29", time: "08:30" });
+    expect(screen.getByTestId("embed-denied-forbidden")).toBeTruthy();
+    expect(mocks.buildScreen1PreviewData).not.toHaveBeenCalled();
   });
 
   it("uses the production Anlageplan renderer when Screen 2 is configured for it", async () => {

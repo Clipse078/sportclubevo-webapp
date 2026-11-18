@@ -6,6 +6,7 @@ import { buildBoardConfig } from "@/lib/infoboard/board-config";
 import { getInfoboardBySlug } from "@/lib/infoboard/queries";
 import { parseInfoboardPreviewDisplayTheme } from "@/lib/infoboard/preview-display-theme";
 import { parseInfoboardPreviewMoment } from "@/lib/infoboard/preview-time";
+import { sessionCanWriteInfoboard } from "@/lib/permissions/content-view-access";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { INFOBOARD_READ_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -19,7 +20,8 @@ function first(value: string | string[] | undefined) {
 }
 
 export default async function InfoboardPreviewPage({ searchParams }: PageProps) {
-  await requireAnyPermission([...INFOBOARD_READ_PERMISSIONS]);
+  const session = await requireAnyPermission([...INFOBOARD_READ_PERMISSIONS]);
+  const canManageStudio = sessionCanWriteInfoboard(session);
   const tenant = await getActiveTenant();
   if (!tenant?.timezone) notFound();
 
@@ -61,6 +63,7 @@ export default async function InfoboardPreviewPage({ searchParams }: PageProps) 
         timeZone={tenant.timezone}
         screen1BoardId={board?.id ?? null}
         initialStudio={boardConfig?.studio}
+        canManageStudio={canManageStudio}
         />
       </ListPagePattern>
     </PageShell>
