@@ -16,6 +16,14 @@ describe("guided meeting capture UX", () => {
     expect(header).toContain("Play");
   });
 
+  it("uses copper primary for Sitzungsmodus Protokollnotizen save", () => {
+    const focus = read("components/admin/meetings/workspace/MeetingSitzungsmodusFocusExperience.tsx");
+    expect(focus).toContain("notesSavePrimaryButtonClass={MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS}");
+    const notes = read("components/admin/meetings/workspace/MeetingTraktandumAgendaNotes.tsx");
+    expect(notes).toContain("notesSavePrimaryButtonClass");
+    expect(notes).toContain("notesSavePrimaryButtonClass = workspacePrimaryButtonClass");
+  });
+
   it("uses unified Was halten wir fest capture surface", () => {
     const actions = read("components/admin/meetings/workspace/MeetingTraktandumOutcomeActions.tsx");
     expect(actions).toContain("MEETING_CAPTURE_SURFACE_HEADING");

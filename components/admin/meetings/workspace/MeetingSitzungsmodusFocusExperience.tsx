@@ -533,6 +533,7 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
                   canManage={props.canManage}
                   testIdPrefix="meeting-sitzungsmodus-focus"
                   notesSectionTitle="Protokollnotizen"
+                  notesSavePrimaryButtonClass={MEETING_SITZUNGSMODUS_PRIMARY_ACTION_CLASS}
                   onNotesSaved={(notes) => props.onAgendaNotesUpdated?.(activeItem.id, notes ?? "")}
                 />
               </MotionSafe>

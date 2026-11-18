@@ -23,6 +23,8 @@ type Props = {
   onNotesSaved: (notes: string | null) => void;
   /** Override default small-caps label (e.g. Sitzungsmodus focus). */
   notesSectionTitle?: string;
+  /** Primary save button styling (default workspace blue; Sitzungsmodus passes copper). */
+  notesSavePrimaryButtonClass?: string;
 };
 
 function normalizeNotes(value: string | null | undefined): string | null {
@@ -38,6 +40,7 @@ export function MeetingTraktandumAgendaNotes({
   testIdPrefix,
   onNotesSaved,
   notesSectionTitle = "Traktanden-Notizen (Protokoll)",
+  notesSavePrimaryButtonClass = workspacePrimaryButtonClass,
 }: Props) {
   const { draft, patch } = useTraktandumAgendaNotesDraft(meetingId, agendaItemId);
   const [pending, startTransition] = useTransition();
@@ -157,7 +160,7 @@ export function MeetingTraktandumAgendaNotes({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className={workspacePrimaryButtonClass}
+              className={notesSavePrimaryButtonClass}
               disabled={pending}
               onClick={saveEdit}
               data-testid={`${testIdPrefix}-notes-save`}
