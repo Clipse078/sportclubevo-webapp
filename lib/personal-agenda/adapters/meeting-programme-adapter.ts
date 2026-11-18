@@ -10,10 +10,8 @@ import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-lo
 import { resolveSceMeetingPresentationFromProgramme } from "@/lib/sporting-activity-presentation/canonical/adapters/meeting-programme";
 import { buildClubIdentity } from "@/lib/sporting-activity-design";
 import { loadMeetingOrganisationalLabelsById } from "../meeting-programme-organisational-labels";
-import {
-  canIncludeMeetingInPersonalProgramme,
-  type PersonalMeetingProjectionActor,
-} from "../meeting-projection-access";
+import { canIncludeMeetingInPersonalProgrammeForActor } from "../meeting-projection-access";
+import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { resolveMeetingPersonalRole, type MeetingPersonalRole } from "../meeting-personal-relevance";
 import { PROGRAMME_ACTIVITY_GERMAN_TYPE_LABEL } from "@/lib/personal-agenda/programme-activity-german-labels";
 import { programmeResourceKey, type PersonalProgrammeItem } from "../personal-programme-types";
@@ -56,16 +54,6 @@ type MeetingRow = {
   visibleTargetGroupRefs?: unknown;
   plannedDurationMin: number | null;
 };
-
-function buildMeetingActor(ctx: PersonalProgrammeAdapterContext): PersonalMeetingProjectionActor {
-  return {
-    userId: ctx.personal.userId,
-    tenantId: ctx.personal.tenantId,
-    permissionKeys: ctx.permissionKeys,
-    orgUnitIds: ctx.personal.orgUnits.map((org) => org.orgUnitId),
-    roleKeys: [],
-  };
-}
 
 function participantRelationFilter(ctx: PersonalProgrammeAdapterContext) {
   const { userId, personId } = ctx.personal;
@@ -141,7 +129,14 @@ export async function loadMeetingProgrammeItems(
     return [];
   }
 
-  const actor = buildMeetingActor(ctx);
+  const visibilityActor = await getActorContext(
+    {
+      id: ctx.personal.userId,
+      roleKeys: [],
+      permissionKeys: ctx.permissionKeys,
+    },
+    ctx.personal.tenantId,
+  );
   const personallyRelevantTeamIds = getPersonallyRelevantTeamIds(ctx.personal);
 
   const rangeWhere = {
@@ -213,7 +208,7 @@ export async function loadMeetingProgrammeItems(
   const items: PersonalProgrammeItem[] = [];
 
   for (const { meeting, role: participantOrOrganizer } of byId.values()) {
-    if (!canIncludeMeetingInPersonalProgramme(actor, meeting)) {
+    if (!canIncludeMeetingInPersonalProgrammeForActor(visibilityActor, meeting)) {
       continue;
     }
 

@@ -17,7 +17,9 @@ const prismaMocks = vi.hoisted(() => ({
   tenantMembershipFindFirst: vi.fn(),
   userRoleFindMany: vi.fn(),
   meetingFindMany: vi.fn(),
+  meetingFindFirst: vi.fn(),
   personAssignmentFindMany: vi.fn().mockResolvedValue([{ orgUnitId: "cmq574tey000004l80y4vqd17" }]),
+  personFindFirst: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -30,12 +32,16 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     meeting: {
       findMany: (...args: unknown[]) => prismaMocks.meetingFindMany(...args),
+      findFirst: (...args: unknown[]) => prismaMocks.meetingFindFirst(...args),
     },
     orgUnitMembership: {
       findMany: vi.fn().mockResolvedValue([]),
     },
     personAssignment: {
       findMany: (...args: unknown[]) => prismaMocks.personAssignmentFindMany(...args),
+    },
+    person: {
+      findFirst: (...args: unknown[]) => prismaMocks.personFindFirst(...args),
     },
     targetGroup: { findMany: vi.fn().mockResolvedValue([]) },
   },
@@ -92,6 +98,7 @@ describe("FCA VL Patrick meeting visibility chain", () => {
     prismaMocks.tenantMembershipFindFirst.mockResolvedValue({ id: "mem-active" });
     prismaMocks.userRoleFindMany.mockResolvedValue([{ role: { key: CUSTOM_ROLE_KEY } }]);
     prismaMocks.meetingFindMany.mockResolvedValue([vlMeeting]);
+    prismaMocks.meetingFindFirst.mockResolvedValue(vlMeeting);
     vi.mocked(getRequestEffectivePermissions).mockResolvedValue({
       platform: [],
       tenant: [

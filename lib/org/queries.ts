@@ -185,6 +185,19 @@ export async function getOrgUnitById(id: string) {
  * When tenantId is omitted, all active memberships are returned (safe for
  * single-tenant deployments; the caller documents the backwards-compat reason).
  */
+async function resolveLinkedPersonIdForTenant(
+  userId: string,
+  tenantId: string,
+  explicitPersonId?: string,
+): Promise<string | undefined> {
+  if (explicitPersonId) return explicitPersonId;
+  const person = await prisma.person.findFirst({
+    where: { tenantId, userId },
+    select: { id: true },
+  });
+  return person?.id;
+}
+
 export async function loadOrgUnitIds(
   userId: string,
   tenantId?: string,
@@ -196,14 +209,25 @@ export async function loadOrgUnitIds(
   // Exclude memberships for archived org units — archived units must not grant visibility.
   const activeOrgUnitFilter = { orgUnit: { status: { not: "ARCHIVED" as const } } };
 
+  const resolvedPersonId =
+    tenantId !== undefined
+      ? await resolveLinkedPersonIdForTenant(userId, tenantId, personId)
+      : personId;
+
   const [userMemberships, personMemberships, staffAssignments] = await Promise.all([
     prisma.orgUnitMembership.findMany({
       where: { userId, status: "ACTIVE", ...tenantFilter, ...expiryFilter, ...activeOrgUnitFilter },
       select: { orgUnitId: true },
     }),
-    personId
+    resolvedPersonId
       ? prisma.orgUnitMembership.findMany({
-          where: { personId, status: "ACTIVE", ...tenantFilter, ...expiryFilter, ...activeOrgUnitFilter },
+          where: {
+            personId: resolvedPersonId,
+            status: "ACTIVE",
+            ...tenantFilter,
+            ...expiryFilter,
+            ...activeOrgUnitFilter,
+          },
           select: { orgUnitId: true },
         })
       : Promise.resolve([]),
@@ -335,6 +359,11 @@ export async function loadTargetGroupIds(
   tenantId?: string,
   personId?: string,
 ): Promise<string[]> {
+  const resolvedPersonId =
+    tenantId !== undefined
+      ? await resolveLinkedPersonIdForTenant(userId, tenantId, personId)
+      : personId;
+
   const groups = await prisma.targetGroup.findMany({
     where: {
       status: { not: "ARCHIVED" },
@@ -348,7 +377,7 @@ export async function loadTargetGroupIds(
     const members = resolveRuleJsonMemberIds(group.ruleJson);
     const inGroup =
       members.userIds.includes(userId) ||
-      (personId ? members.personIds.includes(personId) : false);
+      (resolvedPersonId ? members.personIds.includes(resolvedPersonId) : false);
     if (inGroup) ids.push(group.id);
   }
   return ids;
