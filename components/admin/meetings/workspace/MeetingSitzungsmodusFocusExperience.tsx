@@ -29,6 +29,7 @@ import {
   formatAgendaDurationMinLabel,
 } from "@/lib/meetings/sitzungsmodus/meeting-sitzungsmodus-focus-presentation";
 import { buildAgendaItemErgebnisseRows } from "@/lib/meetings/agenda-item-ergebnisse";
+import type { MeetingWorkspaceTabId } from "@/lib/nav/meeting-workspace-tab-config";
 
 export const FOCUS_TEST_ID = "meeting-sitzungsmodus-focus";
 
@@ -209,7 +210,19 @@ export function MeetingSitzungsmodusFocusExperience(props: MeetingSitzungsmodusF
           <button
             type="button"
             className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
-            onClick={timer.exitFocusPresentation}
+            onClick={() => {
+              timer.exitFocusPresentation();
+              window.dispatchEvent(
+                new CustomEvent("meeting-workspace-navigate-tab", {
+                  detail: { tab: "traktanden" satisfies MeetingWorkspaceTabId },
+                }),
+              );
+              window.requestAnimationFrame(() => {
+                document
+                  .getElementById("meeting-workspace-section-traktanden")
+                  ?.scrollIntoView({ behavior: "auto", block: "start" });
+              });
+            }}
             data-testid="meeting-sitzungsmodus-exit-focus"
           >
             <Check className="h-4 w-4 text-emerald-700" aria-hidden />

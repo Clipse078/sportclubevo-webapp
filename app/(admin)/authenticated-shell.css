@@ -82,7 +82,8 @@ html[data-meeting-sitzungsmodus-focus] .sce-mobile-bottom-nav {
   display: none !important;
 }
 
-html[data-meeting-sitzungsmodus-focus] [data-meeting-detail-outer-chrome] [data-sce-workspace-chrome] {
+/* Hide meeting detail chrome only — never the workspace main landmark (focus lives there). */
+html[data-meeting-sitzungsmodus-focus] [data-meeting-detail-outer-chrome] [data-sce-workspace-chrome] > :not(main) {
   display: none !important;
 }
 

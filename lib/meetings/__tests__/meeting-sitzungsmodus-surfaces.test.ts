@@ -29,4 +29,10 @@ describe("meeting sitzungsmodus surfaces", () => {
     expect(workspace).toContain("MeetingAgendaTimerProvider");
     expect(workspace).toContain("timerScope && canManage");
   });
+
+  it("renders focus inside workspace shell, not instead of provider children tree", () => {
+    const shell = read("components/admin/meetings/workspace/MeetingWorkspaceSitzungsmodusShell.tsx");
+    expect(shell).toContain("MeetingSitzungsmodusFocusExperience");
+    expect(shell).toContain("<>{children}</>");
+  });
 });
