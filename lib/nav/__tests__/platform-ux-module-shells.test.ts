@@ -27,6 +27,7 @@ const CANONICAL_FULL_ORDER = [
   "mobile-app",
   "infoboard",
   "trainer-staff",
+  "anliegen-meldungen",
   "finanzen",
   "sponsoring",
   "workspace",

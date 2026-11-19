@@ -5272,6 +5272,121 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/page.tsx",
+    "module": "tenant-admin",
+    "requiredPermissions": [
+      "platform.admin"
+    ],
+    "testPersona": "Platform superadmin (hello@tulip-digital.ch)",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen/[meldungId]",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/[meldungId]/page.tsx",
+    "module": "tenant-admin",
+    "requiredPermissions": [
+      "platform.admin"
+    ],
+    "testPersona": "Platform superadmin (hello@tulip-digital.ch)",
+    "pageArchetype": "detail",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen/melden",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/melden/page.tsx",
+    "module": "tenant-admin",
+    "requiredPermissions": [
+      "platform.admin"
+    ],
+    "testPersona": "Platform superadmin (hello@tulip-digital.ch)",
+    "pageArchetype": "form",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/cockpit/meldungen",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/page.tsx",
+    "module": "tenant-admin",
+    "requiredPermissions": [
+      "platform.admin"
+    ],
+    "testPersona": "Platform superadmin (hello@tulip-digital.ch)",
+    "pageArchetype": "list",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]/page.tsx",
+    "module": "tenant-admin",
+    "requiredPermissions": [
+      "platform.admin"
+    ],
+    "testPersona": "Platform superadmin (hello@tulip-digital.ch)",
+    "pageArchetype": "detail",
+    "intercept": false,
+    "parallelSlot": null,
+    "architectureAdoption": "IMPLEMENTED",
+    "automatedChecks": "PASSED",
+    "desktop": "PENDING",
+    "compactDesktop": "PENDING",
+    "tablet": "PENDING",
+    "mobile": "PENDING",
+    "accessibility": "PENDING",
+    "functional": "PENDING",
+    "authenticatedVisual": "PENDING",
+    "evidenceReferences": [],
+    "defects": []
+  },
+  {
     "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations",
     "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx",
     "module": "tenant-admin",
@@ -6132,12 +6247,12 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-18T19:17:54.431Z",
-  "totalCanonicalRoutes": 220,
+  "generatedAt": "2026-11-19T09:13:29.840Z",
+  "totalCanonicalRoutes": 225,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 220,
+  "pendingAuthenticatedVisualCount": 225,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 220,
+  "automatedChecksPassedCount": 225,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
@@ -6157,6 +6272,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 220,
+  "entriesScanned": 225,
   "defects": []
 };

@@ -602,6 +602,17 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        key: "anliegen-meldungen",
+        label: "Anliegen & Meldungen",
+        href: "/dashboard/anliegen-meldungen",
+        navContexts: ["club"],
+        permissionKeys: [
+          PERMISSIONS.MELDUNGEN_HANDLE,
+          PERMISSIONS.MELDUNGEN_VIEW_ALL,
+          PERMISSIONS.MELDUNGEN_SUBMIT,
+        ],
+      },
+      {
         key: "material",
         label: "Material & Inventar",
         href: "/vereinsleitung/material",

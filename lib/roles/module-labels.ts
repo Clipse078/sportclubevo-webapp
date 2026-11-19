@@ -45,6 +45,7 @@ export const MODULE_LABELS: Record<string, string> = {
   COMMUNICATION: "Kommunikation",
   SPONSORING: "Sponsoring",
   REQUIREMENTS: "Anforderungen",
+  MELDUNGEN: "Anliegen & Meldungen",
 };
 
 /**

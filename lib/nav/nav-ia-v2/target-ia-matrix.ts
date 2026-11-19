@@ -63,6 +63,7 @@ const CLUB_DEVELOPMENT_KEYS = new Set([
 ]);
 
 const CLUB_OPERATIONS_KEYS = new Set([
+  "anliegen-meldungen",
   "material",
   "helfereinsaetze",
   "formulare-freigaben",
@@ -386,6 +387,7 @@ export const CLUB_TARGET_L2_GROUPS = [
     label: "Vereinsbetrieb",
     headerVisible: true,
     keys: [
+      "anliegen-meldungen",
       "helfereinsaetze",
       "formulare-freigaben",
       "vorfaelle-disziplin",

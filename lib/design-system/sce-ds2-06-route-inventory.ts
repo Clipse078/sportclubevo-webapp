@@ -31,6 +31,18 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
+    "route": "/anliegen",
+    "source": "app/(admin)/anliegen/page.tsx",
+    "pageArchitecture": "legacy",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": false,
+    "colorsContrastRisk": true,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "redirect alias → /login?callbackUrl=:param (not a visual surface)"
+  },
+  {
     "route": "/dashboard",
     "source": "app/(admin)/dashboard/(personal-dashboard)/page.tsx",
     "pageArchitecture": "canonical",
@@ -497,6 +509,18 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "interactionsLegacy": false,
     "priority": "Low",
     "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/dashboard/anliegen-meldungen",
+    "source": "app/(admin)/dashboard/anliegen-meldungen/page.tsx",
+    "pageArchitecture": "legacy",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": false,
+    "colorsContrastRisk": true,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "redirect alias → /tenant/:param/cockpit/meldungen (not a visual surface)"
   },
   {
     "route": "/dashboard/aufgaben/@task",
@@ -2439,6 +2463,66 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": true,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/tenant/[tenantSlug]/anliegen/[meldungId]",
+    "source": "app/(admin)/tenant/[tenantSlug]/anliegen/[meldungId]/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/tenant/[tenantSlug]/anliegen/melden",
+    "source": "app/(admin)/tenant/[tenantSlug]/anliegen/melden/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/tenant/[tenantSlug]/anliegen",
+    "source": "app/(admin)/tenant/[tenantSlug]/anliegen/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]",
+    "source": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/tenant/[tenantSlug]/cockpit/meldungen",
+    "source": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
     "priority": "Low",
     "action": "DS2-07: align header/tabs tokens"
   },

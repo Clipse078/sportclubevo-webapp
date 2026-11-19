@@ -194,6 +194,15 @@ export const PERMISSIONS = {
   // extended through all subsequent ADMIN-DELETE slices.
   REGISTRATIONS_DELETE: "registrations.delete",
 
+  /** SCE-ANLIEGEN-01 — Vereinsbetrieb service desk (reporter portal). */
+  MELDUNGEN_SUBMIT: "meldungen.submit",
+  /** Internal handling of assigned / delegated cases. */
+  MELDUNGEN_HANDLE: "meldungen.handle",
+  /** Full internal queue visibility («Alle Meldungen»). */
+  MELDUNGEN_VIEW_ALL: "meldungen.view_all",
+  /** Routing configuration (not auto-granted to Club Admin on STAGE). */
+  MELDUNGEN_MANAGE: "meldungen.manage",
+
   TENANTS_VIEW: "tenants.view",
   TENANTS_MANAGE: "tenants.manage",
 

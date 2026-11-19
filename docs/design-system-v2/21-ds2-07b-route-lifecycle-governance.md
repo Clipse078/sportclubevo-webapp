@@ -15,13 +15,13 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 285 |
-| Authenticated renderable pages | 223 |
-| Authenticated visual pages (completion denominator) | 220 |
-| Authenticated redirect aliases | 21 |
+| Page entries | 292 |
+| Authenticated renderable pages | 228 |
+| Authenticated visual pages (completion denominator) | 225 |
+| Authenticated redirect aliases | 23 |
 | Public renderable pages | 40 |
 | Public redirect aliases | 1 |
-| Route handlers | 676 |
+| Route handlers | 684 |
 | Special Next.js framework files | 41 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -32,12 +32,12 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 220 |
+| CANONICAL | 225 |
 | PARTIAL | 0 |
 | LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **220 / 220 (100%)**.
+Architectural canonical adoption: **225 / 225 (100%)**.
 
 ## Verification
 
@@ -45,11 +45,11 @@ Architectural canonical adoption: **220 / 220 (100%)**.
 | --- | ---: |
 | NOT_STARTED | 0 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 220 |
+| IMPLEMENTED | 225 |
 | VERIFIED | 0 |
-| EXCEPTION | 65 |
+| EXCEPTION | 67 |
 
-Verified authenticated visual pages: **0 / 220 (0%)**.
+Verified authenticated visual pages: **0 / 225 (0%)**.
 
 `IMPLEMENTED` means canonical workspace architecture is present. `VERIFIED` additionally requires recorded visual, accessibility, functional, and responsive evidence.
 
@@ -63,7 +63,7 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
 | DS2-07F | 0 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 220 | Authenticated visual/accessibility verification and closure |
+| DS2-07G | 225 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -74,16 +74,18 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | SCE-DS2-07B-EX-PREVIEW | 15 |
 | SCE-DS2-07B-EX-PRINT | 3 |
 | SCE-DS2-07B-EX-PUBLIC | 25 |
-| SCE-DS2-07B-EX-REDIRECT | 22 |
+| SCE-DS2-07B-EX-REDIRECT | 24 |
 
 ## Redirect aliases
 
 | URL pattern | Destination | Source |
 | --- | --- | --- |
 | `/` | `/dashboard` | `app/page.tsx` |
+| `/anliegen` | `/login?callbackUrl=:param` | `app/(admin)/anliegen/page.tsx` |
 | `/dashboard/admin/communications` | `/dashboard/communication/email-sender` | `app/(admin)/dashboard/admin/communications/page.tsx` |
 | `/dashboard/admin/users` | `/dashboard/admin/people-access` | `app/(admin)/dashboard/admin/users/page.tsx` |
 | `/dashboard/admin/users/new` | `/dashboard/admin/people-access/new` | `app/(admin)/dashboard/admin/users/new/page.tsx` |
+| `/dashboard/anliegen-meldungen` | `/tenant/:param/cockpit/meldungen` | `app/(admin)/dashboard/anliegen-meldungen/page.tsx` |
 | `/dashboard/finance/income_statement` | `/dashboard/finance/reports` | `app/(admin)/dashboard/finance/income_statement/page.tsx` |
 | `/dashboard/planner` | `/dashboard/planner/week` | `app/(admin)/dashboard/planner/page.tsx` |
 | `/dashboard/registrations` | `/tenant/:param/cockpit/registrations` | `app/(admin)/dashboard/registrations/page.tsx` |
@@ -313,6 +315,11 @@ None.
 | `/dashboard/workspace` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/page.tsx` |
 | `/dashboard/workspace/audit` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/audit/page.tsx` |
 | `/dashboard/workspace/governance/break-glass` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/workspace/governance/break-glass/page.tsx` |
+| `/tenant/[tenantSlug]/anliegen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/anliegen/page.tsx` |
+| `/tenant/[tenantSlug]/anliegen/[meldungId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/anliegen/[meldungId]/page.tsx` |
+| `/tenant/[tenantSlug]/anliegen/melden` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/anliegen/melden/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/meldungen` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/page.tsx` |
+| `/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]/page.tsx` |
 | `/tenant/[tenantSlug]/cockpit/registrations` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/page.tsx` |
 | `/tenant/[tenantSlug]/cockpit/registrations/[registrationId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx` |
 | `/tenant/[tenantSlug]/cockpit/registrations/archiv` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/tenant/[tenantSlug]/cockpit/registrations/archiv/page.tsx` |

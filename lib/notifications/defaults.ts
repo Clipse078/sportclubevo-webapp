@@ -34,6 +34,9 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   CLUB_CAMPAIGN_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
   PLAYER_RELEASE_TARGETED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
   PLAYER_RELEASE_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  MELDUNG_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  MELDUNG_REPORTER_REPLY: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  MELDUNG_RESOLVED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
 };
 
 export function getDefaultNotificationPreferences(): Record<

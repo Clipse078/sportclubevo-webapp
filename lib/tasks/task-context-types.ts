@@ -16,6 +16,7 @@ export const SUPPORTED_TASK_CONTEXT_TYPES = [
   "TEAM",
   "PERSON",
   "DOCUMENT",
+  "CLUB_MELDUNG",
 ] as const satisfies readonly TaskContextType[];
 
 export type SupportedTaskContextType = (typeof SUPPORTED_TASK_CONTEXT_TYPES)[number];
@@ -56,6 +57,8 @@ export function operationalReadPermissionForContext(
       return PERMISSIONS.PEOPLE_VIEW;
     case "DOCUMENT":
       return PERMISSIONS.WORKSPACE_VIEW;
+    case "CLUB_MELDUNG":
+      return PERMISSIONS.MELDUNGEN_HANDLE;
     default:
       return null;
   }
@@ -100,6 +103,10 @@ export function buildOperationalContextHref(
         : null;
     case "DOCUMENT":
       return `/dashboard/workspace?document=${encodeURIComponent(entity.id)}`;
+    case "CLUB_MELDUNG":
+      return entity.tenantKey
+        ? `/tenant/${encodeURIComponent(entity.tenantKey)}/cockpit/meldungen/${encodeURIComponent(entity.id)}`
+        : null;
     default:
       return null;
   }

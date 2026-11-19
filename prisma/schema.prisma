@@ -75,6 +75,7 @@ enum PermissionModule {
   COMMUNICATION
   SPONSORING
   FINANCE
+  MELDUNGEN
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -609,6 +610,7 @@ enum TaskContextType {
   TEAM
   PERSON
   DOCUMENT
+  CLUB_MELDUNG
 }
 
 // AUFGABEN-01B — recurrence series lifecycle.
@@ -687,6 +689,9 @@ enum NotificationType {
   CLUB_CAMPAIGN_PUBLISHED
   PLAYER_RELEASE_TARGETED
   PLAYER_RELEASE_ASSIGNED
+  MELDUNG_ASSIGNED
+  MELDUNG_REPORTER_REPLY
+  MELDUNG_RESOLVED
 }
 
 enum NotificationEntityType {
@@ -696,6 +701,7 @@ enum NotificationEntityType {
   REQUIREMENT
   COMMUNICATION
   PLAYER_RELEASE
+  CLUB_MELDUNG
 }
 
 enum NotificationChannel {
@@ -1417,6 +1423,13 @@ model Tenant {
   personEmergencyContacts         PersonEmergencyContact[]         @relation("TenantPersonEmergencyContacts")
   // REG-WAIT-01: canonical waiting list entries for this tenant
   waitingListEntries              WaitingListEntry[]               @relation("TenantWaitingListEntries")
+  // SCE-ANLIEGEN-01
+  clubMeldungen                   ClubMeldung[]
+  clubMeldungMessages             ClubMeldungMessage[]
+  clubMeldungAttachments          ClubMeldungAttachment[]
+  clubMeldungHistoryEvents        ClubMeldungHistoryEvent[]
+  clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[]
+  clubMeldungNumberSequence       ClubMeldungNumberSequence?
   // TEAM-COCKPIT-02B: canonical per-event attendance records
   attendanceRecords               AttendanceRecord[]               @relation("TenantAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses
@@ -1574,6 +1587,15 @@ model User {
   responsibleWaitingListEntries   WaitingListEntry[]      @relation("WaitingListEntryResponsibleUser")
   addedWaitingListEntries         WaitingListEntry[]      @relation("WaitingListEntryAddedByUser")
   resolvedWaitingListEntries      WaitingListEntry[]      @relation("WaitingListEntryResolvedByUser")
+  // SCE-ANLIEGEN-01
+  reportedClubMeldungen           ClubMeldung[]           @relation("ClubMeldungReporter")
+  accountableClubMeldungen        ClubMeldung[]           @relation("ClubMeldungAccountable")
+  clubMeldungCollaborations       ClubMeldungCollaborator[] @relation("ClubMeldungCollaboratorUser")
+  clubMeldungCollaboratorsAdded   ClubMeldungCollaborator[] @relation("ClubMeldungCollaboratorAddedBy")
+  clubMeldungMessagesAuthored     ClubMeldungMessage[]    @relation("ClubMeldungMessageAuthor")
+  clubMeldungAttachmentsUploaded  ClubMeldungAttachment[] @relation("ClubMeldungAttachmentUploadedBy")
+  clubMeldungHistoryEvents        ClubMeldungHistoryEvent[] @relation("ClubMeldungHistoryActor")
+  clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[] @relation("ClubMeldungIdempotencyReporter")
   // TEAM-COCKPIT-02B: attendance audit back-relations
   recordedAttendanceRecords       AttendanceRecord[]      @relation("AttendanceRecordedByUser")
   updatedAttendanceRecords        AttendanceRecord[]      @relation("AttendanceUpdatedByUser")
@@ -1877,6 +1899,193 @@ model WaitingListEntry {
   @@index([targetGroupId])
   @@index([orgUnitId])
   @@index([teamSeasonId])
+}
+
+// ---------------------------------------------------------------------------
+// SCE-ANLIEGEN-01 — Vereinsbetrieb «Anliegen & Meldungen»
+// ---------------------------------------------------------------------------
+
+enum ClubMeldungCategory {
+  DAMAGE_OR_PROBLEM
+  QUESTION_OR_SUPPORT
+  IDEA_OR_IMPROVEMENT
+  OTHER
+}
+
+enum ClubMeldungStatus {
+  RECEIVED
+  IN_PROGRESS
+  WAITING
+  DONE
+}
+
+enum ClubMeldungMessageAudience {
+  REPORTER_REPLY
+  INTERNAL_NOTE
+}
+
+enum ClubMeldungHistoryEventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  REASSIGNED
+  WAIT_REASON_SET
+  RESOLUTION_RECORDED
+  REOPENED
+  DUPLICATE_MARKED
+  FIELD_UPDATED
+  COLLABORATOR_ADDED
+  COLLABORATOR_REMOVED
+  REPORTER_MESSAGE
+  HANDLER_MESSAGE_TO_REPORTER
+}
+
+model ClubMeldungNumberSequence {
+  tenantId   String @id
+  nextNumber Int    @default(1)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model ClubMeldung {
+  id        String @id @default(cuid())
+  tenantId  String
+  caseNumber String
+
+  subject     String
+  description String
+  category    ClubMeldungCategory
+  locationHint String?
+
+  status ClubMeldungStatus @default(RECEIVED)
+  urgent Boolean           @default(false)
+  urgentNote String?
+
+  reporterUserId String
+
+  orgUnitId           String?
+  accountableUserId   String?
+  awaitedExternalParty String?
+
+  nextStep       String?
+  followUpAt     DateTime?
+  nextFeedbackAt DateTime?
+
+  waitReason        String?
+  resolutionSummary String?
+  reopenReason      String?
+
+  duplicateOfId String?
+
+  version        Int      @default(0)
+  lastActivityAt DateTime @default(now())
+  resolvedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reporterUser      User      @relation("ClubMeldungReporter", fields: [reporterUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  orgUnit           OrgUnit?  @relation("ClubMeldungOrgUnit", fields: [orgUnitId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  accountableUser   User?     @relation("ClubMeldungAccountable", fields: [accountableUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  duplicateOf       ClubMeldung?  @relation("ClubMeldungDuplicate", fields: [duplicateOfId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  duplicateChildren ClubMeldung[] @relation("ClubMeldungDuplicate")
+
+  collaborators  ClubMeldungCollaborator[]
+  messages       ClubMeldungMessage[]
+  attachments    ClubMeldungAttachment[]
+  historyEvents  ClubMeldungHistoryEvent[]
+  idempotencyRows ClubMeldungCreateIdempotency[]
+
+  @@unique([tenantId, caseNumber])
+  @@index([tenantId, status])
+  @@index([tenantId, reporterUserId])
+  @@index([tenantId, accountableUserId])
+  @@index([tenantId, orgUnitId])
+  @@index([tenantId, followUpAt])
+  @@index([tenantId, lastActivityAt])
+  @@index([duplicateOfId])
+}
+
+model ClubMeldungCollaborator {
+  id        String @id @default(cuid())
+  meldungId String
+  userId    String
+  addedByUserId String
+  createdAt DateTime @default(now())
+
+  meldung   ClubMeldung @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user      User        @relation("ClubMeldungCollaboratorUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  addedBy   User        @relation("ClubMeldungCollaboratorAddedBy", fields: [addedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([meldungId, userId])
+  @@index([userId])
+}
+
+model ClubMeldungMessage {
+  id        String @id @default(cuid())
+  tenantId  String
+  meldungId String
+  audience  ClubMeldungMessageAudience
+  body      String
+  authorUserId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meldung ClubMeldung @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  author  User        @relation("ClubMeldungMessageAuthor", fields: [authorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId, meldungId])
+  @@index([meldungId, createdAt])
+}
+
+model ClubMeldungAttachment {
+  id        String @id @default(cuid())
+  tenantId  String
+  meldungId String
+  communicationAttachmentId String
+  uploadedByUserId String
+  createdAt DateTime @default(now())
+
+  tenant      Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meldung     ClubMeldung             @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attachment  CommunicationAttachment @relation("ClubMeldungCommunicationAttachment", fields: [communicationAttachmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  uploadedBy  User                    @relation("ClubMeldungAttachmentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([communicationAttachmentId])
+  @@index([tenantId, meldungId])
+}
+
+model ClubMeldungHistoryEvent {
+  id        String @id @default(cuid())
+  tenantId  String
+  meldungId String
+  eventType ClubMeldungHistoryEventType
+  actorUserId String?
+  payloadJson Json?
+  createdAt DateTime @default(now())
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meldung ClubMeldung @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  actor   User?       @relation("ClubMeldungHistoryActor", fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([meldungId, createdAt])
+}
+
+model ClubMeldungCreateIdempotency {
+  id        String @id @default(cuid())
+  tenantId  String
+  reporterUserId String
+  idempotencyKey String
+  meldungId String
+  createdAt DateTime @default(now())
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reporter User        @relation("ClubMeldungIdempotencyReporter", fields: [reporterUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  meldung  ClubMeldung @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, reporterUserId, idempotencyKey])
 }
 
 model Role {
@@ -3598,6 +3807,7 @@ model OrgUnit {
   personAssignments  PersonAssignment[]  @relation("OrgUnitPersonAssignments")
   // REG-WAIT-01: waiting list entries scoped to this OrgUnit
   waitingListEntries WaitingListEntry[]  @relation("WaitingListEntryOrgUnit")
+  clubMeldungen      ClubMeldung[]       @relation("ClubMeldungOrgUnit")
   tasks              Task[]              @relation("TaskOrgUnit")
   taskSeries         TaskSeries[]        @relation("TaskSeriesOrgUnit")
   taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
@@ -4493,6 +4703,7 @@ model CommunicationAttachment {
   platformCommunicationLinks PlatformCommunicationAttachment[]
   communicationCenterMessageLinks CommunicationCenterMessageAttachment[]
   personalSignatureAssetLinks UserCommunicationPersonalSignatureAsset[]
+  clubMeldungLinks              ClubMeldungAttachment[] @relation("ClubMeldungCommunicationAttachment")
 
   @@index([tenantId])
   @@index([tenantId, createdAt])

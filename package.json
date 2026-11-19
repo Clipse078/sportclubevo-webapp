@@ -29,6 +29,7 @@
     "acceptance:sync-fixture-passwords": "tsx scripts/acceptance-sync-fixture-passwords.ts",
     "acceptance:verify-fixture-passwords": "tsx scripts/acceptance-verify-fixture-passwords.ts",
     "acceptance:security-smoke": "tsx scripts/acceptance-security-smoke.ts",
+    "acceptance:seed-sce-anliegen-01": "tsx scripts/sce-anliegen-01-acceptance-seed.ts",
     "db:break-glass-superadmin": "tsx scripts/break-glass-superadmin-password.ts",
     "stage:emergency-restore-po-credential": "tsx scripts/emergency-restore-po-supplied-credential.ts",
     "stage:verify-credential-contract": "tsx scripts/verify-stage-credential-contract.ts",
