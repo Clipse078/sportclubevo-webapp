@@ -520,7 +520,7 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "colorsContrastRisk": true,
     "interactionsLegacy": false,
     "priority": "Low",
-    "action": "redirect alias → /tenant/:param/cockpit/meldungen (not a visual surface)"
+    "action": "redirect alias → dynamic (not a visual surface)"
   },
   {
     "route": "/dashboard/aufgaben/@task",

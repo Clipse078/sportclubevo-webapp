@@ -114,7 +114,7 @@ describe("SCE-DS2-05B-R10 tenant crest and mega-menu frame", () => {
   it("lays the mega menu out in one centered frame at desktop widths", () => {
     const css = readRepo(NAV_CSS);
     const tokens = parseDomainNavMenuTokens(css);
-    expect(css).toContain("minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr)");
+    expect(css).toContain("minmax(0, 22fr) minmax(0, 38fr) minmax(0, 40fr)");
     expect(css).toContain(
       "width: min(100%, var(--sce-domain-nav-content-max))",
     );
@@ -143,11 +143,11 @@ describe("SCE-DS2-05B-R10 tenant crest and mega-menu frame", () => {
         layout.containerWidth,
         4,
       );
-      expect(layout.freeShares.title).toBeGreaterThanOrEqual(0.3);
-      expect(layout.freeShares.title).toBeLessThanOrEqual(0.35);
-      expect(layout.freeShares.categories).toBeGreaterThanOrEqual(0.3);
-      expect(layout.freeShares.categories).toBeLessThanOrEqual(0.35);
-      expect(layout.freeShares.destinations).toBeGreaterThan(0.25);
+      expect(layout.freeShares.title).toBeGreaterThanOrEqual(0.2);
+      expect(layout.freeShares.title).toBeLessThanOrEqual(0.26);
+      expect(layout.freeShares.categories).toBeGreaterThanOrEqual(0.36);
+      expect(layout.freeShares.categories).toBeLessThanOrEqual(0.4);
+      expect(layout.freeShares.destinations).toBeGreaterThan(0.38);
       expect(
         layout.columns.title +
           layout.columns.categories +

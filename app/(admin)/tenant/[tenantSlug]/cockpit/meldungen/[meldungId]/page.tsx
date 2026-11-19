@@ -3,15 +3,15 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import { getClubMeldungDetail, listClubMeldungReporterTimeline } from "@/lib/club-meldungen/queries";
-import { canViewMeldungInternal } from "@/lib/club-meldungen/access";
+import { canMutateMeldungInternal, canViewMeldungInternal } from "@/lib/club-meldungen/access";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import ClubMeldungDetailPanel from "@/components/admin/club-meldungen/ClubMeldungDetailPanel";
-import ClubMeldungHandlerPanel from "@/components/admin/club-meldungen/ClubMeldungHandlerPanel";
+import ClubMeldungHandlerDetailView from "@/components/admin/club-meldungen/ClubMeldungHandlerDetailView";
 import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
+import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -32,12 +32,12 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     return (
       <PageShell fullWidth>
         <DetailPagePattern
-          eyebrow={CLUB_MELDUNG_DETAIL_EYEBROW}
-          title="Anliegen & Meldungen"
+          eyebrow={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
+          title={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
           description="Detail"
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },
-            { label: "Anliegen & Meldungen", href: `/tenant/${tenantSlug}/cockpit/meldungen` },
+            { label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle, href: `/tenant/${tenantSlug}/cockpit/meldungen` },
           ]}
         >
           <ClubMeldungSchemaUnavailable />
@@ -59,41 +59,52 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
   }
 
   const timeline = await listClubMeldungReporterTimeline(tenant.id, meldungId, true);
+  const canMutate = canMutateMeldungInternal(meldung, {
+    actorUserId,
+    permissionKeys,
+    collaboratorUserIds: meldung.collaborators.map((c) => c.userId),
+  });
 
   return (
     <PageShell fullWidth>
       <DetailPagePattern
-        eyebrow={CLUB_MELDUNG_DETAIL_EYEBROW}
-        title={meldung.caseNumber}
-        description={meldung.subject}
+        eyebrow={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
+        title={meldung.subject}
+        description={meldung.caseNumber}
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           {
-            label: "Anliegen & Meldungen",
+            label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle,
             href: `/tenant/${tenantSlug}/cockpit/meldungen`,
           },
           { label: meldung.caseNumber },
         ]}
       >
-        <div className="flex flex-col gap-6">
-          <ClubMeldungHandlerPanel
-            tenantSlug={tenantSlug}
-            meldungId={meldung.id}
-            version={meldung.version}
-            status={meldung.status}
-            accountableUserId={meldung.accountableUserId}
-            actorUserId={actorUserId}
-          />
-          <ClubMeldungDetailPanel
+        <ClubMeldungHandlerDetailView
           tenantSlug={tenantSlug}
           meldungId={meldung.id}
-          mode="internal"
+          version={meldung.version}
+          canMutate={canMutate}
+          actorUserId={actorUserId}
           caseNumber={meldung.caseNumber}
           subject={meldung.subject}
           description={meldung.description}
           category={meldung.category}
           status={meldung.status}
-          version={meldung.version}
+          locationHint={meldung.locationHint}
+          urgent={meldung.urgent}
+          resolutionSummary={meldung.resolutionSummary}
+          waitReason={meldung.waitReason}
+          followUpAt={meldung.followUpAt?.toISOString() ?? null}
+          nextStep={meldung.nextStep}
+          accountableUser={meldung.accountableUser}
+          orgUnit={meldung.orgUnit}
+          reporterUser={meldung.reporterUser}
+          duplicateOf={meldung.duplicateOf}
+          attachments={meldung.attachments.map((row) => ({
+            id: row.id,
+            originalFilename: row.attachment.originalFilename,
+          }))}
           messages={timeline.messages.map((m) => ({
             id: m.id,
             body: m.body,
@@ -101,11 +112,15 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             createdAt: m.createdAt.toISOString(),
             author: m.author,
           }))}
+          history={timeline.history.map((event) => ({
+            id: event.id,
+            eventType: event.eventType,
+            createdAt: event.createdAt.toISOString(),
+            actor: event.actor ?? { firstName: "System", lastName: "" },
+            payloadJson: event.payloadJson,
+          }))}
         />
-        </div>
       </DetailPagePattern>
     </PageShell>
   );
 }
-
-const CLUB_MELDUNG_DETAIL_EYEBROW = "Anliegen & Meldungen";

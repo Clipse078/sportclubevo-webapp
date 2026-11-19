@@ -1388,8 +1388,8 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "accessibilityVerificationStatus": "NOT_APPLICABLE",
     "functionalVerificationStatus": "NOT_APPLICABLE",
     "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
-    "exceptionRationale": "Redirect alias to /tenant/:param/cockpit/meldungen. Not a visual surface and excluded from verified-page completion.",
-    "redirectDestination": "/tenant/:param/cockpit/meldungen",
+    "exceptionRationale": "Redirect alias to dynamic. Not a visual surface and excluded from verified-page completion.",
+    "redirectDestination": "dynamic",
     "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
@@ -9452,7 +9452,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "authenticatedRedirectCount": 23,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 684,
+  "routeHandlerCount": 685,
   "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 225,

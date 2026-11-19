@@ -557,9 +557,9 @@
   --sce-domain-nav-frame-pad-block-start: 1.5rem;
   --sce-domain-nav-frame-pad-block-end: 2rem;
   --sce-domain-nav-column-gap: clamp(2.25rem, 3vw, 3.25rem);
-  --sce-domain-nav-col-title: 32;
-  --sce-domain-nav-col-categories: 33;
-  --sce-domain-nav-col-destinations: 35;
+  --sce-domain-nav-col-title: 22;
+  --sce-domain-nav-col-categories: 38;
+  --sce-domain-nav-col-destinations: 40;
   --sce-domain-nav-row-min-height: 2.75rem;
 }
 
@@ -678,12 +678,12 @@
   column-gap: var(--sce-domain-nav-column-gap);
   padding-block: var(--sce-domain-nav-frame-pad-block-start) var(--sce-domain-nav-frame-pad-block-end);
   padding-inline: var(--sce-domain-nav-frame-pad-inline);
-  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
+  grid-template-columns: minmax(0, 22fr) minmax(0, 38fr) minmax(0, 40fr);
   overflow: visible;
 }
 
 .sce-domain-nav-panel--three-column .sce-domain-nav-panel-cham-frame {
-  grid-template-columns: minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr);
+  grid-template-columns: minmax(0, 22fr) minmax(0, 38fr) minmax(0, 40fr);
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -701,7 +701,7 @@
   margin: 0;
   padding: 0.3125rem 0 0;
   font-family: var(--font-display), "Barlow Condensed", Arial, sans-serif;
-  font-size: clamp(2.25rem, 3.2vw, 3.35rem);
+  font-size: clamp(1.65rem, 2.35vw, 2.35rem);
   font-weight: 800;
   font-style: italic;
   line-height: 0.95;

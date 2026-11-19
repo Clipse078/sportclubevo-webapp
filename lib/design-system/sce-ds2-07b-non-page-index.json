@@ -3415,6 +3415,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/lookup/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/lookup",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/meldungen",
     "audience": "API"

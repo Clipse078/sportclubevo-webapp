@@ -56,7 +56,7 @@ describe("SCE-DS2-05B-R5 delivery", () => {
   it("balances three-column proportions on the centered Cham frame", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
+      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*22fr\)\s*minmax\(0,\s*38fr\)\s*minmax\(0,\s*40fr\)/,
     );
   });
 
