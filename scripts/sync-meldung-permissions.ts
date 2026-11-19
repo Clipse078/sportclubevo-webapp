@@ -30,7 +30,7 @@ if (!DRY_RUN) {
     operationId: "sync-meldung-permissions",
     databaseUrl: connectionString,
     explicitIntent: process.env.APPLY_PERMISSION_SYNC === "true",
-    allowedRemoteEnvironments: ["stage"],
+    allowedRemoteEnvironments: ["acceptance", "stage"],
   });
 }
 
