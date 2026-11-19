@@ -85,7 +85,10 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
   }
 
   const meldung = await prisma.$transaction(async (tx) => {
-    const caseNumber = await allocateClubMeldungCaseNumber(tx, input.tenantId);
+    const createdAt = new Date();
+    const caseNumber = await allocateClubMeldungCaseNumber(tx, input.tenantId, {
+      createdAt,
+    });
     const row = await tx.clubMeldung.create({
       data: {
         tenantId: input.tenantId,
@@ -98,6 +101,8 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
         urgentNote: input.urgent ? input.urgentNote?.trim() || null : null,
         reporterUserId: input.reporterUserId,
         status: ClubMeldungStatus.RECEIVED,
+        createdAt,
+        lastActivityAt: createdAt,
       },
     });
 

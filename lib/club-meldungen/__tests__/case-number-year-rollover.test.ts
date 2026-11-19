@@ -185,6 +185,13 @@ describe.skipIf(!canRunDbTests)("allocateClubMeldungCaseNumber year rollover (di
         idempotencyKey: idemKey,
       });
       expect(first.meldung.caseNumber).toBe("M-2026-000001");
+      const expectedYear = calendarYearInTenantTimezone(
+        first.meldung.createdAt,
+        ZURICH,
+      );
+      expect(first.meldung.caseNumber).toBe(
+        formatClubMeldungCaseNumber(expectedYear, 1),
+      );
 
       vi.setSystemTime(ZURICH_FIRST_INSTANT_2027);
 
@@ -199,6 +206,9 @@ describe.skipIf(!canRunDbTests)("allocateClubMeldungCaseNumber year rollover (di
       expect(retry.created).toBe(false);
       expect(retry.meldung.caseNumber).toBe("M-2026-000001");
       expect(retry.meldung.id).toBe(first.meldung.id);
+      expect(retry.meldung.createdAt.toISOString()).toBe(
+        first.meldung.createdAt.toISOString(),
+      );
     } finally {
       vi.useRealTimers();
       await prisma.clubMeldung.deleteMany({ where: { tenantId: tenant.id } });
