@@ -23,6 +23,7 @@ export const MODULE_DESCRIPTIONS_DE: Record<string, string> = {
   WOCHENPLAN: "Operativer Wochenplan mit Spielfeldern und Zuteilungen.",
   FIXTURES: "Spielpläne, Termine und Veröffentlichung.",
   REGISTRATIONS: "Anmeldungen und Teilnahmeprozesse.",
+  MELDUNGEN: "Anliegen melden und intern bearbeiten (Vereinsbetrieb).",
   TASKS: "Operative Aufgaben und Follow-ups im Verein.",
   COMPETITIONS: "Wettbewerbe und Ligen.",
   INFOBOARD: "Infoboard-Inhalte und Ausspielung.",
@@ -108,6 +109,11 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "registrations.view": "Anmeldungen ansehen",
   "registrations.edit": "Anmeldungen bearbeiten",
   "registrations.delete": "Anmeldungen dauerhaft löschen",
+
+  "meldungen.submit": "Eigene Anliegen melden und verfolgen",
+  "meldungen.handle": "Zugewiesene Meldungen bearbeiten",
+  "meldungen.view_all": "Alle Meldungen im Verein einsehen",
+  "meldungen.manage": "Meldungs-Routing konfigurieren",
 
   "news.view": "Veröffentlichte News ansehen",
   "news.manage": "News verwalten",

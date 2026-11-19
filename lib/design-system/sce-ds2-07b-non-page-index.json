@@ -3373,6 +3373,30 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/assign/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/assign",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/permanent/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/permanent",
     "audience": "API"

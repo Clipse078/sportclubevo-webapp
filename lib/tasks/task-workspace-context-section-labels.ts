@@ -16,6 +16,7 @@ export const TASK_WORKSPACE_CONTEXT_SECTION_LABELS: Record<TaskContextType, stri
   TEAM: "Zugehöriges Team",
   PERSON: "Zugehörige Person",
   DOCUMENT: "Zugehöriges Dokument",
+  CLUB_MELDUNG: "Zugehörige Meldung",
 };
 
 export function taskWorkspaceContextSectionLabel(

@@ -38,6 +38,7 @@ export const TASK_CONTEXT_LABELS: Record<TaskContextType, string> = {
   TEAM: "Team",
   PERSON: "Person",
   DOCUMENT: "Dokument",
+  CLUB_MELDUNG: "Meldung",
 };
 
 const WEEKDAY_LABELS: Record<TaskSeriesWeekday, string> = {

@@ -347,6 +347,44 @@ export const TASK_CONTEXT_REGISTRY: TaskContextRegistryEntry[] = [
     },
   },
   {
+    type: "CLUB_MELDUNG",
+    operationalReadPermission: PERMISSIONS.MELDUNGEN_HANDLE,
+    buildHref: (entity) =>
+      entity.tenantKey
+        ? `/tenant/${encodeURIComponent(entity.tenantKey)}/cockpit/meldungen/${encodeURIComponent(entity.id)}`
+        : null,
+    validateAttachable: async (ctx, id) =>
+      Boolean(
+        await prisma.clubMeldung.findFirst({
+          where: { id, tenantId: ctx.tenantId },
+          select: { id: true },
+        }),
+      ),
+    searchOptions: async (ctx, query, limit) => {
+      const rows = await prisma.clubMeldung.findMany({
+        where: {
+          tenantId: ctx.tenantId,
+          ...(query
+            ? {
+                OR: [
+                  { subject: { contains: query, mode: "insensitive" } },
+                  { caseNumber: { contains: query, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: { lastActivityAt: "desc" },
+        take: limit,
+        select: { id: true, caseNumber: true, subject: true },
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        label: row.caseNumber,
+        secondary: row.subject,
+      }));
+    },
+  },
+  {
     type: "REGISTRATION",
     operationalReadPermission: PERMISSIONS.REGISTRATIONS_VIEW,
     buildHref: (entity) =>

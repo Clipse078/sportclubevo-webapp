@@ -37,6 +37,37 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/anliegen",
+    "routeKey": "/anliegen",
+    "sourceFile": "app/(admin)/anliegen/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "workspace",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "REDIRECT_ALIAS",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+    "exceptionRationale": "Redirect alias to /login?callbackUrl=:param. Not a visual surface and excluded from verified-page completion.",
+    "redirectDestination": "/login?callbackUrl=:param",
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/dashboard",
     "routeKey": "/dashboard",
     "sourceFile": "app/(admin)/dashboard/(personal-dashboard)/page.tsx",
@@ -1327,6 +1358,38 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "exceptionId": null,
     "exceptionRationale": null,
     "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/anliegen-meldungen",
+    "routeKey": "/dashboard/anliegen-meldungen",
+    "sourceFile": "app/(admin)/dashboard/anliegen-meldungen/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "REDIRECT_ALIAS",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+    "exceptionRationale": "Redirect alias to /tenant/:param/cockpit/meldungen. Not a visual surface and excluded from verified-page completion.",
+    "redirectDestination": "/tenant/:param/cockpit/meldungen",
     "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
@@ -6588,6 +6651,166 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen/[meldungId]",
+    "routeKey": "/tenant/[tenantSlug]/anliegen/[meldungId]",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/[meldungId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "tenant-admin",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen/melden",
+    "routeKey": "/tenant/[tenantSlug]/anliegen/melden",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/melden/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "tenant-admin",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/anliegen",
+    "routeKey": "/tenant/[tenantSlug]/anliegen",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/anliegen/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "tenant-admin",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]",
+    "routeKey": "/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/[meldungId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "tenant-admin",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/tenant/[tenantSlug]/cockpit/meldungen",
+    "routeKey": "/tenant/[tenantSlug]/cockpit/meldungen",
+    "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/meldungen/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/tenant/[tenantSlug]/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "tenant-admin",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/tenant/[tenantSlug]/cockpit/registrations/[registrationId]",
     "routeKey": "/tenant/[tenantSlug]/cockpit/registrations/[registrationId]",
     "sourceFile": "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx",
@@ -9223,16 +9446,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 285,
-  "authenticatedRenderableCount": 223,
-  "authenticatedVisualCount": 220,
-  "authenticatedRedirectCount": 21,
+  "pageCount": 292,
+  "authenticatedRenderableCount": 228,
+  "authenticatedVisualCount": 225,
+  "authenticatedRedirectCount": 23,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 676,
+  "routeHandlerCount": 680,
   "frameworkFileCount": 41,
   "architecture": {
-    "CANONICAL": 220,
+    "CANONICAL": 225,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -9240,17 +9463,17 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 220,
+    "IMPLEMENTED": 225,
     "VERIFIED": 0,
-    "EXCEPTION": 65
+    "EXCEPTION": 67
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 220,
+  "architecturalCanonicalCount": 225,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
-    "SCE-DS2-07B-EX-REDIRECT": 22,
+    "SCE-DS2-07B-EX-REDIRECT": 24,
     "SCE-DS2-07B-EX-PUBLIC": 25,
     "SCE-DS2-07B-EX-PREVIEW": 15,
     "SCE-DS2-07B-EX-PRINT": 3
@@ -9260,7 +9483,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 220
+    "DS2-07G": 225
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,
