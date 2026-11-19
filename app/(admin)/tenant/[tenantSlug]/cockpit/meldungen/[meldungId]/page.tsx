@@ -15,7 +15,7 @@ import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
 import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
-import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
+import { mapClubMeldungMessageMentionsForTimeline } from "@/lib/club-meldungen/timeline";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -136,17 +136,10 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             audience: m.audience,
             createdAt: m.createdAt.toISOString(),
             author: m.author,
-            mentions:
-              mentionsEnabled && "mentions" in m && Array.isArray(m.mentions)
-                ? (
-                    m.mentions as Array<{
-                      user: { id: string; firstName: string; lastName: string };
-                    }>
-                  ).map((row) => ({
-                    userId: row.user.id,
-                    displayName: meldungMentionDisplayName(row.user.firstName, row.user.lastName),
-                  }))
-                : undefined,
+            mentions: mapClubMeldungMessageMentionsForTimeline(
+              "mentions" in m ? m.mentions : undefined,
+              mentionsEnabled,
+            ),
           }))}
           history={timeline.history.map((event) => ({
             id: event.id,

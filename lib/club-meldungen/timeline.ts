@@ -3,11 +3,39 @@ import {
   formatClubMeldungHistoryEvent,
   type ClubMeldungHistoryPresentation,
 } from "@/lib/club-meldungen/history-copy";
+import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
 
 export type ClubMeldungTimelineMention = {
   userId: string;
   displayName: string;
 };
+
+/** Maps optional Prisma mention rows (with conditional `user` include) for handler UI. */
+export function mapClubMeldungMessageMentionsForTimeline(
+  mentions: unknown,
+  enabled: boolean,
+): ClubMeldungTimelineMention[] | undefined {
+  if (!enabled || !Array.isArray(mentions)) {
+    return undefined;
+  }
+
+  const mapped: ClubMeldungTimelineMention[] = [];
+  for (const row of mentions) {
+    if (!row || typeof row !== "object" || !("user" in row)) {
+      continue;
+    }
+    const user = (row as { user?: { id?: string; firstName?: string; lastName?: string } }).user;
+    if (!user?.id || user.firstName == null || user.lastName == null) {
+      continue;
+    }
+    mapped.push({
+      userId: user.id,
+      displayName: meldungMentionDisplayName(user.firstName, user.lastName),
+    });
+  }
+
+  return mapped.length > 0 ? mapped : undefined;
+}
 
 export type ClubMeldungTimelineMessage = {
   id: string;
