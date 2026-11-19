@@ -72,9 +72,9 @@ async function grantTenantPermission(
       tenantId,
       userId,
       permissionId: permission.id,
-      effect: "GRANT",
+      effect: "ALLOW",
     },
-    update: { effect: "GRANT" },
+    update: { effect: "ALLOW" },
   });
 }
 
