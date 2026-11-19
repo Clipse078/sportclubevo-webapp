@@ -3,15 +3,19 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import { getClubMeldungDetail, listClubMeldungReporterTimeline } from "@/lib/club-meldungen/queries";
-import { canViewMeldungInternal } from "@/lib/club-meldungen/access";
+import { canMutateMeldungInternal, canViewMeldungInternal } from "@/lib/club-meldungen/access";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import ClubMeldungDetailPanel from "@/components/admin/club-meldungen/ClubMeldungDetailPanel";
-import ClubMeldungHandlerPanel from "@/components/admin/club-meldungen/ClubMeldungHandlerPanel";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import ClubMeldungHandlerDetailView from "@/components/admin/club-meldungen/ClubMeldungHandlerDetailView";
 import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
+import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
+import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
+import { mapClubMeldungMessageMentionsForTimeline } from "@/lib/club-meldungen/timeline";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -32,12 +36,12 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     return (
       <PageShell fullWidth>
         <DetailPagePattern
-          eyebrow={CLUB_MELDUNG_DETAIL_EYEBROW}
-          title="Anliegen & Meldungen"
+          eyebrow={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
+          title={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
           description="Detail"
           breadcrumbs={[
             { label: "Dashboard", href: "/dashboard" },
-            { label: "Anliegen & Meldungen", href: `/tenant/${tenantSlug}/cockpit/meldungen` },
+            { label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle, href: `/tenant/${tenantSlug}/cockpit/meldungen` },
           ]}
         >
           <ClubMeldungSchemaUnavailable />
@@ -58,54 +62,95 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     notFound();
   }
 
-  const timeline = await listClubMeldungReporterTimeline(tenant.id, meldungId, true);
+  const mentionsEnabled = await isClubMeldungMentionSchemaReady();
+  const timeline = await listClubMeldungReporterTimeline(
+    tenant.id,
+    meldungId,
+    true,
+    mentionsEnabled,
+  );
+  const createdEvent = timeline.history.find((event) => event.eventType === "CREATED");
+  const createdByUser = createdEvent?.actor
+    ? {
+        id: createdEvent.actor.id,
+        firstName: createdEvent.actor.firstName,
+        lastName: createdEvent.actor.lastName,
+      }
+    : null;
+  const canMutate = canMutateMeldungInternal(meldung, {
+    actorUserId,
+    permissionKeys,
+    collaboratorUserIds: meldung.collaborators.map((c) => c.userId),
+  });
+  const assignOptions = canMutate
+    ? await loadClubMeldungAssignOptions(tenant.id)
+    : null;
 
   return (
     <PageShell fullWidth>
-      <DetailPagePattern
-        eyebrow={CLUB_MELDUNG_DETAIL_EYEBROW}
-        title={meldung.caseNumber}
-        description={meldung.subject}
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           {
-            label: "Anliegen & Meldungen",
+            label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle,
             href: `/tenant/${tenantSlug}/cockpit/meldungen`,
           },
           { label: meldung.caseNumber },
         ]}
       >
-        <div className="flex flex-col gap-6">
-          <ClubMeldungHandlerPanel
-            tenantSlug={tenantSlug}
-            meldungId={meldung.id}
-            version={meldung.version}
-            status={meldung.status}
-            accountableUserId={meldung.accountableUserId}
-            actorUserId={actorUserId}
-          />
-          <ClubMeldungDetailPanel
+        <ClubMeldungHandlerDetailView
           tenantSlug={tenantSlug}
           meldungId={meldung.id}
-          mode="internal"
+          version={meldung.version}
+          canMutate={canMutate}
+          actorUserId={actorUserId}
           caseNumber={meldung.caseNumber}
           subject={meldung.subject}
           description={meldung.description}
           category={meldung.category}
           status={meldung.status}
-          version={meldung.version}
+          locationHint={meldung.locationHint}
+          urgent={meldung.urgent}
+          resolutionSummary={meldung.resolutionSummary}
+          waitReason={meldung.waitReason}
+          followUpAt={meldung.followUpAt?.toISOString() ?? null}
+          nextStep={meldung.nextStep}
+          accountableUser={meldung.accountableUser}
+          orgUnit={meldung.orgUnit}
+          reporterUser={{
+            id: meldung.reporterUser.id,
+            firstName: meldung.reporterUser.firstName,
+            lastName: meldung.reporterUser.lastName,
+          }}
+          createdAt={meldung.createdAt.toISOString()}
+          createdByUser={createdByUser}
+          mentionsEnabled={mentionsEnabled}
+          duplicateOf={meldung.duplicateOf}
+          attachments={meldung.attachments.map((row) => ({
+            id: row.id,
+            originalFilename: row.attachment.originalFilename,
+          }))}
           messages={timeline.messages.map((m) => ({
             id: m.id,
             body: m.body,
             audience: m.audience,
             createdAt: m.createdAt.toISOString(),
             author: m.author,
+            mentions: mapClubMeldungMessageMentionsForTimeline(
+              "mentions" in m ? m.mentions : undefined,
+              mentionsEnabled,
+            ),
           }))}
+          history={timeline.history.map((event) => ({
+            id: event.id,
+            eventType: event.eventType,
+            createdAt: event.createdAt.toISOString(),
+            actor: event.actor ?? { firstName: "System", lastName: "" },
+            payloadJson: event.payloadJson,
+          }))}
+          assignOptions={assignOptions}
         />
-        </div>
-      </DetailPagePattern>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }
-
-const CLUB_MELDUNG_DETAIL_EYEBROW = "Anliegen & Meldungen";

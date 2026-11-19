@@ -9,6 +9,10 @@ import {
 } from "@/lib/club-meldungen/tenant-api";
 import { canViewMeldungAsReporter } from "@/lib/club-meldungen/access";
 import { meldungApiSchemaGuard } from "@/lib/club-meldungen/api-schema";
+import {
+  CLUB_MELDUNG_MENTION_SCHEMA_PREREQUISITE,
+  isClubMeldungMentionSchemaReady,
+} from "@/lib/club-meldungen/schema-mention-ready";
 
 export async function POST(
   request: NextRequest,
@@ -77,6 +81,21 @@ export async function POST(
       ? ClubMeldungMessageAudience.INTERNAL_NOTE
       : ClubMeldungMessageAudience.REPORTER_REPLY;
 
+  const rawMentions = body.mentionedUserIds;
+  const mentionedUserIds = Array.isArray(rawMentions)
+    ? rawMentions.filter((id): id is string => typeof id === "string")
+    : [];
+
+  if (mentionedUserIds.length > 0) {
+    const mentionReady = await isClubMeldungMentionSchemaReady();
+    if (!mentionReady) {
+      return NextResponse.json(
+        { error: CLUB_MELDUNG_MENTION_SCHEMA_PREREQUISITE, code: "SCHEMA_UNAVAILABLE" },
+        { status: 503 },
+      );
+    }
+  }
+
   try {
     const message = await postClubMeldungMessage({
       tenantId: actorResult.actor.tenantId,
@@ -85,6 +104,8 @@ export async function POST(
       audience: resolvedAudience,
       body: body.body,
       asReporter,
+      mentionedUserIds: asReporter || resolvedAudience !== ClubMeldungMessageAudience.INTERNAL_NOTE ? [] : mentionedUserIds,
+      tenantKey: actorResult.actor.tenantKey,
     });
     return NextResponse.json({ message });
   } catch (error) {

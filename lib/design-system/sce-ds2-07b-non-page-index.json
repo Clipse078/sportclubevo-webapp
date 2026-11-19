@@ -3385,6 +3385,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/mention-candidates/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/mention-candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages",
     "audience": "API"
@@ -3411,6 +3417,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/attachments/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/meldungen/attachments",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/lookup/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/lookup",
     "audience": "API"
   },
   {

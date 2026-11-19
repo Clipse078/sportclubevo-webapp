@@ -692,6 +692,7 @@ enum NotificationType {
   MELDUNG_ASSIGNED
   MELDUNG_REPORTER_REPLY
   MELDUNG_RESOLVED
+  MELDUNG_MENTION
 }
 
 enum NotificationEntityType {
@@ -1426,6 +1427,7 @@ model Tenant {
   // SCE-ANLIEGEN-01
   clubMeldungen                   ClubMeldung[]
   clubMeldungMessages             ClubMeldungMessage[]
+  clubMeldungMessageMentions      ClubMeldungMessageMention[]
   clubMeldungAttachments          ClubMeldungAttachment[]
   clubMeldungHistoryEvents        ClubMeldungHistoryEvent[]
   clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[]
@@ -1593,6 +1595,7 @@ model User {
   clubMeldungCollaborations       ClubMeldungCollaborator[] @relation("ClubMeldungCollaboratorUser")
   clubMeldungCollaboratorsAdded   ClubMeldungCollaborator[] @relation("ClubMeldungCollaboratorAddedBy")
   clubMeldungMessagesAuthored     ClubMeldungMessage[]    @relation("ClubMeldungMessageAuthor")
+  clubMeldungMessageMentionsReceived ClubMeldungMessageMention[] @relation("ClubMeldungMessageMentionUser")
   clubMeldungAttachmentsUploaded  ClubMeldungAttachment[] @relation("ClubMeldungAttachmentUploadedBy")
   clubMeldungHistoryEvents        ClubMeldungHistoryEvent[] @relation("ClubMeldungHistoryActor")
   clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[] @relation("ClubMeldungIdempotencyReporter")
@@ -2035,9 +2038,27 @@ model ClubMeldungMessage {
   tenant  Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   meldung ClubMeldung @relation(fields: [meldungId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   author  User        @relation("ClubMeldungMessageAuthor", fields: [authorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  mentions ClubMeldungMessageMention[]
 
   @@index([tenantId, meldungId])
   @@index([meldungId, createdAt])
+}
+
+/// SCE-ANLIEGEN-02 — structured @mention metadata for internal Meldung messages (User identity only).
+model ClubMeldungMessageMention {
+  id        String   @id @default(cuid())
+  tenantId  String
+  messageId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tenant  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  message ClubMeldungMessage @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User               @relation("ClubMeldungMessageMentionUser", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([tenantId, messageId])
+  @@index([tenantId, userId])
 }
 
 model ClubMeldungAttachment {

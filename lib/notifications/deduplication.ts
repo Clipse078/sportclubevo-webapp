@@ -66,6 +66,17 @@ export function buildTaskMentionDedupKey(input: {
   return `TASK_MENTION:${input.commentId}:${input.recipientUserId}`;
 }
 
+export function buildMeldungMentionDedupKey(input: {
+  messageId: string;
+  recipientUserId: string;
+}): string {
+  return `MELDUNG_MENTION:${input.messageId}:${input.recipientUserId}`;
+}
+
+export function meldungHandlerDetailHref(tenantKey: string, meldungId: string): string {
+  return `/tenant/${encodeURIComponent(tenantKey)}/cockpit/meldungen/${encodeURIComponent(meldungId)}`;
+}
+
 export function buildTaskCommentDedupKey(input: {
   commentId: string;
   recipientUserId: string;

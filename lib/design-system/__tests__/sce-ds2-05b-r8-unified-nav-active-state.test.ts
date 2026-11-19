@@ -96,7 +96,7 @@ describe("SCE-DS2-05B-R8 unified navigation active states", () => {
     const css = readRepo(NAV_CSS);
     const rows = declarationBlocks(css, ".sce-domain-nav-panel-l2-link").join("\n");
     expect(rows).toMatch(/border-bottom:\s*1px solid/);
-    expect(rows).toMatch(/padding:\s*0\.3125rem 0/);
+    expect(rows).toMatch(/padding:\s*0\.25rem 0/);
     expect(rows).toMatch(/text-transform:\s*uppercase/);
     expect(css).not.toContain(".sce-global-nav-level-separator");
     expect(css).not.toContain(".sce-global-module-nav");

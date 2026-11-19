@@ -14,6 +14,10 @@ import {
   emitMeldungReporterReplyNotification,
   emitMeldungResolvedNotification,
 } from "./notification-producer";
+import { MAX_CLUB_MELDUNG_MESSAGE_BODY_LENGTH } from "./constants";
+import { validateMentionedUsersForMeldung } from "./meldung-mention-auth";
+import { emitMeldungMentionNotifications } from "./meldung-mention-producer";
+import { mentionExcerpt, meldungMentionDisplayName } from "./meldung-mention-tokens";
 import {
   canMutateMeldungInternal,
   canViewMeldung,
@@ -190,6 +194,19 @@ export type AssignClubMeldungInput = {
 export async function assignClubMeldung(input: AssignClubMeldungInput) {
   if (input.accountableUserId) {
     await assertActiveTenantMember(input.tenantId, input.accountableUserId);
+  }
+  if (input.orgUnitId) {
+    const orgUnit = await prisma.orgUnit.findFirst({
+      where: {
+        id: input.orgUnitId,
+        tenantId: input.tenantId,
+        status: { not: "ARCHIVED" },
+      },
+      select: { id: true },
+    });
+    if (!orgUnit) {
+      throw new ClubMeldungServiceError("Organisationseinheit ungültig", "VALIDATION");
+    }
   }
   for (const userId of input.collaboratorUserIds ?? []) {
     await assertActiveTenantMember(input.tenantId, userId);
@@ -399,11 +416,36 @@ export type PostClubMeldungMessageInput = {
   audience: ClubMeldungMessageAudience;
   body: string;
   asReporter?: boolean;
+  mentionedUserIds?: string[];
+  tenantKey?: string;
 };
 
 export async function postClubMeldungMessage(input: PostClubMeldungMessageInput) {
   const body = input.body.trim();
   if (!body) throw new ClubMeldungServiceError("Nachricht darf nicht leer sein", "VALIDATION");
+  if (body.length > MAX_CLUB_MELDUNG_MESSAGE_BODY_LENGTH) {
+    throw new ClubMeldungServiceError("Nachricht ist zu lang", "VALIDATION");
+  }
+
+  if (input.asReporter && (input.mentionedUserIds?.length ?? 0) > 0) {
+    throw new ClubMeldungServiceError("Erwähnungen sind nur in internen Kommentaren möglich", "VALIDATION");
+  }
+  if (
+    input.audience !== ClubMeldungMessageAudience.INTERNAL_NOTE &&
+    (input.mentionedUserIds?.length ?? 0) > 0
+  ) {
+    throw new ClubMeldungServiceError("Erwähnungen sind nur in internen Kommentaren möglich", "VALIDATION");
+  }
+
+  const validatedMentions =
+    input.audience === ClubMeldungMessageAudience.INTERNAL_NOTE
+      ? await validateMentionedUsersForMeldung({
+          tenantId: input.tenantId,
+          meldungId: input.meldungId,
+          body,
+          mentionedUserIds: input.mentionedUserIds ?? [],
+        })
+      : [];
 
   return prisma.$transaction(async (tx) => {
     const meldung = await tx.clubMeldung.findFirst({
@@ -425,6 +467,15 @@ export async function postClubMeldungMessage(input: PostClubMeldungMessageInput)
         audience: input.audience,
         body,
         authorUserId: input.actorUserId,
+        mentions:
+          validatedMentions.length > 0
+            ? {
+                create: validatedMentions.map((userId) => ({
+                  tenantId: input.tenantId,
+                  userId,
+                })),
+              }
+            : undefined,
       },
     });
 
@@ -460,6 +511,32 @@ export async function postClubMeldungMessage(input: PostClubMeldungMessageInput)
         subject: meldung.subject,
         reporterUserId: meldung.reporterUserId,
         actorUserId: input.actorUserId,
+      });
+    }
+
+    if (validatedMentions.length > 0) {
+      const author = await tx.user.findUnique({
+        where: { id: input.actorUserId },
+        select: { firstName: true, lastName: true },
+      });
+      const actorDisplayName = author
+        ? meldungMentionDisplayName(author.firstName, author.lastName)
+        : "Bearbeiter";
+      const tenantKey =
+        input.tenantKey ??
+        (await tx.tenant.findUnique({ where: { id: input.tenantId }, select: { key: true } }))?.key ??
+        input.tenantId;
+
+      await emitMeldungMentionNotifications(tx, {
+        tenantId: input.tenantId,
+        tenantKey,
+        meldungId: meldung.id,
+        caseNumber: meldung.caseNumber,
+        messageId: message.id,
+        commentExcerpt: mentionExcerpt(body),
+        actorUserId: input.actorUserId,
+        actorDisplayName,
+        mentionedUserIds: validatedMentions,
       });
     }
 

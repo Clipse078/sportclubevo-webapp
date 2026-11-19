@@ -43,7 +43,7 @@ describe("SCE-DS2-05B-R5 delivery", () => {
 
   it("tightens L2/L3 row density while preserving Barlow Condensed uppercase labels", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
-    expect(css).toMatch(/--sce-domain-nav-row-min-height:\s*2\.75rem/);
+    expect(css).toMatch(/--sce-domain-nav-row-min-height:\s*2\.625rem/);
     expect(css).toMatch(
       /\.sce-domain-nav-panel-l2-link[\s\S]*min-height:\s*var\(--sce-domain-nav-row-min-height\)/,
     );
@@ -56,7 +56,7 @@ describe("SCE-DS2-05B-R5 delivery", () => {
   it("balances three-column proportions on the centered Cham frame", () => {
     const css = readRepo("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
+      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame[\s\S]*grid-template-columns:\s*minmax\(0,\s*22fr\)\s*minmax\(0,\s*38fr\)\s*minmax\(0,\s*40fr\)/,
     );
   });
 

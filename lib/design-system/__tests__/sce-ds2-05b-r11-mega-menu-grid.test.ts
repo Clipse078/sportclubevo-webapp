@@ -22,7 +22,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const NAV_CSS = "app/(admin)/global-app-navigation.css";
 const PANEL = "components/sce/navigation/SceDomainNavigationPanel.tsx";
-const GRID = "minmax(0, 32fr) minmax(0, 33fr) minmax(0, 35fr)";
+const GRID = "minmax(0, 22fr) minmax(0, 38fr) minmax(0, 40fr)";
 
 const DIRECT_L2_DOMAINS = ["planning", "communication"] as const;
 const HIERARCHICAL_DOMAINS = ["club", "publishing", "admin"] as const;
@@ -40,10 +40,10 @@ describe("SCE-DS2-05B-R11 mega-menu grid contract", () => {
     expect(css).not.toContain("68fr");
     expect(css).not.toContain("sce-domain-nav-panel-cham-frame--two-column");
     expect(css).toMatch(
-      /\.sce-domain-nav-panel-cham-frame\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
+      /\.sce-domain-nav-panel-cham-frame\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*22fr\)\s*minmax\(0,\s*38fr\)\s*minmax\(0,\s*40fr\)/,
     );
     expect(css).toMatch(
-      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*32fr\)\s*minmax\(0,\s*33fr\)\s*minmax\(0,\s*35fr\)/,
+      /\.sce-domain-nav-panel--three-column \.sce-domain-nav-panel-cham-frame\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*22fr\)\s*minmax\(0,\s*38fr\)\s*minmax\(0,\s*40fr\)/,
     );
     expect(css).toMatch(/\.sce-domain-nav-panel-section-title\s*\{[^}]*grid-column:\s*1;/);
     expect(css).toMatch(/\.sce-domain-nav-panel-l2\s*\{[^}]*grid-column:\s*2;/);

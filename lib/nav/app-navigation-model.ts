@@ -190,6 +190,36 @@ export function resolveDesktopPrimaryNavigationDomains(
   return domains.filter((domain) => domain.id !== "dashboard");
 }
 
+function resolveFlatHeaderGroupNavChildren(
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+): NavItemChild[] {
+  if (!item.headerGroupNavKeys?.length) return [];
+  const children: NavItemChild[] = [];
+  for (const navKey of item.headerGroupNavKeys) {
+    const resolved = resolveNavKeyHrefInDomain(domain, navKey);
+    if (!resolved) continue;
+    const canonicalKey = CLUB_NAV_KEY_ALIASES[navKey] ?? navKey;
+    const dest =
+      domain.destinations.find((entry) => entry.key === canonicalKey) ??
+      domain.destinations.find((entry) => entry.key === navKey);
+    children.push({
+      key: navKey,
+      label: dest?.label ?? navKey,
+      href: resolved.href,
+    });
+  }
+  return children;
+}
+
+function areFlatHeaderGroupModuleChildren(
+  item: DomainSecondaryNavItem,
+  children: readonly NavItemChild[],
+): boolean {
+  if (!item.headerGroupNavKeys?.length || children.length === 0) return false;
+  return children.every((child) => item.headerGroupNavKeys!.includes(child.key));
+}
+
 /** Canonical L3 destinations for a Row 2 item (permission-filtered via nav-config children on the model). */
 export function resolveSecondaryNavItemModuleLocalChildren(
   domain: NavigationDomain,
@@ -210,6 +240,11 @@ export function resolveSecondaryNavItemModuleLocalChildren(
       if (groupedDest?.children?.length) {
         return groupedDest.children;
       }
+    }
+
+    const flatChildren = resolveFlatHeaderGroupNavChildren(domain, item);
+    if (flatChildren.length > 0) {
+      return flatChildren;
     }
 
     if (domain.id === "publishing" && topLevel) {
@@ -291,17 +326,19 @@ export function resolveDomainPanelRightColumnEntries(
   const children = resolveSecondaryNavItemModuleLocalChildren(domain, item);
   if (children.length === 0) return [];
 
+  const flatGroupChildren = areFlatHeaderGroupModuleChildren(item, children);
   const hasChildForHubHref = children.some((child) => child.href === item.href);
-  const entries = hasChildForHubHref
-    ? children
-    : [
-        {
-          key: `${item.key}__domain-panel-overview`,
-          label: resolveDomainPanelOverviewLabel(item),
-          href: item.href,
-        },
-        ...children,
-      ];
+  const entries =
+    flatGroupChildren || hasChildForHubHref
+      ? children
+      : [
+          {
+            key: `${item.key}__domain-panel-overview`,
+            label: resolveDomainPanelOverviewLabel(item),
+            href: item.href,
+          },
+          ...children,
+        ];
 
   return dedupeNavChildrenByHref(entries);
 }

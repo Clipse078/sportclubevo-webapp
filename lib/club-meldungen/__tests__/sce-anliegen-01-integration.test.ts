@@ -13,6 +13,7 @@ import {
   updateClubMeldungStatus,
 } from "@/lib/club-meldungen/meldung-service";
 import {
+  canMutateMeldungInternal,
   canViewMeldung,
   canViewMeldungInternal,
 } from "@/lib/club-meldungen/access";
@@ -24,6 +25,11 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 import { createSafeTestPrismaClient } from "@/lib/test/safe-test-prisma";
 import { prisma } from "@/lib/db/prisma";
+import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
+import { searchMeldungMentionCandidates } from "@/lib/club-meldungen/meldung-mention-candidates";
+import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
+import { meldungMentionToken } from "@/lib/club-meldungen/meldung-mention-tokens";
+import type { PermissionKey } from "@/lib/permissions/permissions";
 
 const RUN = `sce-anliegen-01-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 
@@ -47,6 +53,31 @@ async function createMember(
     data: { tenantId, userId: user.id, isActive: active },
   });
   return user;
+}
+
+async function grantTenantPermission(
+  tenantId: string,
+  userId: string,
+  permissionKey: PermissionKey,
+) {
+  const permission = await prisma.permission.findUnique({ where: { key: permissionKey } });
+  if (!permission) return;
+  await prisma.userPermissionOverride.upsert({
+    where: {
+      tenantId_userId_permissionId: {
+        tenantId,
+        userId,
+        permissionId: permission.id,
+      },
+    },
+    create: {
+      tenantId,
+      userId,
+      permissionId: permission.id,
+      effect: "ALLOW",
+    },
+    update: { effect: "ALLOW" },
+  });
 }
 
 describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
@@ -99,6 +130,9 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       await prisma.communicationAttachment.deleteMany({ where: { tenantId } });
       await prisma.notification.deleteMany({ where: { tenantId } });
       await prisma.task.deleteMany({ where: { tenantId } });
+      await prisma.orgUnit.deleteMany({ where: { tenantId, key: { contains: RUN } } });
+      await prisma.userPermissionOverride.deleteMany({ where: { tenantId } });
+      await prisma.clubMeldungMessageMention.deleteMany({ where: { tenantId } }).catch(() => undefined);
       await prisma.tenantMembership.deleteMany({ where: { tenantId } });
       const users = await prisma.user.findMany({
         where: { email: { contains: RUN } },
@@ -174,6 +208,209 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
     expect(a.meldung.caseNumber.endsWith("000001") || b.meldung.caseNumber.endsWith("000001")).toBe(
       true,
     );
+  });
+
+  it("reassigns accountable handler and org unit with validation", async () => {
+    const orgUnit = await prisma.orgUnit.create({
+      data: {
+        tenantId: tenantAId,
+        key: `infra-${RUN}`,
+        name: "Infrastruktur",
+        level: 0,
+        sortOrder: 0,
+      },
+    });
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "assign-org",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `assign-org-${RUN}`,
+    });
+    const toA = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: created.meldung.version,
+    });
+    expect(toA.orgUnitId).toBe(orgUnit.id);
+    expect(toA.accountableUserId).toBe(handlerAId);
+
+    const toB = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerBId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: toA.version,
+    });
+    expect(toB.accountableUserId).toBe(handlerBId);
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerAId,
+        accountableUserId: handlerBId,
+        orgUnitId: "missing-org-unit",
+        expectedVersion: toB.version,
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
+  it("records assignment history, rejects stale versions, and keeps access scoped to policy", async () => {
+    const orgUnit = await prisma.orgUnit.create({
+      data: {
+        tenantId: tenantAId,
+        key: `policy-ou-${RUN}`,
+        name: "Betrieb",
+        level: 0,
+        sortOrder: 0,
+      },
+    });
+    const orgUnitTenantB = await prisma.orgUnit.create({
+      data: {
+        tenantId: tenantBId,
+        key: `foreign-ou-${RUN}`,
+        name: "Fremd",
+        level: 0,
+        sortOrder: 0,
+      },
+    });
+    const inactiveAssignee = await createMember(prisma, tenantAId, "inactive-assignee", false);
+    const pickerOnly = await createMember(prisma, tenantAId, "picker-only");
+    const handlerTenantB = await createMember(prisma, tenantBId, "handler-tenant-b");
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "assign-policy",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `assign-policy-${RUN}`,
+    });
+
+    const firstAssign = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: created.meldung.version,
+    });
+    const assignedHistory = await prisma.clubMeldungHistoryEvent.findMany({
+      where: { meldungId: created.meldung.id, eventType: "ASSIGNED" },
+    });
+    expect(assignedHistory).toHaveLength(1);
+
+    const reassigned = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerBId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: firstAssign.version,
+    });
+    const reassignHistory = await prisma.clubMeldungHistoryEvent.findMany({
+      where: { meldungId: created.meldung.id, eventType: "REASSIGNED" },
+    });
+    expect(reassignHistory).toHaveLength(1);
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerBId,
+        accountableUserId: handlerAId,
+        orgUnitId: orgUnit.id,
+        expectedVersion: firstAssign.version,
+      }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerBId,
+        accountableUserId: inactiveAssignee.id,
+        expectedVersion: reassigned.version,
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerBId,
+        accountableUserId: handlerTenantB.id,
+        expectedVersion: reassigned.version,
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerBId,
+        accountableUserId: handlerAId,
+        orgUnitId: orgUnitTenantB.id,
+        expectedVersion: reassigned.version,
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+
+    const assignedPicker = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: viewerAllId,
+      accountableUserId: pickerOnly.id,
+      orgUnitId: orgUnit.id,
+      expectedVersion: reassigned.version,
+    });
+    expect(assignedPicker.accountableUserId).toBe(pickerOnly.id);
+
+    const pickerCtx = { actorUserId: pickerOnly.id, permissionKeys: [] as string[] };
+    expect(
+      canViewMeldungInternal(
+        { reporterUserId: reporterId, accountableUserId: pickerOnly.id },
+        pickerCtx,
+      ),
+    ).toBe(false);
+    expect(
+      canMutateMeldungInternal(
+        { reporterUserId: reporterId, accountableUserId: pickerOnly.id },
+        pickerCtx,
+      ),
+    ).toBe(false);
+
+    const ownerCtx = {
+      actorUserId: handlerBId,
+      permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
+    };
+    const previousOwnerCtx = {
+      actorUserId: handlerAId,
+      permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
+    };
+    expect(
+      canViewMeldungInternal(
+        { reporterUserId: reporterId, accountableUserId: handlerBId },
+        ownerCtx,
+      ),
+    ).toBe(true);
+    expect(
+      canMutateMeldungInternal(
+        { reporterUserId: reporterId, accountableUserId: handlerBId },
+        ownerCtx,
+      ),
+    ).toBe(true);
+    expect(
+      canViewMeldungInternal(
+        { reporterUserId: reporterId, accountableUserId: handlerBId },
+        previousOwnerCtx,
+      ),
+    ).toBe(false);
   });
 
   it("preserves case number across assign, resolve and reopen", async () => {
@@ -572,5 +809,97 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       canViewAll: false,
     });
     expect(afterAssign.some((row) => row.id === unassigned.meldung.id)).toBe(false);
+  });
+
+  it("persists internal @mentions without exposing them on the reporter timeline", async () => {
+    const mentionReady = await isClubMeldungMentionSchemaReady();
+    if (!mentionReady) return;
+
+    await grantTenantPermission(tenantAId, handlerAId, PERMISSIONS.MELDUNGEN_VIEW_ALL);
+    await grantTenantPermission(tenantAId, handlerBId, PERMISSIONS.MELDUNGEN_VIEW_ALL);
+
+    const handlerB = await prisma.user.findUniqueOrThrow({ where: { id: handlerBId } });
+    const token = meldungMentionToken(handlerB.firstName, handlerB.lastName);
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "mention-flow",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `mention-${RUN}`,
+    });
+
+    await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      expectedVersion: created.meldung.version,
+    });
+
+    await postClubMeldungMessage({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      audience: "INTERNAL_NOTE",
+      body: `FYI ${token}`,
+      mentionedUserIds: [handlerBId],
+    });
+
+    const after = await prisma.clubMeldung.findUniqueOrThrow({
+      where: { id: created.meldung.id },
+      select: { accountableUserId: true },
+    });
+    expect(after.accountableUserId).toBe(handlerAId);
+
+    const mentions = await prisma.clubMeldungMessageMention.findMany({
+      where: { tenantId: tenantAId, userId: handlerBId },
+    });
+    expect(mentions.length).toBe(1);
+
+    const reporterView = await listClubMeldungReporterTimeline(
+      tenantAId,
+      created.meldung.id,
+      false,
+    );
+    expect(reporterView.messages).toHaveLength(0);
+  });
+
+  it("lists active members for assignee pickers while mention search stays internal-read scoped", async () => {
+    const assignOnly = await createMember(prisma, tenantAId, "assign-only-member");
+    const assignOptions = await loadClubMeldungAssignOptions(tenantAId);
+    const assignRow = assignOptions.members.find((member) => member.id === assignOnly.id);
+    expect(assignRow).toBeDefined();
+    expect(assignRow?.canOperateCase).toBe(false);
+
+    const mentionReady = await isClubMeldungMentionSchemaReady();
+    if (!mentionReady) return;
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "assign-mention-split",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `assign-mention-split-${RUN}`,
+    });
+
+    await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      expectedVersion: created.meldung.version,
+    });
+
+    const mentionHits = await searchMeldungMentionCandidates({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      search: "handler",
+    });
+    expect(mentionHits.some((row) => row.userId === assignOnly.id)).toBe(false);
+    expect(mentionHits.some((row) => row.userId === handlerBId)).toBe(true);
   });
 });

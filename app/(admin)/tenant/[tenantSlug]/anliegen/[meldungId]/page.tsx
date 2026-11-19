@@ -56,8 +56,8 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
     <PageShell fullWidth>
       <DetailPagePattern
         eyebrow="Meine Meldung"
-        title={meldung.caseNumber}
-        description={meldung.subject}
+        title={meldung.subject}
+        description={meldung.caseNumber}
         breadcrumbs={[
           { label: "Anliegen", href: `/tenant/${tenantSlug}/anliegen` },
           { label: meldung.caseNumber },
@@ -72,8 +72,11 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
           description={meldung.description}
           category={meldung.category}
           status={meldung.status}
-          version={meldung.version}
           createdBanner={created === "1"}
+          attachments={meldung.attachments.map((row) => ({
+            id: row.id,
+            originalFilename: row.attachment.originalFilename,
+          }))}
           messages={timeline.messages.map((m) => ({
             id: m.id,
             body: m.body,
