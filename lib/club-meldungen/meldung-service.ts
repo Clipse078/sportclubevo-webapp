@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { allocateClubMeldungCaseNumber } from "./case-number";
+import { assertAttachmentLinkableForMeldung } from "./attachment-link";
 import { recordClubMeldungHistory } from "./history-service";
 import {
   emitMeldungAssignedNotification,
@@ -142,16 +143,21 @@ async function linkAttachmentsTx(
   },
 ) {
   for (const communicationAttachmentId of input.attachmentIds) {
-    const attachment = await tx.communicationAttachment.findFirst({
-      where: {
-        id: communicationAttachmentId,
+    try {
+      await assertAttachmentLinkableForMeldung(tx, {
         tenantId: input.tenantId,
-        createdByUserId: input.uploadedByUserId,
-        lifecycleStatus: { in: ["STAGED", "READY"] },
-      },
-      select: { id: true },
-    });
-    if (!attachment) {
+        uploaderUserId: input.uploadedByUserId,
+        communicationAttachmentId,
+        targetMeldungId: input.meldungId,
+      });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "VALIDATION";
+      if (code === "ATTACHMENT_ALREADY_LINKED") {
+        throw new ClubMeldungServiceError(
+          "Anhang ist bereits einer anderen Meldung zugeordnet",
+          "CONFLICT",
+        );
+      }
       throw new ClubMeldungServiceError("Anhang nicht gefunden oder nicht bereit", "VALIDATION");
     }
     await tx.clubMeldungAttachment.create({

@@ -2,6 +2,9 @@
  * Read-only incident inspection — stdout is safe (no credentials).
  * Usage: npx tsx scripts/readonly-investigate-meldung-migration.ts
  */
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { Pool } from "pg";
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
@@ -23,7 +26,7 @@ async function inspect(label: string, url: string | undefined) {
 
     const targetMigration = (
       await pool.query(
-        `SELECT migration_name, started_at, finished_at, applied_steps_count, rolled_back_at,
+        `SELECT migration_name, started_at, finished_at, applied_steps_count, rolled_back_at, checksum,
                 left(coalesce(logs, ''), 200) AS logs_preview
          FROM "_prisma_migrations"
          WHERE migration_name = $1`,
@@ -56,6 +59,29 @@ async function inspect(label: string, url: string | undefined) {
       )
     ).rows[0] as { n: number };
 
+    const aggregateCounts = exists
+      ? (
+          await pool.query(
+            `SELECT
+              (SELECT COUNT(*)::int FROM "ClubMeldung") AS club_meldung,
+              (SELECT COUNT(*)::int FROM "ClubMeldungAttachment") AS club_meldung_attachment,
+              (SELECT COUNT(*)::int FROM "ClubMeldungMessage") AS club_meldung_message,
+              (SELECT COUNT(*)::int FROM "ClubMeldungHistoryEvent") AS club_meldung_history`,
+          )
+        ).rows[0]
+      : null;
+
+    const migrationPath = join(
+      process.cwd(),
+      "prisma/migrations/20261120120000_sce_anliegen_01_foundation/migration.sql",
+    );
+    const repoChecksum = createHash("sha256")
+      .update(readFileSync(migrationPath, "utf8"))
+      .digest("hex");
+    const dbChecksum = (
+      targetMigration[0] as { checksum?: string } | undefined
+    )?.checksum;
+
     console.log(
       JSON.stringify(
         {
@@ -64,8 +90,16 @@ async function inspect(label: string, url: string | undefined) {
           fingerprint: fp,
           matchesStagePoolerFingerprint: fp?.toLowerCase() === STAGE_FP,
           clubMeldungTableExists: exists,
+          aggregateRowCounts: aggregateCounts,
           foundationMigration: targetMigration,
-          incompleteMigrations: incomplete,
+          migrationChecksum: {
+            repositorySha256: repoChecksum,
+            databaseRecorded: dbChecksum ?? null,
+            matches: dbChecksum ? dbChecksum === repoChecksum : null,
+          },
+          preExistingUnfinishedMigrationsSample: incomplete,
+          preExistingUnfinishedMigrationNote:
+            "Rows with finished_at IS NULL pre-date this package; not repaired or assessed as harmless here.",
           meldungenPermissionCatalogCount: meldungPerms.length,
           meldungenPermissionKeys: meldungPerms.map((p) => p.key),
           meldungenRolePermissionGrants: roleGrantCount.n,

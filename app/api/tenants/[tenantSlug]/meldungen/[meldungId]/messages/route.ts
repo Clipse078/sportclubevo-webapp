@@ -23,6 +23,20 @@ export async function POST(
     return NextResponse.json({ error: "Nachricht fehlt" }, { status: 400 });
   }
 
+  if (
+    "attachmentIds" in body ||
+    "attachments" in body ||
+    "attachmentId" in body
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Anhänge an interne Nachrichten oder Meldungsantworten werden nicht unterstützt. Bitte nur fallbezogene Anhänge bei der Erstellung verwenden.",
+      },
+      { status: 400 },
+    );
+  }
+
   const asReporter = Boolean(body.asReporter);
   const audience = body.audience;
 

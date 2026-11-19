@@ -29,4 +29,6 @@ export const CLUB_MELDUNG_WORKSPACE_COPY = {
     "E-Mail-Kanal ist in dieser Umgebung nicht aktiviert. Meldungen werden über Web und API aufgenommen.",
   visibilityNote:
     "Vertrauliche Beschwerden erscheinen nicht automatisch in einer breiten Betriebswarteschlange. Zugriff erfolgt nur für berechtigte Personen mit expliziter Rolle.",
+  attachmentLifecycleNote:
+    "Fall-Anhänge nur bei der Erstellung. Interne Notizen unterstützen keine Anhänge. Nicht verknüpfte Uploads (STAGED/READY) werden nach SCE-COMM-EVO-09 nach spätestens 7 Tagen bereinigt, sofern sie an keiner Meldung hängen.",
 } as const;
