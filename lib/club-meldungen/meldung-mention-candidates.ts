@@ -13,6 +13,7 @@ import {
   loadMeldungMentionAccessRecord,
   type MeldungMentionAccessRecord,
 } from "./meldung-mention-auth";
+import { searchEligiblePersonUserIdentitiesInTenant } from "@/lib/people/person-user-identity";
 import { meldungMentionDisplayName } from "./meldung-mention-tokens";
 
 export type MeldungMentionCandidate = {
@@ -39,16 +40,42 @@ function mapRows(
   rows: Array<{
     user: { id: string; firstName: string; lastName: string; isActive: boolean };
   }>,
+  personNameByUserId: Map<string, { firstName: string; lastName: string }>,
 ): MeldungMentionCandidate[] {
   return rows
     .map((m) => m.user)
     .filter((u) => u.isActive)
-    .map((u) => ({
-      userId: u.id,
-      firstName: u.firstName,
-      lastName: u.lastName,
-      displayName: meldungMentionDisplayName(u.firstName, u.lastName),
-    }));
+    .map((u) => {
+      const personName = personNameByUserId.get(u.id);
+      const firstName = personName?.firstName ?? u.firstName;
+      const lastName = personName?.lastName ?? u.lastName;
+      return {
+        userId: u.id,
+        firstName,
+        lastName,
+        displayName: meldungMentionDisplayName(firstName, lastName),
+      };
+    });
+}
+
+async function loadLinkedPersonNamesForUsers(
+  tenantId: string,
+  userIds: string[],
+): Promise<Map<string, { firstName: string; lastName: string }>> {
+  if (userIds.length === 0) return new Map();
+  const people = await prisma.person.findMany({
+    where: {
+      tenantId,
+      isActive: true,
+      userId: { in: userIds },
+    },
+    select: { userId: true, firstName: true, lastName: true },
+  });
+  return new Map(
+    people
+      .filter((row): row is typeof row & { userId: string } => row.userId != null)
+      .map((row) => [row.userId, { firstName: row.firstName, lastName: row.lastName }]),
+  );
 }
 
 export async function searchMeldungMentionCandidates(input: {
@@ -65,11 +92,34 @@ export async function searchMeldungMentionCandidates(input: {
   const record = await loadMeldungMentionAccessRecord(input.tenantId, input.meldungId);
   if (!record) return [];
 
+  const personMatches =
+    term.length > 0
+      ? await searchEligiblePersonUserIdentitiesInTenant(
+          input.tenantId,
+          term,
+          MELDUNG_MENTION_SEARCH_LIMIT * 4,
+        )
+      : [];
+  const personMatchedUserIds = personMatches.map((row) => row.userId);
+
   const max = input.limit ?? MELDUNG_MENTION_SEARCH_LIMIT;
   const batchSize = Math.max(max * 3, max);
   let skip = 0;
   const results: MeldungMentionCandidate[] = [];
   const seen = new Set<string>();
+
+  const activeUserWhere =
+    term.length > 0
+      ? {
+          isActive: true,
+          OR: [
+            ...(userFilter.OR ?? []),
+            ...(personMatchedUserIds.length > 0
+              ? [{ id: { in: personMatchedUserIds } }]
+              : []),
+          ],
+        }
+      : { isActive: true, ...userFilter };
 
   while (results.length < max && skip < MELDUNG_MENTION_SEARCH_MAX_DB_ROWS) {
     const take = Math.min(batchSize, MELDUNG_MENTION_SEARCH_MAX_DB_ROWS - skip);
@@ -78,7 +128,7 @@ export async function searchMeldungMentionCandidates(input: {
         tenantId: input.tenantId,
         isActive: true,
         userId: { not: input.actorUserId },
-        user: { isActive: true, ...userFilter },
+        user: activeUserWhere,
       },
       select: {
         user: { select: { id: true, firstName: true, lastName: true, isActive: true } },
@@ -91,7 +141,9 @@ export async function searchMeldungMentionCandidates(input: {
     skip += memberships.length;
     if (memberships.length === 0) break;
 
-    const options = mapRows(memberships).filter((row) => !seen.has(row.userId));
+    const userIds = memberships.map((row) => row.user.id);
+    const personNameByUserId = await loadLinkedPersonNamesForUsers(input.tenantId, userIds);
+    const options = mapRows(memberships, personNameByUserId).filter((row) => !seen.has(row.userId));
     for (const row of options) {
       seen.add(row.userId);
     }

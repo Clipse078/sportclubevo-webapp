@@ -34,6 +34,20 @@ export async function loadClubMeldungAssignOptions(
     getEligibleTenantMembers(tenantId),
   ]);
 
+  const linkedPeople = await prisma.person.findMany({
+    where: {
+      tenantId,
+      isActive: true,
+      userId: { in: members.map((member) => member.userId) },
+    },
+    select: { userId: true, firstName: true, lastName: true },
+  });
+  const personNameByUserId = new Map(
+    linkedPeople
+      .filter((row): row is typeof row & { userId: string } => row.userId != null)
+      .map((row) => [row.userId, { firstName: row.firstName, lastName: row.lastName }]),
+  );
+
   const resolver = createEffectivePermissionResolver(prisma);
   const memberOptions = await Promise.all(
     members.map(async (member) => {
@@ -42,10 +56,11 @@ export async function loadClubMeldungAssignOptions(
         tenantId,
         permission: PERMISSIONS.MELDUNGEN_HANDLE,
       });
+      const personName = personNameByUserId.get(member.userId);
       return {
         id: member.userId,
-        firstName: member.firstName,
-        lastName: member.lastName,
+        firstName: personName?.firstName ?? member.firstName,
+        lastName: personName?.lastName ?? member.lastName,
         canOperateCase,
       };
     }),

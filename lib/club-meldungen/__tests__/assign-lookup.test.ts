@@ -6,6 +6,9 @@ vi.mock("@/lib/db/prisma", () => ({
     orgUnit: {
       findMany: vi.fn(),
     },
+    person: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -27,6 +30,8 @@ import { getEligibleTenantMembers } from "@/lib/roles/tenant-queries";
 describe("loadClubMeldungAssignOptions", () => {
   beforeEach(() => {
     vi.mocked(prisma.orgUnit.findMany).mockReset();
+    vi.mocked(prisma.person.findMany).mockReset();
+    vi.mocked(prisma.person.findMany).mockResolvedValue([]);
     vi.mocked(getEligibleTenantMembers).mockReset();
     vi.mocked(createEffectivePermissionResolver).mockReturnValue({
       hasPermission: vi.fn().mockResolvedValue(false),
@@ -97,5 +102,36 @@ describe("loadClubMeldungAssignOptions", () => {
         permission: PERMISSIONS.MELDUNGEN_HANDLE,
       }),
     );
+  });
+
+  it("prefers linked Person names over bootstrap User account labels", async () => {
+    vi.mocked(prisma.orgUnit.findMany).mockResolvedValue([] as never);
+    vi.mocked(getEligibleTenantMembers).mockResolvedValue([
+      {
+        userId: "user-club-admin",
+        firstName: "FC Allschwil",
+        lastName: "Club Admin",
+        email: "admin@example.com",
+        roleIds: [],
+      },
+    ]);
+    vi.mocked(prisma.person.findMany).mockResolvedValue([
+      {
+        userId: "user-club-admin",
+        firstName: "Michael",
+        lastName: "Duijster",
+      },
+    ] as never);
+
+    const options = await loadClubMeldungAssignOptions("tenant-1");
+
+    expect(options.members).toEqual([
+      {
+        id: "user-club-admin",
+        firstName: "Michael",
+        lastName: "Duijster",
+        canOperateCase: false,
+      },
+    ]);
   });
 });
