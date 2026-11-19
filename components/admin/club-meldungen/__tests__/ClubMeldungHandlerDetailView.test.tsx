@@ -22,7 +22,10 @@ const baseProps = {
   nextStep: "Techniker informieren",
   accountableUser: { id: "user-handler", firstName: "Alex", lastName: "Muster" },
   orgUnit: { id: "ou-1", name: "Infrastruktur" },
-  reporterUser: { firstName: "Sam", lastName: "Reporter" },
+  reporterUser: { id: "user-reporter", firstName: "Sam", lastName: "Reporter" },
+  createdAt: "2026-01-01T08:00:00.000Z",
+  createdByUser: { id: "user-reporter", firstName: "Sam", lastName: "Reporter" },
+  mentionsEnabled: false,
   duplicateOf: null,
   attachments: [],
   messages: [],
@@ -66,19 +69,57 @@ describe("ClubMeldungHandlerDetailView", () => {
 
   it("keeps separate drafts for reply modes", () => {
     render(<ClubMeldungHandlerDetailView {...baseProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Interne Notiz" }));
-    const textarea = screen.getByLabelText("Interne Notiz verfassen");
-    fireEvent.change(textarea, { target: { value: "interner Entwurf" } });
+    const internalDraft = screen.getByLabelText("Interner Kommentar verfassen");
+    fireEvent.change(internalDraft, { target: { value: "interner Entwurf" } });
     fireEvent.click(screen.getByRole("button", { name: "Antwort an meldende Person" }));
     const publicDraft = screen.getByLabelText("Antwort an meldende Person verfassen");
     expect(publicDraft).toHaveValue("");
     fireEvent.change(publicDraft, { target: { value: "öffentlicher Entwurf" } });
-    fireEvent.click(screen.getByRole("button", { name: "Interne Notiz" }));
-    expect(screen.getByLabelText("Interne Notiz verfassen")).toHaveValue("interner Entwurf");
+    fireEvent.click(screen.getByRole("button", { name: "Interner Kommentar" }));
+    expect(screen.getByLabelText("Interner Kommentar verfassen")).toHaveValue("interner Entwurf");
     fireEvent.click(screen.getByRole("button", { name: "Antwort an meldende Person" }));
     expect(screen.getByLabelText("Antwort an meldende Person verfassen")).toHaveValue(
       "öffentlicher Entwurf",
     );
+  });
+
+  it("shows Verantwortlich and Erstellt von in the sidebar", () => {
+    render(<ClubMeldungHandlerDetailView {...baseProps} accountableUser={null} />);
+    expect(screen.getByText("Noch nicht zugewiesen")).toBeTruthy();
+    expect(screen.getByText("Erstellt von")).toBeTruthy();
+    expect(screen.getByText("Sam Reporter")).toBeTruthy();
+  });
+
+  it("filters activity to comments only", () => {
+    render(
+      <ClubMeldungHandlerDetailView
+        {...baseProps}
+        messages={[
+          {
+            id: "msg-1",
+            body: "Intern",
+            audience: "INTERNAL_NOTE",
+            createdAt: "2026-01-02T10:00:00.000Z",
+            author: { firstName: "Alex", lastName: "Muster" },
+          },
+        ]}
+        history={[
+          {
+            id: "hist-1",
+            eventType: "STATUS_CHANGED",
+            createdAt: "2026-01-02T09:30:00.000Z",
+            actor: { firstName: "Alex", lastName: "Muster" },
+            payloadJson: { to: "IN_PROGRESS" },
+          },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Kommentare" }));
+    expect(screen.getByText("Intern")).toBeTruthy();
+    expect(screen.queryByText("Status: In Bearbeitung")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Aktivitäten" }));
+    expect(screen.getByText("Status: In Bearbeitung")).toBeTruthy();
+    expect(screen.queryByText("Intern")).toBeNull();
   });
 
   it("renders compact system rows and merges duplicate message audit entries", () => {
@@ -115,7 +156,7 @@ describe("ClubMeldungHandlerDetailView", () => {
     expect(screen.getByText("Wir prüfen das.")).toBeTruthy();
     expect(screen.getByText("Status: In Bearbeitung")).toBeTruthy();
     expect(
-      within(screen.getByLabelText("Verlauf")).queryByText("Antwort an meldende Person"),
+      within(screen.getByLabelText("Aktivität")).queryByText("Antwort an meldende Person"),
     ).toBeNull();
   });
 

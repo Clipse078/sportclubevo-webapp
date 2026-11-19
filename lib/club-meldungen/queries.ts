@@ -92,6 +92,7 @@ export async function listClubMeldungReporterTimeline(
   tenantId: string,
   meldungId: string,
   includeInternal: boolean,
+  includeMentions = false,
 ) {
   const [messages, history] = await Promise.all([
     prisma.clubMeldungMessage.findMany({
@@ -103,6 +104,15 @@ export async function listClubMeldungReporterTimeline(
       orderBy: { createdAt: "asc" },
       include: {
         author: { select: { id: true, firstName: true, lastName: true } },
+        ...(includeMentions
+          ? {
+              mentions: {
+                include: {
+                  user: { select: { id: true, firstName: true, lastName: true } },
+                },
+              },
+            }
+          : {}),
       },
     }),
     includeInternal

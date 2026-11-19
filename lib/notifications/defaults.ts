@@ -37,6 +37,7 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   MELDUNG_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
   MELDUNG_REPORTER_REPLY: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
   MELDUNG_RESOLVED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  MELDUNG_MENTION: { inAppEnabled: true, emailEnabled: false, pushEnabled: false },
 };
 
 export function getDefaultNotificationPreferences(): Record<

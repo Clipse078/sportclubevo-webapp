@@ -4,12 +4,18 @@ import {
   type ClubMeldungHistoryPresentation,
 } from "@/lib/club-meldungen/history-copy";
 
+export type ClubMeldungTimelineMention = {
+  userId: string;
+  displayName: string;
+};
+
 export type ClubMeldungTimelineMessage = {
   id: string;
   body: string;
   audience: "REPORTER_REPLY" | "INTERNAL_NOTE";
   createdAt: string;
   author: { firstName: string; lastName: string };
+  mentions?: ClubMeldungTimelineMention[];
 };
 
 export type ClubMeldungTimelineHistory = {

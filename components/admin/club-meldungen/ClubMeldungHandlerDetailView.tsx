@@ -12,6 +12,10 @@ import {
 import type { ClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
 import { buildClubMeldungHandlerTimeline } from "@/lib/club-meldungen/timeline";
 import { cn } from "@/lib/cn";
+import { CoordinatorAvatar } from "@/components/admin/registrations/WaitingListCoordinatorPicker";
+import { ClubMeldungMessageBody } from "@/components/admin/club-meldungen/ClubMeldungMessageBody";
+import { ClubMeldungReplyComposer } from "@/components/admin/club-meldungen/ClubMeldungReplyComposer";
+import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
 
 type Message = {
   id: string;
@@ -19,6 +23,7 @@ type Message = {
   audience: "REPORTER_REPLY" | "INTERNAL_NOTE";
   createdAt: string;
   author: { firstName: string; lastName: string };
+  mentions?: Array<{ userId: string; displayName: string }>;
 };
 
 type HistoryEvent = {
@@ -66,7 +71,10 @@ type Props = {
   nextStep: string | null;
   accountableUser: { id: string; firstName: string; lastName: string } | null;
   orgUnit: { id: string; name: string } | null;
-  reporterUser: { firstName: string; lastName: string };
+  reporterUser: { id: string; firstName: string; lastName: string };
+  createdAt: string;
+  createdByUser: { id: string; firstName: string; lastName: string } | null;
+  mentionsEnabled?: boolean;
   duplicateOf: { id: string; caseNumber: string } | null;
   attachments: Attachment[];
   messages: Message[];
@@ -75,6 +83,7 @@ type Props = {
 };
 
 type ActivePanel = "assign" | "status" | "task" | "duplicate" | "more" | null;
+type ActivityFilter = "all" | "comments" | "events";
 
 const STATUS_OPTIONS: ClubMeldungStatus[] = ["RECEIVED", "IN_PROGRESS", "WAITING", "DONE"];
 
@@ -86,8 +95,10 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
   const [replyDraftReporter, setReplyDraftReporter] = useState("");
   const [replyDraftInternal, setReplyDraftInternal] = useState("");
   const [messageAudience, setMessageAudience] = useState<"REPORTER_REPLY" | "INTERNAL_NOTE">(
-    "REPORTER_REPLY",
+    "INTERNAL_NOTE",
   );
+  const [internalMentionedUserIds, setInternalMentionedUserIds] = useState<string[]>([]);
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [waitReason, setWaitReason] = useState(props.waitReason ?? "");
   const [resolutionSummary, setResolutionSummary] = useState("");
   const [reopenReason, setReopenReason] = useState("");
@@ -202,7 +213,14 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body, audience: messageAudience }),
+          body: JSON.stringify({
+            body,
+            audience: messageAudience,
+            mentionedUserIds:
+              messageAudience === "INTERNAL_NOTE" && props.mentionsEnabled
+                ? internalMentionedUserIds
+                : undefined,
+          }),
         },
       );
       const payload = await response.json().catch(() => ({}));
@@ -212,6 +230,7 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
       }
       if (messageAudience === "INTERNAL_NOTE") {
         setReplyDraftInternal("");
+        setInternalMentionedUserIds([]);
       } else {
         setReplyDraftReporter("");
       }
@@ -296,6 +315,21 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
   const setActiveReplyDraft =
     messageAudience === "INTERNAL_NOTE" ? setReplyDraftInternal : setReplyDraftReporter;
 
+  const filteredTimeline = useMemo(() => {
+    if (activityFilter === "all") return timeline;
+    if (activityFilter === "comments") {
+      return timeline.filter((entry) => entry.kind === "message");
+    }
+    return timeline.filter((entry) => entry.kind === "history");
+  }, [activityFilter, timeline]);
+
+  const reporterDiffersFromCreator =
+    props.createdByUser != null && props.createdByUser.id !== props.reporterUser.id;
+
+  function personDisplayName(person: { firstName: string; lastName: string }) {
+    return meldungMentionDisplayName(person.firstName, person.lastName);
+  }
+
   return (
     <div
       className="mx-auto flex w-full max-w-6xl flex-col gap-6"
@@ -347,12 +381,87 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
             </SceClubDevelopmentSectionShell>
           ) : null}
 
-          <SceClubDevelopmentSectionShell title="Verlauf">
-            <ul className="space-y-2" aria-label="Verlauf">
-              {timeline.length === 0 ? (
-                <li className="text-sm text-[var(--muted)]">Noch keine Aktivität.</li>
+          <SceClubDevelopmentSectionShell title="Aktivität">
+            <div
+              className="flex flex-wrap gap-2"
+              role="tablist"
+              aria-label="Aktivitätsfilter"
+            >
+              {(
+                [
+                  ["all", "Alle"],
+                  ["comments", "Kommentare"],
+                  ["events", "Aktivitäten"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activityFilter === key}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-xs font-medium",
+                    activityFilter === key
+                      ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
+                      : "border-[var(--border)] text-[var(--foreground)]",
+                  )}
+                  onClick={() => setActivityFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {props.canMutate ? (
+              <div className="mt-4 space-y-3 border-b border-[var(--border)] pb-4">
+                <p className="text-xs font-medium text-[var(--text-2)]">Modus</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Nachrichtenmodus">
+                  <button
+                    type="button"
+                    className={cn(
+                      "rounded-md border px-3 py-1.5 text-xs font-medium",
+                      messageAudience === "INTERNAL_NOTE"
+                        ? "border-amber-700 bg-amber-700 text-white"
+                        : "border-[var(--border)] text-[var(--foreground)]",
+                    )}
+                    onClick={() => setMessageAudience("INTERNAL_NOTE")}
+                  >
+                    Interner Kommentar
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "rounded-md border px-3 py-1.5 text-xs font-medium",
+                      messageAudience === "REPORTER_REPLY"
+                        ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
+                        : "border-[var(--border)] text-[var(--foreground)]",
+                    )}
+                    onClick={() => setMessageAudience("REPORTER_REPLY")}
+                  >
+                    Antwort an meldende Person
+                  </button>
+                </div>
+                <ClubMeldungReplyComposer
+                  tenantSlug={props.tenantSlug}
+                  meldungId={props.meldungId}
+                  audience={messageAudience}
+                  disabled={!props.canMutate}
+                  body={activeReplyDraft}
+                  onBodyChange={setActiveReplyDraft}
+                  mentionedUserIds={internalMentionedUserIds}
+                  onMentionedUserIdsChange={setInternalMentionedUserIds}
+                  onSubmit={sendMessage}
+                  pending={pending}
+                  error={error}
+                />
+              </div>
+            ) : null}
+
+            <ul className="mt-4 space-y-2" aria-label="Aktivität">
+              {filteredTimeline.length === 0 ? (
+                <li className="text-sm text-[var(--muted)]">Noch keine Einträge in dieser Ansicht.</li>
               ) : (
-                timeline.map((entry) => {
+                filteredTimeline.map((entry) => {
                   if (entry.kind === "history") {
                     const { presentation } = entry;
                     return (
@@ -398,98 +507,78 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
                       <p className="text-xs text-[var(--muted)]">
                         {message.author.firstName} {message.author.lastName} ·{" "}
                         {new Date(message.createdAt).toLocaleString("de-CH")}
-                        {internal ? " · Interne Notiz" : " · Antwort an meldende Person"}
+                        {internal ? " · Interner Kommentar" : " · Antwort an meldende Person"}
                       </p>
-                      <p className="mt-1 whitespace-pre-wrap text-[var(--foreground)]">
-                        {message.body}
-                      </p>
+                      <ClubMeldungMessageBody
+                        body={message.body}
+                        mentions={message.mentions ?? []}
+                      />
                     </li>
                   );
                 })
               )}
             </ul>
           </SceClubDevelopmentSectionShell>
-
-          {props.canMutate ? (
-            <SceClubDevelopmentSectionShell title="Antwort verfassen">
-              <p className="text-xs font-medium text-[var(--text-2)]" id="meldung-reply-audience-label">
-                Zielgruppe vor dem Senden
-              </p>
-              <div
-                className="mt-2 flex flex-wrap gap-2"
-                role="group"
-                aria-labelledby="meldung-reply-audience-label"
-              >
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-md border px-3 py-1.5 text-xs font-medium",
-                    messageAudience === "REPORTER_REPLY"
-                      ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
-                      : "border-[var(--border)] text-[var(--foreground)]",
-                  )}
-                  onClick={() => setMessageAudience("REPORTER_REPLY")}
-                >
-                  Antwort an meldende Person
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-md border px-3 py-1.5 text-xs font-medium",
-                    messageAudience === "INTERNAL_NOTE"
-                      ? "border-amber-700 bg-amber-700 text-white"
-                      : "border-[var(--border)] text-[var(--foreground)]",
-                  )}
-                  onClick={() => setMessageAudience("INTERNAL_NOTE")}
-                >
-                  Interne Notiz
-                </button>
-              </div>
-              <textarea
-                rows={4}
-                value={activeReplyDraft}
-                onChange={(event) => setActiveReplyDraft(event.target.value)}
-                className="mt-3 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                placeholder="Nachricht verfassen…"
-                disabled={pending}
-                aria-label={
-                  messageAudience === "INTERNAL_NOTE"
-                    ? "Interne Notiz verfassen"
-                    : "Antwort an meldende Person verfassen"
-                }
-              />
-              {error ? (
-                <p className="mt-2 text-sm text-red-700" role="alert">
-                  {error}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                disabled={pending || !activeReplyDraft.trim()}
-                className="sce-button-primary mt-3 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60"
-                onClick={sendMessage}
-              >
-                Senden
-              </button>
-            </SceClubDevelopmentSectionShell>
-          ) : null}
         </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-4">
           <div className={cn(SCE_CD_WORKSPACE_PANEL_CLASS, "space-y-3 text-sm")}>
             <h2 className="text-sm font-semibold text-[var(--foreground)]">Zuständigkeit</h2>
-            <dl className="space-y-2 text-[var(--text-2)]">
+            <dl className="space-y-3 text-[var(--text-2)]">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Verantwortlich</dt>
+                <dd className="mt-1 flex items-center gap-2">
+                  {props.accountableUser ? (
+                    <>
+                      <CoordinatorAvatar
+                        name={personDisplayName(props.accountableUser)}
+                        compact
+                      />
+                      <span>{personDisplayName(props.accountableUser)}</span>
+                    </>
+                  ) : (
+                    <span className="text-[var(--muted)]">Noch nicht zugewiesen</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Erstellt von</dt>
+                <dd className="mt-1">
+                  {props.createdByUser ? (
+                    <div className="flex items-center gap-2">
+                      <CoordinatorAvatar
+                        name={personDisplayName(props.createdByUser)}
+                        compact
+                      />
+                      <div>
+                        <span>{personDisplayName(props.createdByUser)}</span>
+                        <p className="text-xs text-[var(--muted)]">
+                          {new Date(props.createdAt).toLocaleString("de-CH")}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-[var(--muted)]">
+                      Nicht verfügbar ·{" "}
+                      {new Date(props.createdAt).toLocaleString("de-CH")}
+                    </span>
+                  )}
+                </dd>
+              </div>
+              {reporterDiffersFromCreator ? (
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">
+                    Meldende Person
+                  </dt>
+                  <dd className="mt-1 flex items-center gap-2">
+                    <CoordinatorAvatar name={personDisplayName(props.reporterUser)} compact />
+                    <span>{personDisplayName(props.reporterUser)}</span>
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Bereich</dt>
                 <dd>{props.orgUnit?.name ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Person</dt>
-                <dd>
-                  {props.accountableUser
-                    ? `${props.accountableUser.firstName} ${props.accountableUser.lastName}`
-                    : "Ohne Verantwortliche"}
-                </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Nächster Schritt</dt>
@@ -501,12 +590,6 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
                   {props.followUpAt
                     ? new Date(props.followUpAt).toLocaleString("de-CH")
                     : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Meldende Person</dt>
-                <dd>
-                  {props.reporterUser.firstName} {props.reporterUser.lastName}
                 </dd>
               </div>
               {props.duplicateOf ? (

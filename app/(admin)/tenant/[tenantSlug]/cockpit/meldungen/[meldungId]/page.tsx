@@ -13,7 +13,9 @@ import ClubMeldungHandlerDetailView from "@/components/admin/club-meldungen/Club
 import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
 import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
+import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
 import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
+import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -60,7 +62,21 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     notFound();
   }
 
-  const timeline = await listClubMeldungReporterTimeline(tenant.id, meldungId, true);
+  const mentionsEnabled = await isClubMeldungMentionSchemaReady();
+  const timeline = await listClubMeldungReporterTimeline(
+    tenant.id,
+    meldungId,
+    true,
+    mentionsEnabled,
+  );
+  const createdEvent = timeline.history.find((event) => event.eventType === "CREATED");
+  const createdByUser = createdEvent?.actor
+    ? {
+        id: createdEvent.actor.id,
+        firstName: createdEvent.actor.firstName,
+        lastName: createdEvent.actor.lastName,
+      }
+    : null;
   const canMutate = canMutateMeldungInternal(meldung, {
     actorUserId,
     permissionKeys,
@@ -101,7 +117,14 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
           nextStep={meldung.nextStep}
           accountableUser={meldung.accountableUser}
           orgUnit={meldung.orgUnit}
-          reporterUser={meldung.reporterUser}
+          reporterUser={{
+            id: meldung.reporterUser.id,
+            firstName: meldung.reporterUser.firstName,
+            lastName: meldung.reporterUser.lastName,
+          }}
+          createdAt={meldung.createdAt.toISOString()}
+          createdByUser={createdByUser}
+          mentionsEnabled={mentionsEnabled}
           duplicateOf={meldung.duplicateOf}
           attachments={meldung.attachments.map((row) => ({
             id: row.id,
@@ -113,6 +136,13 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             audience: m.audience,
             createdAt: m.createdAt.toISOString(),
             author: m.author,
+            mentions:
+              "mentions" in m && Array.isArray(m.mentions)
+                ? m.mentions.map((row) => ({
+                    userId: row.user.id,
+                    displayName: meldungMentionDisplayName(row.user.firstName, row.user.lastName),
+                  }))
+                : undefined,
           }))}
           history={timeline.history.map((event) => ({
             id: event.id,

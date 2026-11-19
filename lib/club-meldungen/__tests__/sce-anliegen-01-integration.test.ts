@@ -25,6 +25,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 import { createSafeTestPrismaClient } from "@/lib/test/safe-test-prisma";
 import { prisma } from "@/lib/db/prisma";
+import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
+import { meldungMentionToken } from "@/lib/club-meldungen/meldung-mention-tokens";
+import type { PermissionKey } from "@/lib/permissions/permissions";
 
 const RUN = `sce-anliegen-01-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 
@@ -48,6 +51,31 @@ async function createMember(
     data: { tenantId, userId: user.id, isActive: active },
   });
   return user;
+}
+
+async function grantTenantPermission(
+  tenantId: string,
+  userId: string,
+  permissionKey: PermissionKey,
+) {
+  const permission = await prisma.permission.findUnique({ where: { key: permissionKey } });
+  if (!permission) return;
+  await prisma.userPermissionOverride.upsert({
+    where: {
+      tenantId_userId_permissionId: {
+        tenantId,
+        userId,
+        permissionId: permission.id,
+      },
+    },
+    create: {
+      tenantId,
+      userId,
+      permissionId: permission.id,
+      effect: "GRANT",
+    },
+    update: { effect: "GRANT" },
+  });
 }
 
 describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
@@ -101,6 +129,8 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       await prisma.notification.deleteMany({ where: { tenantId } });
       await prisma.task.deleteMany({ where: { tenantId } });
       await prisma.orgUnit.deleteMany({ where: { tenantId, key: { contains: RUN } } });
+      await prisma.userPermissionOverride.deleteMany({ where: { tenantId } });
+      await prisma.clubMeldungMessageMention.deleteMany({ where: { tenantId } }).catch(() => undefined);
       await prisma.tenantMembership.deleteMany({ where: { tenantId } });
       const users = await prisma.user.findMany({
         where: { email: { contains: RUN } },
@@ -775,5 +805,60 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       canViewAll: false,
     });
     expect(afterAssign.some((row) => row.id === unassigned.meldung.id)).toBe(false);
+  });
+
+  it("persists internal @mentions without exposing them on the reporter timeline", async () => {
+    const mentionReady = await isClubMeldungMentionSchemaReady();
+    if (!mentionReady) return;
+
+    await grantTenantPermission(tenantAId, handlerAId, PERMISSIONS.MELDUNGEN_VIEW_ALL);
+    await grantTenantPermission(tenantAId, handlerBId, PERMISSIONS.MELDUNGEN_VIEW_ALL);
+
+    const handlerB = await prisma.user.findUniqueOrThrow({ where: { id: handlerBId } });
+    const token = meldungMentionToken(handlerB.firstName, handlerB.lastName);
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "mention-flow",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `mention-${RUN}`,
+    });
+
+    await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      expectedVersion: created.meldung.version,
+    });
+
+    await postClubMeldungMessage({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      audience: "INTERNAL_NOTE",
+      body: `FYI ${token}`,
+      mentionedUserIds: [handlerBId],
+    });
+
+    const after = await prisma.clubMeldung.findUniqueOrThrow({
+      where: { id: created.meldung.id },
+      select: { accountableUserId: true },
+    });
+    expect(after.accountableUserId).toBe(handlerAId);
+
+    const mentions = await prisma.clubMeldungMessageMention.findMany({
+      where: { tenantId: tenantAId, userId: handlerBId },
+    });
+    expect(mentions.length).toBe(1);
+
+    const reporterView = await listClubMeldungReporterTimeline(
+      tenantAId,
+      created.meldung.id,
+      false,
+    );
+    expect(reporterView.messages).toHaveLength(0);
   });
 });
