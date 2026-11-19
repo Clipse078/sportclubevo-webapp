@@ -16,6 +16,7 @@ import { SceApplicationPageGrid } from "@/components/sce/shell/SceApplicationPag
 import "./authenticated-shell.css";
 import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
+import { resolveShellNavigationPermissionKeys } from "@/lib/nav/resolve-shell-navigation-permission-keys";
 import { userHasVereinsleitungWorkspaceAccess } from "@/lib/permissions/vereinsleitung-workspace-access";
 import { getActiveSeasonForTenant } from "@/lib/people/queries";
 import {
@@ -59,6 +60,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   const workspaceContext = resolveWorkspaceContextFromSessionUser(session.user);
 
   const actorUserId = session.user.effectiveUserId ?? session.user.id;
+  const shellNavigationPermissionKeys = await resolveShellNavigationPermissionKeys({
+    effectiveUserId: actorUserId,
+    activeTenantId: session.user.activeTenantId ?? null,
+  });
 
   const [ctx, linkedPersonProfile, participationNavCapable, vereinsleitungWorkspace, activeSeason] =
     await Promise.all([
@@ -136,7 +141,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
         <Suspense fallback={null}>
           <AppShellNavigation
-            permissionKeys={session.user.permissionKeys}
+            permissionKeys={shellNavigationPermissionKeys}
             workspaceContext={workspaceContext}
             clubName={ctx?.name}
             logoUrl={ctx?.logoUrl}
