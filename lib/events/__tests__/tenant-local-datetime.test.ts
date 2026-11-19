@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  calendarYearInTimeZone,
   parseTenantLocalDateTimeInput,
   resolveTenantEventTimezone,
   utcInstantToDateTimeLocalValue,
@@ -13,6 +14,13 @@ import {
 
 const ZURICH = "Europe/Zurich";
 const NEW_YORK = "America/New_York";
+
+describe("calendarYearInTimeZone", () => {
+  it("resolves year immediately before and after Europe/Zurich New Year", () => {
+    expect(calendarYearInTimeZone(new Date("2026-12-31T22:59:59.999Z"), ZURICH)).toBe(2026);
+    expect(calendarYearInTimeZone(new Date("2026-12-31T23:00:00.000Z"), ZURICH)).toBe(2027);
+  });
+});
 
 describe("resolveTenantEventTimezone", () => {
   it("falls back to Europe/Zurich when tenant timezone is unset", () => {
