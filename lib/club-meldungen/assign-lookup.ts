@@ -37,10 +37,10 @@ export async function loadClubMeldungAssignOptions(
   const resolver = createEffectivePermissionResolver(prisma);
   const memberOptions = await Promise.all(
     members.map(async (member) => {
-      const canOperateCase = await resolver.hasAnyPermission({
+      const canOperateCase = await resolver.hasPermission({
         userId: member.userId,
         tenantId,
-        permissions: [PERMISSIONS.MELDUNGEN_HANDLE, PERMISSIONS.MELDUNGEN_VIEW_ALL],
+        permission: PERMISSIONS.MELDUNGEN_HANDLE,
       });
       return {
         id: member.userId,
