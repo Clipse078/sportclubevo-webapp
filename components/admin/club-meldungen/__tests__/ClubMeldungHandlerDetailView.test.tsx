@@ -36,8 +36,8 @@ const baseProps = {
       { id: "ou-2", name: "Facility" },
     ],
     members: [
-      { id: "user-handler", firstName: "Alex", lastName: "Muster" },
-      { id: "user-alt", firstName: "Bianca", lastName: "Team" },
+      { id: "user-handler", firstName: "Alex", lastName: "Muster", canOperateCase: true },
+      { id: "user-alt", firstName: "Bianca", lastName: "Team", canOperateCase: true },
     ],
   },
 };
@@ -51,6 +51,10 @@ describe("ClubMeldungHandlerDetailView", () => {
         json: async () => ({ meldung: { version: 3 } }),
       }),
     );
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...window.location, reload: vi.fn() },
+    });
   });
 
   afterEach(() => {
@@ -85,7 +89,7 @@ describe("ClubMeldungHandlerDetailView", () => {
 
   it("shows Verantwortlich and Erstellt von in the sidebar", () => {
     render(<ClubMeldungHandlerDetailView {...baseProps} accountableUser={null} />);
-    expect(screen.getByText("Noch nicht zugewiesen")).toBeTruthy();
+    expect(screen.getByPlaceholderText(/Noch nicht zugewiesen/)).toBeTruthy();
     expect(screen.getByText("Erstellt von")).toBeTruthy();
     expect(screen.getByText("Sam Reporter")).toBeTruthy();
   });
@@ -160,25 +164,30 @@ describe("ClubMeldungHandlerDetailView", () => {
     ).toBeNull();
   });
 
-  it("allows selecting another org unit and member in the assignment panel", () => {
+  it("assigns another handler from the sidebar picker", () => {
+    render(<ClubMeldungHandlerDetailView {...baseProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "Verantwortliche Person ändern" }));
+    const assigneeSearch = screen.getByLabelText("Verantwortliche Person suchen");
+    fireEvent.change(assigneeSearch, { target: { value: "Bian" } });
+    fireEvent.keyDown(assigneeSearch, { key: "Enter" });
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/assign"),
+      expect.objectContaining({
+        body: expect.stringContaining('"accountableUserId":"user-alt"'),
+      }),
+    );
+  });
+
+  it("saves org unit from the assignment panel", () => {
     render(<ClubMeldungHandlerDetailView {...baseProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Zuständigkeit ändern" }));
-    const orgSelect = screen.getByLabelText("Bereich");
-    const memberSelect = screen.getByLabelText("Verantwortliche Person");
-    fireEvent.change(orgSelect, { target: { value: "ou-2" } });
-    fireEvent.change(memberSelect, { target: { value: "user-alt" } });
-    fireEvent.click(screen.getByRole("button", { name: "Zuständigkeit speichern" }));
+    fireEvent.change(screen.getByLabelText("Bereich"), { target: { value: "ou-2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Bereich speichern" }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/assign"),
       expect.objectContaining({
         method: "PATCH",
         body: expect.stringContaining('"orgUnitId":"ou-2"'),
-      }),
-    );
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/assign"),
-      expect.objectContaining({
-        body: expect.stringContaining('"accountableUserId":"user-alt"'),
       }),
     );
   });

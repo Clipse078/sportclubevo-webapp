@@ -5,6 +5,10 @@ import { Loader2, Send } from "lucide-react";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 import { MAX_CLUB_MELDUNG_MESSAGE_BODY_LENGTH } from "@/lib/club-meldungen/constants";
+import {
+  SCE_MELDUNG_LIGHT_PICKER_MUTED_TEXT,
+  sceMeldungLightPickerOptionClass,
+} from "@/lib/club-meldungen/meldung-picker-surface";
 import { CoordinatorAvatar } from "@/components/admin/registrations/WaitingListCoordinatorPicker";
 
 type MentionCandidate = {
@@ -19,10 +23,22 @@ type MentionContext = {
   query: string;
 };
 
+type MentionPanelState =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "results"; candidates: MentionCandidate[] }
+  | { kind: "empty" }
+  | { kind: "unavailable"; message: string }
+  | { kind: "error"; message: string };
+
+const MENTION_UNAVAILABLE_COPY = "Erwähnungen derzeit nicht verfügbar";
+const MENTION_NO_MATCH_COPY = "Keine berechtigte Person gefunden";
+
 type Props = {
   tenantSlug: string;
   meldungId: string;
   audience: "REPORTER_REPLY" | "INTERNAL_NOTE";
+  mentionsEnabled?: boolean;
   disabled?: boolean;
   body: string;
   onBodyChange: (value: string) => void;
@@ -53,6 +69,7 @@ export function ClubMeldungReplyComposer({
   tenantSlug,
   meldungId,
   audience,
+  mentionsEnabled = true,
   disabled = false,
   body,
   onBodyChange,
@@ -71,49 +88,78 @@ export function ClubMeldungReplyComposer({
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionStart, setMentionStart] = useState<number | null>(null);
-  const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
-  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [panelState, setPanelState] = useState<MentionPanelState>({ kind: "idle" });
   const [activeIndex, setActiveIndex] = useState(0);
 
   const trimmed = body.trim();
   const canSubmit = !disabled && !pending && trimmed.length > 0;
   const internal = audience === "INTERNAL_NOTE";
+  const mentionFeatureActive = internal && mentionsEnabled;
+
+  const candidates =
+    panelState.kind === "results" ? panelState.candidates : [];
 
   const listActiveIndex =
     candidates.length === 0 ? -1 : Math.min(Math.max(activeIndex, 0), candidates.length - 1);
 
   const fetchCandidates = useCallback(
     async (query: string) => {
+      if (!mentionsEnabled) {
+        setPanelState({
+          kind: "unavailable",
+          message: MENTION_UNAVAILABLE_COPY,
+        });
+        return;
+      }
+
       searchAbortRef.current?.abort();
       const controller = new AbortController();
       searchAbortRef.current = controller;
-      setCandidatesLoading(true);
+      setPanelState({ kind: "loading" });
       try {
         const res = await fetch(
           `/api/tenants/${encodeURIComponent(tenantSlug)}/meldungen/${encodeURIComponent(meldungId)}/mention-candidates?q=${encodeURIComponent(query)}`,
           { cache: "no-store", signal: controller.signal },
         );
-        const payload = await res.json();
-        setCandidates(res.ok && Array.isArray(payload.candidates) ? payload.candidates : []);
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
-        setCandidates([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setCandidatesLoading(false);
+        let payload: { candidates?: MentionCandidate[]; code?: string; error?: string } = {};
+        try {
+          payload = await res.json();
+        } catch {
+          payload = {};
         }
+
+        if (!res.ok) {
+          if (res.status === 503 || payload.code === "SCHEMA_UNAVAILABLE") {
+            setPanelState({ kind: "unavailable", message: MENTION_UNAVAILABLE_COPY });
+          } else if (res.status === 401 || res.status === 403) {
+            setPanelState({ kind: "unavailable", message: MENTION_UNAVAILABLE_COPY });
+          } else {
+            setPanelState({ kind: "error", message: MENTION_UNAVAILABLE_COPY });
+          }
+          return;
+        }
+
+        const next = Array.isArray(payload.candidates) ? payload.candidates : [];
+        if (next.length === 0) {
+          setPanelState({ kind: "empty" });
+        } else {
+          setPanelState({ kind: "results", candidates: next });
+        }
+      } catch (fetchError) {
+        if (fetchError instanceof Error && fetchError.name === "AbortError") return;
+        setPanelState({ kind: "error", message: MENTION_UNAVAILABLE_COPY });
       }
     },
-    [meldungId, tenantSlug],
+    [meldungId, mentionsEnabled, tenantSlug],
   );
 
   useEffect(() => {
-    if (!mentionOpen || !internal) return;
+    if (!mentionOpen || !mentionFeatureActive) return;
     const handle = window.setTimeout(() => {
       void fetchCandidates(mentionQuery);
     }, 180);
     return () => window.clearTimeout(handle);
-  }, [fetchCandidates, internal, mentionOpen, mentionQuery]);
+  }, [fetchCandidates, mentionFeatureActive, mentionOpen, mentionQuery]);
 
   useEffect(() => {
     if (!internal) {
@@ -122,7 +168,7 @@ export function ClubMeldungReplyComposer({
   }, [internal, onMentionedUserIdsChange]);
 
   const updateMentionState = (nextBody: string, cursor: number) => {
-    if (!internal) {
+    if (!mentionFeatureActive) {
       setMentionOpen(false);
       return;
     }
@@ -131,6 +177,7 @@ export function ClubMeldungReplyComposer({
       setMentionOpen(false);
       setMentionQuery("");
       setMentionStart(null);
+      setPanelState({ kind: "idle" });
       return;
     }
     setMentionOpen(true);
@@ -155,6 +202,7 @@ export function ClubMeldungReplyComposer({
     setMentionOpen(false);
     setMentionQuery("");
     setMentionStart(null);
+    setPanelState({ kind: "idle" });
 
     requestAnimationFrame(() => {
       const nextCursor = `${before}@${label} `.length;
@@ -163,11 +211,19 @@ export function ClubMeldungReplyComposer({
     });
   };
 
-  const filteredCandidates = useMemo(() => candidates, [candidates]);
-
   const ariaLabel = internal
     ? "Interner Kommentar verfassen"
     : "Antwort an meldende Person verfassen";
+
+  const showMentionPanel = mentionFeatureActive && mentionOpen;
+  const panelMessage = useMemo(() => {
+    if (panelState.kind === "loading") return null;
+    if (panelState.kind === "empty") return MENTION_NO_MATCH_COPY;
+    if (panelState.kind === "unavailable" || panelState.kind === "error") {
+      return panelState.message;
+    }
+    return null;
+  }, [panelState]);
 
   return (
     <div className="space-y-3">
@@ -187,10 +243,10 @@ export function ClubMeldungReplyComposer({
           onClick={(event) => updateMentionState(body, event.currentTarget.selectionStart)}
           onKeyUp={(event) => updateMentionState(body, event.currentTarget.selectionStart)}
           onKeyDown={(event) => {
-            if (internal && mentionOpen && filteredCandidates.length > 0) {
+            if (mentionFeatureActive && mentionOpen && candidates.length > 0) {
               if (event.key === "ArrowDown") {
                 event.preventDefault();
-                setActiveIndex((prev) => Math.min(prev + 1, filteredCandidates.length - 1));
+                setActiveIndex((prev) => Math.min(prev + 1, candidates.length - 1));
                 return;
               }
               if (event.key === "ArrowUp") {
@@ -200,14 +256,14 @@ export function ClubMeldungReplyComposer({
               }
               if (event.key === "Enter" && !event.shiftKey && listActiveIndex >= 0) {
                 event.preventDefault();
-                insertMention(filteredCandidates[listActiveIndex]);
+                insertMention(candidates[listActiveIndex]);
                 return;
               }
-              if (event.key === "Escape") {
-                event.preventDefault();
-                setMentionOpen(false);
-                return;
-              }
+            }
+            if (event.key === "Escape" && mentionOpen) {
+              event.preventDefault();
+              setMentionOpen(false);
+              setPanelState({ kind: "idle" });
             }
           }}
           disabled={disabled || pending}
@@ -216,31 +272,36 @@ export function ClubMeldungReplyComposer({
           placeholder="Nachricht verfassen…"
           aria-label={ariaLabel}
         />
-        {internal && mentionOpen ? (
+        {showMentionPanel ? (
           <PopoverContent
             anchorRef={anchorRef}
             open
             onOpenChange={setMentionOpen}
-            className="z-20 max-h-48 w-[min(100%,20rem)] overflow-y-auto p-1"
+            surfaceVariant="sce-light"
+            matchAnchorWidth={false}
+            className="z-20 max-h-48 w-[min(100%,20rem)] p-1"
           >
             <ul id={listboxId} role="listbox" aria-label="Personen vorschlagen">
-              {candidatesLoading ? (
-                <li className="flex items-center gap-2 px-2 py-2 text-xs text-[var(--muted)]">
+              {panelState.kind === "loading" ? (
+                <li className="flex items-center gap-2 px-2 py-2 text-xs text-slate-600">
                   <Loader2 className="size-3.5 animate-spin" aria-hidden />
                   Suche…
                 </li>
-              ) : filteredCandidates.length === 0 ? (
-                <li className="px-2 py-2 text-xs text-[var(--muted)]">Keine Vorschläge</li>
+              ) : panelMessage ? (
+                <li
+                  className={cn("px-2 py-2 text-xs", SCE_MELDUNG_LIGHT_PICKER_MUTED_TEXT)}
+                  role="status"
+                >
+                  {panelMessage}
+                </li>
               ) : (
-                filteredCandidates.map((user, index) => (
+                candidates.map((user, index) => (
                   <li key={user.id} role="option" aria-selected={index === listActiveIndex}>
                     <button
                       type="button"
                       className={cn(
-                        "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm",
-                        index === listActiveIndex
-                          ? "bg-[var(--surface-2)]"
-                          : "hover:bg-[var(--surface-2)]",
+                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-slate-900",
+                        sceMeldungLightPickerOptionClass(index === listActiveIndex),
                       )}
                       onMouseDown={(event) => {
                         event.preventDefault();
@@ -248,7 +309,7 @@ export function ClubMeldungReplyComposer({
                       }}
                     >
                       <CoordinatorAvatar name={user.displayName} compact />
-                      <span className="text-[var(--foreground)]">{user.displayName}</span>
+                      <span>{user.displayName}</span>
                     </button>
                   </li>
                 ))
@@ -288,3 +349,5 @@ export function ClubMeldungReplyComposer({
     </div>
   );
 }
+
+export { detectMentionContext, MENTION_NO_MATCH_COPY, MENTION_UNAVAILABLE_COPY };

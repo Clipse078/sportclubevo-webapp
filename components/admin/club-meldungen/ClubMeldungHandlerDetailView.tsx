@@ -15,6 +15,7 @@ import { cn } from "@/lib/cn";
 import { CoordinatorAvatar } from "@/components/admin/registrations/WaitingListCoordinatorPicker";
 import { ClubMeldungMessageBody } from "@/components/admin/club-meldungen/ClubMeldungMessageBody";
 import { ClubMeldungReplyComposer } from "@/components/admin/club-meldungen/ClubMeldungReplyComposer";
+import { ClubMeldungAssigneePicker } from "@/components/admin/club-meldungen/ClubMeldungAssigneePicker";
 import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
 
 type Message = {
@@ -113,9 +114,6 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
   >([]);
   const [selectedDuplicateId, setSelectedDuplicateId] = useState<string | null>(null);
   const [assignOrgUnitId, setAssignOrgUnitId] = useState<string | null>(props.orgUnit?.id ?? null);
-  const [assignUserId, setAssignUserId] = useState<string | null>(
-    props.accountableUser?.id ?? null,
-  );
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -130,7 +128,6 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
       const next = current === panel ? null : panel;
       if (next === "assign") {
         setAssignOrgUnitId(props.orgUnit?.id ?? null);
-        setAssignUserId(props.accountableUser?.id ?? null);
       }
       return next;
     });
@@ -199,8 +196,12 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
     saveAssignment(props.actorUserId, assignOrgUnitId ?? props.orgUnit?.id ?? null);
   }
 
-  function submitAssignment() {
-    saveAssignment(assignUserId, assignOrgUnitId);
+  function submitOrgUnitOnly() {
+    saveAssignment(props.accountableUser?.id ?? null, assignOrgUnitId);
+  }
+
+  function assignFromSidebar(accountableUserId: string | null) {
+    saveAssignment(accountableUserId, props.orgUnit?.id ?? assignOrgUnitId ?? null);
   }
 
   function sendMessage() {
@@ -445,6 +446,7 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
                   tenantSlug={props.tenantSlug}
                   meldungId={props.meldungId}
                   audience={messageAudience}
+                  mentionsEnabled={props.mentionsEnabled}
                   disabled={!props.canMutate}
                   body={activeReplyDraft}
                   onBodyChange={setActiveReplyDraft}
@@ -527,15 +529,23 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
             <dl className="space-y-3 text-[var(--text-2)]">
               <div>
                 <dt className="text-xs uppercase tracking-wide text-[var(--muted)]">Verantwortlich</dt>
-                <dd className="mt-1 flex items-center gap-2">
-                  {props.accountableUser ? (
-                    <>
+                <dd className="mt-1">
+                  {props.canMutate && props.assignOptions ? (
+                    <ClubMeldungAssigneePicker
+                      members={props.assignOptions.members}
+                      selectedUserId={props.accountableUser?.id ?? null}
+                      onSelect={assignFromSidebar}
+                      disabled={!props.canMutate}
+                      pending={pending}
+                    />
+                  ) : props.accountableUser ? (
+                    <div className="flex items-center gap-2">
                       <CoordinatorAvatar
                         name={personDisplayName(props.accountableUser)}
                         compact
                       />
                       <span>{personDisplayName(props.accountableUser)}</span>
-                    </>
+                    </div>
                   ) : (
                     <span className="text-[var(--muted)]">Noch nicht zugewiesen</span>
                   )}
@@ -672,35 +682,17 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
                           ))}
                         </select>
                       </label>
-                      <label className="block text-xs font-medium text-[var(--text-2)]">
-                        Verantwortliche Person
-                        <select
-                          className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm"
-                          value={assignUserId ?? ""}
-                          onChange={(event) =>
-                            setAssignUserId(event.target.value || null)
-                          }
-                          disabled={pending}
-                        >
-                          <option value="">Ohne Verantwortliche</option>
-                          {props.assignOptions.members.map((member) => (
-                            <option key={member.id} value={member.id}>
-                              {member.firstName} {member.lastName}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
                       <p className="text-xs text-[var(--muted)]">
-                        Die Auswahl listet aktive Vereinsmitglieder; sie erteilt keine
-                        Bearbeitungsberechtigung.
+                        Verantwortliche Person über «Verantwortlich» in der Spalte links
+                        zuweisen. Hier nur Bereich anpassen.
                       </p>
                       <button
                         type="button"
                         className="sce-button-primary w-full rounded-md px-3 py-2 text-sm font-medium disabled:opacity-60"
                         disabled={pending}
-                        onClick={submitAssignment}
+                        onClick={submitOrgUnitOnly}
                       >
-                        Zuständigkeit speichern
+                        Bereich speichern
                       </button>
                     </>
                   ) : null}

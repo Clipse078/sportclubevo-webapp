@@ -44,6 +44,8 @@ type PopoverContentProps = {
   className?: string;
   /** Stacking layer when portalled — composer popovers must sit above modal overlay roots. */
   floatingLayer?: SceFloatingLayer;
+  /** Default uses theme surface tokens; `sce-light` forces opaque white SCE workspace popovers. */
+  surfaceVariant?: "default" | "sce-light";
 };
 
 export function PopoverContent({
@@ -60,6 +62,7 @@ export function PopoverContent({
   constrainHeight = true,
   className,
   floatingLayer = "app",
+  surfaceVariant = "default",
 }: PopoverContentProps) {
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -115,8 +118,10 @@ export function PopoverContent({
         id={id}
         className={cn(
           resolveSceFloatingLayerClass(floatingLayer),
-          "rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
-          clipOverflow ? "overflow-y-auto" : "overflow-visible",
+          surfaceVariant === "sce-light"
+            ? "rounded-[var(--radius-xl)] border border-slate-200 bg-white py-1 text-slate-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)]"
+            : "rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
+          clipOverflow ? "overflow-y-auto overflow-x-hidden" : "overflow-visible",
           className,
         )}
         data-floating-layer={floatingLayer}

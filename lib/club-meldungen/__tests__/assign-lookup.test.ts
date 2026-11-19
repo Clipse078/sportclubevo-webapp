@@ -13,6 +13,12 @@ vi.mock("@/lib/roles/tenant-queries", () => ({
   getEligibleTenantMembers: vi.fn(),
 }));
 
+vi.mock("@/lib/permissions/services/effective-permission-resolver", () => ({
+  createEffectivePermissionResolver: vi.fn(() => ({
+    hasAnyPermission: vi.fn().mockResolvedValue(false),
+  })),
+}));
+
 import { prisma } from "@/lib/db/prisma";
 import { getEligibleTenantMembers } from "@/lib/roles/tenant-queries";
 
@@ -40,7 +46,7 @@ describe("loadClubMeldungAssignOptions", () => {
 
     expect(options.orgUnits).toEqual([{ id: "ou-1", name: "Infrastruktur" }]);
     expect(options.members).toEqual([
-      { id: "user-1", firstName: "Alex", lastName: "Muster" },
+      { id: "user-1", firstName: "Alex", lastName: "Muster", canOperateCase: false },
     ]);
     expect(prisma.orgUnit.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
