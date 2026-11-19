@@ -28,9 +28,7 @@ export async function POST(
 
   const actorResult = await requireMeldungApiActor(
     tenantSlug,
-    asReporter
-      ? [PERMISSIONS.MELDUNGEN_SUBMIT]
-      : [PERMISSIONS.MELDUNGEN_HANDLE, PERMISSIONS.MELDUNGEN_VIEW_ALL],
+    asReporter ? [PERMISSIONS.MELDUNGEN_SUBMIT] : [PERMISSIONS.MELDUNGEN_HANDLE],
   );
   if (!actorResult.ok) {
     return NextResponse.json({ error: actorResult.error }, { status: actorResult.status });

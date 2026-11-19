@@ -68,18 +68,36 @@ export function canViewMeldung(
   );
 }
 
-/** Mutations (assign, status, internal notes) require handle + visibility. */
+/**
+ * Mutations (assign, status, internal notes) require meldungen.handle plus
+ * applicable case scope (assigned, collaborator, or unassigned triage queue).
+ * meldungen.view_all grants read-all only — not mutation by itself.
+ */
 export function canMutateMeldungInternal(
   meldung: Pick<ClubMeldung, "accountableUserId" | "reporterUserId">,
   ctx: ClubMeldungAccessContext,
 ): boolean {
-  if (hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_VIEW_ALL)) {
-    return true;
-  }
   if (!hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_HANDLE)) {
     return false;
   }
-  return canViewMeldungInternal(meldung, ctx);
+  if (hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_VIEW_ALL)) {
+    return true;
+  }
+  if (meldung.accountableUserId == null) {
+    return true;
+  }
+  return canHandleMeldungInternal(meldung, ctx);
+}
+
+/** Explicit unassigned claim/triage: handle permission, queue visibility, not view_all alone. */
+export function canClaimUnassignedMeldung(
+  meldung: Pick<ClubMeldung, "accountableUserId">,
+  ctx: ClubMeldungAccessContext,
+): boolean {
+  return (
+    hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_HANDLE) &&
+    meldung.accountableUserId == null
+  );
 }
 
 export const MELDUNG_HANDLER_READ_PERMISSIONS = [

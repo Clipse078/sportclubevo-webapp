@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { CLUB_MELDUNG_CATEGORY_LABELS } from "@/lib/club-meldungen/copy";
 import type { ClubMeldungCategory } from "@prisma/client";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
+import ClubMeldungReporterAttachments, {
+  type ReporterAttachmentDraft,
+} from "@/components/admin/club-meldungen/ClubMeldungReporterAttachments";
 
 const CATEGORY_OPTIONS = Object.entries(CLUB_MELDUNG_CATEGORY_LABELS) as [
   ClubMeldungCategory,
@@ -20,6 +23,7 @@ type Props = {
     category?: ClubMeldungCategory;
     urgent?: boolean;
     urgentNote?: string;
+    attachmentIds?: string[];
   };
   errorMessage?: string | null;
 };
@@ -49,21 +53,38 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
   const [urgent, setUrgent] = useState(initial?.urgent ?? false);
   const [urgentNote, setUrgentNote] = useState(initial?.urgentNote ?? "");
   const [localError, setLocalError] = useState<string | null>(errorMessage ?? null);
+  const [attachments, setAttachments] = useState<ReporterAttachmentDraft[]>([]);
 
   const draftKey = `meldung-draft-${tenantSlug}`;
+  const uploadsBusy = attachments.some((row) => row.status === "UPLOADING");
+  const readyAttachmentIds = attachments
+    .filter((row) => row.status === "READY" && row.attachmentId)
+    .map((row) => row.attachmentId as string);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const raw = sessionStorage.getItem(draftKey);
       if (!raw) return;
-      const draft = JSON.parse(raw) as Props["initial"];
+      const draft = JSON.parse(raw) as Props["initial"] & { attachmentIds?: string[] };
       if (draft?.subject) setSubject(draft.subject);
       if (draft?.description) setDescription(draft.description);
       if (draft?.locationHint) setLocationHint(draft.locationHint);
       if (draft?.category) setCategory(draft.category);
       if (typeof draft?.urgent === "boolean") setUrgent(draft.urgent);
       if (draft?.urgentNote) setUrgentNote(draft.urgentNote);
+      if (draft?.attachmentIds?.length) {
+        setAttachments(
+          draft.attachmentIds.map((id, index) => ({
+            localId: `restored-${index}-${id}`,
+            attachmentId: id,
+            filename: `Anhang ${index + 1}`,
+            contentType: "application/octet-stream",
+            size: 0,
+            status: "READY",
+          })),
+        );
+      }
     } catch {
       // ignore corrupt draft
     }
@@ -73,11 +94,32 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
     if (typeof window === "undefined") return;
     sessionStorage.setItem(
       draftKey,
-      JSON.stringify({ subject, description, locationHint, category, urgent, urgentNote }),
+      JSON.stringify({
+        subject,
+        description,
+        locationHint,
+        category,
+        urgent,
+        urgentNote,
+        attachmentIds: readyAttachmentIds,
+      }),
     );
-  }, [draftKey, subject, description, locationHint, category, urgent, urgentNote]);
+  }, [
+    draftKey,
+    subject,
+    description,
+    locationHint,
+    category,
+    urgent,
+    urgentNote,
+    readyAttachmentIds,
+  ]);
 
   function submit() {
+    if (uploadsBusy) {
+      setLocalError("Bitte warten, bis alle Anhänge hochgeladen sind.");
+      return;
+    }
     setLocalError(null);
     startTransition(async () => {
       try {
@@ -95,6 +137,7 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
             locationHint: locationHint || null,
             urgent,
             urgentNote: urgent ? urgentNote : null,
+            attachmentIds: readyAttachmentIds,
           }),
         });
         const payload = await response.json().catch(() => ({}));
@@ -119,7 +162,7 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
       className="mx-auto flex w-full max-w-2xl flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!pending) submit();
+        if (!pending && !uploadsBusy) submit();
       }}
     >
       {localError ? (
@@ -186,6 +229,13 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
         disabled={pending}
       />
 
+      <ClubMeldungReporterAttachments
+        tenantSlug={tenantSlug}
+        attachments={attachments}
+        onChange={setAttachments}
+        disabled={pending}
+      />
+
       {urgent ? (
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-slate-900">Kurze Erläuterung</span>
@@ -201,7 +251,7 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || uploadsBusy}
         className="sce-button-primary rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60"
       >
         {pending ? "Wird gesendet…" : "Anliegen melden"}

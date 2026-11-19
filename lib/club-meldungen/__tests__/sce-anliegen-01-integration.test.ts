@@ -268,9 +268,9 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       tenantId: tenantAId,
       meldungId: duplicateCandidate.meldung.id,
       duplicateOfId: owned.meldung.id,
-      actorUserId: viewerAllId,
+      actorUserId: handlerAId,
       expectedVersion: duplicateCandidate.meldung.version,
-      permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL],
+      permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
     });
     expect(linked.duplicateOfId).toBe(owned.meldung.id);
   });
@@ -427,6 +427,115 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
     );
     expect(task.contextType).toBe("CLUB_MELDUNG");
     expect(task.contextId).toBe(created.meldung.id);
+  });
+
+  it("exercises end-to-end lifecycle with attachment", async () => {
+    const communicationAttachment = await prisma.communicationAttachment.create({
+      data: {
+        tenantId: tenantAId,
+        storageKey: `workflow-${RUN}`,
+        originalFilename: "leak.jpg",
+        sanitizedFilename: "leak.jpg",
+        contentType: "image/jpeg",
+        sizeBytes: 1200,
+        checksumSha256: "b".repeat(64),
+        sourceType: "UPLOAD",
+        lifecycleStatus: "READY",
+        scanStatus: "CLEAN",
+        createdByUserId: reporterId,
+      },
+    });
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "Workflow Foto",
+      description: "Beschreibung",
+      category: "DAMAGE_OR_PROBLEM",
+      idempotencyKey: `workflow-${RUN}`,
+      attachmentIds: [communicationAttachment.id],
+    });
+    const withLinks = await prisma.clubMeldung.findFirst({
+      where: { id: created.meldung.id },
+      include: { attachments: true },
+    });
+    expect(withLinks?.attachments).toHaveLength(1);
+
+    const assigned = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      accountableUserId: handlerBId,
+      expectedVersion: created.meldung.version,
+    });
+
+    await postClubMeldungMessage({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      audience: "INTERNAL_NOTE",
+      body: "Intern — nicht für meldende Person",
+    });
+    await postClubMeldungMessage({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      audience: "REPORTER_REPLY",
+      body: "Wir kümmern uns darum.",
+    });
+
+    const reporterTimeline = await listClubMeldungReporterTimeline(
+      tenantAId,
+      created.meldung.id,
+      false,
+    );
+    expect(reporterTimeline.messages.map((m) => m.body)).toEqual(["Wir kümmern uns darum."]);
+
+    await createClubMeldungLinkedTask(
+      {
+        tenantId: tenantAId,
+        userId: handlerBId,
+        permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE, PERMISSIONS.TASKS_CREATE],
+      },
+      {
+        meldungId: created.meldung.id,
+        title: "Reparatur planen",
+        access: {
+          actorUserId: handlerBId,
+          permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
+        },
+      },
+    );
+
+    const waiting = await updateClubMeldungStatus({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      status: "WAITING",
+      waitReason: "Termin Anbieter",
+      expectedVersion: assigned.version,
+    });
+
+    const done = await updateClubMeldungStatus({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      status: "DONE",
+      resolutionSummary: "Erledigt",
+      expectedVersion: waiting.version,
+    });
+
+    const reopened = await updateClubMeldungStatus({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerBId,
+      status: "IN_PROGRESS",
+      reopenReason: "Neue Info",
+      expectedVersion: done.version,
+    });
+
+    expect(reopened.caseNumber).toBe(created.meldung.caseNumber);
+    expect(reopened.status).toBe("IN_PROGRESS");
   });
 
   it("lists handler queue without granting read-all", async () => {

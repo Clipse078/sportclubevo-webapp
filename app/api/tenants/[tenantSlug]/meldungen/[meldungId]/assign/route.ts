@@ -16,10 +16,7 @@ export async function PATCH(
   if (schemaBlocked) return schemaBlocked;
 
   const { tenantSlug, meldungId } = await context.params;
-  const actorResult = await requireMeldungApiActor(tenantSlug, [
-    PERMISSIONS.MELDUNGEN_HANDLE,
-    PERMISSIONS.MELDUNGEN_VIEW_ALL,
-  ]);
+  const actorResult = await requireMeldungApiActor(tenantSlug, [PERMISSIONS.MELDUNGEN_HANDLE]);
   if (!actorResult.ok) {
     return NextResponse.json({ error: actorResult.error }, { status: actorResult.status });
   }

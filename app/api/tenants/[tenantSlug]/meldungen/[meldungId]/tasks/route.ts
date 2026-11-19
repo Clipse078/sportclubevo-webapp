@@ -19,7 +19,6 @@ export async function POST(
   const { tenantSlug, meldungId } = await context.params;
   const actorResult = await requireMeldungApiActor(tenantSlug, [
     PERMISSIONS.MELDUNGEN_HANDLE,
-    PERMISSIONS.MELDUNGEN_VIEW_ALL,
     PERMISSIONS.TASKS_CREATE,
   ]);
   if (!actorResult.ok) {

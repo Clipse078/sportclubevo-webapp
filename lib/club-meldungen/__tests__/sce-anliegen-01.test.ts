@@ -4,6 +4,7 @@ import {
   canViewMeldungInternal,
   canViewMeldung,
   canMutateMeldungInternal,
+  canClaimUnassignedMeldung,
 } from "@/lib/club-meldungen/access";
 import { allocateClubMeldungCaseNumber } from "@/lib/club-meldungen/case-number";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -25,11 +26,20 @@ describe("club meldungen access", () => {
     ).toBe(false);
   });
 
-  it("view_all can mutate without assignment", () => {
+  it("view_all alone cannot mutate", () => {
     expect(
       canMutateMeldungInternal(meldung, {
         actorUserId: "user-x",
         permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL],
+      }),
+    ).toBe(false);
+  });
+
+  it("view_all with handle can mutate any case", () => {
+    expect(
+      canMutateMeldungInternal(meldung, {
+        actorUserId: "user-x",
+        permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL, PERMISSIONS.MELDUNGEN_HANDLE],
       }),
     ).toBe(true);
   });
@@ -41,6 +51,21 @@ describe("club meldungen access", () => {
         permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL],
       }),
     ).toBe(true);
+  });
+
+  it("canClaimUnassignedMeldung requires handle on unassigned queue", () => {
+    expect(
+      canClaimUnassignedMeldung(
+        { accountableUserId: null },
+        { actorUserId: "user-x", permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE] },
+      ),
+    ).toBe(true);
+    expect(
+      canClaimUnassignedMeldung(
+        { accountableUserId: null },
+        { actorUserId: "user-x", permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL] },
+      ),
+    ).toBe(false);
   });
 
   it("handler with handle can triage unassigned without view_all", () => {

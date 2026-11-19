@@ -15,4 +15,15 @@ No automatic Club-Admin backfill is included in this package — STAGE role rows
 
 **Visibility:** Cases are not visible by case number guessing; server routes require authenticated membership and capability checks. Internal notes are excluded from reporter APIs and timelines.
 
+**Authorization matrix:**
+
+| Capability | Read scope | Mutate scope |
+|------------|------------|--------------|
+| `meldungen.submit` | Own reporter cases only | Create own cases; reporter replies on own cases |
+| `meldungen.handle` | Assigned/collaborator cases + unassigned triage queue | Same scope: claim unassigned, assign, status, internal notes on visible cases |
+| `meldungen.view_all` | All cases in tenant | **No mutation by itself** — pairing with `meldungen.handle` allows full-desk mutations |
+| `meldungen.manage` | (reserved) | (reserved) |
+
+Collaborators see only cases where they are listed; `meldungen.handle` does **not** grant read access to unrelated assigned cases. Attachment download uses case ACL — a known attachment ID cannot bypass visibility.
+
 **Email:** Outbound/inbound adapters are implemented with fixtures only; live mail requires Communication Center mailbox setup and DNS (see `lib/club-meldungen/email-adapter.ts`).
