@@ -186,6 +186,19 @@ export async function assignClubMeldung(input: AssignClubMeldungInput) {
   if (input.accountableUserId) {
     await assertActiveTenantMember(input.tenantId, input.accountableUserId);
   }
+  if (input.orgUnitId) {
+    const orgUnit = await prisma.orgUnit.findFirst({
+      where: {
+        id: input.orgUnitId,
+        tenantId: input.tenantId,
+        status: { not: "ARCHIVED" },
+      },
+      select: { id: true },
+    });
+    if (!orgUnit) {
+      throw new ClubMeldungServiceError("Organisationseinheit ungültig", "VALIDATION");
+    }
+  }
   for (const userId of input.collaboratorUserIds ?? []) {
     await assertActiveTenantMember(input.tenantId, userId);
   }

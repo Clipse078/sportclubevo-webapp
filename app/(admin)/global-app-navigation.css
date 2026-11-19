@@ -560,7 +560,7 @@
   --sce-domain-nav-col-title: 22;
   --sce-domain-nav-col-categories: 38;
   --sce-domain-nav-col-destinations: 40;
-  --sce-domain-nav-row-min-height: 2.75rem;
+  --sce-domain-nav-row-min-height: 2.625rem;
 }
 
 .sce-domain-nav-panel--overlay {
@@ -763,7 +763,7 @@
   gap: 0.5rem;
   width: 100%;
   min-height: var(--sce-domain-nav-row-min-height);
-  padding: 0.3125rem 0;
+  padding: 0.25rem 0;
   border: none;
   border-radius: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);

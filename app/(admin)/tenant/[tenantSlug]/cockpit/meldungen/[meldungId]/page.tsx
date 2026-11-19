@@ -8,8 +8,10 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import ClubMeldungHandlerDetailView from "@/components/admin/club-meldungen/ClubMeldungHandlerDetailView";
 import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
 
@@ -64,13 +66,13 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     permissionKeys,
     collaboratorUserIds: meldung.collaborators.map((c) => c.userId),
   });
+  const assignOptions = canMutate
+    ? await loadClubMeldungAssignOptions(tenant.id)
+    : null;
 
   return (
     <PageShell fullWidth>
-      <DetailPagePattern
-        eyebrow={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
-        title={meldung.subject}
-        description={meldung.caseNumber}
+      <SceWorkspaceChrome
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           {
@@ -119,8 +121,9 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             actor: event.actor ?? { firstName: "System", lastName: "" },
             payloadJson: event.payloadJson,
           }))}
+          assignOptions={assignOptions}
         />
-      </DetailPagePattern>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

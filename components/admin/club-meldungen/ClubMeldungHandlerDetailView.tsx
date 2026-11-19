@@ -9,7 +9,8 @@ import {
   CLUB_MELDUNG_CATEGORY_LABELS,
   CLUB_MELDUNG_STATUS_LABELS,
 } from "@/lib/club-meldungen/copy";
-import { formatClubMeldungHistoryEvent } from "@/lib/club-meldungen/history-copy";
+import type { ClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
+import { buildClubMeldungHandlerTimeline } from "@/lib/club-meldungen/timeline";
 import { cn } from "@/lib/cn";
 
 type Message = {
@@ -22,7 +23,20 @@ type Message = {
 
 type HistoryEvent = {
   id: string;
-  eventType: Parameters<typeof formatClubMeldungHistoryEvent>[0]["eventType"];
+  eventType:
+    | "CREATED"
+    | "STATUS_CHANGED"
+    | "ASSIGNED"
+    | "REASSIGNED"
+    | "WAIT_REASON_SET"
+    | "RESOLUTION_RECORDED"
+    | "REOPENED"
+    | "DUPLICATE_MARKED"
+    | "FIELD_UPDATED"
+    | "COLLABORATOR_ADDED"
+    | "COLLABORATOR_REMOVED"
+    | "REPORTER_MESSAGE"
+    | "HANDLER_MESSAGE_TO_REPORTER";
   createdAt: string;
   actor: { firstName: string; lastName: string };
   payloadJson: unknown;
@@ -57,6 +71,7 @@ type Props = {
   attachments: Attachment[];
   messages: Message[];
   history: HistoryEvent[];
+  assignOptions?: ClubMeldungAssignOptions | null;
 };
 
 type ActivePanel = "assign" | "status" | "task" | "duplicate" | "more" | null;
@@ -86,46 +101,28 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
     Array<{ id: string; caseNumber: string; subject: string }>
   >([]);
   const [selectedDuplicateId, setSelectedDuplicateId] = useState<string | null>(null);
+  const [assignOrgUnitId, setAssignOrgUnitId] = useState<string | null>(props.orgUnit?.id ?? null);
+  const [assignUserId, setAssignUserId] = useState<string | null>(
+    props.accountableUser?.id ?? null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const historyItems = useMemo(
-    () =>
-      props.history.map((event) =>
-        formatClubMeldungHistoryEvent({
-          ...event,
-          createdAt: new Date(event.createdAt),
-        }),
-      ),
-    [props.history],
+  const timeline = useMemo(
+    () => buildClubMeldungHandlerTimeline(props.messages, props.history),
+    [props.history, props.messages],
   );
 
-  const timeline = useMemo(() => {
-    const entries: Array<
-      | { kind: "message"; id: string; at: string; node: Message }
-      | { kind: "history"; id: string; at: string; label: string; actorName: string; detail?: string }
-    > = [
-      ...props.messages.map((message) => ({
-        kind: "message" as const,
-        id: message.id,
-        at: message.createdAt,
-        node: message,
-      })),
-      ...historyItems.map((item) => ({
-        kind: "history" as const,
-        id: item.id,
-        at: item.createdAt,
-        label: item.label,
-        actorName: item.actorName,
-        detail: item.detail,
-      })),
-    ];
-    return entries.sort((a, b) => a.at.localeCompare(b.at));
-  }, [historyItems, props.messages]);
-
   function togglePanel(panel: Exclude<ActivePanel, null>) {
-    setActivePanel((current) => (current === panel ? null : panel));
+    setActivePanel((current) => {
+      const next = current === panel ? null : panel;
+      if (next === "assign") {
+        setAssignOrgUnitId(props.orgUnit?.id ?? null);
+        setAssignUserId(props.accountableUser?.id ?? null);
+      }
+      return next;
+    });
     setError(null);
     setNotice(null);
   }
@@ -160,9 +157,10 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
     if (nextStatus === "DONE") setResolutionSummary("");
   }
 
-  function claimSelf() {
+  function saveAssignment(accountableUserId: string | null, orgUnitId: string | null) {
     startTransition(async () => {
       setError(null);
+      setNotice(null);
       const response = await fetch(
         `/api/tenants/${props.tenantSlug}/meldungen/${props.meldungId}/assign`,
         {
@@ -170,7 +168,8 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             expectedVersion: currentVersion,
-            accountableUserId: props.actorUserId,
+            accountableUserId,
+            orgUnitId,
           }),
         },
       );
@@ -180,9 +179,17 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
         return;
       }
       setCurrentVersion(payload.meldung.version);
-      setNotice("Du bist jetzt verantwortlich.");
+      setNotice("Zuständigkeit gespeichert.");
       window.location.reload();
     });
+  }
+
+  function claimSelf() {
+    saveAssignment(props.actorUserId, assignOrgUnitId ?? props.orgUnit?.id ?? null);
+  }
+
+  function submitAssignment() {
+    saveAssignment(assignUserId, assignOrgUnitId);
   }
 
   function sendMessage() {
@@ -294,25 +301,22 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
       className="mx-auto flex w-full max-w-6xl flex-col gap-6"
       data-testid="club-meldung-handler-detail"
     >
-      <header className={cn(SCE_CD_WORKSPACE_PANEL_CLASS, "space-y-3")}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-              {props.caseNumber}
-            </p>
-            <h1 className="text-2xl font-semibold text-[var(--foreground)]">{props.subject}</h1>
-            <p className="text-sm text-[var(--text-2)]">
-              {CLUB_MELDUNG_CATEGORY_LABELS[props.category]}
-              {props.locationHint ? ` · ${props.locationHint}` : ""}
-            </p>
-          </div>
-          <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-sm font-medium text-[var(--foreground)]">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">{props.subject}</h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-2)]">
+          <span className="font-mono text-xs tracking-wide text-[var(--muted)]">
+            {props.caseNumber}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-0.5 text-xs font-medium text-[var(--foreground)]">
             {CLUB_MELDUNG_STATUS_LABELS[currentStatus]}
           </span>
         </div>
-        {props.urgent ? (
-          <p className="text-sm font-medium text-amber-800">Dringend gemeldet</p>
-        ) : null}
+        <p className="text-sm text-[var(--text-2)]">
+          {CLUB_MELDUNG_CATEGORY_LABELS[props.category]}
+          {props.locationHint ? ` · ${props.locationHint}` : ""}
+          {props.urgent ? " · Dringend gemeldet" : ""}
+        </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
@@ -344,30 +348,42 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
           ) : null}
 
           <SceClubDevelopmentSectionShell title="Verlauf">
-            <ul className="space-y-3" aria-label="Verlauf">
+            <ul className="space-y-2" aria-label="Verlauf">
               {timeline.length === 0 ? (
                 <li className="text-sm text-[var(--muted)]">Noch keine Aktivität.</li>
               ) : (
                 timeline.map((entry) => {
                   if (entry.kind === "history") {
+                    const { presentation } = entry;
                     return (
                       <li
                         key={entry.id}
-                        className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/50 px-3 py-2 text-sm"
+                        className="border-b border-[var(--border)]/80 py-1.5 text-xs text-[var(--text-2)] last:border-b-0"
                       >
-                        <p className="text-xs text-[var(--muted)]">
-                          {entry.actorName} · {new Date(entry.at).toLocaleString("de-CH")}
+                        <p>
+                          <span className="text-[var(--muted)]">
+                            {new Date(entry.at).toLocaleString("de-CH")}
+                          </span>
+                          <span aria-hidden="true" className="mx-1.5">
+                            ·
+                          </span>
+                          <span className="font-medium text-[var(--foreground)]">
+                            {presentation.label}
+                          </span>
+                          <span aria-hidden="true" className="mx-1.5">
+                            ·
+                          </span>
+                          <span>{presentation.actorName}</span>
                         </p>
-                        <p className="font-medium text-[var(--foreground)]">{entry.label}</p>
-                        {entry.detail ? (
-                          <p className="mt-1 whitespace-pre-wrap text-[var(--text-2)]">
-                            {entry.detail}
+                        {presentation.detail ? (
+                          <p className="mt-0.5 whitespace-pre-wrap text-[var(--muted)]">
+                            {presentation.detail}
                           </p>
                         ) : null}
                       </li>
                     );
                   }
-                  const message = entry.node;
+                  const message = entry.message;
                   const internal = message.audience === "INTERNAL_NOTE";
                   return (
                     <li
@@ -552,14 +568,63 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
               </button>
 
               {activePanel === "assign" ? (
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3 text-sm">
-                  <p className="text-[var(--text-2)]">
-                    Zuständigkeit zuweisen erfolgt über die Bearbeitungsoberfläche im Verein; hier
-                    kannst du die Meldung übernehmen oder eine Zuweisung anstoßen.
-                  </p>
+                <div className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3 text-sm">
+                  {props.assignOptions ? (
+                    <>
+                      <label className="block text-xs font-medium text-[var(--text-2)]">
+                        Bereich
+                        <select
+                          className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm"
+                          value={assignOrgUnitId ?? ""}
+                          onChange={(event) =>
+                            setAssignOrgUnitId(event.target.value || null)
+                          }
+                          disabled={pending}
+                        >
+                          <option value="">—</option>
+                          {props.assignOptions.orgUnits.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                              {unit.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block text-xs font-medium text-[var(--text-2)]">
+                        Verantwortliche Person
+                        <select
+                          className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm"
+                          value={assignUserId ?? ""}
+                          onChange={(event) =>
+                            setAssignUserId(event.target.value || null)
+                          }
+                          disabled={pending}
+                        >
+                          <option value="">Ohne Verantwortliche</option>
+                          {props.assignOptions.members.map((member) => (
+                            <option key={member.id} value={member.id}>
+                              {member.firstName} {member.lastName}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <p className="text-xs text-[var(--muted)]">
+                        Die Auswahl listet aktive Vereinsmitglieder; sie erteilt keine
+                        Bearbeitungsberechtigung.
+                      </p>
+                      <button
+                        type="button"
+                        className="sce-button-primary w-full rounded-md px-3 py-2 text-sm font-medium disabled:opacity-60"
+                        disabled={pending}
+                        onClick={submitAssignment}
+                      >
+                        Zuständigkeit speichern
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
-                    className="mt-2 text-sm text-[var(--sce-primary)] hover:underline"
+                    className="w-full text-sm text-[var(--sce-primary)] hover:underline disabled:opacity-60"
+                    disabled={pending}
                     onClick={claimSelf}
                   >
                     Mir zuweisen

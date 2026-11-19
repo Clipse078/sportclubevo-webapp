@@ -99,6 +99,7 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       await prisma.communicationAttachment.deleteMany({ where: { tenantId } });
       await prisma.notification.deleteMany({ where: { tenantId } });
       await prisma.task.deleteMany({ where: { tenantId } });
+      await prisma.orgUnit.deleteMany({ where: { tenantId, key: { contains: RUN } } });
       await prisma.tenantMembership.deleteMany({ where: { tenantId } });
       const users = await prisma.user.findMany({
         where: { email: { contains: RUN } },
@@ -174,6 +175,57 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
     expect(a.meldung.caseNumber.endsWith("000001") || b.meldung.caseNumber.endsWith("000001")).toBe(
       true,
     );
+  });
+
+  it("reassigns accountable handler and org unit with validation", async () => {
+    const orgUnit = await prisma.orgUnit.create({
+      data: {
+        tenantId: tenantAId,
+        key: `infra-${RUN}`,
+        name: "Infrastruktur",
+        level: 0,
+        sortOrder: 0,
+      },
+    });
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "assign-org",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `assign-org-${RUN}`,
+    });
+    const toA = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: created.meldung.version,
+    });
+    expect(toA.orgUnitId).toBe(orgUnit.id);
+    expect(toA.accountableUserId).toBe(handlerAId);
+
+    const toB = await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerBId,
+      orgUnitId: orgUnit.id,
+      expectedVersion: toA.version,
+    });
+    expect(toB.accountableUserId).toBe(handlerBId);
+
+    await expect(
+      assignClubMeldung({
+        tenantId: tenantAId,
+        meldungId: created.meldung.id,
+        actorUserId: handlerAId,
+        accountableUserId: handlerBId,
+        orgUnitId: "missing-org-unit",
+        expectedVersion: toB.version,
+      }),
+    ).rejects.toBeInstanceOf(ClubMeldungServiceError);
   });
 
   it("preserves case number across assign, resolve and reopen", async () => {

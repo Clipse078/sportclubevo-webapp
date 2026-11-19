@@ -110,12 +110,29 @@ export function formatClubMeldungHistoryEvent(input: {
         actorName,
         label: "Antwort an meldende Person",
       };
+    case "FIELD_UPDATED": {
+      const audience = payload.audience;
+      if (audience === "INTERNAL_NOTE") {
+        return {
+          id: input.id,
+          createdAt: input.createdAt.toISOString(),
+          actorName,
+          label: "Interne Notiz erfasst",
+        };
+      }
+      return {
+        id: input.id,
+        createdAt: input.createdAt.toISOString(),
+        actorName,
+        label: "Eintrag aktualisiert",
+      };
+    }
     default:
-    return {
-      id: input.id,
-      createdAt: input.createdAt.toISOString(),
-      actorName,
-      label: "Aktivität",
-    };
+      return {
+        id: input.id,
+        createdAt: input.createdAt.toISOString(),
+        actorName,
+        label: "Eintrag protokolliert",
+      };
   }
 }
