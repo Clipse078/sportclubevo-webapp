@@ -4,6 +4,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import { listClubMeldungen } from "@/lib/club-meldungen/queries";
 import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
+import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 
@@ -14,6 +16,25 @@ export default async function TenantAnliegenHomePage({ params }: Props) {
   const tenant = await requireTenantContextForSlug(tenantSlug);
   const session = await requireAnyPermission([PERMISSIONS.MELDUNGEN_SUBMIT], tenant.id);
   const actorUserId = session.user.effectiveUserId ?? session.user.id;
+
+  const schemaReady = await isClubMeldungSchemaReady();
+  if (!schemaReady) {
+    return (
+      <PageShell fullWidth>
+        <ListPagePattern
+          eyebrow="Vereinsbetrieb"
+          title={CLUB_MELDUNG_WORKSPACE_COPY.reporterListTitle}
+          description="Eigene Meldungen einsehen und Rückmeldungen des Vereins verfolgen."
+          breadcrumbs={[
+            { label: "Anliegen", href: `/tenant/${tenantSlug}/anliegen` },
+            { label: CLUB_MELDUNG_WORKSPACE_COPY.reporterListTitle },
+          ]}
+        >
+          <ClubMeldungSchemaUnavailable />
+        </ListPagePattern>
+      </PageShell>
+    );
+  }
 
   const items = await listClubMeldungen({
     tenantId: tenant.id,

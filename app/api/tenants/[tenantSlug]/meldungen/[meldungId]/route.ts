@@ -6,13 +6,21 @@ import {
   updateClubMeldungStatus,
 } from "@/lib/club-meldungen/meldung-service";
 import { listClubMeldungReporterTimeline } from "@/lib/club-meldungen/queries";
-import { assertMeldungReadable, requireMeldungApiActor } from "@/lib/club-meldungen/tenant-api";
+import {
+  assertMeldungMutable,
+  assertMeldungReadable,
+  requireMeldungApiActor,
+} from "@/lib/club-meldungen/tenant-api";
 import { canViewMeldungAsReporter, canViewMeldungInternal } from "@/lib/club-meldungen/access";
+import { meldungApiSchemaGuard } from "@/lib/club-meldungen/api-schema";
 
 export async function GET(
   _: NextRequest,
   context: { params: Promise<{ tenantSlug: string; meldungId: string }> },
 ) {
+  const schemaBlocked = await meldungApiSchemaGuard();
+  if (schemaBlocked) return schemaBlocked;
+
   const { tenantSlug, meldungId } = await context.params;
   const actorResult = await requireMeldungApiActor(tenantSlug, [
     PERMISSIONS.MELDUNGEN_SUBMIT,
@@ -64,6 +72,9 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ tenantSlug: string; meldungId: string }> },
 ) {
+  const schemaBlocked = await meldungApiSchemaGuard();
+  if (schemaBlocked) return schemaBlocked;
+
   const { tenantSlug, meldungId } = await context.params;
   const actorResult = await requireMeldungApiActor(tenantSlug, [
     PERMISSIONS.MELDUNGEN_HANDLE,
@@ -76,6 +87,11 @@ export async function PATCH(
   const readable = await assertMeldungReadable(actorResult.actor, meldungId);
   if (!readable.ok) {
     return NextResponse.json({ error: readable.error }, { status: readable.status });
+  }
+
+  const mutable = assertMeldungMutable(actorResult.actor, readable.meldung);
+  if (!mutable.ok) {
+    return NextResponse.json({ error: mutable.error }, { status: mutable.status });
   }
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;

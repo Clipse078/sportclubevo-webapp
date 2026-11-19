@@ -38,11 +38,21 @@ export function canHandleMeldungInternal(
   return collaborators.includes(ctx.actorUserId);
 }
 
+/**
+ * Internal read: view_all sees everything; handle sees assigned/collaborator
+ * cases plus unassigned queue for triage (not other owners' cases).
+ */
 export function canViewMeldungInternal(
   meldung: Pick<ClubMeldung, "accountableUserId" | "reporterUserId">,
   ctx: ClubMeldungAccessContext,
 ): boolean {
   if (hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_VIEW_ALL)) {
+    return true;
+  }
+  if (
+    hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_HANDLE) &&
+    meldung.accountableUserId == null
+  ) {
     return true;
   }
   return canHandleMeldungInternal(meldung, ctx);
@@ -56,6 +66,20 @@ export function canViewMeldung(
     canViewMeldungAsReporter(meldung, ctx.actorUserId, ctx.permissionKeys) ||
     canViewMeldungInternal(meldung, ctx)
   );
+}
+
+/** Mutations (assign, status, internal notes) require handle + visibility. */
+export function canMutateMeldungInternal(
+  meldung: Pick<ClubMeldung, "accountableUserId" | "reporterUserId">,
+  ctx: ClubMeldungAccessContext,
+): boolean {
+  if (hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_VIEW_ALL)) {
+    return true;
+  }
+  if (!hasMeldungPermission(ctx.permissionKeys, PERMISSIONS.MELDUNGEN_HANDLE)) {
+    return false;
+  }
+  return canViewMeldungInternal(meldung, ctx);
 }
 
 export const MELDUNG_HANDLER_READ_PERMISSIONS = [

@@ -9,6 +9,9 @@ import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import ClubMeldungDetailPanel from "@/components/admin/club-meldungen/ClubMeldungDetailPanel";
+import ClubMeldungHandlerPanel from "@/components/admin/club-meldungen/ClubMeldungHandlerPanel";
+import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -23,6 +26,25 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
   const resolver = createEffectivePermissionResolver(prisma);
   const effective = await resolver.getEffectivePermissions({ userId: actorUserId, tenantId: tenant.id });
   const permissionKeys = [...effective.platform, ...effective.tenant];
+
+  const schemaReady = await isClubMeldungSchemaReady();
+  if (!schemaReady) {
+    return (
+      <PageShell fullWidth>
+        <DetailPagePattern
+          eyebrow={CLUB_MELDUNG_DETAIL_EYEBROW}
+          title="Anliegen & Meldungen"
+          description="Detail"
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Anliegen & Meldungen", href: `/tenant/${tenantSlug}/cockpit/meldungen` },
+          ]}
+        >
+          <ClubMeldungSchemaUnavailable />
+        </DetailPagePattern>
+      </PageShell>
+    );
+  }
 
   const meldung = await getClubMeldungDetail(tenant.id, meldungId);
   if (
@@ -53,7 +75,16 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
           { label: meldung.caseNumber },
         ]}
       >
-        <ClubMeldungDetailPanel
+        <div className="flex flex-col gap-6">
+          <ClubMeldungHandlerPanel
+            tenantSlug={tenantSlug}
+            meldungId={meldung.id}
+            version={meldung.version}
+            status={meldung.status}
+            accountableUserId={meldung.accountableUserId}
+            actorUserId={actorUserId}
+          />
+          <ClubMeldungDetailPanel
           tenantSlug={tenantSlug}
           meldungId={meldung.id}
           mode="internal"
@@ -71,6 +102,7 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             author: m.author,
           }))}
         />
+        </div>
       </DetailPagePattern>
     </PageShell>
   );

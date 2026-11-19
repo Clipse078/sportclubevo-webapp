@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CLUB_MELDUNG_CATEGORY_LABELS } from "@/lib/club-meldungen/copy";
 import type { ClubMeldungCategory } from "@prisma/client";
@@ -50,6 +50,33 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
   const [urgentNote, setUrgentNote] = useState(initial?.urgentNote ?? "");
   const [localError, setLocalError] = useState<string | null>(errorMessage ?? null);
 
+  const draftKey = `meldung-draft-${tenantSlug}`;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Props["initial"];
+      if (draft?.subject) setSubject(draft.subject);
+      if (draft?.description) setDescription(draft.description);
+      if (draft?.locationHint) setLocationHint(draft.locationHint);
+      if (draft?.category) setCategory(draft.category);
+      if (typeof draft?.urgent === "boolean") setUrgent(draft.urgent);
+      if (draft?.urgentNote) setUrgentNote(draft.urgentNote);
+    } catch {
+      // ignore corrupt draft
+    }
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem(
+      draftKey,
+      JSON.stringify({ subject, description, locationHint, category, urgent, urgentNote }),
+    );
+  }, [draftKey, subject, description, locationHint, category, urgent, urgentNote]);
+
   function submit() {
     setLocalError(null);
     startTransition(async () => {
@@ -76,6 +103,7 @@ export default function ClubMeldungReporterForm({ tenantSlug, initial, errorMess
           return;
         }
         sessionStorage.removeItem("meldung-idem");
+        sessionStorage.removeItem(draftKey);
         router.push(
           `/tenant/${tenantSlug}/anliegen/${payload.meldung.id}?created=${payload.created ? "1" : "0"}`,
         );

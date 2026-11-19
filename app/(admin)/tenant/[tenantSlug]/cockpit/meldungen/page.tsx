@@ -9,6 +9,8 @@ import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import ClubMeldungenWorkspace from "@/components/admin/club-meldungen/ClubMeldungenWorkspace";
+import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 
 type Props = {
   params: Promise<{ tenantSlug: string }>;
@@ -31,6 +33,25 @@ export default async function TenantMeldungenCockpitPage({ params, searchParams 
   const view = (ansicht === "unassigned" || ansicht === "all" || ansicht === "mine"
     ? ansicht
     : "mine") as ClubMeldungListView;
+
+  const schemaReady = await isClubMeldungSchemaReady();
+  if (!schemaReady) {
+    return (
+      <PageShell fullWidth>
+        <ListPagePattern
+          eyebrow="Vereinsbetrieb"
+          title={CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle}
+          description={CLUB_MELDUNG_WORKSPACE_COPY.pageSubtitle}
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle },
+          ]}
+        >
+          <ClubMeldungSchemaUnavailable />
+        </ListPagePattern>
+      </PageShell>
+    );
+  }
 
   const items = await listClubMeldungen({
     tenantId: tenant.id,

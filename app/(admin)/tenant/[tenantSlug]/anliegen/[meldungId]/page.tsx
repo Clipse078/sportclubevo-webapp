@@ -9,6 +9,8 @@ import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import ClubMeldungDetailPanel from "@/components/admin/club-meldungen/ClubMeldungDetailPanel";
+import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 
 type Props = {
   params: Promise<{ tenantSlug: string; meldungId: string }>;
@@ -24,6 +26,24 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
   const resolver = createEffectivePermissionResolver(prisma);
   const effective = await resolver.getEffectivePermissions({ userId: actorUserId, tenantId: tenant.id });
   const permissionKeys = [...effective.platform, ...effective.tenant];
+
+  const schemaReady = await isClubMeldungSchemaReady();
+  if (!schemaReady) {
+    return (
+      <PageShell fullWidth>
+        <DetailPagePattern
+          eyebrow="Meine Meldung"
+          title="Anliegen"
+          description="Detail"
+          breadcrumbs={[
+            { label: "Anliegen", href: `/tenant/${tenantSlug}/anliegen` },
+          ]}
+        >
+          <ClubMeldungSchemaUnavailable />
+        </DetailPagePattern>
+      </PageShell>
+    );
+  }
 
   const meldung = await getClubMeldungDetail(tenant.id, meldungId);
   if (!meldung || !canViewMeldungAsReporter(meldung, actorUserId, permissionKeys)) {

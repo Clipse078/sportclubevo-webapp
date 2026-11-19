@@ -13,6 +13,11 @@ import {
   emitMeldungReporterReplyNotification,
   emitMeldungResolvedNotification,
 } from "./notification-producer";
+import {
+  canMutateMeldungInternal,
+  canViewMeldung,
+  type ClubMeldungAccessContext,
+} from "./access";
 
 export class ClubMeldungServiceError extends Error {
   constructor(
@@ -457,20 +462,41 @@ export async function markClubMeldungDuplicate(input: {
   duplicateOfId: string;
   actorUserId: string;
   expectedVersion: number;
+  permissionKeys: readonly string[];
 }) {
   return prisma.$transaction(async (tx) => {
     const current = await tx.clubMeldung.findFirst({
       where: { id: input.meldungId, tenantId: input.tenantId },
+      include: { collaborators: { select: { userId: true } } },
     });
     if (!current) throw new ClubMeldungServiceError("Meldung nicht gefunden", "NOT_FOUND");
     if (current.version !== input.expectedVersion) {
       throw new ClubMeldungServiceError("Zwischenzeitlich geändert", "CONFLICT");
     }
+
+    const currentCtx: ClubMeldungAccessContext = {
+      actorUserId: input.actorUserId,
+      permissionKeys: input.permissionKeys,
+      collaboratorUserIds: current.collaborators.map((c) => c.userId),
+    };
+    if (!canMutateMeldungInternal(current, currentCtx)) {
+      throw new ClubMeldungServiceError("Keine Berechtigung", "FORBIDDEN");
+    }
+
     const canonical = await tx.clubMeldung.findFirst({
       where: { id: input.duplicateOfId, tenantId: input.tenantId },
-      select: { id: true, caseNumber: true },
+      include: { collaborators: { select: { userId: true } } },
     });
-    if (!canonical) throw new ClubMeldungServiceError("Verknüpfte Meldung nicht sichtbar", "FORBIDDEN");
+    if (!canonical) throw new ClubMeldungServiceError("Verknüpfte Meldung nicht gefunden", "NOT_FOUND");
+
+    const canonicalCtx: ClubMeldungAccessContext = {
+      actorUserId: input.actorUserId,
+      permissionKeys: input.permissionKeys,
+      collaboratorUserIds: canonical.collaborators.map((c) => c.userId),
+    };
+    if (!canViewMeldung(canonical, canonicalCtx)) {
+      throw new ClubMeldungServiceError("Verknüpfte Meldung nicht sichtbar", "FORBIDDEN");
+    }
 
     const updated = await tx.clubMeldung.update({
       where: { id: current.id },

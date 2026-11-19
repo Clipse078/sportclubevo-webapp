@@ -8,6 +8,7 @@ import {
 import { listClubMeldungen, type ClubMeldungListView } from "@/lib/club-meldungen/queries";
 import { requireMeldungApiActor } from "@/lib/club-meldungen/tenant-api";
 import { hasMeldungPermission } from "@/lib/club-meldungen/access";
+import { meldungApiSchemaGuard } from "@/lib/club-meldungen/api-schema";
 
 const CATEGORIES = new Set([
   "DAMAGE_OR_PROBLEM",
@@ -20,6 +21,9 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ tenantSlug: string }> },
 ) {
+  const schemaBlocked = await meldungApiSchemaGuard();
+  if (schemaBlocked) return schemaBlocked;
+
   const { tenantSlug } = await context.params;
   const actorResult = await requireMeldungApiActor(tenantSlug, [
     PERMISSIONS.MELDUNGEN_SUBMIT,
@@ -55,6 +59,9 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ tenantSlug: string }> },
 ) {
+  const schemaBlocked = await meldungApiSchemaGuard();
+  if (schemaBlocked) return schemaBlocked;
+
   const { tenantSlug } = await context.params;
   const actorResult = await requireMeldungApiActor(tenantSlug, [PERMISSIONS.MELDUNGEN_SUBMIT]);
   if (!actorResult.ok) {

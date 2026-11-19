@@ -4,6 +4,7 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import { requireApiTenantContextForSlug } from "@/lib/tenants/active-tenant";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import {
+  canMutateMeldungInternal,
   canViewMeldung,
   type ClubMeldungAccessContext,
 } from "@/lib/club-meldungen/access";
@@ -73,4 +74,23 @@ export async function assertMeldungReadable(
     return { ok: false, status: 403, error: "Forbidden" };
   }
   return { ok: true, meldung };
+}
+
+export function assertMeldungMutable(
+  actor: MeldungApiActor,
+  meldung: Parameters<typeof canMutateMeldungInternal>[0] & {
+    collaborators?: { userId: string }[];
+  },
+):
+  | { ok: true }
+  | { ok: false; status: number; error: string } {
+  const accessCtx: ClubMeldungAccessContext = {
+    actorUserId: actor.actorUserId,
+    permissionKeys: actor.permissionKeys,
+    collaboratorUserIds: meldung.collaborators?.map((c) => c.userId),
+  };
+  if (!canMutateMeldungInternal(meldung, accessCtx)) {
+    return { ok: false, status: 403, error: "Forbidden" };
+  }
+  return { ok: true };
 }

@@ -12,5 +12,5 @@ export async function allocateClubMeldungCaseNumber(
     select: { nextNumber: true },
   });
   const assigned = seq.nextNumber === 2 ? 1 : seq.nextNumber - 1;
-  return `M-${year}-${String(assigned).padStart(5, "0")}`;
+  return `M-${year}-${String(assigned).padStart(6, "0")}`;
 }

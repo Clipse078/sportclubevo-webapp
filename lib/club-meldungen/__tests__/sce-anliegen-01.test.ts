@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   canViewMeldungAsReporter,
   canViewMeldungInternal,
+  canViewMeldung,
+  canMutateMeldungInternal,
 } from "@/lib/club-meldungen/access";
+import { allocateClubMeldungCaseNumber } from "@/lib/club-meldungen/case-number";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   processClubMeldungInboundEmailFixture,
@@ -22,6 +25,15 @@ describe("club meldungen access", () => {
     ).toBe(false);
   });
 
+  it("view_all can mutate without assignment", () => {
+    expect(
+      canMutateMeldungInternal(meldung, {
+        actorUserId: "user-x",
+        permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL],
+      }),
+    ).toBe(true);
+  });
+
   it("handler with view_all sees without assignment", () => {
     expect(
       canViewMeldungInternal(meldung, {
@@ -29,6 +41,31 @@ describe("club meldungen access", () => {
         permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL],
       }),
     ).toBe(true);
+  });
+
+  it("handler with handle can triage unassigned without view_all", () => {
+    const unassigned = { reporterUserId: "user-a", accountableUserId: null as string | null };
+    expect(
+      canViewMeldungInternal(unassigned, {
+        actorUserId: "user-x",
+        permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
+      }),
+    ).toBe(true);
+    expect(
+      canMutateMeldungInternal(unassigned, {
+        actorUserId: "user-x",
+        permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE],
+      }),
+    ).toBe(true);
+  });
+
+  it("handle without assignment cannot read another handler case", () => {
+    expect(
+      canViewMeldung(
+        { reporterUserId: "user-a", accountableUserId: "user-b" },
+        { actorUserId: "user-x", permissionKeys: [PERMISSIONS.MELDUNGEN_HANDLE] },
+      ),
+    ).toBe(false);
   });
 
   it("handler without handle/view_all needs assignment", () => {

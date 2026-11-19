@@ -3379,6 +3379,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/duplicate/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/duplicate",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/messages",
     "audience": "API"
@@ -3387,6 +3393,18 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/route.ts",
     "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/[meldungId]/tasks/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/[meldungId]/tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenants/[tenantSlug]/meldungen/attachments/[clubMeldungAttachmentId]/download/route.ts",
+    "urlPattern": "/api/tenants/[tenantSlug]/meldungen/attachments/[clubMeldungAttachmentId]/download",
     "audience": "API"
   },
   {

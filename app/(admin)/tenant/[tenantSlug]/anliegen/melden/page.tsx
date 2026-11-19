@@ -5,6 +5,8 @@ import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
 import { PageShell } from "@/components/ui/page";
 import { FormPagePattern } from "@/components/ui/patterns";
 import ClubMeldungReporterForm from "@/components/admin/club-meldungen/ClubMeldungReporterForm";
+import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
+import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 
 type Props = { params: Promise<{ tenantSlug: string }> };
 
@@ -12,6 +14,7 @@ export default async function TenantAnliegenMeldenPage({ params }: Props) {
   const { tenantSlug } = await params;
   const tenant = await requireTenantContextForSlug(tenantSlug);
   await requireAnyPermission([PERMISSIONS.MELDUNGEN_SUBMIT], tenant.id);
+  const schemaReady = await isClubMeldungSchemaReady();
 
   return (
     <PageShell fullWidth>
@@ -24,7 +27,11 @@ export default async function TenantAnliegenMeldenPage({ params }: Props) {
           { label: "Melden" },
         ]}
       >
-        <ClubMeldungReporterForm tenantSlug={tenantSlug} />
+        {schemaReady ? (
+          <ClubMeldungReporterForm tenantSlug={tenantSlug} />
+        ) : (
+          <ClubMeldungSchemaUnavailable />
+        )}
       </FormPagePattern>
     </PageShell>
   );

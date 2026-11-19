@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { ClubMeldungMessageAudience } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { ClubMeldungServiceError, postClubMeldungMessage } from "@/lib/club-meldungen/meldung-service";
-import { assertMeldungReadable, requireMeldungApiActor } from "@/lib/club-meldungen/tenant-api";
+import {
+  assertMeldungMutable,
+  assertMeldungReadable,
+  requireMeldungApiActor,
+} from "@/lib/club-meldungen/tenant-api";
 import { canViewMeldungAsReporter } from "@/lib/club-meldungen/access";
+import { meldungApiSchemaGuard } from "@/lib/club-meldungen/api-schema";
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ tenantSlug: string; meldungId: string }> },
 ) {
+  const schemaBlocked = await meldungApiSchemaGuard();
+  if (schemaBlocked) return schemaBlocked;
+
   const { tenantSlug, meldungId } = await context.params;
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body || typeof body.body !== "string") {
@@ -31,6 +39,13 @@ export async function POST(
   const readable = await assertMeldungReadable(actorResult.actor, meldungId);
   if (!readable.ok) {
     return NextResponse.json({ error: readable.error }, { status: readable.status });
+  }
+
+  if (!asReporter) {
+    const mutable = assertMeldungMutable(actorResult.actor, readable.meldung);
+    if (!mutable.ok) {
+      return NextResponse.json({ error: mutable.error }, { status: mutable.status });
+    }
   }
 
   if (
