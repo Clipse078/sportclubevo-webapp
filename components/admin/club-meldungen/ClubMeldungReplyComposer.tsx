@@ -33,6 +33,8 @@ type MentionPanelState =
 
 const MENTION_UNAVAILABLE_COPY = "Erwähnungen derzeit nicht verfügbar";
 const MENTION_NO_MATCH_COPY = "Keine berechtigte Person gefunden";
+const MENTION_DENIED_COPY = "Keine Berechtigung für Erwähnungen";
+const MENTION_ERROR_COPY = "Erwähnungen konnten nicht geladen werden";
 
 type Props = {
   tenantSlug: string;
@@ -132,9 +134,9 @@ export function ClubMeldungReplyComposer({
           if (res.status === 503 || payload.code === "SCHEMA_UNAVAILABLE") {
             setPanelState({ kind: "unavailable", message: MENTION_UNAVAILABLE_COPY });
           } else if (res.status === 401 || res.status === 403) {
-            setPanelState({ kind: "unavailable", message: MENTION_UNAVAILABLE_COPY });
+            setPanelState({ kind: "unavailable", message: MENTION_DENIED_COPY });
           } else {
-            setPanelState({ kind: "error", message: MENTION_UNAVAILABLE_COPY });
+            setPanelState({ kind: "error", message: MENTION_ERROR_COPY });
           }
           return;
         }
@@ -147,7 +149,7 @@ export function ClubMeldungReplyComposer({
         }
       } catch (fetchError) {
         if (fetchError instanceof Error && fetchError.name === "AbortError") return;
-        setPanelState({ kind: "error", message: MENTION_UNAVAILABLE_COPY });
+        setPanelState({ kind: "error", message: MENTION_ERROR_COPY });
       }
     },
     [meldungId, mentionsEnabled, tenantSlug],
@@ -168,11 +170,21 @@ export function ClubMeldungReplyComposer({
   }, [internal, onMentionedUserIdsChange]);
 
   const updateMentionState = (nextBody: string, cursor: number) => {
+    const context = detectMentionContext(nextBody, cursor);
     if (!mentionFeatureActive) {
-      setMentionOpen(false);
+      if (internal && !mentionsEnabled && context) {
+        setMentionOpen(true);
+        setMentionQuery(context.query);
+        setMentionStart(context.start);
+        setPanelState({ kind: "unavailable", message: MENTION_UNAVAILABLE_COPY });
+      } else {
+        setMentionOpen(false);
+        setMentionQuery("");
+        setMentionStart(null);
+        setPanelState({ kind: "idle" });
+      }
       return;
     }
-    const context = detectMentionContext(nextBody, cursor);
     if (!context) {
       setMentionOpen(false);
       setMentionQuery("");
@@ -215,7 +227,7 @@ export function ClubMeldungReplyComposer({
     ? "Interner Kommentar verfassen"
     : "Antwort an meldende Person verfassen";
 
-  const showMentionPanel = mentionFeatureActive && mentionOpen;
+  const showMentionPanel = internal && mentionOpen;
   const panelMessage = useMemo(() => {
     if (panelState.kind === "loading") return null;
     if (panelState.kind === "empty") return MENTION_NO_MATCH_COPY;
@@ -350,4 +362,10 @@ export function ClubMeldungReplyComposer({
   );
 }
 
-export { detectMentionContext, MENTION_NO_MATCH_COPY, MENTION_UNAVAILABLE_COPY };
+export {
+  detectMentionContext,
+  MENTION_DENIED_COPY,
+  MENTION_ERROR_COPY,
+  MENTION_NO_MATCH_COPY,
+  MENTION_UNAVAILABLE_COPY,
+};

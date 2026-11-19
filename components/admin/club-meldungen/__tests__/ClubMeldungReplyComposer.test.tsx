@@ -5,6 +5,8 @@ import { useState } from "react";
 import {
   ClubMeldungReplyComposer,
   detectMentionContext,
+  MENTION_DENIED_COPY,
+  MENTION_ERROR_COPY,
   MENTION_NO_MATCH_COPY,
   MENTION_UNAVAILABLE_COPY,
 } from "@/components/admin/club-meldungen/ClubMeldungReplyComposer";
@@ -59,6 +61,40 @@ describe("ClubMeldungReplyComposer mentions", () => {
     expect(screen.queryByText("Keine Vorschläge")).toBeNull();
   });
 
+  it("shows denied copy on 403", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: "Forbidden" }),
+    } as Response);
+
+    render(<MentionHarness />);
+    fireEvent.change(screen.getByLabelText("Interner Kommentar verfassen"), {
+      target: { value: "@pat" },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(MENTION_DENIED_COPY)).toBeTruthy();
+    });
+  });
+
+  it("shows error copy on unexpected API failures", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: "boom" }),
+    } as Response);
+
+    render(<MentionHarness />);
+    fireEvent.change(screen.getByLabelText("Interner Kommentar verfassen"), {
+      target: { value: "@pat" },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(MENTION_ERROR_COPY)).toBeTruthy();
+    });
+  });
+
   it("shows unavailable copy on 503 schema errors", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
@@ -76,11 +112,14 @@ describe("ClubMeldungReplyComposer mentions", () => {
     });
   });
 
-  it("skips mention fetch when schema feature disabled", async () => {
+  it("shows unavailable copy when schema feature disabled", async () => {
     render(<MentionHarness mentionsEnabled={false} />);
     fireEvent.change(screen.getByLabelText("Interner Kommentar verfassen"), {
       target: { value: "@pat more" },
     });
     expect(fetch).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText(MENTION_UNAVAILABLE_COPY)).toBeTruthy();
+    });
   });
 });

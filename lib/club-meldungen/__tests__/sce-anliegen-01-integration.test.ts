@@ -25,6 +25,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 import { createSafeTestPrismaClient } from "@/lib/test/safe-test-prisma";
 import { prisma } from "@/lib/db/prisma";
+import { loadClubMeldungAssignOptions } from "@/lib/club-meldungen/assign-lookup";
+import { searchMeldungMentionCandidates } from "@/lib/club-meldungen/meldung-mention-candidates";
 import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
 import { meldungMentionToken } from "@/lib/club-meldungen/meldung-mention-tokens";
 import type { PermissionKey } from "@/lib/permissions/permissions";
@@ -860,5 +862,42 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
       false,
     );
     expect(reporterView.messages).toHaveLength(0);
+  });
+
+  it("lists active members for assignee pickers while mention search stays internal-read scoped", async () => {
+    const assignOnly = await createMember(prisma, tenantAId, "assign-only-member");
+    const assignOptions = await loadClubMeldungAssignOptions(tenantAId);
+    const assignRow = assignOptions.members.find((member) => member.id === assignOnly.id);
+    expect(assignRow).toBeDefined();
+    expect(assignRow?.canOperateCase).toBe(false);
+
+    const mentionReady = await isClubMeldungMentionSchemaReady();
+    if (!mentionReady) return;
+
+    const created = await createClubMeldung({
+      tenantId: tenantAId,
+      reporterUserId: reporterId,
+      subject: "assign-mention-split",
+      description: "d",
+      category: "OTHER",
+      idempotencyKey: `assign-mention-split-${RUN}`,
+    });
+
+    await assignClubMeldung({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      accountableUserId: handlerAId,
+      expectedVersion: created.meldung.version,
+    });
+
+    const mentionHits = await searchMeldungMentionCandidates({
+      tenantId: tenantAId,
+      meldungId: created.meldung.id,
+      actorUserId: handlerAId,
+      search: "handler",
+    });
+    expect(mentionHits.some((row) => row.userId === assignOnly.id)).toBe(false);
+    expect(mentionHits.some((row) => row.userId === handlerBId)).toBe(true);
   });
 });

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { filterClubMeldungAssignMembersBySearch } from "@/lib/club-meldungen/assign-member-search";
+import {
+  filterClubMeldungAssignMembersBySearch,
+  listInitialClubMeldungAssignMembers,
+} from "@/lib/club-meldungen/assign-member-search";
 
 const members = [
   { id: "1", firstName: "Patrick", lastName: "Admin", canOperateCase: true },
@@ -7,11 +10,17 @@ const members = [
 ];
 
 describe("filterClubMeldungAssignMembersBySearch", () => {
-  it("matches display name prefix after two characters", () => {
-    expect(filterClubMeldungAssignMembersBySearch(members, "pat")).toEqual([members[0]]);
+  it("returns sorted initial slice for empty query", () => {
+    expect(listInitialClubMeldungAssignMembers(members)).toEqual([members[0], members[1]]);
+    expect(filterClubMeldungAssignMembersBySearch(members, "")).toEqual([members[0], members[1]]);
   });
 
-  it("returns empty for short queries", () => {
-    expect(filterClubMeldungAssignMembersBySearch(members, "p")).toEqual([]);
+  it("matches display name with partial query", () => {
+    expect(filterClubMeldungAssignMembersBySearch(members, "pat")).toEqual([members[0]]);
+    expect(filterClubMeldungAssignMembersBySearch(members, "p")).toEqual([members[0]]);
+  });
+
+  it("returns empty when filter excludes everyone", () => {
+    expect(filterClubMeldungAssignMembersBySearch(members, "zz")).toEqual([]);
   });
 });

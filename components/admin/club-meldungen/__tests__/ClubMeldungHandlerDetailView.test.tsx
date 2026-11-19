@@ -164,10 +164,33 @@ describe("ClubMeldungHandlerDetailView", () => {
     ).toBeNull();
   });
 
+  it("keeps persisted assignee when assignment save fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "Konflikt" }),
+      }),
+    );
+    render(<ClubMeldungHandlerDetailView {...baseProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "Verantwortliche Person ändern" }));
+    const assigneeSearch = screen.getByLabelText("Verantwortliche Person suchen");
+    fireEvent.change(assigneeSearch, { target: { value: "Bian" } });
+    fireEvent.keyDown(assigneeSearch, { key: "Enter" });
+    await vi.waitFor(() => {
+      expect(screen.getByText("Konflikt")).toBeTruthy();
+    });
+    expect(screen.getByRole("button", { name: "Verantwortliche Person ändern" })).toHaveTextContent(
+      "Alex Muster",
+    );
+  });
+
   it("assigns another handler from the sidebar picker", () => {
     render(<ClubMeldungHandlerDetailView {...baseProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Verantwortliche Person ändern" }));
     const assigneeSearch = screen.getByLabelText("Verantwortliche Person suchen");
+    expect(assigneeSearch).toHaveValue("");
+    expect(screen.getByTestId("meldung-assignee-current")).toHaveTextContent("Alex Muster");
     fireEvent.change(assigneeSearch, { target: { value: "Bian" } });
     fireEvent.keyDown(assigneeSearch, { key: "Enter" });
     expect(fetch).toHaveBeenCalledWith(
