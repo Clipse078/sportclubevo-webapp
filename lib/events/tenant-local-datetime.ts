@@ -23,6 +23,27 @@ export function resolveTenantEventTimezone(timezone?: string | null): string {
   return trimmed || DEFAULT_TENANT_EVENT_TIMEZONE;
 }
 
+/** Calendar year for an instant in a tenant IANA timezone (for Meldungsnummer, etc.). */
+export function calendarYearInTimeZone(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+  }).formatToParts(instant);
+  const year = parts.find((part) => part.type === "year")?.value;
+  if (!year) {
+    throw new Error(`calendarYearInTimeZone: could not resolve year for ${timeZone}`);
+  }
+  return Number(year);
+}
+
+/** Calendar year at `instant` using tenant timezone with platform default when unset. */
+export function calendarYearInTenantTimezone(
+  instant: Date,
+  tenantTimezone?: string | null,
+): number {
+  return calendarYearInTimeZone(instant, resolveTenantEventTimezone(tenantTimezone));
+}
+
 function partsAt(instant: Date, timeZone: string): { date: string; time: string } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,

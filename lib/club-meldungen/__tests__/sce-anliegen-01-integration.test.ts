@@ -381,15 +381,17 @@ describe("SCE-ANLIEGEN-01 club meldungen (disposable Postgres)", () => {
   });
 
   it("pads beyond six digits when sequence grows", async () => {
-    const year = new Date().getUTCFullYear();
+    const fixedInstant = new Date("2026-06-15T12:00:00.000Z");
     await prisma.$transaction(async (tx) => {
       await tx.clubMeldungNumberSequence.upsert({
         where: { tenantId: tenantAId },
         create: { tenantId: tenantAId, nextNumber: 1_000_002 },
         update: { nextNumber: 1_000_002 },
       });
-      const caseNumber = await allocateClubMeldungCaseNumber(tx, tenantAId);
-      expect(caseNumber).toBe(`M-${year}-1000002`);
+      const caseNumber = await allocateClubMeldungCaseNumber(tx, tenantAId, {
+        createdAt: fixedInstant,
+      });
+      expect(caseNumber).toBe("M-2026-1000002");
     });
   });
 
