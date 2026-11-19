@@ -220,6 +220,7 @@ export function ClubMeldungReplyComposer({
           <PopoverContent
             anchorRef={anchorRef}
             open
+            onOpenChange={setMentionOpen}
             className="z-20 max-h-48 w-[min(100%,20rem)] overflow-y-auto p-1"
           >
             <ul id={listboxId} role="listbox" aria-label="Personen vorschlagen">

@@ -137,8 +137,12 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             createdAt: m.createdAt.toISOString(),
             author: m.author,
             mentions:
-              "mentions" in m && Array.isArray(m.mentions)
-                ? m.mentions.map((row) => ({
+              mentionsEnabled && "mentions" in m && Array.isArray(m.mentions)
+                ? (
+                    m.mentions as Array<{
+                      user: { id: string; firstName: string; lastName: string };
+                    }>
+                  ).map((row) => ({
                     userId: row.user.id,
                     displayName: meldungMentionDisplayName(row.user.firstName, row.user.lastName),
                   }))
