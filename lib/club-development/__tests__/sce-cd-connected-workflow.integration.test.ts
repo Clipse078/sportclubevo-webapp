@@ -2,7 +2,7 @@
  * PR #1017 — connected Vereinsentwicklung workflow on disposable local Postgres.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   ClubStrategyScopeType,
   TaskContextType,
@@ -27,7 +27,16 @@ import {
 } from "../club-strategy-service";
 import { patchDevelopmentSprintMetadata } from "../sprints/sprint-lifecycle";
 import { computeStrategyDeliveryProgress, computeTargetDeliveryProgress } from "../vereinsentwicklung-workspace-progress";
+import { buildTaskServiceContextForActor, getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadVorhabenWorkspace } from "../vorhaben-workspace";
+
+vi.mock("@/lib/tasks/server-context", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tasks/server-context")>();
+  return {
+    ...actual,
+    getTaskServiceContext: vi.fn(),
+  };
+});
 
 const describeIntegration = canRunDbMutatingIntegrationTests() ? describe : describe.skip;
 
@@ -130,6 +139,9 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       orgUnitIds: [],
       personId: null,
     } as ActorContext;
+
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    vi.mocked(getTaskServiceContext).mockResolvedValue(taskCtx);
   });
 
   afterAll(async () => {
@@ -208,28 +220,24 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     expect(restored.map((row) => row.orgUnitId).sort()).toEqual([orgA, orgB].sort());
   });
 
-  it("binds focus targets to the oldest club-wide strategy when multiple CLUB rows exist", async () => {
-    const older = await admin.clubStrategy.create({
-      data: {
+  it("links focus targets to the tenant club-wide strategy when an Org-Einheit strategy also exists", async () => {
+    const clubWide = await admin.clubStrategy.findFirstOrThrow({
+      where: {
         tenantId,
         scopeType: ClubStrategyScopeType.CLUB,
         scopeOrgUnitId: null,
-        title: `Older canonical ${RUN}`,
-        createdByUserId: userId,
-        updatedByUserId: userId,
-        createdAt: new Date("2019-01-01T00:00:00.000Z"),
       },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       select: { id: true },
     });
     await admin.clubStrategy.create({
       data: {
         tenantId,
-        scopeType: ClubStrategyScopeType.CLUB,
-        scopeOrgUnitId: null,
-        title: `Newer club-wide ${RUN}`,
+        scopeType: ClubStrategyScopeType.ORG_UNIT,
+        scopeOrgUnitId: orgB,
+        title: `Org B only ${RUN}`,
         createdByUserId: userId,
         updatedByUserId: userId,
-        createdAt: new Date("2025-06-01T00:00:00.000Z"),
       },
     });
 
@@ -251,7 +259,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       where: { tenantId, targetId: target.id },
       select: { clubStrategyId: true },
     });
-    expect(link?.clubStrategyId).toBe(older.id);
+    expect(link?.clubStrategyId).toBe(clubWide.id);
   });
 
   it("lists TARGET-context tasks in Vorhaben workspace reads", async () => {
@@ -275,7 +283,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
         contextType: TaskContextType.TARGET,
         contextId: target.id,
         createdByUserId: userId,
-        visibilityScope: TaskVisibilityScope.ORGANISATION,
+        visibilityScope: TaskVisibilityScope.CLUB,
       },
       select: { id: true },
     });
