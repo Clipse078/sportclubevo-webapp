@@ -9,6 +9,7 @@ import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import type { SprintBoardCard } from "@/lib/club-development/sprints/sprint-board";
 import { mapSprintBoardCardToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
@@ -57,6 +58,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
   const [info, setInfo] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const submittingRef = useRef(false);
+  const dragCtx = useUmsetzungsplanungDragOptional();
 
   useEffect(() => {
     if (!moveTargetId && moveTargetPhases[0]?.id) {
@@ -248,22 +250,61 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
             <VereinsentwicklungConnectedTaskTable
               rows={tableRows}
               testId={`umsetzungsplanung-phase-task-table-${sprintSlug}`}
+              phaseDrag={
+                canManageAssignments
+                  ? {
+                      enabled: true,
+                      phaseId: sprintId,
+                      onDragStart: (taskId) => {
+                        dragCtx?.beginDrag({ taskId, source: "phase", sourcePhaseId: sprintId });
+                      },
+                      onDragEnd: () => dragCtx?.endDrag(),
+                    }
+                  : undefined
+              }
               renderRowActions={(row) =>
                 canManageAssignments ? (
-                  <SceCheckbox
-                    checked={selectedIds.has(row.taskId)}
-                    disabled={pending}
-                    onChange={(event) => {
-                      const checked = event.target.checked;
-                      setSelectedIds((prev) => {
-                        const next = new Set(prev);
-                        if (checked) next.add(row.taskId);
-                        else next.delete(row.taskId);
-                        return next;
-                      });
-                    }}
-                    aria-label={`Aufgabe ${row.title} auswählen`}
-                  />
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
+                      disabled={pending}
+                      onClick={() => {
+                        runBulkMutation(async () => {
+                          const res = await fetch(
+                            `/api/club-development/sprints/${sprintId}/tasks?taskId=${encodeURIComponent(row.taskId)}`,
+                            { method: "DELETE" },
+                          );
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) {
+                            throw new Error(
+                              typeof data.error === "string"
+                                ? data.error
+                                : "Zuordnung konnte nicht entfernt werden.",
+                            );
+                          }
+                          setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnUnplannedAction);
+                        });
+                      }}
+                      data-testid={`umsetzungsplanung-return-unplanned-${row.taskId}`}
+                    >
+                      {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnUnplannedAction}
+                    </button>
+                    <SceCheckbox
+                      checked={selectedIds.has(row.taskId)}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (checked) next.add(row.taskId);
+                          else next.delete(row.taskId);
+                          return next;
+                        });
+                      }}
+                      aria-label={`Aufgabe ${row.title} auswählen`}
+                    />
+                  </div>
                 ) : null
               }
             />

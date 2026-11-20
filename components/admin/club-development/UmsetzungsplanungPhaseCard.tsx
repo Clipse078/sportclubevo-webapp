@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useTransition } from "react";
 import { Calendar, ChevronRight, ClipboardCheck, ExternalLink } from "lucide-react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import {
@@ -10,6 +14,7 @@ import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprint
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
 import DevelopmentSprintPhaseEditMenu from "./DevelopmentSprintPhaseEditMenu";
 import UmsetzungsplanungPhaseAssignedTasksPanel from "./UmsetzungsplanungPhaseAssignedTasksPanel";
+import UmsetzungsplanungPhaseScheduleDropZone from "./UmsetzungsplanungPhaseScheduleDropZone";
 
 export type UmsetzungsplanungPhaseCardItem = {
   id: string;
@@ -42,6 +47,8 @@ export default function UmsetzungsplanungPhaseCard({
   phaseOptions,
   readOnlyTasks = false,
 }: PhaseCardProps) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const planningLabel =
     sprint.status === "ACTIVE"
       ? CD_SPRINT_WORKSPACE_COPY.tabPlanning
@@ -49,11 +56,34 @@ export default function UmsetzungsplanungPhaseCard({
   const allowTaskMoves = canManageSprints && !readOnlyTasks && sprint.status !== "COMPLETED";
   const moveTargets = phaseOptions.filter((p) => p.id !== sprint.id);
 
+  const assignDraggedTask = useCallback(
+    async (taskId: string) => {
+      if (!allowTaskMoves) return;
+      const res = await fetch(`/api/club-development/sprints/${sprint.id}/tasks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: [taskId] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.");
+      }
+      startTransition(() => router.refresh());
+    },
+    [allowTaskMoves, router, sprint.id],
+  );
+
   return (
     <article
       className="space-y-2 border-b border-[var(--border)]/60 pb-3 last:border-b-0 last:pb-0"
       data-testid={`umsetzungsplanung-phase-${sprint.slug}`}
     >
+      <UmsetzungsplanungPhaseScheduleDropZone
+        phaseId={sprint.id}
+        phaseTitle={sprint.title}
+        acceptDrop={allowTaskMoves}
+        onAssignTask={assignDraggedTask}
+      >
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface)] px-3 py-2.5">
         <div className="min-w-0 flex-1">
           <Link
@@ -126,6 +156,7 @@ export default function UmsetzungsplanungPhaseCard({
         moveTargetPhases={moveTargets}
         defaultExpanded={sprint.status === "ACTIVE" || sprint.status === "PLANNED"}
       />
+      </UmsetzungsplanungPhaseScheduleDropZone>
     </article>
   );
 }

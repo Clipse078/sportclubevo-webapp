@@ -109,6 +109,8 @@ describe("Umsetzungsplanung workspace", () => {
     expect(unplanned).toContain("VereinsentwicklungConnectedTaskTable");
     expect(unplanned).toContain("einplanenAction");
     expect(unplanned).toContain("showReorderHandle");
+    expect(unplanned).toContain("unplanned-order");
+    expect(workspace).toContain("UmsetzungsplanungDragProvider");
     expect(workspace).not.toContain("Dialog");
     expect(workspace).not.toContain("SceClubDevelopmentEmptyState");
   });

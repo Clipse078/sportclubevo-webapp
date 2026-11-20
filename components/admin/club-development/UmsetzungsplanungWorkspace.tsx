@@ -25,6 +25,7 @@ import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleS
 import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetzungsplanung-section-accent";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import UmsetzungsplanungUnplannedPanel from "./UmsetzungsplanungUnplannedPanel";
+import { UmsetzungsplanungDragProvider } from "./UmsetzungsplanungDragContext";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -107,7 +108,28 @@ export default function UmsetzungsplanungWorkspace({
         testId="umsetzungsplanung-workspace-toolbar"
       />
 
+      <UmsetzungsplanungDragProvider canManagePlanning={canManageSprints}>
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}>
+        {canManageSprints && phaseOptions.length === 0 ? (
+          <UmsetzungsplanungInlineEmpty
+            message={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.noFuturePhases}
+            testId="umsetzungsplanung-zero-phases-empty"
+            action={
+              <button
+                type="button"
+                className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
+                onClick={() => {
+                  touchSection("planned", true);
+                  setCreateOpen(true);
+                  createRef.current?.openForm();
+                }}
+                data-testid="umsetzungsplanung-zero-phases-create"
+              >
+                + Umsetzungsphase erstellen
+              </button>
+            }
+          />
+        ) : null}
         {canManageSprints ? (
           <DevelopmentSprintCreateCard
             ref={createRef}
@@ -190,7 +212,7 @@ export default function UmsetzungsplanungWorkspace({
         {canManageSprints ? (
           <UmsetzungsplanungUnplannedPanel
             phaseOptions={phaseOptions}
-            disabled={phaseOptions.length === 0}
+            assignDisabled={phaseOptions.length === 0}
             open={sectionOpen.unplanned}
             onOpenChange={(open) => touchSection("unplanned", open)}
             onAssigned={() => router.refresh()}
@@ -229,6 +251,7 @@ export default function UmsetzungsplanungWorkspace({
           )}
         </UmsetzungsplanungCollapsibleSection>
       </div>
+      </UmsetzungsplanungDragProvider>
     </div>
   );
 }
