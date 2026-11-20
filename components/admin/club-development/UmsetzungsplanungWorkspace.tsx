@@ -22,6 +22,7 @@ import { CD_UMSETZUNGSPLANUNG_SECTION_QUERY } from "@/lib/club-development/verei
 import type { UmsetzungsplanungPhaseCardItem } from "./UmsetzungsplanungPhaseCard";
 import { UmsetzungsplanungPhaseList } from "./UmsetzungsplanungPhaseCard";
 import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleSection";
+import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetzungsplanung-section-accent";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import UmsetzungsplanungUnplannedPanel from "./UmsetzungsplanungUnplannedPanel";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
@@ -123,6 +124,12 @@ export default function UmsetzungsplanungWorkspace({
           open={sectionOpen.ongoing}
           onOpenChange={(open) => touchSection("ongoing", open)}
           testId="umsetzungsplanung-ongoing-section"
+          headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.ongoing.headerClass}
+          sectionBadge={
+            <span className={UMSETZUNGSPLANUNG_SECTION_ACCENTS.ongoing.badgeClass} data-testid="umsetzungsplanung-ongoing-badge">
+              Laufend
+            </span>
+          }
         >
           {counts.ongoing > 0 ? (
             <UmsetzungsplanungPhaseList
@@ -144,6 +151,12 @@ export default function UmsetzungsplanungWorkspace({
           open={sectionOpen.planned}
           onOpenChange={(open) => touchSection("planned", open)}
           testId="umsetzungsplanung-future-section"
+          headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.planned.headerClass}
+          sectionBadge={
+            <span className={UMSETZUNGSPLANUNG_SECTION_ACCENTS.planned.badgeClass} data-testid="umsetzungsplanung-planned-badge">
+              Geplant
+            </span>
+          }
         >
           {counts.planned > 0 ? (
             <UmsetzungsplanungPhaseList
@@ -191,6 +204,15 @@ export default function UmsetzungsplanungWorkspace({
           open={sectionOpen.completed}
           onOpenChange={(open) => touchSection("completed", open)}
           testId="umsetzungsplanung-completed-section"
+          headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.completed.headerClass}
+          sectionBadge={
+            <span
+              className={UMSETZUNGSPLANUNG_SECTION_ACCENTS.completed.badgeClass}
+              data-testid="umsetzungsplanung-completed-badge"
+            >
+              Abgeschlossen
+            </span>
+          }
         >
           {counts.completed > 0 ? (
             <UmsetzungsplanungPhaseList

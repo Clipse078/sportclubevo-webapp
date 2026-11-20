@@ -1,11 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { TargetConnectedTaskRow } from "@/lib/club-development/target-connected-tasks";
 import { CD_VORHABEN_WORKSPACE_COPY, CD_TARGET_COPY } from "@/lib/club-development/product-copy";
-import { buildVereinsentwicklungTargetTaskCreateHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { VEREINSLEITUNG_PANEL_CLASS } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
+import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "@/components/admin/club-development/vereinsentwicklung-workspace-primary-button";
+import VereinsentwicklungAufgabeWorkspaceCreateCard from "@/components/admin/club-development/VereinsentwicklungAufgabeWorkspaceCreateCard";
 
 type Props = {
   targetId: string;
+  targetTitle: string;
   tasks: TargetConnectedTaskRow[];
   canCreate: boolean;
   returnTo: string;
@@ -17,19 +23,15 @@ type Props = {
 
 export default function TargetTasksSection({
   targetId,
+  targetTitle,
   tasks,
   canCreate,
-  returnTo,
-  orgUnitId = null,
   showCreatedBanner = false,
   deliveryProgressCaption = null,
   deliveryProgressPercent = null,
 }: Props) {
-  const createHref = buildVereinsentwicklungTargetTaskCreateHref({
-    targetId,
-    returnTo,
-    orgUnitId,
-  });
+  const router = useRouter();
+  const [createOpen, setCreateOpen] = useState(showCreatedBanner);
 
   return (
     <section className={VEREINSLEITUNG_PANEL_CLASS} data-testid="target-aufgaben-section">
@@ -48,14 +50,15 @@ export default function TargetTasksSection({
           ) : null}
         </div>
         {canCreate ? (
-          <Link
-            href={createHref}
-            className="inline-flex items-center rounded-lg bg-[var(--sce-primary)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-95"
+          <button
+            type="button"
+            className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
             data-testid="target-aufgabe-erstellen"
-            data-sce-contextual-create-flow="full-page"
+            data-sce-contextual-create-flow="inline-collapsible"
+            onClick={() => setCreateOpen(true)}
           >
             {CD_VORHABEN_WORKSPACE_COPY.createTaskAction}
-          </Link>
+          </button>
         ) : null}
       </div>
 
@@ -63,10 +66,28 @@ export default function TargetTasksSection({
         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
           Ziel gespeichert.{" "}
           {canCreate ? (
-            <Link href={createHref} className="font-semibold underline">
+            <button
+              type="button"
+              className="font-semibold underline"
+              onClick={() => setCreateOpen(true)}
+            >
               {CD_TARGET_COPY.createTaskAfterZielAction}
-            </Link>
+            </button>
           ) : null}
+        </div>
+      ) : null}
+
+      {canCreate ? (
+        <div className="mb-4" data-sce-contextual-create-flow="inline-collapsible">
+          <VereinsentwicklungAufgabeWorkspaceCreateCard
+            canCreate
+            expanded={createOpen}
+            onExpandedChange={setCreateOpen}
+            hideToolbarTrigger
+            initialTargetId={targetId}
+            initialTargetTitle={targetTitle}
+            onCreated={() => router.refresh()}
+          />
         </div>
       ) : null}
 

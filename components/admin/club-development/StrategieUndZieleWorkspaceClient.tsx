@@ -28,6 +28,7 @@ type Props = {
   availableMeetings: EntityRef[];
   availableDecisions: EntityRef[];
   orgUnitOptions: { id: string; name: string }[];
+  timeZone: string;
 };
 
 export default function StrategieUndZieleWorkspaceClient({
@@ -44,6 +45,7 @@ export default function StrategieUndZieleWorkspaceClient({
   availableMeetings,
   availableDecisions,
   orgUnitOptions,
+  timeZone,
 }: Props) {
   const searchParams = useSearchParams();
   const activeView = parseStrategieZieleView(searchParams.get("ansicht"));
@@ -64,6 +66,7 @@ export default function StrategieUndZieleWorkspaceClient({
           canManage={canManageTargets}
           orgUnitOptions={orgUnitOptions}
           orgEinheitFilterLabel={orgEinheitFilterLabel}
+          timeZone={timeZone}
         />
         {selectedStrategyId ? (
           authoring ? (

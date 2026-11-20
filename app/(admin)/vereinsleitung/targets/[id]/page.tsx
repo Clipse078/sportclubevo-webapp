@@ -17,7 +17,6 @@ import TargetMetricProgress from "@/components/admin/targets/TargetMetricProgres
 import TargetDataPointForm from "@/components/admin/targets/TargetDataPointForm";
 import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
-import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
 import TargetTasksSection from "@/components/admin/targets/TargetTasksSection";
 import { loadTargetConnectedTasks } from "@/lib/club-development/target-connected-tasks";
 import { loadTargetLinkedClubStrategy } from "@/lib/club-development/target-linked-club-strategy";
@@ -29,7 +28,6 @@ import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwickl
 import { resolveTargetCreatorDisplayName } from "@/lib/club-development/target-creator-display";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { parseOrgEinheitQuery } from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
-import { parseEntityRefs } from "@/lib/linking/helpers";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import TargetMetricsEmptyState from "@/components/admin/targets/TargetMetricsEmptyState";
@@ -79,9 +77,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
       permission: PERMISSIONS.TARGETS_DELETE,
       tenantId,
     });
-    canManageTarget =
-      actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE) &&
-      actor.permissionKeys.includes(PERMISSIONS.INITIATIVES_MANAGE);
+    canManageTarget = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
   }
 
   const statusLabel = formatTargetStatusLabel(target.status);
@@ -252,6 +248,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
 
           <TargetTasksSection
             targetId={id}
+            targetTitle={target.title}
             tasks={connectedTasks}
             canCreate={canCreateTargetTasks}
             returnTo={detailReturnTo}
@@ -259,12 +256,6 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             showCreatedBanner={showCreatedBanner}
             deliveryProgressCaption={targetDeliveryCaption}
             deliveryProgressPercent={targetDeliveryPercent}
-          />
-          <TargetInitiativeLinksSection
-            targetId={id}
-            targetTitle={target.title}
-            canManage={canManageTarget}
-            legacyInitiativeRefs={parseEntityRefs(target.linkedInitiativeRefs)}
           />
         </div>
 

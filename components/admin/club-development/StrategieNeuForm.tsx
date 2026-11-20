@@ -14,6 +14,7 @@ import {
   workspacePrimaryButtonClass,
 } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
 import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
+import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import TaskDescriptionFormField from "@/components/admin/aufgaben/TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "@/components/admin/aufgaben/TaskPeopleMultiPicker";
 import { TaskDeadlineFields } from "@/components/admin/aufgaben/TaskReminderFields";
@@ -106,11 +107,7 @@ export default function StrategieNeuForm({
 
   return (
     <form className="space-y-4" onSubmit={onSubmit} data-testid="strategie-neu-form">
-      {error ? (
-        <p className="rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ClubDevelopmentFormError message={error} /> : null}
       <label className="block text-sm">
         <span className="mb-1 block text-xs text-[var(--muted)]">Titel</span>
         <input

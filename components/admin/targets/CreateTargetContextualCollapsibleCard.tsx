@@ -19,6 +19,8 @@ type Props = {
   expanded: boolean;
   onExpandedChange: (expanded: boolean) => void;
   contextualFocus: ContextualFocusProps;
+  clubStrategyId?: string | null;
+  strategyTitle?: string | null;
 };
 
 const PANEL_ID = "strategy-create-target-contextual-panel";
@@ -28,6 +30,8 @@ function CreateTargetContextualCollapsibleCardInner({
   expanded,
   onExpandedChange,
   contextualFocus,
+  clubStrategyId = null,
+  strategyTitle = null,
 }: Props) {
   const discardPrompt = useSceInlineDiscardPrompt();
   const inlineDirtyClose = useOptionalSceClubDevelopmentInlineDirtyClose();
@@ -49,7 +53,10 @@ function CreateTargetContextualCollapsibleCardInner({
     const res = await fetch("/api/club-development/club-strategy/focus-targets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetId }),
+      body: JSON.stringify({
+        targetId,
+        ...(clubStrategyId?.trim() ? { clubStrategyId: clubStrategyId.trim() } : {}),
+      }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -79,8 +86,12 @@ function CreateTargetContextualCollapsibleCardInner({
   return (
     <div ref={cardRef}>
       <SceClubDevelopmentContextualCreateCollapsibleShell
-        actionLabel={CD_TARGET_COPY.createTargetAndLinkSchwerpunkt}
-        contextLabel="Schwerpunkt der Vereinsstrategie"
+        actionLabel={CD_TARGET_COPY.createTargetInStrategy}
+        contextLabel={
+          strategyTitle?.trim()
+            ? `Strategie: ${strategyTitle.trim()}`
+            : "Schwerpunkt der Vereinsstrategie"
+        }
         expanded={expanded}
         onExpandedChange={guardedExpandedChange}
         panelDomId={PANEL_ID}

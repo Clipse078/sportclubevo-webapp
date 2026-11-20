@@ -69,6 +69,21 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === "ORG_UNIT_FORBIDDEN") {
       return NextResponse.json({ error: "Keine Berechtigung für diese Org-Einheit." }, { status: 403 });
     }
+    if (error instanceof Error && error.message === "CLUB_WIDE_STRATEGY_CONFLICT") {
+      return NextResponse.json(
+        {
+          error:
+            "Es existiert bereits eine Gesamtverein-Strategie. Mehrere getrennt betitelte Strategien mit Gesamtverein-Scope sind nach Anwendung der Datenbank-Erweiterung aus diesem Release möglich.",
+        },
+        { status: 409 },
+      );
+    }
+    if (error instanceof Error && error.message === "RESPONSIBLE_NOT_FOUND") {
+      return NextResponse.json({ error: "Verantwortliche Person nicht gefunden." }, { status: 400 });
+    }
+    if (error instanceof Error && error.message === "INVALID_NEXT_REVIEW") {
+      return NextResponse.json({ error: "Ungültiges Datum für die nächste Überprüfung." }, { status: 400 });
+    }
     console.error("club-strategies POST failed", error);
     return NextResponse.json({ error: "Strategie konnte nicht angelegt werden." }, { status: 500 });
   }

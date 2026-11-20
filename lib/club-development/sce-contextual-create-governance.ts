@@ -18,6 +18,8 @@ export const SCE_CONTEXTUAL_CREATE_INLINE_CARD_MARKERS = [
   "CreateTargetContextualCollapsibleCard",
   "CreateTargetWorkspaceCollapsibleCard",
   "CreateInitiativeWorkspaceCollapsibleCard",
+  "CreateStrategieWorkspaceCollapsibleCard",
+  "VereinsentwicklungAufgabeWorkspaceCreateCard",
   "data-sce-contextual-create-flow=\"inline-collapsible\"",
 ] as const;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
@@ -8,15 +9,18 @@ import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import { buildStrategieUndZieleHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
-import { buildVereinsentwicklungStrategieNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
+import CreateStrategieWorkspaceCollapsibleCard from "./CreateStrategieWorkspaceCollapsibleCard";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
+
 type Props = {
   strategies: ClubStrategyListItemDto[];
   selectedStrategyId: string | null;
   canManage: boolean;
-  orgUnitOptions: { id: string; name: string }[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   orgEinheitFilterLabel?: string | null;
+  timeZone: string;
 };
 
 export default function StrategienWorkspaceListPanel({
@@ -25,23 +29,23 @@ export default function StrategienWorkspaceListPanel({
   canManage,
   orgUnitOptions,
   orgEinheitFilterLabel = null,
+  timeZone,
 }: Props) {
   const searchParams = useSearchParams();
   const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const primaryAction =
-    canManage ? (
-      <Link
-        href={buildVereinsentwicklungStrategieNeuHref({
-          orgUnitId: orgQuery,
-        })}
-        className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
-        data-testid="strategien-toolbar-create"
-        data-sce-contextual-create-flow="full-page"
-      >
-        + Strategie anlegen
-      </Link>
-    ) : null;
+  const primaryAction = canManage ? (
+    <button
+      type="button"
+      className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
+      data-testid="strategien-toolbar-create"
+      data-sce-contextual-create-flow="inline-collapsible"
+      onClick={() => setCreateOpen(true)}
+    >
+      + Strategie anlegen
+    </button>
+  ) : null;
 
   return (
     <div className="space-y-4" data-testid="strategien-workspace-panel">
@@ -51,6 +55,17 @@ export default function StrategienWorkspaceListPanel({
         testId="strategien-workspace-toolbar"
       />
 
+      {canManage ? (
+        <CreateStrategieWorkspaceCollapsibleCard
+          canCreate
+          orgUnitOptions={orgUnitOptions}
+          timeZone={timeZone}
+          expanded={createOpen}
+          onExpandedChange={setCreateOpen}
+          hideToolbarTrigger
+        />
+      ) : null}
+
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`} data-testid="strategien-workspace-list-surface">
         {strategies.length === 0 ? (
           <SceClubDevelopmentEmptyState
@@ -59,6 +74,17 @@ export default function StrategienWorkspaceListPanel({
               canManage
                 ? "Noch keine Strategie sichtbar — legen Sie eine Strategie an."
                 : "Keine Strategie sichtbar."
+            }
+            action={
+              canManage ? (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  + Strategie anlegen
+                </button>
+              ) : null
             }
           />
         ) : (

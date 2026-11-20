@@ -18,10 +18,14 @@ export const SCE_CD_CONNECTED_COMPATIBILITY_RELEASE = {
     "20261120120000_sce_cd_connected_workspace",
     "20261120140000_sce_cd_connected_strategy_org_units",
   ] as const,
+  /** Apply on shared STAGE only after PO signs off — enables multiple Gesamtverein-scoped strategies. */
+  pendingSchemaMigrationForMultiClubWideStrategy:
+    "20261120180000_sce_cd_multi_club_wide_strategy" as const,
   rolloutOrder: [
     "1. Keep PR #1017 (feature + compatibility code) open until PO finishes STAGE PR-preview UAT.",
     "2. PO approval gate: merge PR #1017 → STAGE (no squash that drops migration-adjacent application files).",
-    "3. Deploy STAGE project sportclubevo-webapp-stage from the merge commit with APPLY_DATABASE_MIGRATIONS unset.",
+    "3. Deploy STAGE project sportclubevo-webapp-stage from the merge commit with APPLY_DATABASE_MIGRATIONS unset (application-only).",
+    "3b. After PO approval, run guarded migrate deploy once with 20261120180000_sce_cd_multi_club_wide_strategy to drop the legacy Gesamtverein singleton index.",
     "4. Run read-only STAGE inventories: npm run cd-connected:stage-migration-verify and npm run cd-connected:stage-reconciliation-outcome.",
     "5. Smoke TARGET task list/detail + club-wide strategy pick on STAGE preview (read-only); PO Acceptance seed remains on sce_acceptance only.",
   ] as const,

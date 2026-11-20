@@ -8,6 +8,7 @@ import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprint
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { mapPlanningTaskToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
 import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleSection";
+import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetzungsplanung-section-accent";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
@@ -146,6 +147,15 @@ export default function UmsetzungsplanungUnplannedPanel({
       open={open}
       onOpenChange={onOpenChange}
       testId="umsetzungsplanung-unplanned-panel"
+      headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.unplanned.headerClass}
+      sectionBadge={
+        <span
+          className={UMSETZUNGSPLANUNG_SECTION_ACCENTS.unplanned.badgeClass}
+          data-testid="umsetzungsplanung-unplanned-badge"
+        >
+          Ungeplant
+        </span>
+      }
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-end gap-3 px-1">

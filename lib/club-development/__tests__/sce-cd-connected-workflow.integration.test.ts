@@ -210,6 +210,35 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     expect(row.orgUnitAssignments).toHaveLength(0);
   });
 
+  it("allows a second titled Gesamtverein strategy while preserving the legacy row", async () => {
+    const legacy = await admin.clubStrategy.create({
+      data: {
+        tenantId,
+        scopeType: ClubStrategyScopeType.CLUB,
+        scopeOrgUnitId: null,
+        title: `Legacy Gesamtverein ${RUN}`,
+        createdByUserId: userId,
+        updatedByUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    const created = await createClubStrategy(actor, userId, {
+      title: `Test Strategie 1 ${RUN}`,
+      scopeClubWide: true,
+    });
+
+    const clubWideRows = await admin.clubStrategy.findMany({
+      where: { tenantId, scopeType: ClubStrategyScopeType.CLUB, scopeOrgUnitId: null },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { id: true, title: true },
+    });
+    expect(clubWideRows.map((row) => row.id)).toEqual(
+      expect.arrayContaining([legacy.id, created.id]),
+    );
+    expect(clubWideRows).toHaveLength(2);
+  });
+
   it("creates one strategy assigned to two Org-Einheiten and filters through both", async () => {
     await admin.clubStrategy.deleteMany({ where: { tenantId } });
     const created = await createClubStrategy(actor, userId, {

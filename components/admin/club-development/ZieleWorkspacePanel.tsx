@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { buildVereinsentwicklungZielNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
-import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
@@ -15,6 +13,8 @@ import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwickl
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
+import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
+import CreateTargetWorkspaceCollapsibleCard from "@/components/admin/targets/CreateTargetWorkspaceCollapsibleCard";
 
 type Props = {
   targets: StrategyTargetOverview[];
@@ -34,6 +34,8 @@ export default function ZieleWorkspacePanel({
 }: Props) {
   const searchParams = useSearchParams();
   const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
+  const [createOpen, setCreateOpen] = useState(false);
+
   const strategyLinkByTargetId = useMemo(() => {
     const map = new Map<string, { title: string; href: string }>();
     for (const strategy of strategies) {
@@ -50,14 +52,15 @@ export default function ZieleWorkspacePanel({
   }, [strategies, orgQuery]);
 
   const primaryAction = canManageTargets ? (
-    <Link
-      href={buildVereinsentwicklungZielNeuHref({ orgUnitId: orgQuery })}
+    <button
+      type="button"
       className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
       data-testid="ziele-toolbar-create"
-      data-sce-contextual-create-flow="full-page"
+      data-sce-contextual-create-flow="inline-collapsible"
+      onClick={() => setCreateOpen(true)}
     >
       + Ziel anlegen
-    </Link>
+    </button>
   ) : null;
 
   return (
@@ -68,6 +71,15 @@ export default function ZieleWorkspacePanel({
         testId="ziele-workspace-toolbar"
       />
 
+      {canManageTargets ? (
+        <CreateTargetWorkspaceCollapsibleCard
+          canCreate
+          expanded={createOpen}
+          onExpandedChange={setCreateOpen}
+          hideToolbarTrigger
+        />
+      ) : null}
+
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}>
         {targets.length === 0 ? (
           <SceClubDevelopmentEmptyState
@@ -76,6 +88,17 @@ export default function ZieleWorkspacePanel({
               canManageTargets
                 ? "Noch keine Ziele sichtbar — legen Sie ein Ziel an."
                 : "Keine strategischen Ziele sichtbar."
+            }
+            action={
+              canManageTargets ? (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  + Ziel anlegen
+                </button>
+              ) : null
             }
           />
         ) : (
@@ -122,6 +145,11 @@ export default function ZieleWorkspacePanel({
                     progressCaption={target.deliveryProgressCaption}
                     statusLabel={formatTargetStatusLabel(target.status)}
                     testId={`ziele-row-${target.id}`}
+                    trailing={
+                      <Link href={detailHref} className="text-xs text-[var(--sce-primary)] hover:underline">
+                        Öffnen
+                      </Link>
+                    }
                   />
                 );
               })}

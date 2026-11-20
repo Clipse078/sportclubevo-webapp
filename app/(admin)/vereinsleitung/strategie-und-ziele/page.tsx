@@ -63,6 +63,14 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
         : Promise.resolve([]),
     ]);
 
+  const tenantRow = actor.tenantId
+    ? await prisma.tenant.findUnique({
+        where: { id: actor.tenantId },
+        select: { timezone: true },
+      })
+    : null;
+  const timeZone = tenantRow?.timezone ?? "Europe/Zurich";
+
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
   const canCreateTargetTasks =
     actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
@@ -95,6 +103,7 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
           orgUnitOptions={orgUnitOptions}
+          timeZone={timeZone}
         />
       </ListPagePattern>
     </PageShell>

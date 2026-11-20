@@ -3,8 +3,8 @@ import "server-only";
 import {
   ClubStrategyDocumentKind,
   ClubStrategyScopeType,
+  Prisma,
   TaskDocumentReferenceVersionBinding,
-  type Prisma,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { logAuditEvent } from "@/lib/audit/audit-log";
@@ -342,30 +342,42 @@ export async function createClubStrategy(
     throw new Error("INVALID_NEXT_REVIEW");
   }
 
-  const created = await prisma.clubStrategy.create({
-    data: {
-      tenantId: actor.tenantId,
-      scopeType,
-      scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
-      title,
-      situationText,
-      responsiblePersonId,
-      responsibleLabel,
-      nextReviewAt,
-      createdByUserId: actorUserId,
-      updatedByUserId: actorUserId,
-      orgUnitAssignments:
-        orgUnitIds.length > 0
-          ? {
-              create: orgUnitIds.map((orgUnitId) => ({
-                tenantId: actor.tenantId!,
-                orgUnitId,
-              })),
-            }
-          : undefined,
-    },
-    select: { id: true },
-  });
+  let created: { id: string };
+  try {
+    created = await prisma.clubStrategy.create({
+      data: {
+        tenantId: actor.tenantId,
+        scopeType,
+        scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
+        title,
+        situationText,
+        responsiblePersonId,
+        responsibleLabel,
+        nextReviewAt,
+        createdByUserId: actorUserId,
+        updatedByUserId: actorUserId,
+        orgUnitAssignments:
+          orgUnitIds.length > 0
+            ? {
+                create: orgUnitIds.map((orgUnitId) => ({
+                  tenantId: actor.tenantId!,
+                  orgUnitId,
+                })),
+              }
+            : undefined,
+      },
+      select: { id: true },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      orgUnitIds.length === 0
+    ) {
+      throw new Error("CLUB_WIDE_STRATEGY_CONFLICT");
+    }
+    throw error;
+  }
 
   void logAuditEvent({
     actorUserId,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Loader2, Pencil } from "lucide-react";
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
 import { useRouter, useSearchParams } from "next/navigation";
-import { buildVereinsentwicklungZielNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
+import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import {
   useCallback,
@@ -113,6 +113,7 @@ export default function StrategyAuthoringPanel({
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
   const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
+  const [createTargetOpen, setCreateTargetOpen] = useState(false);
   const searchParams = useSearchParams();
   const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
   const [supportingCounts, setSupportingCounts] = useState(() => strategySupportingMaterialCounts(initial));
@@ -569,18 +570,31 @@ export default function StrategyAuthoringPanel({
 
         {canManage ? (
           <div className="space-y-3">
-            <Link
-              href={buildVereinsentwicklungZielNeuHref({
-                orgUnitId: orgQuery,
-                clubStrategyId: strategyId,
-                linkFocus: true,
-              })}
+            <button
+              type="button"
               className="inline-flex items-center rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-sm font-medium text-white"
               data-testid="strategy-focus-create-target"
-              data-sce-contextual-create-flow="full-page"
+              data-sce-contextual-create-flow="inline-collapsible"
+              onClick={() => setCreateTargetOpen(true)}
             >
               {CD_TARGET_COPY.createTargetInStrategy}
-            </Link>
+            </button>
+            <CreateTargetContextualCollapsibleCard
+              expanded={createTargetOpen}
+              onExpandedChange={setCreateTargetOpen}
+              clubStrategyId={strategyId}
+              strategyTitle={strategyTitle}
+              contextualFocus={{
+                onFinished: (payload) => {
+                  if (payload.linkOk) {
+                    setFocusLinkRetryTargetId(null);
+                    router.refresh();
+                  } else if (payload.linkError) {
+                    setFocusLinkRetryTargetId(payload.targetId);
+                  }
+                },
+              }}
+            />
             <div className="space-y-1">
               <p className="text-xs font-medium text-[var(--muted)]">{CD_TARGET_COPY.linkExistingTargetToStrategy}</p>
               <ClubDevelopmentTargetSearchPicker

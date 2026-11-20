@@ -132,7 +132,7 @@ async function main(): Promise<void> {
           order: [
             "Confirm STAGE fingerprint and APP_ENV=stage (not production).",
             "Run this script (read-only inventory).",
-            "On designated STAGE: PKG-05 should already be applied — if pending, use guarded Path B in handoff (not db push).",
+            "On designated STAGE: PKG-05 should already be applied — if pending, use guarded Path B in handoff with APPLY_DATABASE_MIGRATIONS=true (not db push).",
             "Optional: post-deploy-reconciliation dry-run inventory (no writes).",
             "Re-test STAGE acceptance /vereinsleitung/strategie on https://fcallschwil.sportclubevo.com",
           ],

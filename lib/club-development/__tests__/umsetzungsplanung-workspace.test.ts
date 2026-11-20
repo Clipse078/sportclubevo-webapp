@@ -102,6 +102,8 @@ describe("Umsetzungsplanung workspace", () => {
     expect(client).not.toContain("DevelopmentSprintList");
     const workspace = read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx");
     expect(workspace).toContain("UmsetzungsplanungCollapsibleSection");
+    expect(workspace).toContain("UMSETZUNGSPLANUNG_SECTION_ACCENTS");
+    expect(workspace).toContain("umsetzungsplanung-ongoing-badge");
     expect(workspace).toContain("UmsetzungsplanungUnplannedPanel");
     const unplanned = read("components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx");
     expect(unplanned).toContain("VereinsentwicklungConnectedTaskTable");
