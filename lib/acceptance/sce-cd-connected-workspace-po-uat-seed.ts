@@ -4,7 +4,7 @@ import {
   TargetCategory,
   TargetPeriod,
   TargetStatus,
-  type Prisma,
+  ReviewWorkflowStage,
   type PrismaClient,
 } from "@prisma/client";
 import {
@@ -157,15 +157,15 @@ export async function seedConnectedWorkspacePoUatFixtures(
       status: TargetStatus.ACTIVE,
       period: TargetPeriod.YEAR,
       periodLabel: "PO UAT",
-      reviewStage: "PUBLISHED",
+      reviewStage: ReviewWorkflowStage.PUBLISHED,
       visibilityScope: "ORGANISATION",
       createdByUserId: SCE_CD_CONNECTED_PO_UAT_ACTOR_USER_ID,
       visibleOrgUnitRefs: [{ id: SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID, title: "Junioren" }],
-    } satisfies Prisma.TargetCreateInput,
+    },
     update: {
       title: SCE_CD_CONNECTED_PO_UAT_TARGET_TITLE,
       status: TargetStatus.ACTIVE,
-      reviewStage: "PUBLISHED",
+      reviewStage: ReviewWorkflowStage.PUBLISHED,
     },
   });
 
