@@ -182,16 +182,37 @@ async function main(): Promise<void> {
               requiresSeparateFixtureApproval: true,
             };
           }
-          const [targetCount, sprintCount, orgUnitCount] = await Promise.all([
+          const [targetCount, sprintCount, orgUnitCount, clubStrategyCount, clubWideStrategies] =
+            await Promise.all([
             prisma.target.count({ where: { tenantId: tenant.id } }),
             prisma.developmentSprint.count({ where: { tenantId: tenant.id } }),
             prisma.orgUnit.count({ where: { tenantId: tenant.id } }),
+            prisma.clubStrategy.count({ where: { tenantId: tenant.id } }),
+            prisma.clubStrategy.findMany({
+              where: { tenantId: tenant.id },
+              select: {
+                id: true,
+                title: true,
+                scopeType: true,
+                scopeOrgUnitId: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: "asc" },
+            }),
           ]);
           return {
+            tenantId: tenant.id,
             tenantKey: "fc-allschwil",
             orgUnitCount,
             targetCount,
             sprintCount,
+            clubStrategyCount,
+            clubWideStrategyRows: clubWideStrategies.filter(
+              (row) => row.scopeType === "CLUB" && row.scopeOrgUnitId === null,
+            ),
+            clubStrategyRows: clubWideStrategies,
+            gesamtvereinDisplayFallback:
+              "null title + scopeType=CLUB renders as Gesamtverein in listClubStrategies()",
             note: "Acceptance ledger fixture IDs are not on STAGE; PO sprint/target deep links need an approved STAGE seed or manual PO-created records.",
             requiresSeparateFixtureApproval: targetCount === 0 || sprintCount === 0,
           };

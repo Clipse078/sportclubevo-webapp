@@ -100,6 +100,7 @@ function clubWideStrategyWhere(tenantId: string): Prisma.ClubStrategyWhereInput 
 async function findClubWideStrategyId(tenantId: string): Promise<string | null> {
   const row = await prisma.clubStrategy.findFirst({
     where: clubWideStrategyWhere(tenantId),
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: { id: true },
   });
   return row?.id ?? null;

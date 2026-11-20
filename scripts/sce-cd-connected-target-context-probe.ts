@@ -13,6 +13,11 @@ import path from "node:path";
 
 import { Prisma, TaskContextType, TaskVisibilityScope, VisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  applyConfiguredTestDatabaseUrlToProcessEnv,
+  assertSafeTestDatabase,
+  maskDatabaseUrl,
+} from "@/lib/test/safe-test-database";
 
 const CANONICAL_STAGE_BASE = "8e2176efa2f995bf877e9640a004a9b6a716d8f0" as const;
 const FIXTURE_PREFIX = `sce-cd-connected-probe-${Date.now()}-`;
@@ -50,6 +55,9 @@ function readRepoRegistryHasTarget(repoPath: string, ref?: string): boolean {
 }
 
 async function main(): Promise<void> {
+  const disposableUrl = assertSafeTestDatabase();
+  applyConfiguredTestDatabaseUrlToProcessEnv();
+
   const appSha = resolveAppSha();
   const prismaClient = resolvePrismaClientLabel();
 
@@ -213,6 +221,7 @@ async function main(): Promise<void> {
 
   const payload = {
     pullRequest: 1017,
+    disposableDatabase: maskDatabaseUrl(disposableUrl),
     writePerformed: true,
     disposableFixtures: { targetId, taskId, tenantKey: tenant.key, userId: user.id },
     prClient,
