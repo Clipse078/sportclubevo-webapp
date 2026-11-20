@@ -14,6 +14,7 @@ import {
   UMSETZUNGSPLANUNG_DND_MIME,
 } from "@/lib/club-development/umsetzungsplanung-dnd";
 import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorkspaceTaskStatusPill";
+import VereinsentwicklungTaskStatusControl from "./VereinsentwicklungTaskStatusControl";
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
 import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
@@ -143,6 +144,9 @@ export type VereinsentwicklungConnectedTaskTableProps = {
   showReorderHandle?: boolean;
   reorder?: VereinsentwicklungTaskTableReorderConfig;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
+  canEditStatus?: boolean;
+  onTaskStatusUpdated?: () => void;
+  onTaskStatusError?: (message: string) => void;
   renderRowActions?: (row: VereinsentwicklungConnectedTaskTableRowModel) => ReactNode;
   footer?: ReactNode;
   testId?: string;
@@ -159,6 +163,9 @@ function TaskTableRow({
   onDragStartRow,
   onDragEndRow,
   phaseDrag,
+  canEditStatus,
+  onTaskStatusUpdated,
+  onTaskStatusError,
   renderRowActions,
   schedulingDragEnabled = false,
 }: {
@@ -172,6 +179,9 @@ function TaskTableRow({
   onDragStartRow?: (taskId: string) => void;
   onDragEndRow?: () => void;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
+  canEditStatus?: boolean;
+  onTaskStatusUpdated?: () => void;
+  onTaskStatusError?: (message: string) => void;
   renderRowActions?: (row: VereinsentwicklungConnectedTaskTableRowModel) => ReactNode;
   schedulingDragEnabled?: boolean;
 }) {
@@ -303,7 +313,17 @@ function TaskTableRow({
           </>
         ) : null}
         <div className="min-w-0 w-full" data-sce-overview-col={unifiedTaskLayout ? "status" : undefined}>
-          <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
+          {canEditStatus && layoutVariant !== "overview" ? (
+            <VereinsentwicklungTaskStatusControl
+              taskId={row.taskId}
+              status={row.status}
+              canEdit
+              onUpdated={() => onTaskStatusUpdated?.()}
+              onError={onTaskStatusError}
+            />
+          ) : (
+            <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
+          )}
         </div>
         {unifiedTaskLayout ? (
           <>
@@ -360,6 +380,9 @@ export default function VereinsentwicklungConnectedTaskTable({
   showReorderHandle = false,
   reorder,
   phaseDrag,
+  canEditStatus = false,
+  onTaskStatusUpdated,
+  onTaskStatusError,
   renderRowActions,
   footer,
   testId,
@@ -524,6 +547,9 @@ export default function VereinsentwicklungConnectedTaskTable({
               onDragStartRow={onDragStartRow}
               onDragEndRow={onDragEndRow}
               phaseDrag={phaseDrag}
+              canEditStatus={canEditStatus}
+              onTaskStatusUpdated={onTaskStatusUpdated}
+              onTaskStatusError={onTaskStatusError}
               renderRowActions={renderRowActions}
             />
             {reorderListActive ? (

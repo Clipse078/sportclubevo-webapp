@@ -313,6 +313,9 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
           {!loading && !error && cards && cards.length > 0 ? (
             <VereinsentwicklungConnectedTaskTable
               rows={tableRows}
+              canEditStatus={canManageAssignments}
+              onTaskStatusUpdated={() => void loadAssignedTasks()}
+              onTaskStatusError={(message) => setError(message)}
               testId={`umsetzungsplanung-phase-task-table-${sprintSlug}`}
               phaseDrag={
                 canManageAssignments

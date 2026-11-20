@@ -57,6 +57,7 @@ const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
 const TASK_STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "OPEN", label: "Offen" },
   { value: "IN_PROGRESS", label: "In Arbeit" },
+  { value: "WAITING", label: "Wartet" },
   { value: "DONE", label: "Erledigt" },
   { value: "CANCELLED", label: "Abgebrochen" },
 ];
@@ -366,6 +367,9 @@ export default function VorhabenAufgabenWorkspace({
               <VereinsentwicklungConnectedTaskTable
                 rows={snapshot.tasks.map(mapVorhabenTaskRowToTableModel)}
                 showRowProgress={false}
+                canEditStatus={snapshot.canManageTasks}
+                onTaskStatusUpdated={() => fetchWorkspace()}
+                onTaskStatusError={(message) => setError(message)}
                 testId="vereinsentwicklung-aufgaben-task-table"
               />
             )}

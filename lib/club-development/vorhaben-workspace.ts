@@ -12,7 +12,7 @@ import { applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
-import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
+import { vereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status";
 import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import {
@@ -260,7 +260,7 @@ function mapTaskRows(
       publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
       title: row.title,
       status: row.status,
-      statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
+      statusLabel: vereinsentwicklungTaskStatusLabel(row.status),
       dueAt: row.dueAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
       assigneeLabels: assigneeLabels(row),

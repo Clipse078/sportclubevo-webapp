@@ -5,6 +5,7 @@ import type { TaskSeriesWeekday, TaskRecurrenceFrequency } from "@prisma/client"
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   OPEN: "Offen",
   IN_PROGRESS: "In Bearbeitung",
+  WAITING: "Wartet",
   DONE: "Erledigt",
   CANCELLED: "Abgebrochen",
 };
