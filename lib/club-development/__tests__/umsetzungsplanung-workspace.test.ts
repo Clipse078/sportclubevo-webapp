@@ -103,6 +103,10 @@ describe("Umsetzungsplanung workspace", () => {
     const workspace = read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx");
     expect(workspace).toContain("UmsetzungsplanungCollapsibleSection");
     expect(workspace).toContain("UmsetzungsplanungUnplannedPanel");
+    const unplanned = read("components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx");
+    expect(unplanned).toContain("VereinsentwicklungConnectedTaskTable");
+    expect(unplanned).toContain("einplanenAction");
+    expect(unplanned).toContain("showReorderHandle");
     expect(workspace).not.toContain("Dialog");
     expect(workspace).not.toContain("SceClubDevelopmentEmptyState");
   });
