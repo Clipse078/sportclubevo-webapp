@@ -5,6 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ClubStrategyOrgUnitScopePicker from "../ClubStrategyOrgUnitScopePicker";
+import {
+  CD_CLUB_STRATEGY_ORG_SCOPE_REQUIRED_MESSAGE,
+  CD_CLUB_STRATEGY_SCOPE_GESAMTVEREIN,
+  defaultClubStrategyOrgScopeSelection,
+  selectGesamtvereinScope,
+} from "@/lib/club-development/club-strategy-org-scope";
 
 vi.mock("@/components/admin/aufgaben/TaskOrgUnitMultiPicker", () => ({
   default: ({
@@ -14,86 +20,127 @@ vi.mock("@/components/admin/aufgaben/TaskOrgUnitMultiPicker", () => ({
     selectedIds: string[];
     onSelectedIdsChange: (ids: string[]) => void;
   }) => (
-    <button
-      type="button"
-      data-testid="mock-add-org-unit"
-      onClick={() => onSelectedIdsChange([...selectedIds, "org-junioren"])}
-    >
-      Mock add unit
-    </button>
+    <div>
+      <button
+        type="button"
+        data-testid="mock-add-org-unit-a"
+        onClick={() => onSelectedIdsChange([...selectedIds, "org-a"])}
+      >
+        Mock add A
+      </button>
+      <button
+        type="button"
+        data-testid="mock-add-org-unit-b"
+        onClick={() => onSelectedIdsChange([...selectedIds, "org-b"])}
+      >
+        Mock add B
+      </button>
+    </div>
   ),
 }));
 
 describe("ClubStrategyOrgUnitScopePicker", () => {
-  const options = [{ id: "org-junioren", label: "Junioren", parentId: null, level: 1 }];
+  const options = [
+    { id: "org-a", label: "Junioren A", parentId: null, level: 1 },
+    { id: "org-b", label: "Junioren B", parentId: null, level: 1 },
+  ];
 
-  it("defaults to Gesamtverein (no org unit ids)", () => {
+  it("shows default Gesamtverein chip with remove control", () => {
     render(
       <ClubStrategyOrgUnitScopePicker
         options={options}
-        selectedOrgUnitIds={[]}
-        onSelectedOrgUnitIdsChange={() => {}}
+        selectedScope={defaultClubStrategyOrgScopeSelection()}
+        onSelectedScopeChange={() => {}}
       />,
     );
-    const gesamtverein = screen.getByTestId("club-strategy-scope-gesamtverein");
-    expect(gesamtverein).toHaveAttribute("aria-pressed", "true");
-    expect(gesamtverein).toHaveTextContent("Gesamtverein");
+    expect(screen.getByTestId("club-strategy-scope-gesamtverein-chip")).toHaveTextContent("Gesamtverein");
+    expect(screen.getByTestId("club-strategy-scope-gesamtverein-remove")).toBeInTheDocument();
   });
 
-  it("clears specific units when Gesamtverein is chosen", async () => {
+  it("removes Gesamtverein without auto-reselect", async () => {
     const user = userEvent.setup();
-    let selected = ["org-junioren"];
-    const onChange = vi.fn((ids: string[]) => {
-      selected = ids;
-    });
-
-    const { rerender } = render(
+    const onChange = vi.fn();
+    render(
       <ClubStrategyOrgUnitScopePicker
         options={options}
-        selectedOrgUnitIds={selected}
-        onSelectedOrgUnitIdsChange={onChange}
+        selectedScope={defaultClubStrategyOrgScopeSelection()}
+        onSelectedScopeChange={onChange}
       />,
     );
-
-    expect(screen.getByTestId("club-strategy-scope-gesamtverein")).toHaveAttribute("aria-pressed", "false");
-    await user.click(screen.getByTestId("club-strategy-scope-gesamtverein"));
+    await user.click(screen.getByTestId("club-strategy-scope-gesamtverein-remove"));
     expect(onChange).toHaveBeenCalledWith([]);
-
-    rerender(
-      <ClubStrategyOrgUnitScopePicker
-        options={options}
-        selectedOrgUnitIds={[]}
-        onSelectedOrgUnitIdsChange={onChange}
-      />,
-    );
-    expect(screen.getByTestId("club-strategy-scope-gesamtverein")).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("replaces Gesamtverein when a specific unit is added", async () => {
+  it("replaces Gesamtverein when adding a specific unit", async () => {
     const user = userEvent.setup();
-    let selected: string[] = [];
-    const onChange = vi.fn((ids: string[]) => {
-      selected = ids;
-    });
+    const onChange = vi.fn();
+    render(
+      <ClubStrategyOrgUnitScopePicker
+        options={options}
+        selectedScope={defaultClubStrategyOrgScopeSelection()}
+        onSelectedScopeChange={onChange}
+      />,
+    );
+    await user.click(screen.getByTestId("mock-add-org-unit-a"));
+    expect(onChange).toHaveBeenCalledWith(["org-a"]);
+  });
 
+  it("supports two units and removes the last chip", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
     const { rerender } = render(
       <ClubStrategyOrgUnitScopePicker
         options={options}
-        selectedOrgUnitIds={selected}
-        onSelectedOrgUnitIdsChange={onChange}
+        selectedScope={["org-a", "org-b"]}
+        onSelectedScopeChange={onChange}
       />,
     );
+    expect(screen.queryByTestId("club-strategy-scope-gesamtverein-chip")).toBeNull();
+    expect(screen.getByTestId("club-strategy-scope-gesamtverein-add")).toBeInTheDocument();
 
-    await user.click(screen.getByTestId("mock-add-org-unit"));
-    expect(onChange).toHaveBeenCalledWith(["org-junioren"]);
+    await user.click(screen.getByTestId("club-strategy-org-unit-remove-org-b"));
+    expect(onChange).toHaveBeenCalledWith(["org-a"]);
 
     rerender(
       <ClubStrategyOrgUnitScopePicker
         options={options}
-        selectedOrgUnitIds={["org-junioren"]}
-        onSelectedOrgUnitIdsChange={onChange}
+        selectedScope={["org-a"]}
+        onSelectedScopeChange={onChange}
       />,
     );
-    expect(screen.getByTestId("club-strategy-scope-gesamtverein")).toHaveAttribute("aria-pressed", "false");
+    await user.click(screen.getByTestId("club-strategy-org-unit-remove-org-a"));
+    expect(onChange).toHaveBeenLastCalledWith([]);
+  });
+
+  it("reselects Gesamtverein and replaces unit selections", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ClubStrategyOrgUnitScopePicker
+        options={options}
+        selectedScope={["org-a", "org-b"]}
+        onSelectedScopeChange={onChange}
+      />,
+    );
+    await user.click(screen.getByTestId("club-strategy-scope-gesamtverein-add"));
+    expect(onChange).toHaveBeenCalledWith(selectGesamtvereinScope());
+  });
+
+  it("shows required hint when requested", () => {
+    render(
+      <ClubStrategyOrgUnitScopePicker
+        options={options}
+        selectedScope={[]}
+        onSelectedScopeChange={() => {}}
+        showRequiredHint
+      />,
+    );
+    expect(screen.getByTestId("club-strategy-org-scope-required")).toHaveTextContent(
+      CD_CLUB_STRATEGY_ORG_SCOPE_REQUIRED_MESSAGE,
+    );
+  });
+
+  it("ignores gesamtverein token in unit list when parsing payload", () => {
+    expect(CD_CLUB_STRATEGY_SCOPE_GESAMTVEREIN).toBe("__gesamtverein__");
   });
 });

@@ -20,6 +20,9 @@ import {
   computeStrategyDeliveryProgress,
   formatProgressCountLabel,
 } from "@/lib/club-development/vereinsentwicklung-workspace-progress";
+import { parseCreateClubStrategyScopeInput } from "@/lib/club-development/club-strategy-org-scope";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { canAssignTaskOrgUnit } from "@/lib/tasks/task-org-mutation-policy";
 import {
   resolveTaskDocumentReferencePresentations,
   type TaskReferenceRow,
@@ -273,6 +276,7 @@ async function resolveManagedClubStrategyId(
 
 export type CreateClubStrategyInput = {
   title: string;
+  scopeClubWide?: boolean;
   orgUnitIds?: string[];
 };
 
@@ -285,8 +289,19 @@ export async function createClubStrategy(
   const title = input.title?.trim();
   if (!title) throw new Error("TITLE_REQUIRED");
 
-  const orgUnitIds = [...new Set((input.orgUnitIds ?? []).map((id) => id.trim()).filter(Boolean))];
+  const parsedScope = parseCreateClubStrategyScopeInput(input);
+  if (parsedScope.kind === "invalid") throw new Error("ORG_SCOPE_REQUIRED");
+
+  const taskCtx = await buildTaskServiceContextForActor(actorUserId, actor.tenantId);
+  if (!taskCtx) throw new Error("FORBIDDEN");
+
+  const orgUnitIds =
+    parsedScope.kind === "org_units" ? [...new Set(parsedScope.orgUnitIds)] : [];
+
   if (orgUnitIds.length > 0) {
+    for (const orgUnitId of orgUnitIds) {
+      if (!canAssignTaskOrgUnit(taskCtx, orgUnitId)) throw new Error("ORG_UNIT_FORBIDDEN");
+    }
     const found = await prisma.orgUnit.findMany({
       where: { tenantId: actor.tenantId, id: { in: orgUnitIds }, status: "ACTIVE" },
       select: { id: true },

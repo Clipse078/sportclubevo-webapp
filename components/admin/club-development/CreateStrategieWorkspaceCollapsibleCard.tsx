@@ -52,7 +52,11 @@ export default function CreateStrategieWorkspaceCollapsibleCard({
         const result = await clubDevelopmentFetchJson<{ id: string }>("/api/club-development/club-strategies", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), orgUnitIds }),
+          body: JSON.stringify(
+            orgUnitIds.length > 0
+              ? { title: title.trim(), orgUnitIds }
+              : { title: title.trim(), scopeClubWide: true },
+          ),
         });
         if (!result.ok) {
           setError(result.message);

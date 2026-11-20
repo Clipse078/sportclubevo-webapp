@@ -152,9 +152,16 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     await pool.end();
   });
 
-  it("creates club-wide strategy when orgUnitIds are omitted (Gesamtverein default)", async () => {
+  it("rejects create when org scope is omitted", async () => {
+    await expect(createClubStrategy(actor, userId, { title: `No scope ${RUN}` })).rejects.toThrow(
+      /ORG_SCOPE_REQUIRED/i,
+    );
+  });
+
+  it("creates club-wide strategy only with explicit scopeClubWide", async () => {
     const created = await createClubStrategy(actor, userId, {
       title: `Club wide ${RUN}`,
+      scopeClubWide: true,
     });
 
     const row = await admin.clubStrategy.findUniqueOrThrow({
@@ -170,6 +177,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     const created = await createClubStrategy(actor, userId, {
       title: `Strategie ${RUN}`,
       orgUnitIds: [orgA, orgB],
+      scopeClubWide: false,
     });
 
     const visibleA = await listClubStrategies(actor, { orgUnitId: orgA });

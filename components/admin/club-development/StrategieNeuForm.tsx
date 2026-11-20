@@ -5,6 +5,11 @@ import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import {
+  defaultClubStrategyOrgScopeSelection,
+  parseClubStrategyOrgScopeSelection,
+  toCreateClubStrategyScopePayload,
+} from "@/lib/club-development/club-strategy-org-scope";
+import {
   workspaceGhostButtonClass,
   workspacePrimaryButtonClass,
 } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
@@ -18,7 +23,7 @@ export type StrategieNeuFormProps = {
   pendingLabel?: string;
 };
 
-export function useStrategieNeuDirtyGuard(formSnapshot: { title: string; orgUnitIds: string[] }) {
+export function useStrategieNeuDirtyGuard(formSnapshot: { title: string; orgScope: string[] }) {
   return useSceComposerFormDirty(formSnapshot);
 }
 
@@ -30,12 +35,15 @@ export default function StrategieNeuForm({
   pendingLabel = "Speichern…",
 }: StrategieNeuFormProps) {
   const [title, setTitle] = useState("");
-  const [orgUnitIds, setOrgUnitIds] = useState<string[]>([]);
+  const [orgScope, setOrgScope] = useState<string[]>(defaultClubStrategyOrgScopeSelection);
+  const [orgScopeTouched, setOrgScopeTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const formSnapshot = useMemo(() => ({ title, orgUnitIds }), [title, orgUnitIds]);
+  const formSnapshot = useMemo(() => ({ title, orgScope }), [title, orgScope]);
   useSceComposerFormDirty(formSnapshot);
+
+  const scopeInvalid = parseClubStrategyOrgScopeSelection(orgScope).kind === "invalid";
 
   const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     (event) => {
@@ -44,12 +52,18 @@ export default function StrategieNeuForm({
         setError("Bitte einen Titel eingeben.");
         return;
       }
+      const scopePayload = toCreateClubStrategyScopePayload(orgScope);
+      if (!scopePayload) {
+        setOrgScopeTouched(true);
+        setError(null);
+        return;
+      }
       setError(null);
       startTransition(async () => {
         const result = await clubDevelopmentFetchJson<{ id: string }>("/api/club-development/club-strategies", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), orgUnitIds }),
+          body: JSON.stringify({ title: title.trim(), ...scopePayload }),
         });
         if (!result.ok) {
           setError(result.message);
@@ -58,7 +72,7 @@ export default function StrategieNeuForm({
         onSuccess(result.data.id);
       });
     },
-    [onSuccess, orgUnitIds, title],
+    [onSuccess, orgScope, title],
   );
 
   return (
@@ -80,9 +94,13 @@ export default function StrategieNeuForm({
       </label>
       <ClubStrategyOrgUnitScopePicker
         options={orgUnitOptions}
-        selectedOrgUnitIds={orgUnitIds}
-        onSelectedOrgUnitIdsChange={setOrgUnitIds}
+        selectedScope={orgScope}
+        onSelectedScopeChange={(next) => {
+          setOrgScope(next);
+          setOrgScopeTouched(true);
+        }}
         disabled={pending}
+        showRequiredHint={orgScopeTouched && scopeInvalid}
       />
       <div className="flex flex-wrap gap-2">
         <button

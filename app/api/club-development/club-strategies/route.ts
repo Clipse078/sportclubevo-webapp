@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         .filter((v: unknown): v is string => typeof v === "string")
         .map((id: string) => id.trim())
     : [];
+  const scopeClubWide = body?.scopeClubWide === true;
 
   if (!title) {
     return NextResponse.json({ error: "Titel ist erforderlich." }, { status: 400 });
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
   try {
     const created = await createClubStrategy(access.context.actor, access.context.actorUserId, {
       title,
+      scopeClubWide,
       orgUnitIds,
     });
     return NextResponse.json(created, { status: 201 });
@@ -47,6 +49,15 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof Error && error.message === "ORG_UNIT_NOT_FOUND") {
       return NextResponse.json({ error: "Org-Einheit nicht gefunden." }, { status: 400 });
+    }
+    if (error instanceof Error && error.message === "ORG_SCOPE_REQUIRED") {
+      return NextResponse.json(
+        { error: "Wählen Sie mindestens eine Org-Einheit aus." },
+        { status: 400 },
+      );
+    }
+    if (error instanceof Error && error.message === "ORG_UNIT_FORBIDDEN") {
+      return NextResponse.json({ error: "Keine Berechtigung für diese Org-Einheit." }, { status: 403 });
     }
     console.error("club-strategies POST failed", error);
     return NextResponse.json({ error: "Strategie konnte nicht angelegt werden." }, { status: 500 });
