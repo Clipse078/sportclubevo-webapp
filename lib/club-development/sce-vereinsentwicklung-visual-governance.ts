@@ -32,6 +32,7 @@ export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
   "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
   "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
+  "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx",
   "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
   "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
@@ -225,6 +226,25 @@ export function collectVereinsentwicklungWorkspaceViolations(
       findings.push({
         file: normalized,
         reason: "Section empty states must follow authorised sprint bucket counts, not assumed placeholders.",
+      });
+    }
+  }
+
+  if (normalized === "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx") {
+    if (!src.includes("VereinsentwicklungConnectedTaskTable")) {
+      findings.push({
+        file: normalized,
+        reason: "Ungeplant backlog must use the connected task table.",
+      });
+    }
+    if (
+      src.includes("initiativeGroups.map") ||
+      src.includes("SprintPlanningInitiativeGroupDto") ||
+      src.includes("toggleInitiativeGroupSelection")
+    ) {
+      findings.push({
+        file: normalized,
+        reason: "Ungeplant backlog must present a flat aligned task list, not Vorhaben grouping.",
       });
     }
   }

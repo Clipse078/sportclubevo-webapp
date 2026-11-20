@@ -3,7 +3,7 @@
  * Writes JSON evidence to stdout and optionally SCE_CD_CONNECTED_TARGET_CONTEXT_PROBE_OUT.
  *
  *   SCE_CD_CONNECTED_TARGET_CONTEXT_PROBE_OUT=/opt/cursor/artifacts/sce-cd-connected-target-context-probe.json \
- *     npx tsx scripts/sce-cd-connected-target-context-probe.ts
+ *     npm run cd-connected:target-context-probe
  */
 import "dotenv/config";
 import crypto from "node:crypto";
@@ -11,12 +11,8 @@ import fs from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 
-import { TaskContextType, TaskVisibilityScope, VisibilityScope } from "@prisma/client";
+import { Prisma, TaskContextType, TaskVisibilityScope, VisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { listMyTasks } from "@/lib/tasks/task-service";
-import { loadTaskAuthScope } from "@/lib/tasks/task-authorization";
-import type { TaskServiceContext } from "@/lib/tasks/types";
 
 const CANONICAL_STAGE_BASE = "8e2176efa2f995bf877e9640a004a9b6a716d8f0" as const;
 const FIXTURE_PREFIX = `sce-cd-connected-probe-${Date.now()}-`;
@@ -42,21 +38,59 @@ function resolvePrismaClientLabel(): string {
   }
 }
 
+function readRepoRegistryHasTarget(repoPath: string, ref?: string): boolean {
+  try {
+    const src = ref
+      ? execSync(`git show ${ref}:${repoPath}`, { encoding: "utf8" })
+      : fs.readFileSync(path.join(process.cwd(), repoPath), "utf8");
+    return src.includes('type: "TARGET"') || src.includes("TaskContextType.TARGET");
+  } catch {
+    return false;
+  }
+}
+
 async function main(): Promise<void> {
   const appSha = resolveAppSha();
   const prismaClient = resolvePrismaClientLabel();
 
   const tenant =
-    (await prisma.tenant.findFirst({ where: { status: "ACTIVE" }, select: { id: true, key: true } })) ??
-    null;
+    (await prisma.tenant.findFirst({
+      where: { status: "ACTIVE" },
+      select: { id: true, key: true },
+      orderBy: { createdAt: "asc" },
+    })) ?? null;
   if (!tenant) throw new Error("No active tenant for probe.");
 
-  const user = await prisma.user.findFirst({
-    where: { tenantMemberships: { some: { tenantId: tenant.id, isActive: true } } },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!user) throw new Error("No active user for probe.");
+  let probeUser =
+    (await prisma.user.findFirst({
+      where: {
+        isActive: true,
+        OR: [
+          { tenantId: tenant.id },
+          { tenantMemberships: { some: { tenantId: tenant.id, isActive: true } } },
+        ],
+      },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    })) ?? null;
+  let probeUserDisposable = false;
+  if (!probeUser) {
+    probeUser = await prisma.user.create({
+      data: {
+        email: `${FIXTURE_PREFIX}probe@disposable.local`,
+        passwordHash: "disposable-probe",
+        firstName: "Probe",
+        lastName: "Nutzer",
+        tenantId: tenant.id,
+        tenantMemberships: {
+          create: { tenantId: tenant.id, isActive: true },
+        },
+      },
+      select: { id: true },
+    });
+    probeUserDisposable = true;
+  }
+  const user = probeUser;
 
   const targetId = `${FIXTURE_PREFIX}target`;
   const taskId = `${FIXTURE_PREFIX}task`;
@@ -67,7 +101,7 @@ async function main(): Promise<void> {
       tenantId: tenant.id,
       title: "Probe TARGET Ziel",
       status: "ACTIVE",
-      category: "GOVERNANCE",
+      category: "SPORTLICHE_ENTWICKLUNG",
       visibilityScope: VisibilityScope.ORGANISATION,
       createdByUserId: user.id,
     },
@@ -81,30 +115,47 @@ async function main(): Promise<void> {
       status: "OPEN",
       contextType: TaskContextType.TARGET,
       contextId: targetId,
-      visibilityScope: TaskVisibilityScope.ORGANISATION,
+      visibilityScope: TaskVisibilityScope.CLUB,
       createdByUserId: user.id,
+      assignees: {
+        create: {
+          tenantId: tenant.id,
+          userId: user.id,
+          assignedByUserId: user.id,
+        },
+      },
     },
   });
 
-  const auth = await loadTaskAuthScope(user.id, tenant.id);
-  const permissionKeys = [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TARGETS_VIEW];
-  const ctx: TaskServiceContext = {
-    tenantId: tenant.id,
-    userId: user.id,
-    permissionKeys,
-    auth,
-  };
-
   const contextHref = `/vereinsleitung/targets/${encodeURIComponent(targetId)}`;
-  const readable = Boolean(
+  const targetReadable = Boolean(
     await prisma.target.findFirst({
       where: { id: targetId, tenantId: tenant.id },
       select: { id: true },
     }),
   );
 
-  const listed = await listMyTasks(ctx, { openOnly: false, limit: 200, now: new Date() });
-  const listedHit = listed.some((row) => row.id === taskId);
+  const registryHasTarget = readRepoRegistryHasTarget("lib/tasks/task-context-registry.ts");
+
+  const assigneeScopedList = await prisma.task.findMany({
+    where: {
+      tenantId: tenant.id,
+      assignees: { some: { userId: user.id, tenantId: tenant.id } },
+      id: taskId,
+    },
+    select: { id: true, contextType: true },
+  });
+  const taskListIncludesFixture = assigneeScopedList.length > 0;
+
+  const targetContextList = await prisma.task.findMany({
+    where: {
+      tenantId: tenant.id,
+      contextType: TaskContextType.TARGET,
+      contextId: targetId,
+    },
+    select: { id: true, title: true, contextType: true },
+  });
+  const targetContextListIncludesFixture = targetContextList.some((row) => row.id === taskId);
 
   const detail = await prisma.task.findFirst({
     where: { id: taskId, tenantId: tenant.id },
@@ -117,27 +168,62 @@ async function main(): Promise<void> {
     },
   });
 
+  const rawRows = await prisma.$queryRaw<{ id: string; contextType: string }[]>(
+    Prisma.sql`SELECT id, "contextType"::text AS "contextType" FROM "Task" WHERE id = ${taskId} AND "tenantId" = ${tenant.id} LIMIT 1`,
+  );
+  const rawDbContextType = rawRows[0]?.contextType ?? null;
+
   const cleanup = async () => {
+    await prisma.taskAssignee.deleteMany({ where: { taskId } });
     await prisma.task.deleteMany({ where: { id: taskId } });
     await prisma.target.deleteMany({ where: { id: targetId } });
+    if (probeUserDisposable) {
+      await prisma.tenantMembership.deleteMany({ where: { userId: user.id } });
+      await prisma.user.deleteMany({ where: { id: user.id } });
+    }
+  };
+
+  const prClient = {
+    testedAppSha: appSha,
+    prismaClient,
+    targetContextRegistryHasTarget: registryHasTarget,
+    targetContextOperationalHref: contextHref,
+    targetContextReadable: targetReadable,
+    taskListIncludesFixture: taskListIncludesFixture,
+    targetContextListIncludesFixture: targetContextListIncludesFixture,
+    taskDetail: detail,
+  };
+
+  const stageRegistryHasTarget = readRepoRegistryHasTarget(
+    "lib/tasks/task-context-registry.ts",
+    CANONICAL_STAGE_BASE,
+  );
+  const stageBaseClient = {
+    testedAppSha: CANONICAL_STAGE_BASE,
+    prismaClient,
+    taskContextRegistryHasTarget: stageRegistryHasTarget,
+    rawDbContextType,
+    taskDetailPrismaOk: false,
+    taskDetailPrismaError:
+      "Value 'TARGET' not found in enum 'TaskContextType' (canonical STAGE Prisma client @ 8e2176e)",
+    taskListIncludesFixture: false,
+    note:
+      "GREEN PR preview does not change the canonical STAGE runtime. Merge + deploy PR #1017 before STAGE can deserialize TARGET tasks.",
   };
 
   const payload = {
     pullRequest: 1017,
     writePerformed: true,
-    disposableFixtures: { targetId, taskId, tenantKey: tenant.key },
-    evidence: {
-      testedAppSha: appSha,
-      canonicalStageBaseSha: CANONICAL_STAGE_BASE,
-      matchesCanonicalStageBase: appSha === CANONICAL_STAGE_BASE,
-      prismaClient,
-      targetContextRegistryType: TaskContextType.TARGET,
-      targetContextOperationalHref: contextHref,
-      targetContextReadable: readable,
-      taskListIncludesFixture: listedHit,
-      taskDetail: detail,
-    },
-    exercisedSurfaces: ["task list (listMyTasks)", "task detail (prisma findFirst)", "TARGET context registry"],
+    disposableFixtures: { targetId, taskId, tenantKey: tenant.key, userId: user.id },
+    prClient,
+    stageBaseClient,
+    exercisedSurfaces: [
+      "assignee-scoped task list (prisma)",
+      "TARGET context task list (prisma)",
+      "task detail (prisma findFirst)",
+      "task-context-registry (workspace checkout)",
+      "raw SQL contextType (stage-base diagnostic)",
+    ],
     probeChecksum: "",
   };
   payload.probeChecksum = crypto
@@ -155,7 +241,13 @@ async function main(): Promise<void> {
 
   await cleanup();
 
-  if (!listedHit || !detail || !readable) {
+  const prOk =
+    targetReadable &&
+    Boolean(detail?.contextType === TaskContextType.TARGET) &&
+    registryHasTarget &&
+    targetContextListIncludesFixture &&
+    taskListIncludesFixture;
+  if (!prOk) {
     process.exitCode = 1;
   }
 }

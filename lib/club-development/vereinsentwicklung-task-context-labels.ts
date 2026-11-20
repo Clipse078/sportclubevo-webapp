@@ -37,10 +37,10 @@ export async function loadTaskContextLabelBundles(
   const focusLinks =
     targetIds.length > 0
       ? await prisma.clubStrategyFocusTarget.findMany({
-          where: { targetId: { in: targetIds }, strategy: { tenantId } },
+          where: { tenantId, targetId: { in: targetIds } },
           select: {
             targetId: true,
-            strategy: { select: { id: true, title: true } },
+            clubStrategy: { select: { id: true, title: true } },
           },
           orderBy: { sortOrder: "asc" },
         })
@@ -48,7 +48,10 @@ export async function loadTaskContextLabelBundles(
   const strategyByTargetId = new Map<string, { id: string; title: string }>();
   for (const link of focusLinks) {
     if (!strategyByTargetId.has(link.targetId)) {
-      strategyByTargetId.set(link.targetId, link.strategy);
+      strategyByTargetId.set(link.targetId, {
+        id: link.clubStrategy.id,
+        title: link.clubStrategy.title?.trim() || "Strategie",
+      });
     }
   }
 

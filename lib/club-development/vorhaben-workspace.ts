@@ -50,6 +50,19 @@ const INITIATIVE_LIST_SELECT = {
   visibleTargetGroupRefs: true,
 } satisfies Prisma.InitiativeSelect;
 
+const TARGET_VISIBILITY_SELECT = {
+  id: true,
+  title: true,
+  visibilityScope: true,
+  createdByUserId: true,
+  visibleRoleRefs: true,
+  visibleUserRefs: true,
+  visibleTeamRefs: true,
+  visibleOrgUnitRefs: true,
+  visiblePersonRefs: true,
+  visibleTargetGroupRefs: true,
+} satisfies Prisma.TargetSelect;
+
 const TASK_ROW_SELECT = {
   id: true,
   title: true,
@@ -501,7 +514,7 @@ export async function loadVorhabenWorkspace(
       if (targetIds.length > 0) {
         const targets = await prisma.target.findMany({
           where: { tenantId: actor.tenantId, id: { in: targetIds } },
-          select: { id: true, title: true },
+          select: TARGET_VISIBILITY_SELECT,
         });
         for (const target of applyVisibilityFilter(targets, actor)) {
           targetById.set(target.id, target.title);

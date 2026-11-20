@@ -70,6 +70,7 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
         "components/admin/meetings/workspace/MeetingWorkspace.tsx",
         "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
         "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
+        "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx",
       ],
     });
     expect(
