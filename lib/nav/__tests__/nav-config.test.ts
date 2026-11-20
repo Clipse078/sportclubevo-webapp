@@ -304,16 +304,11 @@ describe("NAV_SECTIONS static structure", () => {
     expect(clubDev?.label).toBe("Vereinsentwicklung");
     expect(clubDev?.children?.map((c) => c.label)).toEqual([
       "Übersicht",
-      "Strategie",
-      "Pläne & Ziele",
-      "Vorhaben & Prioritäten",
-      "Vorhaben & Aufgaben",
+      "Strategien",
+      "Ziele",
+      "Aufgaben",
       "Umsetzungsplanung",
-      "Sitzungen",
-      "Prozesse & Richtlinien",
     ]);
-    const sitzungen = clubDev?.children?.find((c) => c.key === "club-entwicklung-sitzungen");
-    expect(sitzungen?.navSection).toBe("admin");
     expect(sponsoring).toEqual(expect.objectContaining({
       label: "Sponsoring",
       href: "/dashboard/sponsoring",

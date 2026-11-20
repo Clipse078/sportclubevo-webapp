@@ -347,6 +347,62 @@ export const TASK_CONTEXT_REGISTRY: TaskContextRegistryEntry[] = [
     },
   },
   {
+    type: "TARGET",
+    operationalReadPermission: PERMISSIONS.TARGETS_VIEW,
+    buildHref: (entity) => `/vereinsleitung/targets/${encodeURIComponent(entity.id)}`,
+    validateAttachable: async (ctx, id) => {
+      const actor = await buildMeetingActor(ctx);
+      const row = await prisma.target.findFirst({
+        where: { id, tenantId: ctx.tenantId },
+        select: {
+          id: true,
+          visibilityScope: true,
+          createdByUserId: true,
+          visibleRoleRefs: true,
+          visibleUserRefs: true,
+          visibleTeamRefs: true,
+          visibleOrgUnitRefs: true,
+          visiblePersonRefs: true,
+          visibleTargetGroupRefs: true,
+        },
+      });
+      if (!row) return false;
+      return canSeeEntity(row, actor);
+    },
+    searchOptions: async (ctx, query, limit) => {
+      const actor = await buildMeetingActor(ctx);
+      const rows = await prisma.target.findMany({
+        where: {
+          tenantId: ctx.tenantId,
+          ...(query ? { title: { contains: query, mode: "insensitive" } } : {}),
+        },
+        orderBy: { updatedAt: "desc" },
+        take: limit * 3,
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          visibilityScope: true,
+          createdByUserId: true,
+          visibleRoleRefs: true,
+          visibleUserRefs: true,
+          visibleTeamRefs: true,
+          visibleOrgUnitRefs: true,
+          visiblePersonRefs: true,
+          visibleTargetGroupRefs: true,
+        },
+      });
+      return rows
+        .filter((row) => canSeeEntity(row, actor))
+        .slice(0, limit)
+        .map((row) => ({
+          id: row.id,
+          label: row.title,
+          secondary: row.status,
+        }));
+    },
+  },
+  {
     type: "CLUB_MELDUNG",
     operationalReadPermission: PERMISSIONS.MELDUNGEN_HANDLE,
     buildHref: (entity) =>

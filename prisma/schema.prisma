@@ -606,11 +606,17 @@ enum TaskContextType {
   MEETING
   MEETING_DECISION
   INITIATIVE
+  TARGET
   REGISTRATION
   TEAM
   PERSON
   DOCUMENT
   CLUB_MELDUNG
+}
+
+enum ClubStrategyScopeType {
+  CLUB
+  ORG_UNIT
 }
 
 // AUFGABEN-01B — recurrence series lifecycle.
@@ -1295,7 +1301,7 @@ model Tenant {
   developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
-  clubStrategy                     ClubStrategy?
+  clubStrategies                   ClubStrategy[]
   clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
   clubStrategyFocusTargets         ClubStrategyFocusTarget[]
   targets                          Target[]
@@ -3642,10 +3648,13 @@ model ClubDevelopmentProcessApprovalVote {
   @@index([tenantId, processId, contentRevision])
 }
 
-/// PKG-05 — tenant-scoped club strategy authoring (single row per tenant).
+/// PKG-05 + connected workspace — tenant-scoped strategy records (club-wide or Org-Einheit).
 model ClubStrategy {
   id                    String   @id @default(cuid())
-  tenantId              String   @unique
+  tenantId              String
+  scopeType             ClubStrategyScopeType @default(CLUB)
+  scopeOrgUnitId        String?
+  title                 String?
   situationText         String?
   alignmentText         String?
   responsiblePersonId   String?
@@ -3667,6 +3676,7 @@ model ClubStrategy {
   documentReferences ClubStrategyDocumentReference[]
 
   @@index([tenantId])
+  @@index([tenantId, scopeType, scopeOrgUnitId])
 }
 
 enum ClubStrategyDocumentKind {

@@ -18,6 +18,7 @@ import TargetDataPointForm from "@/components/admin/targets/TargetDataPointForm"
 import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
 import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
+import CreateTargetTaskContextualCollapsibleCard from "@/components/admin/targets/CreateTargetTaskContextualCollapsibleCard";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
@@ -207,6 +208,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             )}
           </section>
 
+          <CreateTargetTaskContextualCollapsibleCard
+            targetId={id}
+            canCreate={
+              actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE) &&
+              actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW)
+            }
+          />
           <TargetInitiativeLinksSection
             targetId={id}
             targetTitle={target.title}

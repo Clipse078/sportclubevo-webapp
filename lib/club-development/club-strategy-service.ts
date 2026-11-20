@@ -2,7 +2,9 @@ import "server-only";
 
 import {
   ClubStrategyDocumentKind,
+  ClubStrategyScopeType,
   TaskDocumentReferenceVersionBinding,
+  type Prisma,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { logAuditEvent } from "@/lib/audit/audit-log";
@@ -83,14 +85,80 @@ export function workspaceAccessFromActor(
   };
 }
 
+function clubWideStrategyWhere(tenantId: string): Prisma.ClubStrategyWhereInput {
+  return { tenantId, scopeType: ClubStrategyScopeType.CLUB, scopeOrgUnitId: null };
+}
+
+async function findClubWideStrategyId(tenantId: string): Promise<string | null> {
+  const row = await prisma.clubStrategy.findFirst({
+    where: clubWideStrategyWhere(tenantId),
+    select: { id: true },
+  });
+  return row?.id ?? null;
+}
+
 async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) {
-  const existing = await prisma.clubStrategy.findUnique({ where: { tenantId }, select: { id: true } });
-  if (existing) return existing.id;
+  const existingId = await findClubWideStrategyId(tenantId);
+  if (existingId) return existingId;
   const created = await prisma.clubStrategy.create({
-    data: { tenantId, createdByUserId, updatedByUserId: createdByUserId },
+    data: {
+      tenantId,
+      scopeType: ClubStrategyScopeType.CLUB,
+      createdByUserId,
+      updatedByUserId: createdByUserId,
+      title: "Gesamtverein",
+    },
     select: { id: true },
   });
   return created.id;
+}
+
+export type ClubStrategyListItemDto = {
+  id: string;
+  title: string;
+  scopeType: ClubStrategyScopeType;
+  scopeOrgUnitId: string | null;
+  scopeOrgUnitLabel: string | null;
+  focusTargetCount: number;
+};
+
+export async function listClubStrategies(actor: ActorContext): Promise<ClubStrategyListItemDto[]> {
+  if (!canViewClubStrategy(actor) || !actor.tenantId) return [];
+  const rows = await prisma.clubStrategy.findMany({
+    where: { tenantId: actor.tenantId },
+    orderBy: [{ scopeType: "asc" }, { title: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      scopeType: true,
+      scopeOrgUnitId: true,
+      _count: { select: { focusTargets: true } },
+    },
+  });
+  const orgUnitIds = rows.map((r) => r.scopeOrgUnitId).filter((id): id is string => Boolean(id));
+  const orgLabels = new Map<string, string>();
+  if (orgUnitIds.length > 0) {
+    const units = await prisma.orgUnit.findMany({
+      where: { tenantId: actor.tenantId, id: { in: orgUnitIds } },
+      select: { id: true, name: true },
+    });
+    for (const unit of units) orgLabels.set(unit.id, unit.name);
+  }
+  return rows.map((row) => ({
+    id: row.id,
+    title:
+      row.title?.trim() ||
+      (row.scopeType === ClubStrategyScopeType.CLUB
+        ? "Gesamtverein"
+        : orgLabels.get(row.scopeOrgUnitId ?? "") || "Strategie"),
+    scopeType: row.scopeType,
+    scopeOrgUnitId: row.scopeOrgUnitId,
+    scopeOrgUnitLabel:
+      row.scopeType === ClubStrategyScopeType.CLUB
+        ? "Gesamtverein"
+        : orgLabels.get(row.scopeOrgUnitId ?? "") ?? null,
+    focusTargetCount: row._count.focusTargets,
+  }));
 }
 
 function meetingRefsFromRaw(raw: unknown) {
@@ -115,8 +183,8 @@ export async function loadClubStrategyAuthoring(
 ): Promise<ClubStrategyAuthoringDto | null> {
   if (!canViewClubStrategy(actor) || !actor.tenantId) return null;
 
-  const row = await prisma.clubStrategy.findUnique({
-    where: { tenantId: actor.tenantId },
+  const row = await prisma.clubStrategy.findFirst({
+    where: clubWideStrategyWhere(actor.tenantId),
     select: {
       id: true,
       situationText: true,
@@ -472,20 +540,17 @@ export async function removeClubStrategyFocusTarget(
 ): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const tenantId = actor.tenantId;
-  const strategy = await prisma.clubStrategy.findUnique({
-    where: { tenantId },
-    select: { id: true },
-  });
-  if (!strategy) return;
+  const strategyId = await findClubWideStrategyId(tenantId);
+  if (!strategyId) return;
 
   await prisma.clubStrategyFocusTarget.deleteMany({
-    where: { tenantId, clubStrategyId: strategy.id, targetId },
+    where: { tenantId, clubStrategyId: strategyId, targetId },
   });
 
   void logAuditEvent({
     actorUserId,
     module: "targets",
-    entityId: strategy.id,
+    entityId: strategyId,
     action: "LINKS_UPDATE",
     before: { focusTargetId: targetId },
     metadata: { clubStrategyFocus: true },

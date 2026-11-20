@@ -20,20 +20,22 @@ function read(rel: string) {
 }
 
 describe("PKG-05 Vereinsentwicklung workspace consolidation", () => {
-  it("exposes four Vereinsentwicklung nav entries including consolidated workspaces", () => {
+  it("exposes five connected Vereinsentwicklung nav entries", () => {
     const sections = getVisibleNavSections([], "club", { vereinsleitungWorkspace: true });
     const clubDev = sections.flatMap((s) => s.items).find((i) => i.key === "club-entwicklung");
     expect(clubDev?.children?.map((c) => c.key)).toEqual([
       "club-entwicklung-uebersicht",
-      "club-entwicklung-strategie-ziele",
-      "club-entwicklung-vorhaben-umsetzung",
-      "club-entwicklung-sitzungen",
+      "club-entwicklung-strategien",
+      "club-entwicklung-ziele",
+      "club-entwicklung-aufgaben",
+      "club-entwicklung-umsetzungsplanung",
     ]);
     expect(clubDev?.children?.map((c) => c.label)).toEqual([
       "Übersicht",
-      "Strategie & Ziele",
-      "Vorhaben & Umsetzung",
-      "Sitzungen",
+      "Strategien",
+      "Ziele",
+      "Aufgaben",
+      "Umsetzungsplanung",
     ]);
   });
 
@@ -48,7 +50,7 @@ describe("PKG-05 Vereinsentwicklung workspace consolidation", () => {
       `${CD_STRATEGIE_ZIELE_BASE}?ansicht=ziele&status=ACTIVE`,
     );
     expect(legacyBacklogRedirect({ targetId: "t1" })).toBe(
-      `${CD_VORHABEN_UMSETZUNG_BASE}?ansicht=vorhaben&targetId=t1&prioritaeten=1`,
+      `${CD_VORHABEN_UMSETZUNG_BASE}?ansicht=umsetzungsphasen&targetId=t1&umsetzungsabschnitt=ungeplant`,
     );
     expect(legacySprintsRedirect({})).toBe(`${CD_VORHABEN_UMSETZUNG_BASE}?ansicht=umsetzungsphasen`);
   });

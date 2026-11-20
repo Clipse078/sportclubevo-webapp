@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import ClubDevelopmentOverview, {
-  type ClubDevelopmentOverviewKpis,
-} from "@/components/admin/club-development/ClubDevelopmentOverview";
+import ClubDevelopmentOverviewPageClient from "@/components/admin/club-development/ClubDevelopmentOverviewPageClient";
+import { type ClubDevelopmentOverviewKpis } from "@/components/admin/club-development/ClubDevelopmentOverview";
+import { hasSprintManagePermission } from "@/lib/club-development/sprints/queries";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import {
@@ -110,7 +110,9 @@ export default async function ClubEntwicklungPage() {
           { label: "Vereinsentwicklung" },
         ]}
       >
-        <ClubDevelopmentOverview
+        <ClubDevelopmentOverviewPageClient
+          permissionKeys={actor.permissionKeys}
+          hasPlanningAccess={hasSprintManagePermission(actor)}
           targets={targets}
           initiatives={initiatives}
           upcomingMeetings={upcomingMeetings}

@@ -10,6 +10,7 @@ import StrategieUndZieleWorkspaceClient from "@/components/admin/club-developmen
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { hasSprintManagePermission } from "@/lib/club-development/sprints/queries";
 
 export default async function StrategieUndZielePage() {
   const session = await auth();
@@ -41,6 +42,8 @@ export default async function StrategieUndZielePage() {
         isEmpty={false}
       >
         <StrategieUndZieleWorkspaceClient
+          permissionKeys={actor.permissionKeys}
+          hasPlanningAccess={hasSprintManagePermission(actor)}
           authoring={authoring}
           canManageTargets={canManageTargets}
           targets={targets}

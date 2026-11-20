@@ -45,9 +45,10 @@ describe("Club Verein L2 navigation order", () => {
     const hub = club.destinations.find((d) => d.key === "club-entwicklung");
     expect(hub?.children?.map((c) => c.label)).toEqual([
       "Übersicht",
-      "Strategie & Ziele",
-      "Vorhaben & Umsetzung",
-      "Sitzungen",
+      "Strategien",
+      "Ziele",
+      "Aufgaben",
+      "Umsetzungsplanung",
     ]);
   });
 });

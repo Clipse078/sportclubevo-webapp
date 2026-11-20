@@ -39,9 +39,10 @@ describe("SCE-CD-01R1 Vereinsleitung nav visibility", () => {
     const clubDev = findClubEntwicklung(sections);
     expect(clubDev?.children?.map((c) => c.key)).toEqual([
       "club-entwicklung-uebersicht",
-      "club-entwicklung-strategie-ziele",
-      "club-entwicklung-vorhaben-umsetzung",
-      "club-entwicklung-sitzungen",
+      "club-entwicklung-strategien",
+      "club-entwicklung-ziele",
+      "club-entwicklung-aufgaben",
+      "club-entwicklung-umsetzungsplanung",
     ]);
   });
 

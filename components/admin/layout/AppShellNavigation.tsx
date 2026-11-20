@@ -411,6 +411,7 @@ function AppShellNavigationInner({
               child,
               active.moduleLocalChildren,
               active.activeChildKey,
+              searchParams,
             );
           }}
           onNavigateSibling={navigateToModuleLocalSibling}
@@ -470,6 +471,7 @@ function AppShellNavigationInner({
         model={model}
         active={active}
         pathname={pathname}
+        locationSearch={searchParams}
         resolveHref={resolveHref}
         domainLabel={domainLabel}
         title={t("drawerTitle")}

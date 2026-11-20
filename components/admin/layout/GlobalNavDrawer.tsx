@@ -27,6 +27,7 @@ type GlobalNavDrawerProps = {
   model: AppNavigationModel;
   active: ActiveAppNavigation;
   pathname: string;
+  locationSearch: URLSearchParams;
   resolveHref: (href: string) => string;
   domainLabel: (domain: NavigationDomain) => string;
   title: string;
@@ -67,6 +68,7 @@ type ExplorerModuleCardProps = {
   panelId: string;
   module: ExplorerModuleEntry;
   pathname: string;
+  locationSearch: URLSearchParams;
   active: ActiveAppNavigation;
   resolveHref: (href: string) => string;
   expandedModuleKey: string | null;
@@ -78,6 +80,7 @@ function ExplorerModuleCard({
   panelId,
   module,
   pathname,
+  locationSearch,
   active,
   resolveHref,
   expandedModuleKey,
@@ -92,6 +95,7 @@ function ExplorerModuleCard({
         child,
         module.children,
         active.activeChildKey,
+        locationSearch,
       ),
     );
   const isExpanded = expandedModuleKey === module.key;
@@ -145,6 +149,7 @@ function ExplorerModuleCard({
                 child,
                 module.children,
                 active.activeChildKey,
+                locationSearch,
               );
               return (
                 <li key={child.key}>
@@ -177,6 +182,7 @@ function GlobalNavExplorerPanel({
   model,
   active,
   pathname,
+  locationSearch,
   resolveHref,
   domainLabel,
   title,
@@ -367,6 +373,7 @@ function GlobalNavExplorerPanel({
                         panelId={panelId}
                         module={module}
                         pathname={pathname}
+                        locationSearch={locationSearch}
                         active={active}
                         resolveHref={resolveHref}
                         expandedModuleKey={expandedModuleKey}
@@ -386,6 +393,7 @@ function GlobalNavExplorerPanel({
                   panelId={panelId}
                   module={module}
                   pathname={pathname}
+                  locationSearch={locationSearch}
                   active={active}
                   resolveHref={resolveHref}
                   expandedModuleKey={expandedModuleKey}
@@ -459,6 +467,7 @@ export default function GlobalNavDrawer({
   model,
   active,
   pathname,
+  locationSearch,
   resolveHref,
   domainLabel,
   title,
@@ -513,6 +522,7 @@ export default function GlobalNavDrawer({
           model={model}
           active={active}
           pathname={pathname}
+          locationSearch={locationSearch}
           resolveHref={resolveHref}
           domainLabel={domainLabel}
           title={title}

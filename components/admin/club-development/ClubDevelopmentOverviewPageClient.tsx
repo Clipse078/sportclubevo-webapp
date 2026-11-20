@@ -1,0 +1,32 @@
+"use client";
+
+import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
+import ClubDevelopmentOverview, {
+  type ClubDevelopmentOverviewKpis,
+} from "./ClubDevelopmentOverview";
+import type { GovernanceOverviewData } from "@/lib/dashboard/governance-overview";
+
+type Props = {
+  permissionKeys: string[];
+  hasPlanningAccess: boolean;
+  targets: React.ComponentProps<typeof ClubDevelopmentOverview>["targets"];
+  initiatives: React.ComponentProps<typeof ClubDevelopmentOverview>["initiatives"];
+  upcomingMeetings: React.ComponentProps<typeof ClubDevelopmentOverview>["upcomingMeetings"];
+  assignedTasks: React.ComponentProps<typeof ClubDevelopmentOverview>["assignedTasks"];
+  governance: GovernanceOverviewData;
+  kpis: ClubDevelopmentOverviewKpis;
+};
+
+export default function ClubDevelopmentOverviewPageClient(props: Props) {
+  const { permissionKeys, hasPlanningAccess, ...overviewProps } = props;
+  return (
+    <>
+      <VereinsentwicklungConnectedWorkspaceNav
+        permissionKeys={permissionKeys}
+        hasPlanningAccess={hasPlanningAccess}
+        activeView="uebersicht"
+      />
+      <ClubDevelopmentOverview {...overviewProps} />
+    </>
+  );
+}

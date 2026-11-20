@@ -149,6 +149,8 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
         emptyIcon={<Kanban className="h-10 w-10" />}
       >
         <VorhabenUndUmsetzungWorkspaceClient
+          permissionKeys={actor.permissionKeys}
+          hasPlanningAccess={hasSprintManagePermission(actor)}
           snapshot={snapshot}
           initialTargetId={filters.targetId ?? null}
           initialInitiativeId={filters.initiativeId ?? null}

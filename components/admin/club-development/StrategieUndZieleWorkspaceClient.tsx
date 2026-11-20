@@ -6,16 +6,13 @@ import type { StrategyTargetOverview } from "@/lib/club-development/strategy-ove
 import type { EntityRef } from "@/lib/linking/types";
 import StrategyAuthoringPanel from "./StrategyAuthoringPanel";
 import ZieleWorkspacePanel from "./ZieleWorkspacePanel";
-import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
+import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
 import { SceContextDirtyGuardProvider } from "@/lib/context-tabs";
-import {
-  buildStrategieUndZieleHref,
-  CD_STRATEGIE_ZIELE_VIEWS,
-  CD_STRATEGIE_ZIELE_VIEW_LABELS,
-  parseStrategieZieleView,
-} from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import { parseStrategieZieleView } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 
 type Props = {
+  permissionKeys: string[];
+  hasPlanningAccess: boolean;
   authoring: ClubStrategyAuthoringDto | null;
   canManageTargets: boolean;
   targets: StrategyTargetOverview[];
@@ -25,6 +22,8 @@ type Props = {
 };
 
 export default function StrategieUndZieleWorkspaceClient({
+  permissionKeys,
+  hasPlanningAccess,
   authoring,
   canManageTargets,
   targets,
@@ -36,22 +35,12 @@ export default function StrategieUndZieleWorkspaceClient({
   const activeView = parseStrategieZieleView(searchParams.get("ansicht"));
   const focusSet = new Set(focusTargetIds);
 
-  const buildHref = (view: (typeof CD_STRATEGIE_ZIELE_VIEWS)[number]) => {
-    const params: Record<string, string | undefined> = {};
-    searchParams.forEach((value, key) => {
-      if (key !== "ansicht") params[key] = value;
-    });
-    return buildStrategieUndZieleHref(view, params);
-  };
-
   return (
     <SceContextDirtyGuardProvider>
-      <VereinsentwicklungWorkspaceViewNav
-        views={CD_STRATEGIE_ZIELE_VIEWS}
-        labels={CD_STRATEGIE_ZIELE_VIEW_LABELS}
-        activeView={activeView}
-        buildHref={buildHref}
-        testId="strategie-ziele-view-nav"
+      <VereinsentwicklungConnectedWorkspaceNav
+        permissionKeys={permissionKeys}
+        hasPlanningAccess={hasPlanningAccess}
+        activeView={activeView === "ziele" ? "ziele" : "strategien"}
       />
 
       <div hidden={activeView !== "strategie"} aria-hidden={activeView !== "strategie"}>
