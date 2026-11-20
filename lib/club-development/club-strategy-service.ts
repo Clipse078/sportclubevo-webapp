@@ -143,7 +143,7 @@ export type ListClubStrategiesOptions = {
   orgUnitId?: string | null;
 };
 
-function resolveStrategyTitle(
+export function resolveStrategyTitle(
   title: string | null | undefined,
   scopeType: ClubStrategyScopeType,
   orgUnitLabels: string[],

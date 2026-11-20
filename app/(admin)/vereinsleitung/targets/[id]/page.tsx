@@ -20,6 +20,12 @@ import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
 import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
 import TargetTasksSection from "@/components/admin/targets/TargetTasksSection";
 import { loadTargetConnectedTasks } from "@/lib/club-development/target-connected-tasks";
+import { loadTargetLinkedClubStrategy } from "@/lib/club-development/target-linked-club-strategy";
+import {
+  computeTargetDeliveryProgress,
+  formatProgressCountLabel,
+} from "@/lib/club-development/vereinsentwicklung-workspace-progress";
+import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import { resolveTargetCreatorDisplayName } from "@/lib/club-development/target-creator-display";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { parseOrgEinheitQuery } from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
@@ -89,10 +95,18 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
   const canCreateTargetTasks =
     actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
     actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE);
-  const [connectedTasks, creatorDisplayName] = await Promise.all([
+  const [connectedTasks, creatorDisplayName, linkedStrategy, targetDelivery] = await Promise.all([
     loadTargetConnectedTasks(actor, id, detailReturnTo),
     tenantId ? resolveTargetCreatorDisplayName(tenantId, target.createdByUserId) : Promise.resolve(null),
+    tenantId ? loadTargetLinkedClubStrategy(tenantId, id) : Promise.resolve(null),
+    computeTargetDeliveryProgress(actor, id),
   ]);
+  const targetDeliveryCaption = formatProgressCountLabel(targetDelivery);
+  const targetDeliveryPercent =
+    targetDelivery.totalCount > 0 ? targetDelivery.percent : 0;
+  const linkedStrategyHref = linkedStrategy
+    ? buildStrategieReturnHref({ orgUnitId, strategyId: linkedStrategy.id })
+    : null;
   const showCreatedBanner = qp.created === "1";
 
   return (
@@ -222,6 +236,20 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             )}
           </section>
 
+          {linkedStrategy && linkedStrategyHref ? (
+            <section className={VEREINSLEITUNG_PANEL_CLASS} data-testid="target-linked-strategie">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
+                Verknüpfte Strategie
+              </p>
+              <Link
+                href={linkedStrategyHref}
+                className="text-base font-semibold text-[var(--sce-primary)] hover:underline"
+              >
+                {linkedStrategy.title}
+              </Link>
+            </section>
+          ) : null}
+
           <TargetTasksSection
             targetId={id}
             tasks={connectedTasks}
@@ -229,6 +257,8 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             returnTo={detailReturnTo}
             orgUnitId={orgUnitId}
             showCreatedBanner={showCreatedBanner}
+            deliveryProgressCaption={targetDeliveryCaption}
+            deliveryProgressPercent={targetDeliveryPercent}
           />
           <TargetInitiativeLinksSection
             targetId={id}

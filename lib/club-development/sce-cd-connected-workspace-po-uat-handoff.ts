@@ -23,13 +23,16 @@ export const STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID = "cmslki2q4000104l87hu4qqbs" as
 /** Shared STAGE record for identity + contextual Aufgabe create PO screenshots (read-only). */
 export const STAGE_PREVIEW_TESTZIEL_I_ID = "cmwpanrjn000008l6jhpjhjb4" as const;
 
+/** Shared STAGE record for hierarchy UAT (Ziel detail Aufgaben group + contextual create). */
+export const STAGE_PREVIEW_TESTZIEL_III_ID = "cmwpapvn4000608l64zwx8dye" as const;
+
 export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   /** Vercel Custom Environment `acceptance` — canonical PO UAT hostname (isolated sce_acceptance). */
   acceptanceCommit: "7b7c64b4c0a5c9f376ea9ee85a8cdd5cd9eb7ff4",
   acceptanceCommitShort: "7b7c64b4",
   acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
   acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
-  /** STAGE-backed PR Preview — not a valid PO UAT target (shared STAGE DB, no connected-workspace migration). */
+  /** STAGE-backed PR preview — read-only PO UAT (shared STAGE DB; connected-workspace migration applied). */
   readyPreviewCommit: "cc7770af04a39023fb5066120177b824c2bb19dc",
   readyPreviewCommitShort: "cc7770af0",
   readyPreviewDeploymentId: "4t9cc4f5cTEyVzoTwjGCRUH5pGLr",
@@ -68,6 +71,8 @@ export type ConnectedWorkspacePoUatUrls = {
   zielNeuFromGesamtvereinStrategie: string;
   stageTestzielIDetail: string;
   stageTestzielITaskCreate: string;
+  stageTestzielIIIDetail: string;
+  stageTestzielIIITaskCreate: string;
 };
 
 export function buildConnectedWorkspacePoUatHandoffUrls(
@@ -93,6 +98,8 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
     sprintBoard: `${base}/vereinsleitung/sprints/${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_SPRINT_SLUG)}/board`,
     stageTestzielIDetail: `${base}/vereinsleitung/targets/${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_I_ID)}?${orgQuery}`,
     stageTestzielITaskCreate: `${base}/dashboard/aufgaben/neu?contextType=TARGET&contextId=${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_I_ID)}&returnTo=${encodeURIComponent(`${base}/vereinsleitung/targets/${STAGE_PREVIEW_TESTZIEL_I_ID}?${orgQuery}`)}&${orgQuery}`,
+    stageTestzielIIIDetail: `${base}/vereinsleitung/targets/${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_III_ID)}?${orgQuery}`,
+    stageTestzielIIITaskCreate: `${base}/dashboard/aufgaben/neu?contextType=TARGET&contextId=${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_III_ID)}&returnTo=${encodeURIComponent(`${base}/vereinsleitung/targets/${STAGE_PREVIEW_TESTZIEL_III_ID}?${orgQuery}`)}&${orgQuery}`,
   };
 }
 
@@ -122,7 +129,8 @@ export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
   "7. Open strategy by title: capture Ziele group with create/link (blocked if no strategy).",
   "8. Open Ziel detail: capture Aufgaben group with create/link.",
   "9. Umsetzungsphase «…» → «Umsetzungsphase bearbeiten» (blocked if no phase).",
-  "10. Ziele — Testziel I row «Verantwortlich» shows «Nicht zugewiesen» (not Club Admin); … → «Aufgabe erstellen».",
-  "11. Testziel I detail — «+ Aufgabe erstellen» in Aufgaben group; «Erstellt von» separate from «Verantwortlich».",
-  "12. Contextual Neue Aufgabe — preselected TARGET context for Testziel I, Ziel + Strategie visible on form.",
+  "10. Ziele list — no row «…» menu / no «Aufgabe erstellen»; Testziel I row shows «Verantwortlich» «Nicht zugewiesen»; clickable Strategie link when linked.",
+  "11. Testziel III detail (/targets/cmwpapvn4000608l64zwx8dye) — linked Strategie, Aufgaben group with «+ Aufgabe erstellen» even when empty; Umsetzungsfortschritt caption (x von y or «Noch keine Aufgaben»).",
+  "12. Contextual Neue Aufgabe from Testziel III — TARGET context with Ziel name; save returns to Aufgaben group with Junioren filter.",
+  "13. Strategie detail — Ziele group rows with Umsetzungsfortschritt bar + «x von y Aufgaben erledigt» for existing data (flag if preview lacks tasks).",
 ] as const;

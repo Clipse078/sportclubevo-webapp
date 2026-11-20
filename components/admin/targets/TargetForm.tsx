@@ -363,6 +363,9 @@ export default function TargetForm({
               optional
               initialStored={defaultValues?.description ?? null}
               inputId="target-form-description"
+              placeholder="Ziel beschreiben …"
+              enableMentions
+              mentionScope="tenant"
               onSerializedChange={setDescription}
             />
           </div>

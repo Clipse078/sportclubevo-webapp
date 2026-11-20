@@ -10,8 +10,8 @@ import type { StrategyTargetOverview } from "@/lib/club-development/strategy-ove
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
-import ZieleWorkspaceRowActions from "./ZieleWorkspaceRowActions";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
+import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -21,7 +21,7 @@ type Props = {
   strategies: ClubStrategyListItemDto[];
   focusTargetIds: ReadonlySet<string>;
   canManageTargets: boolean;
-  canCreateTargetTasks: boolean;
+  canCreateTargetTasks?: boolean;
   orgEinheitFilterLabel?: string | null;
 };
 
@@ -30,26 +30,24 @@ export default function ZieleWorkspacePanel({
   strategies,
   focusTargetIds,
   canManageTargets,
-  canCreateTargetTasks,
   orgEinheitFilterLabel = null,
 }: Props) {
   const searchParams = useSearchParams();
   const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
-  const zieleListReturnTo = useMemo(() => {
-    const sp = new URLSearchParams({ ansicht: "ziele" });
-    if (orgQuery) sp.set(CD_WORKSPACE_ORG_UNIT_QUERY, orgQuery);
-    return `/vereinsleitung/strategie-und-ziele?${sp.toString()}`;
-  }, [orgQuery]);
-
-  const strategyTitleByTargetId = useMemo(() => {
-    const map = new Map<string, string>();
+  const strategyLinkByTargetId = useMemo(() => {
+    const map = new Map<string, { title: string; href: string }>();
     for (const strategy of strategies) {
       for (const targetId of strategy.focusTargetIds) {
-        if (!map.has(targetId)) map.set(targetId, strategy.title);
+        if (!map.has(targetId)) {
+          map.set(targetId, {
+            title: strategy.title,
+            href: buildStrategieReturnHref({ orgUnitId: orgQuery, strategyId: strategy.id }),
+          });
+        }
       }
     }
     return map;
-  }, [strategies]);
+  }, [strategies, orgQuery]);
 
   const primaryAction = canManageTargets ? (
     <Link
@@ -96,7 +94,17 @@ export default function ZieleWorkspacePanel({
               {targets.map((target) => {
                 const isFocus = focusTargetIds.has(target.id);
                 const detailHref = buildZielDetailHref(target.id, orgQuery);
-                const strategyLabel = strategyTitleByTargetId.get(target.id) ?? "—";
+                const strategyLink =
+                  target.linkedClubStrategyTitle && target.linkedClubStrategyId
+                    ? {
+                        title: target.linkedClubStrategyTitle,
+                        href: buildStrategieReturnHref({
+                          orgUnitId: orgQuery,
+                          strategyId: target.linkedClubStrategyId,
+                        }),
+                      }
+                    : strategyLinkByTargetId.get(target.id) ?? null;
+                const strategyLabel = strategyLink?.title ?? "—";
                 const orgUnitLabel =
                   target.orgUnitLabel?.trim() ||
                   (isFocus ? "Schwerpunkt" : null) ||
@@ -107,24 +115,13 @@ export default function ZieleWorkspacePanel({
                     title={target.title}
                     titleHref={detailHref}
                     strategyLabel={strategyLabel}
+                    strategyHref={strategyLink?.href ?? null}
                     responsibleLabel={target.responsibleLabel}
                     orgUnitLabel={orgUnitLabel}
-                    progressPercent={target.deliveryProgressPercent}
-                    progressCaption={
-                      target.deliveryProgressPercent != null
-                        ? `${target.deliveryProgressPercent}%`
-                        : null
-                    }
+                    progressPercent={target.deliveryProgressPercent ?? 0}
+                    progressCaption={target.deliveryProgressCaption}
                     statusLabel={formatTargetStatusLabel(target.status)}
                     testId={`ziele-row-${target.id}`}
-                    trailing={
-                      <ZieleWorkspaceRowActions
-                        targetId={target.id}
-                        canCreateTask={canCreateTargetTasks}
-                        returnTo={zieleListReturnTo}
-                        orgUnitId={orgQuery}
-                      />
-                    }
                   />
                 );
               })}

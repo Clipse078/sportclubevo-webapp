@@ -33,6 +33,7 @@ import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSecti
 import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
+import TaskDescriptionFormField from "@/components/admin/aufgaben/TaskDescriptionFormField";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
@@ -439,33 +440,31 @@ export default function StrategyAuthoringPanel({
               </MotionMetaField>
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_AUTHORING_COPY.situationLabel}
-              </label>
-              <textarea
-                value={situationText}
-                onChange={(e) => setSituationText(e.target.value)}
-                rows={3}
-                placeholder={CD_STRATEGY_AUTHORING_COPY.situationPlaceholder}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--foreground)]"
-                data-testid="strategy-situation"
-              />
-            </div>
+            <TaskDescriptionFormField
+              key={`strategy-situation-${strategyId}-${editing}`}
+              label={CD_STRATEGY_AUTHORING_COPY.situationLabel}
+              optional
+              initialStored={initial.situationText}
+              inputId="strategy-situation"
+              placeholder={CD_STRATEGY_AUTHORING_COPY.situationPlaceholder}
+              enableMentions
+              mentionScope="tenant"
+              compact
+              onSerializedChange={setSituationText}
+            />
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_AUTHORING_COPY.alignmentLabel}
-              </label>
-              <textarea
-                value={alignmentText}
-                onChange={(e) => setAlignmentText(e.target.value)}
-                rows={3}
-                placeholder={CD_STRATEGY_AUTHORING_COPY.alignmentPlaceholder}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--foreground)]"
-                data-testid="strategy-alignment"
-              />
-            </div>
+            <TaskDescriptionFormField
+              key={`strategy-alignment-${strategyId}-${editing}`}
+              label={CD_STRATEGY_AUTHORING_COPY.alignmentLabel}
+              optional
+              initialStored={initial.alignmentText}
+              inputId="strategy-alignment"
+              placeholder={CD_STRATEGY_AUTHORING_COPY.alignmentPlaceholder}
+              enableMentions
+              mentionScope="tenant"
+              compact
+              onSerializedChange={setAlignmentText}
+            />
 
             <MotionSaveStatus
               unsaved={unsavedNarrative}
@@ -536,12 +535,8 @@ export default function StrategyAuthoringPanel({
                     titleHref={`/vereinsleitung/targets/${focus.target.id}`}
                     responsibleLabel={overview.responsibleLabel}
                     orgUnitLabel={overview.orgUnitLabel}
-                    progressPercent={overview.deliveryProgressPercent}
-                    progressCaption={
-                      overview.deliveryProgressPercent != null
-                        ? `${overview.deliveryProgressPercent}%`
-                        : null
-                    }
+                    progressPercent={overview.deliveryProgressPercent ?? 0}
+                    progressCaption={overview.deliveryProgressCaption}
                     statusLabel={formatTargetStatusLabel(overview.status)}
                     testId={`strategy-focus-row-${focus.target.id}`}
                   />

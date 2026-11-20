@@ -136,6 +136,9 @@ export default function StrategieNeuForm({
         optional
         label="Beschreibung"
         inputId="strategie-neu-description"
+        placeholder="Strategie beschreiben …"
+        enableMentions
+        mentionScope="tenant"
         onSerializedChange={setSituationText}
       />
       <TaskPeopleMultiPicker
