@@ -106,6 +106,7 @@ export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
   assignedTasksSection: "Zugeordnete Aufgaben",
   assignedTasksLoading: "Aufgaben werden geladen …",
   noAssignedTasks: "Noch keine Aufgaben dieser Umsetzungsphase zugeordnet.",
+  phaseEditAction: "Umsetzungsphase bearbeiten",
 } as const;
 
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */

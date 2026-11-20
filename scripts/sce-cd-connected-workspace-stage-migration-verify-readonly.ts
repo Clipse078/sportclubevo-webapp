@@ -22,12 +22,13 @@ import { getRuntimeEnvironment } from "@/lib/env";
 import { CONNECTED_WORKSPACE_PO_UAT_HANDOFF } from "@/lib/club-development/sce-cd-connected-workspace-po-uat-handoff";
 
 const MIGRATION = CONNECTED_WORKSPACE_PO_UAT_HANDOFF.requiredMigration;
+const JUNCTION_MIGRATION = CONNECTED_WORKSPACE_PO_UAT_HANDOFF.orgUnitAssignmentMigration;
 const EXPECTED_HOST_FRAGMENT = "ep-wispy-hall-aso93dy6";
 const KNOWN_PREVIEW_NOTE =
   "PR Preview for sportclubevo-webapp-stage uses the shared STAGE Neon database (see docs/deployment/stage-preview-migration-runbook.md). No branch-scoped isolated Preview database is provisioned in-repo.";
 
-function migrationChecksum(): string {
-  const sqlPath = path.join(process.cwd(), `prisma/migrations/${MIGRATION}/migration.sql`);
+function migrationChecksum(name: string): string {
+  const sqlPath = path.join(process.cwd(), `prisma/migrations/${name}/migration.sql`);
   return crypto.createHash("sha256").update(fs.readFileSync(sqlPath)).digest("hex");
 }
 
@@ -48,7 +49,14 @@ async function main(): Promise<void> {
   >`
     SELECT migration_name, checksum, finished_at, rolled_back_at
     FROM "_prisma_migrations"
-    WHERE migration_name = ${MIGRATION}
+    WHERE migration_name IN (${MIGRATION}, ${JUNCTION_MIGRATION})
+  `;
+
+  const junctionTable = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'ClubStrategyOrgUnitAssignment'
+    ) AS exists
   `;
 
   const scopeColumns = await prisma.$queryRaw<Array<{ column_name: string }>>`
@@ -75,7 +83,7 @@ async function main(): Promise<void> {
     ) AS exists
   `;
 
-  const loaderProbe = await prisma.clubStrategy
+  const baseLoaderProbe = await prisma.clubStrategy
     .findFirst({
       where: { tenantId: "probe-tenant-never-exists" },
       select: { id: true, scopeType: true, title: true },
@@ -86,8 +94,23 @@ async function main(): Promise<void> {
       errorCode: error instanceof Error ? error.message.slice(0, 120) : "unknown",
     }));
 
-  const repoChecksum = migrationChecksum();
-  const row = applied.find((r) => r.finished_at && !r.rolled_back_at);
+  const junctionLoaderProbe = await prisma.clubStrategy
+    .findFirst({
+      where: { tenantId: "probe-tenant-never-exists" },
+      select: { id: true, orgUnitAssignments: { select: { orgUnitId: true } } },
+    })
+    .then(() => ({ ok: true, errorCode: null as string | null }))
+    .catch((error: unknown) => ({
+      ok: false,
+      errorCode: error instanceof Error ? error.message.slice(0, 200) : "unknown",
+    }));
+
+  const repoChecksum = migrationChecksum(MIGRATION);
+  const junctionRepoChecksum = migrationChecksum(JUNCTION_MIGRATION);
+  const row = applied.find((r) => r.migration_name === MIGRATION && r.finished_at && !r.rolled_back_at);
+  const junctionRow = applied.find(
+    (r) => r.migration_name === JUNCTION_MIGRATION && r.finished_at && !r.rolled_back_at,
+  );
   const columnSet = new Set(scopeColumns.map((c) => c.column_name));
 
   console.log(
@@ -126,10 +149,28 @@ async function main(): Promise<void> {
           },
           taskContextTargetEnum: targetEnum[0]?.exists ?? false,
         },
-        loaderPathProbe: {
-          clubStrategyFindFirst: loaderProbe,
-          blocksStrategienAndZieleOnPreview: !loaderProbe.ok,
+        orgUnitAssignmentMigration: {
+          name: JUNCTION_MIGRATION,
+          applied: Boolean(junctionRow),
+          tableExists: junctionTable[0]?.exists ?? false,
+          checksumInDb: junctionRow?.checksum ?? null,
+          checksumMatch: junctionRow?.checksum === junctionRepoChecksum,
+          repoChecksum: junctionRepoChecksum,
+          finishedAt: junctionRow?.finished_at?.toISOString?.() ?? null,
         },
+        loaderPathProbe: {
+          clubStrategyWithoutJunction: baseLoaderProbe,
+          clubStrategyWithOrgUnitAssignments: junctionLoaderProbe,
+          blocksStrategienAndZieleOnPreview: !baseLoaderProbe.ok || !junctionLoaderProbe.ok,
+        },
+        routesRequiringOrgUnitJunctionForReads: [
+          "/vereinsleitung/strategie-und-ziele?ansicht=strategie",
+          "/vereinsleitung/strategie-und-ziele?ansicht=strategie&strategyId=…",
+          "/vereinsleitung/club-entwicklung (Strategien delivery progress)",
+          "GET /api/club-development/club-strategies",
+          "POST /api/club-development/club-strategies (multi Org-Einheit create)",
+          "PATCH /api/club-development/club-strategies (Org-Einheit replace)",
+        ],
         fixtureInventoryOnStageFcAllschwil: await (async () => {
           const tenant = await prisma.tenant.findFirst({
             where: { key: "fc-allschwil" },
@@ -172,7 +213,7 @@ async function main(): Promise<void> {
     ),
   );
 
-  if (!row || !columnSet.has("scopeType")) {
+  if (!row || !columnSet.has("scopeType") || !junctionRow || !(junctionTable[0]?.exists ?? false)) {
     process.exitCode = 1;
   }
 }

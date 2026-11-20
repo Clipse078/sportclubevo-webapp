@@ -8,6 +8,7 @@ import {
 } from "@/lib/club-development/product-copy";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
+import DevelopmentSprintPhaseEditMenu from "./DevelopmentSprintPhaseEditMenu";
 import UmsetzungsplanungPhaseAssignedTasksPanel from "./UmsetzungsplanungPhaseAssignedTasksPanel";
 
 export type UmsetzungsplanungPhaseCardItem = {
@@ -77,6 +78,18 @@ export default function UmsetzungsplanungPhaseCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <DevelopmentSprintPhaseEditMenu
+            sprint={{
+              id: sprint.id,
+              slug: sprint.slug,
+              title: sprint.title,
+              goal: sprint.goal,
+              status: sprint.status,
+              startsAt: sprint.startsAt,
+              endsAt: sprint.endsAt,
+            }}
+            canManage={canManageSprints}
+          />
           <Link
             href={`/vereinsleitung/sprints/${sprint.slug}/board`}
             className="inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-95"
