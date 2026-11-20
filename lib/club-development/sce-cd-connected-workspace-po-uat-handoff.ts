@@ -14,7 +14,16 @@ import {
 
 export const CONNECTED_WORKSPACE_PULL_REQUEST = 1017 as const;
 
+export const CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN =
+  "https://acceptance.sportclubevo.com" as const;
+
 export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
+  /** Vercel Custom Environment `acceptance` — canonical PO UAT hostname (isolated sce_acceptance). */
+  acceptanceCommit: "7b7c64b4c0a5c9f376ea9ee85a8cdd5cd9eb7ff4",
+  acceptanceCommitShort: "7b7c64b4",
+  acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
+  acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
+  /** STAGE-backed PR Preview — not a valid PO UAT target (shared STAGE DB, no connected-workspace migration). */
   readyPreviewCommit: "bbec0135cca40a3c01b540d44335807b0af30067",
   readyPreviewCommitShort: "bbec0135",
   readyPreviewHostname:
@@ -64,7 +73,7 @@ export function buildConnectedWorkspacePoUatHandoffUrls(previewBase: string): Co
 
 /** Ordered screenshot checklist for PO manual UAT (no automation). */
 export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
-  "1. Login as Acceptance Alpha Club Admin on the Ready preview (Vercel auth, then app login).",
+  "1. Login as Acceptance Alpha Club Admin on https://acceptance.sportclubevo.com (Vercel Deployment Protection, then club-admin-alpha@acceptance.sportclubevo.com).",
   "2. Verein → Vereinsentwicklung: capture mega-menu — five entries (Übersicht, Strategien, Ziele, Aufgaben, Umsetzungsplanung) with matching tab strip.",
   "3. Übersicht with orgEinheit filter → switch through all five tabs; confirm filter carries.",
   "4. Strategien: confirm club-wide strategy row (title PO UAT #1017) shows linked Schwerpunkt-Ziel.",

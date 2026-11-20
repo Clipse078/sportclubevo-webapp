@@ -89,7 +89,7 @@ async function main(): Promise<void> {
 
     const fixturesReady = Boolean(strategy && target && sprint && focus);
 
-    const previewBase = CONNECTED_WORKSPACE_PO_UAT_HANDOFF.readyPreviewOrigin;
+    const previewBase = CONNECTED_WORKSPACE_PO_UAT_HANDOFF.acceptanceOrigin;
 
     console.log(
       JSON.stringify(
