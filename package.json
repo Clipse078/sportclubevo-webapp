@@ -72,6 +72,7 @@
     "finance:06e:r2:stage-migration-verify": "tsx scripts/sce-finance-06e-r2-stage-migration-verify.ts",
     "cd-04:stage-migration-verify": "tsx scripts/sce-cd-04-stage-migration-verify.ts",
     "cd-05:pkg-05:stage-migration-verify": "tsx scripts/sce-cd-05-pkg-05-stage-migration-verify-readonly.ts",
+    "cd-connected:stage-migration-verify": "tsx scripts/sce-cd-connected-workspace-stage-migration-verify-readonly.ts",
     "ds2-07g:provision-verification-db": "tsx scripts/sce-ds2-07g-provision-verification-database.ts",
     "ds2-07g:seed-verification-fixtures": "tsx scripts/sce-ds2-07g-seed-verification-fixtures.ts",
     "ds2-07g:teardown-verification-fixtures": "tsx scripts/sce-ds2-07g-teardown-verification-fixtures.ts",
