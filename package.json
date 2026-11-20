@@ -73,6 +73,7 @@
     "cd-04:stage-migration-verify": "tsx scripts/sce-cd-04-stage-migration-verify.ts",
     "cd-05:pkg-05:stage-migration-verify": "tsx scripts/sce-cd-05-pkg-05-stage-migration-verify-readonly.ts",
     "cd-connected:stage-migration-verify": "tsx scripts/sce-cd-connected-workspace-stage-migration-verify-readonly.ts",
+    "cd-connected:stage-testziel-identity-readonly": "tsx scripts/sce-cd-connected-stage-testziel-identity-readonly.ts",
     "cd-connected:stage-reconciliation-outcome": "tsx scripts/sce-cd-connected-workspace-stage-reconciliation-outcome-readonly.ts",
     "cd-connected:target-context-probe": "tsx scripts/sce-cd-connected-target-context-probe.ts",
     "cd-connected:disposable-migration-verify": "tsx scripts/sce-cd-connected-workspace-disposable-migration-verify.ts",

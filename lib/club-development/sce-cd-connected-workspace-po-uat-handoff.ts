@@ -20,6 +20,9 @@ export const CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN =
 /** FC Allschwil STAGE — Junioren orgEinheit filter for PR preview smoke URLs (read-only UAT). */
 export const STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID = "cmslki2q4000104l87hu4qqbs" as const;
 
+/** Shared STAGE record for identity + contextual Aufgabe create PO screenshots (read-only). */
+export const STAGE_PREVIEW_TESTZIEL_I_ID = "cmwpanrjn000008l6jhpjhjb4" as const;
+
 export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   /** Vercel Custom Environment `acceptance` — canonical PO UAT hostname (isolated sce_acceptance). */
   acceptanceCommit: "7b7c64b4c0a5c9f376ea9ee85a8cdd5cd9eb7ff4",
@@ -63,6 +66,8 @@ export type ConnectedWorkspacePoUatUrls = {
   ungeplantBacklog: string;
   sprintBoard: string;
   zielNeuFromGesamtvereinStrategie: string;
+  stageTestzielIDetail: string;
+  stageTestzielITaskCreate: string;
 };
 
 export function buildConnectedWorkspacePoUatHandoffUrls(
@@ -86,6 +91,8 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
     targetDetail: `${base}/vereinsleitung/targets/${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_TARGET_ID)}?${orgQuery}`,
     ungeplantBacklog: `${base}/vereinsleitung/vorhaben-und-umsetzung?ansicht=umsetzungsphasen&${CD_UMSETZUNGSPLANUNG_SECTION_QUERY}=ungeplant&${orgQuery}`,
     sprintBoard: `${base}/vereinsleitung/sprints/${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_SPRINT_SLUG)}/board`,
+    stageTestzielIDetail: `${base}/vereinsleitung/targets/${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_I_ID)}?${orgQuery}`,
+    stageTestzielITaskCreate: `${base}/dashboard/aufgaben/neu?contextType=TARGET&contextId=${encodeURIComponent(STAGE_PREVIEW_TESTZIEL_I_ID)}&returnTo=${encodeURIComponent(`${base}/vereinsleitung/targets/${STAGE_PREVIEW_TESTZIEL_I_ID}?${orgQuery}`)}&${orgQuery}`,
   };
 }
 
@@ -115,4 +122,7 @@ export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
   "7. Open strategy by title: capture Ziele group with create/link (blocked if no strategy).",
   "8. Open Ziel detail: capture Aufgaben group with create/link.",
   "9. Umsetzungsphase «…» → «Umsetzungsphase bearbeiten» (blocked if no phase).",
+  "10. Ziele — Testziel I row «Verantwortlich» shows «Nicht zugewiesen» (not Club Admin); … → «Aufgabe erstellen».",
+  "11. Testziel I detail — «+ Aufgabe erstellen» in Aufgaben group; «Erstellt von» separate from «Verantwortlich».",
+  "12. Contextual Neue Aufgabe — preselected TARGET context for Testziel I, Ziel + Strategie visible on form.",
 ] as const;

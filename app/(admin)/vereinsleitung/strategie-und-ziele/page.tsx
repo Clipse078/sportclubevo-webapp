@@ -64,6 +64,9 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
     ]);
 
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
+  const canCreateTargetTasks =
+    actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
+    actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE);
   const focusTargetIds =
     connectedView === "ziele"
       ? allFocusTargetIds
@@ -86,6 +89,7 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
           selectedStrategyId={selectedStrategyId}
           authoring={authoring}
           canManageTargets={canManageTargets}
+          canCreateTargetTasks={canCreateTargetTasks}
           targets={targets}
           focusTargetIds={focusTargetIds}
           availableMeetings={availableMeetings}

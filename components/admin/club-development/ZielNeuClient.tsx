@@ -14,6 +14,7 @@ import {
   buildZieleReturnHref,
   parseSafeReturnToHref,
 } from "@/lib/club-development/vereinsentwicklung-create-routing";
+import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import VereinsentwicklungFullPageCreatePanel from "./VereinsentwicklungFullPageCreatePanel";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 
@@ -158,13 +159,14 @@ function ZielNeuClientInner({
                         return;
                       }
                     }
+                    const detailHref = buildZielDetailHref(targetId, orgUnitId);
                     const destination = lockedClubStrategy
-                      ? buildStrategieReturnHref({
-                          orgUnitId,
-                          strategyId: lockedClubStrategy.id,
-                        })
-                      : buildZieleReturnHref({ orgUnitId });
-                    router.push(parseSafeReturnToHref(backHref, destination));
+                      ? `${detailHref}${detailHref.includes("?") ? "&" : "?"}created=1`
+                      : parseSafeReturnToHref(
+                          backHref,
+                          buildZieleReturnHref({ orgUnitId }),
+                        );
+                    router.push(destination);
                     router.refresh();
                   }}
                 />

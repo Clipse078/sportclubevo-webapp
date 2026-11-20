@@ -26,5 +26,7 @@ describe("PR #1017 connected workspace PO UAT handoff", () => {
     expect(urls.neuesZiel).toContain("/strategie-und-ziele/ziele/neu");
     expect(urls.neueAufgabeReference).toContain("/dashboard/aufgaben/neu");
     expect(urls.zielNeuFromGesamtvereinStrategie).toContain("clubStrategyId=");
+    expect(urls.stageTestzielIDetail).toContain("cmwpanrjn000008l6jhpjhjb4");
+    expect(urls.stageTestzielITaskCreate).toContain("contextType=TARGET");
   });
 });

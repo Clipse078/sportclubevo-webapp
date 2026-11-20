@@ -287,6 +287,10 @@ export const CD_TARGET_COPY = {
   meetingsEditorHint:
     "Verknüpfe relevante Sitzungen, in denen dieses Ziel besprochen wurde.",
   unlinkInitiativeAction: "Entfernen",
+  aufgabenSectionHeading: "Aufgaben",
+  aufgabenEmpty: "Noch keine Aufgaben",
+  createTaskAfterZielAction: "Jetzt Aufgabe erstellen",
+  createdByLabel: "Erstellt von",
 } as const;
 
 export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {

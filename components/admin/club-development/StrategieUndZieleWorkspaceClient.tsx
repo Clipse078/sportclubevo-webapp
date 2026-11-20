@@ -22,6 +22,7 @@ type Props = {
   selectedStrategyId: string | null;
   authoring: ClubStrategyAuthoringDto | null;
   canManageTargets: boolean;
+  canCreateTargetTasks: boolean;
   targets: StrategyTargetOverview[];
   focusTargetIds: string[];
   availableMeetings: EntityRef[];
@@ -37,6 +38,7 @@ export default function StrategieUndZieleWorkspaceClient({
   selectedStrategyId,
   authoring,
   canManageTargets,
+  canCreateTargetTasks,
   targets,
   focusTargetIds,
   availableMeetings,
@@ -85,6 +87,7 @@ export default function StrategieUndZieleWorkspaceClient({
           strategies={strategies}
           focusTargetIds={focusSet}
           canManageTargets={canManageTargets}
+          canCreateTargetTasks={canCreateTargetTasks}
           orgEinheitFilterLabel={orgEinheitFilterLabel}
         />
       </div>

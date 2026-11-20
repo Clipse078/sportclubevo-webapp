@@ -13,6 +13,7 @@ import {
   describeDeliveryProgressUnknown,
   describeOutcomeProgressUnknown,
 } from "./strategy-progress-presentation";
+import { resolveTargetAssigneeLabelsById } from "./vereinsentwicklung-target-responsible-display";
 
 type JsonInitiativeRef = { slug?: string; title?: string };
 
@@ -125,14 +126,13 @@ export async function loadStrategyOverview(
     }),
   ]);
 
-  const [focusLinks, creatorUsers, orgUnits] = await Promise.all([
+  const [focusLinks, orgUnits] = await Promise.all([
     prisma.clubStrategyFocusTarget.findMany({
       where: { tenantId },
       select: {
         targetId: true,
         clubStrategy: {
           select: {
-            responsibleLabel: true,
             scopeType: true,
             scopeOrgUnitId: true,
             orgUnitAssignments: { select: { orgUnitId: true } },
@@ -140,23 +140,6 @@ export async function loadStrategyOverview(
         },
       },
     }),
-    targetRows.some((row) => row.createdByUserId)
-      ? prisma.user.findMany({
-          where: {
-            tenantId,
-            id: {
-              in: [
-                ...new Set(
-                  targetRows
-                    .map((row) => row.createdByUserId)
-                    .filter((id): id is string => Boolean(id)),
-                ),
-              ],
-            },
-          },
-          select: { id: true, firstName: true, lastName: true },
-        })
-      : Promise.resolve([]),
     prisma.orgUnit.findMany({
       where: { tenantId, status: "ACTIVE" },
       select: { id: true, name: true },
@@ -164,17 +147,9 @@ export async function loadStrategyOverview(
   ]);
 
   const orgUnitNameById = new Map(orgUnits.map((row) => [row.id, row.name]));
-  const responsibleByUserId = new Map(
-    creatorUsers.map((user) => [
-      user.id,
-      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || null,
-    ]),
-  );
+  const assigneeLabelByTargetId = resolveTargetAssigneeLabelsById(targetRows);
 
-  const focusMetaByTargetId = new Map<
-    string,
-    { responsibleLabel: string | null; orgUnitLabel: string | null }
-  >();
+  const focusMetaByTargetId = new Map<string, { orgUnitLabel: string | null }>();
   for (const link of focusLinks) {
     const strategy = link.clubStrategy;
     const orgIds = [
@@ -185,7 +160,6 @@ export async function loadStrategyOverview(
       .map((id) => orgUnitNameById.get(id) ?? null)
       .filter((label): label is string => Boolean(label));
     focusMetaByTargetId.set(link.targetId, {
-      responsibleLabel: strategy.responsibleLabel?.trim() || null,
       orgUnitLabel: strategy.scopeType === "CLUB" && orgLabels.length === 0 ? "Gesamtverein" : formatOrgUnitLabels(orgLabels),
     });
   }
@@ -233,9 +207,7 @@ export async function loadStrategyOverview(
       deliveryCount > 0 ? Math.round(deliverySum / deliveryCount) : null;
 
     const focusMeta = focusMetaByTargetId.get(target.id);
-    const responsibleLabel =
-      focusMeta?.responsibleLabel ??
-      (target.createdByUserId ? responsibleByUserId.get(target.createdByUserId) ?? null : null);
+    const responsibleLabel = assigneeLabelByTargetId.get(target.id) ?? null;
     const orgUnitLabel =
       focusMeta?.orgUnitLabel ?? firstOrgUnitLabelFromVisibilityRefs(target.visibleOrgUnitRefs);
 

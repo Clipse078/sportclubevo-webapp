@@ -18,7 +18,11 @@ import TargetDataPointForm from "@/components/admin/targets/TargetDataPointForm"
 import TargetStageActions from "@/components/admin/targets/TargetStageActions";
 import TargetLinksPanel from "@/components/admin/targets/TargetLinksPanel";
 import TargetInitiativeLinksSection from "@/components/admin/targets/TargetInitiativeLinksSection";
-import CreateTargetTaskContextualCollapsibleCard from "@/components/admin/targets/CreateTargetTaskContextualCollapsibleCard";
+import TargetTasksSection from "@/components/admin/targets/TargetTasksSection";
+import { loadTargetConnectedTasks } from "@/lib/club-development/target-connected-tasks";
+import { resolveTargetCreatorDisplayName } from "@/lib/club-development/target-creator-display";
+import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
+import { parseOrgEinheitQuery } from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 import { parseEntityRefs } from "@/lib/linking/helpers";
 import TargetDeleteButton from "@/components/admin/targets/TargetDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
@@ -44,7 +48,7 @@ function formatSwissDate(value: Date | string) {
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ status?: string }>;
+  searchParams?: Promise<{ status?: string; created?: string; orgEinheit?: string }>;
 };
 
 export default async function TargetDetailPage({ params, searchParams }: PageProps) {
@@ -80,6 +84,16 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
     TARGET_STATUS_BADGE_CLASSES.DRAFT;
   const categoryLabel = TARGET_CATEGORY_LABELS[target.category] ?? target.category;
   const periodDisplay = formatTargetPeriodLabel(target.period, target.periodLabel);
+  const orgUnitId = parseOrgEinheitQuery(qp);
+  const detailReturnTo = buildZielDetailHref(id, orgUnitId);
+  const canCreateTargetTasks =
+    actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
+    actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE);
+  const [connectedTasks, creatorDisplayName] = await Promise.all([
+    loadTargetConnectedTasks(actor, id, detailReturnTo),
+    tenantId ? resolveTargetCreatorDisplayName(tenantId, target.createdByUserId) : Promise.resolve(null),
+  ]);
+  const showCreatedBanner = qp.created === "1";
 
   return (
     <PageShell fullWidth>
@@ -208,12 +222,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             )}
           </section>
 
-          <CreateTargetTaskContextualCollapsibleCard
+          <TargetTasksSection
             targetId={id}
-            canCreate={
-              actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE) &&
-              actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW)
-            }
+            tasks={connectedTasks}
+            canCreate={canCreateTargetTasks}
+            returnTo={detailReturnTo}
+            orgUnitId={orgUnitId}
+            showCreatedBanner={showCreatedBanner}
           />
           <TargetInitiativeLinksSection
             targetId={id}
@@ -273,6 +288,12 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                 </div>
               ) : null}
 
+              {creatorDisplayName ? (
+                <div>
+                  <dt className="text-[11px] text-slate-400 mb-1">{CD_TARGET_COPY.createdByLabel}</dt>
+                  <dd className="text-sm font-medium text-[var(--foreground)]">{creatorDisplayName}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-[11px] text-slate-400 mb-1">Erstellt</dt>
                 <dd className="text-sm font-medium text-[var(--foreground)]">

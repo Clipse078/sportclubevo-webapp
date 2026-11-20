@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { formatTargetResponsiblePresentation } from "@/lib/club-development/vereinsentwicklung-target-responsible-presentation";
 
 export type VereinsentwicklungWorkspaceRecordRowProps = {
   title: string;
@@ -57,7 +58,7 @@ export default function VereinsentwicklungWorkspaceRecordRow({
       ) : null}
       <div className="text-xs text-[var(--text-2)]">
         <span className="sr-only">Verantwortlich: </span>
-        {responsibleLabel?.trim() || "—"}
+        {formatTargetResponsiblePresentation(responsibleLabel)}
       </div>
       <div className="text-xs text-[var(--text-2)]">
         <span className="sr-only">Org-Einheit: </span>
