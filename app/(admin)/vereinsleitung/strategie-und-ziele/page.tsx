@@ -2,9 +2,11 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import {
+  listAllFocusTargetIds,
   listClubStrategies,
   loadClubStrategyAuthoring,
 } from "@/lib/club-development/club-strategy-service";
+import { prisma } from "@/lib/db/prisma";
 import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
 import {
@@ -39,22 +41,33 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
     actor,
     parseOrgEinheitQuery(query),
   );
-  const strategies = await listClubStrategies(actor);
-  const selectedStrategyId =
-    query.strategyId?.trim() ??
-    strategies.find((row) => row.scopeType === "CLUB")?.id ??
-    strategies[0]?.id ??
-    null;
+  const strategies = await listClubStrategies(actor, { orgUnitId: orgEinheitFilter?.id });
+  const selectedStrategyId = query.strategyId?.trim() || null;
 
-  const [authoring, { targets }, availableMeetings, availableDecisions] = await Promise.all([
-    loadClubStrategyAuthoring(actor, actorUserId, selectedStrategyId),
-    loadStrategyOverview(actor),
-    getMeetingLinkOptions(actor),
-    getMeetingDecisionLinkOptions(actor),
-  ]);
+  const [authoring, { targets }, availableMeetings, availableDecisions, allFocusTargetIds, orgUnitOptions] =
+    await Promise.all([
+      selectedStrategyId
+        ? loadClubStrategyAuthoring(actor, actorUserId, selectedStrategyId)
+        : Promise.resolve(null),
+      loadStrategyOverview(actor),
+      getMeetingLinkOptions(actor),
+      getMeetingDecisionLinkOptions(actor),
+      listAllFocusTargetIds(actor),
+      actor.tenantId
+        ? prisma.orgUnit.findMany({
+            where: { tenantId: actor.tenantId, status: "ACTIVE" },
+            orderBy: [{ level: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+            select: { id: true, name: true },
+            take: 200,
+          })
+        : Promise.resolve([]),
+    ]);
 
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
-  const focusTargetIds = authoring?.focusTargets.map((row) => row.target.id) ?? [];
+  const focusTargetIds =
+    connectedView === "ziele"
+      ? allFocusTargetIds
+      : (authoring?.focusTargets.map((row) => row.target.id) ?? []);
 
   return (
     <PageShell fullWidth>
@@ -77,6 +90,7 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
           focusTargetIds={focusTargetIds}
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
+          orgUnitOptions={orgUnitOptions}
         />
       </ListPagePattern>
     </PageShell>

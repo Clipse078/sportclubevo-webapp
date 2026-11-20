@@ -25,7 +25,7 @@ export default function ZieleWorkspacePanel({
         <SceClubDevelopmentEmptyState
           message={
             canManageTargets
-              ? "Noch keine Ziele sichtbar — legen Sie ein erstes Ziel an und verknüpfen Sie es in der Strategie."
+              ? "Noch keine Ziele sichtbar — legen Sie ein Ziel an."
               : "Keine strategischen Ziele sichtbar."
           }
         />

@@ -26,6 +26,7 @@ type Props = {
   focusTargetIds: string[];
   availableMeetings: EntityRef[];
   availableDecisions: EntityRef[];
+  orgUnitOptions: { id: string; name: string }[];
 };
 
 export default function StrategieUndZieleWorkspaceClient({
@@ -40,6 +41,7 @@ export default function StrategieUndZieleWorkspaceClient({
   focusTargetIds,
   availableMeetings,
   availableDecisions,
+  orgUnitOptions,
 }: Props) {
   const searchParams = useSearchParams();
   const activeView = parseStrategieZieleView(searchParams.get("ansicht"));
@@ -58,18 +60,23 @@ export default function StrategieUndZieleWorkspaceClient({
         <StrategienWorkspaceListPanel
           strategies={strategies}
           selectedStrategyId={selectedStrategyId}
+          canManage={canManageTargets}
+          orgUnitOptions={orgUnitOptions}
         />
-        {authoring ? (
-          <StrategyAuthoringPanel
-            initial={authoring}
-            canManage={canManageTargets}
-            targets={targets}
-            availableMeetings={availableMeetings}
-            availableDecisions={availableDecisions}
-          />
-        ) : (
-          <p className="text-sm text-[var(--muted)]">Strategie konnte nicht geladen werden.</p>
-        )}
+        {selectedStrategyId ? (
+          authoring ? (
+            <StrategyAuthoringPanel
+              initial={authoring}
+              canManage={canManageTargets}
+              targets={targets}
+              availableMeetings={availableMeetings}
+              availableDecisions={availableDecisions}
+              orgUnitOptions={orgUnitOptions}
+            />
+          ) : (
+            <p className="text-sm text-[var(--muted)]">Strategie konnte nicht geladen werden.</p>
+          )
+        ) : null}
       </div>
 
       <div hidden={activeView !== "ziele"} aria-hidden={activeView !== "ziele"}>

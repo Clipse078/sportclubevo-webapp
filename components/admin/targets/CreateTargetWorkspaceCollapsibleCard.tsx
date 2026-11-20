@@ -59,7 +59,7 @@ function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
     <div ref={cardRef} className="flex justify-end">
       <div className="w-full max-w-xl">
         <SceClubDevelopmentContextualCreateCollapsibleShell
-          actionLabel="Neues Ziel"
+          actionLabel="+ Ziel anlegen"
           contextLabel="Strategisches Ziel"
           expanded={expanded}
           onExpandedChange={guardedExpandedChange}

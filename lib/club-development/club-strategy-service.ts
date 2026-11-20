@@ -17,6 +17,10 @@ import { requireTargetAccess } from "@/lib/visibility/visibility-guards";
 import type { WorkspaceDocumentAccessContext } from "@/lib/workspace/document-access";
 import { searchWorkspaceDocumentsForTaskLink } from "@/lib/workspace/document-access";
 import {
+  computeStrategyDeliveryProgress,
+  formatProgressCountLabel,
+} from "@/lib/club-development/vereinsentwicklung-workspace-progress";
+import {
   resolveTaskDocumentReferencePresentations,
   type TaskReferenceRow,
 } from "@/lib/workspace/reference/resolve-workspace-version-references";
@@ -42,6 +46,10 @@ export type ClubStrategyFocusTargetDto = {
 
 export type ClubStrategyAuthoringDto = {
   id: string | null;
+  title: string | null;
+  scopeType: ClubStrategyScopeType;
+  scopeOrgUnitIds: string[];
+  scopeOrgUnitLabels: string[];
   situationText: string | null;
   alignmentText: string | null;
   responsiblePersonId: string | null;
@@ -119,46 +127,257 @@ export type ClubStrategyListItemDto = {
   scopeType: ClubStrategyScopeType;
   scopeOrgUnitId: string | null;
   scopeOrgUnitLabel: string | null;
+  orgUnitLabels: string[];
+  responsibleLabel: string | null;
   focusTargetCount: number;
+  deliveryProgressPercent: number;
+  deliveryProgressCaption: string;
 };
 
-export async function listClubStrategies(actor: ActorContext): Promise<ClubStrategyListItemDto[]> {
+export type ListClubStrategiesOptions = {
+  orgUnitId?: string | null;
+};
+
+function resolveStrategyTitle(
+  title: string | null | undefined,
+  scopeType: ClubStrategyScopeType,
+  orgUnitLabels: string[],
+): string {
+  const trimmed = title?.trim();
+  if (trimmed) return trimmed;
+  if (scopeType === ClubStrategyScopeType.CLUB && orgUnitLabels.length === 0) return "Gesamtverein";
+  if (orgUnitLabels.length === 1) return `Strategie ${orgUnitLabels[0]}`;
+  return "Strategie";
+}
+
+export async function listClubStrategies(
+  actor: ActorContext,
+  options: ListClubStrategiesOptions = {},
+): Promise<ClubStrategyListItemDto[]> {
   if (!canViewClubStrategy(actor) || !actor.tenantId) return [];
+  const orgUnitFilter = options.orgUnitId?.trim() || null;
+
+  const where: Prisma.ClubStrategyWhereInput = { tenantId: actor.tenantId };
+  if (orgUnitFilter) {
+    where.OR = [
+      { scopeType: ClubStrategyScopeType.CLUB },
+      { orgUnitAssignments: { some: { orgUnitId: orgUnitFilter } } },
+      { scopeOrgUnitId: orgUnitFilter },
+    ];
+  }
+
   const rows = await prisma.clubStrategy.findMany({
-    where: { tenantId: actor.tenantId },
+    where,
     orderBy: [{ scopeType: "asc" }, { title: "asc" }],
     select: {
       id: true,
       title: true,
       scopeType: true,
       scopeOrgUnitId: true,
+      responsibleLabel: true,
+      focusTargets: { select: { targetId: true } },
+      orgUnitAssignments: { select: { orgUnitId: true } },
       _count: { select: { focusTargets: true } },
     },
   });
-  const orgUnitIds = rows.map((r) => r.scopeOrgUnitId).filter((id): id is string => Boolean(id));
-  const orgLabels = new Map<string, string>();
-  if (orgUnitIds.length > 0) {
+
+  const allOrgUnitIds = new Set<string>();
+  for (const row of rows) {
+    for (const a of row.orgUnitAssignments) allOrgUnitIds.add(a.orgUnitId);
+    if (row.scopeOrgUnitId) allOrgUnitIds.add(row.scopeOrgUnitId);
+  }
+  const labelByOrgUnitId = new Map<string, string>();
+  if (allOrgUnitIds.size > 0) {
     const units = await prisma.orgUnit.findMany({
-      where: { tenantId: actor.tenantId, id: { in: orgUnitIds } },
+      where: { tenantId: actor.tenantId, id: { in: [...allOrgUnitIds] } },
       select: { id: true, name: true },
     });
-    for (const unit of units) orgLabels.set(unit.id, unit.name);
+    for (const unit of units) labelByOrgUnitId.set(unit.id, unit.name);
   }
-  return rows.map((row) => ({
-    id: row.id,
-    title:
-      row.title?.trim() ||
-      (row.scopeType === ClubStrategyScopeType.CLUB
+
+  const items: ClubStrategyListItemDto[] = [];
+  for (const row of rows) {
+    const orgUnitIdList = [
+      ...row.orgUnitAssignments.map((a) => a.orgUnitId),
+      ...(row.scopeOrgUnitId &&
+      !row.orgUnitAssignments.some((a) => a.orgUnitId === row.scopeOrgUnitId)
+        ? [row.scopeOrgUnitId]
+        : []),
+    ].filter((v, i, arr) => arr.indexOf(v) === i);
+    const orgUnitLabels = orgUnitIdList
+      .map((id) => labelByOrgUnitId.get(id) ?? "Org-Einheit")
+      .sort((a, b) => a.localeCompare(b, "de"));
+
+    const focusIds = row.focusTargets.map((ft) => ft.targetId);
+    const delivery =
+      focusIds.length > 0
+        ? await computeStrategyDeliveryProgress(actor, focusIds)
+        : { completedCount: 0, totalCount: 0, percent: 0, contributingTaskIds: [] };
+
+    const orgUnitLabelDisplay =
+      orgUnitLabels.length === 0
         ? "Gesamtverein"
-        : orgLabels.get(row.scopeOrgUnitId ?? "") || "Strategie"),
-    scopeType: row.scopeType,
-    scopeOrgUnitId: row.scopeOrgUnitId,
-    scopeOrgUnitLabel:
-      row.scopeType === ClubStrategyScopeType.CLUB
-        ? "Gesamtverein"
-        : orgLabels.get(row.scopeOrgUnitId ?? "") ?? null,
-    focusTargetCount: row._count.focusTargets,
-  }));
+        : orgUnitLabels.length <= 2
+          ? orgUnitLabels.join(", ")
+          : `${orgUnitLabels.slice(0, 2).join(", ")} +${orgUnitLabels.length - 2}`;
+
+    items.push({
+      id: row.id,
+      title: resolveStrategyTitle(row.title, row.scopeType, orgUnitLabels),
+      scopeType: row.scopeType,
+      scopeOrgUnitId: row.scopeOrgUnitId,
+      scopeOrgUnitLabel: orgUnitLabelDisplay,
+      orgUnitLabels,
+      responsibleLabel: row.responsibleLabel,
+      focusTargetCount: row._count.focusTargets,
+      deliveryProgressPercent: delivery.percent,
+      deliveryProgressCaption: formatProgressCountLabel(delivery),
+    });
+  }
+  return items;
+}
+
+export async function listAllFocusTargetIds(actor: ActorContext): Promise<string[]> {
+  if (!canViewClubStrategy(actor) || !actor.tenantId) return [];
+  const rows = await prisma.clubStrategyFocusTarget.findMany({
+    where: { tenantId: actor.tenantId },
+    select: { targetId: true },
+    distinct: ["targetId"],
+  });
+  return rows.map((r) => r.targetId);
+}
+
+async function assertClubStrategyInTenant(tenantId: string, clubStrategyId: string): Promise<string> {
+  const row = await prisma.clubStrategy.findFirst({
+    where: { id: clubStrategyId, tenantId },
+    select: { id: true },
+  });
+  if (!row) throw new Error("STRATEGY_NOT_FOUND");
+  return row.id;
+}
+
+async function resolveManagedClubStrategyId(
+  actor: ActorContext,
+  actorUserId: string,
+  clubStrategyId?: string | null,
+): Promise<string> {
+  if (!actor.tenantId) throw new Error("FORBIDDEN");
+  if (clubStrategyId?.trim()) {
+    return assertClubStrategyInTenant(actor.tenantId, clubStrategyId.trim());
+  }
+  return ensureClubStrategyRow(actor.tenantId, actorUserId);
+}
+
+export type CreateClubStrategyInput = {
+  title: string;
+  orgUnitIds?: string[];
+};
+
+export async function createClubStrategy(
+  actor: ActorContext,
+  actorUserId: string,
+  input: CreateClubStrategyInput,
+): Promise<{ id: string }> {
+  if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
+  const title = input.title?.trim();
+  if (!title) throw new Error("TITLE_REQUIRED");
+
+  const orgUnitIds = [...new Set((input.orgUnitIds ?? []).map((id) => id.trim()).filter(Boolean))];
+  if (orgUnitIds.length > 0) {
+    const found = await prisma.orgUnit.findMany({
+      where: { tenantId: actor.tenantId, id: { in: orgUnitIds }, status: "ACTIVE" },
+      select: { id: true },
+    });
+    if (found.length !== orgUnitIds.length) throw new Error("ORG_UNIT_NOT_FOUND");
+  }
+
+  const scopeType =
+    orgUnitIds.length === 1 ? ClubStrategyScopeType.ORG_UNIT : ClubStrategyScopeType.CLUB;
+
+  const created = await prisma.clubStrategy.create({
+    data: {
+      tenantId: actor.tenantId,
+      scopeType,
+      scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
+      title,
+      createdByUserId: actorUserId,
+      updatedByUserId: actorUserId,
+      orgUnitAssignments:
+        orgUnitIds.length > 0
+          ? {
+              create: orgUnitIds.map((orgUnitId) => ({
+                tenantId: actor.tenantId!,
+                orgUnitId,
+              })),
+            }
+          : undefined,
+    },
+    select: { id: true },
+  });
+
+  void logAuditEvent({
+    actorUserId,
+    module: "targets",
+    entityId: created.id,
+    action: "UPDATE",
+    after: { title, orgUnitIds },
+    metadata: { clubStrategy: true },
+  });
+
+  return { id: created.id };
+}
+
+export type ReplaceClubStrategyOrgUnitsInput = {
+  clubStrategyId: string;
+  orgUnitIds: string[];
+};
+
+export async function replaceClubStrategyOrgUnitAssignments(
+  actor: ActorContext,
+  actorUserId: string,
+  input: ReplaceClubStrategyOrgUnitsInput,
+): Promise<void> {
+  if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
+  const strategyId = await assertClubStrategyInTenant(actor.tenantId, input.clubStrategyId);
+  const orgUnitIds = [...new Set(input.orgUnitIds.map((id) => id.trim()).filter(Boolean))];
+
+  if (orgUnitIds.length > 0) {
+    const found = await prisma.orgUnit.findMany({
+      where: { tenantId: actor.tenantId, id: { in: orgUnitIds }, status: "ACTIVE" },
+      select: { id: true },
+    });
+    if (found.length !== orgUnitIds.length) throw new Error("ORG_UNIT_NOT_FOUND");
+  }
+
+  await prisma.$transaction([
+    prisma.clubStrategyOrgUnitAssignment.deleteMany({
+      where: { tenantId: actor.tenantId, clubStrategyId: strategyId },
+    }),
+    ...(orgUnitIds.length > 0
+      ? [
+          prisma.clubStrategyOrgUnitAssignment.createMany({
+            data: orgUnitIds.map((orgUnitId) => ({
+              tenantId: actor.tenantId!,
+              clubStrategyId: strategyId,
+              orgUnitId,
+            })),
+          }),
+        ]
+      : []),
+    prisma.clubStrategy.update({
+      where: { id: strategyId, tenantId: actor.tenantId },
+      data: {
+        scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
+        scopeType:
+          orgUnitIds.length === 0
+            ? ClubStrategyScopeType.CLUB
+            : orgUnitIds.length === 1
+              ? ClubStrategyScopeType.ORG_UNIT
+              : ClubStrategyScopeType.CLUB,
+        updatedByUserId: actorUserId,
+      },
+    }),
+  ]);
 }
 
 function meetingRefsFromRaw(raw: unknown) {
@@ -192,6 +411,10 @@ export async function loadClubStrategyAuthoring(
     where: strategyWhere,
     select: {
       id: true,
+      title: true,
+      scopeType: true,
+      scopeOrgUnitId: true,
+      orgUnitAssignments: { select: { orgUnitId: true } },
       situationText: true,
       alignmentText: true,
       responsiblePersonId: true,
@@ -242,6 +465,10 @@ export async function loadClubStrategyAuthoring(
   if (!row) {
     return {
       id: null,
+      title: null,
+      scopeType: ClubStrategyScopeType.CLUB,
+      scopeOrgUnitIds: [],
+      scopeOrgUnitLabels: [],
       situationText: null,
       alignmentText: null,
       responsiblePersonId: null,
@@ -283,8 +510,29 @@ export async function loadClubStrategyAuthoring(
       presentations.get(r.id) ?? ({ accessible: false, referenceId: r.id } satisfies WorkspaceVersionReferencePresentation),
   }));
 
+  const scopeOrgUnitIds = [
+    ...row.orgUnitAssignments.map((a) => a.orgUnitId),
+    ...(row.scopeOrgUnitId && !row.orgUnitAssignments.some((a) => a.orgUnitId === row.scopeOrgUnitId)
+      ? [row.scopeOrgUnitId]
+      : []),
+  ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+  const orgUnits =
+    scopeOrgUnitIds.length > 0
+      ? await prisma.orgUnit.findMany({
+          where: { tenantId: actor.tenantId!, id: { in: scopeOrgUnitIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+  const orgNameById = new Map(orgUnits.map((u) => [u.id, u.name] as const));
+  const scopeOrgUnitLabels = scopeOrgUnitIds.map((id) => orgNameById.get(id) ?? "Org-Einheit");
+
   return {
     id: row.id,
+    title: row.title,
+    scopeType: row.scopeType,
+    scopeOrgUnitIds,
+    scopeOrgUnitLabels,
     situationText: row.situationText,
     alignmentText: row.alignmentText,
     responsiblePersonId: row.responsiblePersonId,
@@ -302,6 +550,8 @@ export async function loadClubStrategyAuthoring(
 }
 
 export type UpsertClubStrategyInput = {
+  clubStrategyId?: string | null;
+  title?: string | null;
   situationText?: string | null;
   alignmentText?: string | null;
   responsiblePersonId?: string | null;
@@ -328,11 +578,12 @@ export async function upsertClubStrategyAuthoring(
   }
   const tenantId = actor.tenantId;
 
-  const strategyId = await ensureClubStrategyRow(tenantId, actorUserId);
+  const strategyId = await resolveManagedClubStrategyId(actor, actorUserId, input.clubStrategyId);
 
   const before = await prisma.clubStrategy.findUnique({
     where: { id: strategyId },
     select: {
+      title: true,
       situationText: true,
       alignmentText: true,
       responsiblePersonId: true,
@@ -363,6 +614,7 @@ export async function upsertClubStrategyAuthoring(
   const data: Record<string, unknown> = {
     updatedByUserId: actorUserId,
   };
+  if (input.title !== undefined) data.title = input.title?.trim() || null;
   if (input.situationText !== undefined) data.situationText = input.situationText?.trim() || null;
   if (input.alignmentText !== undefined) data.alignmentText = input.alignmentText?.trim() || null;
   if (responsiblePersonId !== undefined) {
@@ -379,7 +631,8 @@ export async function upsertClubStrategyAuthoring(
 
   const narrativeChanged =
     before &&
-    ((input.situationText !== undefined && (input.situationText?.trim() || null) !== before.situationText) ||
+    ((input.title !== undefined && (input.title?.trim() || null) !== before.title) ||
+      (input.situationText !== undefined && (input.situationText?.trim() || null) !== before.situationText) ||
       (input.alignmentText !== undefined && (input.alignmentText?.trim() || null) !== before.alignmentText) ||
       (responsiblePersonId !== undefined && responsiblePersonId !== before.responsiblePersonId) ||
       (input.periodLabel !== undefined && (input.periodLabel?.trim() || null) !== before.periodLabel) ||
@@ -453,13 +706,14 @@ export async function replaceClubStrategyAssociationRefs(
   actor: ActorContext,
   actorUserId: string,
   input: {
+    clubStrategyId?: string | null;
     meetingRefs?: { slug: string; title: string }[];
     decisionRefs?: { slug: string; title: string }[];
   },
 ): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const tenantId = actor.tenantId;
-  const strategyId = await ensureClubStrategyRow(tenantId, actorUserId);
+  const strategyId = await resolveManagedClubStrategyId(actor, actorUserId, input.clubStrategyId);
 
   const meetingRefs = input.meetingRefs;
   const decisionRefs = input.decisionRefs;
@@ -505,13 +759,14 @@ export async function addClubStrategyFocusTarget(
   actor: ActorContext,
   actorUserId: string,
   targetId: string,
+  clubStrategyId?: string | null,
 ): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const guard = await requireTargetAccess({ actor, id: targetId, access: "read" });
   if (!guard.ok) throw new Error("TARGET_FORBIDDEN");
 
   const tenantId = actor.tenantId;
-  const strategyId = await ensureClubStrategyRow(tenantId, actorUserId);
+  const strategyId = await resolveManagedClubStrategyId(actor, actorUserId, clubStrategyId);
 
   const existingCount = await prisma.clubStrategyFocusTarget.count({
     where: { clubStrategyId: strategyId },
@@ -542,10 +797,13 @@ export async function removeClubStrategyFocusTarget(
   actor: ActorContext,
   actorUserId: string,
   targetId: string,
+  clubStrategyId?: string | null,
 ): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const tenantId = actor.tenantId;
-  const strategyId = await findClubWideStrategyId(tenantId);
+  const strategyId = clubStrategyId?.trim()
+    ? await assertClubStrategyInTenant(tenantId, clubStrategyId.trim())
+    : await findClubWideStrategyId(tenantId);
   if (!strategyId) return;
 
   await prisma.clubStrategyFocusTarget.deleteMany({
@@ -566,6 +824,7 @@ export async function linkClubStrategyDocument(
   actor: ActorContext,
   actorUserId: string,
   input: {
+    clubStrategyId?: string | null;
     kind: ClubStrategyDocumentKind;
     documentId: string;
     workspaceDocumentVersionId?: string | null;
@@ -573,7 +832,7 @@ export async function linkClubStrategyDocument(
 ): Promise<void> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const tenantId = actor.tenantId;
-  const strategyId = await ensureClubStrategyRow(tenantId, actorUserId);
+  const strategyId = await resolveManagedClubStrategyId(actor, actorUserId, input.clubStrategyId);
   const workspaceCtx = workspaceAccessFromActor(actor, actorUserId);
 
   let resolved;

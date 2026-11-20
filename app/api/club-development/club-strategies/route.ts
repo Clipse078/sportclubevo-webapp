@@ -1,0 +1,95 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  createClubStrategy,
+  listClubStrategies,
+  replaceClubStrategyOrgUnitAssignments,
+} from "@/lib/club-development/club-strategy-service";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
+
+export async function GET(request: NextRequest) {
+  const access = await requireStrategicApiContext([
+    PERMISSIONS.TARGETS_VIEW,
+    PERMISSIONS.TARGETS_MANAGE,
+  ]);
+  if (!access.ok) return access.response;
+
+  const orgUnitId = request.nextUrl.searchParams.get("orgEinheit")?.trim() ?? null;
+  const strategies = await listClubStrategies(access.context.actor, { orgUnitId });
+  return NextResponse.json({ strategies });
+}
+
+export async function POST(request: NextRequest) {
+  const access = await requireStrategicApiContext([PERMISSIONS.TARGETS_MANAGE]);
+  if (!access.ok) return access.response;
+
+  const body = await request.json().catch(() => ({}));
+  const title = typeof body?.title === "string" ? body.title.trim() : "";
+  const orgUnitIds = Array.isArray(body?.orgUnitIds)
+    ? body.orgUnitIds
+        .filter((v: unknown): v is string => typeof v === "string")
+        .map((id: string) => id.trim())
+    : [];
+
+  if (!title) {
+    return NextResponse.json({ error: "Titel ist erforderlich." }, { status: 400 });
+  }
+
+  try {
+    const created = await createClubStrategy(access.context.actor, access.context.actorUserId, {
+      title,
+      orgUnitIds,
+    });
+    return NextResponse.json(created, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (error instanceof Error && error.message === "ORG_UNIT_NOT_FOUND") {
+      return NextResponse.json({ error: "Org-Einheit nicht gefunden." }, { status: 400 });
+    }
+    console.error("club-strategies POST failed", error);
+    return NextResponse.json({ error: "Strategie konnte nicht angelegt werden." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const access = await requireStrategicApiContext([PERMISSIONS.TARGETS_MANAGE]);
+  if (!access.ok) return access.response;
+
+  const body = await request.json().catch(() => ({}));
+  const clubStrategyId =
+    typeof body?.clubStrategyId === "string"
+      ? body.clubStrategyId.trim()
+      : typeof body?.strategyId === "string"
+        ? body.strategyId.trim()
+        : "";
+  const orgUnitIds = Array.isArray(body?.orgUnitIds)
+    ? body.orgUnitIds
+        .filter((v: unknown): v is string => typeof v === "string")
+        .map((id: string) => id.trim())
+    : [];
+
+  if (!clubStrategyId) {
+    return NextResponse.json({ error: "clubStrategyId ist erforderlich." }, { status: 400 });
+  }
+
+  try {
+    await replaceClubStrategyOrgUnitAssignments(access.context.actor, access.context.actorUserId, {
+      clubStrategyId,
+      orgUnitIds,
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (error instanceof Error && error.message === "STRATEGY_NOT_FOUND") {
+      return NextResponse.json({ error: "Strategie nicht gefunden." }, { status: 404 });
+    }
+    if (error instanceof Error && error.message === "ORG_UNIT_NOT_FOUND") {
+      return NextResponse.json({ error: "Org-Einheit nicht gefunden." }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Org-Einheiten konnten nicht gespeichert werden." }, { status: 500 });
+  }
+}

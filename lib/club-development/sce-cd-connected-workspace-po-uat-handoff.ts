@@ -17,6 +17,9 @@ export const CONNECTED_WORKSPACE_PULL_REQUEST = 1017 as const;
 export const CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN =
   "https://acceptance.sportclubevo.com" as const;
 
+/** FC Allschwil STAGE — Junioren orgEinheit filter for PR preview smoke URLs (read-only UAT). */
+export const STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID = "cmslki2q4000104l87hu4qqbs" as const;
+
 export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   /** Vercel Custom Environment `acceptance` — canonical PO UAT hostname (isolated sce_acceptance). */
   acceptanceCommit: "7b7c64b4c0a5c9f376ea9ee85a8cdd5cd9eb7ff4",
@@ -36,6 +39,8 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   },
   stageSharedFingerprint: "acd3b37682911890",
   requiredMigration: "20261120120000_sce_cd_connected_workspace",
+  /** Additive 1:n Org-Einheit — deploy after connected workspace migration. */
+  orgUnitAssignmentMigration: "20261120140000_sce_cd_connected_strategy_org_units",
   acceptanceTenantSlug: SCE_CD_CONNECTED_PO_UAT_TENANT_KEY,
   fixture: {
     orgUnitId: SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID,
@@ -56,9 +61,12 @@ export type ConnectedWorkspacePoUatUrls = {
   sprintBoard: string;
 };
 
-export function buildConnectedWorkspacePoUatHandoffUrls(previewBase: string): ConnectedWorkspacePoUatUrls {
+export function buildConnectedWorkspacePoUatHandoffUrls(
+  previewBase: string,
+  orgUnitId: string = SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID,
+): ConnectedWorkspacePoUatUrls {
   const base = previewBase.replace(/\/$/, "");
-  const orgQuery = `${CD_WORKSPACE_ORG_UNIT_QUERY}=${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID)}`;
+  const orgQuery = `${CD_WORKSPACE_ORG_UNIT_QUERY}=${encodeURIComponent(orgUnitId)}`;
 
   return {
     uebersicht: `${base}/vereinsleitung/club-entwicklung?${orgQuery}`,

@@ -43,6 +43,7 @@ type Props = {
   targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
   availableDecisions: import("@/lib/linking/types").EntityRef[];
+  orgUnitOptions: { id: string; name: string }[];
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -70,11 +71,19 @@ export default function StrategyAuthoringPanel({
   targets,
   availableMeetings,
   availableDecisions,
+  orgUnitOptions,
 }: Props) {
   const router = useRouter();
   const persisted = hasPersistedClubStrategy(initial);
   const [editing, setEditing] = useState(canManage && !persisted);
 
+  const strategyId = initial.id;
+  const strategyPayloadId = strategyId ? { clubStrategyId: strategyId } : {};
+  const [strategyTitle, setStrategyTitle] = useState(
+    initial.title?.trim() ||
+      (initial.scopeOrgUnitLabels[0] ? `Strategie ${initial.scopeOrgUnitLabels[0]}` : "Strategie"),
+  );
+  const [orgUnitIds, setOrgUnitIds] = useState<string[]>(initial.scopeOrgUnitIds);
   const [situationText, setSituationText] = useState(initial.situationText ?? "");
   const [alignmentText, setAlignmentText] = useState(initial.alignmentText ?? "");
   const [periodLabel, setPeriodLabel] = useState(initial.periodLabel ?? "");
@@ -201,6 +210,8 @@ export default function StrategyAuthoringPanel({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...strategyPayloadId,
+          title: strategyTitle,
           situationText,
           alignmentText,
           responsiblePersonId: responsiblePerson?.id ?? null,
@@ -213,6 +224,17 @@ export default function StrategyAuthoringPanel({
       if (!result.ok) {
         setSaveError(result.message);
         return;
+      }
+      if (strategyId) {
+        const orgResult = await clubDevelopmentFetchJson("/api/club-development/club-strategies", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clubStrategyId: strategyId, orgUnitIds }),
+        });
+        if (!orgResult.ok) {
+          setSaveError(orgResult.message);
+          return;
+        }
       }
       setSaveSuccess(true);
       setEditing(false);
@@ -227,7 +249,7 @@ export default function StrategyAuthoringPanel({
       const res = await fetch("/api/club-development/club-strategy/focus-targets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetId: target.id }),
+        body: JSON.stringify({ targetId: target.id, ...strategyPayloadId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -253,7 +275,7 @@ export default function StrategyAuthoringPanel({
       const res = await fetch("/api/club-development/club-strategy/focus-targets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetId: focusLinkRetryTargetId }),
+        body: JSON.stringify({ targetId: focusLinkRetryTargetId, ...strategyPayloadId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -287,7 +309,9 @@ export default function StrategyAuthoringPanel({
     setFocusError(null);
     startFocus(async () => {
       const res = await fetch(
-        `/api/club-development/club-strategy/focus-targets?targetId=${encodeURIComponent(targetId)}`,
+        `/api/club-development/club-strategy/focus-targets?targetId=${encodeURIComponent(targetId)}${
+          strategyId ? `&clubStrategyId=${encodeURIComponent(strategyId)}` : ""
+        }`,
         { method: "DELETE" },
       );
       if (!res.ok) {
@@ -320,13 +344,47 @@ export default function StrategyAuthoringPanel({
   return (
     <div className="mb-8 space-y-5" data-testid="strategy-authoring-panel">
       <SceClubDevelopmentSectionShell
-        title={CD_STRATEGY_AUTHORING_COPY.sectionTitle}
+        title={strategyTitle}
         headerAside={strategyEditAside}
         bodyClassName="p-5 space-y-4"
-        testId="strategy-clubstrategie-section"
+        testId="strategy-detail-section"
       >
         {editing && canManage ? (
           <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
+            <label className="block text-sm">
+              <span className="mb-1 block text-xs text-[var(--muted)]">Titel</span>
+              <input
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm"
+                value={strategyTitle}
+                onChange={(e) => setStrategyTitle(e.target.value)}
+                data-testid="strategy-title-input"
+              />
+            </label>
+            {orgUnitOptions.length > 0 ? (
+              <fieldset className="space-y-2">
+                <legend className="text-xs text-[var(--muted)]">Org-Einheiten</legend>
+                <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-2">
+                  {orgUnitOptions.map((unit) => (
+                    <li key={unit.id}>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={orgUnitIds.includes(unit.id)}
+                          onChange={() =>
+                            setOrgUnitIds((prev) =>
+                              prev.includes(unit.id)
+                                ? prev.filter((id) => id !== unit.id)
+                                : [...prev, unit.id],
+                            )
+                          }
+                        />
+                        {unit.name}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </fieldset>
+            ) : null}
             <div className="flex flex-wrap gap-x-6 gap-y-3">
               <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker
@@ -546,6 +604,7 @@ export default function StrategyAuthoringPanel({
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
           canManage={canManage}
+          clubStrategyId={strategyId}
           editing={editing && canManage}
           compact
           onAssociationsSaved={handleAssociationsSaved}

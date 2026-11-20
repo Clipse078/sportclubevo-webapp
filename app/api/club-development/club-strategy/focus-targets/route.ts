@@ -12,12 +12,23 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const targetId = typeof body?.targetId === "string" ? body.targetId.trim() : "";
+  const clubStrategyId =
+    typeof body?.clubStrategyId === "string"
+      ? body.clubStrategyId
+      : typeof body?.strategyId === "string"
+        ? body.strategyId
+        : null;
   if (!targetId) {
     return NextResponse.json({ error: "targetId ist erforderlich." }, { status: 400 });
   }
 
   try {
-    await addClubStrategyFocusTarget(access.context.actor, access.context.actorUserId, targetId);
+    await addClubStrategyFocusTarget(
+      access.context.actor,
+      access.context.actorUserId,
+      targetId,
+      clubStrategyId,
+    );
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error && error.message === "FORBIDDEN") {
@@ -35,12 +46,21 @@ export async function DELETE(request: NextRequest) {
   if (!access.ok) return access.response;
 
   const targetId = request.nextUrl.searchParams.get("targetId")?.trim() ?? "";
+  const clubStrategyId =
+    request.nextUrl.searchParams.get("clubStrategyId")?.trim() ??
+    request.nextUrl.searchParams.get("strategyId")?.trim() ??
+    null;
   if (!targetId) {
     return NextResponse.json({ error: "targetId ist erforderlich." }, { status: 400 });
   }
 
   try {
-    await removeClubStrategyFocusTarget(access.context.actor, access.context.actorUserId, targetId);
+    await removeClubStrategyFocusTarget(
+      access.context.actor,
+      access.context.actorUserId,
+      targetId,
+      clubStrategyId,
+    );
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error && error.message === "FORBIDDEN") {

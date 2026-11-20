@@ -1304,6 +1304,7 @@ model Tenant {
   clubStrategies                   ClubStrategy[]
   clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
   clubStrategyFocusTargets         ClubStrategyFocusTarget[]
+  clubStrategyOrgUnitAssignments   ClubStrategyOrgUnitAssignment[]
   targets                          Target[]
   tasks                            Task[]
   taskAssignees                    TaskAssignee[]
@@ -3674,9 +3675,28 @@ model ClubStrategy {
   tenant            Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   focusTargets      ClubStrategyFocusTarget[]
   documentReferences ClubStrategyDocumentReference[]
+  orgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@index([tenantId])
   @@index([tenantId, scopeType, scopeOrgUnitId])
+}
+
+/// PR #1017 — multiple Org-Einheiten per Strategie (scope assignment ≠ access grant).
+model ClubStrategyOrgUnitAssignment {
+  id             String   @id @default(cuid())
+  tenantId       String
+  clubStrategyId String
+  orgUnitId      String
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clubStrategy ClubStrategy @relation(fields: [clubStrategyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit      OrgUnit      @relation(fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([clubStrategyId, orgUnitId])
+  @@index([tenantId])
+  @@index([clubStrategyId])
+  @@index([orgUnitId])
 }
 
 enum ClubStrategyDocumentKind {
@@ -3844,6 +3864,7 @@ model OrgUnit {
   taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
   taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantOrgUnit")
   workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantOrgUnit")
+  clubStrategyOrgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@unique([tenantId, key])
   @@index([tenantId])

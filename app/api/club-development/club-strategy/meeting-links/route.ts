@@ -23,6 +23,12 @@ export async function PATCH(request: NextRequest) {
 
   try {
     await replaceClubStrategyAssociationRefs(access.context.actor, access.context.actorUserId, {
+      clubStrategyId:
+        typeof body?.clubStrategyId === "string"
+          ? body.clubStrategyId
+          : typeof body?.strategyId === "string"
+            ? body.strategyId
+            : null,
       meetingRefs,
       decisionRefs,
     });
