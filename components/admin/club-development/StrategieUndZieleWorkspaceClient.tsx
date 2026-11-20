@@ -13,6 +13,7 @@ import ZieleWorkspacePanel from "./ZieleWorkspacePanel";
 import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
 import { SceContextDirtyGuardProvider } from "@/lib/context-tabs";
 import { parseStrategieZieleView } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 
 type Props = {
   permissionKeys: string[];
@@ -27,7 +28,7 @@ type Props = {
   focusTargetIds: string[];
   availableMeetings: EntityRef[];
   availableDecisions: EntityRef[];
-  orgUnitOptions: { id: string; name: string }[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   timeZone: string;
 };
 

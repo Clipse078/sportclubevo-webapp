@@ -40,6 +40,13 @@ import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
+import { ClubStrategyScopeType } from "@prisma/client";
+import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
+import {
+  defaultClubStrategyOrgScopeSelection,
+  parseClubStrategyOrgScopeSelection,
+} from "@/lib/club-development/club-strategy-org-scope";
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
@@ -47,8 +54,14 @@ type Props = {
   targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
   availableDecisions: import("@/lib/linking/types").EntityRef[];
-  orgUnitOptions: { id: string; name: string }[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
 };
+
+function initialOrgScopeFromAuthoring(dto: ClubStrategyAuthoringDto): string[] {
+  if (dto.scopeOrgUnitIds.length > 0) return [...dto.scopeOrgUnitIds];
+  if (dto.scopeType === ClubStrategyScopeType.CLUB) return defaultClubStrategyOrgScopeSelection();
+  return [];
+}
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -87,7 +100,7 @@ export default function StrategyAuthoringPanel({
     initial.title?.trim() ||
       (initial.scopeOrgUnitLabels[0] ? `Strategie ${initial.scopeOrgUnitLabels[0]}` : "Strategie"),
   );
-  const [orgUnitIds, setOrgUnitIds] = useState<string[]>(initial.scopeOrgUnitIds);
+  const [orgScope, setOrgScope] = useState<string[]>(() => initialOrgScopeFromAuthoring(initial));
   const [situationText, setSituationText] = useState(initial.situationText ?? "");
   const [alignmentText, setAlignmentText] = useState(initial.alignmentText ?? "");
   const [periodLabel, setPeriodLabel] = useState(initial.periodLabel ?? "");
@@ -232,10 +245,16 @@ export default function StrategyAuthoringPanel({
         return;
       }
       if (strategyId) {
+        const parsedScope = parseClubStrategyOrgScopeSelection(orgScope);
+        const patchOrgUnitIds = parsedScope.kind === "org_units" ? parsedScope.orgUnitIds : [];
+        if (parsedScope.kind === "invalid") {
+          setSaveError("Bitte mindestens eine Org-Einheit oder Gesamtverein wählen.");
+          return;
+        }
         const orgResult = await clubDevelopmentFetchJson("/api/club-development/club-strategies", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clubStrategyId: strategyId, orgUnitIds }),
+          body: JSON.stringify({ clubStrategyId: strategyId, orgUnitIds: patchOrgUnitIds }),
         });
         if (!orgResult.ok) {
           setSaveError(orgResult.message);
@@ -365,38 +384,12 @@ export default function StrategyAuthoringPanel({
                 data-testid="strategy-title-input"
               />
             </label>
-            {orgUnitOptions.length > 0 ? (
-              <fieldset className="space-y-2">
-                <legend className="text-xs text-[var(--muted)]">Org-Einheiten</legend>
-                <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-2">
-                  {orgUnitOptions.map((unit) => {
-                    const selected = orgUnitIds.includes(unit.id);
-                    return (
-                      <li key={unit.id}>
-                        <button
-                          type="button"
-                          aria-pressed={selected}
-                          className={`w-full rounded-md border px-2 py-1 text-left text-sm ${
-                            selected
-                              ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
-                              : "border-[var(--border)] text-[var(--foreground)]"
-                          }`}
-                          onClick={() =>
-                            setOrgUnitIds((prev) =>
-                              prev.includes(unit.id)
-                                ? prev.filter((id) => id !== unit.id)
-                                : [...prev, unit.id],
-                            )
-                          }
-                        >
-                          {unit.name}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </fieldset>
-            ) : null}
+            <ClubStrategyOrgUnitScopePicker
+              options={orgUnitOptions}
+              selectedScope={orgScope}
+              onSelectedScopeChange={setOrgScope}
+              disabled={pendingSave}
+            />
             <div className="flex flex-wrap gap-x-6 gap-y-3">
               <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker

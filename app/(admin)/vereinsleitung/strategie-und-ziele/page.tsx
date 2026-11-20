@@ -7,6 +7,8 @@ import {
   loadClubStrategyAuthoring,
 } from "@/lib/club-development/club-strategy-service";
 import { prisma } from "@/lib/db/prisma";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
 import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
 import {
@@ -44,6 +46,11 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
   const strategies = await listClubStrategies(actor, { orgUnitId: orgEinheitFilter?.id });
   const selectedStrategyId = query.strategyId?.trim() || null;
 
+  const taskCtx =
+    actor.tenantId && actorUserId
+      ? await buildTaskServiceContextForActor(actorUserId, actor.tenantId)
+      : null;
+
   const [authoring, { targets }, availableMeetings, availableDecisions, allFocusTargetIds, orgUnitOptions] =
     await Promise.all([
       selectedStrategyId
@@ -53,14 +60,7 @@ export default async function StrategieUndZielePage({ searchParams }: PageProps)
       getMeetingLinkOptions(actor),
       getMeetingDecisionLinkOptions(actor),
       listAllFocusTargetIds(actor),
-      actor.tenantId
-        ? prisma.orgUnit.findMany({
-            where: { tenantId: actor.tenantId, status: "ACTIVE" },
-            orderBy: [{ level: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-            select: { id: true, name: true },
-            take: 200,
-          })
-        : Promise.resolve([]),
+      taskCtx ? loadTaskOrgUnitMutationOptions(taskCtx) : Promise.resolve([]),
     ]);
 
   const tenantRow = actor.tenantId
