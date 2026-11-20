@@ -33,8 +33,8 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
   acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
   /** STAGE-backed PR preview — read-only PO UAT (shared STAGE DB; connected-workspace migration applied). */
-  readyPreviewCommit: "f0d9c435e7459f60da96eabe311b5ca0e8370eaa",
-  readyPreviewCommitShort: "f0d9c435e",
+  readyPreviewCommit: "c2d2217fe4835413ef37db1e7ee6e48f6a8f6416",
+  readyPreviewCommitShort: "c2d2217fe",
   readyPreviewDeploymentId: "4t9cc4f5cTEyVzoTwjGCRUH5pGLr",
   readyPreviewHostname:
     "sportclubevo-webapp-stage-git-curs-e07387-mds-projects-462da62c.vercel.app",
