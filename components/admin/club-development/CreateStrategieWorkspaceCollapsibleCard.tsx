@@ -11,12 +11,23 @@ import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwi
 type Props = {
   canCreate: boolean;
   orgUnitOptions: { id: string; name: string }[];
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  hideToolbarTrigger?: boolean;
 };
 
-export default function CreateStrategieWorkspaceCollapsibleCard({ canCreate, orgUnitOptions }: Props) {
+export default function CreateStrategieWorkspaceCollapsibleCard({
+  canCreate,
+  orgUnitOptions,
+  expanded: expandedProp,
+  onExpandedChange,
+  hideToolbarTrigger = false,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [expanded, setExpanded] = useState(false);
+  const [expandedInternal, setExpandedInternal] = useState(false);
+  const expanded = expandedProp ?? expandedInternal;
+  const setExpanded = onExpandedChange ?? setExpandedInternal;
   const [title, setTitle] = useState("");
   const [orgUnitIds, setOrgUnitIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +74,7 @@ export default function CreateStrategieWorkspaceCollapsibleCard({ canCreate, org
   if (!canCreate) return null;
 
   return (
-    <div ref={cardRef} className="flex w-full justify-end">
+    <div ref={cardRef} className="w-full">
         <SceClubDevelopmentContextualCreateCollapsibleShell
           actionLabel="+ Strategie anlegen"
           contextLabel="Strategie"
@@ -72,6 +83,7 @@ export default function CreateStrategieWorkspaceCollapsibleCard({ canCreate, org
           panelDomId="strategien-workspace-create-strategy-panel"
           cardTestId="strategien-workspace-create-strategy-card"
           collapseToggleTestId="strategien-workspace-create-strategy"
+          hideToggle={hideToolbarTrigger}
         >
           <form className="space-y-4" onSubmit={onSubmit}>
             {error ? <ClubDevelopmentFormError message={error} /> : null}

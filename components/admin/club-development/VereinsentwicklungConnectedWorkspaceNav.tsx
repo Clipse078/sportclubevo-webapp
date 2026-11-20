@@ -13,20 +13,16 @@ import {
   CD_CONNECTED_VIEW_LABELS,
 } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import { parseConnectedViewFromLocation } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
-import VereinsentwicklungOrgEinheitFilterChip from "./VereinsentwicklungOrgEinheitFilterChip";
-
 type Props = {
   permissionKeys: string[];
   hasPlanningAccess: boolean;
   activeView?: CdConnectedView;
-  orgEinheitFilterLabel?: string | null;
 };
 
 export default function VereinsentwicklungConnectedWorkspaceNav({
   permissionKeys,
   hasPlanningAccess,
   activeView: activeViewProp,
-  orgEinheitFilterLabel = null,
 }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -73,10 +69,7 @@ export default function VereinsentwicklungConnectedWorkspaceNav({
   if (visibleViews.length <= 1) return null;
 
   return (
-    <div className="mb-6 space-y-3" data-testid="vereinsentwicklung-connected-workspace-nav">
-      {orgEinheitFilterLabel ? (
-        <VereinsentwicklungOrgEinheitFilterChip label={orgEinheitFilterLabel} />
-      ) : null}
+    <div className="mb-4" data-testid="vereinsentwicklung-connected-workspace-nav">
       {pendingView ? (
         <SceInlineDiscardConfirm
           onContinueEditing={() => setPendingView(null)}

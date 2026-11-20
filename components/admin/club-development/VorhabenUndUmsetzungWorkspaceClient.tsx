@@ -70,7 +70,6 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView={connectedActiveView}
-        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
       <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
         {showPrioritaeten && backlogCanView ? (
@@ -91,6 +90,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
             filterTarget={filterTarget}
             showPrioritaetenControl={backlogCanView}
             showPrioritaetenActive={showPrioritaeten && backlogCanView}
+            orgEinheitFilterLabel={orgEinheitFilterLabel}
           />
         )}
       </div>
@@ -100,10 +100,15 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
           initialSnapshot={snapshot}
           initialTargetId={initialTargetId}
           initialInitiativeId={initialInitiativeId}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
         />
       </div>
       <div hidden={activeView !== "umsetzungsphasen"} aria-hidden={activeView !== "umsetzungsphasen"} className="space-y-4">
-        <UmsetzungsplanungWorkspace sprints={sprints} canManageSprints={canManageSprints} />
+        <UmsetzungsplanungWorkspace
+          sprints={sprints}
+          canManageSprints={canManageSprints}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
+        />
       </div>
     </>
   );

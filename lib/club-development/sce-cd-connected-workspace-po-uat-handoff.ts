@@ -80,27 +80,30 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
   };
 }
 
-/** Six PO-owned screenshots (visual baseline — attach to PR #1017 by PO). */
+/**
+ * PO side-by-side checklist (same viewport: Übersicht first, then the four working tabs).
+ * Capture heading, tab strip, workspace toolbar (org chip + filters + primary action), and first list rows or empty state.
+ */
 export const CONNECTED_WORKSPACE_PO_SCREENSHOT_BASELINE = [
-  "01-mega-menu-five-views.png",
-  "02-uebersicht-junioren-filter-tabs.png",
-  "03-strategien-club-row.png",
-  "04-ziele-anlegen-empty.png",
-  "05-aufgaben-target-row.png",
-  "06-umsetzungsplanung-ungeplant-sprint-progress.png",
+  "01-uebersicht-junioren-toolbar.png",
+  "02-strategien-list-toolbar.png",
+  "03-ziele-list-toolbar.png",
+  "04-aufgaben-list-toolbar.png",
+  "05-umsetzungsplanung-phase-groups.png",
+  "06-strategie-detail-ziele-group.png",
+  "07-ziel-detail-aufgaben-group.png",
+  "08-umsetzungsphase-menu-bearbeiten.png",
 ] as const;
 
 /** Ordered screenshot checklist for PO manual UAT (no automation). */
 export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
-  "1. Login as Acceptance Alpha Club Admin on https://acceptance.sportclubevo.com (Vercel Deployment Protection, then club-admin-alpha@acceptance.sportclubevo.com).",
-  "2. Verein → Vereinsentwicklung: capture mega-menu — five entries (Übersicht, Strategien, Ziele, Aufgaben, Umsetzungsplanung) with matching tab strip.",
-  "3. Übersicht with orgEinheit filter → switch through all five tabs; confirm filter carries.",
-  "4. Strategien: confirm club-wide strategy row (title PO UAT #1017) shows linked Schwerpunkt-Ziel.",
-  "5. Ziele → open fixture Ziel → inline «Aufgabe erstellen»; save new Aufgabe (PO-created).",
-  "6. Aufgaben view: confirm new Aufgabe listed.",
-  "7. Umsetzungsplanung → Ungeplant section: confirm Aufgabe appears unplanned.",
-  "8. Schedule Aufgabe into fixture sprint «po-uat-vereinsentwicklung-planung» from board/planning UI.",
-  "9. Sprint board: mark Aufgabe Erledigt; capture status change.",
-  "10. Return to Ziel detail + Übersicht: capture progress / rollup labels updated.",
-  "11. Strategien tab: capture delivery progress panel reflects completed task leaf.",
+  "1. STAGE PR preview (read-only UAT): set desktop width + zoom on Übersicht first; apply orgEinheit=Junioren (cmslki2q4000104l87hu4qqbs).",
+  "2. Capture Übersicht — page chrome, five tabs, toolbar with Junioren chip only.",
+  "3. Without changing width/zoom, capture Strategien — toolbar «+ Strategie anlegen», column headers, first strategy row (label blocked if no rows).",
+  "4. Capture Ziele — toolbar «+ Ziel anlegen», compact list or empty state.",
+  "5. Capture Aufgaben — toolbar search/filters, «+ Aufgabe erstellen», task table or differentiated empty state.",
+  "6. Capture Umsetzungsplanung — single search, «+ Umsetzungsphase erstellen», phase group headers + Ungeplant.",
+  "7. Open strategy by title: capture Ziele group with create/link (blocked if no strategy).",
+  "8. Open Ziel detail: capture Aufgaben group with create/link.",
+  "9. Umsetzungsphase «…» → «Umsetzungsphase bearbeiten» (blocked if no phase).",
 ] as const;

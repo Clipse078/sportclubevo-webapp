@@ -131,6 +131,7 @@ export type ClubStrategyListItemDto = {
   orgUnitLabels: string[];
   responsibleLabel: string | null;
   focusTargetCount: number;
+  focusTargetIds: string[];
   deliveryProgressPercent: number;
   deliveryProgressCaption: string;
 };
@@ -231,6 +232,7 @@ export async function listClubStrategies(
       orgUnitLabels,
       responsibleLabel: row.responsibleLabel,
       focusTargetCount: row._count.focusTargets,
+      focusTargetIds: focusIds,
       deliveryProgressPercent: delivery.percent,
       deliveryProgressCaption: formatProgressCountLabel(delivery),
     });

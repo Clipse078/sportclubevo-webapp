@@ -1,6 +1,7 @@
 "use client";
 
 import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
+import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import ClubDevelopmentOverview, {
   type ClubDevelopmentOverviewKpis,
 } from "./ClubDevelopmentOverview";
@@ -26,8 +27,8 @@ export default function ClubDevelopmentOverviewPageClient(props: Props) {
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView="uebersicht"
-        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
+      <VereinsentwicklungWorkspaceToolbar orgEinheitFilterLabel={orgEinheitFilterLabel} />
       <ClubDevelopmentOverview {...overviewProps} />
     </>
   );

@@ -13,8 +13,9 @@ import VorhabenWorkspaceCardList from "./VorhabenWorkspaceCardList";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
-import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
+import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
+import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
 import { Badge } from "@/components/ui";
 import CreateInitiativeWorkspaceCollapsibleCard from "@/components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard";
 import VorhabenWorkspaceToolbar from "./VorhabenWorkspaceToolbar";
@@ -40,6 +41,7 @@ type Props = {
   filterTarget?: FilterTarget | null;
   showPrioritaetenControl?: boolean;
   showPrioritaetenActive?: boolean;
+  orgEinheitFilterLabel?: string | null;
 };
 
 const INITIATIVE_STATUS_LABELS: Record<InitiativeStatus, string> = {
@@ -66,6 +68,7 @@ export default function VorhabenAufgabenWorkspace({
   filterTarget = null,
   showPrioritaetenControl = false,
   showPrioritaetenActive = false,
+  orgEinheitFilterLabel = null,
 }: Props) {
   const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
@@ -135,6 +138,27 @@ export default function VorhabenAufgabenWorkspace({
   const showRestricted = Boolean(snapshot.restrictedReason);
   const tasksEmpty = snapshot.tasks.length === 0;
   const initiativesEmpty = snapshot.initiatives.length === 0;
+  const hasActiveTaskFilters = Boolean(
+    search.trim() || initiativeId || taskStatus || targetIdFilter || initiativeStatus,
+  );
+
+  const clearFilters = () => {
+    setSearch("");
+    setInitiativeId("");
+    setInitiativeStatus("");
+    setTaskStatus("");
+  };
+
+  const aufgabenPrimaryAction =
+    snapshot.canManageTasks && !isVorhabenView ? (
+      <Link
+        href="/dashboard/aufgaben/neu"
+        className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
+        data-testid="aufgaben-toolbar-create"
+      >
+        {CD_VORHABEN_WORKSPACE_COPY.createTaskAction}
+      </Link>
+    ) : null;
 
   const filterBar = (
     <>
@@ -145,6 +169,7 @@ export default function VorhabenAufgabenWorkspace({
         onSecondaryFiltersToggle={() => setSecondaryFiltersOpen((open) => !open)}
         showPrioritaetenControl={isVorhabenView && showPrioritaetenControl}
         prioritaetenActive={showPrioritaetenActive}
+        embedded={!isVorhabenView}
         searchPlaceholder={
           isVorhabenView
             ? CD_VORHABEN_WORKSPACE_COPY.searchPlaceholder
@@ -226,6 +251,17 @@ export default function VorhabenAufgabenWorkspace({
         </div>
       ) : null}
 
+      {isVorhabenView ? (
+        <VereinsentwicklungWorkspaceToolbar orgEinheitFilterLabel={orgEinheitFilterLabel} testId="vorhaben-workspace-toolbar" />
+      ) : (
+        <VereinsentwicklungWorkspaceToolbar
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
+          filters={filterBar}
+          primaryAction={aufgabenPrimaryAction}
+          testId="aufgaben-workspace-toolbar"
+        />
+      )}
+
       {/* data-sce-contextual-create-flow="inline-collapsible" — CreateInitiativeWorkspaceCollapsibleCard */}
       {isVorhabenView && snapshot.canManageInitiatives ? (
         <CreateInitiativeWorkspaceCollapsibleCard
@@ -236,7 +272,7 @@ export default function VorhabenAufgabenWorkspace({
       ) : null}
 
       <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
-        {filterBar}
+        {isVorhabenView ? filterBar : null}
 
         {selectedInitiative && !isVorhabenView ? (
           <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
@@ -272,23 +308,54 @@ export default function VorhabenAufgabenWorkspace({
             )}
           </section>
         ) : (
-          <SceClubDevelopmentSectionShell
-            title={CD_VORHABEN_WORKSPACE_COPY.tasksHeading}
-            href="/dashboard/aufgaben"
-            linkLabel="Gesamt-Inbox"
-            bodyClassName="px-5 py-3"
-          >
+          <section aria-labelledby="aufgaben-workspace-heading" className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p id="aufgaben-workspace-heading" className="text-sm text-[var(--text-2)]">
+                {CD_VORHABEN_WORKSPACE_COPY.tasksSubheading}
+              </p>
+              <Link
+                href="/dashboard/aufgaben"
+                className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
+              >
+                Gesamt-Inbox
+              </Link>
+            </div>
             {!snapshot.canViewTasks ? (
               <p className="text-sm text-[var(--muted)]">{CD_VORHABEN_WORKSPACE_COPY.noTaskAccess}</p>
             ) : tasksEmpty ? (
-              <SceClubDevelopmentEmptyState message={CD_VORHABEN_WORKSPACE_COPY.emptyTasks} />
+              <SceClubDevelopmentEmptyState
+                testId="aufgaben-workspace-empty"
+                message={
+                  hasActiveTaskFilters
+                    ? CD_VORHABEN_WORKSPACE_COPY.emptyTasks
+                    : CD_VORHABEN_WORKSPACE_COPY.emptyTasksUnfiltered
+                }
+                action={
+                  hasActiveTaskFilters ? (
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                      onClick={clearFilters}
+                    >
+                      {CD_VORHABEN_WORKSPACE_COPY.clearFiltersAction}
+                    </button>
+                  ) : snapshot.canManageTasks ? (
+                    <Link
+                      href="/dashboard/aufgaben/neu"
+                      className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                    >
+                      {CD_VORHABEN_WORKSPACE_COPY.createTaskAction}
+                    </Link>
+                  ) : null
+                }
+              />
             ) : (
               <VereinsentwicklungConnectedTaskTable
                 rows={snapshot.tasks.map(mapVorhabenTaskRowToTableModel)}
                 testId="vereinsentwicklung-aufgaben-task-table"
               />
             )}
-          </SceClubDevelopmentSectionShell>
+          </section>
         )}
       </div>
     </div>

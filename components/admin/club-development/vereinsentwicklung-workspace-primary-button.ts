@@ -1,0 +1,2 @@
+export const VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS =
+  "inline-flex items-center justify-center rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-sm font-medium text-white hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] disabled:opacity-60";

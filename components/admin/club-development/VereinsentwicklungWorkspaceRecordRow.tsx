@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 export type VereinsentwicklungWorkspaceRecordRowProps = {
   title: string;
   titleHref?: string;
+  strategyLabel?: string | null;
   responsibleLabel?: string | null;
   orgUnitLabel?: string | null;
   progressPercent?: number | null;
@@ -17,6 +18,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps = {
 export default function VereinsentwicklungWorkspaceRecordRow({
   title,
   titleHref,
+  strategyLabel,
   responsibleLabel,
   orgUnitLabel,
   progressPercent,
@@ -39,12 +41,20 @@ export default function VereinsentwicklungWorkspaceRecordRow({
       className={cn(
         "grid gap-3 rounded-lg border border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
         "bg-[color-mix(in_srgb,var(--surface)_96%,transparent)] px-3 py-2.5",
-        "sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.7fr))_auto]",
+        strategyLabel !== undefined
+          ? "sm:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.65fr))]"
+          : "sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.7fr))_auto]",
         "sm:items-center",
       )}
       data-testid={testId}
     >
       <div className="min-w-0">{titleNode}</div>
+      {strategyLabel !== undefined ? (
+        <div className="text-xs text-[var(--text-2)]">
+          <span className="sr-only">Strategie: </span>
+          {strategyLabel?.trim() || "—"}
+        </div>
+      ) : null}
       <div className="text-xs text-[var(--text-2)]">
         <span className="sr-only">Verantwortlich: </span>
         {responsibleLabel?.trim() || "—"}

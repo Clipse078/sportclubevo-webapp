@@ -18,6 +18,8 @@ type Props = {
   onAssigned?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When set, hides the panel search field and filters from the workspace toolbar query. */
+  searchQuery?: string;
 };
 
 function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
@@ -43,9 +45,11 @@ export default function UmsetzungsplanungUnplannedPanel({
   onAssigned,
   open,
   onOpenChange,
+  searchQuery,
 }: Props) {
   const [catalog, setCatalog] = useState<SprintPlanningCatalogDto | null>(null);
   const [search, setSearch] = useState("");
+  const effectiveSearch = searchQuery ?? search;
   const [serverSearch, setServerSearch] = useState("");
   const [defaultPhaseId, setDefaultPhaseId] = useState(() => phaseOptions[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -78,9 +82,9 @@ export default function UmsetzungsplanungUnplannedPanel({
 
   useEffect(() => {
     if (!open) return;
-    const handle = window.setTimeout(() => setServerSearch(search), 300);
+    const handle = window.setTimeout(() => setServerSearch(effectiveSearch), 300);
     return () => window.clearTimeout(handle);
-  }, [open, search]);
+  }, [open, effectiveSearch]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,7 +95,7 @@ export default function UmsetzungsplanungUnplannedPanel({
 
   const filteredTasks = useMemo(() => {
     if (!catalog) return [] as SprintPlanningTaskDto[];
-    const q = search.trim().toLowerCase();
+    const q = effectiveSearch.trim().toLowerCase();
     return flattenCatalogTasks(catalog).filter((task) => {
       if (!q) return true;
       return (
@@ -100,7 +104,7 @@ export default function UmsetzungsplanungUnplannedPanel({
         (task.strategyTitle?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [catalog, search]);
+  }, [catalog, effectiveSearch]);
 
   const tableRows = useMemo(
     () => filteredTasks.map(mapPlanningTaskToTableModel),
@@ -145,16 +149,18 @@ export default function UmsetzungsplanungUnplannedPanel({
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-end gap-3 px-1">
-          <label className="min-w-[12rem] flex-1 text-sm">
-            <span className="mb-1 block text-xs text-[var(--muted)]">Aufgaben suchen …</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Aufgaben suchen …"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-              disabled={disabled}
-            />
-          </label>
+          {searchQuery === undefined ? (
+            <label className="min-w-[12rem] flex-1 text-sm">
+              <span className="mb-1 block text-xs text-[var(--muted)]">Aufgaben suchen …</span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Aufgaben suchen …"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                disabled={disabled}
+              />
+            </label>
+          ) : null}
           {phaseOptions.length > 0 ? (
             <label className="min-w-[12rem] flex-1 text-sm">
               <span className="mb-1 block text-xs text-[var(--muted)]">

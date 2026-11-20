@@ -53,7 +53,6 @@ export default function StrategieUndZieleWorkspaceClient({
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView={activeView === "ziele" ? "ziele" : "strategien"}
-        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
 
       <div hidden={activeView !== "strategie"} aria-hidden={activeView !== "strategie"} className="space-y-4">
@@ -62,6 +61,7 @@ export default function StrategieUndZieleWorkspaceClient({
           selectedStrategyId={selectedStrategyId}
           canManage={canManageTargets}
           orgUnitOptions={orgUnitOptions}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
         />
         {selectedStrategyId ? (
           authoring ? (
@@ -82,8 +82,10 @@ export default function StrategieUndZieleWorkspaceClient({
       <div hidden={activeView !== "ziele"} aria-hidden={activeView !== "ziele"}>
         <ZieleWorkspacePanel
           targets={targets}
+          strategies={strategies}
           focusTargetIds={focusSet}
           canManageTargets={canManageTargets}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
         />
       </div>
     </SceContextDirtyGuardProvider>

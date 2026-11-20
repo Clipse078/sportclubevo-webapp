@@ -119,9 +119,12 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   focusInitiative: "Fokus:",
   initiativesHeading: "Vorhaben",
   tasksHeading: "Zugehörige Aufgaben",
-  tasksSubheading: "Aufgaben",
+  tasksSubheading: "Überblick über Aufgaben mit Bezug zu Zielen und Strategien.",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  emptyTasksUnfiltered: "Noch keine Aufgaben sichtbar.",
+  clearFiltersAction: "Filter zurücksetzen",
+  createTaskAction: "+ Aufgabe erstellen",
   rootTasksTruncationNotice: (shown: number, total: number) =>
     `Es werden ${shown} von ${total} übergeordneten Aufgaben angezeigt.`,
   allRootTasksAction: "Alle übergeordneten Aufgaben anzeigen",

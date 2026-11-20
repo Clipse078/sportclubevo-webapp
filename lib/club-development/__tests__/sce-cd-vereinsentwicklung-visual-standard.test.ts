@@ -25,6 +25,18 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.surfaceStyles,
     );
+    expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
+      "aufgaben-workspace-toolbar",
+    );
   });
 
   it("uses single Vorhaben & Umsetzung page subtitle without duplicate workspace intro", () => {
