@@ -2,12 +2,11 @@
 
 export const CD_STRATEGY_PROGRESS_COPY = {
   outcomeLabel: "Zielerreichung (Erwartetes Ergebnis)",
-  deliveryLabel: "Umsetzungsfortschritt (Vorhaben)",
+  deliveryLabel: "Umsetzungsfortschritt (Aufgaben)",
   outcomeUnknownNoMetrics: "Keine Kennzahlen — Zielerreichung nicht berechenbar.",
   outcomeUnknownNotComputable: "Kennzahlen ohne auswertbaren Zielwert.",
-  deliveryUnknownNoInitiatives: "Keine verknüpften Vorhaben.",
-  deliveryUnknownNoEligibleTasks:
-    "Verknüpfte Vorhaben ohne auswertbare Aufgaben — Umsetzungsfortschritt unbekannt.",
+  deliveryUnknownNoInitiatives: "Noch keine Aufgaben.",
+  deliveryUnknownNoEligibleTasks: "Noch keine auswertbaren Aufgaben.",
   progressOverviewVsFocus:
     "Die Fortschrittsübersicht zeigt alle sichtbaren Ziele. Schwerpunkte oben sind die strategisch verknüpften Ziele.",
   progressOverviewVsFocusWhenEmpty:

@@ -108,13 +108,13 @@ describe("PKG-06 UX consistency (Vorhaben + Umsetzungsphasen)", () => {
     expect(
       pathnameMatchesVereinsentwicklungNavHref(
         "/vereinsleitung/sprints/demo-phase/board",
-        "/vereinsleitung/vorhaben-und-umsetzung",
+        "/vereinsleitung/vorhaben-und-umsetzung?ansicht=umsetzungsphasen",
       ),
     ).toBe(true);
     expect(
       isNavigationHrefActive(
         "/vereinsleitung/sprints/demo-phase/rueckblick",
-        "/vereinsleitung/vorhaben-und-umsetzung",
+        "/vereinsleitung/vorhaben-und-umsetzung?ansicht=umsetzungsphasen",
       ),
     ).toBe(true);
   });

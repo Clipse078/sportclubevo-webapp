@@ -3,6 +3,21 @@
  * Presentation labels only; routes, enums and API keys stay unchanged.
  */
 
+/** Connected Vereinsentwicklung — per-tab page descriptions (ListPagePattern). */
+export const CD_CONNECTED_WORKSPACE_VIEW_COPY = {
+  uebersicht:
+    "Mitgliederentwicklung, Ziele und nächste Schritte im Überblick.",
+  aufgaben: "Aufgaben zu Zielen und Strategien verwalten.",
+  umsetzungsplanung: "Aufgaben priorisieren und in Umsetzungsphasen einplanen.",
+} as const;
+
+/** Leadership Übersicht dashboard section chrome. */
+export const CD_LEADERSHIP_DASHBOARD_COPY = {
+  umsetzungProgressLabel: "Umsetzungsfortschritt",
+  openPersonsAction: "Personen öffnen",
+  personsListHref: "/dashboard/persons",
+} as const;
+
 export const CD_NAV_COPY = {
   initiativeBacklog: "Vorhaben & Prioritäten",
   implementationPlanning: "Umsetzungsplanung",
@@ -85,7 +100,7 @@ export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
   ongoingSection: "Laufende Umsetzungsphase",
   futureSection: "Geplante Umsetzungsphasen",
   completedSection: "Abgeschlossene Umsetzungsphasen",
-  unplannedSection: "Noch nicht eingeplante Aufgaben",
+  unplannedSection: "Ungeplant",
   unplannedSummary: "Übergeordnete Aufgaben ohne Zuordnung zu einer geplanten oder laufenden Phase.",
   noActivePhase: "Keine laufende Umsetzungsphase.",
   noFuturePhases: "Keine geplanten Umsetzungsphasen.",
@@ -99,25 +114,42 @@ export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
   assignToPhaseAction: "Zur Umsetzungsphase hinzufügen",
   choosePhaseTarget: "Ziel-Umsetzungsphase",
   assignSelectedAction: "Auswahl zuordnen",
+  einplanenAction: "Einplanen",
+  einplanenSuccess: "Aufgabe eingeplant.",
+  unplannedReorderSaved: "Reihenfolge gespeichert.",
+  unplannedReorderFailed: "Reihenfolge konnte nicht gespeichert werden.",
+  unplannedReorderFilteredHint:
+    "Priorität ändern ist bei aktiver Suche oder Filterung nicht verfügbar — alle ungeplanten Aufgaben müssen sichtbar sein.",
+  unplannedDropReturnHint: "Aufgabe hier ablegen, um die Zuordnung zur Umsetzungsphase zu entfernen.",
+  phaseDropHintPrefix: "Aufgabe hier ablegen, um sie in",
+  taskMoveUpAction: "Nach oben",
+  taskMoveDownAction: "Nach unten",
+  taskReturnUnplannedAction: "Zurück zu Ungeplant",
+  taskReturnedUnplannedInfo: "Aufgabe wieder in Ungeplant.",
   expandUnplannedAction: "Ungeplante Aufgaben anzeigen",
   planningDetailLink: "Zur Planung",
   assignedTasksSection: "Zugeordnete Aufgaben",
   assignedTasksLoading: "Aufgaben werden geladen …",
   noAssignedTasks: "Noch keine Aufgaben dieser Umsetzungsphase zugeordnet.",
+  phaseEditAction: "Umsetzungsphase bearbeiten",
 } as const;
 
 /** PKG-02 — CD-WORK Vorhaben & Aufgaben workspace copy. */
 export const CD_VORHABEN_WORKSPACE_COPY = {
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
   searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
+  tasksSearchPlaceholder: "Aufgaben suchen …",
   allInitiatives: "Alle sichtbaren Vorhaben",
   anyOpenTaskStatus: "Aktive Aufgaben (ohne Abbruch)",
   focusInitiative: "Fokus:",
   initiativesHeading: "Vorhaben",
   tasksHeading: "Zugehörige Aufgaben",
-  tasksSubheading: "Aufgaben",
+  tasksSubheading: "Zugehörige Aufgaben zu den gelisteten Vorhaben.",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
+  emptyTasksUnfiltered: "Noch keine Aufgaben sichtbar.",
+  clearFiltersAction: "Filter zurücksetzen",
+  createTaskAction: "+ Aufgabe erstellen",
   rootTasksTruncationNotice: (shown: number, total: number) =>
     `Es werden ${shown} von ${total} übergeordneten Aufgaben angezeigt.`,
   allRootTasksAction: "Alle übergeordneten Aufgaben anzeigen",
@@ -266,6 +298,8 @@ export const CD_TARGET_COPY = {
     "Vorhaben wurde erstellt, die Verknüpfung zum Ziel ist jedoch fehlgeschlagen.",
   preselectedTargetLabel: "Verknüpftes Ziel",
   createTargetAndLinkSchwerpunkt: "Ziel erstellen & verknüpfen",
+  linkExistingTargetToStrategy: "Bestehendes Ziel verknüpfen",
+  createTargetInStrategy: "+ Ziel anlegen",
   targetCreatedFocusLinkFailed:
     "Ziel wurde erstellt, die Verknüpfung als Schwerpunkt ist jedoch fehlgeschlagen.",
   focusLinkRetry: "Schwerpunkt-Verknüpfung erneut versuchen",
@@ -278,6 +312,10 @@ export const CD_TARGET_COPY = {
   meetingsEditorHint:
     "Verknüpfe relevante Sitzungen, in denen dieses Ziel besprochen wurde.",
   unlinkInitiativeAction: "Entfernen",
+  aufgabenSectionHeading: "Aufgaben",
+  aufgabenEmpty: "Noch keine Aufgaben",
+  createTaskAfterZielAction: "Jetzt Aufgabe erstellen",
+  createdByLabel: "Erstellt von",
 } as const;
 
 export function isSprintWorkspaceReturnPath(returnTo: string | null): boolean {

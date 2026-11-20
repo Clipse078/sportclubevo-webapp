@@ -15,6 +15,9 @@ type Props = {
   disabled?: boolean;
   form?: string;
   omitHiddenField?: boolean;
+  authContext?: "TASK_ASSIGNMENT" | "CLUB_REFERENCE";
+  placeholder?: string;
+  testIdPrefix?: string;
 };
 
 export default function TaskOrgUnitMultiPicker({
@@ -25,6 +28,9 @@ export default function TaskOrgUnitMultiPicker({
   disabled = false,
   form,
   omitHiddenField = false,
+  authContext = "TASK_ASSIGNMENT",
+  placeholder = "Organisationseinheit suchen …",
+  testIdPrefix = "task-org-unit-multi-picker",
 }: Props) {
   const byId = useMemo(() => new Map(options.map((o) => [o.id, o])), [options]);
   const [addedKnown, setAddedKnown] = useState<Record<string, SceInlineOrgUnitChip>>({});
@@ -63,9 +69,9 @@ export default function TaskOrgUnitMultiPicker({
       knownById={knownById}
       disabled={disabled}
       allowAdd
-      authContext="TASK_ASSIGNMENT"
-      placeholder="Organisationseinheit suchen …"
-      testIdPrefix="task-org-unit-multi-picker"
+      authContext={authContext}
+      placeholder={placeholder}
+      testIdPrefix={testIdPrefix}
     />
   );
 }

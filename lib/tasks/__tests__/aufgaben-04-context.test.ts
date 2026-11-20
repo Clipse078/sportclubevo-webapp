@@ -13,6 +13,8 @@ import type { TaskServiceContext } from "../types";
 const prismaMocks = vi.hoisted(() => ({
   eventFindMany: vi.fn(),
   teamFindFirst: vi.fn(),
+  targetFindMany: vi.fn(),
+  clubStrategyFocusTargetFindMany: vi.fn(),
   tenantFindUnique: vi.fn(),
   loadOrgUnitIds: vi.fn(),
   loadTargetGroupIds: vi.fn(),
@@ -26,6 +28,8 @@ vi.mock("@/lib/db/prisma", () => ({
     registration: { findFirst: vi.fn(), findMany: vi.fn() },
     team: { findFirst: prismaMocks.teamFindFirst, findMany: vi.fn() },
     person: { findFirst: vi.fn(), findMany: vi.fn() },
+    target: { findMany: prismaMocks.targetFindMany },
+    clubStrategyFocusTarget: { findMany: prismaMocks.clubStrategyFocusTargetFindMany },
     workspaceDocument: { findFirst: vi.fn(), findMany: vi.fn() },
     tenant: { findUnique: prismaMocks.tenantFindUnique },
   },
@@ -117,6 +121,41 @@ describe("AUFGABEN-04 batch resolution", () => {
     expect(row?.title).toBe("FC Allschwil – FC Basel");
     expect(row?.href).toBe("/dashboard/matchcenter/match-1");
     expect(row?.compactSecondary).toContain("Spiel");
+  });
+
+  it("resolves TARGET label, href, and linked Strategie subtitle", async () => {
+    prismaMocks.targetFindMany.mockResolvedValue([
+      {
+        id: "target-1",
+        title: "Testziel I",
+        visibilityScope: "ORGANISATION",
+        createdByUserId: "user-1",
+        visibleRoleRefs: [],
+        visibleUserRefs: [],
+        visibleTeamRefs: [],
+        visibleOrgUnitRefs: [],
+        visiblePersonRefs: [],
+        visibleTargetGroupRefs: [],
+      },
+    ]);
+    prismaMocks.clubStrategyFocusTargetFindMany.mockResolvedValue([
+      {
+        targetId: "target-1",
+        clubStrategy: { id: "strategy-1", title: "Junioren Strategie", scopeOrgUnitId: null, scopeType: "CLUB" },
+      },
+    ]);
+
+    const map = await resolveTaskContextsBatch(
+      ctx([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TARGETS_VIEW]),
+      [{ contextType: "TARGET", contextId: "target-1" }],
+      "de-CH",
+      "Europe/Zurich",
+    );
+
+    const row = map.get("TARGET:target-1");
+    expect(row?.title).toBe("Testziel I");
+    expect(row?.href).toBe("/vereinsleitung/targets/target-1");
+    expect(row?.subtitle).toContain("Junioren Strategie");
   });
 
   it("D — missing target is unavailable without crashing", async () => {

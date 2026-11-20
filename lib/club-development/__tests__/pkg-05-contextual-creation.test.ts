@@ -55,11 +55,12 @@ describe("PKG-05 contextual creation (Ziel ↔ Vorhaben, Strategie ↔ Ziel)", (
     vi.clearAllMocks();
   });
 
-  it("exposes Vorhaben contextual actions on Ziel detail and edit", () => {
+  it("exposes Vorhaben contextual actions on Ziel edit only (not detail)", () => {
     const detail = read("app/(admin)/vereinsleitung/targets/[id]/page.tsx");
     const edit = read("app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx");
     const section = read("components/admin/targets/TargetInitiativeLinksSection.tsx");
-    expect(detail).toContain("TargetInitiativeLinksSection");
+    expect(detail).not.toContain("TargetInitiativeLinksSection");
+    expect(detail).toContain("TargetTasksSection");
     expect(edit).toContain("TargetInitiativeLinksSection");
     const card = read("components/admin/initiatives/CreateInitiativeContextualCollapsibleCard.tsx");
     expect(card).toContain("CD_INITIATIVE_COPY.createAction");

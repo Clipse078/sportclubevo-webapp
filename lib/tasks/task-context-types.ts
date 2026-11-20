@@ -12,6 +12,7 @@ export const SUPPORTED_TASK_CONTEXT_TYPES = [
   "MEETING",
   "MEETING_DECISION",
   "INITIATIVE",
+  "TARGET",
   "REGISTRATION",
   "TEAM",
   "PERSON",
@@ -49,6 +50,8 @@ export function operationalReadPermissionForContext(
       return PERMISSIONS.MEETINGS_VIEW;
     case "INITIATIVE":
       return PERMISSIONS.INITIATIVES_VIEW;
+    case "TARGET":
+      return PERMISSIONS.TARGETS_VIEW;
     case "REGISTRATION":
       return PERMISSIONS.REGISTRATIONS_VIEW;
     case "TEAM":
@@ -93,6 +96,8 @@ export function buildOperationalContextHref(
       return entity.slug
         ? `/vereinsleitung/initiativen/${encodeURIComponent(entity.slug)}`
         : null;
+    case "TARGET":
+      return `/vereinsleitung/targets/${encodeURIComponent(entity.id)}`;
     case "TEAM":
       return `/dashboard/teams/${encodeURIComponent(entity.id)}`;
     case "PERSON":

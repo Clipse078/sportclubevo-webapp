@@ -102,13 +102,21 @@ describe("Umsetzungsplanung workspace", () => {
     expect(client).not.toContain("DevelopmentSprintList");
     const workspace = read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx");
     expect(workspace).toContain("UmsetzungsplanungCollapsibleSection");
+    expect(workspace).toContain("UMSETZUNGSPLANUNG_SECTION_ACCENTS");
+    expect(workspace).toContain("umsetzungsplanung-ongoing-badge");
     expect(workspace).toContain("UmsetzungsplanungUnplannedPanel");
+    const unplanned = read("components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx");
+    expect(unplanned).toContain("VereinsentwicklungConnectedTaskTable");
+    expect(unplanned).toContain("einplanenAction");
+    expect(unplanned).toContain("showReorderHandle");
+    expect(unplanned).toContain("unplanned-order");
+    expect(workspace).toContain("UmsetzungsplanungDragProvider");
     expect(workspace).not.toContain("Dialog");
     expect(workspace).not.toContain("SceClubDevelopmentEmptyState");
   });
 
   it("keeps dedicated Aufgabenboard deep link on phase cards", () => {
-    expect(read("components/admin/club-development/UmsetzungsplanungPhaseCard.tsx")).toContain("SprintBoardQuickLink");
+    expect(read("components/admin/club-development/UmsetzungsplanungPhaseCard.tsx")).toContain("Board öffnen");
     expect(read("lib/club-development/product-copy.ts")).toContain("CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY");
   });
 
@@ -117,11 +125,11 @@ describe("Umsetzungsplanung workspace", () => {
     expect(phaseCard).toContain("UmsetzungsplanungPhaseAssignedTasksPanel");
     const panel = read("components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx");
     expect(panel).toContain("/api/club-development/sprints/");
-    expect(panel).toContain("SprintTaskTitleLink");
-    expect(panel).toContain("SprintTaskAssigneeDisplay");
+    expect(panel).toContain("VereinsentwicklungConnectedTaskTable");
     expect(panel).toContain("removeAssignmentAction");
     expect(panel).toContain("moveSelectedTasksAction");
-    expect(panel).toContain("groupAssignedSprintBoardCards");
+    expect(panel).toContain("von");
+    expect(panel).toContain("Aufgaben erledigt");
   });
 
   it("exposes Phase erstellen beside planned empty state", () => {

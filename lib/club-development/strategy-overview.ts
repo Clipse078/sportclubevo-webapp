@@ -7,12 +7,16 @@ import {
   buildVisibilityWhere,
   canSeeEntity,
 } from "@/lib/visibility/visibility-filter";
-import { computeInitiativeProgressSnapshot } from "./initiative-progress";
 import { computeTargetOutcomePercent } from "./target-outcome-progress";
 import {
-  describeDeliveryProgressUnknown,
   describeOutcomeProgressUnknown,
 } from "./strategy-progress-presentation";
+import {
+  computeTargetDeliveryProgress,
+  formatProgressCountLabel,
+} from "./vereinsentwicklung-workspace-progress";
+import { resolveStrategyTitle } from "./club-strategy-service";
+import { resolveTargetAssigneeLabelsById } from "./vereinsentwicklung-target-responsible-display";
 
 type JsonInitiativeRef = { slug?: string; title?: string };
 
@@ -21,13 +25,37 @@ function parseLinkedInitiativeRefs(raw: unknown): JsonInitiativeRef[] {
   return raw.filter((item) => item && typeof item === "object") as JsonInitiativeRef[];
 }
 
+type JsonOrgRef = { id?: string; title?: string; name?: string };
+
+function firstOrgUnitLabelFromVisibilityRefs(raw: unknown): string | null {
+  if (!Array.isArray(raw)) return null;
+  for (const item of raw) {
+    if (item && typeof item === "object") {
+      const label = (item as JsonOrgRef).title ?? (item as JsonOrgRef).name;
+      if (typeof label === "string" && label.trim()) return label.trim();
+    }
+  }
+  return null;
+}
+
+function formatOrgUnitLabels(labels: string[]): string | null {
+  if (labels.length === 0) return null;
+  if (labels.length <= 2) return labels.join(", ");
+  return `${labels.slice(0, 2).join(", ")} +${labels.length - 2}`;
+}
+
 export type StrategyTargetOverview = {
   id: string;
   title: string;
   status: string;
+  responsibleLabel: string | null;
+  orgUnitLabel: string | null;
   outcomeProgressPercent: number | null;
   linkedInitiativeCount: number;
   deliveryProgressPercent: number | null;
+  deliveryProgressCaption: string;
+  linkedClubStrategyId: string | null;
+  linkedClubStrategyTitle: string | null;
   outcomeProgressUnknownReason: string | null;
   deliveryProgressUnknownReason: string | null;
   metrics: {
@@ -104,6 +132,60 @@ export async function loadStrategyOverview(
     }),
   ]);
 
+  const [focusLinks, orgUnits] = await Promise.all([
+    prisma.clubStrategyFocusTarget.findMany({
+      where: { tenantId },
+      select: {
+        targetId: true,
+        clubStrategy: {
+          select: {
+            id: true,
+            title: true,
+            scopeType: true,
+            scopeOrgUnitId: true,
+            orgUnitAssignments: { select: { orgUnitId: true } },
+          },
+        },
+      },
+    }),
+    prisma.orgUnit.findMany({
+      where: { tenantId, status: "ACTIVE" },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  const orgUnitNameById = new Map(orgUnits.map((row) => [row.id, row.name]));
+  const assigneeLabelByTargetId = resolveTargetAssigneeLabelsById(targetRows);
+
+  const focusMetaByTargetId = new Map<
+    string,
+    {
+      orgUnitLabel: string | null;
+      linkedClubStrategyId: string;
+      linkedClubStrategyTitle: string;
+    }
+  >();
+  for (const link of focusLinks) {
+    const strategy = link.clubStrategy;
+    const orgIds = [
+      ...strategy.orgUnitAssignments.map((row) => row.orgUnitId),
+      ...(strategy.scopeOrgUnitId ? [strategy.scopeOrgUnitId] : []),
+    ].filter((id, index, arr) => arr.indexOf(id) === index);
+    const orgLabels = orgIds
+      .map((id) => orgUnitNameById.get(id) ?? null)
+      .filter((label): label is string => Boolean(label));
+    const orgUnitLabel =
+      strategy.scopeType === "CLUB" && orgLabels.length === 0
+        ? "Gesamtverein"
+        : formatOrgUnitLabels(orgLabels);
+    const strategyOrgLabels = orgLabels.length > 0 ? orgLabels : orgUnitLabel ? [orgUnitLabel] : [];
+    focusMetaByTargetId.set(link.targetId, {
+      orgUnitLabel,
+      linkedClubStrategyId: strategy.id,
+      linkedClubStrategyTitle: resolveStrategyTitle(strategy.title, strategy.scopeType, strategyOrgLabels),
+    });
+  }
+
   const visibleTargets = applyVisibilityFilter(targetRows, actor);
   const visibleInitiatives = applyVisibilityFilter(initiatives, actor);
   const visibleInitiativeIds = new Set(visibleInitiatives.map((i) => i.id));
@@ -130,37 +212,32 @@ export async function loadStrategyOverview(
       }
     }
 
-    let deliveryTotal = 0;
-    let deliverySum = 0;
-    let deliveryCount = 0;
-    for (const initiativeId of initiativeIds) {
-      const snap = await computeInitiativeProgressSnapshot(tenantId, initiativeId);
-      if (snap.eligibleCount > 0) {
-        deliverySum += snap.progress;
-        deliveryCount += 1;
-      }
-      deliveryTotal += 1;
-    }
+    const delivery = await computeTargetDeliveryProgress(actor, target.id);
+    const deliveryProgressCaption = formatProgressCountLabel(delivery);
+    const deliveryProgressPercent =
+      delivery.totalCount > 0 ? delivery.percent : delivery.totalCount === 0 ? 0 : null;
 
     const outcomeProgressPercent = computeTargetOutcomePercent(target.metrics);
-    const deliveryProgressPercent =
-      deliveryCount > 0 ? Math.round(deliverySum / deliveryCount) : null;
+
+    const focusMeta = focusMetaByTargetId.get(target.id);
+    const responsibleLabel = assigneeLabelByTargetId.get(target.id) ?? null;
+    const orgUnitLabel =
+      focusMeta?.orgUnitLabel ?? firstOrgUnitLabelFromVisibilityRefs(target.visibleOrgUnitRefs);
 
     targets.push({
       id: target.id,
       title: target.title,
       status: target.status,
+      responsibleLabel,
+      orgUnitLabel,
       outcomeProgressPercent,
-      linkedInitiativeCount: deliveryTotal,
+      linkedInitiativeCount: initiativeIds.size,
       deliveryProgressPercent,
+      deliveryProgressCaption,
+      linkedClubStrategyId: focusMeta?.linkedClubStrategyId ?? null,
+      linkedClubStrategyTitle: focusMeta?.linkedClubStrategyTitle ?? null,
       outcomeProgressUnknownReason: describeOutcomeProgressUnknown(target.metrics),
-      deliveryProgressUnknownReason:
-        deliveryProgressPercent === null
-          ? describeDeliveryProgressUnknown({
-              linkedInitiativeCount: deliveryTotal,
-              initiativesWithEligibleTasks: deliveryCount,
-            })
-          : null,
+      deliveryProgressUnknownReason: null,
       metrics: target.metrics.map((m) => ({
         id: m.id,
         label: m.label,

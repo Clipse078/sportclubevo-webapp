@@ -59,7 +59,7 @@ export default function TargetZieleCollapsibleCard({
           <p className="mt-0.5 text-xs text-[var(--muted)]">
             Zielstatus: {formatTargetStatusLabel(target.status)} · Zielerreichung:{" "}
             {formatPercent(target.outcomeProgressPercent)} · Umsetzung:{" "}
-            {formatPercent(target.deliveryProgressPercent)}
+            {target.deliveryProgressCaption || formatPercent(target.deliveryProgressPercent)}
           </p>
         </div>
       </div>

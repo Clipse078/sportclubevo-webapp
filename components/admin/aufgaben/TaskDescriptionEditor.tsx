@@ -12,7 +12,9 @@ import Underline from "@tiptap/extension-underline";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { TaskDescriptionMentionMark } from "./TaskDescriptionMentionMark";
+import TaskDescriptionMentionSuggest from "./TaskDescriptionMentionSuggest";
 import {
   Bold,
   Italic,
@@ -36,6 +38,9 @@ type Props = {
   minHeightClassName?: string;
   "data-testid"?: string;
   inputId?: string;
+  enableMentions?: boolean;
+  mentionScope?: "tenant" | "task";
+  mentionTaskId?: string | null;
 };
 
 function ToolbarButton({
@@ -167,7 +172,12 @@ export default function TaskDescriptionEditor({
   minHeightClassName = "min-h-[12.5rem]",
   "data-testid": testId = "task-description-editor",
   inputId,
+  enableMentions = false,
+  mentionScope = "tenant",
+  mentionTaskId = null,
 }: Props) {
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -193,6 +203,7 @@ export default function TaskDescriptionEditor({
         },
       }),
       Placeholder.configure({ placeholder }),
+      ...(enableMentions ? [TaskDescriptionMentionMark] : []),
     ],
     content: value ?? emptyTaskDescriptionDocument(),
     editable: !disabled,
@@ -241,11 +252,22 @@ export default function TaskDescriptionEditor({
     }
   }, [editor, value]);
 
+  useEffect(() => {
+    setEditorInstance(editor);
+  }, [editor]);
+
   return (
     <div
-      className={`overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] ${disabled ? "opacity-60" : ""}`}
+      className={`relative overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] ${disabled ? "opacity-60" : ""}`}
       data-testid={testId}
     >
+      {enableMentions && editorInstance && !disabled ? (
+        <TaskDescriptionMentionSuggest
+          editor={editorInstance}
+          scope={mentionScope}
+          taskId={mentionTaskId}
+        />
+      ) : null}
       {editor && !disabled ? <EditorToolbar editor={editor} onAddLink={addLink} /> : null}
       <EditorContent
         editor={editor}

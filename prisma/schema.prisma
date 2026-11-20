@@ -606,11 +606,17 @@ enum TaskContextType {
   MEETING
   MEETING_DECISION
   INITIATIVE
+  TARGET
   REGISTRATION
   TEAM
   PERSON
   DOCUMENT
   CLUB_MELDUNG
+}
+
+enum ClubStrategyScopeType {
+  CLUB
+  ORG_UNIT
 }
 
 // AUFGABEN-01B — recurrence series lifecycle.
@@ -1293,11 +1299,13 @@ model Tenant {
   initiativeTargetLinks            InitiativeTargetLink[]
   developmentSprints               DevelopmentSprint[]
   developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
+  developmentUnplannedTaskRanks    DevelopmentUnplannedTaskRank[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
-  clubStrategy                     ClubStrategy?
+  clubStrategies                   ClubStrategy[]
   clubStrategyDocumentReferences   ClubStrategyDocumentReference[]
   clubStrategyFocusTargets         ClubStrategyFocusTarget[]
+  clubStrategyOrgUnitAssignments   ClubStrategyOrgUnitAssignment[]
   targets                          Target[]
   tasks                            Task[]
   taskAssignees                    TaskAssignee[]
@@ -3561,6 +3569,21 @@ model DevelopmentSprintTaskMembership {
   @@index([tenantId, taskId])
 }
 
+/// Persisted sort order for Ungeplant backlog on Umsetzungsplanung (per tenant).
+model DevelopmentUnplannedTaskRank {
+  id        String   @id @default(cuid())
+  tenantId  String
+  taskId    String   @unique
+  rank      Int
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, taskId])
+  @@index([tenantId, rank])
+}
+
 /// Immutable approver vote on an Initiative (SCE-CD-03R2; revision-scoped SCE-CD-03R3F1).
 model InitiativeApprovalVote {
   id               String                      @id @default(cuid())
@@ -3642,10 +3665,13 @@ model ClubDevelopmentProcessApprovalVote {
   @@index([tenantId, processId, contentRevision])
 }
 
-/// PKG-05 — tenant-scoped club strategy authoring (single row per tenant).
+/// PKG-05 + connected workspace — tenant-scoped strategy records (club-wide or Org-Einheit).
 model ClubStrategy {
   id                    String   @id @default(cuid())
-  tenantId              String   @unique
+  tenantId              String
+  scopeType             ClubStrategyScopeType @default(CLUB)
+  scopeOrgUnitId        String?
+  title                 String?
   situationText         String?
   alignmentText         String?
   responsiblePersonId   String?
@@ -3665,8 +3691,28 @@ model ClubStrategy {
   tenant            Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   focusTargets      ClubStrategyFocusTarget[]
   documentReferences ClubStrategyDocumentReference[]
+  orgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@index([tenantId])
+  @@index([tenantId, scopeType, scopeOrgUnitId])
+}
+
+/// PR #1017 — multiple Org-Einheiten per Strategie (scope assignment ≠ access grant).
+model ClubStrategyOrgUnitAssignment {
+  id             String   @id @default(cuid())
+  tenantId       String
+  clubStrategyId String
+  orgUnitId      String
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clubStrategy ClubStrategy @relation(fields: [clubStrategyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit      OrgUnit      @relation(fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([clubStrategyId, orgUnitId])
+  @@index([tenantId])
+  @@index([clubStrategyId])
+  @@index([orgUnitId])
 }
 
 enum ClubStrategyDocumentKind {
@@ -3834,6 +3880,7 @@ model OrgUnit {
   taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
   taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantOrgUnit")
   workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantOrgUnit")
+  clubStrategyOrgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -4989,6 +5036,7 @@ model Task {
   documentReferences TaskDocumentReference[]
   accessGrants TaskAccessGrant[]
   sprintMemberships DevelopmentSprintTaskMembership[]
+  unplannedPlanningRank DevelopmentUnplannedTaskRank?
   primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])

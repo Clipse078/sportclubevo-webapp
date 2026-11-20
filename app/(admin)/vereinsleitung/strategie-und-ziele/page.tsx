@@ -1,52 +1,109 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
-import { loadClubStrategyAuthoring } from "@/lib/club-development/club-strategy-service";
+import {
+  listAllFocusTargetIds,
+  listClubStrategies,
+  loadClubStrategyAuthoring,
+} from "@/lib/club-development/club-strategy-service";
+import { prisma } from "@/lib/db/prisma";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
 import { getMeetingDecisionLinkOptions, getMeetingLinkOptions } from "@/lib/linking/queries";
 import { loadStrategyOverview } from "@/lib/club-development/strategy-overview";
-import { CD_NAV_WORKSPACE_LABELS } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
-import { CD_STRATEGY_AUTHORING_COPY } from "@/lib/club-development/product-copy";
+import {
+  connectedWorkspacePageMeta,
+  CD_CONNECTED_WORKSPACE_EYEBROW,
+  resolveConnectedViewFromStrategieUndZieleAnsicht,
+} from "@/lib/club-development/vereinsentwicklung-workspace-page-meta";
+import {
+  parseOrgEinheitQuery,
+  resolveVereinsentwicklungOrgEinheitFilter,
+} from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 import StrategieUndZieleWorkspaceClient from "@/components/admin/club-development/StrategieUndZieleWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { hasSprintManagePermission } from "@/lib/club-development/sprints/queries";
 
-export default async function StrategieUndZielePage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | undefined>>;
+};
+
+export default async function StrategieUndZielePage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const query = (await searchParams) ?? {};
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
   const actorUserId = session.user.effectiveUserId ?? session.user.id;
-  const [authoring, { targets }, availableMeetings, availableDecisions] = await Promise.all([
-    loadClubStrategyAuthoring(actor, actorUserId),
-    loadStrategyOverview(actor),
-    getMeetingLinkOptions(actor),
-    getMeetingDecisionLinkOptions(actor),
-  ]);
+  const connectedView = resolveConnectedViewFromStrategieUndZieleAnsicht(query.ansicht);
+  const pageMeta = connectedWorkspacePageMeta(connectedView);
+  const orgEinheitFilter = await resolveVereinsentwicklungOrgEinheitFilter(
+    actor,
+    parseOrgEinheitQuery(query),
+  );
+  const strategies = await listClubStrategies(actor, { orgUnitId: orgEinheitFilter?.id });
+  const selectedStrategyId = query.strategyId?.trim() || null;
+
+  const taskCtx =
+    actor.tenantId && actorUserId
+      ? await buildTaskServiceContextForActor(actorUserId, actor.tenantId)
+      : null;
+
+  const [authoring, { targets }, availableMeetings, availableDecisions, allFocusTargetIds, orgUnitOptions] =
+    await Promise.all([
+      selectedStrategyId
+        ? loadClubStrategyAuthoring(actor, actorUserId, selectedStrategyId)
+        : Promise.resolve(null),
+      loadStrategyOverview(actor),
+      getMeetingLinkOptions(actor),
+      getMeetingDecisionLinkOptions(actor),
+      listAllFocusTargetIds(actor),
+      taskCtx ? loadTaskOrgUnitMutationOptions(taskCtx) : Promise.resolve([]),
+    ]);
+
+  const tenantRow = actor.tenantId
+    ? await prisma.tenant.findUnique({
+        where: { id: actor.tenantId },
+        select: { timezone: true },
+      })
+    : null;
+  const timeZone = tenantRow?.timezone ?? "Europe/Zurich";
 
   const canManageTargets = actor.permissionKeys.includes(PERMISSIONS.TARGETS_MANAGE);
-  const focusTargetIds = authoring?.focusTargets.map((row) => row.target.id) ?? [];
+  const canCreateTargetTasks =
+    actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
+    actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE);
+  const focusTargetIds =
+    connectedView === "ziele"
+      ? allFocusTargetIds
+      : (authoring?.focusTargets.map((row) => row.target.id) ?? []);
 
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Vereinsentwicklung"
-        title={CD_NAV_WORKSPACE_LABELS.strategieUndZiele}
-        description={CD_STRATEGY_AUTHORING_COPY.workspacePageDescription}
-        breadcrumbs={[
-          { label: "Verein", href: "/vereinsleitung" },
-          { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },
-          { label: CD_NAV_WORKSPACE_LABELS.strategieUndZiele },
-        ]}
+        eyebrow={CD_CONNECTED_WORKSPACE_EYEBROW}
+        title={pageMeta.title}
+        description={pageMeta.description}
+        breadcrumbs={pageMeta.breadcrumbs}
         isEmpty={false}
       >
         <StrategieUndZieleWorkspaceClient
+          permissionKeys={actor.permissionKeys}
+          hasPlanningAccess={hasSprintManagePermission(actor)}
+          orgEinheitFilterLabel={orgEinheitFilter?.label ?? null}
+          strategies={strategies}
+          selectedStrategyId={selectedStrategyId}
           authoring={authoring}
           canManageTargets={canManageTargets}
+          canCreateTargetTasks={canCreateTargetTasks}
           targets={targets}
           focusTargetIds={focusTargetIds}
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
+          orgUnitOptions={orgUnitOptions}
+          timeZone={timeZone}
         />
       </ListPagePattern>
     </PageShell>

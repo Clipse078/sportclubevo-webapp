@@ -6,6 +6,7 @@
 /** Entry points migrated to inline collapsible cards (governance-enforced). */
 export const SCE_CONTEXTUAL_CREATE_INLINE_ENTRY_PATHS = [
   "components/admin/targets/TargetInitiativeLinksSection.tsx",
+  "components/admin/club-development/StrategienWorkspaceListPanel.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
   "components/admin/club-development/ZieleWorkspacePanel.tsx",
   "components/admin/club-development/VorhabenAufgabenWorkspace.tsx",
@@ -17,6 +18,8 @@ export const SCE_CONTEXTUAL_CREATE_INLINE_CARD_MARKERS = [
   "CreateTargetContextualCollapsibleCard",
   "CreateTargetWorkspaceCollapsibleCard",
   "CreateInitiativeWorkspaceCollapsibleCard",
+  "CreateStrategieWorkspaceCollapsibleCard",
+  "VereinsentwicklungAufgabeWorkspaceCreateCard",
   "data-sce-contextual-create-flow=\"inline-collapsible\"",
 ] as const;
 
@@ -92,14 +95,20 @@ export function collectContextualCreateEntryViolations(
       reason: "Contextual create/link entry still mounts modal ComposerDialog shell.",
     });
   }
+  const hasFullPageCreate =
+    src.includes('data-sce-contextual-create-flow="full-page"') ||
+    src.includes("buildVereinsentwicklungZielNeuHref") ||
+    src.includes("buildVereinsentwicklungStrategieNeuHref");
   if (
     !src.includes("ContextualCollapsibleCard") &&
     !src.includes("CreateInitiativeWorkspaceCollapsibleCard") &&
-    !src.includes('data-sce-contextual-create-flow="inline-collapsible"')
+    !src.includes("CreateTargetWorkspaceCollapsibleCard") &&
+    !src.includes('data-sce-contextual-create-flow="inline-collapsible"') &&
+    !hasFullPageCreate
   ) {
     findings.push({
       file: normalized,
-      reason: "Migrated contextual create entry missing inline collapsible card marker.",
+      reason: "Migrated contextual create entry missing inline collapsible or full-page create marker.",
     });
   }
   return findings;

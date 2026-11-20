@@ -32,6 +32,7 @@ export const SCE_VEREINSENTWICKLUNG_WORKSPACE_GOVERNANCE_PATHS = [
   "components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient.tsx",
   "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
   "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
+  "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx",
   "components/admin/club-development/InitiativeBacklogWorkspace.tsx",
   "components/admin/initiatives/CreateInitiativeWorkspaceCollapsibleCard.tsx",
   "components/admin/club-development/StrategyAuthoringPanel.tsx",
@@ -98,10 +99,10 @@ export function collectVereinsentwicklungWorkspaceViolations(
   }
 
   if (normalized === "app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx") {
-    if (!src.includes("CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle")) {
+    if (!src.includes("connectedWorkspacePageMeta") || !src.includes("pageMeta.description")) {
       findings.push({
         file: normalized,
-        reason: "Vorhaben & Umsetzung page must use canonical single subtitle copy key.",
+        reason: "Vorhaben & Umsetzung page must use connected workspace pageMeta.description.",
       });
     }
   }
@@ -229,6 +230,25 @@ export function collectVereinsentwicklungWorkspaceViolations(
     }
   }
 
+  if (normalized === "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx") {
+    if (!src.includes("VereinsentwicklungConnectedTaskTable")) {
+      findings.push({
+        file: normalized,
+        reason: "Ungeplant backlog must use the connected task table.",
+      });
+    }
+    if (
+      src.includes("initiativeGroups.map") ||
+      src.includes("SprintPlanningInitiativeGroupDto") ||
+      src.includes("toggleInitiativeGroupSelection")
+    ) {
+      findings.push({
+        file: normalized,
+        reason: "Ungeplant backlog must present a flat aligned task list, not Vorhaben grouping.",
+      });
+    }
+  }
+
   if (normalized === "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx") {
     if (src.includes("SceClubDevelopmentEmptyState")) {
       findings.push({
@@ -236,10 +256,14 @@ export function collectVereinsentwicklungWorkspaceViolations(
         reason: "Phase task panel must distinguish empty vs loading vs error with inline copy.",
       });
     }
-    if (!src.includes("groupAssignedSprintBoardCards")) {
+    if (
+      !src.includes("VereinsentwicklungConnectedTaskTable") &&
+      !src.includes("groupAssignedSprintBoardCards")
+    ) {
       findings.push({
         file: normalized,
-        reason: "Assigned phase tasks must group by Vorhaben and status in the workspace.",
+        reason:
+          "Assigned phase tasks must use the connected task table or legacy Vorhaben/status grouping.",
       });
     }
   }

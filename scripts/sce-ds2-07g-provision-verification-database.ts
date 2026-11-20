@@ -17,6 +17,7 @@ import {
   assertSafeVerificationDatabase,
   fingerprintVerificationDatabase,
 } from "@/lib/test/safe-verification-database";
+import { buildDisposablePrismaMigrateProcessEnv } from "@/lib/test/safe-disposable-migration-env";
 import { maskDatabaseUrl } from "@/lib/test/safe-test-database";
 
 async function ensureDatabaseExists(adminUrl: string, databaseName: string): Promise<void> {
@@ -45,24 +46,18 @@ async function main() {
   process.env.DATABASE_URL_VERIFICATION = verificationUrl;
   const safeUrl = assertSafeVerificationDatabase(verificationUrl);
 
+  const migrateEnv = buildDisposablePrismaMigrateProcessEnv(process.env, safeUrl);
+  migrateEnv.SCE_OPERATION_AUTHORIZATION =
+    SCE_DS2_07G_VERIFICATION_OPERATION_AUTHORIZATION;
+
   execSync("npx prisma migrate deploy", {
     stdio: "inherit",
-    env: {
-      ...process.env,
-      DATABASE_URL: safeUrl,
-      DIRECT_URL: safeUrl,
-      SCE_OPERATION_AUTHORIZATION: SCE_DS2_07G_VERIFICATION_OPERATION_AUTHORIZATION,
-    },
+    env: migrateEnv,
   });
 
   execSync("npm run db:seed", {
     stdio: "inherit",
-    env: {
-      ...process.env,
-      DATABASE_URL: safeUrl,
-      DIRECT_URL: safeUrl,
-      SCE_OPERATION_AUTHORIZATION: SCE_DS2_07G_VERIFICATION_OPERATION_AUTHORIZATION,
-    },
+    env: migrateEnv,
   });
 
   const pool = new Pool({ connectionString: safeUrl });

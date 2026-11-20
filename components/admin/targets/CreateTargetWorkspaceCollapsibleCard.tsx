@@ -16,14 +16,24 @@ const CARD_TEST_ID = "ziele-workspace-create-target-card";
 
 type Props = {
   canCreate: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  hideToolbarTrigger?: boolean;
 };
 
-function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
+function CreateTargetWorkspaceCollapsibleCardInner({
+  canCreate,
+  expanded: expandedProp,
+  onExpandedChange,
+  hideToolbarTrigger = false,
+}: Props) {
   const router = useRouter();
   const discardPrompt = useSceInlineDiscardPrompt();
   const inlineDirtyClose = useOptionalSceClubDevelopmentInlineDirtyClose();
   const cardRef = useRef<HTMLDivElement>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expandedInternal, setExpandedInternal] = useState(false);
+  const expanded = expandedProp ?? expandedInternal;
+  const setExpanded = onExpandedChange ?? setExpandedInternal;
   const [formKey, setFormKey] = useState(0);
 
   const guardedExpandedChange = useCallback(
@@ -41,7 +51,7 @@ function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
     setFormKey((k) => k + 1);
     setExpanded(false);
     router.refresh();
-  }, [router]);
+  }, [router, setExpanded]);
 
   useEffect(() => {
     if (expanded) {
@@ -56,10 +66,9 @@ function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
   if (!canCreate) return null;
 
   return (
-    <div ref={cardRef} className="flex justify-end">
-      <div className="w-full max-w-xl">
+    <div ref={cardRef} className="w-full">
         <SceClubDevelopmentContextualCreateCollapsibleShell
-          actionLabel="Neues Ziel"
+          actionLabel="+ Ziel anlegen"
           contextLabel="Strategisches Ziel"
           expanded={expanded}
           onExpandedChange={guardedExpandedChange}
@@ -67,6 +76,7 @@ function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
           cardTestId={CARD_TEST_ID}
           collapseToggleTestId="ziele-workspace-create-target"
           discardPrompt={discardPrompt}
+          hideToggle={hideToolbarTrigger}
         >
           <ClubDevelopmentComposerCancelBridge onClose={() => setExpanded(false)}>
             {(onCancel) => (
@@ -79,7 +89,6 @@ function CreateTargetWorkspaceCollapsibleCardInner({ canCreate }: Props) {
             )}
           </ClubDevelopmentComposerCancelBridge>
         </SceClubDevelopmentContextualCreateCollapsibleShell>
-      </div>
     </div>
   );
 }

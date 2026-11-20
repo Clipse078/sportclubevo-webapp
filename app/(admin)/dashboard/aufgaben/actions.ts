@@ -60,6 +60,7 @@ import {
   updateTaskComment,
 } from "@/lib/tasks/task-comment-service";
 import { searchTaskMentionCandidates } from "@/lib/tasks/task-mention-candidates";
+import { searchTenantDescriptionMentionCandidates } from "@/lib/tasks/task-description-mention-candidates";
 import { requireVisibleTask } from "@/lib/tasks/task-access";
 import {
   loadTaskTimelinePage,
@@ -1206,6 +1207,21 @@ export async function searchTaskMentionCandidatesAction(
   try {
     const task = await requireVisibleTask(ctx, taskId);
     const options = await searchTaskMentionCandidates(ctx, task, query);
+    return { ok: true, options };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function searchTenantDescriptionMentionCandidatesAction(query: string): Promise<
+  | { ok: true; options: Awaited<ReturnType<typeof searchTenantDescriptionMentionCandidates>> }
+  | { ok: false; message: string }
+> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const options = await searchTenantDescriptionMentionCandidates(ctx.tenantId, ctx.userId, query);
     return { ok: true, options };
   } catch (error) {
     return { ok: false, message: actionErrorMessage(error) };

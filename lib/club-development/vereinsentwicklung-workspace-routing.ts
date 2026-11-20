@@ -89,9 +89,9 @@ export function legacyVorhabenRedirect(search: Record<string, string | undefined
 }
 
 export function legacyBacklogRedirect(search: Record<string, string | undefined>): string {
-  return buildVorhabenUndUmsetzungHref("vorhaben", {
+  return buildVorhabenUndUmsetzungHref("umsetzungsphasen", {
     ...search,
-    [CD_WORKSPACE_PRIORITAETEN_QUERY]: "1",
+    [CD_UMSETZUNGSPLANUNG_SECTION_QUERY]: "ungeplant",
   });
 }
 
@@ -105,5 +105,5 @@ export const CD_LEGACY_ROUTE_ALIASES = [
   { legacy: "/vereinsleitung/vorhaben", workspace: CD_VORHABEN_UMSETZUNG_BASE, defaultView: "aufgaben" },
   { legacy: "/vereinsleitung/initiativen/backlog", workspace: CD_VORHABEN_UMSETZUNG_BASE, defaultView: "vorhaben" },
   { legacy: "/vereinsleitung/sprints", workspace: CD_VORHABEN_UMSETZUNG_BASE, defaultView: "umsetzungsphasen" },
-  { legacy: "/vereinsleitung/initiativen", workspace: CD_VORHABEN_UMSETZUNG_BASE, defaultView: "vorhaben" },
+  { legacy: "/vereinsleitung/initiativen", workspace: CD_VORHABEN_UMSETZUNG_BASE, defaultView: "aufgaben" },
 ] as const;

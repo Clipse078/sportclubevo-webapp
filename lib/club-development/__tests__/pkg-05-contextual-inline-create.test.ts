@@ -30,14 +30,11 @@ describe("PKG-05 contextual inline collapsible create (SCE rule)", () => {
     expect(card).toContain("/initiative-links");
   });
 
-  it("Strategie Schwerpunkt create uses inline collapsible card", () => {
+  it("Strategie Schwerpunkt create uses inline collapsible Ziel anlegen", () => {
     const strategy = read("components/admin/club-development/StrategyAuthoringPanel.tsx");
-    const card = read("components/admin/targets/CreateTargetContextualCollapsibleCard.tsx");
     expect(strategy).toContain("CreateTargetContextualCollapsibleCard");
     expect(strategy).not.toContain("CreateTargetComposerDialog");
-    expect(card).toContain("focus-targets");
-    expect(card).toContain("linkAsSchwerpunkt");
-    expect(card).toContain('collapseToggleTestId="strategy-create-target-and-link"');
+    expect(strategy).toContain('data-sce-contextual-create-flow="inline-collapsible"');
   });
 
   it("shared shell exposes aria-expanded and aria-controls without Dialog portal", () => {
@@ -71,6 +68,7 @@ describe("PKG-05 contextual inline collapsible create (SCE rule)", () => {
     expect(panel).toContain("CreateTargetWorkspaceCollapsibleCard");
     expect(panel).not.toContain("CreateTargetComposerDialog");
     expect(panel).not.toContain("CreateTargetTrigger");
+    expect(panel).toContain('data-sce-contextual-create-flow="inline-collapsible"');
   });
 
   it("documents remaining overlay inventory without claiming full-app migration", () => {

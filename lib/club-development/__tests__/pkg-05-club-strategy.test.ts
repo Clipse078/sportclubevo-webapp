@@ -15,6 +15,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const prismaMocks = vi.hoisted(() => ({
   clubStrategyFindUnique: vi.fn(),
+  clubStrategyFindFirst: vi.fn(),
   clubStrategyCreate: vi.fn(),
   clubStrategyUpdate: vi.fn(),
   meetingFindMany: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     clubStrategy: {
       findUnique: prismaMocks.clubStrategyFindUnique,
+      findFirst: prismaMocks.clubStrategyFindFirst,
       create: prismaMocks.clubStrategyCreate,
       update: prismaMocks.clubStrategyUpdate,
     },
@@ -87,6 +89,13 @@ describe("PKG-05 club strategy authoring", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMocks.clubStrategyFindUnique.mockResolvedValue(null);
+    prismaMocks.clubStrategyFindFirst.mockImplementation(async (args) => {
+      const where = args?.where as { tenantId?: string; scopeType?: string } | undefined;
+      if (where?.tenantId && where.scopeType === "CLUB") {
+        return prismaMocks.clubStrategyFindUnique({ where: { tenantId: where.tenantId } });
+      }
+      return null;
+    });
     prismaMocks.clubStrategyCreate.mockResolvedValue({ id: "strategy-1" });
     prismaMocks.clubStrategyUpdate.mockResolvedValue({ id: "strategy-1", contentRevision: 2 });
     prismaMocks.focusCount.mockResolvedValue(0);

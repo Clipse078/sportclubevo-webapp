@@ -17,14 +17,14 @@ import {
 } from "../task-mention-candidates";
 
 const mocks = vi.hoisted(() => ({
-  tenantMembershipFindMany: vi.fn(),
+  searchIdentities: vi.fn(),
+  listIdentities: vi.fn(),
   filterReadable: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    tenantMembership: { findMany: mocks.tenantMembershipFindMany },
-  },
+vi.mock("@/lib/people/person-user-identity", () => ({
+  searchEligiblePersonUserIdentitiesInTenant: mocks.searchIdentities,
+  listEligiblePersonUserIdentitiesInTenant: mocks.listIdentities,
 }));
 
 vi.mock("../task-mention-auth", async (importOriginal) => {
@@ -71,14 +71,21 @@ function ctx(userId = AUTHOR) {
   };
 }
 
-function membershipUser(
+function identityUser(
   userId: string,
   firstName: string,
   lastName: string,
   email: string,
+  personId = `person-${userId}`,
 ) {
   return {
-    user: { id: userId, firstName, lastName, email, isActive: true },
+    personId,
+    userId,
+    tenantId: TENANT,
+    firstName,
+    lastName,
+    displayName: `${firstName} ${lastName}`.trim(),
+    email,
   };
 }
 
@@ -88,24 +95,20 @@ beforeEach(() => {
 });
 
 describe("AUFGABEN-06B mention candidate search", () => {
-  it("M25/M28 requires tenant-scoped membership query and caller-visible task", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
-      membershipUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
+  it("M25/M28 requires tenant-scoped person identity search", async () => {
+    mocks.searchIdentities.mockResolvedValue([
+      identityUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
     ]);
 
     await searchTaskMentionCandidates(ctx(), taskRow(), "sa");
 
-    expect(mocks.tenantMembershipFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ tenantId: TENANT, isActive: true }),
-      }),
-    );
+    expect(mocks.searchIdentities).toHaveBeenCalledWith(TENANT, "sa", expect.any(Number));
   });
 
   it("M26 post-filters to users who canReadTask", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
-      membershipUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
-      membershipUser(OUTSIDER, "Otto", "Out", "otto@example.com"),
+    mocks.searchIdentities.mockResolvedValue([
+      identityUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
+      identityUser(OUTSIDER, "Otto", "Out", "otto@example.com"),
     ]);
     mocks.filterReadable.mockResolvedValue([ASSIGNEE]);
 
@@ -120,9 +123,9 @@ describe("AUFGABEN-06B mention candidate search", () => {
   });
 
   it("M27/M28 identity leakage — ineligible users never returned", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
-      membershipUser(OUTSIDER, "Leo", "Leak", "leak@example.com"),
-      membershipUser(FOREIGN, "F", "Foreign", "f@other.com"),
+    mocks.searchIdentities.mockResolvedValue([
+      identityUser(OUTSIDER, "Leo", "Leak", "leak@example.com"),
+      identityUser(FOREIGN, "F", "Foreign", "f@other.com"),
     ]);
     mocks.filterReadable.mockResolvedValue([]);
 
@@ -132,8 +135,9 @@ describe("AUFGABEN-06B mention candidate search", () => {
   });
 
   it("ASSIGNEES_ONLY searches only direct participants (bounded)", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
-      membershipUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
+    mocks.searchIdentities.mockResolvedValue([
+      identityUser(ASSIGNEE, "Sandra", "Schmid", "sandra@example.com"),
+      identityUser(OUTSIDER, "Otto", "Out", "otto@example.com"),
     ]);
 
     const options = await searchTaskMentionCandidates(
@@ -143,44 +147,37 @@ describe("AUFGABEN-06B mention candidate search", () => {
     );
 
     expect(options).toHaveLength(1);
-    const call = mocks.tenantMembershipFindMany.mock.calls[0]?.[0];
-    expect(call.where.userId).toEqual({ in: expect.arrayContaining([AUTHOR, ASSIGNEE]) });
-    expect(call.take).toBeLessThanOrEqual(TASK_MENTION_SEARCH_LIMIT);
+    expect(options[0]?.displayName).toBe("Sandra Schmid");
   });
 
-  it("CLUB search uses bounded over-fetch with strict DB row cap", async () => {
-    const batch = Math.max(TASK_MENTION_SEARCH_LIMIT * 3, TASK_MENTION_SEARCH_LIMIT);
-    mocks.tenantMembershipFindMany
-      .mockResolvedValueOnce(
-        Array.from({ length: batch }, (_, i) =>
-          membershipUser(`u-${i}`, "N", `User${i}`, `u${i}@example.com`),
-        ),
-      )
-      .mockResolvedValueOnce([]);
+  it("CLUB search forwards bounded limit to person identity search", async () => {
+  mocks.searchIdentities.mockResolvedValue([
+    identityUser("u-0", "N", "User0", "u0@example.com"),
+  ]);
 
-    mocks.filterReadable.mockImplementation(async (_t, _task, ids: string[]) =>
-      ids.filter((id) => id === "u-0"),
-    );
+  mocks.filterReadable.mockImplementation(async (_t, _task, ids: string[]) =>
+    ids.filter((id) => id === "u-0"),
+  );
 
-    await searchTaskMentionCandidates(ctx(), taskRow(), "user");
+  await searchTaskMentionCandidates(ctx(), taskRow(), "user");
 
-    const totalTake = mocks.tenantMembershipFindMany.mock.calls.reduce(
-      (sum, call) => sum + (call[0]?.take ?? 0),
-      0,
-    );
-    expect(totalTake).toBeLessThanOrEqual(TASK_MENTION_SEARCH_MAX_DB_ROWS);
-    expect(taskMentionSearchWorstCaseDbRowBound()).toBe(TASK_MENTION_SEARCH_MAX_DB_ROWS);
-  });
+  expect(mocks.searchIdentities).toHaveBeenCalledWith(
+    TENANT,
+    "user",
+    TASK_MENTION_SEARCH_MAX_DB_ROWS,
+  );
+  expect(taskMentionSearchWorstCaseDbRowBound()).toBe(TASK_MENTION_SEARCH_MAX_DB_ROWS);
+});
 
   it("short query below min chars returns empty without DB scan", async () => {
     const options = await searchTaskMentionCandidates(ctx(), taskRow(), "a");
     expect(options).toEqual([]);
-    expect(mocks.tenantMembershipFindMany).not.toHaveBeenCalled();
+    expect(mocks.searchIdentities).not.toHaveBeenCalled();
   });
 
   it("excludes searching user from results", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
-      membershipUser(AUTHOR, "Anna", "Author", "a@example.com"),
+    mocks.searchIdentities.mockResolvedValue([
+      identityUser(AUTHOR, "Anna", "Author", "a@example.com"),
     ]);
     mocks.filterReadable.mockResolvedValue([AUTHOR]);
 

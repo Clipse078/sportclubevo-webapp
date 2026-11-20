@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TaskDescriptionEditor from "./TaskDescriptionEditor";
 import {
   documentFromStoredTaskDescription,
@@ -16,6 +16,12 @@ type Props = {
   disabled?: boolean;
   inputId?: string;
   compact?: boolean;
+  /** Sync serialized storage value to parent forms that submit via client state. */
+  onSerializedChange?: (serialized: string) => void;
+  placeholder?: string;
+  enableMentions?: boolean;
+  mentionScope?: "tenant" | "task";
+  mentionTaskId?: string | null;
 };
 
 export default function TaskDescriptionFormField({
@@ -26,6 +32,11 @@ export default function TaskDescriptionFormField({
   disabled = false,
   inputId = "task-description",
   compact = false,
+  onSerializedChange,
+  placeholder = "Aufgabe beschreiben …",
+  enableMentions = false,
+  mentionScope = "tenant",
+  mentionTaskId = null,
 }: Props) {
   const [document, setDocument] = useState<TaskDescriptionDocument>(() =>
     documentFromStoredTaskDescription(initialStored),
@@ -35,6 +46,10 @@ export default function TaskDescriptionFormField({
     () => serializeTaskDescriptionForStorage(document) ?? "",
     [document],
   );
+
+  useEffect(() => {
+    onSerializedChange?.(serialized);
+  }, [onSerializedChange, serialized]);
 
   return (
     <div className="block space-y-1">
@@ -47,6 +62,10 @@ export default function TaskDescriptionFormField({
         onChange={setDocument}
         disabled={disabled}
         inputId={inputId}
+        placeholder={placeholder}
+        enableMentions={enableMentions}
+        mentionScope={mentionScope}
+        mentionTaskId={mentionTaskId}
         minHeightClassName={compact ? "min-h-[7rem]" : "min-h-[12.5rem]"}
       />
       <input type="hidden" name={name} value={serialized} data-testid="task-description-serialized" />

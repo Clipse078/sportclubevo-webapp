@@ -3,7 +3,7 @@
 import type { FormEventHandler, RefObject } from "react";
 import type { TaskContextPresentation } from "@/lib/tasks/context-resolution";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
-import { taskContextTypeLabel } from "@/lib/tasks/context-registry";
+import { taskContextTypeLabel, TASK_CONTEXT_UNAVAILABLE_LABEL } from "@/lib/tasks/context-registry";
 import type { TaskContextType } from "@prisma/client";
 import TaskOrgVisibilityFields from "../TaskOrgVisibilityFields";
 import { TaskDeadlineFields } from "../TaskReminderFields";
@@ -53,11 +53,11 @@ export default function ContextualTaskCreateFormBody({
   titleInputClassName,
   showContextBanner = true,
 }: Props) {
-  const contextLabel = presentation?.title ?? taskContextTypeLabel(contextType);
-  const contextSecondary =
-    presentation?.subtitle ??
-    presentation?.compactSecondary ??
-    taskContextTypeLabel(contextType);
+  const typeLabel = presentation?.typeLabel ?? taskContextTypeLabel(contextType);
+  const contextTitle = presentation?.unavailable
+    ? TASK_CONTEXT_UNAVAILABLE_LABEL
+    : presentation?.title?.trim() || null;
+  const contextSecondary = presentation?.subtitle?.trim() || null;
 
   return (
     <>
@@ -67,10 +67,14 @@ export default function ContextualTaskCreateFormBody({
           data-testid={`${testIdPrefix}-fixed-context`}
         >
           <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Kontext
+            {typeLabel}
           </p>
-          <p className="mt-0.5 text-sm font-medium text-[var(--foreground)]">{contextLabel}</p>
-          <p className="text-xs text-[var(--text-2)]">{contextSecondary}</p>
+          {contextTitle ? (
+            <p className="mt-0.5 text-sm font-medium text-[var(--foreground)]">{contextTitle}</p>
+          ) : null}
+          {contextSecondary ? (
+            <p className="text-xs text-[var(--text-2)]">{contextSecondary}</p>
+          ) : null}
         </div>
       ) : null}
 

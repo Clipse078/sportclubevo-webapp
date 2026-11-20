@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Loader2, Pencil } from "lucide-react";
-import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
+import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import {
   useCallback,
   useEffect,
@@ -32,10 +33,20 @@ import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSecti
 import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
-import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
+import TaskDescriptionFormField from "@/components/admin/aufgaben/TaskDescriptionFormField";
+import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
+import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
+import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
+import { ClubStrategyScopeType } from "@prisma/client";
+import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
+import {
+  defaultClubStrategyOrgScopeSelection,
+  parseClubStrategyOrgScopeSelection,
+} from "@/lib/club-development/club-strategy-org-scope";
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
@@ -43,7 +54,14 @@ type Props = {
   targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
   availableDecisions: import("@/lib/linking/types").EntityRef[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
 };
+
+function initialOrgScopeFromAuthoring(dto: ClubStrategyAuthoringDto): string[] {
+  if (dto.scopeOrgUnitIds.length > 0) return [...dto.scopeOrgUnitIds];
+  if (dto.scopeType === ClubStrategyScopeType.CLUB) return defaultClubStrategyOrgScopeSelection();
+  return [];
+}
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -70,11 +88,19 @@ export default function StrategyAuthoringPanel({
   targets,
   availableMeetings,
   availableDecisions,
+  orgUnitOptions,
 }: Props) {
   const router = useRouter();
   const persisted = hasPersistedClubStrategy(initial);
   const [editing, setEditing] = useState(canManage && !persisted);
 
+  const strategyId = initial.id;
+  const strategyPayloadId = strategyId ? { clubStrategyId: strategyId } : {};
+  const [strategyTitle, setStrategyTitle] = useState(
+    initial.title?.trim() ||
+      (initial.scopeOrgUnitLabels[0] ? `Strategie ${initial.scopeOrgUnitLabels[0]}` : "Strategie"),
+  );
+  const [orgScope, setOrgScope] = useState<string[]>(() => initialOrgScopeFromAuthoring(initial));
   const [situationText, setSituationText] = useState(initial.situationText ?? "");
   const [alignmentText, setAlignmentText] = useState(initial.alignmentText ?? "");
   const [periodLabel, setPeriodLabel] = useState(initial.periodLabel ?? "");
@@ -99,8 +125,10 @@ export default function StrategyAuthoringPanel({
   const [focusError, setFocusError] = useState<string | null>(null);
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
-  const [targetCreateExpanded, setTargetCreateExpanded] = useState(false);
   const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
+  const [createTargetOpen, setCreateTargetOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
   const [supportingCounts, setSupportingCounts] = useState(() => strategySupportingMaterialCounts(initial));
   const [documentReferences, setDocumentReferences] = useState(initial.documentReferences);
 
@@ -201,6 +229,8 @@ export default function StrategyAuthoringPanel({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...strategyPayloadId,
+          title: strategyTitle,
           situationText,
           alignmentText,
           responsiblePersonId: responsiblePerson?.id ?? null,
@@ -214,6 +244,23 @@ export default function StrategyAuthoringPanel({
         setSaveError(result.message);
         return;
       }
+      if (strategyId) {
+        const parsedScope = parseClubStrategyOrgScopeSelection(orgScope);
+        const patchOrgUnitIds = parsedScope.kind === "org_units" ? parsedScope.orgUnitIds : [];
+        if (parsedScope.kind === "invalid") {
+          setSaveError("Bitte mindestens eine Org-Einheit oder Gesamtverein wählen.");
+          return;
+        }
+        const orgResult = await clubDevelopmentFetchJson("/api/club-development/club-strategies", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clubStrategyId: strategyId, orgUnitIds: patchOrgUnitIds }),
+        });
+        if (!orgResult.ok) {
+          setSaveError(orgResult.message);
+          return;
+        }
+      }
       setSaveSuccess(true);
       setEditing(false);
       router.refresh();
@@ -221,13 +268,13 @@ export default function StrategyAuthoringPanel({
   };
 
   const addFocusTarget = (target: { id: string; title: string; status: string }) => {
-    if (!canManage || !editing) return;
+    if (!canManage) return;
     setFocusError(null);
     startFocus(async () => {
       const res = await fetch("/api/club-development/club-strategy/focus-targets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetId: target.id }),
+        body: JSON.stringify({ targetId: target.id, ...strategyPayloadId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -253,7 +300,7 @@ export default function StrategyAuthoringPanel({
       const res = await fetch("/api/club-development/club-strategy/focus-targets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetId: focusLinkRetryTargetId }),
+        body: JSON.stringify({ targetId: focusLinkRetryTargetId, ...strategyPayloadId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -287,7 +334,9 @@ export default function StrategyAuthoringPanel({
     setFocusError(null);
     startFocus(async () => {
       const res = await fetch(
-        `/api/club-development/club-strategy/focus-targets?targetId=${encodeURIComponent(targetId)}`,
+        `/api/club-development/club-strategy/focus-targets?targetId=${encodeURIComponent(targetId)}${
+          strategyId ? `&clubStrategyId=${encodeURIComponent(strategyId)}` : ""
+        }`,
         { method: "DELETE" },
       );
       if (!res.ok) {
@@ -318,15 +367,29 @@ export default function StrategyAuthoringPanel({
     ) : null;
 
   return (
-    <div className="mb-8 space-y-5" data-testid="strategy-authoring-panel">
-      <SceClubDevelopmentSectionShell
-        title={CD_STRATEGY_AUTHORING_COPY.sectionTitle}
-        headerAside={strategyEditAside}
-        bodyClassName="p-5 space-y-4"
-        testId="strategy-clubstrategie-section"
-      >
+    <div className={`mb-8 ${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-5`} data-testid="strategy-authoring-panel">
+      <section className="space-y-4" data-testid="strategy-detail-section">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">{strategyTitle}</h2>
+          {strategyEditAside}
+        </div>
         {editing && canManage ? (
           <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
+            <label className="block text-sm">
+              <span className="mb-1 block text-xs text-[var(--muted)]">Titel</span>
+              <input
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-sm"
+                value={strategyTitle}
+                onChange={(e) => setStrategyTitle(e.target.value)}
+                data-testid="strategy-title-input"
+              />
+            </label>
+            <ClubStrategyOrgUnitScopePicker
+              options={orgUnitOptions}
+              selectedScope={orgScope}
+              onSelectedScopeChange={setOrgScope}
+              disabled={pendingSave}
+            />
             <div className="flex flex-wrap gap-x-6 gap-y-3">
               <MotionMetaField label={CD_STRATEGY_AUTHORING_COPY.responsibleLabel}>
                 <PeoplePicker
@@ -371,33 +434,31 @@ export default function StrategyAuthoringPanel({
               </MotionMetaField>
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_AUTHORING_COPY.situationLabel}
-              </label>
-              <textarea
-                value={situationText}
-                onChange={(e) => setSituationText(e.target.value)}
-                rows={3}
-                placeholder={CD_STRATEGY_AUTHORING_COPY.situationPlaceholder}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--foreground)]"
-                data-testid="strategy-situation"
-              />
-            </div>
+            <TaskDescriptionFormField
+              key={`strategy-situation-${strategyId}-${editing}`}
+              label={CD_STRATEGY_AUTHORING_COPY.situationLabel}
+              optional
+              initialStored={initial.situationText}
+              inputId="strategy-situation"
+              placeholder={CD_STRATEGY_AUTHORING_COPY.situationPlaceholder}
+              enableMentions
+              mentionScope="tenant"
+              compact
+              onSerializedChange={setSituationText}
+            />
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_AUTHORING_COPY.alignmentLabel}
-              </label>
-              <textarea
-                value={alignmentText}
-                onChange={(e) => setAlignmentText(e.target.value)}
-                rows={3}
-                placeholder={CD_STRATEGY_AUTHORING_COPY.alignmentPlaceholder}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--foreground)]"
-                data-testid="strategy-alignment"
-              />
-            </div>
+            <TaskDescriptionFormField
+              key={`strategy-alignment-${strategyId}-${editing}`}
+              label={CD_STRATEGY_AUTHORING_COPY.alignmentLabel}
+              optional
+              initialStored={initial.alignmentText}
+              inputId="strategy-alignment"
+              placeholder={CD_STRATEGY_AUTHORING_COPY.alignmentPlaceholder}
+              enableMentions
+              mentionScope="tenant"
+              compact
+              onSerializedChange={setAlignmentText}
+            />
 
             <MotionSaveStatus
               unsaved={unsavedNarrative}
@@ -431,18 +492,15 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         )}
-      </SceClubDevelopmentSectionShell>
+      </section>
 
-      <SceClubDevelopmentSectionShell
-        title={CD_STRATEGY_AUTHORING_COPY.focusHeading}
-        headerAside={
-          focusTargets.length > 0 ? (
+      <section className="space-y-3 border-t border-[var(--border)]/60 pt-4" data-testid="strategy-focus-section">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">{CD_STRATEGY_AUTHORING_COPY.focusHeading}</h3>
+          {focusTargets.length > 0 ? (
             <span className="text-xs text-[var(--muted)] tabular-nums">{focusTargets.length}</span>
-          ) : null
-        }
-        bodyClassName="p-5 space-y-3"
-        testId="strategy-focus-section"
-      >
+          ) : null}
+        </div>
         {focusError ? (
           <div className="space-y-1">
             <ClubDevelopmentFormError message={focusError} />
@@ -462,9 +520,30 @@ export default function StrategyAuthoringPanel({
         {focusTargets.length === 0 ? (
           <SceClubDevelopmentEmptyState message={CD_STRATEGY_AUTHORING_COPY.focusEmpty} />
         ) : (
-          <ul className="mb-3 space-y-3" data-testid="strategy-focus-cards">
+          <ul className="mb-3 space-y-2" data-testid="strategy-focus-cards">
             {focusTargetOverviews.map(({ focus, overview }) => (
               <li key={focus.target.id} className="space-y-1">
+                {overview ? (
+                  <VereinsentwicklungWorkspaceRecordRow
+                    title={overview.title}
+                    titleHref={`/vereinsleitung/targets/${focus.target.id}`}
+                    responsibleLabel={overview.responsibleLabel}
+                    orgUnitLabel={overview.orgUnitLabel}
+                    progressPercent={overview.deliveryProgressPercent ?? 0}
+                    progressCaption={overview.deliveryProgressCaption}
+                    statusLabel={formatTargetStatusLabel(overview.status)}
+                    testId={`strategy-focus-row-${focus.target.id}`}
+                  />
+                ) : (
+                  <VereinsentwicklungWorkspaceRecordRow
+                    title={focus.target.title}
+                    titleHref={`/vereinsleitung/targets/${focus.target.id}`}
+                    responsibleLabel={null}
+                    orgUnitLabel="—"
+                    progressPercent={null}
+                    testId={`strategy-focus-row-${focus.target.id}`}
+                  />
+                )}
                 {canManage && editing ? (
                   <div className="flex justify-end">
                     <button
@@ -477,54 +556,40 @@ export default function StrategyAuthoringPanel({
                     </button>
                   </div>
                 ) : null}
-                {overview ? (
-                  <TargetZieleCollapsibleCard target={overview} isFocus showFocusBadge={false} />
-                ) : (
-                  <Link
-                    href={`/vereinsleitung/targets/${focus.target.id}`}
-                    className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--sce-primary)] shadow-sm hover:underline"
-                  >
-                    {focus.target.title}
-                  </Link>
-                )}
               </li>
             ))}
           </ul>
         )}
 
-        {canManage && editing ? (
+        {canManage ? (
           <div className="space-y-3">
+            <button
+              type="button"
+              className="inline-flex items-center rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-sm font-medium text-white"
+              data-testid="strategy-focus-create-target"
+              data-sce-contextual-create-flow="inline-collapsible"
+              onClick={() => setCreateTargetOpen(true)}
+            >
+              {CD_TARGET_COPY.createTargetInStrategy}
+            </button>
             <CreateTargetContextualCollapsibleCard
-              expanded={targetCreateExpanded}
-              onExpandedChange={setTargetCreateExpanded}
+              expanded={createTargetOpen}
+              onExpandedChange={setCreateTargetOpen}
+              clubStrategyId={strategyId}
+              strategyTitle={strategyTitle}
               contextualFocus={{
-                onFinished: ({ targetId, title, linkOk, linkError }) => {
-                  if (linkOk && targetId) {
-                    setFocusError(null);
+                onFinished: (payload) => {
+                  if (payload.linkOk) {
                     setFocusLinkRetryTargetId(null);
-                    setFocusTargets((prev) => [
-                      ...prev,
-                      {
-                        id: `local-${targetId}`,
-                        sortOrder: prev.length,
-                        target: {
-                          id: targetId,
-                          title: title ?? "Ziel",
-                          status: "DRAFT",
-                        },
-                      },
-                    ]);
                     router.refresh();
-                    return;
+                  } else if (payload.linkError) {
+                    setFocusLinkRetryTargetId(payload.targetId);
                   }
-                  if (targetId) {
-                    setFocusLinkRetryTargetId(targetId);
-                  }
-                  setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
                 },
               }}
             />
-            <div className="flex flex-wrap items-start gap-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[var(--muted)]">{CD_TARGET_COPY.linkExistingTargetToStrategy}</p>
               <ClubDevelopmentTargetSearchPicker
                 excludeTargetIds={linkedTargetIds}
                 onSelect={addFocusTarget}
@@ -533,7 +598,7 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         ) : null}
-      </SceClubDevelopmentSectionShell>
+      </section>
 
       <StrategySupportingMaterialsCard
         meetingCount={supportingCounts.meetings}
@@ -546,6 +611,7 @@ export default function StrategyAuthoringPanel({
           availableMeetings={availableMeetings}
           availableDecisions={availableDecisions}
           canManage={canManage}
+          clubStrategyId={strategyId}
           editing={editing && canManage}
           compact
           onAssociationsSaved={handleAssociationsSaved}

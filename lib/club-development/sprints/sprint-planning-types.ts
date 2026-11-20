@@ -14,6 +14,14 @@ export type SprintPlanningTaskDto = {
   inTargetSprint: boolean;
   otherSprintTitle: string | null;
   exclusionReason: string | null;
+  targetId: string | null;
+  targetTitle: string | null;
+  strategyId: string | null;
+  strategyTitle: string | null;
+  orgUnitLabel: string | null;
+  taskHref: string;
+  /** Present on Ungeplant catalog rows — persisted backlog rank when set. */
+  unplannedRank?: number | null;
 };
 
 export type SprintPlanningInitiativeGroupDto = {

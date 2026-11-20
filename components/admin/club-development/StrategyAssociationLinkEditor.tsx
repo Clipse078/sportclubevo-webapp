@@ -14,6 +14,7 @@ type Props = {
   availableMeetings: EntityRef[];
   availableDecisions: EntityRef[];
   canManage: boolean;
+  clubStrategyId?: string | null;
   editing?: boolean;
   compact?: boolean;
   onAssociationsSaved?: (counts: { meetings: number; decisions: number }) => void;
@@ -25,6 +26,7 @@ export default function StrategyAssociationLinkEditor({
   availableMeetings,
   availableDecisions,
   canManage,
+  clubStrategyId = null,
   editing = false,
   compact = false,
   onAssociationsSaved,
@@ -53,7 +55,11 @@ export default function StrategyAssociationLinkEditor({
       const res = await fetch("/api/club-development/club-strategy/meeting-links", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meetingRefs, decisionRefs }),
+        body: JSON.stringify({
+          meetingRefs,
+          decisionRefs,
+          ...(clubStrategyId ? { clubStrategyId } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

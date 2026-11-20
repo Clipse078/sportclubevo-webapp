@@ -1,75 +1,66 @@
 "use client";
 
-import { ChevronDown, Loader2, Search } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Loader2, MoreVertical } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
+import { flattenUnplannedCatalogTasks } from "@/lib/club-development/sprints/unplanned-catalog-flatten";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
-import { SceCheckbox } from "@/components/sce/forms/SceCheckbox";
+import { mapPlanningTaskToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
+import {
+  parseUmsetzungsplanungDragPayload,
+  UMSETZUNGSPLANUNG_DND_MIME,
+} from "@/lib/club-development/umsetzungsplanung-dnd";
+import { cn } from "@/lib/cn";
 import UmsetzungsplanungCollapsibleSection from "./UmsetzungsplanungCollapsibleSection";
+import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetzungsplanung-section-accent";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
-import SprintTaskAssigneeDisplay from "./SprintTaskAssigneeDisplay";
-import SprintTaskTitleLink from "./SprintTaskTitleLink";
-import {
-  filterCatalogBySearch,
-  initiativeGroupSelectionState,
-  toggleInitiativeGroupSelection,
-} from "@/lib/club-development/sprints/sprint-bulk-planning-selection";
+import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
 
 type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
-  disabled?: boolean;
+  assignDisabled?: boolean;
   onAssigned?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  searchQuery?: string;
 };
 
 function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
-  let total = catalog.standaloneGroup.tasks.length;
-  for (const group of catalog.initiativeGroups) {
-    total += group.tasks.length;
-  }
-  return total;
-}
-
-function formatDueDate(iso: string | null): string | null {
-  if (!iso) return null;
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return flattenUnplannedCatalogTasks(catalog).length;
 }
 
 export default function UmsetzungsplanungUnplannedPanel({
   phaseOptions,
-  disabled = false,
+  assignDisabled = false,
   onAssigned,
   open,
   onOpenChange,
+  searchQuery,
 }: Props) {
+  const dragCtx = useUmsetzungsplanungDragOptional();
   const [catalog, setCatalog] = useState<SprintPlanningCatalogDto | null>(null);
   const [search, setSearch] = useState("");
+  const effectiveSearch = searchQuery ?? search;
   const [serverSearch, setServerSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [expandedInitiatives, setExpandedInitiatives] = useState<Set<string>>(() => new Set());
-  const [standaloneExpanded, setStandaloneExpanded] = useState(true);
-  const [targetPhaseId, setTargetPhaseId] = useState(() => phaseOptions[0]?.id ?? "");
+  const [defaultPhaseId, setDefaultPhaseId] = useState(() => phaseOptions[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [reorderPending, setReorderPending] = useState(false);
   const submittingRef = useRef(false);
+  const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
+  const [returnDropActive, setReturnDropActive] = useState(false);
 
   useEffect(() => {
-    if (!targetPhaseId && phaseOptions[0]?.id) {
-      setTargetPhaseId(phaseOptions[0].id);
+    if (!defaultPhaseId && phaseOptions[0]?.id) {
+      setDefaultPhaseId(phaseOptions[0].id);
     }
-  }, [phaseOptions, targetPhaseId]);
+  }, [phaseOptions, defaultPhaseId]);
 
   const loadCatalog = useCallback(async (q: string) => {
     setLoading(true);
@@ -88,9 +79,9 @@ export default function UmsetzungsplanungUnplannedPanel({
 
   useEffect(() => {
     if (!open) return;
-    const handle = window.setTimeout(() => setServerSearch(search), 300);
+    const handle = window.setTimeout(() => setServerSearch(effectiveSearch), 300);
     return () => window.clearTimeout(handle);
-  }, [open, search]);
+  }, [open, effectiveSearch]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,66 +90,122 @@ export default function UmsetzungsplanungUnplannedPanel({
 
   const headerCount = catalog ? countCatalogTasks(catalog) : null;
 
-  const filtered = useMemo(() => {
-    if (!catalog) return { initiativeGroups: [] as SprintPlanningCatalogDto["initiativeGroups"], standaloneTasks: [] as SprintPlanningTaskDto[] };
-    const q = search.trim().toLowerCase();
-    const initiativeGroups = catalog.initiativeGroups
-      .filter(
-        (g) =>
-          g.title.toLowerCase().includes(q) ||
-          g.tasks.some((t) => !q || t.title.toLowerCase().includes(q)),
-      )
-      .map((g) => ({
-        ...g,
-        tasks: q ? g.tasks.filter((t) => t.title.toLowerCase().includes(q)) : g.tasks,
-      }))
-      .filter((g) => g.tasks.length > 0 || (!q && g.tasks.length === 0));
-    const standaloneTasks = filterCatalogBySearch(search, catalog.standaloneGroup.tasks);
-    return { initiativeGroups, standaloneTasks };
-  }, [catalog, search]);
+  const rankedTasks = useMemo(
+    () => (catalog ? flattenUnplannedCatalogTasks(catalog) : []),
+    [catalog],
+  );
 
-  const selectableIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const group of filtered.initiativeGroups) {
-      for (const task of group.tasks) {
-        if (task.selectable) ids.add(task.id);
+  const filteredTasks = useMemo(() => {
+    const q = effectiveSearch.trim().toLowerCase();
+    if (!q) return rankedTasks;
+    return rankedTasks.filter((task) => {
+      return (
+        task.title.toLowerCase().includes(q) ||
+        (task.targetTitle?.toLowerCase().includes(q) ?? false) ||
+        (task.strategyTitle?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [effectiveSearch, rankedTasks]);
+
+  const allOrderedTaskIds = useMemo(() => rankedTasks.map((t) => t.id), [rankedTasks]);
+
+  const reorderBlocked =
+    effectiveSearch.trim().length > 0 || serverSearch.trim().length >= 2;
+
+  const tableRows = useMemo(
+    () => filteredTasks.map(mapPlanningTaskToTableModel),
+    [filteredTasks],
+  );
+
+  const persistOrder = useCallback(
+    async (orderedTaskIds: string[]) => {
+      setReorderPending(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/club-development/umsetzungsplanung/unplanned-order", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderedTaskIds }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const message =
+            typeof data.error === "string"
+              ? data.error
+              : CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderFailed;
+          setError(message);
+          return { ok: false as const, error: message };
+        }
+        setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderSaved);
+        await loadCatalog(serverSearch);
+        return { ok: true as const };
+      } finally {
+        setReorderPending(false);
       }
-    }
-    for (const task of filtered.standaloneTasks) {
-      if (task.selectable) ids.add(task.id);
-    }
-    return ids;
-  }, [filtered]);
+    },
+    [loadCatalog, serverSearch],
+  );
 
-  const toggleTask = (taskId: string, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(taskId);
-      else next.delete(taskId);
-      return next;
+  const moveTaskByOffset = (taskId: string, offset: -1 | 1) => {
+    if (reorderBlocked) return;
+    const idx = allOrderedTaskIds.indexOf(taskId);
+    if (idx < 0) return;
+    const target = idx + offset;
+    if (target < 0 || target >= allOrderedTaskIds.length) return;
+    const next = [...allOrderedTaskIds];
+    const [removed] = next.splice(idx, 1);
+    if (!removed) return;
+    next.splice(target, 0, removed);
+    startTransition(async () => {
+      await persistOrder(next);
     });
   };
 
-  const assignSelected = () => {
-    if (!targetPhaseId || selectedIds.size === 0 || submittingRef.current) return;
+  const assignTaskToPhase = (taskId: string, phaseId: string) => {
+    if (!phaseId || submittingRef.current || assignDisabled) return;
+    submittingRef.current = true;
+    setAssigningTaskId(taskId);
+    setError(null);
+    setInfo(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/club-development/sprints/${phaseId}/tasks/bulk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taskIds: [taskId] }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.");
+          return;
+        }
+        setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+        await loadCatalog(serverSearch);
+        onAssigned?.();
+      } finally {
+        submittingRef.current = false;
+        setAssigningTaskId(null);
+      }
+    });
+  };
+
+  const unassignFromPhase = (taskId: string, phaseId: string) => {
+    if (submittingRef.current) return;
     submittingRef.current = true;
     setError(null);
     setInfo(null);
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/club-development/sprints/${targetPhaseId}/tasks/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ taskIds: [...selectedIds] }),
-        });
+        const res = await fetch(
+          `/api/club-development/sprints/${phaseId}/tasks?taskId=${encodeURIComponent(taskId)}`,
+          { method: "DELETE" },
+        );
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Zuordnung fehlgeschlagen.");
+          setError(typeof data.error === "string" ? data.error : "Zuordnung konnte nicht entfernt werden.");
           return;
         }
-        const added = typeof data.addedCount === "number" ? data.addedCount : selectedIds.size;
-        setInfo(`${added} Aufgabe${added === 1 ? "" : "n"} zugeordnet.`);
-        setSelectedIds(new Set());
+        setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnedUnplannedInfo);
         await loadCatalog(serverSearch);
         onAssigned?.();
       } finally {
@@ -167,8 +214,19 @@ export default function UmsetzungsplanungUnplannedPanel({
     });
   };
 
-  const canAssign =
-    !disabled && phaseOptions.length > 0 && targetPhaseId && selectedIds.size > 0 && !pending;
+  const handleReturnDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+    setReturnDropActive(false);
+    const raw =
+      event.dataTransfer.getData(UMSETZUNGSPLANUNG_DND_MIME) ||
+      event.dataTransfer.getData("text/plain");
+    const payload = parseUmsetzungsplanungDragPayload(raw);
+    if (!payload || payload.source !== "phase" || !payload.sourcePhaseId) return;
+    dragCtx?.endDrag();
+    unassignFromPhase(payload.taskId, payload.sourcePhaseId);
+  };
+
+  const returnDropVisible = dragCtx?.dragging?.source === "phase";
 
   return (
     <UmsetzungsplanungCollapsibleSection
@@ -177,185 +235,176 @@ export default function UmsetzungsplanungUnplannedPanel({
       open={open}
       onOpenChange={onOpenChange}
       testId="umsetzungsplanung-unplanned-panel"
+      headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.unplanned.headerClass}
+      sectionBadge={
+        <span
+          className={UMSETZUNGSPLANUNG_SECTION_ACCENTS.unplanned.badgeClass}
+          data-testid="umsetzungsplanung-unplanned-badge"
+        >
+          Ungeplant
+        </span>
+      }
     >
-      <p className="px-1 text-xs text-[var(--muted)]">{CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedSummary}</p>
-      <div className="space-y-3">
-          <label className="relative block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Aufgaben suchen …"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm"
-              disabled={disabled}
-            />
-          </label>
+      <div
+        className={cn(
+          "space-y-3 rounded-lg transition-shadow",
+          returnDropActive && returnDropVisible && "ring-2 ring-[var(--sce-primary)] ring-offset-2",
+        )}
+        onDragOver={(event) => {
+          if (!returnDropVisible) return;
+          event.preventDefault();
+          setReturnDropActive(true);
+        }}
+        onDragLeave={() => setReturnDropActive(false)}
+        onDrop={(e) => void handleReturnDrop(e)}
+        data-testid="umsetzungsplanung-unplanned-drop-zone"
+      >
+        {returnDropVisible ? (
+          <p className="px-1 text-xs text-[var(--text-2)]">
+            {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedDropReturnHint}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap items-end gap-3 px-1">
+          {searchQuery === undefined ? (
+            <label className="min-w-[12rem] flex-1 text-sm">
+              <span className="mb-1 block text-xs text-[var(--muted)]">Aufgaben suchen …</span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Aufgaben suchen …"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              />
+            </label>
+          ) : null}
           {phaseOptions.length > 0 ? (
-            <div className="flex flex-wrap items-end gap-3">
-              <label className="min-w-[12rem] flex-1 text-sm">
-                <span className="mb-1 block text-[var(--muted)]">
-                  {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.choosePhaseTarget}
-                </span>
-                <select
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                  value={targetPhaseId}
-                  onChange={(e) => setTargetPhaseId(e.target.value)}
-                  disabled={disabled || pending}
-                >
-                  {phaseOptions.map((phase) => (
-                    <option key={phase.id} value={phase.id}>
-                      {phase.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                disabled={!canAssign}
-                onClick={assignSelected}
+            <label className="min-w-[12rem] flex-1 text-sm">
+              <span className="mb-1 block text-xs text-[var(--muted)]">
+                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.choosePhaseTarget}
+              </span>
+              <select
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                value={defaultPhaseId}
+                onChange={(e) => setDefaultPhaseId(e.target.value)}
+                disabled={assignDisabled || pending}
               >
-                {pending ? <Loader2 className="inline h-4 w-4 animate-spin" aria-hidden /> : null}{" "}
-                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.assignSelectedAction}
-                {selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
-              </button>
-            </div>
+                {phaseOptions.map((phase) => (
+                  <option key={phase.id} value={phase.id}>
+                    {phase.title}
+                  </option>
+                ))}
+              </select>
+            </label>
           ) : null}
-          {error ? (
-            <div className="space-y-2">
-              <ClubDevelopmentFormError message={error || CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedLoadError} />
-              <button
-                type="button"
-                className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-                onClick={() => void loadCatalog(serverSearch)}
-              >
-                Erneut laden
-              </button>
-            </div>
-          ) : null}
-          {info ? <p className="text-sm text-[var(--sce-primary)]">{info}</p> : null}
-          {loading ? (
-            <p className="flex items-center gap-2 text-sm text-[var(--muted)]" role="status">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Laden …
-            </p>
-          ) : null}
-          {!loading && !error && catalog && filtered.initiativeGroups.length === 0 && filtered.standaloneTasks.length === 0 ? (
-            <UmsetzungsplanungInlineEmpty message="Keine ungeplanten Aufgaben für die aktuelle Filterung." />
-          ) : null}
-          {filtered.initiativeGroups.map((group) => {
-            const groupState = initiativeGroupSelectionState(group.tasks, selectedIds);
-            const isOpen = expandedInitiatives.has(group.initiativeId);
-            return (
-              <div key={group.initiativeId} className="rounded-md bg-[var(--surface-2)]/40">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left"
-                  aria-expanded={isOpen}
-                  onClick={() =>
-                    setExpandedInitiatives((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(group.initiativeId)) next.delete(group.initiativeId);
-                      else next.add(group.initiativeId);
-                      return next;
-                    })
-                  }
-                >
-                  <ChevronDown className={`h-4 w-4 ${isOpen ? "rotate-180" : ""}`} aria-hidden />
-                  <span className="text-sm font-medium">{group.title}</span>
-                  <span className="text-xs text-[var(--muted)]">({group.tasks.length})</span>
-                  <span className="ml-auto">
-                    <SceCheckbox
-                      checked={groupState === "all"}
-                      onChange={() =>
-                        setSelectedIds((prev) => toggleInitiativeGroupSelection(group.tasks, prev))
-                      }
-                      aria-label={`Alle auswählbaren Aufgaben des Vorhabens ${group.title} auswählen`}
-                      disabled={disabled}
-                    />
-                  </span>
-                </button>
-                {isOpen ? (
-                  <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
-                    {group.tasks.map((task) => (
-                      <UnplannedTaskRow
-                        key={task.id}
-                        task={task}
-                        checked={selectedIds.has(task.id)}
-                        onCheckedChange={(checked) => toggleTask(task.id, checked)}
-                        disabled={disabled || !task.selectable}
-                      />
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            );
-          })}
-          {filtered.standaloneTasks.length > 0 ? (
-            <div className="rounded-md bg-[var(--surface-2)]/40">
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-2 text-left"
-                aria-expanded={standaloneExpanded}
-                onClick={() => setStandaloneExpanded((v) => !v)}
-              >
-                <ChevronDown className={`h-4 w-4 ${standaloneExpanded ? "rotate-180" : ""}`} aria-hidden />
-                <span className="text-sm font-medium">Ohne Vorhaben</span>
-              </button>
-              {standaloneExpanded ? (
-                <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
-                  {filtered.standaloneTasks.map((task) => (
-                    <UnplannedTaskRow
-                      key={task.id}
-                      task={task}
-                      checked={selectedIds.has(task.id)}
-                      onCheckedChange={(checked) => toggleTask(task.id, checked)}
-                      disabled={disabled || !task.selectable}
-                    />
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-          {selectableIds.size > 0 ? (
-            <p className="text-xs text-[var(--muted)]">
-              Tastatur: Aufgaben per Kontrollkästchen auswählen, Zielphase wählen, dann „
-              {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.assignSelectedAction}“.
-            </p>
-          ) : null}
+        </div>
+        {reorderBlocked ? (
+          <p className="px-1 text-xs text-[var(--muted)]">
+            {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderFilteredHint}
+          </p>
+        ) : null}
+
+        {error ? (
+          <div className="space-y-2 px-1">
+            <ClubDevelopmentFormError message={error || CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedLoadError} />
+            <button
+              type="button"
+              className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
+              onClick={() => void loadCatalog(serverSearch)}
+            >
+              Erneut laden
+            </button>
+          </div>
+        ) : null}
+        {info ? <p className="px-1 text-sm text-[var(--sce-primary)]">{info}</p> : null}
+        {loading ? (
+          <p className="flex items-center gap-2 px-1 text-sm text-[var(--muted)]" role="status">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Laden …
+          </p>
+        ) : null}
+        {!loading && !error && catalog && filteredTasks.length === 0 ? (
+          <UmsetzungsplanungInlineEmpty message="Keine ungeplanten Aufgaben für die aktuelle Filterung." />
+        ) : null}
+        {!loading && !error && filteredTasks.length > 0 ? (
+          <VereinsentwicklungConnectedTaskTable
+            rows={tableRows}
+            showReorderHandle
+            reorder={{
+              dragEnabled: !assignDisabled && phaseOptions.length > 0,
+              canReorder: !reorderBlocked && !reorderPending,
+              pending: pending || reorderPending,
+              allOrderedTaskIds,
+              onPersistOrder: persistOrder,
+              onDragStart: (taskId) => {
+                dragCtx?.beginDrag({ taskId, source: "unplanned" });
+              },
+              onDragEnd: () => dragCtx?.endDrag(),
+            }}
+            testId="umsetzungsplanung-unplanned-task-table"
+            renderRowActions={(row) => {
+              const task = filteredTasks.find((t) => t.id === row.taskId);
+              const canPlan =
+                !assignDisabled &&
+                phaseOptions.length > 0 &&
+                Boolean(defaultPhaseId) &&
+                task?.selectable !== false;
+              const isAssigning = assigningTaskId === row.taskId && pending;
+              const idx = allOrderedTaskIds.indexOf(row.taskId);
+              const canMove = !reorderBlocked && !reorderPending;
+              return (
+                <div className="flex flex-wrap items-center justify-end gap-1">
+                  {canMove ? (
+                    <>
+                      <button
+                        type="button"
+                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                        disabled={idx <= 0}
+                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveUpAction}
+                        onClick={() => moveTaskByOffset(row.taskId, -1)}
+                        data-testid={`umsetzungsplanung-move-up-${row.taskId}`}
+                      >
+                        <ChevronUp className="h-4 w-4" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                        disabled={idx < 0 || idx >= allOrderedTaskIds.length - 1}
+                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveDownAction}
+                        onClick={() => moveTaskByOffset(row.taskId, 1)}
+                        data-testid={`umsetzungsplanung-move-down-${row.taskId}`}
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden />
+                      </button>
+                    </>
+                  ) : null}
+                  {canPlan ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
+                      disabled={isAssigning || pending}
+                      onClick={() => assignTaskToPhase(row.taskId, defaultPhaseId)}
+                      data-testid={`umsetzungsplanung-einplanen-${row.taskId}`}
+                    >
+                      {isAssigning ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                      ) : (
+                        <Calendar className="h-3.5 w-3.5" aria-hidden />
+                      )}
+                      {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenAction}
+                    </button>
+                  ) : (
+                    <span
+                      className="text-[var(--muted)]"
+                      title={task?.exclusionReason ?? undefined}
+                      aria-hidden
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </span>
+                  )}
+                </div>
+              );
+            }}
+          />
+        ) : null}
       </div>
     </UmsetzungsplanungCollapsibleSection>
-  );
-}
-
-function UnplannedTaskRow({
-  task,
-  checked,
-  onCheckedChange,
-  disabled,
-}: {
-  task: SprintPlanningTaskDto;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  disabled: boolean;
-}) {
-  const due = formatDueDate(task.dueAt);
-  return (
-    <li className="flex flex-wrap items-center gap-3 px-3 py-2" data-testid={`umsetzungsplanung-unplanned-task-${task.id}`}>
-      <SceCheckbox
-        checked={checked}
-        onChange={() => onCheckedChange(!checked)}
-        disabled={disabled}
-        className="mt-1"
-        aria-label={task.title}
-      />
-      <div className="min-w-0 flex-1">
-        <SprintTaskTitleLink taskId={task.id} title={task.title} />
-        <p className="text-xs text-[var(--muted)]">
-          {task.statusLabel}
-          {due ? ` · Fällig ${due}` : ""}
-        </p>
-        <SprintTaskAssigneeDisplay assignees={task.assignees} />
-      </div>
-    </li>
   );
 }

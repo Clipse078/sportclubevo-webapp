@@ -16,6 +16,9 @@ import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 type Props = {
   canCreate: boolean;
   defaultExpanded?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  hideHeader?: boolean;
 };
 
 export type DevelopmentSprintCreateCardHandle = {
@@ -28,11 +31,13 @@ type CreateSprintResponse = {
 };
 
 const DevelopmentSprintCreateCard = forwardRef<DevelopmentSprintCreateCardHandle, Props>(function DevelopmentSprintCreateCard(
-  { canCreate, defaultExpanded = false },
+  { canCreate, defaultExpanded = false, expanded: expandedProp, onExpandedChange, hideHeader = false },
   ref,
 ) {
   const router = useRouter();
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expandedInternal, setExpandedInternal] = useState(defaultExpanded);
+  const expanded = expandedProp ?? expandedInternal;
+  const setExpanded = onExpandedChange ?? setExpandedInternal;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const submittingRef = useRef(false);
@@ -94,8 +99,13 @@ const DevelopmentSprintCreateCard = forwardRef<DevelopmentSprintCreateCardHandle
   };
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/50" data-testid="sprint-create-card">
-      <SprintCreateCollapsibleHeader expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+    <div
+      className={hideHeader && !expanded ? "hidden" : "rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/50"}
+      data-testid="sprint-create-card"
+    >
+      {hideHeader ? null : (
+        <SprintCreateCollapsibleHeader expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+      )}
       {expanded ? (
         <form onSubmit={onSubmit} className="space-y-4 p-4">
           {error ? <ClubDevelopmentFormError message={error} /> : null}

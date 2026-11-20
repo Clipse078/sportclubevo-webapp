@@ -457,6 +457,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/club-strategies/route.ts",
+    "urlPattern": "/api/club-development/club-strategies",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/club-strategy/document-references/route.ts",
     "urlPattern": "/api/club-development/club-strategy/document-references",
     "audience": "API"
@@ -477,6 +483,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/club-strategy/route.ts",
     "urlPattern": "/api/club-development/club-strategy",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/contextual-task-create/route.ts",
+    "urlPattern": "/api/club-development/contextual-task-create",
     "audience": "API"
   },
   {
@@ -619,6 +631,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/targets/[id]/tasks/route.ts",
+    "urlPattern": "/api/club-development/targets/[id]/tasks",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/targets/candidates/route.ts",
     "urlPattern": "/api/club-development/targets/candidates",
     "audience": "API"
@@ -633,6 +651,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/club-development/umsetzungsplanung/unplanned-candidates/route.ts",
     "urlPattern": "/api/club-development/umsetzungsplanung/unplanned-candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/club-development/umsetzungsplanung/unplanned-order/route.ts",
+    "urlPattern": "/api/club-development/umsetzungsplanung/unplanned-order",
     "audience": "API"
   },
   {

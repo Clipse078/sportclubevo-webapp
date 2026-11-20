@@ -578,15 +578,14 @@ function groupChildrenUnits(
   if (parentItem.key === "club-entwicklung") {
     const childPermissionMap: Record<string, string[]> = {
       "club-entwicklung-uebersicht": [PERMISSIONS.WORKSPACE_VIEW, PERMISSIONS.WORKSPACE_MANAGE],
-      "club-entwicklung-strategie-ziele": [PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE],
-      "club-entwicklung-vorhaben-umsetzung": [
+      "club-entwicklung-strategien": [PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE],
+      "club-entwicklung-ziele": [PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE],
+      "club-entwicklung-aufgaben": [PERMISSIONS.INITIATIVES_VIEW, PERMISSIONS.INITIATIVES_MANAGE, PERMISSIONS.TASKS_VIEW],
+      "club-entwicklung-umsetzungsplanung": [
         PERMISSIONS.INITIATIVES_VIEW,
         PERMISSIONS.INITIATIVES_MANAGE,
       ],
-      "club-entwicklung-sitzungen": [PERMISSIONS.MEETINGS_VIEW, PERMISSIONS.MEETINGS_MANAGE],
     };
-  const VL_ASSIGNMENT_NOTE =
-    "Zugang zu Sitzungen setzt eine aktive Vereinsleitungs-Zuweisung voraus; die Rolle allein ist keine Mitgliedschaft.";
   for (const child of children) {
     const keys = filterGrantableKeys(childPermissionMap[child.key] ?? child.permissionKeys, catalog);
     if (keys.length === 0) continue;
@@ -596,15 +595,11 @@ function groupChildrenUnits(
       keys,
       catalog,
       {
-        description:
-          child.key === "club-entwicklung-sitzungen"
-            ? VL_ASSIGNMENT_NOTE
-            : undefined,
         iconLabel: child.label,
         parentLabel: parentItem.label,
         sharedNote:
           child.key !== "club-entwicklung-uebersicht"
-            ? "Workspace-Gate canAccessVereinsleitung wird mit Zielen/Vorhaben/Sitzungen gemeinsam gespeichert."
+            ? "Workspace-Gate canAccessVereinsleitung wird mit Strategie/Zielen/Aufgaben gemeinsam gespeichert."
             : undefined,
       },
     );

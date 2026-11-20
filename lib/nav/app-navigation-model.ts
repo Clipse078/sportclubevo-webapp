@@ -20,7 +20,10 @@ import type { NavHeaderL2GroupDefinition } from "@/lib/nav/nav-ia-v2/target-ia-m
 import type { NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
-import { pathnameMatchesVereinsentwicklungNavHref } from "@/lib/club-development/vereinsentwicklung-nav-path-aliases";
+import {
+  pathnameMatchesVereinsentwicklungNavHref,
+  resolveVereinsentwicklungConnectedNavChildKey,
+} from "@/lib/club-development/vereinsentwicklung-nav-path-aliases";
 
 export type { NavPresentationPriority };
 
@@ -766,8 +769,12 @@ export function buildAppNavigationModelForUser(
   );
 }
 
-export function isNavigationHrefActive(pathname: string, href: string): boolean {
-  return pathnameMatchesVereinsentwicklungNavHref(pathname, href);
+export function isNavigationHrefActive(
+  pathname: string,
+  href: string,
+  search?: URLSearchParams | string | null,
+): boolean {
+  return pathnameMatchesVereinsentwicklungNavHref(pathname, href, search);
 }
 
 /** Relative strength of a pathname ↔ href match (higher wins among siblings). */
@@ -783,16 +790,19 @@ export function rankNavigationHrefMatch(
   href: string,
   matchExact?: boolean,
   order = 0,
+  search?: URLSearchParams | string | null,
 ): NavigationHrefMatchRank | null {
+  const hrefPath = href.includes("?") ? href.slice(0, href.indexOf("?")) : href;
   if (matchExact) {
-    return pathname === href ? { exact: true, hrefLength: href.length, order } : null;
+    return pathname === hrefPath ? { exact: true, hrefLength: href.length, order } : null;
   }
-  if (pathname === href) {
-    return { exact: true, hrefLength: href.length, order };
+  if (pathname === hrefPath) {
+    const exact = !href.includes("?") || pathnameMatchesVereinsentwicklungNavHref(pathname, href, search);
+    return { exact, hrefLength: href.length, order };
   }
   if (href === "/dashboard") return null;
-  if (pathnameMatchesVereinsentwicklungNavHref(pathname, href)) {
-    const exact = pathname === href;
+  if (pathnameMatchesVereinsentwicklungNavHref(pathname, href, search)) {
+    const exact = pathname === hrefPath;
     return { exact, hrefLength: href.length, order };
   }
   return null;
@@ -810,6 +820,7 @@ function compareNavigationHrefMatchRank(
 function pickBestNavigationHrefMatch(
   pathname: string,
   candidates: ReadonlyArray<{ href: string; matchExact?: boolean; order: number; token: string }>,
+  search?: URLSearchParams | string | null,
 ): string | null {
   let best: { rank: NavigationHrefMatchRank; token: string } | null = null;
   for (const candidate of candidates) {
@@ -818,6 +829,7 @@ function pickBestNavigationHrefMatch(
       candidate.href,
       candidate.matchExact,
       candidate.order,
+      search,
     );
     if (!rank) continue;
     if (!best || compareNavigationHrefMatchRank(rank, best.rank) > 0) {
@@ -852,8 +864,19 @@ export function resolvePrimaryActiveModuleLocalChildKey(
   pathname: string,
   children: readonly NavItemChild[],
   preferredChildKey: string | null = null,
+  search?: URLSearchParams | string | null,
 ): string | null {
   if (children.length === 0) return null;
+
+  const locationSearch =
+    search instanceof URLSearchParams
+      ? search
+      : new URLSearchParams(typeof search === "string" ? search.replace(/^\?/, "") : "");
+  const connectedKey = resolveVereinsentwicklungConnectedNavChildKey(pathname, locationSearch);
+  if (connectedKey && children.some((c) => c.key === connectedKey)) {
+    return connectedKey;
+  }
+
   const bestKey = pickBestNavigationHrefMatch(
     pathname,
     children.map((child, order) => ({
@@ -862,6 +885,7 @@ export function resolvePrimaryActiveModuleLocalChildKey(
       order,
       token: child.key,
     })),
+    search,
   );
   if (bestKey) return bestKey;
   const nestedKey = resolveNestedModuleLocalChildKey(pathname, children);
@@ -874,16 +898,22 @@ export function isModuleLocalChildPrimaryActive(
   child: NavItemChild,
   siblings: readonly NavItemChild[],
   preferredChildKey: string | null = null,
+  search?: URLSearchParams | string | null,
 ): boolean {
-  const winner = resolvePrimaryActiveModuleLocalChildKey(pathname, siblings, preferredChildKey);
+  const winner = resolvePrimaryActiveModuleLocalChildKey(pathname, siblings, preferredChildKey, search);
   return winner === child.key;
 }
 
-export function isNavigationChildActive(pathname: string, child: NavItemChild): boolean {
+export function isNavigationChildActive(
+  pathname: string,
+  child: NavItemChild,
+  search?: URLSearchParams | string | null,
+): boolean {
   if (child.matchExact) {
-    return pathname === child.href;
+    const childPath = child.href.includes("?") ? child.href.slice(0, child.href.indexOf("?")) : child.href;
+    return pathname === childPath;
   }
-  return isNavigationHrefActive(pathname, child.href);
+  return isNavigationHrefActive(pathname, child.href, search);
 }
 
 function domainToLegacyPrimary(domain: NavigationDomain): AppNavigationPrimaryItem {

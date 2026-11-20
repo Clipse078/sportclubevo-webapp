@@ -6,11 +6,8 @@ import InitiativeBacklogWorkspace from "./InitiativeBacklogWorkspace";
 import VorhabenAufgabenWorkspace from "./VorhabenAufgabenWorkspace";
 import UmsetzungsplanungWorkspace from "./UmsetzungsplanungWorkspace";
 import type { UmsetzungsplanungPhaseCardItem } from "./UmsetzungsplanungPhaseCard";
-import VereinsentwicklungWorkspaceViewNav from "./VereinsentwicklungWorkspaceViewNav";
+import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
 import {
-  buildVorhabenUndUmsetzungHref,
-  CD_VORHABEN_UMSETZUNG_VIEWS,
-  CD_VORHABEN_UMSETZUNG_VIEW_LABELS,
   CD_WORKSPACE_PRIORITAETEN_QUERY,
   parseVorhabenUmsetzungView,
 } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
@@ -23,6 +20,9 @@ type FilterTarget = {
 };
 
 type Props = {
+  permissionKeys: string[];
+  hasPlanningAccess: boolean;
+  orgEinheitFilterLabel?: string | null;
   snapshot: VorhabenWorkspaceSnapshot;
   initialTargetId: string | null;
   initialInitiativeId: string | null;
@@ -37,6 +37,9 @@ type Props = {
 };
 
 export default function VorhabenUndUmsetzungWorkspaceClient({
+  permissionKeys,
+  hasPlanningAccess,
+  orgEinheitFilterLabel = null,
   snapshot,
   initialTargetId,
   initialInitiativeId,
@@ -54,22 +57,19 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
   const showPrioritaeten =
     searchParams.get(CD_WORKSPACE_PRIORITAETEN_QUERY) === "1" || showPrioritaetenDefault;
 
-  const buildHref = (view: (typeof CD_VORHABEN_UMSETZUNG_VIEWS)[number]) => {
-    const params: Record<string, string | undefined> = {};
-    searchParams.forEach((value, key) => {
-      if (key !== "ansicht") params[key] = value;
-    });
-    return buildVorhabenUndUmsetzungHref(view, params);
-  };
+  const connectedActiveView =
+    activeView === "umsetzungsphasen"
+      ? "umsetzungsplanung"
+      : activeView === "aufgaben"
+        ? "aufgaben"
+        : "aufgaben";
 
   return (
     <>
-      <VereinsentwicklungWorkspaceViewNav
-        views={CD_VORHABEN_UMSETZUNG_VIEWS}
-        labels={CD_VORHABEN_UMSETZUNG_VIEW_LABELS}
-        activeView={activeView}
-        buildHref={buildHref}
-        testId="vorhaben-umsetzung-view-nav"
+      <VereinsentwicklungConnectedWorkspaceNav
+        permissionKeys={permissionKeys}
+        hasPlanningAccess={hasPlanningAccess}
+        activeView={connectedActiveView}
       />
       <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
         {showPrioritaeten && backlogCanView ? (
@@ -90,6 +90,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
             filterTarget={filterTarget}
             showPrioritaetenControl={backlogCanView}
             showPrioritaetenActive={showPrioritaeten && backlogCanView}
+            orgEinheitFilterLabel={orgEinheitFilterLabel}
           />
         )}
       </div>
@@ -99,10 +100,15 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
           initialSnapshot={snapshot}
           initialTargetId={initialTargetId}
           initialInitiativeId={initialInitiativeId}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
         />
       </div>
       <div hidden={activeView !== "umsetzungsphasen"} aria-hidden={activeView !== "umsetzungsphasen"} className="space-y-4">
-        <UmsetzungsplanungWorkspace sprints={sprints} canManageSprints={canManageSprints} />
+        <UmsetzungsplanungWorkspace
+          sprints={sprints}
+          canManageSprints={canManageSprints}
+          orgEinheitFilterLabel={orgEinheitFilterLabel}
+        />
       </div>
     </>
   );

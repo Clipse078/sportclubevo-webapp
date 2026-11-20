@@ -39,10 +39,12 @@ describe("PKG-05 single Vorhaben linking surface", () => {
     expect(section).toContain('data-testid="target-initiative-legacy-unlink-notice"');
   });
 
-  it("detail page does not mount TargetLinkEditor (Vorhaben section only)", () => {
+  it("detail page omits Vorhaben panel while edit keeps initiative linking", () => {
     const detail = read("app/(admin)/vereinsleitung/targets/[id]/page.tsx");
-    expect(detail).toContain("TargetInitiativeLinksSection");
+    expect(detail).not.toContain("TargetInitiativeLinksSection");
     expect(detail).not.toContain("TargetLinkEditor");
+    expect(detail).toContain("TargetTasksSection");
+    expect(detail).toContain("target-linked-strategie");
   });
 });
 

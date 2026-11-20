@@ -2863,6 +2863,30 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
+    "route": "/vereinsleitung/strategie-und-ziele/strategie/neu",
+    "source": "app/(admin)/vereinsleitung/strategie-und-ziele/strategie/neu/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/vereinsleitung/strategie-und-ziele/ziele/neu",
+    "source": "app/(admin)/vereinsleitung/strategie-und-ziele/ziele/neu/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
     "route": "/vereinsleitung/strategie",
     "source": "app/(admin)/vereinsleitung/strategie/page.tsx",
     "pageArchitecture": "legacy",
@@ -2901,14 +2925,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/vereinsleitung/targets/new",
     "source": "app/(admin)/vereinsleitung/targets/new/page.tsx",
-    "pageArchitecture": "canonical",
-    "headerFinanceAligned": true,
+    "pageArchitecture": "legacy",
+    "headerFinanceAligned": false,
     "tabsFinanceAligned": false,
-    "typographyConsistent": true,
-    "colorsContrastRisk": false,
+    "typographyConsistent": false,
+    "colorsContrastRisk": true,
     "interactionsLegacy": false,
     "priority": "Low",
-    "action": "DS2-07: align header/tabs tokens"
+    "action": "redirect alias → dynamic (not a visual surface)"
   },
   {
     "route": "/vereinsleitung/targets",

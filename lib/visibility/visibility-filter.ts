@@ -61,7 +61,7 @@ export type VisibilityCheckable = {
 };
 
 /** Parse a JSONB field that stores a plain string[]. */
-function parseStringArray(raw: unknown): string[] {
+export function parseStringArray(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter((v): v is string => typeof v === "string");
 }

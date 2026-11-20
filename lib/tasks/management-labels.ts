@@ -34,6 +34,7 @@ export const TASK_CONTEXT_LABELS: Record<TaskContextType, string> = {
   MEETING: "Sitzung",
   MEETING_DECISION: "Beschluss",
   INITIATIVE: "Vorhaben",
+  TARGET: "Ziel",
   REGISTRATION: "Anmeldung",
   TEAM: "Team",
   PERSON: "Person",

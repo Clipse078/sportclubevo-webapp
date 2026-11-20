@@ -37,6 +37,9 @@ describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
     expect(readSrc("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
       "CreateTargetWorkspaceCollapsibleCard",
     );
+    expect(readSrc("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
+      "CreateStrategieWorkspaceCollapsibleCard",
+    );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/page.tsx")).toContain("CreateMeetingTrigger");
     expect(readSrc("components/admin/initiatives/CreateInitiativeTrigger.tsx")).toContain(
       "/vereinsleitung/initiativen/new",

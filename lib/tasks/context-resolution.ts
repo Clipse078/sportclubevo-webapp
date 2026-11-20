@@ -413,6 +413,76 @@ export async function resolveTaskContextsBatch(
     );
   }
 
+  if (byType.has("TARGET")) {
+    const ids = [...(byType.get("TARGET") ?? [])];
+    loads.push(
+      (async () => {
+        const [rows, focusRows] = await Promise.all([
+          prisma.target.findMany({
+            where: { id: { in: ids }, tenantId: ctx.tenantId },
+            select: {
+              id: true,
+              title: true,
+              visibilityScope: true,
+              createdByUserId: true,
+              visibleRoleRefs: true,
+              visibleUserRefs: true,
+              visibleTeamRefs: true,
+              visibleOrgUnitRefs: true,
+              visiblePersonRefs: true,
+              visibleTargetGroupRefs: true,
+            },
+          }),
+          prisma.clubStrategyFocusTarget.findMany({
+            where: { targetId: { in: ids }, tenantId: ctx.tenantId },
+            select: {
+              targetId: true,
+              clubStrategy: {
+                select: { id: true, title: true, scopeOrgUnitId: true, scopeType: true },
+              },
+            },
+            orderBy: { sortOrder: "asc" },
+          }),
+        ]);
+        const rowById = new Map(rows.map((r) => [r.id, r]));
+        const strategyTitleByTargetId = new Map<string, string>();
+        for (const focus of focusRows) {
+          if (!strategyTitleByTargetId.has(focus.targetId)) {
+            const title = focus.clubStrategy.title?.trim();
+            if (title) strategyTitleByTargetId.set(focus.targetId, title);
+          }
+        }
+        const canSeeModule = canResolveTaskContextDetails(ctx, "TARGET");
+        const actorResolved = await hydrateActorForMeetings(ctx);
+        const { canSeeEntity } = await import("@/lib/visibility/visibility-filter");
+        for (const id of ids) {
+          const key = contextKey("TARGET", id);
+          const row = rowById.get(id);
+          if (!row) {
+            resolvedRows.set(key, {
+              title: TASK_CONTEXT_UNAVAILABLE_LABEL,
+              subtitle: null,
+              href: null,
+              unavailable: true,
+            });
+            continue;
+          }
+          if (!canSeeModule || !canSeeEntity(row, actorResolved)) {
+            resolvedRows.set(key, { title: null, subtitle: null, href: null, unavailable: false });
+            continue;
+          }
+          const strategieTitle = strategyTitleByTargetId.get(id);
+          resolvedRows.set(key, {
+            title: row.title,
+            subtitle: strategieTitle ? `Strategie · ${strategieTitle}` : null,
+            href: buildOperationalContextHref("TARGET", { id: row.id }),
+            unavailable: false,
+          });
+        }
+      })(),
+    );
+  }
+
   if (byType.has("INITIATIVE")) {
     const ids = [...(byType.get("INITIATIVE") ?? [])];
     loads.push(

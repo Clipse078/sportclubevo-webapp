@@ -26,6 +26,8 @@ export async function PUT(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   try {
     const result = await upsertClubStrategyAuthoring(access.context.actor, access.context.actorUserId, {
+      clubStrategyId: body?.clubStrategyId ?? body?.strategyId,
+      title: body?.title,
       situationText: body?.situationText,
       alignmentText: body?.alignmentText,
       responsiblePersonId: body?.responsiblePersonId,

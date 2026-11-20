@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { ChevronRight, ClipboardCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useTransition } from "react";
+import { Calendar, ChevronRight, ClipboardCheck, ExternalLink } from "lucide-react";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import {
   CD_SPRINT_STATUS_LABELS,
@@ -8,7 +12,9 @@ import {
 } from "@/lib/club-development/product-copy";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import { SprintBoardQuickLink } from "./DevelopmentSprintList";
+import DevelopmentSprintPhaseEditMenu from "./DevelopmentSprintPhaseEditMenu";
 import UmsetzungsplanungPhaseAssignedTasksPanel from "./UmsetzungsplanungPhaseAssignedTasksPanel";
+import UmsetzungsplanungPhaseScheduleDropZone from "./UmsetzungsplanungPhaseScheduleDropZone";
 
 export type UmsetzungsplanungPhaseCardItem = {
   id: string;
@@ -41,6 +47,8 @@ export default function UmsetzungsplanungPhaseCard({
   phaseOptions,
   readOnlyTasks = false,
 }: PhaseCardProps) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const planningLabel =
     sprint.status === "ACTIVE"
       ? CD_SPRINT_WORKSPACE_COPY.tabPlanning
@@ -48,34 +56,87 @@ export default function UmsetzungsplanungPhaseCard({
   const allowTaskMoves = canManageSprints && !readOnlyTasks && sprint.status !== "COMPLETED";
   const moveTargets = phaseOptions.filter((p) => p.id !== sprint.id);
 
+  const assignDraggedTask = useCallback(
+    async (taskId: string) => {
+      if (!allowTaskMoves) return;
+      const res = await fetch(`/api/club-development/sprints/${sprint.id}/tasks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: [taskId] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.");
+      }
+      startTransition(() => router.refresh());
+    },
+    [allowTaskMoves, router, sprint.id],
+  );
+
   return (
     <article
       className="space-y-2 border-b border-[var(--border)]/60 pb-3 last:border-b-0 last:pb-0"
       data-testid={`umsetzungsplanung-phase-${sprint.slug}`}
     >
-      <Link
-        href={`/vereinsleitung/sprints/${sprint.slug}`}
-        className="group flex items-center justify-between gap-3 rounded-md px-1 py-1 transition hover:bg-[var(--surface-2)]/60"
+      <UmsetzungsplanungPhaseScheduleDropZone
+        phaseId={sprint.id}
+        phaseTitle={sprint.title}
+        acceptDrop={allowTaskMoves}
+        onAssignTask={assignDraggedTask}
       >
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface)] px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/vereinsleitung/sprints/${sprint.slug}`}
+            className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
+          >
             {sprint.title}
+          </Link>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--muted)]">
+            <Calendar className="h-3.5 w-3.5" aria-hidden />
+            <span>
+              {formatDate(sprint.startsAt)} – {formatDate(sprint.endsAt)}
+            </span>
+            <span aria-hidden>·</span>
+            <span>{CD_SPRINT_STATUS_LABELS[sprint.status]}</span>
+            {sprint.owner ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>{sprint.owner}</span>
+              </>
+            ) : null}
           </p>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
-            {CD_SPRINT_STATUS_LABELS[sprint.status]} · {formatDate(sprint.startsAt)} – {formatDate(sprint.endsAt)}
-            {sprint.owner ? ` · ${sprint.owner}` : ""}
-          </p>
-          {sprint.goal ? <p className="mt-1 line-clamp-1 text-xs text-[var(--text-2)]">{sprint.goal}</p> : null}
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-      </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <DevelopmentSprintPhaseEditMenu
+            sprint={{
+              id: sprint.id,
+              slug: sprint.slug,
+              title: sprint.title,
+              goal: sprint.goal,
+              status: sprint.status,
+              startsAt: sprint.startsAt,
+              endsAt: sprint.endsAt,
+            }}
+            canManage={canManageSprints}
+          />
+          <Link
+            href={`/vereinsleitung/sprints/${sprint.slug}/board`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-95"
+          >
+            Board öffnen
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+          <Link
+            href={`/vereinsleitung/sprints/${sprint.slug}`}
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-[var(--sce-primary)]"
+          >
+            {planningLabel}
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2 px-1">
-        <Link
-          href={`/vereinsleitung/sprints/${sprint.slug}`}
-          className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)]/80 bg-[var(--surface-2)]/80 px-2.5 py-1.5 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)]"
-        >
-          {planningLabel}
-        </Link>
         <SprintBoardQuickLink slug={sprint.slug} />
         {sprint.status === "COMPLETED" || sprint.status === "ACTIVE" ? (
           <Link
@@ -95,6 +156,7 @@ export default function UmsetzungsplanungPhaseCard({
         moveTargetPhases={moveTargets}
         defaultExpanded={sprint.status === "ACTIVE" || sprint.status === "PLANNED"}
       />
+      </UmsetzungsplanungPhaseScheduleDropZone>
     </article>
   );
 }

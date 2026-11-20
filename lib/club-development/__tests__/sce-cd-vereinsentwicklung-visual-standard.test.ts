@@ -25,14 +25,26 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.surfaceStyles,
     );
+    expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx")).toContain(
+      "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
+      "aufgaben-workspace-toolbar",
+    );
   });
 
   it("uses single Vorhaben & Umsetzung page subtitle without duplicate workspace intro", () => {
     const page = read("app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx");
     const workspace = read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx");
-    expect(page).toContain("CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle");
+    expect(page).toContain("pageMeta.description");
     expect(read("lib/club-development/product-copy.ts")).toContain(
-      "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
+      "CD_CONNECTED_WORKSPACE_VIEW_COPY",
     );
     expect(workspace).not.toContain("NavShortcut");
     expect(workspace).not.toContain("CD_VORHABEN_WORKSPACE_COPY.intro");
@@ -70,6 +82,7 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
         "components/admin/meetings/workspace/MeetingWorkspace.tsx",
         "components/admin/club-development/UmsetzungsplanungWorkspace.tsx",
         "components/admin/club-development/UmsetzungsplanungPhaseAssignedTasksPanel.tsx",
+        "components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx",
       ],
     });
     expect(
