@@ -84,7 +84,7 @@ export function isSingleHubNavigationDomain(domain: NavigationDomain): boolean {
 
 /** Canonical nav-config keys for legacy / matrix aliases (e.g. meetings → Sitzungen child). */
 const CLUB_NAV_KEY_ALIASES: Record<string, string> = {
-  meetings: "club-entwicklung-uebersicht",
+  meetings: "club-entwicklung-sitzungen",
 };
 
 function resolveNavKeyHrefInDomain(

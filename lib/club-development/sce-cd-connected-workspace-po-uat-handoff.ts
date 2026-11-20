@@ -33,8 +33,8 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
   acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
   /** STAGE-backed PR preview — read-only PO UAT (shared STAGE DB; connected-workspace migration applied). */
-  readyPreviewCommit: "4d23736a9f4f7d3a6d39927af2368d8ad233a0e4",
-  readyPreviewCommitShort: "4d23736a9",
+  readyPreviewCommit: "PLACEHOLDER_AFTER_PUSH",
+  readyPreviewCommitShort: "PLACEHOLDER",
   readyPreviewDeploymentId: "4t9cc4f5cTEyVzoTwjGCRUH5pGLr",
   readyPreviewHostname:
     "sportclubevo-webapp-stage-git-curs-e07387-mds-projects-462da62c.vercel.app",
@@ -57,7 +57,12 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
 } as const;
 
 export type ConnectedWorkspacePoUatUrls = {
+  uebersichtUnfiltered: string;
   uebersicht: string;
+  sitzungen: string;
+  membershipDrillDown: string;
+  umsetzungAufgabenDrillDown: string;
+  registrierungenDrillDown: string;
   strategien: string;
   ziele: string;
   neueStrategie: string;
@@ -84,7 +89,12 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
 
   const clubStrategyId = SCE_CD_CONNECTED_PO_UAT_CLUB_STRATEGY_ID;
   return {
+    uebersichtUnfiltered: `${base}/vereinsleitung/club-entwicklung`,
     uebersicht: `${base}/vereinsleitung/club-entwicklung?${orgQuery}`,
+    sitzungen: `${base}/vereinsleitung/meetings`,
+    membershipDrillDown: `${base}/dashboard/personen`,
+    umsetzungAufgabenDrillDown: `${base}/vereinsleitung/vorhaben-und-umsetzung?ansicht=aufgaben&${orgQuery}`,
+    registrierungenDrillDown: `${base}/dashboard/registrations`,
     strategien: `${base}/vereinsleitung/strategie-und-ziele?ansicht=strategie&${orgQuery}`,
     ziele: `${base}/vereinsleitung/strategie-und-ziele?ansicht=ziele&${orgQuery}`,
     neueStrategie: `${base}/vereinsleitung/strategie-und-ziele/strategie/neu?${orgQuery}`,
@@ -133,4 +143,13 @@ export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
   "11. Testziel III detail (/targets/cmwpapvn4000608l64zwx8dye) — linked Strategie, Aufgaben group with «+ Aufgabe erstellen» even when empty; Umsetzungsfortschritt caption (x von y or «Noch keine Aufgaben»).",
   "12. Contextual Neue Aufgabe from Testziel III — TARGET context with Ziel name; save returns to Aufgaben group with Junioren filter.",
   "13. Strategie detail — Ziele group rows with Umsetzungsfortschritt bar + «x von y Aufgaben erledigt» for existing data (flag if preview lacks tasks).",
+] as const;
+
+/** Leadership Übersicht dashboard — PO read-only screenshot order (PR #1017, separate from hierarchy UAT). */
+export const CONNECTED_WORKSPACE_LEADERSHIP_PO_SCREENSHOT_CHECKLIST = [
+  "1. Verein mega menu open — Vereinsentwicklung L3 shows Übersicht … Umsetzungsplanung, Sitzungen once (no duplicate meetings entry).",
+  "2. Übersicht top — five in-page tabs unchanged; leadership sections Verein in Zahlen → Umsetzung → Handlungsbedarf → Nächste Sitzung (no module shortcut cards).",
+  "3. Übersicht with orgEinheit=Junioren — scope badge on Mitglieder block reads «Junioren»; KPI labels visible without colour-only meaning.",
+  "4. KPI drill-down — Mitgliederbestand link targets /dashboard/personen; Umsetzung «Aufgaben» targets filtered aufgaben view.",
+  "5. Nächste Sitzung — title, date/time, location when present; «Alle Sitzungen» → /vereinsleitung/meetings; detail link opens meeting slug.",
 ] as const;

@@ -610,6 +610,14 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS],
             requiresVereinsleitungMembership: true,
           },
+          {
+            key: "club-entwicklung-sitzungen",
+            label: "Sitzungen",
+            href: "/vereinsleitung/meetings",
+            navContexts: ["club"],
+            permissionKeys: [PERMISSIONS.MEETINGS_VIEW, PERMISSIONS.MEETINGS_MANAGE],
+            requiresVereinsleitungMembership: true,
+          },
         ],
       },
       {

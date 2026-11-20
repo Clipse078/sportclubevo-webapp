@@ -49,6 +49,7 @@ describe("Club Verein L2 navigation order", () => {
       "Ziele",
       "Aufgaben",
       "Umsetzungsplanung",
+      "Sitzungen",
     ]);
   });
 });

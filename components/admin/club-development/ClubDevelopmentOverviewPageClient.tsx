@@ -2,25 +2,25 @@
 
 import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnectedWorkspaceNav";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
-import ClubDevelopmentOverview, {
-  type ClubDevelopmentOverviewKpis,
-} from "./ClubDevelopmentOverview";
-import type { GovernanceOverviewData } from "@/lib/dashboard/governance-overview";
+import ClubDevelopmentOverview from "./ClubDevelopmentOverview";
+import type { VereinsentwicklungLeadershipDashboard } from "@/lib/club-development/vereinsentwicklung-leadership-dashboard";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 type Props = {
   permissionKeys: string[];
   hasPlanningAccess: boolean;
   orgEinheitFilterLabel?: string | null;
-  targets: React.ComponentProps<typeof ClubDevelopmentOverview>["targets"];
-  initiatives: React.ComponentProps<typeof ClubDevelopmentOverview>["initiatives"];
-  upcomingMeetings: React.ComponentProps<typeof ClubDevelopmentOverview>["upcomingMeetings"];
-  assignedTasks: React.ComponentProps<typeof ClubDevelopmentOverview>["assignedTasks"];
-  governance: GovernanceOverviewData;
-  kpis: ClubDevelopmentOverviewKpis;
+  orgEinheitQuery: Record<string, string>;
+  dashboard: VereinsentwicklungLeadershipDashboard;
 };
 
 export default function ClubDevelopmentOverviewPageClient(props: Props) {
-  const { permissionKeys, hasPlanningAccess, orgEinheitFilterLabel, ...overviewProps } = props;
+  const { permissionKeys, hasPlanningAccess, orgEinheitFilterLabel, orgEinheitQuery, dashboard } =
+    props;
+  const canSeeMeetings =
+    permissionKeys.includes(PERMISSIONS.MEETINGS_VIEW) ||
+    permissionKeys.includes(PERMISSIONS.MEETINGS_MANAGE);
+
   return (
     <>
       <VereinsentwicklungConnectedWorkspaceNav
@@ -29,7 +29,11 @@ export default function ClubDevelopmentOverviewPageClient(props: Props) {
         activeView="uebersicht"
       />
       <VereinsentwicklungWorkspaceToolbar orgEinheitFilterLabel={orgEinheitFilterLabel} />
-      <ClubDevelopmentOverview {...overviewProps} />
+      <ClubDevelopmentOverview
+        dashboard={dashboard}
+        orgEinheitQuery={orgEinheitQuery}
+        canSeeMeetings={canSeeMeetings}
+      />
     </>
   );
 }
