@@ -40,6 +40,41 @@ vi.mock("@/lib/tasks/server-context", async (importOriginal) => {
 
 const describeIntegration = canRunDbMutatingIntegrationTests() ? describe : describe.skip;
 
+const VL_INTEGRATION_PERMISSION_KEYS = [
+  PERMISSIONS.TARGETS_MANAGE,
+  PERMISSIONS.TARGETS_VIEW,
+  PERMISSIONS.TASKS_MANAGE,
+  PERMISSIONS.TASKS_VIEW,
+  PERMISSIONS.INITIATIVES_VIEW,
+  PERMISSIONS.INITIATIVES_MANAGE,
+] as const;
+
+async function attachPermissionsToRole(
+  adminClient: PrismaClient,
+  roleId: string,
+  keys: readonly string[],
+): Promise<void> {
+  for (const key of keys) {
+    const permission = await adminClient.permission.upsert({
+      where: { key },
+      update: {},
+      create: {
+        key,
+        name: key,
+        module: "TEAMS",
+        scope: "TENANT",
+        grantableByAdmin: true,
+      },
+      select: { id: true },
+    });
+    await adminClient.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId, permissionId: permission.id } },
+      update: {},
+      create: { roleId, permissionId: permission.id },
+    });
+  }
+}
+
 describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)", () => {
   let admin: PrismaClient;
   let pool: { end: () => Promise<void> };
@@ -124,6 +159,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     await admin.userRole.create({
       data: { userId, roleId: vlRole.id, tenantId },
     });
+    await attachPermissionsToRole(admin, vlRole.id, VL_INTEGRATION_PERMISSION_KEYS);
 
     actor = {
       tenantId,
@@ -159,6 +195,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
   });
 
   it("creates club-wide strategy only with explicit scopeClubWide", async () => {
+    await admin.clubStrategy.deleteMany({ where: { tenantId } });
     const created = await createClubStrategy(actor, userId, {
       title: `Club wide ${RUN}`,
       scopeClubWide: true,
@@ -174,6 +211,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
   });
 
   it("creates one strategy assigned to two Org-Einheiten and filters through both", async () => {
+    await admin.clubStrategy.deleteMany({ where: { tenantId } });
     const created = await createClubStrategy(actor, userId, {
       title: `Strategie ${RUN}`,
       orgUnitIds: [orgA, orgB],
@@ -213,6 +251,59 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     await expect(
       createClubStrategy(viewOnly, userId, { title: "Forbidden", orgUnitIds: [orgA] }),
     ).rejects.toThrow(/FORBIDDEN/i);
+  });
+
+  it("denies org-scoped strategy create for Org-Einheit outside task-manage scope", async () => {
+    const scopedRole = await admin.role.create({
+      data: {
+        key: `vl-scoped-${RUN}`,
+        name: "VL Scoped",
+        scope: "TENANT",
+        tenantId,
+        canAccessVereinsleitung: true,
+      },
+      select: { id: true },
+    });
+    await attachPermissionsToRole(admin, scopedRole.id, [
+      PERMISSIONS.TARGETS_MANAGE,
+      PERMISSIONS.TARGETS_VIEW,
+      PERMISSIONS.TASKS_MANAGE,
+      PERMISSIONS.TASKS_VIEW,
+    ]);
+
+    const scopedUser = await admin.user.create({
+      data: {
+        email: `scoped-${RUN}@example.invalid`,
+        passwordHash: "unused",
+        firstName: "Scoped",
+        lastName: "Manager",
+        tenantId,
+      },
+      select: { id: true },
+    });
+    await admin.tenantMembership.create({
+      data: { tenantId, userId: scopedUser.id, isActive: true },
+    });
+    await admin.userRole.create({
+      data: { userId: scopedUser.id, roleId: scopedRole.id, tenantId, orgUnitId: orgA },
+    });
+
+    const scopedActor: ActorContext = {
+      tenantId,
+      userId: scopedUser.id,
+      permissionKeys: [PERMISSIONS.TARGETS_MANAGE, PERMISSIONS.TASKS_MANAGE],
+      roleKeys: [],
+      teamIds: [],
+      orgUnitIds: [orgA],
+      personId: null,
+    };
+
+    await expect(
+      createClubStrategy(scopedActor, scopedUser.id, {
+        title: `Forbidden org ${RUN}`,
+        orgUnitIds: [orgB],
+      }),
+    ).rejects.toThrow(/ORG_UNIT_FORBIDDEN/i);
   });
 
   it("replaces Org-Einheit assignments on an existing strategy", async () => {

@@ -3,6 +3,21 @@
  * Presentation labels only; routes, enums and API keys stay unchanged.
  */
 
+/** Connected Vereinsentwicklung — per-tab page descriptions (ListPagePattern). */
+export const CD_CONNECTED_WORKSPACE_VIEW_COPY = {
+  uebersicht:
+    "Mitgliederentwicklung, Ziele und nächste Schritte im Überblick.",
+  aufgaben: "Aufgaben zu Zielen und Strategien verwalten.",
+  umsetzungsplanung: "Aufgaben priorisieren und in Umsetzungsphasen einplanen.",
+} as const;
+
+/** Leadership Übersicht dashboard section chrome. */
+export const CD_LEADERSHIP_DASHBOARD_COPY = {
+  umsetzungProgressLabel: "Umsetzungsfortschritt",
+  openPersonsAction: "Personen öffnen",
+  personsListHref: "/dashboard/persons",
+} as const;
+
 export const CD_NAV_COPY = {
   initiativeBacklog: "Vorhaben & Prioritäten",
   implementationPlanning: "Umsetzungsplanung",
@@ -119,7 +134,7 @@ export const CD_VORHABEN_WORKSPACE_COPY = {
   focusInitiative: "Fokus:",
   initiativesHeading: "Vorhaben",
   tasksHeading: "Zugehörige Aufgaben",
-  tasksSubheading: "Überblick über Aufgaben mit Bezug zu Zielen und Strategien.",
+  tasksSubheading: "Zugehörige Aufgaben zu den gelisteten Vorhaben.",
   emptyInitiatives: "Keine Vorhaben für die aktuelle Filterung sichtbar.",
   emptyTasks: "Keine passenden Aufgaben — prüfen Sie Filter oder Verknüpfungen im Vorhaben-Detail.",
   emptyTasksUnfiltered: "Noch keine Aufgaben sichtbar.",

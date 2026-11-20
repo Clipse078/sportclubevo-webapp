@@ -42,9 +42,9 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
   it("uses single Vorhaben & Umsetzung page subtitle without duplicate workspace intro", () => {
     const page = read("app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx");
     const workspace = read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx");
-    expect(page).toContain("CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle");
+    expect(page).toContain("pageMeta.description");
     expect(read("lib/club-development/product-copy.ts")).toContain(
-      "Vorhaben priorisieren, Aufgaben erledigen und Umsetzung planen.",
+      "CD_CONNECTED_WORKSPACE_VIEW_COPY",
     );
     expect(workspace).not.toContain("NavShortcut");
     expect(workspace).not.toContain("CD_VORHABEN_WORKSPACE_COPY.intro");

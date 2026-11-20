@@ -17,7 +17,7 @@ describe("PR #1017 connected workspace PO UAT handoff", () => {
     expect(urls.uebersichtUnfiltered).toContain("/vereinsleitung/club-entwicklung");
     expect(urls.uebersicht).toContain("/vereinsleitung/club-entwicklung");
     expect(urls.sitzungen).toContain("/vereinsleitung/meetings");
-    expect(urls.membershipDrillDown).toContain("/dashboard/personen");
+    expect(urls.membershipDrillDown).toContain("/dashboard/persons");
     expect(urls.strategien).toContain("ansicht=strategie");
     expect(urls.ziele).toContain("ansicht=ziele");
     expect(urls.aufgaben).toContain("ansicht=aufgaben");

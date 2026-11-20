@@ -28,7 +28,7 @@ const emptyDashboard: VereinsentwicklungLeadershipDashboard = {
     exitsPrevious: 1,
     trendKind: "up",
     trendLabel: "Mehr Netto-Eintritte als im Vorjahresfenster",
-    drillDownHref: "/dashboard/personen",
+    drillDownHref: "/dashboard/persons",
   },
   umsetzung: {
     activeTargetCount: 1,

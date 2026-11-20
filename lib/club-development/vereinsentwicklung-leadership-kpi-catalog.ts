@@ -34,9 +34,9 @@ export const SCE_VEREINSENTWICKLUNG_LEADERSHIP_KPIS: VereinsentwicklungLeadershi
     timeBoundary: "Stand: letzte Aktualisierung aktiver Mitgliedschaften oder Stichtag heute",
     scope: "Vereinsweit oder Org-Einheit über ACTIVE PersonAssignment + ACTIVE Mitgliedschaft",
     permissionRule: "people.view — ohne Berechtigung wird der Block nicht befüllt",
-    drillDownDestination: "/dashboard/personen",
+    drillDownDestination: "/dashboard/persons",
     scopeNote:
-      "Org-Einheit nur wenn ACTIVE PersonAssignment zur gewählten Einheit; sonst Vereinsweit (explizit beschriftet).",
+      "Org-Einheit nur wenn ACTIVE PersonAssignment zur gewählten Einheit; sonst Vereinsweit (explizit beschriftet). Personen-Liste übernimmt diesen Scope nicht — KPI-Zahlen sind informativ.",
   },
   {
     id: "eintritte",
@@ -47,7 +47,7 @@ export const SCE_VEREINSENTWICKLUNG_LEADERSHIP_KPIS: VereinsentwicklungLeadershi
     timeBoundary: "Rollierendes 12-Monats-Fenster vs. vorheriges 12-Monats-Fenster",
     scope: "Gleiche Org-/Vereins-Scope-Regel wie Mitgliederbestand",
     permissionRule: "people.view",
-    drillDownDestination: "/dashboard/personen",
+    drillDownDestination: "/dashboard/persons",
   },
   {
     id: "austritte",
@@ -58,7 +58,7 @@ export const SCE_VEREINSENTWICKLUNG_LEADERSHIP_KPIS: VereinsentwicklungLeadershi
     timeBoundary: "Rollierendes 12-Monats-Fenster vs. vorheriges 12-Monats-Fenster",
     scope: "Gleiche Org-/Vereins-Scope-Regel wie Mitgliederbestand",
     permissionRule: "people.view",
-    drillDownDestination: "/dashboard/personen",
+    drillDownDestination: "/dashboard/persons",
   },
   {
     id: "umsetzung_tasks",

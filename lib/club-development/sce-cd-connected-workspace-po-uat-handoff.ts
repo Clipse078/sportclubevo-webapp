@@ -92,7 +92,7 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
     uebersichtUnfiltered: `${base}/vereinsleitung/club-entwicklung`,
     uebersicht: `${base}/vereinsleitung/club-entwicklung?${orgQuery}`,
     sitzungen: `${base}/vereinsleitung/meetings`,
-    membershipDrillDown: `${base}/dashboard/personen`,
+    membershipDrillDown: `${base}/dashboard/persons`,
     umsetzungAufgabenDrillDown: `${base}/vereinsleitung/vorhaben-und-umsetzung?ansicht=aufgaben&${orgQuery}`,
     registrierungenDrillDown: `${base}/dashboard/registrations`,
     strategien: `${base}/vereinsleitung/strategie-und-ziele?ansicht=strategie&${orgQuery}`,
@@ -148,8 +148,11 @@ export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [
 /** Leadership Übersicht dashboard — PO read-only screenshot order (PR #1017, separate from hierarchy UAT). */
 export const CONNECTED_WORKSPACE_LEADERSHIP_PO_SCREENSHOT_CHECKLIST = [
   "1. Verein mega menu open — Vereinsentwicklung L3 shows Übersicht … Umsetzungsplanung, Sitzungen once (no duplicate meetings entry).",
-  "2. Übersicht top — five in-page tabs unchanged; leadership sections Verein in Zahlen → Umsetzung → Handlungsbedarf → Nächste Sitzung (no module shortcut cards).",
-  "3. Übersicht with orgEinheit=Junioren — scope badge on Mitglieder block reads «Junioren»; KPI labels visible without colour-only meaning.",
-  "4. KPI drill-down — Mitgliederbestand link targets /dashboard/personen; Umsetzung «Aufgaben» targets filtered aufgaben view.",
-  "5. Nächste Sitzung — title, date/time, location when present; «Alle Sitzungen» → /vereinsleitung/meetings; detail link opens meeting slug.",
+  "2. Übersicht — page subtitle «Mitgliederentwicklung, Ziele und nächste Schritte im Überblick.»; sections Verein in Zahlen → Umsetzung → Handlungsbedarf → Nächste Sitzung.",
+  "3. Übersicht with orgEinheit=Junioren — scope badge «Junioren» on Mitglieder; club-wide KPIs labeled «Vereinsweit» when unfiltered.",
+  "4. Mitglieder block — informational KPI cards; footer link «Personen öffnen» → /dashboard/persons (not /dashboard/personen).",
+  "5. Umsetzung section title «Umsetzung»; aggregate labeled «Umsetzungsfortschritt»; «Aufgaben» drill-down → filtered aufgaben view.",
+  "6. Aufgaben tab — subtitle «Aufgaben zu Zielen und Strategien verwalten.»; no duplicate intro above the task table; Strategie column shows real strategy titles.",
+  "7. Umsetzungsplanung tab — subtitle «Aufgaben priorisieren und in Umsetzungsphasen einplanen.»; phase groups use «Umsetzungsphasen» wording.",
+  "8. Nächste Sitzung — title, date/time, location; «Alle Sitzungen» → /vereinsleitung/meetings.",
 ] as const;

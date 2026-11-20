@@ -5,6 +5,7 @@ import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import type { VereinsentwicklungLeadershipDashboard } from "@/lib/club-development/vereinsentwicklung-leadership-dashboard";
+import { CD_LEADERSHIP_DASHBOARD_COPY } from "@/lib/club-development/product-copy";
 import { buildConnectedWorkspaceHref } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 
 type ClubDevelopmentOverviewProps = {
@@ -111,8 +112,6 @@ export default function ClubDevelopmentOverview({
     <div className="space-y-8" data-testid="vereinsentwicklung-leadership-dashboard">
       <SceClubDevelopmentSectionShell
         title="Verein in Zahlen"
-        href={membership.accessible ? membership.drillDownHref : undefined}
-        linkLabel={membership.accessible ? "Mitgliedschaft" : undefined}
         headerAside={<ScopeBadge label={membership.scopeLabel} />}
         testId="vereinsentwicklung-section-membership"
       >
@@ -120,6 +119,10 @@ export default function ClubDevelopmentOverview({
           <SceClubDevelopmentEmptyState message="Keine Berechtigung für Mitgliederzahlen." />
         ) : (
           <div className="space-y-4">
+            <p className="text-xs text-[var(--text-2)]">
+              Zahlen gelten für den gewählten Bereich ({membership.scopeLabel}). Die Personen-Übersicht
+              übernimmt keinen automatischen Org-Einheit- oder Zeitraumfilter.
+            </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <StatBlock
                 label="Mitgliederbestand"
@@ -149,6 +152,14 @@ export default function ClubDevelopmentOverview({
                 <span>{membership.trendLabel}</span>
               </p>
             ) : null}
+            <Link
+              href={membership.drillDownHref}
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
+              data-testid="vereinsentwicklung-membership-open-persons"
+            >
+              {CD_LEADERSHIP_DASHBOARD_COPY.openPersonsAction}
+              <ArrowRight className="h-3 w-3" aria-hidden />
+            </Link>
           </div>
         )}
       </SceClubDevelopmentSectionShell>
@@ -165,11 +176,16 @@ export default function ClubDevelopmentOverview({
         testId="vereinsentwicklung-section-umsetzung"
       >
         <div className="space-y-4">
-          <ProgressStrip
-            percent={umsetzung.aggregate.percent}
-            caption={umsetzung.aggregateCaption}
-            ariaLabel={`Umsetzung gesamt: ${umsetzung.aggregateCaption}`}
-          />
+          <div>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              {CD_LEADERSHIP_DASHBOARD_COPY.umsetzungProgressLabel}
+            </p>
+            <ProgressStrip
+              percent={umsetzung.aggregate.percent}
+              caption={umsetzung.aggregateCaption}
+              ariaLabel={`${CD_LEADERSHIP_DASHBOARD_COPY.umsetzungProgressLabel}: ${umsetzung.aggregateCaption}`}
+            />
+          </div>
           {umsetzung.targetRows.length === 0 ? (
             <SceClubDevelopmentEmptyState message="Keine aktiven Ziele sichtbar." />
           ) : (

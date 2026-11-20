@@ -99,10 +99,10 @@ export function collectVereinsentwicklungWorkspaceViolations(
   }
 
   if (normalized === "app/(admin)/vereinsleitung/vorhaben-und-umsetzung/page.tsx") {
-    if (!src.includes("CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle")) {
+    if (!src.includes("connectedWorkspacePageMeta") || !src.includes("pageMeta.description")) {
       findings.push({
         file: normalized,
-        reason: "Vorhaben & Umsetzung page must use canonical single subtitle copy key.",
+        reason: "Vorhaben & Umsetzung page must use connected workspace pageMeta.description.",
       });
     }
   }

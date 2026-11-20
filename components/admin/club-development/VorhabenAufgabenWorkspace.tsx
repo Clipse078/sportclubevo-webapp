@@ -324,10 +324,7 @@ export default function VorhabenAufgabenWorkspace({
                 onCreated={() => fetchWorkspace()}
               />
             ) : null}
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p id="aufgaben-workspace-heading" className="text-sm text-[var(--text-2)]">
-                {CD_VORHABEN_WORKSPACE_COPY.tasksSubheading}
-              </p>
+            <div className="flex flex-wrap items-baseline justify-end gap-2">
               <Link
                 href="/dashboard/aufgaben"
                 className="text-xs font-medium text-[var(--sce-primary)] hover:underline"

@@ -2,6 +2,7 @@ import "server-only";
 
 import { TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { resolveStrategyTitle } from "./club-strategy-service";
 import type { TaskContextLabelBundle } from "./vereinsentwicklung-task-context-labels-types";
 
 export type { TaskContextLabelBundle } from "./vereinsentwicklung-task-context-labels-types";
@@ -40,30 +41,67 @@ export async function loadTaskContextLabelBundles(
           where: { tenantId, targetId: { in: targetIds } },
           select: {
             targetId: true,
-            clubStrategy: { select: { id: true, title: true } },
+            clubStrategy: {
+              select: {
+                id: true,
+                title: true,
+                scopeType: true,
+                scopeOrgUnitId: true,
+                orgUnitAssignments: { select: { orgUnitId: true } },
+              },
+            },
           },
           orderBy: { sortOrder: "asc" },
         })
       : [];
+
+  const strategyOrgUnitIds = new Set<string>();
+  for (const link of focusLinks) {
+    for (const assignment of link.clubStrategy.orgUnitAssignments) {
+      strategyOrgUnitIds.add(assignment.orgUnitId);
+    }
+    if (link.clubStrategy.scopeOrgUnitId) {
+      strategyOrgUnitIds.add(link.clubStrategy.scopeOrgUnitId);
+    }
+  }
+
+  const orgUnits =
+    strategyOrgUnitIds.size > 0
+      ? await prisma.orgUnit.findMany({
+          where: { tenantId, id: { in: [...strategyOrgUnitIds] } },
+          select: { id: true, name: true },
+        })
+      : [];
+  const orgNameById = new Map(orgUnits.map((o) => [o.id, o.name]));
+
   const strategyByTargetId = new Map<string, { id: string; title: string }>();
   for (const link of focusLinks) {
     if (!strategyByTargetId.has(link.targetId)) {
+      const strategy = link.clubStrategy;
+      const orgUnitIds = [
+        ...strategy.orgUnitAssignments.map((a) => a.orgUnitId),
+        ...(strategy.scopeOrgUnitId &&
+        !strategy.orgUnitAssignments.some((a) => a.orgUnitId === strategy.scopeOrgUnitId)
+          ? [strategy.scopeOrgUnitId]
+          : []),
+      ];
+      const orgUnitLabels = orgUnitIds.map((id) => orgNameById.get(id) ?? "Org-Einheit");
       strategyByTargetId.set(link.targetId, {
-        id: link.clubStrategy.id,
-        title: link.clubStrategy.title?.trim() || "Strategie",
+        id: strategy.id,
+        title: resolveStrategyTitle(strategy.title, strategy.scopeType, orgUnitLabels),
       });
     }
   }
 
-  const orgUnitIds = [...new Set(tasks.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)))];
-  const orgUnits =
-    orgUnitIds.length > 0
+  const taskOrgUnitIds = [...new Set(tasks.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)))];
+  const taskOrgUnits =
+    taskOrgUnitIds.length > 0
       ? await prisma.orgUnit.findMany({
-          where: { tenantId, id: { in: orgUnitIds } },
+          where: { tenantId, id: { in: taskOrgUnitIds } },
           select: { id: true, name: true },
         })
       : [];
-  const orgLabelById = new Map(orgUnits.map((o) => [o.id, o.name]));
+  const orgLabelById = new Map(taskOrgUnits.map((o) => [o.id, o.name]));
 
   const bundles = new Map<string, TaskContextLabelBundle>();
   for (const task of tasks) {

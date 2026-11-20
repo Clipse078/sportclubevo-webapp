@@ -18,7 +18,6 @@ import {
   CD_CONNECTED_WORKSPACE_EYEBROW,
   resolveConnectedViewFromVorhabenUndUmsetzungAnsicht,
 } from "@/lib/club-development/vereinsentwicklung-workspace-page-meta";
-import { CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import {
   parseOrgEinheitQuery,
   resolveVereinsentwicklungOrgEinheitFilter,
@@ -154,7 +153,7 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
       <ListPagePattern
         eyebrow={CD_CONNECTED_WORKSPACE_EYEBROW}
         title={pageMeta.title}
-        description={CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle}
+        description={pageMeta.description}
         breadcrumbs={pageMeta.breadcrumbs}
         emptyIcon={<Kanban className="h-10 w-10" />}
       >

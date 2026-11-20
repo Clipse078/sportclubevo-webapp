@@ -14,8 +14,18 @@ describe("Connected workspace page meta", () => {
   it("uses active view label in title and breadcrumb leaf", () => {
     const meta = connectedWorkspacePageMeta("aufgaben");
     expect(meta.title).toBe("Aufgaben");
+    expect(meta.description).toBe("Aufgaben zu Zielen und Strategien verwalten.");
     expect(meta.breadcrumbs.at(-1)?.label).toBe("Aufgaben");
     expect(CD_CONNECTED_WORKSPACE_EYEBROW).toBe("Vereinsentwicklung");
+  });
+
+  it("uses connected-workflow descriptions for Übersicht and Umsetzungsplanung", () => {
+    expect(connectedWorkspacePageMeta("uebersicht").description).toBe(
+      "Mitgliederentwicklung, Ziele und nächste Schritte im Überblick.",
+    );
+    expect(connectedWorkspacePageMeta("umsetzungsplanung").description).toBe(
+      "Aufgaben priorisieren und in Umsetzungsphasen einplanen.",
+    );
   });
 
   it("maps legacy ansicht values to five-tab connected views", () => {

@@ -2,6 +2,7 @@
  * Connected Vereinsentwicklung — per-view page chrome (title + breadcrumb leaf).
  */
 
+import { CD_CONNECTED_WORKSPACE_VIEW_COPY } from "./product-copy";
 import {
   CD_CONNECTED_VIEW_LABELS,
   type CdConnectedView,
@@ -21,12 +22,11 @@ export const CD_CONNECTED_WORKSPACE_BREADCRUMB_HUB = {
 } as const;
 
 const VIEW_DESCRIPTIONS: Record<CdConnectedView, string> = {
-  uebersicht:
-    "Kurzüberblick über Ziele, Aufgaben, Umsetzung und anstehende Sitzungen — nur Daten, die Sie sehen dürfen.",
+  uebersicht: CD_CONNECTED_WORKSPACE_VIEW_COPY.uebersicht,
   strategien: "Vereinsstrategien im Überblick, Schwerpunkte und verknüpfte Ziele bearbeiten.",
   ziele: "Strategische Ziele pflegen, mit der Gesamtstrategie verknüpfen und Fortschritt verfolgen.",
-  aufgaben: "Aufgaben aus Zielen und Vorhaben — Status, Verantwortliche und Umsetzung im Blick.",
-  umsetzungsplanung: "Umsetzungsphasen, Sprint-Boards und ungeplante Aufgaben koordinieren.",
+  aufgaben: CD_CONNECTED_WORKSPACE_VIEW_COPY.aufgaben,
+  umsetzungsplanung: CD_CONNECTED_WORKSPACE_VIEW_COPY.umsetzungsplanung,
 };
 
 export function resolveConnectedViewFromStrategieUndZieleAnsicht(

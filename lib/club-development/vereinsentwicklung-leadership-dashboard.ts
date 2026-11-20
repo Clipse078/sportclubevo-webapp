@@ -20,6 +20,7 @@ import {
 } from "./vereinsentwicklung-workspace-progress";
 import { parseStringArray } from "@/lib/visibility/visibility-filter";
 import type { VereinsentwicklungOrgEinheitFilter } from "./vereinsentwicklung-workspace-org-filter";
+import { CD_LEADERSHIP_DASHBOARD_COPY } from "./product-copy";
 import { CD_WORKSPACE_ORG_UNIT_QUERY, buildUebersichtHref } from "./vereinsentwicklung-connected-workspace";
 import { buildVorhabenUndUmsetzungHref } from "./vereinsentwicklung-workspace-routing";
 
@@ -196,7 +197,7 @@ export async function loadLeadershipMembershipKpis(
   now = new Date(),
 ): Promise<LeadershipMembershipKpis> {
   const scopeLabel = orgEinheit ? orgEinheit.label : "Vereinsweit";
-  const drillDownHref = "/dashboard/personen";
+  const drillDownHref = CD_LEADERSHIP_DASHBOARD_COPY.personsListHref;
 
   if (!actor.tenantId || !hasPermission(actor, PERMISSIONS.PEOPLE_VIEW)) {
     return {
