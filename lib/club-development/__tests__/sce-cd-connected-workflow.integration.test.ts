@@ -26,6 +26,11 @@ import {
   replaceClubStrategyOrgUnitAssignments,
 } from "../club-strategy-service";
 import { patchDevelopmentSprintMetadata } from "../sprints/sprint-lifecycle";
+import { addTaskToSprint, removeTaskFromSprint } from "../sprints/sprint-service";
+import {
+  loadUnplannedTaskRankMap,
+  persistUnplannedTaskOrder,
+} from "../sprints/unplanned-task-rank";
 import { computeStrategyDeliveryProgress, computeTargetDeliveryProgress } from "../vereinsentwicklung-workspace-progress";
 import { buildTaskServiceContextForActor, getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadVorhabenWorkspace } from "../vorhaben-workspace";
@@ -211,6 +216,7 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
   });
 
   it("allows a second titled Gesamtverein strategy while preserving the legacy row", async () => {
+    await admin.clubStrategy.deleteMany({ where: { tenantId } });
     const legacy = await admin.clubStrategy.create({
       data: {
         tenantId,
@@ -237,6 +243,25 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       expect.arrayContaining([legacy.id, created.id]),
     );
     expect(clubWideRows).toHaveLength(2);
+
+    const focusTarget = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Linked Ziel ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+    await addClubStrategyFocusTarget(actor, userId, focusTarget.id, legacy.id);
+    const link = await admin.clubStrategyFocusTarget.findFirst({
+      where: { tenantId, targetId: focusTarget.id },
+      select: { clubStrategyId: true },
+    });
+    expect(link?.clubStrategyId).toBe(legacy.id);
   });
 
   it("creates one strategy assigned to two Org-Einheiten and filters through both", async () => {
@@ -493,6 +518,100 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       where: { tenantId, sprintId: sprint.id, removedAt: null },
     });
     expect(membershipCount).toBe(1);
+  });
+
+  it("persists Ungeplant task order across reload", async () => {
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Unplanned rank target ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+    const [taskA, taskB] = await Promise.all(
+      ["Alpha", "Beta"].map(async (label) =>
+        admin.task.create({
+          data: {
+            tenantId,
+            title: `Unplanned ${label} ${RUN}`,
+            status: TaskStatus.OPEN,
+            contextType: TaskContextType.TARGET,
+            contextId: target.id,
+            createdByUserId: userId,
+            visibilityScope: TaskVisibilityScope.ORGANISATION,
+          },
+          select: { id: true },
+        }),
+      ),
+    );
+
+    const allowed = new Set([taskA.id, taskB.id]);
+    await persistUnplannedTaskOrder(tenantId, [taskB.id, taskA.id], allowed);
+
+    const firstLoad = await loadUnplannedTaskRankMap(tenantId, [taskA.id, taskB.id]);
+    expect(firstLoad.get(taskB.id)).toBeLessThan(firstLoad.get(taskA.id)!);
+
+    const secondLoad = await loadUnplannedTaskRankMap(tenantId, [taskA.id, taskB.id]);
+    expect(secondLoad).toEqual(firstLoad);
+  });
+
+  it("keeps task identity and links when moving into a phase and back to unplanned", async () => {
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Phase hop target ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: `Phase hop task ${RUN}`,
+        status: TaskStatus.OPEN,
+        contextType: TaskContextType.TARGET,
+        contextId: target.id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true, contextType: true, contextId: true },
+    });
+    const sprint = await admin.developmentSprint.create({
+      data: {
+        tenantId,
+        slug: `phase-hop-${RUN}`,
+        title: "Hop phase",
+        createdByUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    await addTaskToSprint(tenantId, sprint.id, task.id);
+    await removeTaskFromSprint(tenantId, sprint.id, task.id);
+
+    const after = await admin.task.findUniqueOrThrow({
+      where: { id: task.id },
+      select: { id: true, contextType: true, contextId: true },
+    });
+    expect(after).toEqual({
+      id: task.id,
+      contextType: task.contextType,
+      contextId: task.contextId,
+    });
+
+    const activeMembership = await admin.developmentSprintTaskMembership.count({
+      where: { tenantId, taskId: task.id, removedAt: null },
+    });
+    expect(activeMembership).toBe(0);
   });
 
   it("rolls target progress as 0/1, 1/1, and strategy aggregate 1/2", async () => {
