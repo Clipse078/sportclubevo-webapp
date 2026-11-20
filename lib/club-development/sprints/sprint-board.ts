@@ -56,7 +56,7 @@ export async function loadSprintBoard(
   });
   if (memberships.length === 0) {
     return {
-      columns: { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [] } as Record<
+      columns: { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [], CANCELLED: [] } as Record<
         SprintBoardColumnKey,
         SprintBoardCard[]
       >,
@@ -109,6 +109,7 @@ export async function loadSprintBoard(
     IN_PROGRESS: [],
     WAITING: [],
     DONE: [],
+    CANCELLED: [],
   };
 
   const allAssigneeUserIds = tasks.flatMap((t) => t.assignees.map((a) => a.userId));

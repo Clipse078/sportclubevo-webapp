@@ -15,7 +15,7 @@ describe("vereinsentwicklung task status", () => {
 
   it("maps TaskStatus to board columns including Wartet", () => {
     expect(mapTaskStatusToVereinsentwicklungBoardColumn(TaskStatus.WAITING)).toBe("WAITING");
-    expect(mapTaskStatusToVereinsentwicklungBoardColumn(TaskStatus.CANCELLED)).toBe("OPEN");
+    expect(mapTaskStatusToVereinsentwicklungBoardColumn(TaskStatus.CANCELLED)).toBe("CANCELLED");
   });
 
   it("exposes workflow transitions for DONE reopen", () => {

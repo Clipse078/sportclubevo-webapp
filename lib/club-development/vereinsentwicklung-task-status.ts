@@ -14,16 +14,32 @@ export const CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS: Record<TaskStatus, string
   CANCELLED: "Abgebrochen",
 };
 
-export type VereinsentwicklungTaskBoardColumn = "OPEN" | "IN_PROGRESS" | "WAITING" | "DONE";
+export type VereinsentwicklungTaskBoardColumn =
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "WAITING"
+  | "DONE"
+  | "CANCELLED";
 
+/** Workflow columns (drag targets + status menus). Abgebrochen is read-only alongside. */
 export const VEREINSENTWICKLUNG_BOARD_COLUMNS: {
   key: VereinsentwicklungTaskBoardColumn;
   label: string;
+  workflow: boolean;
 }[] = [
-  { key: "OPEN", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.OPEN },
-  { key: "IN_PROGRESS", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.IN_PROGRESS },
-  { key: "WAITING", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.WAITING },
-  { key: "DONE", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.DONE },
+  { key: "OPEN", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.OPEN, workflow: true },
+  {
+    key: "IN_PROGRESS",
+    label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.IN_PROGRESS,
+    workflow: true,
+  },
+  { key: "WAITING", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.WAITING, workflow: true },
+  { key: "DONE", label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.DONE, workflow: true },
+  {
+    key: "CANCELLED",
+    label: CD_VEREINSENTWICKLUNG_TASK_STATUS_LABELS.CANCELLED,
+    workflow: false,
+  },
 ];
 
 export function vereinsentwicklungTaskStatusLabel(status: TaskStatus): string {
@@ -36,7 +52,14 @@ export function mapTaskStatusToVereinsentwicklungBoardColumn(
   if (status === TaskStatus.DONE) return "DONE";
   if (status === TaskStatus.IN_PROGRESS) return "IN_PROGRESS";
   if (status === TaskStatus.WAITING) return "WAITING";
+  if (status === TaskStatus.CANCELLED) return "CANCELLED";
   return "OPEN";
+}
+
+export function isVereinsentwicklungWorkflowBoardColumn(
+  column: VereinsentwicklungTaskBoardColumn,
+): boolean {
+  return column !== "CANCELLED";
 }
 
 const WORKFLOW_STATUSES: TaskStatus[] = [

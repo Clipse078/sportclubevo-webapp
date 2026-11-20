@@ -783,6 +783,93 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     expect(mapTaskStatusToBoardColumn(reopened.status)).toBe("OPEN");
   });
 
+  it("maps CANCELLED tasks to Abgebrochen board column (not Offen)", async () => {
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    expect(taskCtx).toBeTruthy();
+
+    const sprint = await admin.developmentSprint.create({
+      data: {
+        tenantId,
+        slug: `cancelled-phase-${RUN}`,
+        title: "Cancelled Phase",
+        createdByUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Cancelled probe",
+        status: TaskStatus.CANCELLED,
+        contextType: TaskContextType.TARGET,
+        contextId: (
+          await admin.target.create({
+            data: {
+              tenantId,
+              title: "Cancel Ziel",
+              status: "ACTIVE",
+              category: "GOVERNANCE",
+              period: "YEAR",
+              createdByUserId: userId,
+            },
+            select: { id: true },
+          })
+        ).id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    await admin.developmentSprintTaskMembership.create({
+      data: { tenantId, sprintId: sprint.id, taskId: task.id },
+    });
+
+    const board = await loadSprintBoard(taskCtx!, sprint.id);
+    expect(board.columns.CANCELLED.some((c) => c.taskId === task.id)).toBe(true);
+    expect(board.columns.OPEN.some((c) => c.taskId === task.id)).toBe(false);
+    expect(mapTaskStatusToBoardColumn(TaskStatus.CANCELLED)).toBe("CANCELLED");
+  });
+
+  it("reads stored WAITING after migration and preserves label on workspace reload", async () => {
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Waiting reload ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Waiting stored",
+        status: TaskStatus.WAITING,
+        contextType: TaskContextType.TARGET,
+        contextId: target.id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const snapshot = await loadVorhabenWorkspace(actor, {});
+    const row = snapshot.tasks.find((t) => t.id === task.id);
+    expect(row?.status).toBe(TaskStatus.WAITING);
+    expect(row?.statusLabel).toBe("Wartet");
+
+    await patchVereinsentwicklungTaskStatus(taskCtx!, task.id, TaskStatus.OPEN, TaskStatus.WAITING);
+    const reopened = await loadVorhabenWorkspace(actor, {});
+    expect(reopened.tasks.find((t) => t.id === task.id)?.status).toBe(TaskStatus.OPEN);
+  });
+
   it("denies status mutation for read-only tasks view", async () => {
     const viewer = await admin.user.create({
       data: {

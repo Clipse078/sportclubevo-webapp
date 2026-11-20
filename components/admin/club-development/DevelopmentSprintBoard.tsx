@@ -24,6 +24,7 @@ import {
 } from "./sce-club-development-surface-styles";
 import {
   VEREINSENTWICKLUNG_BOARD_COLUMNS,
+  isVereinsentwicklungWorkflowBoardColumn,
   mapTaskStatusToVereinsentwicklungBoardColumn,
 } from "@/lib/club-development/vereinsentwicklung-task-status";
 import VereinsentwicklungTaskStatusControl from "./VereinsentwicklungTaskStatusControl";
@@ -31,7 +32,7 @@ import VereinsentwicklungTaskStatusControl from "./VereinsentwicklungTaskStatusC
 type BoardState = Record<SprintBoardColumnKey, SprintBoardCard[]>;
 
 function emptyBoardState(): BoardState {
-  return { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [] };
+  return { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [], CANCELLED: [] };
 }
 
 function allBoardCards(board: BoardState): SprintBoardCard[] {
@@ -46,6 +47,8 @@ function statusForBoardColumn(column: SprintBoardColumnKey): TaskStatus {
       return TaskStatus.IN_PROGRESS;
     case "WAITING":
       return TaskStatus.WAITING;
+    case "CANCELLED":
+      return TaskStatus.CANCELLED;
     default:
       return TaskStatus.OPEN;
   }
@@ -86,6 +89,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
         IN_PROGRESS: columns?.IN_PROGRESS ?? [],
         WAITING: columns?.WAITING ?? [],
         DONE: columns?.DONE ?? [],
+        CANCELLED: columns?.CANCELLED ?? [],
       });
     });
   }, [sprintId]);
@@ -165,8 +169,10 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 
   const onDropToColumn = (columnKey: SprintBoardColumnKey, taskId: string) => {
     if (!canManage) return;
+    if (!isVereinsentwicklungWorkflowBoardColumn(columnKey)) return;
     const card = allCards.find((c) => c.taskId === taskId);
     if (!card) return;
+    if (card.status === TaskStatus.CANCELLED) return;
     const targetStatus = statusForBoardColumn(columnKey);
     if (card.status !== targetStatus) moveCard(taskId, targetStatus);
   };
@@ -373,7 +379,7 @@ function BoardColumnsGrid({
   onStatusError: (message: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-4">
+    <div className="grid gap-4 lg:grid-cols-5">
       {VEREINSENTWICKLUNG_BOARD_COLUMNS.map((col) => {
         const cards = board[col.key];
         const fullCount = fullBoard[col.key].length;
@@ -384,8 +390,12 @@ function BoardColumnsGrid({
             key={col.key}
             className={SCE_CD_SECTION_SHELL_CLASS}
             aria-label={col.label}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              if (!col.workflow) return;
+              e.preventDefault();
+            }}
             onDrop={(e) => {
+              if (!col.workflow) return;
               e.preventDefault();
               const taskId = draggingId ?? e.dataTransfer.getData("text/task-id");
               if (taskId) onDropToColumn(col.key, taskId);
@@ -406,12 +416,13 @@ function BoardColumnsGrid({
                       <CardStack
                         cards={lane.cards}
                         pending={pending}
-                        canManage={canManage}
+                        canManage={canManage && col.workflow}
                         sprintId={sprintId}
                         onBoardRefresh={onRefresh}
                         onStatusError={onStatusError}
                         onDragStart={onDragStart}
                         onDragEnd={onDragEnd}
+                        readOnly={!col.workflow}
                       />
                     </div>
                   ))}
@@ -420,12 +431,13 @@ function BoardColumnsGrid({
                 <CardStack
                   cards={cards}
                   pending={pending}
-                  canManage={canManage}
+                  canManage={canManage && col.workflow}
                   sprintId={sprintId}
                   onBoardRefresh={onRefresh}
                   onStatusError={onStatusError}
                   onDragStart={onDragStart}
                   onDragEnd={onDragEnd}
+                  readOnly={!col.workflow}
                 />
               )}
               {col.key === "OPEN" && canManage ? (
@@ -448,6 +460,7 @@ function CardStack({
   onStatusError,
   onDragStart,
   onDragEnd,
+  readOnly = false,
 }: {
   cards: SprintBoardCard[];
   pending: boolean;
@@ -457,7 +470,9 @@ function CardStack({
   onStatusError: (message: string) => void;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
+  readOnly?: boolean;
 }) {
+  const actionable = canManage && !readOnly;
   return (
     <div className="space-y-2">
       {cards.length === 0 ? (
@@ -468,11 +483,11 @@ function CardStack({
             key={card.taskId}
             card={card}
             pending={pending}
-            canManage={canManage}
+            canManage={actionable && card.status !== TaskStatus.CANCELLED}
             sprintId={sprintId}
             onBoardRefresh={onBoardRefresh}
             onStatusError={onStatusError}
-            draggable={canManage}
+            draggable={actionable && card.status !== TaskStatus.CANCELLED}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
           />
