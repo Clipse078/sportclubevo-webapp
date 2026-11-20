@@ -1299,6 +1299,7 @@ model Tenant {
   initiativeTargetLinks            InitiativeTargetLink[]
   developmentSprints               DevelopmentSprint[]
   developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
+  developmentUnplannedTaskRanks    DevelopmentUnplannedTaskRank[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
   clubStrategies                   ClubStrategy[]
@@ -3568,6 +3569,21 @@ model DevelopmentSprintTaskMembership {
   @@index([tenantId, taskId])
 }
 
+/// Persisted sort order for Ungeplant backlog on Umsetzungsplanung (per tenant).
+model DevelopmentUnplannedTaskRank {
+  id        String   @id @default(cuid())
+  tenantId  String
+  taskId    String   @unique
+  rank      Int
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, taskId])
+  @@index([tenantId, rank])
+}
+
 /// Immutable approver vote on an Initiative (SCE-CD-03R2; revision-scoped SCE-CD-03R3F1).
 model InitiativeApprovalVote {
   id               String                      @id @default(cuid())
@@ -5020,6 +5036,7 @@ model Task {
   documentReferences TaskDocumentReference[]
   accessGrants TaskAccessGrant[]
   sprintMemberships DevelopmentSprintTaskMembership[]
+  unplannedPlanningRank DevelopmentUnplannedTaskRank?
   primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])

@@ -20,6 +20,8 @@ export type SprintPlanningTaskDto = {
   strategyTitle: string | null;
   orgUnitLabel: string | null;
   taskHref: string;
+  /** Present on Ungeplant catalog rows — persisted backlog rank when set. */
+  unplannedRank?: number | null;
 };
 
 export type SprintPlanningInitiativeGroupDto = {
