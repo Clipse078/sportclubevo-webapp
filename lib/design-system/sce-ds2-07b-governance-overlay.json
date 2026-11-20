@@ -1,4 +1,17 @@
 {
   "lifecycle": [],
-  "recordOverrides": {}
+  "recordOverrides": {
+    "app/(admin)/vereinsleitung/targets/new/page.tsx": {
+      "routeKind": "REDIRECT_ALIAS",
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+      "exceptionRationale": "Legacy deep link alias → /vereinsleitung/strategie-und-ziele/ziele/neu (not a visual surface).",
+      "redirectDestination": "/vereinsleitung/strategie-und-ziele/ziele/neu",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    }
+  }
 }

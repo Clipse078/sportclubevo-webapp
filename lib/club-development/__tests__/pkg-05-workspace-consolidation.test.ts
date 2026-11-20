@@ -68,7 +68,7 @@ describe("PKG-05 Vereinsentwicklung workspace consolidation", () => {
       "CreateTargetContextualCollapsibleCard",
     );
     expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
-      "CreateTargetWorkspaceCollapsibleCard",
+      "buildVereinsentwicklungZielNeuHref",
     );
     expect(read("components/admin/targets/TargetZieleCollapsibleCard.tsx")).toContain("aria-expanded");
     expect(read("components/admin/club-development/VorhabenCollapsibleCard.tsx")).toContain("aria-expanded");

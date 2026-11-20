@@ -22,5 +22,9 @@ describe("PR #1017 connected workspace PO UAT handoff", () => {
     expect(urls.ungeplantBacklog).toContain("umsetzungsabschnitt=ungeplant");
     expect(urls.sprintBoard).toContain("po-uat-vereinsentwicklung-planung");
     expect(urls.targetDetail).toContain(CONNECTED_WORKSPACE_PO_UAT_HANDOFF.fixture.targetId);
+    expect(urls.neueStrategie).toContain("/strategie-und-ziele/strategie/neu");
+    expect(urls.neuesZiel).toContain("/strategie-und-ziele/ziele/neu");
+    expect(urls.neueAufgabeReference).toContain("/dashboard/aufgaben/neu");
+    expect(urls.zielNeuFromGesamtvereinStrategie).toContain("clubStrategyId=");
   });
 });

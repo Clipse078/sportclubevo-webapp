@@ -1,30 +1,18 @@
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import TargetNewPageClient from "@/components/admin/targets/TargetNewPageClient";
-import { ClubDevelopmentFormWorkflowShell } from "@/components/sce/club-development/ClubDevelopmentFormWorkflowShell";
-import { PageShell } from "@/components/ui/page";
-import { FormPagePattern } from "@/components/ui/patterns";
+import { buildVereinsentwicklungZielNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 
-export default async function NewTargetPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+type Props = {
+  searchParams?: Promise<{ [key: string]: string | undefined }>;
+};
 
-  return (
-    <PageShell fullWidth>
-      <FormPagePattern
-        eyebrow="Ziele"
-        title="Neues Ziel erstellen"
-        description="Strategisches Ziel mit messbaren Kennzahlen erfassen. Optional eine Vorlage als Ausgangspunkt verwenden."
-        breadcrumbs={[
-          { label: "Vereinsleitung", href: "/vereinsleitung" },
-          { label: "Strategie & Ziele", href: "/vereinsleitung/strategie-und-ziele?ansicht=ziele" },
-          { label: "Neues Ziel" },
-        ]}
-      >
-        <ClubDevelopmentFormWorkflowShell>
-          <TargetNewPageClient layout="composer" />
-        </ClubDevelopmentFormWorkflowShell>
-      </FormPagePattern>
-    </PageShell>
-  );
+/** Legacy alias → connected workspace full-page create. */
+export default async function NewTargetPage({ searchParams }: Props) {
+  const query = (await searchParams) ?? {};
+  const href = buildVereinsentwicklungZielNeuHref({
+    orgUnitId: query.orgEinheit ?? query.orgUnitId,
+    returnTo: query.returnTo,
+    clubStrategyId: query.clubStrategyId ?? query.strategyId,
+    linkFocus: query.linkFocus === "1",
+  });
+  redirect(href);
 }

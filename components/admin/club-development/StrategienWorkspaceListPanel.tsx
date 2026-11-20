@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import { buildStrategieUndZieleHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
-import { useSearchParams } from "next/navigation";
-import CreateStrategieWorkspaceCollapsibleCard from "./CreateStrategieWorkspaceCollapsibleCard";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
+import { buildVereinsentwicklungStrategieNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
 type Props = {
@@ -29,18 +28,19 @@ export default function StrategienWorkspaceListPanel({
 }: Props) {
   const searchParams = useSearchParams();
   const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const primaryAction =
     canManage ? (
-      <button
-        type="button"
+      <Link
+        href={buildVereinsentwicklungStrategieNeuHref({
+          orgUnitId: orgQuery,
+        })}
         className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
-        onClick={() => setCreateOpen(true)}
         data-testid="strategien-toolbar-create"
+        data-sce-contextual-create-flow="full-page"
       >
         + Strategie anlegen
-      </button>
+      </Link>
     ) : null;
 
   return (
@@ -52,16 +52,6 @@ export default function StrategienWorkspaceListPanel({
       />
 
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`} data-testid="strategien-workspace-list-surface">
-        {canManage ? (
-          <CreateStrategieWorkspaceCollapsibleCard
-            canCreate
-            orgUnitOptions={orgUnitOptions}
-            expanded={createOpen}
-            onExpandedChange={setCreateOpen}
-            hideToolbarTrigger
-          />
-        ) : null}
-
         {strategies.length === 0 ? (
           <SceClubDevelopmentEmptyState
             testId="strategien-workspace-empty"

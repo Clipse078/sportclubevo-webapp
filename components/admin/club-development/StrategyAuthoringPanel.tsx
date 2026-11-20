@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Loader2, Pencil } from "lucide-react";
-import CreateTargetContextualCollapsibleCard from "@/components/admin/targets/CreateTargetContextualCollapsibleCard";
 import { CD_TARGET_COPY } from "@/lib/club-development/product-copy";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { buildVereinsentwicklungZielNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
+import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import {
   useCallback,
   useEffect,
@@ -110,8 +111,9 @@ export default function StrategyAuthoringPanel({
   const [focusError, setFocusError] = useState<string | null>(null);
   const [pendingSave, startSave] = useTransition();
   const [pendingFocus, startFocus] = useTransition();
-  const [targetCreateExpanded, setTargetCreateExpanded] = useState(false);
   const [focusLinkRetryTargetId, setFocusLinkRetryTargetId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
   const [supportingCounts, setSupportingCounts] = useState(() => strategySupportingMaterialCounts(initial));
   const [documentReferences, setDocumentReferences] = useState(initial.documentReferences);
 
@@ -572,36 +574,18 @@ export default function StrategyAuthoringPanel({
 
         {canManage ? (
           <div className="space-y-3">
-            <CreateTargetContextualCollapsibleCard
-              expanded={targetCreateExpanded}
-              onExpandedChange={setTargetCreateExpanded}
-              contextualFocus={{
-                onFinished: ({ targetId, title, linkOk, linkError }) => {
-                  if (linkOk && targetId) {
-                    setFocusError(null);
-                    setFocusLinkRetryTargetId(null);
-                    setFocusTargets((prev) => [
-                      ...prev,
-                      {
-                        id: `local-${targetId}`,
-                        sortOrder: prev.length,
-                        target: {
-                          id: targetId,
-                          title: title ?? "Ziel",
-                          status: "DRAFT",
-                        },
-                      },
-                    ]);
-                    router.refresh();
-                    return;
-                  }
-                  if (targetId) {
-                    setFocusLinkRetryTargetId(targetId);
-                  }
-                  setFocusError(linkError ?? CD_TARGET_COPY.targetCreatedFocusLinkFailed);
-                },
-              }}
-            />
+            <Link
+              href={buildVereinsentwicklungZielNeuHref({
+                orgUnitId: orgQuery,
+                clubStrategyId: strategyId,
+                linkFocus: true,
+              })}
+              className="inline-flex items-center rounded-lg bg-[var(--sce-primary)] px-3 py-2 text-sm font-medium text-white"
+              data-testid="strategy-focus-create-target"
+              data-sce-contextual-create-flow="full-page"
+            >
+              {CD_TARGET_COPY.createTargetInStrategy}
+            </Link>
             <div className="space-y-1">
               <p className="text-xs font-medium text-[var(--muted)]">{CD_TARGET_COPY.linkExistingTargetToStrategy}</p>
               <ClubDevelopmentTargetSearchPicker

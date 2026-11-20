@@ -7715,6 +7715,70 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/vereinsleitung/strategie-und-ziele/strategie/neu",
+    "routeKey": "/vereinsleitung/strategie-und-ziele/strategie/neu",
+    "sourceFile": "app/(admin)/vereinsleitung/strategie-und-ziele/strategie/neu/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/vereinsleitung/strategie-und-ziele/ziele/neu",
+    "routeKey": "/vereinsleitung/strategie-und-ziele/ziele/neu",
+    "sourceFile": "app/(admin)/vereinsleitung/strategie-und-ziele/ziele/neu/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/vereinsleitung/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "vereinsleitung",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Low",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/vereinsleitung/strategie",
     "routeKey": "/vereinsleitung/strategie",
     "sourceFile": "app/(admin)/vereinsleitung/strategie/page.tsx",
@@ -7821,19 +7885,19 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     ],
     "module": "vereinsleitung",
     "authenticationScope": "AUTHENTICATED",
-    "routeKind": "RENDERABLE_PAGE",
+    "routeKind": "REDIRECT_ALIAS",
     "intercept": false,
     "parallelSlot": null,
-    "architecture": "CANONICAL",
-    "migrationStatus": "IMPLEMENTED",
-    "migrationPackage": "DS2-07G",
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
     "priority": "Low",
-    "visualVerificationStatus": "PENDING",
-    "accessibilityVerificationStatus": "PENDING",
-    "functionalVerificationStatus": "PENDING",
-    "exceptionId": null,
-    "exceptionRationale": null,
-    "redirectDestination": null,
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+    "exceptionRationale": "Legacy deep link alias → /vereinsleitung/strategie-und-ziele/ziele/neu (not a visual surface).",
+    "redirectDestination": "dynamic",
     "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
@@ -9446,16 +9510,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 292,
-  "authenticatedRenderableCount": 228,
-  "authenticatedVisualCount": 225,
-  "authenticatedRedirectCount": 23,
+  "pageCount": 294,
+  "authenticatedRenderableCount": 229,
+  "authenticatedVisualCount": 226,
+  "authenticatedRedirectCount": 24,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
   "routeHandlerCount": 689,
   "frameworkFileCount": 41,
   "architecture": {
-    "CANONICAL": 225,
+    "CANONICAL": 226,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -9463,17 +9527,17 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 225,
+    "IMPLEMENTED": 226,
     "VERIFIED": 0,
-    "EXCEPTION": 67
+    "EXCEPTION": 68
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 225,
+  "architecturalCanonicalCount": 226,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
-    "SCE-DS2-07B-EX-REDIRECT": 24,
+    "SCE-DS2-07B-EX-REDIRECT": 25,
     "SCE-DS2-07B-EX-PUBLIC": 25,
     "SCE-DS2-07B-EX-PREVIEW": 15,
     "SCE-DS2-07B-EX-PRINT": 3
@@ -9483,7 +9547,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 225
+    "DS2-07G": 226
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,

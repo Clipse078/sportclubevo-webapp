@@ -35,7 +35,7 @@ describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
   it("uses modal-first create triggers on corrected representative CTAs", () => {
     expect(SCE_DESIGN_SYSTEM_10R1_CREATE_FLOW.CREATE_IN_CONTEXT).toBe("MODAL_FIRST");
     expect(readSrc("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
-      "CreateTargetWorkspaceCollapsibleCard",
+      "buildVereinsentwicklungZielNeuHref",
     );
     expect(readSrc("app/(admin)/vereinsleitung/meetings/page.tsx")).toContain("CreateMeetingTrigger");
     expect(readSrc("components/admin/initiatives/CreateInitiativeTrigger.tsx")).toContain(

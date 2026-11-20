@@ -54,11 +54,15 @@ export type ConnectedWorkspacePoUatUrls = {
   uebersicht: string;
   strategien: string;
   ziele: string;
+  neueStrategie: string;
+  neuesZiel: string;
+  neueAufgabeReference: string;
   aufgaben: string;
   umsetzungsplanung: string;
   targetDetail: string;
   ungeplantBacklog: string;
   sprintBoard: string;
+  zielNeuFromGesamtvereinStrategie: string;
 };
 
 export function buildConnectedWorkspacePoUatHandoffUrls(
@@ -68,10 +72,15 @@ export function buildConnectedWorkspacePoUatHandoffUrls(
   const base = previewBase.replace(/\/$/, "");
   const orgQuery = `${CD_WORKSPACE_ORG_UNIT_QUERY}=${encodeURIComponent(orgUnitId)}`;
 
+  const clubStrategyId = SCE_CD_CONNECTED_PO_UAT_CLUB_STRATEGY_ID;
   return {
     uebersicht: `${base}/vereinsleitung/club-entwicklung?${orgQuery}`,
     strategien: `${base}/vereinsleitung/strategie-und-ziele?ansicht=strategie&${orgQuery}`,
     ziele: `${base}/vereinsleitung/strategie-und-ziele?ansicht=ziele&${orgQuery}`,
+    neueStrategie: `${base}/vereinsleitung/strategie-und-ziele/strategie/neu?${orgQuery}`,
+    neuesZiel: `${base}/vereinsleitung/strategie-und-ziele/ziele/neu?${orgQuery}`,
+    neueAufgabeReference: `${base}/dashboard/aufgaben/neu`,
+    zielNeuFromGesamtvereinStrategie: `${base}/vereinsleitung/strategie-und-ziele/ziele/neu?${orgQuery}&clubStrategyId=${encodeURIComponent(clubStrategyId)}&linkFocus=1`,
     aufgaben: `${base}/vereinsleitung/vorhaben-und-umsetzung?ansicht=aufgaben&${orgQuery}`,
     umsetzungsplanung: `${base}/vereinsleitung/vorhaben-und-umsetzung?ansicht=umsetzungsphasen&${orgQuery}`,
     targetDetail: `${base}/vereinsleitung/targets/${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_TARGET_ID)}?${orgQuery}`,

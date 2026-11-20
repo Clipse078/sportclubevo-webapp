@@ -30,14 +30,11 @@ describe("PKG-05 contextual inline collapsible create (SCE rule)", () => {
     expect(card).toContain("/initiative-links");
   });
 
-  it("Strategie Schwerpunkt create uses inline collapsible card", () => {
+  it("Strategie Schwerpunkt create links to full-page Ziel anlegen", () => {
     const strategy = read("components/admin/club-development/StrategyAuthoringPanel.tsx");
-    const card = read("components/admin/targets/CreateTargetContextualCollapsibleCard.tsx");
-    expect(strategy).toContain("CreateTargetContextualCollapsibleCard");
+    expect(strategy).toContain("buildVereinsentwicklungZielNeuHref");
     expect(strategy).not.toContain("CreateTargetComposerDialog");
-    expect(card).toContain("focus-targets");
-    expect(card).toContain("linkAsSchwerpunkt");
-    expect(card).toContain('collapseToggleTestId="strategy-create-target-and-link"');
+    expect(strategy).toContain('data-sce-contextual-create-flow="full-page"');
   });
 
   it("shared shell exposes aria-expanded and aria-controls without Dialog portal", () => {
@@ -66,9 +63,9 @@ describe("PKG-05 contextual inline collapsible create (SCE rule)", () => {
     expect(findings.length).toBeGreaterThan(0);
   });
 
-  it("Ziele workspace list uses inline collapsible create instead of modal", () => {
+  it("Ziele workspace list links to full-page create instead of modal", () => {
     const panel = read("components/admin/club-development/ZieleWorkspacePanel.tsx");
-    expect(panel).toContain("CreateTargetWorkspaceCollapsibleCard");
+    expect(panel).toContain("buildVereinsentwicklungZielNeuHref");
     expect(panel).not.toContain("CreateTargetComposerDialog");
     expect(panel).not.toContain("CreateTargetTrigger");
   });

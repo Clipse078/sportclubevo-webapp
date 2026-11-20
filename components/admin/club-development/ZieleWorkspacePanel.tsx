@@ -1,7 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import CreateTargetWorkspaceCollapsibleCard from "@/components/admin/targets/CreateTargetWorkspaceCollapsibleCard";
+import Link from "next/link";
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { buildVereinsentwicklungZielNeuHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
+import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
@@ -26,7 +29,8 @@ export default function ZieleWorkspacePanel({
   canManageTargets,
   orgEinheitFilterLabel = null,
 }: Props) {
-  const [createOpen, setCreateOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const orgQuery = searchParams.get(CD_WORKSPACE_ORG_UNIT_QUERY);
 
   const strategyTitleByTargetId = useMemo(() => {
     const map = new Map<string, string>();
@@ -39,14 +43,14 @@ export default function ZieleWorkspacePanel({
   }, [strategies]);
 
   const primaryAction = canManageTargets ? (
-    <button
-      type="button"
+    <Link
+      href={buildVereinsentwicklungZielNeuHref({ orgUnitId: orgQuery })}
       className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
-      onClick={() => setCreateOpen(true)}
       data-testid="ziele-toolbar-create"
+      data-sce-contextual-create-flow="full-page"
     >
       + Ziel anlegen
-    </button>
+    </Link>
   ) : null;
 
   return (
@@ -58,16 +62,6 @@ export default function ZieleWorkspacePanel({
       />
 
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}>
-        {/* data-sce-contextual-create-flow="inline-collapsible" — CreateTargetWorkspaceCollapsibleCard */}
-        {canManageTargets ? (
-          <CreateTargetWorkspaceCollapsibleCard
-            canCreate
-            expanded={createOpen}
-            onExpandedChange={setCreateOpen}
-            hideToolbarTrigger
-          />
-        ) : null}
-
         {targets.length === 0 ? (
           <SceClubDevelopmentEmptyState
             testId="ziele-workspace-empty"

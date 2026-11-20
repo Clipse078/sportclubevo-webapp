@@ -53,9 +53,10 @@ export const SCE_DS2_07F_ASSIGNED_SOURCES = [
   "app/(admin)/vereinsleitung/meetings/new/page.tsx",
   "app/(admin)/vereinsleitung/page.tsx",
   "app/(admin)/vereinsleitung/prozesse/page.tsx",
+  "app/(admin)/vereinsleitung/strategie-und-ziele/strategie/neu/page.tsx",
+  "app/(admin)/vereinsleitung/strategie-und-ziele/ziele/neu/page.tsx",
   "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
   "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
-  "app/(admin)/vereinsleitung/targets/new/page.tsx",
   "app/(admin)/vereinsleitung/templates/[id]/edit/page.tsx",
   "app/(admin)/vereinsleitung/templates/[id]/page.tsx",
   "app/(admin)/vereinsleitung/templates/new/page.tsx",
@@ -72,13 +73,13 @@ const CANONICAL_MARKERS = [
 
 describe("SCE-DS2-07F remaining workspaces migration", () => {
   it("accounts for every assigned route and moves it to canonical DS2-07G", () => {
-    expect(SCE_DS2_07F_ASSIGNED_SOURCES).toHaveLength(44);
+    expect(SCE_DS2_07F_ASSIGNED_SOURCES).toHaveLength(45);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(225);
+    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(226);
     expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(225);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(226);
 
     for (const sourceFile of SCE_DS2_07F_ASSIGNED_SOURCES) {
       const entry = SCE_DS2_07B_ROUTE_REGISTRY.find((item) => item.sourceFile === sourceFile);

@@ -236,6 +236,8 @@
   "app/(admin)/vereinsleitung/sprints/[slug]/page.tsx",
   "app/(admin)/vereinsleitung/sprints/page.tsx",
   "app/(admin)/vereinsleitung/strategie-und-ziele/page.tsx",
+  "app/(admin)/vereinsleitung/strategie-und-ziele/strategie/neu/page.tsx",
+  "app/(admin)/vereinsleitung/strategie-und-ziele/ziele/neu/page.tsx",
   "app/(admin)/vereinsleitung/strategie/page.tsx",
   "app/(admin)/vereinsleitung/targets/[id]/edit/page.tsx",
   "app/(admin)/vereinsleitung/targets/[id]/page.tsx",
