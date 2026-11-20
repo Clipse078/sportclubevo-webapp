@@ -21,6 +21,7 @@ import {
 } from "@/lib/club-development/initiative-associated-tasks";
 import { initiativeDeliveryProgressPercentFromSnapshot } from "@/lib/club-development/initiative-delivery-progress";
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
+import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwicklung-task-context-labels";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
 import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
 import type { VorhabenWorkspaceCardNextMilestone } from "@/lib/club-development/vorhaben-workspace-card-types";
@@ -110,6 +111,8 @@ export type VorhabenWorkspaceTaskRow = {
   initiativeSlug: string | null;
   targetId: string | null;
   targetTitle: string | null;
+  strategyId: string | null;
+  strategyTitle: string | null;
   orgUnitLabel: string | null;
   linkKind: VorhabenWorkspaceTaskLinkKind;
   isRootTask: true;
@@ -219,6 +222,7 @@ function mapTaskRows(
   initiativeById: Map<string, { id: string; title: string; slug: string }>,
   targetById: Map<string, string>,
   orgUnitLabels: Map<string, string>,
+  contextLabels: Map<string, import("@/lib/club-development/vereinsentwicklung-task-context-labels-types").TaskContextLabelBundle>,
   returnTo: string,
 ): VorhabenWorkspaceTaskRow[] {
   const deduped = dedupeTasksById(rows);
@@ -228,6 +232,7 @@ function mapTaskRows(
     const targetId =
       row.contextType === TaskContextType.TARGET && row.contextId ? row.contextId : null;
     const targetTitle = targetId ? targetById.get(targetId) ?? null : null;
+    const labels = contextLabels.get(row.id);
     return {
       id: row.id,
       title: row.title,
@@ -241,7 +246,9 @@ function mapTaskRows(
       initiativeSlug: initiative?.slug ?? null,
       targetId,
       targetTitle,
-      orgUnitLabel: row.orgUnitId ? orgUnitLabels.get(row.orgUnitId) ?? null : null,
+      strategyId: labels?.strategyId ?? null,
+      strategyTitle: labels?.strategyTitle ?? null,
+      orgUnitLabel: row.orgUnitId ? orgUnitLabels.get(row.orgUnitId) ?? null : labels?.orgUnitLabel ?? null,
       linkKind: taskLinkKind(row, initiativeId),
       isRootTask: true,
     };
@@ -513,7 +520,8 @@ export async function loadVorhabenWorkspace(
         for (const unit of orgUnits) orgUnitLabels.set(unit.id, unit.name);
       }
 
-      tasks = mapTaskRows(taskRows, initiativeById, targetById, orgUnitLabels, returnTo);
+      const contextLabels = await loadTaskContextLabelBundles(actor.tenantId, taskRows);
+      tasks = mapTaskRows(taskRows, initiativeById, targetById, orgUnitLabels, contextLabels, returnTo);
     }
   }
 

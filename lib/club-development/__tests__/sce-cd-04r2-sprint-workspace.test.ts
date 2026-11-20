@@ -54,6 +54,12 @@ function card(partial: Partial<SprintBoardCard> & { taskId: string }): SprintBoa
     assignees: partial.assignees ?? [],
     initiativeLabel: partial.initiativeLabel ?? null,
     initiativeId: partial.initiativeId ?? null,
+    targetId: partial.targetId ?? null,
+    targetTitle: partial.targetTitle ?? null,
+    strategyId: partial.strategyId ?? null,
+    strategyTitle: partial.strategyTitle ?? null,
+    orgUnitLabel: partial.orgUnitLabel ?? null,
+    taskHref: partial.taskHref ?? `/aufgaben/${partial.taskId}`,
     addedAfterSprintStart: partial.addedAfterSprintStart ?? false,
   };
 }

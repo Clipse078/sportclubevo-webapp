@@ -236,10 +236,14 @@ export function collectVereinsentwicklungWorkspaceViolations(
         reason: "Phase task panel must distinguish empty vs loading vs error with inline copy.",
       });
     }
-    if (!src.includes("groupAssignedSprintBoardCards")) {
+    if (
+      !src.includes("VereinsentwicklungConnectedTaskTable") &&
+      !src.includes("groupAssignedSprintBoardCards")
+    ) {
       findings.push({
         file: normalized,
-        reason: "Assigned phase tasks must group by Vorhaben and status in the workspace.",
+        reason:
+          "Assigned phase tasks must use the connected task table or legacy Vorhaben/status grouping.",
       });
     }
   }

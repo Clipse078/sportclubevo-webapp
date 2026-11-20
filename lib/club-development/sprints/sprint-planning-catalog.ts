@@ -21,6 +21,8 @@ import {
   isSprintPlanningTaskSelectable,
   sprintPlanningExclusionMessage,
 } from "./sprint-planning-eligibility";
+import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwicklung-task-context-labels";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { loadSprintTaskAssigneeViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import type {
   SprintPlanningCatalogDto,
@@ -63,6 +65,7 @@ function toPlanningTaskDto(
   row: PlanningTaskRow,
   membership: { inTarget: boolean; otherTitle: string | null },
   byUserId: Map<string, SprintTaskAssigneeViewModel>,
+  contextLabels: Map<string, import("@/lib/club-development/vereinsentwicklung-task-context-labels-types").TaskContextLabelBundle>,
 ): SprintPlanningTaskDto {
   const assignees = assigneesForRow(row, byUserId);
   const inTargetSprint = membership.inTarget;
@@ -77,6 +80,7 @@ function toPlanningTaskDto(
     otherSprintTitle,
     status: row.status,
   });
+  const labels = contextLabels.get(row.id);
   return {
     id: row.id,
     title: row.title,
@@ -89,6 +93,12 @@ function toPlanningTaskDto(
     inTargetSprint,
     otherSprintTitle,
     exclusionReason,
+    targetId: labels?.targetId ?? null,
+    targetTitle: labels?.targetTitle ?? null,
+    strategyId: labels?.strategyId ?? null,
+    strategyTitle: labels?.strategyTitle ?? null,
+    orgUnitLabel: labels?.orgUnitLabel ?? null,
+    taskHref: taskWorkspaceHref(row.id),
   };
 }
 
@@ -276,12 +286,14 @@ export async function loadSprintPlanningCatalog(
     ).map((a) => [a.userId, a] as const),
   );
 
+  const contextLabels = await loadTaskContextLabelBundles(tenantId, catalogRows);
+
   const initiativeGroups: SprintPlanningInitiativeGroupDto[] = pendingInitiativeGroups.map((group) => ({
     initiativeId: group.initiativeId,
     title: group.title,
     slug: group.slug,
     tasks: group.deduped.map((row) =>
-      toPlanningTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId),
+      toPlanningTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId, contextLabels),
     ),
   }));
 
@@ -289,7 +301,7 @@ export async function loadSprintPlanningCatalog(
     initiativeGroups,
     standaloneGroup: {
       tasks: finalStandalone.map((row) =>
-        toPlanningTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId),
+        toPlanningTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId, contextLabels),
       ),
     },
   };
@@ -328,6 +340,7 @@ function toUnplannedTaskDto(
   row: PlanningTaskRow,
   membership: OpenPhaseMembership,
   byUserId: Map<string, SprintTaskAssigneeViewModel>,
+  contextLabels: Map<string, import("@/lib/club-development/vereinsentwicklung-task-context-labels-types").TaskContextLabelBundle>,
 ): SprintPlanningTaskDto {
   const assignees = assigneesForRow(row, byUserId);
   const inOpenPhase = membership.inOpenPhase;
@@ -338,6 +351,7 @@ function toUnplannedTaskDto(
       ? "Abgeschlossene oder abgebrochene Aufgaben können nicht geplant werden."
       : null;
   const selectable = !inOpenPhase && isSprintPlanningEligibleStatus(row.status);
+  const labels = contextLabels.get(row.id);
   return {
     id: row.id,
     title: row.title,
@@ -350,6 +364,12 @@ function toUnplannedTaskDto(
     inTargetSprint: false,
     otherSprintTitle: inOpenPhase ? otherSprintTitle : null,
     exclusionReason,
+    targetId: labels?.targetId ?? null,
+    targetTitle: labels?.targetTitle ?? null,
+    strategyId: labels?.strategyId ?? null,
+    strategyTitle: labels?.strategyTitle ?? null,
+    orgUnitLabel: labels?.orgUnitLabel ?? null,
+    taskHref: taskWorkspaceHref(row.id),
   };
 }
 
@@ -493,6 +513,8 @@ export async function loadUnplannedTasksCatalog(
     ).map((a) => [a.userId, a] as const),
   );
 
+  const contextLabels = await loadTaskContextLabelBundles(tenantId, catalogRows);
+
   const mapGroups = (groups: PendingInitiativeGroup[]): SprintPlanningInitiativeGroupDto[] =>
     groups
       .map((group) => ({
@@ -500,7 +522,9 @@ export async function loadUnplannedTasksCatalog(
         title: group.title,
         slug: group.slug,
         tasks: group.deduped
-          .map((row) => toUnplannedTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId))
+          .map((row) =>
+            toUnplannedTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId, contextLabels),
+          )
           .filter((t) => t.selectable),
       }))
       .filter((g) => g.tasks.length > 0);
@@ -509,7 +533,9 @@ export async function loadUnplannedTasksCatalog(
     initiativeGroups: mapGroups(pendingInitiativeGroups),
     standaloneGroup: {
       tasks: finalStandalone
-        .map((row) => toUnplannedTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId))
+        .map((row) =>
+          toUnplannedTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId, contextLabels),
+        )
         .filter((t) => t.selectable),
     },
   };

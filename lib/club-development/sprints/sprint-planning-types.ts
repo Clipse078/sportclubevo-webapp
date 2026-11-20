@@ -14,6 +14,12 @@ export type SprintPlanningTaskDto = {
   inTargetSprint: boolean;
   otherSprintTitle: string | null;
   exclusionReason: string | null;
+  targetId: string | null;
+  targetTitle: string | null;
+  strategyId: string | null;
+  strategyTitle: string | null;
+  orgUnitLabel: string | null;
+  taskHref: string;
 };
 
 export type SprintPlanningInitiativeGroupDto = {

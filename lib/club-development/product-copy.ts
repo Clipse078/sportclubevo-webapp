@@ -110,6 +110,7 @@ export const CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY = {
 export const CD_VORHABEN_WORKSPACE_COPY = {
   targetFilterHint: "Anzeige auf Vorhaben mit Verknüpfung zum gewählten strategischen Ziel.",
   searchPlaceholder: "Vorhaben oder Aufgaben suchen …",
+  tasksSearchPlaceholder: "Aufgaben suchen …",
   allInitiatives: "Alle sichtbaren Vorhaben",
   anyOpenTaskStatus: "Aktive Aufgaben (ohne Abbruch)",
   focusInitiative: "Fokus:",

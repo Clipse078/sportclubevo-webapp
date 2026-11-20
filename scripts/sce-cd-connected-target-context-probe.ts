@@ -11,7 +11,7 @@ import fs from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 
-import { TaskContextType, TaskVisibilityScope } from "@prisma/client";
+import { TaskContextType, TaskVisibilityScope, VisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { listMyTasks } from "@/lib/tasks/task-service";
@@ -68,9 +68,8 @@ async function main(): Promise<void> {
       title: "Probe TARGET Ziel",
       status: "ACTIVE",
       category: "GOVERNANCE",
-      visibilityScope: TaskVisibilityScope.ORGANISATION,
+      visibilityScope: VisibilityScope.ORGANISATION,
       createdByUserId: user.id,
-      updatedByUserId: user.id,
     },
   });
 
@@ -84,7 +83,6 @@ async function main(): Promise<void> {
       contextId: targetId,
       visibilityScope: TaskVisibilityScope.ORGANISATION,
       createdByUserId: user.id,
-      updatedByUserId: user.id,
     },
   });
 

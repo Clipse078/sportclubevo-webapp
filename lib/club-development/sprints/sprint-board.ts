@@ -3,6 +3,8 @@ import "server-only";
 import { TaskContextType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TaskServiceContext } from "@/lib/tasks/types";
+import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwicklung-task-context-labels";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
 
@@ -20,6 +22,12 @@ export type SprintBoardCard = {
   assignees: SprintTaskAssigneeViewModel[];
   initiativeLabel: string | null;
   initiativeId: string | null;
+  targetId: string | null;
+  targetTitle: string | null;
+  strategyId: string | null;
+  strategyTitle: string | null;
+  orgUnitLabel: string | null;
+  taskHref: string;
   addedAfterSprintStart: boolean;
 };
 
@@ -56,6 +64,7 @@ export async function loadSprintBoard(
       contextType: true,
       contextId: true,
       primaryInitiativeId: true,
+      orgUnitId: true,
       assignees: {
         orderBy: { assignedAt: "asc" },
         select: { userId: true },
@@ -94,6 +103,8 @@ export async function loadSprintBoard(
     ),
   );
 
+  const contextLabels = await loadTaskContextLabelBundles(tenantId, tasks);
+
   for (const task of tasks) {
     const column = mapTaskStatusToBoardColumn(task.status);
     const initiativeIdForLabel =
@@ -101,6 +112,7 @@ export async function loadSprintBoard(
         ? task.contextId
         : task.primaryInitiativeId;
     const initiative = initiativeIdForLabel ? initiativeById.get(initiativeIdForLabel) : null;
+    const labels = contextLabels.get(task.id);
 
     const card: SprintBoardCard = {
       taskId: task.id,
@@ -114,6 +126,12 @@ export async function loadSprintBoard(
         .filter((a): a is SprintTaskAssigneeViewModel => Boolean(a)),
       initiativeLabel: initiative?.title ?? null,
       initiativeId: initiativeIdForLabel ?? null,
+      targetId: labels?.targetId ?? null,
+      targetTitle: labels?.targetTitle ?? null,
+      strategyId: labels?.strategyId ?? null,
+      strategyTitle: labels?.strategyTitle ?? null,
+      orgUnitLabel: labels?.orgUnitLabel ?? null,
+      taskHref: taskWorkspaceHref(task.id),
       addedAfterSprintStart: addedFlagByTask.get(task.id) ?? false,
     };
     columns[column].push(card);

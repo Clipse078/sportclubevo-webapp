@@ -22,7 +22,8 @@ import VorhabenZielFilterChip, {
   buildVorhabenZielFilterRemoveHref,
 } from "./VorhabenZielFilterChip";
 import VorhabenWorkspaceLoadingState from "./VorhabenWorkspaceLoadingState";
-import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
+import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import { mapVorhabenTaskRowToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
 
 export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
 
@@ -56,49 +57,6 @@ const TASK_STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "DONE", label: "Erledigt" },
   { value: "CANCELLED", label: "Abgebrochen" },
 ];
-
-function TaskRowCard({ row }: { row: VorhabenWorkspaceTaskRow }) {
-  const supplemental =
-    row.targetTitle ? (
-      <span className="text-xs text-[var(--text-2)]">
-        Ziel:{" "}
-        <Link
-          href={`/vereinsleitung/targets/${encodeURIComponent(row.targetId!)}`}
-          className="hover:text-[var(--sce-primary)]"
-        >
-          {row.targetTitle}
-        </Link>
-      </span>
-    ) : row.initiativeTitle ? (
-      <span className="text-xs text-[var(--text-2)]">
-        Vorhaben:{" "}
-        {row.initiativeSlug ? (
-          <Link
-            href={`/vereinsleitung/initiativen/${encodeURIComponent(row.initiativeSlug)}`}
-            className="hover:text-[var(--sce-primary)]"
-          >
-            {row.initiativeTitle}
-          </Link>
-        ) : (
-          row.initiativeTitle
-        )}
-      </span>
-    ) : null;
-
-  return (
-  <li>
-    <VereinsentwicklungWorkspaceRecordRow
-      title={row.title}
-      titleHref={row.href}
-      responsibleLabel={row.assigneeLabels.join(", ") || null}
-      orgUnitLabel={row.orgUnitLabel}
-      statusLabel={row.statusLabel}
-      trailing={supplemental}
-      testId={`aufgaben-task-row-${row.id}`}
-    />
-    </li>
-  );
-}
 
 export default function VorhabenAufgabenWorkspace({
   initialSnapshot,
@@ -187,6 +145,11 @@ export default function VorhabenAufgabenWorkspace({
         onSecondaryFiltersToggle={() => setSecondaryFiltersOpen((open) => !open)}
         showPrioritaetenControl={isVorhabenView && showPrioritaetenControl}
         prioritaetenActive={showPrioritaetenActive}
+        searchPlaceholder={
+          isVorhabenView
+            ? CD_VORHABEN_WORKSPACE_COPY.searchPlaceholder
+            : CD_VORHABEN_WORKSPACE_COPY.tasksSearchPlaceholder
+        }
       />
       {secondaryFiltersOpen ? (
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -320,11 +283,10 @@ export default function VorhabenAufgabenWorkspace({
             ) : tasksEmpty ? (
               <SceClubDevelopmentEmptyState message={CD_VORHABEN_WORKSPACE_COPY.emptyTasks} />
             ) : (
-              <ul>
-                {snapshot.tasks.map((row) => (
-                  <TaskRowCard key={row.id} row={row} />
-                ))}
-              </ul>
+              <VereinsentwicklungConnectedTaskTable
+                rows={snapshot.tasks.map(mapVorhabenTaskRowToTableModel)}
+                testId="vereinsentwicklung-aufgaben-task-table"
+              />
             )}
           </SceClubDevelopmentSectionShell>
         )}
