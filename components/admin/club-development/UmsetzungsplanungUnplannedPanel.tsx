@@ -226,8 +226,7 @@ export default function UmsetzungsplanungUnplannedPanel({
     unassignFromPhase(payload.taskId, payload.sourcePhaseId);
   };
 
-  const returnDropVisible =
-  dragCtx?.dragging?.source === "phase" && !assignDisabled;
+  const returnDropVisible = dragCtx?.dragging?.source === "phase";
 
   return (
     <UmsetzungsplanungCollapsibleSection
