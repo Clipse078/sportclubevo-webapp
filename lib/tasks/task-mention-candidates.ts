@@ -3,7 +3,10 @@
  */
 
 import { TaskVisibilityScope } from "@prisma/client";
-import { prisma } from "@/lib/db/prisma";
+import {
+  listEligiblePersonUserIdentitiesInTenant,
+  searchEligiblePersonUserIdentitiesInTenant,
+} from "@/lib/people/person-user-identity";
 import type { TaskAssigneeOption } from "./queries";
 import {
   TASK_MENTION_SEARCH_LIMIT,
@@ -19,51 +22,18 @@ import {
 } from "./task-mention-auth";
 import { canReadTask } from "./task-authorization";
 
-function userSearchWhere(term: string) {
-  if (term.length < TASK_MENTION_SEARCH_MIN_CHARS) return {};
-  return {
-    OR: [
-      { firstName: { contains: term, mode: "insensitive" as const } },
-      { lastName: { contains: term, mode: "insensitive" as const } },
-      { email: { contains: term, mode: "insensitive" as const } },
-    ],
-  };
-}
-
-function mapMembershipRows(
-  rows: Array<{
-    user: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      isActive: boolean;
-    };
-  }>,
+function mapIdentityRows(
+  rows: Awaited<ReturnType<typeof searchEligiblePersonUserIdentitiesInTenant>>,
 ): TaskAssigneeOption[] {
-  return rows
-    .map((m) => m.user)
-    .filter((u) => u.isActive)
-    .map((u) => ({
-      userId: u.id,
-      firstName: u.firstName,
-      lastName: u.lastName,
-      email: u.email,
-      displayName: `${u.firstName} ${u.lastName}`.trim(),
-    }));
+  return rows.map((row) => ({
+    personId: row.personId,
+    userId: row.userId,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    email: row.email,
+    displayName: row.displayName,
+  }));
 }
-
-const membershipUserSelect = {
-  user: {
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      isActive: true,
-    },
-  },
-} as const;
 
 /** Documents worst-case DB scan bound for acceptance (CLUB / ORG_UNIT path). */
 export function taskMentionSearchWorstCaseDbRowBound(): number {
@@ -82,72 +52,38 @@ export async function searchTaskMentionCandidates(
   }
 
   const authRecord = taskAuthorizationFromRow(task);
-  const userFilter = userSearchWhere(term);
+
+  const identityCandidates = term
+    ? await searchEligiblePersonUserIdentitiesInTenant(
+        ctx.tenantId,
+        term,
+        Math.max(limit * 4, TASK_MENTION_SEARCH_MAX_DB_ROWS),
+      )
+    : await listEligiblePersonUserIdentitiesInTenant(ctx.tenantId);
+
+  let options = mapIdentityRows(identityCandidates).filter((row) => row.userId !== ctx.userId);
 
   if (task.visibilityScope === TaskVisibilityScope.ASSIGNEES_ONLY) {
-    const candidateUserIds = directTaskParticipantUserIds(authRecord);
-    if (candidateUserIds.length === 0) return [];
-
-    const memberships = await prisma.tenantMembership.findMany({
-      where: {
-        tenantId: ctx.tenantId,
-        isActive: true,
-        userId: { in: candidateUserIds },
-        user: { isActive: true, ...userFilter },
-      },
-      select: membershipUserSelect,
-      orderBy: { user: { lastName: "asc" } },
-      take: limit,
-    });
-
-    return mapMembershipRows(memberships).filter((row) => row.userId !== ctx.userId);
+    const allowed = new Set(directTaskParticipantUserIds(authRecord));
+    options = options.filter((row) => allowed.has(row.userId));
+    return options.slice(0, limit);
   }
 
-  const batchSize = Math.max(limit * 3, limit);
-  let skip = 0;
+  const readableIds = await filterUserIdsWhoCanReadTask(
+    ctx.tenantId,
+    authRecord,
+    options.map((o) => o.userId),
+  );
+  const readable = new Set(readableIds);
+
   const results: TaskAssigneeOption[] = [];
-  const seenUserIds = new Set<string>();
-
-  while (results.length < limit && skip < TASK_MENTION_SEARCH_MAX_DB_ROWS) {
-    const take = Math.min(batchSize, TASK_MENTION_SEARCH_MAX_DB_ROWS - skip);
-    const memberships = await prisma.tenantMembership.findMany({
-      where: {
-        tenantId: ctx.tenantId,
-        isActive: true,
-        user: { isActive: true, ...userFilter },
-      },
-      select: membershipUserSelect,
-      orderBy: { user: { lastName: "asc" } },
-      take,
-      skip,
-    });
-
-    skip += memberships.length;
-    if (memberships.length === 0) break;
-
-    const options = mapMembershipRows(memberships).filter((row) => row.userId !== ctx.userId);
-    const fresh = options.filter((row) => !seenUserIds.has(row.userId));
-    for (const row of fresh) {
-      seenUserIds.add(row.userId);
-    }
-    if (fresh.length === 0) continue;
-
-    const readableIds = await filterUserIdsWhoCanReadTask(
-      ctx.tenantId,
-      authRecord,
-      fresh.map((o) => o.userId),
-    );
-    const readable = new Set(readableIds);
-
-    for (const option of fresh) {
-      if (readable.has(option.userId)) {
-        results.push(option);
-        if (results.length >= limit) break;
-      }
-    }
+  for (const option of options) {
+    if (!readable.has(option.userId)) continue;
+    results.push(option);
+    if (results.length >= limit) break;
   }
 
-  return results.slice(0, limit);
+  return results;
 }
 
 /** Used in tests — documents CLUB vs assignee-only eligibility split. */

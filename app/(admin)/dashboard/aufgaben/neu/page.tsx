@@ -10,6 +10,7 @@ import AufgabenNeuClient from "@/components/admin/aufgaben/AufgabenNeuClient";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
 import { prisma } from "@/lib/db/prisma";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
+import { parseSafeReturnToHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 
 export const dynamic = "force-dynamic";
 
@@ -73,17 +74,28 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
         }
       : null;
 
+  const returnTo = parseSafeReturnToHref(sp.returnTo, backHref);
+  const contextBlocked =
+    initialContextType && initialContextId && !contextualView
+      ? {
+          contextType: initialContextType,
+          contextId: initialContextId,
+          returnTo,
+        }
+      : null;
+
   return (
     <AufgabenNeuClient
       backHref={backHref}
       initialTitle={initialTitle}
       originMeetingSlug={originMeetingSlug}
       contextual={contextual}
+      contextBlocked={contextBlocked}
       fullCreate={{
         orgUnitOptions,
         timeZone,
-        initialContextType,
-        initialContextId,
+        initialContextType: contextBlocked ? null : initialContextType,
+        initialContextId: contextBlocked ? null : initialContextId,
         initialContextLabel: contextualView?.presentation?.title ?? null,
       }}
     />

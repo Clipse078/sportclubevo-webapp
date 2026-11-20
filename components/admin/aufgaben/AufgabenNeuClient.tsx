@@ -18,12 +18,19 @@ type ContextualProps = {
   tenantWideVisibility: boolean;
 };
 
+type ContextBlocked = {
+  contextType: TaskContextType;
+  contextId: string;
+  returnTo: string;
+};
+
 type Props = {
   backHref: string;
   initialTitle: string;
   originMeetingSlug: string | null;
   contextual: ContextualProps | null;
-  /** Full create (no fixed context or eligibility miss with partial context labels). */
+  contextBlocked: ContextBlocked | null;
+  /** Full create when no fixed context was requested (generic Neue Aufgabe). */
   fullCreate: {
     orgUnitOptions: TaskOrgUnitPickerOption[];
     timeZone: string;
@@ -38,9 +45,14 @@ export default function AufgabenNeuClient({
   initialTitle,
   originMeetingSlug,
   contextual,
+  contextBlocked,
   fullCreate,
 }: Props) {
   const [contextualExpanded, setContextualExpanded] = useState(true);
+
+  const headerDescription = contextual
+    ? "Die Aufgabe wird dem gewählten Kontext zugeordnet."
+    : "Alle Details für eine operative Aufgabe.";
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
@@ -52,11 +64,12 @@ export default function AufgabenNeuClient({
         ]}
         header={{
           title: "Neue Aufgabe",
-          description: contextual
-            ? "Kontextbezogene Aufgabe — inline erstellen."
-            : "Alle Details für eine operative Aufgabe.",
+          description: contextBlocked ? undefined : headerDescription,
           secondaryActions: (
-            <Link href={backHref} className="fca-button-secondary text-sm">
+            <Link
+              href={contextBlocked?.returnTo ?? backHref}
+              className="fca-button-secondary text-sm"
+            >
               Zurück
             </Link>
           ),
@@ -64,7 +77,27 @@ export default function AufgabenNeuClient({
         density="dense"
       >
         <div className="mx-auto w-full max-w-3xl" data-testid="task-workspace-create">
-            {contextual ? (
+            {contextBlocked ? (
+              <section
+                className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-4"
+                data-testid="aufgaben-neu-context-blocked"
+              >
+                <h2 className="text-sm font-semibold text-amber-100">
+                  Kontext nicht verfügbar
+                </h2>
+                <p className="mt-2 text-sm text-amber-50/90">
+                  Das gewählte Ziel ist nicht sichtbar oder Sie haben keine Berechtigung, hier eine
+                  kontextbezogene Aufgabe anzulegen. Es wird keine Aufgabe ohne diesen Kontext
+                  erstellt.
+                </p>
+                <Link
+                  href={contextBlocked.returnTo}
+                  className="mt-4 inline-flex text-sm font-medium text-[var(--sce-primary)] underline"
+                >
+                  Zurück zum Ausgangspunkt
+                </Link>
+              </section>
+            ) : contextual ? (
               <ContextualTaskInlineCreateCard
                 expanded={contextualExpanded}
                 onExpandedChange={setContextualExpanded}

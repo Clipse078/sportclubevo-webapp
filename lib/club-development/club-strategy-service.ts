@@ -278,6 +278,10 @@ export type CreateClubStrategyInput = {
   title: string;
   scopeClubWide?: boolean;
   orgUnitIds?: string[];
+  situationText?: string | null;
+  responsiblePersonId?: string | null;
+  responsibleUserId?: string | null;
+  nextReviewAt?: string | null;
 };
 
 export async function createClubStrategy(
@@ -312,12 +316,42 @@ export async function createClubStrategy(
   const scopeType =
     orgUnitIds.length === 1 ? ClubStrategyScopeType.ORG_UNIT : ClubStrategyScopeType.CLUB;
 
+  let responsiblePersonId: string | null = null;
+  let responsibleLabel: string | null = null;
+  if (input.responsiblePersonId?.trim()) {
+    const snap = await resolveMeetingPersonSnapshot(actor.tenantId, input.responsiblePersonId.trim());
+    if (!snap) throw new Error("RESPONSIBLE_NOT_FOUND");
+    responsiblePersonId = snap.personId;
+    responsibleLabel = snap.displayName;
+  } else if (input.responsibleUserId?.trim()) {
+    const { resolvePersonUserIdentityByUserId } = await import("@/lib/people/person-user-identity");
+    const identity = await resolvePersonUserIdentityByUserId(
+      actor.tenantId,
+      input.responsibleUserId.trim(),
+    );
+    if (!identity) throw new Error("RESPONSIBLE_NOT_FOUND");
+    responsiblePersonId = identity.personId;
+    responsibleLabel = identity.displayName;
+  }
+
+  const situationText = input.situationText?.trim() || null;
+  const nextReviewAt = input.nextReviewAt?.trim()
+    ? new Date(input.nextReviewAt.trim())
+  : null;
+  if (nextReviewAt && Number.isNaN(nextReviewAt.getTime())) {
+    throw new Error("INVALID_NEXT_REVIEW");
+  }
+
   const created = await prisma.clubStrategy.create({
     data: {
       tenantId: actor.tenantId,
       scopeType,
       scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
       title,
+      situationText,
+      responsiblePersonId,
+      responsibleLabel,
+      nextReviewAt,
       createdByUserId: actorUserId,
       updatedByUserId: actorUserId,
       orgUnitAssignments:

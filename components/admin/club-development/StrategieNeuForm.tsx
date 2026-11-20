@@ -14,9 +14,14 @@ import {
   workspacePrimaryButtonClass,
 } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
 import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
+import TaskDescriptionFormField from "@/components/admin/aufgaben/TaskDescriptionFormField";
+import TaskPeopleMultiPicker from "@/components/admin/aufgaben/TaskPeopleMultiPicker";
+import { TaskDeadlineFields } from "@/components/admin/aufgaben/TaskReminderFields";
+import { parseTaskDueAtFromForm } from "@/lib/tasks/task-reminder-schedule";
 
 export type StrategieNeuFormProps = {
   orgUnitOptions: TaskOrgUnitPickerOption[];
+  timeZone: string;
   onCancel: () => void;
   onSuccess: (strategyId: string) => void;
   submitLabel?: string;
@@ -29,6 +34,7 @@ export function useStrategieNeuDirtyGuard(formSnapshot: { title: string; orgScop
 
 export default function StrategieNeuForm({
   orgUnitOptions,
+  timeZone,
   onCancel,
   onSuccess,
   submitLabel = "Strategie anlegen",
@@ -37,10 +43,16 @@ export default function StrategieNeuForm({
   const [title, setTitle] = useState("");
   const [orgScope, setOrgScope] = useState<string[]>(defaultClubStrategyOrgScopeSelection);
   const [orgScopeTouched, setOrgScopeTouched] = useState(false);
+  const [situationText, setSituationText] = useState("");
+  const [assigneeUserIds, setAssigneeUserIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [fieldsKey] = useState(0);
 
-  const formSnapshot = useMemo(() => ({ title, orgScope }), [title, orgScope]);
+  const formSnapshot = useMemo(
+    () => ({ title, orgScope, situationText, assigneeUserIds }),
+    [title, orgScope, situationText, assigneeUserIds],
+  );
   useSceComposerFormDirty(formSnapshot);
 
   const scopeInvalid = parseClubStrategyOrgScopeSelection(orgScope).kind === "invalid";
@@ -59,11 +71,28 @@ export default function StrategieNeuForm({
         return;
       }
       setError(null);
+      const form = event.currentTarget;
+      const dueAt = parseTaskDueAtFromForm({
+        dateRaw: new FormData(form).get("dueAt")?.toString(),
+        timeRaw: new FormData(form).get("dueTime")?.toString(),
+        timeZone,
+      });
+      if (dueAt === "invalid") {
+        setError("Ungültiges Fälligkeitsdatum.");
+        return;
+      }
+
       startTransition(async () => {
         const result = await clubDevelopmentFetchJson<{ id: string }>("/api/club-development/club-strategies", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), ...scopePayload }),
+          body: JSON.stringify({
+            title: title.trim(),
+            ...scopePayload,
+            situationText: situationText.trim() || null,
+            responsibleUserId: assigneeUserIds[0] ?? null,
+            nextReviewAt: dueAt?.toISOString() ?? null,
+          }),
         });
         if (!result.ok) {
           setError(result.message);
@@ -72,7 +101,7 @@ export default function StrategieNeuForm({
         onSuccess(result.data.id);
       });
     },
-    [onSuccess, orgScope, title],
+    [assigneeUserIds, onSuccess, orgScope, situationText, timeZone, title],
   );
 
   return (
@@ -102,6 +131,24 @@ export default function StrategieNeuForm({
         disabled={pending}
         showRequiredHint={orgScopeTouched && scopeInvalid}
       />
+      <TaskDescriptionFormField
+        key={fieldsKey}
+        optional
+        label="Beschreibung"
+        inputId="strategie-neu-description"
+        onSerializedChange={setSituationText}
+      />
+      <TaskPeopleMultiPicker
+        label="Verantwortlich"
+        fieldName="responsibleUserIds"
+        selectedIds={assigneeUserIds}
+        onSelectedIdsChange={setAssigneeUserIds}
+        disabled={pending}
+        testIdPrefix="strategie-neu-responsible"
+        omitHiddenField
+        allowAdd
+      />
+      <TaskDeadlineFields timeZone={timeZone} dueAt={null} />
       <div className="flex flex-wrap gap-2">
         <button
           type="submit"

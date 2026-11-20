@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TaskDescriptionEditor from "./TaskDescriptionEditor";
 import {
   documentFromStoredTaskDescription,
@@ -16,6 +16,8 @@ type Props = {
   disabled?: boolean;
   inputId?: string;
   compact?: boolean;
+  /** Sync serialized storage value to parent forms that submit via client state. */
+  onSerializedChange?: (serialized: string) => void;
 };
 
 export default function TaskDescriptionFormField({
@@ -26,6 +28,7 @@ export default function TaskDescriptionFormField({
   disabled = false,
   inputId = "task-description",
   compact = false,
+  onSerializedChange,
 }: Props) {
   const [document, setDocument] = useState<TaskDescriptionDocument>(() =>
     documentFromStoredTaskDescription(initialStored),
@@ -35,6 +38,10 @@ export default function TaskDescriptionFormField({
     () => serializeTaskDescriptionForStorage(document) ?? "",
     [document],
   );
+
+  useEffect(() => {
+    onSerializedChange?.(serialized);
+  }, [onSerializedChange, serialized]);
 
   return (
     <div className="block space-y-1">

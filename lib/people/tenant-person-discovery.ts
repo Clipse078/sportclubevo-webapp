@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { buildPersonNameSearchOrClauses } from "@/lib/people/person-name-search";
 
 export type DiscoverableTenantPerson = {
   personId: string;
@@ -83,12 +84,7 @@ export async function searchDiscoverableTenantPersons(
     where: {
       tenantId,
       isActive: true,
-      OR: [
-        { firstName: { contains: term, mode: "insensitive" } },
-        { lastName: { contains: term, mode: "insensitive" } },
-        { displayName: { contains: term, mode: "insensitive" } },
-        { email: { contains: term, mode: "insensitive" } },
-      ],
+      OR: buildPersonNameSearchOrClauses(term),
     },
     select: personListSelect,
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],

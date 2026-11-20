@@ -96,6 +96,8 @@ export function buildOperationalContextHref(
       return entity.slug
         ? `/vereinsleitung/initiativen/${encodeURIComponent(entity.slug)}`
         : null;
+    case "TARGET":
+      return `/vereinsleitung/targets/${encodeURIComponent(entity.id)}`;
     case "TEAM":
       return `/dashboard/teams/${encodeURIComponent(entity.id)}`;
     case "PERSON":

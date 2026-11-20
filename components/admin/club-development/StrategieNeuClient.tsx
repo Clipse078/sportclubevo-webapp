@@ -15,9 +15,10 @@ type Props = {
   backHref: string;
   orgUnitId: string | null;
   orgUnitOptions: TaskOrgUnitPickerOption[];
+  timeZone: string;
 };
 
-export default function StrategieNeuClient({ backHref, orgUnitId, orgUnitOptions }: Props) {
+export default function StrategieNeuClient({ backHref, orgUnitId, orgUnitOptions, timeZone }: Props) {
   const router = useRouter();
   const guardedCancel = useGuardedComposerCancel();
 
@@ -53,6 +54,7 @@ export default function StrategieNeuClient({ backHref, orgUnitId, orgUnitOptions
           >
             <StrategieNeuForm
               orgUnitOptions={orgUnitOptions}
+              timeZone={timeZone}
               onCancel={navigateBack}
               onSuccess={(strategyId) => {
                 router.push(

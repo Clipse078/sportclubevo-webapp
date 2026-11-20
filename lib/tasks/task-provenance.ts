@@ -224,5 +224,54 @@ export async function resolveTaskProvenance(
     return { links };
   }
 
+  if (contextType === TaskContextType.TARGET) {
+    const target = await prisma.target.findFirst({
+      where: { id: contextId, tenantId: ctx.tenantId },
+      select: {
+        id: true,
+        title: true,
+        visibilityScope: true,
+        createdByUserId: true,
+        visibleRoleRefs: true,
+        visibleUserRefs: true,
+        visibleTeamRefs: true,
+        visibleOrgUnitRefs: true,
+        visiblePersonRefs: true,
+        visibleTargetGroupRefs: true,
+      },
+    });
+    if (!target) return { links: [] };
+    const actor = await hydrateMeetingActor(ctx);
+    const visible = canSeeEntity(target, actor);
+    links.push({
+      kind: "target",
+      label: visible ? target.title : "Ziel",
+      href: visible ? `/vereinsleitung/targets/${encodeURIComponent(target.id)}` : null,
+      restricted: !visible,
+    });
+
+    const focus = await prisma.clubStrategyFocusTarget.findFirst({
+      where: { targetId: target.id, tenantId: ctx.tenantId },
+      select: {
+        clubStrategy: { select: { id: true, title: true } },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+    const strategyTitle = focus?.clubStrategy.title?.trim();
+    if (strategyTitle) {
+      const { buildStrategieReturnHref } = await import(
+        "@/lib/club-development/vereinsentwicklung-create-routing"
+      );
+      links.push({
+        kind: "target",
+        label: `Strategie · ${strategyTitle}`,
+        href: buildStrategieReturnHref({ strategyId: focus!.clubStrategy.id }),
+        restricted: false,
+      });
+    }
+
+    return { links };
+  }
+
   return null;
 }

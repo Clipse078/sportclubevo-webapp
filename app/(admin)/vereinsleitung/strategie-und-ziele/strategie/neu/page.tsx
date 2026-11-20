@@ -8,6 +8,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
+import { prisma } from "@/lib/db/prisma";
 import { parseOrgEinheitQuery } from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 import {
   buildStrategieReturnHref,
@@ -35,7 +36,16 @@ export default async function VereinsentwicklungStrategieNeuPage({ searchParams 
     actor.tenantId && session.user.id
       ? await buildTaskServiceContextForActor(session.user.id, actor.tenantId)
       : null;
-  const orgUnitOptions = taskCtx ? await loadTaskOrgUnitMutationOptions(taskCtx) : [];
+  const [orgUnitOptions, tenantRow] = await Promise.all([
+    taskCtx ? loadTaskOrgUnitMutationOptions(taskCtx) : Promise.resolve([]),
+    actor.tenantId
+      ? prisma.tenant.findUnique({
+          where: { id: actor.tenantId },
+          select: { timezone: true },
+        })
+      : Promise.resolve(null),
+  ]);
+  const timeZone = tenantRow?.timezone ?? "Europe/Zurich";
 
   const backHref = parseSafeReturnToHref(
     query.returnTo,
@@ -43,6 +53,11 @@ export default async function VereinsentwicklungStrategieNeuPage({ searchParams 
   );
 
   return (
-    <StrategieNeuClient backHref={backHref} orgUnitId={orgUnitId} orgUnitOptions={orgUnitOptions} />
+    <StrategieNeuClient
+      backHref={backHref}
+      orgUnitId={orgUnitId}
+      orgUnitOptions={orgUnitOptions}
+      timeZone={timeZone}
+    />
   );
 }

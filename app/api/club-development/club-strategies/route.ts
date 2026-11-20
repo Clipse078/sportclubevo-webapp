@@ -37,10 +37,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const situationText =
+      typeof body?.situationText === "string" ? body.situationText : null;
+    const responsibleUserId =
+      typeof body?.responsibleUserId === "string" ? body.responsibleUserId.trim() : null;
+    const nextReviewAt =
+      typeof body?.nextReviewAt === "string" ? body.nextReviewAt.trim() : null;
+
     const created = await createClubStrategy(access.context.actor, access.context.actorUserId, {
       title,
       scopeClubWide,
       orgUnitIds,
+      situationText,
+      responsibleUserId,
+      nextReviewAt,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

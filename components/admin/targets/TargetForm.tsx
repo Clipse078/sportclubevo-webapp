@@ -17,6 +17,7 @@ import {
 import {
   parseTargetMetricNumericInput,
 } from "@/lib/targets/target-metric-payload";
+import TaskDescriptionFormField from "@/components/admin/aufgaben/TaskDescriptionFormField";
 
 type MetricDraft = {
   id?: string;
@@ -357,13 +358,12 @@ export default function TargetForm({
           </div>
 
           <div className="md:col-span-2">
-            <label className={labelClass}>Beschreibung</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kurze Beschreibung des Ziels…"
-              rows={3}
-              className={fieldClass}
+            <TaskDescriptionFormField
+              label="Beschreibung"
+              optional
+              initialStored={defaultValues?.description ?? null}
+              inputId="target-form-description"
+              onSerializedChange={setDescription}
             />
           </div>
 
