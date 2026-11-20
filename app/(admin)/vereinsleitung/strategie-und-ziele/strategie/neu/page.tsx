@@ -5,8 +5,9 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import StrategieNeuClient from "@/components/admin/club-development/StrategieNeuClient";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
-import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
 import { parseOrgEinheitQuery } from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 import {
   buildStrategieReturnHref,
@@ -30,14 +31,11 @@ export default async function VereinsentwicklungStrategieNeuPage({ searchParams 
   }
 
   const orgUnitId = parseOrgEinheitQuery(query) ?? null;
-  const orgUnitOptions = actor.tenantId
-    ? await prisma.orgUnit.findMany({
-        where: { tenantId: actor.tenantId, status: "ACTIVE" },
-        orderBy: [{ level: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-        select: { id: true, name: true },
-        take: 200,
-      })
-  : [];
+  const taskCtx =
+    actor.tenantId && session.user.id
+      ? await buildTaskServiceContextForActor(session.user.id, actor.tenantId)
+      : null;
+  const orgUnitOptions = taskCtx ? await loadTaskOrgUnitMutationOptions(taskCtx) : [];
 
   const backHref = parseSafeReturnToHref(
     query.returnTo,

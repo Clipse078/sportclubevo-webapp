@@ -152,6 +152,20 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     await pool.end();
   });
 
+  it("creates club-wide strategy when orgUnitIds are omitted (Gesamtverein default)", async () => {
+    const created = await createClubStrategy(actor, userId, {
+      title: `Club wide ${RUN}`,
+    });
+
+    const row = await admin.clubStrategy.findUniqueOrThrow({
+      where: { id: created.id },
+      include: { orgUnitAssignments: true },
+    });
+    expect(row.scopeType).toBe(ClubStrategyScopeType.CLUB);
+    expect(row.scopeOrgUnitId).toBeNull();
+    expect(row.orgUnitAssignments).toHaveLength(0);
+  });
+
   it("creates one strategy assigned to two Org-Einheiten and filters through both", async () => {
     const created = await createClubStrategy(actor, userId, {
       title: `Strategie ${RUN}`,

@@ -8,12 +8,13 @@ import {
   parseSafeReturnToHref,
 } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import VereinsentwicklungFullPageCreatePanel from "./VereinsentwicklungFullPageCreatePanel";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import StrategieNeuForm from "./StrategieNeuForm";
 
 type Props = {
   backHref: string;
   orgUnitId: string | null;
-  orgUnitOptions: { id: string; name: string }[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
 };
 
 export default function StrategieNeuClient({ backHref, orgUnitId, orgUnitOptions }: Props) {

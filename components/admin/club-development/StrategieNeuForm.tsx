@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition, type FormEventHandler } from "react";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { useSceComposerFormDirty } from "@/lib/ux/use-sce-composer-form-dirty";
 import {
   workspaceGhostButtonClass,
   workspacePrimaryButtonClass,
 } from "@/components/admin/meetings/workspace/meetingWorkspaceFieldClasses";
+import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
 
 export type StrategieNeuFormProps = {
-  orgUnitOptions: { id: string; name: string }[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   onCancel: () => void;
   onSuccess: (strategyId: string) => void;
   submitLabel?: string;
@@ -34,12 +36,6 @@ export default function StrategieNeuForm({
 
   const formSnapshot = useMemo(() => ({ title, orgUnitIds }), [title, orgUnitIds]);
   useSceComposerFormDirty(formSnapshot);
-
-  const toggleOrgUnit = (orgUnitId: string) => {
-    setOrgUnitIds((prev) =>
-      prev.includes(orgUnitId) ? prev.filter((id) => id !== orgUnitId) : [...prev, orgUnitId],
-    );
-  };
 
   const onSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     (event) => {
@@ -82,32 +78,12 @@ export default function StrategieNeuForm({
           data-testid="strategie-create-title"
         />
       </label>
-      {orgUnitOptions.length > 0 ? (
-        <fieldset className="space-y-2">
-          <legend className="text-xs text-[var(--muted)]">Org-Einheiten (optional, mehrfach)</legend>
-          <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-2">
-            {orgUnitOptions.map((unit) => {
-              const selected = orgUnitIds.includes(unit.id);
-              return (
-                <li key={unit.id}>
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    className={`w-full rounded-md border px-2 py-1 text-left text-sm ${
-                      selected
-                        ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
-                        : "border-[var(--border)] text-[var(--foreground)]"
-                    }`}
-                    onClick={() => toggleOrgUnit(unit.id)}
-                  >
-                    {unit.name}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </fieldset>
-      ) : null}
+      <ClubStrategyOrgUnitScopePicker
+        options={orgUnitOptions}
+        selectedOrgUnitIds={orgUnitIds}
+        onSelectedOrgUnitIdsChange={setOrgUnitIds}
+        disabled={pending}
+      />
       <div className="flex flex-wrap gap-2">
         <button
           type="submit"
