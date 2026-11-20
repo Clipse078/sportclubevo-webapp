@@ -24,7 +24,7 @@ This document is the **smallest separate application release** after that schema
 
 | Step | Command |
 |------|---------|
-| Disposable migration replay | `TEST_DATABASE_URL=… npm run cd-connected:disposable-migration-verify` |
+| Disposable migration replay | `TEST_DATABASE_URL=… npm run cd-connected:disposable-migration-verify` (includes `20261120180000_sce_cd_multi_club_wide_strategy`) |
 | Connected workflow integration | `TEST_DATABASE_URL=… npx vitest run lib/club-development/__tests__/sce-cd-connected-workflow.integration.test.ts` |
 | STAGE health (read-only) | `npm run cd-connected:stage-migration-verify` |
 
