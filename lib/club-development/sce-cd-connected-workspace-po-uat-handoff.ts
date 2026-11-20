@@ -27,8 +27,8 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
   acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
   /** STAGE-backed PR Preview — not a valid PO UAT target (shared STAGE DB, no connected-workspace migration). */
-  readyPreviewCommit: "47613ee6cfe77d034400549d4967f33c39865fd0",
-  readyPreviewCommitShort: "47613ee",
+  readyPreviewCommit: "9a56c659bfa2bea0fc7aa52a55321a867b765bd1",
+  readyPreviewCommitShort: "9a56c659",
   readyPreviewDeploymentId: "4QsKeWb3WaFiZHv5sCUvMoZ3evZF",
   readyPreviewHostname:
     "sportclubevo-webapp-stage-git-curs-e07387-mds-projects-462da62c.vercel.app",
@@ -63,7 +63,7 @@ export type ConnectedWorkspacePoUatUrls = {
 
 export function buildConnectedWorkspacePoUatHandoffUrls(
   previewBase: string,
-  orgUnitId: string = SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID,
+  orgUnitId: string = STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID,
 ): ConnectedWorkspacePoUatUrls {
   const base = previewBase.replace(/\/$/, "");
   const orgQuery = `${CD_WORKSPACE_ORG_UNIT_QUERY}=${encodeURIComponent(orgUnitId)}`;
