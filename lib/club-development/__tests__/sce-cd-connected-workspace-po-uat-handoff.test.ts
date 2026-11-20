@@ -14,7 +14,10 @@ describe("PR #1017 connected workspace PO UAT handoff", () => {
 
   it("builds five workspace destinations plus deep links", () => {
     const urls = buildConnectedWorkspacePoUatHandoffUrls(CONNECTED_WORKSPACE_PO_UAT_HANDOFF.acceptanceOrigin);
+    expect(urls.uebersichtUnfiltered).toContain("/vereinsleitung/club-entwicklung");
     expect(urls.uebersicht).toContain("/vereinsleitung/club-entwicklung");
+    expect(urls.sitzungen).toContain("/vereinsleitung/meetings");
+    expect(urls.membershipDrillDown).toContain("/dashboard/personen");
     expect(urls.strategien).toContain("ansicht=strategie");
     expect(urls.ziele).toContain("ansicht=ziele");
     expect(urls.aufgaben).toContain("ansicht=aufgaben");
