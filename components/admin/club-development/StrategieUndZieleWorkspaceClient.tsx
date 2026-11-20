@@ -1,7 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import type { ClubStrategyAuthoringDto } from "@/lib/club-development/club-strategy-service";
+import type {
+  ClubStrategyAuthoringDto,
+  ClubStrategyListItemDto,
+} from "@/lib/club-development/club-strategy-service";
+import StrategienWorkspaceListPanel from "./StrategienWorkspaceListPanel";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import type { EntityRef } from "@/lib/linking/types";
 import StrategyAuthoringPanel from "./StrategyAuthoringPanel";
@@ -13,6 +17,9 @@ import { parseStrategieZieleView } from "@/lib/club-development/vereinsentwicklu
 type Props = {
   permissionKeys: string[];
   hasPlanningAccess: boolean;
+  orgEinheitFilterLabel?: string | null;
+  strategies: ClubStrategyListItemDto[];
+  selectedStrategyId: string | null;
   authoring: ClubStrategyAuthoringDto | null;
   canManageTargets: boolean;
   targets: StrategyTargetOverview[];
@@ -24,6 +31,9 @@ type Props = {
 export default function StrategieUndZieleWorkspaceClient({
   permissionKeys,
   hasPlanningAccess,
+  orgEinheitFilterLabel = null,
+  strategies,
+  selectedStrategyId,
   authoring,
   canManageTargets,
   targets,
@@ -41,9 +51,14 @@ export default function StrategieUndZieleWorkspaceClient({
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView={activeView === "ziele" ? "ziele" : "strategien"}
+        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
 
-      <div hidden={activeView !== "strategie"} aria-hidden={activeView !== "strategie"}>
+      <div hidden={activeView !== "strategie"} aria-hidden={activeView !== "strategie"} className="space-y-4">
+        <StrategienWorkspaceListPanel
+          strategies={strategies}
+          selectedStrategyId={selectedStrategyId}
+        />
         {authoring ? (
           <StrategyAuthoringPanel
             initial={authoring}

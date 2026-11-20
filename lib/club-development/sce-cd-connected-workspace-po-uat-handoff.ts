@@ -24,9 +24,9 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   acceptanceDeploymentId: "dpl_HuJs7s5vbPDwh12w7sZgGrRUWmVH",
   acceptanceOrigin: CONNECTED_WORKSPACE_ACCEPTANCE_ORIGIN,
   /** STAGE-backed PR Preview — not a valid PO UAT target (shared STAGE DB, no connected-workspace migration). */
-  readyPreviewCommit: "49f3252838e5fc7671180b4d152878ff20d3bd80",
-  readyPreviewCommitShort: "49f32528",
-  readyPreviewDeploymentId: "D69FRsneNRzJ5jtMkw5GZy9cdvK2",
+  readyPreviewCommit: "d28de15162473d11022003d9fe0698dd152b70c6",
+  readyPreviewCommitShort: "d28de151",
+  readyPreviewDeploymentId: "4QsKeWb3WaFiZHv5sCUvMoZ3evZF",
   readyPreviewHostname:
     "sportclubevo-webapp-stage-git-curs-e07387-mds-projects-462da62c.vercel.app",
   readyPreviewAlias:
@@ -71,6 +71,16 @@ export function buildConnectedWorkspacePoUatHandoffUrls(previewBase: string): Co
     sprintBoard: `${base}/vereinsleitung/sprints/${encodeURIComponent(SCE_CD_CONNECTED_PO_UAT_SPRINT_SLUG)}/board`,
   };
 }
+
+/** Six PO-owned screenshots (visual baseline — attach to PR #1017 by PO). */
+export const CONNECTED_WORKSPACE_PO_SCREENSHOT_BASELINE = [
+  "01-mega-menu-five-views.png",
+  "02-uebersicht-junioren-filter-tabs.png",
+  "03-strategien-club-row.png",
+  "04-ziele-anlegen-empty.png",
+  "05-aufgaben-target-row.png",
+  "06-umsetzungsplanung-ungeplant-sprint-progress.png",
+] as const;
 
 /** Ordered screenshot checklist for PO manual UAT (no automation). */
 export const CONNECTED_WORKSPACE_PO_SCREENSHOT_CHECKLIST = [

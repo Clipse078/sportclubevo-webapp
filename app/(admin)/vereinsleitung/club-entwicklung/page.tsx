@@ -25,15 +25,33 @@ import { getTaskManagementSummary } from "@/lib/tasks/management-service";
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 import { listMyTasks } from "@/lib/tasks/task-service";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
+import {
+  connectedWorkspacePageMeta,
+  CD_CONNECTED_WORKSPACE_EYEBROW,
+} from "@/lib/club-development/vereinsentwicklung-workspace-page-meta";
+import {
+  parseOrgEinheitQuery,
+  resolveVereinsentwicklungOrgEinheitFilter,
+} from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 
-export default async function ClubEntwicklungPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | undefined>>;
+};
+
+export default async function ClubEntwicklungPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const tenantId = session.user.activeTenantId;
   if (!tenantId) redirect("/login");
 
+  const query = (await searchParams) ?? {};
   const actor = await getActorContext(session.user, tenantId);
+  const orgEinheitFilter = await resolveVereinsentwicklungOrgEinheitFilter(
+    actor,
+    parseOrgEinheitQuery(query),
+  );
+  const pageMeta = connectedWorkspacePageMeta("uebersicht");
   const now = new Date();
 
   const [
@@ -102,17 +120,15 @@ export default async function ClubEntwicklungPage() {
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Verein"
-        title="Vereinsentwicklung"
-        description="Übersicht über Ziele, Vorhaben, Sitzungen und offene Massnahmen — nur Daten, die Sie sehen dürfen."
-        breadcrumbs={[
-          { label: "Verein" },
-          { label: "Vereinsentwicklung" },
-        ]}
+        eyebrow={CD_CONNECTED_WORKSPACE_EYEBROW}
+        title={pageMeta.title}
+        description={pageMeta.description}
+        breadcrumbs={pageMeta.breadcrumbs}
       >
         <ClubDevelopmentOverviewPageClient
           permissionKeys={actor.permissionKeys}
           hasPlanningAccess={hasSprintManagePermission(actor)}
+          orgEinheitFilterLabel={orgEinheitFilter?.label ?? null}
           targets={targets}
           initiatives={initiatives}
           upcomingMeetings={upcomingMeetings}

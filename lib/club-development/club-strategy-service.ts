@@ -180,11 +180,16 @@ function decisionRefsFromRaw(raw: unknown) {
 export async function loadClubStrategyAuthoring(
   actor: ActorContext,
   actorUserId: string,
+  strategyId?: string | null,
 ): Promise<ClubStrategyAuthoringDto | null> {
   if (!canViewClubStrategy(actor) || !actor.tenantId) return null;
 
+  const strategyWhere: Prisma.ClubStrategyWhereInput = strategyId?.trim()
+    ? { id: strategyId.trim(), tenantId: actor.tenantId }
+    : clubWideStrategyWhere(actor.tenantId);
+
   const row = await prisma.clubStrategy.findFirst({
-    where: clubWideStrategyWhere(actor.tenantId),
+    where: strategyWhere,
     select: {
       id: true,
       situationText: true,

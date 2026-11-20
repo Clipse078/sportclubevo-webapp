@@ -22,6 +22,7 @@ import VorhabenZielFilterChip, {
   buildVorhabenZielFilterRemoveHref,
 } from "./VorhabenZielFilterChip";
 import VorhabenWorkspaceLoadingState from "./VorhabenWorkspaceLoadingState";
+import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
 
 export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
 
@@ -56,45 +57,45 @@ const TASK_STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "CANCELLED", label: "Abgebrochen" },
 ];
 
-const LINK_KIND_LABELS: Record<VorhabenWorkspaceTaskRow["linkKind"], string> = {
-  INITIATIVE_CONTEXT: "Vorhaben-Kontext",
-  PRIMARY_INITIATIVE: "Primäres Vorhaben",
-  MEETING_DECISION: "Beschluss",
-};
-
 function TaskRowCard({ row }: { row: VorhabenWorkspaceTaskRow }) {
-  return (
-    <li className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border)] py-3 last:border-0">
-      <div className="min-w-0 flex-1">
+  const supplemental =
+    row.targetTitle ? (
+      <span className="text-xs text-[var(--text-2)]">
+        Ziel:{" "}
         <Link
-          href={row.href}
-          className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
+          href={`/vereinsleitung/targets/${encodeURIComponent(row.targetId!)}`}
+          className="hover:text-[var(--sce-primary)]"
         >
-          {row.title}
+          {row.targetTitle}
         </Link>
-        <p className="mt-0.5 text-xs text-[var(--muted)]">
-          {row.statusLabel}
-          {row.assigneeLabels.length > 0 ? ` · ${row.assigneeLabels.join(", ")}` : ""}
-          <span className="text-[var(--text-2)]"> · {LINK_KIND_LABELS[row.linkKind]}</span>
-        </p>
-        {row.initiativeTitle ? (
-          <p className="mt-0.5 text-xs text-[var(--text-2)]">
-            {row.initiativeSlug ? (
-              <Link
-                href={`/vereinsleitung/initiativen/${encodeURIComponent(row.initiativeSlug)}`}
-                className="hover:text-[var(--sce-primary)]"
-              >
-                {row.initiativeTitle}
-              </Link>
-            ) : (
-              row.initiativeTitle
-            )}
-          </p>
-        ) : null}
-      </div>
-      <Badge variant="outline" size="sm">
-        {row.statusLabel}
-      </Badge>
+      </span>
+    ) : row.initiativeTitle ? (
+      <span className="text-xs text-[var(--text-2)]">
+        Vorhaben:{" "}
+        {row.initiativeSlug ? (
+          <Link
+            href={`/vereinsleitung/initiativen/${encodeURIComponent(row.initiativeSlug)}`}
+            className="hover:text-[var(--sce-primary)]"
+          >
+            {row.initiativeTitle}
+          </Link>
+        ) : (
+          row.initiativeTitle
+        )}
+      </span>
+    ) : null;
+
+  return (
+  <li>
+    <VereinsentwicklungWorkspaceRecordRow
+      title={row.title}
+      titleHref={row.href}
+      responsibleLabel={row.assigneeLabels.join(", ") || null}
+      orgUnitLabel={row.orgUnitLabel}
+      statusLabel={row.statusLabel}
+      trailing={supplemental}
+      testId={`aufgaben-task-row-${row.id}`}
+    />
     </li>
   );
 }

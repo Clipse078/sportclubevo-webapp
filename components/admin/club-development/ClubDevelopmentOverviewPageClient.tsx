@@ -9,6 +9,7 @@ import type { GovernanceOverviewData } from "@/lib/dashboard/governance-overview
 type Props = {
   permissionKeys: string[];
   hasPlanningAccess: boolean;
+  orgEinheitFilterLabel?: string | null;
   targets: React.ComponentProps<typeof ClubDevelopmentOverview>["targets"];
   initiatives: React.ComponentProps<typeof ClubDevelopmentOverview>["initiatives"];
   upcomingMeetings: React.ComponentProps<typeof ClubDevelopmentOverview>["upcomingMeetings"];
@@ -18,13 +19,14 @@ type Props = {
 };
 
 export default function ClubDevelopmentOverviewPageClient(props: Props) {
-  const { permissionKeys, hasPlanningAccess, ...overviewProps } = props;
+  const { permissionKeys, hasPlanningAccess, orgEinheitFilterLabel, ...overviewProps } = props;
   return (
     <>
       <VereinsentwicklungConnectedWorkspaceNav
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView="uebersicht"
+        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
       <ClubDevelopmentOverview {...overviewProps} />
     </>

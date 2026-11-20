@@ -56,6 +56,7 @@ const TASK_ROW_SELECT = {
   contextType: true,
   contextId: true,
   primaryInitiativeId: true,
+  orgUnitId: true,
   dueAt: true,
   assignees: {
     select: { user: { select: { firstName: true, lastName: true } } },
@@ -70,6 +71,7 @@ export type VorhabenWorkspaceFilters = {
   search?: string;
   initiativeId?: string;
   targetId?: string;
+  orgUnitId?: string;
   initiativeStatus?: InitiativeStatus;
   taskStatus?: TaskStatus;
 };
@@ -92,7 +94,8 @@ export type VorhabenWorkspaceInitiativeRow = {
 export type VorhabenWorkspaceTaskLinkKind =
   | "INITIATIVE_CONTEXT"
   | "PRIMARY_INITIATIVE"
-  | "MEETING_DECISION";
+  | "MEETING_DECISION"
+  | "TARGET_CONTEXT";
 
 export type VorhabenWorkspaceTaskRow = {
   id: string;
@@ -105,6 +108,9 @@ export type VorhabenWorkspaceTaskRow = {
   initiativeId: string | null;
   initiativeTitle: string | null;
   initiativeSlug: string | null;
+  targetId: string | null;
+  targetTitle: string | null;
+  orgUnitLabel: string | null;
   linkKind: VorhabenWorkspaceTaskLinkKind;
   isRootTask: true;
 };
@@ -138,6 +144,9 @@ function assigneeLabels(row: TaskRow): string[] {
 }
 
 function taskLinkKind(row: TaskRow, initiativeId: string | null): VorhabenWorkspaceTaskLinkKind {
+  if (row.contextType === TaskContextType.TARGET) {
+    return "TARGET_CONTEXT";
+  }
   if (row.contextType === TaskContextType.INITIATIVE && row.contextId === initiativeId) {
     return "INITIATIVE_CONTEXT";
   }
@@ -145,6 +154,11 @@ function taskLinkKind(row: TaskRow, initiativeId: string | null): VorhabenWorksp
     return "MEETING_DECISION";
   }
   return "PRIMARY_INITIATIVE";
+}
+
+function orgUnitScopeWhere(orgUnitId?: string): Prisma.TaskWhereInput {
+  if (!orgUnitId?.trim()) return {};
+  return { orgUnitId: orgUnitId.trim() };
 }
 
 async function meetingDecisionIdsForInitiative(
@@ -203,12 +217,17 @@ async function resolveTaskOrFilters(
 function mapTaskRows(
   rows: TaskRow[],
   initiativeById: Map<string, { id: string; title: string; slug: string }>,
+  targetById: Map<string, string>,
+  orgUnitLabels: Map<string, string>,
   returnTo: string,
 ): VorhabenWorkspaceTaskRow[] {
   const deduped = dedupeTasksById(rows);
   return deduped.map((row) => {
     const initiativeId = resolveCanonicalInitiativeIdForTask(row);
     const initiative = initiativeId ? initiativeById.get(initiativeId) : null;
+    const targetId =
+      row.contextType === TaskContextType.TARGET && row.contextId ? row.contextId : null;
+    const targetTitle = targetId ? targetById.get(targetId) ?? null : null;
     return {
       id: row.id,
       title: row.title,
@@ -220,6 +239,9 @@ function mapTaskRows(
       initiativeId: initiative?.id ?? initiativeId,
       initiativeTitle: initiative?.title ?? null,
       initiativeSlug: initiative?.slug ?? null,
+      targetId,
+      targetTitle,
+      orgUnitLabel: row.orgUnitId ? orgUnitLabels.get(row.orgUnitId) ?? null : null,
       linkKind: taskLinkKind(row, initiativeId),
       isRootTask: true,
     };
@@ -289,6 +311,7 @@ export async function loadVorhabenWorkspace(
             tenantId: actor.tenantId,
             parentTaskId: null,
             status: { notIn: [TaskStatus.DONE, TaskStatus.CANCELLED] },
+            ...orgUnitScopeWhere(filters.orgUnitId),
             AND: [buildTaskReadWhere(taskCtx)],
             OR: taskOr,
           },
@@ -372,7 +395,12 @@ export async function loadVorhabenWorkspace(
         ? await resolveTaskOrFilters(actor.tenantId, initiativeIds, filters)
         : [];
 
-    if (taskOr.length > 0) {
+    const targetTaskOr: Prisma.TaskWhereInput = {
+      contextType: TaskContextType.TARGET,
+      ...orgUnitScopeWhere(filters.orgUnitId),
+    };
+
+    if (taskOr.length > 0 || targetTaskOr) {
       const statusFilter = filters.taskStatus
         ? { status: filters.taskStatus }
         : { status: { not: TaskStatus.CANCELLED } };
@@ -393,7 +421,7 @@ export async function loadVorhabenWorkspace(
                 }
               : {},
           ],
-          OR: taskOr,
+          OR: [...taskOr, targetTaskOr],
         },
         select: TASK_ROW_SELECT,
         orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
@@ -417,6 +445,7 @@ export async function loadVorhabenWorkspace(
                 tenantId: actor.tenantId,
                 parentTaskId: null,
                 ...statusFilter,
+                ...orgUnitScopeWhere(filters.orgUnitId),
                 AND: [buildTaskReadWhere(taskCtx)],
                 OR: extraOr,
               },
@@ -454,7 +483,37 @@ export async function loadVorhabenWorkspace(
         }
       }
 
-      tasks = mapTaskRows(taskRows, initiativeById, returnTo);
+      const targetById = new Map<string, string>();
+      const targetIds = [
+        ...new Set(
+          taskRows
+            .filter((row) => row.contextType === TaskContextType.TARGET && row.contextId)
+            .map((row) => row.contextId!),
+        ),
+      ];
+      if (targetIds.length > 0) {
+        const targets = await prisma.target.findMany({
+          where: { tenantId: actor.tenantId, id: { in: targetIds } },
+          select: { id: true, title: true },
+        });
+        for (const target of applyVisibilityFilter(targets, actor)) {
+          targetById.set(target.id, target.title);
+        }
+      }
+
+      const orgUnitIds = [
+        ...new Set(taskRows.map((row) => row.orgUnitId).filter((id): id is string => Boolean(id))),
+      ];
+      const orgUnitLabels = new Map<string, string>();
+      if (orgUnitIds.length > 0) {
+        const orgUnits = await prisma.orgUnit.findMany({
+          where: { tenantId: actor.tenantId, id: { in: orgUnitIds } },
+          select: { id: true, name: true },
+        });
+        for (const unit of orgUnits) orgUnitLabels.set(unit.id, unit.name);
+      }
+
+      tasks = mapTaskRows(taskRows, initiativeById, targetById, orgUnitLabels, returnTo);
     }
   }
 

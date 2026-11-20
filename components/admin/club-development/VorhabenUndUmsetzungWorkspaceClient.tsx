@@ -22,6 +22,7 @@ type FilterTarget = {
 type Props = {
   permissionKeys: string[];
   hasPlanningAccess: boolean;
+  orgEinheitFilterLabel?: string | null;
   snapshot: VorhabenWorkspaceSnapshot;
   initialTargetId: string | null;
   initialInitiativeId: string | null;
@@ -38,6 +39,7 @@ type Props = {
 export default function VorhabenUndUmsetzungWorkspaceClient({
   permissionKeys,
   hasPlanningAccess,
+  orgEinheitFilterLabel = null,
   snapshot,
   initialTargetId,
   initialInitiativeId,
@@ -68,6 +70,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
         permissionKeys={permissionKeys}
         hasPlanningAccess={hasPlanningAccess}
         activeView={connectedActiveView}
+        orgEinheitFilterLabel={orgEinheitFilterLabel}
       />
       <div hidden={activeView !== "vorhaben"} aria-hidden={activeView !== "vorhaben"} className="space-y-4">
         {showPrioritaeten && backlogCanView ? (

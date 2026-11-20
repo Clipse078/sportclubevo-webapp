@@ -20,14 +20,16 @@ export default function ZieleWorkspacePanel({
 }: Props) {
   if (targets.length === 0) {
     return (
-      <SceClubDevelopmentEmptyState
-        testId="ziele-workspace-empty"
-        message={
-          canManageTargets
-            ? "Noch keine Ziele in der Übersicht — legen Sie Schwerpunkte in der Strategie an oder erfassen Sie ein Ziel."
-            : "Keine strategischen Ziele sichtbar."
-        }
-      />
+      <div className="space-y-4" data-testid="ziele-workspace-empty">
+        {canManageTargets ? <CreateTargetWorkspaceCollapsibleCard canCreate /> : null}
+        <SceClubDevelopmentEmptyState
+          message={
+            canManageTargets
+              ? "Noch keine Ziele sichtbar — legen Sie ein erstes Ziel an und verknüpfen Sie es in der Strategie."
+              : "Keine strategischen Ziele sichtbar."
+          }
+        />
+      </div>
     );
   }
 

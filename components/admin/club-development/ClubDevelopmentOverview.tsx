@@ -7,9 +7,12 @@ import {
   ClipboardList,
   Flag,
   LineChart,
-  Workflow,
 } from "lucide-react";
 import { CD_OVERVIEW_SHORTCUT_COPY } from "@/lib/club-development/product-copy";
+import {
+  buildConnectedWorkspaceHref,
+  CD_CONNECTED_VIEW_LABELS,
+} from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
@@ -84,31 +87,36 @@ export default function ClubDevelopmentOverview({
     <div className="space-y-8">
       <KpiStrip kpis={kpis} />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="vereinsentwicklung-overview-shortcuts">
         <ModuleShortcut
-          title="Strategie & Ziele"
+          title={CD_CONNECTED_VIEW_LABELS.strategien}
           description={CD_OVERVIEW_SHORTCUT_COPY.strategyDescription}
-          href="/vereinsleitung/strategie-und-ziele"
+          href={buildConnectedWorkspaceHref("strategien")}
           icon={<LineChart className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
-          title="Vorhaben & Umsetzung"
-          description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
-          href="/vereinsleitung/vorhaben-und-umsetzung"
+          title={CD_CONNECTED_VIEW_LABELS.ziele}
+          description="Strategische Ziele, Schwerpunkte und Fortschritt."
+          href={buildConnectedWorkspaceHref("ziele")}
+          icon={<GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_CONNECTED_VIEW_LABELS.aufgaben}
+          description="Aufgaben mit Ziel- und Vorhaben-Kontext."
+          href={buildConnectedWorkspaceHref("aufgaben")}
           icon={<CheckSquare className="h-4 w-4 text-[var(--sce-primary)]" />}
+        />
+        <ModuleShortcut
+          title={CD_CONNECTED_VIEW_LABELS.umsetzungsplanung}
+          description={CD_OVERVIEW_SHORTCUT_COPY.workHubDescription}
+          href={buildConnectedWorkspaceHref("umsetzungsplanung")}
+          icon={<ClipboardList className="h-4 w-4 text-[var(--sce-primary)]" />}
         />
         <ModuleShortcut
           title="Sitzungen"
           description="Sitzungen planen, Protokoll und Massnahmen verfolgen."
           href="/vereinsleitung/meetings"
           icon={<CalendarDays className="h-4 w-4 text-[var(--sce-primary)]" />}
-        />
-        <ModuleShortcut
-          title="Prozesse & Richtlinien"
-          description="Dokumentierte Vereinsabläufe und Richtlinien."
-          href="/vereinsleitung/prozesse"
-          status="Demnächst"
-          icon={<Workflow className="h-4 w-4 text-[var(--muted)]" />}
         />
       </section>
 

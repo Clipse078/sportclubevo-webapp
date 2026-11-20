@@ -12,11 +12,16 @@ import {
   listDevelopmentSprints,
 } from "@/lib/club-development/sprints/queries";
 import VorhabenUndUmsetzungWorkspaceClient from "@/components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient";
+import { CD_WORKSPACE_PRIORITAETEN_QUERY } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import {
-  CD_WORKSPACE_PRIORITAETEN_QUERY,
-  CD_NAV_WORKSPACE_LABELS,
-} from "@/lib/club-development/vereinsentwicklung-workspace-routing";
-import { CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+  connectedWorkspacePageMeta,
+  CD_CONNECTED_WORKSPACE_EYEBROW,
+  resolveConnectedViewFromVorhabenUndUmsetzungAnsicht,
+} from "@/lib/club-development/vereinsentwicklung-workspace-page-meta";
+import {
+  parseOrgEinheitQuery,
+  resolveVereinsentwicklungOrgEinheitFilter,
+} from "@/lib/club-development/vereinsentwicklung-workspace-org-filter";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
@@ -32,6 +37,7 @@ type PageProps = {
     taskStatus?: string;
     returnTo?: string;
     prioritaeten?: string;
+    orgEinheit?: string;
   }>;
 };
 
@@ -60,11 +66,18 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
 
   const query = (await searchParams) ?? {};
   const actor = await getActorContext(session.user, session.user?.activeTenantId ?? undefined);
+  const connectedView = resolveConnectedViewFromVorhabenUndUmsetzungAnsicht(query.ansicht);
+  const pageMeta = connectedWorkspacePageMeta(connectedView);
+  const orgEinheitFilter = await resolveVereinsentwicklungOrgEinheitFilter(
+    actor,
+    parseOrgEinheitQuery(query),
+  );
 
   const filters = {
     search: query.search?.trim() || undefined,
     initiativeId: query.initiativeId?.trim() || undefined,
     targetId: query.targetId?.trim() || undefined,
+    orgUnitId: orgEinheitFilter?.id,
     initiativeStatus: parseInitiativeStatus(query.initiativeStatus),
     taskStatus: parseTaskStatus(query.taskStatus),
   };
@@ -138,19 +151,16 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
   return (
     <PageShell fullWidth>
       <ListPagePattern
-        eyebrow="Vereinsentwicklung"
-        title={CD_NAV_WORKSPACE_LABELS.vorhabenUndUmsetzung}
-        description={CD_VORHABEN_UMSETZUNG_WORKSPACE_COPY.pageSubtitle}
-        breadcrumbs={[
-          { label: "Verein", href: "/vereinsleitung" },
-          { label: "Vereinsentwicklung", href: "/vereinsleitung/club-entwicklung" },
-          { label: CD_NAV_WORKSPACE_LABELS.vorhabenUndUmsetzung },
-        ]}
+        eyebrow={CD_CONNECTED_WORKSPACE_EYEBROW}
+        title={pageMeta.title}
+        description={pageMeta.description}
+        breadcrumbs={pageMeta.breadcrumbs}
         emptyIcon={<Kanban className="h-10 w-10" />}
       >
         <VorhabenUndUmsetzungWorkspaceClient
           permissionKeys={actor.permissionKeys}
           hasPlanningAccess={hasSprintManagePermission(actor)}
+          orgEinheitFilterLabel={orgEinheitFilter?.label ?? null}
           snapshot={snapshot}
           initialTargetId={filters.targetId ?? null}
           initialInitiativeId={filters.initiativeId ?? null}
