@@ -868,7 +868,11 @@ export function resolvePrimaryActiveModuleLocalChildKey(
 ): string | null {
   if (children.length === 0) return null;
 
-  const connectedKey = resolveVereinsentwicklungConnectedNavChildKey(pathname, search ?? new URLSearchParams());
+  const locationSearch =
+    search instanceof URLSearchParams
+      ? search
+      : new URLSearchParams(typeof search === "string" ? search.replace(/^\?/, "") : "");
+  const connectedKey = resolveVereinsentwicklungConnectedNavChildKey(pathname, locationSearch);
   if (connectedKey && children.some((c) => c.key === connectedKey)) {
     return connectedKey;
   }

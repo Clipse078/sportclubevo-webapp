@@ -12,6 +12,7 @@ export const TASK_WORKSPACE_CONTEXT_SECTION_LABELS: Record<TaskContextType, stri
   MEETING: "Zugehörige Sitzung",
   MEETING_DECISION: "Zugehöriger Beschluss",
   INITIATIVE: "Zugehöriges Vorhaben",
+  TARGET: "Zugehöriges Ziel",
   REGISTRATION: "Zugehörige Anmeldung",
   TEAM: "Zugehöriges Team",
   PERSON: "Zugehörige Person",

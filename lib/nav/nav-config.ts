@@ -607,7 +607,7 @@ export const NAV_SECTIONS: NavSection[] = [
             label: "Umsetzungsplanung",
             href: "/vereinsleitung/vorhaben-und-umsetzung?ansicht=umsetzungsphasen",
             navContexts: ["club"],
-            permissionKeys: PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
+            permissionKeys: [...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS],
             requiresVereinsleitungMembership: true,
           },
         ],
