@@ -89,18 +89,25 @@ export default function CreateStrategieWorkspaceCollapsibleCard({ canCreate, org
               <fieldset className="space-y-2">
                 <legend className="text-xs text-[var(--muted)]">Org-Einheiten (optional, mehrfach)</legend>
                 <ul className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] p-2">
-                  {orgUnitOptions.map((unit) => (
-                    <li key={unit.id}>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={orgUnitIds.includes(unit.id)}
-                          onChange={() => toggleOrgUnit(unit.id)}
-                        />
-                        {unit.name}
-                      </label>
-                    </li>
-                  ))}
+                  {orgUnitOptions.map((unit) => {
+                    const selected = orgUnitIds.includes(unit.id);
+                    return (
+                      <li key={unit.id}>
+                        <button
+                          type="button"
+                          aria-pressed={selected}
+                          className={`w-full rounded-md border px-2 py-1 text-left text-sm ${
+                            selected
+                              ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
+                              : "border-[var(--border)] text-[var(--foreground)]"
+                          }`}
+                          onClick={() => toggleOrgUnit(unit.id)}
+                        >
+                          {unit.name}
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </fieldset>
             ) : null}
