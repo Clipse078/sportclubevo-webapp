@@ -3,6 +3,7 @@ import { TaskContextType } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import { requireTargetAccess } from "@/lib/visibility/visibility-guards";
+import { prisma } from "@/lib/db/prisma";
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
 
@@ -31,12 +32,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const tenantRow = await prisma.tenant.findUnique({
+    where: { id: access.context.tenantId },
+    select: { timezone: true },
+  });
+  const timeZone = tenantRow?.timezone ?? "Europe/Zurich";
+
   const view = await loadContextualTaskCreateView(
     taskCtx,
     TaskContextType.TARGET,
     contextId,
     "de-CH",
-    taskCtx.timeZone ?? "Europe/Zurich",
+    timeZone,
   );
   if (!view?.canCreate) {
     return NextResponse.json({ error: "Keine Berechtigung für diese Kontext-Aufgabe." }, { status: 403 });

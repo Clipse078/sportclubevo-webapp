@@ -91,7 +91,6 @@ export async function loadStrategyOverview(
         visibleOrgUnitRefs: true,
         visiblePersonRefs: true,
         visibleTargetGroupRefs: true,
-        createdByUserId: true,
         metrics: {
           select: {
             id: true,

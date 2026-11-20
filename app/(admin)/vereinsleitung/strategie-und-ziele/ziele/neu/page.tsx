@@ -32,7 +32,7 @@ export default async function VereinsentwicklungZielNeuPage({ searchParams }: Pr
     redirect(buildZieleReturnHref({ orgUnitId: parseOrgEinheitQuery(query) }));
   }
 
-  const orgUnitId = parseOrgEinheitQuery(query);
+  const orgUnitId = parseOrgEinheitQuery(query) ?? null;
   const clubStrategyId = query[CD_CREATE_CLUB_STRATEGY_QUERY]?.trim() ?? "";
   const linkFocus = parseLinkFocusQuery(query.linkFocus) || Boolean(clubStrategyId);
 

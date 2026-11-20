@@ -29,7 +29,7 @@ export default async function VereinsentwicklungStrategieNeuPage({ searchParams 
     redirect(buildStrategieReturnHref({ orgUnitId: parseOrgEinheitQuery(query) }));
   }
 
-  const orgUnitId = parseOrgEinheitQuery(query);
+  const orgUnitId = parseOrgEinheitQuery(query) ?? null;
   const orgUnitOptions = actor.tenantId
     ? await prisma.orgUnit.findMany({
         where: { tenantId: actor.tenantId, status: "ACTIVE" },
