@@ -27,6 +27,7 @@ import {
 } from "../club-strategy-service";
 import { patchDevelopmentSprintMetadata } from "../sprints/sprint-lifecycle";
 import { computeStrategyDeliveryProgress, computeTargetDeliveryProgress } from "../vereinsentwicklung-workspace-progress";
+import { loadVorhabenWorkspace } from "../vorhaben-workspace";
 
 const describeIntegration = canRunDbMutatingIntegrationTests() ? describe : describe.skip;
 
@@ -118,7 +119,12 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     actor = {
       tenantId,
       userId,
-      permissionKeys: [PERMISSIONS.TARGETS_MANAGE, PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TASKS_MANAGE],
+      permissionKeys: [
+        PERMISSIONS.TARGETS_MANAGE,
+        PERMISSIONS.TARGETS_VIEW,
+        PERMISSIONS.TASKS_MANAGE,
+        PERMISSIONS.TASKS_VIEW,
+      ],
       roleKeys: [],
       teamIds: [],
       orgUnitIds: [],
@@ -200,6 +206,85 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       select: { orgUnitId: true },
     });
     expect(restored.map((row) => row.orgUnitId).sort()).toEqual([orgA, orgB].sort());
+  });
+
+  it("binds focus targets to the oldest club-wide strategy when multiple CLUB rows exist", async () => {
+    const older = await admin.clubStrategy.create({
+      data: {
+        tenantId,
+        scopeType: ClubStrategyScopeType.CLUB,
+        scopeOrgUnitId: null,
+        title: `Older canonical ${RUN}`,
+        createdByUserId: userId,
+        updatedByUserId: userId,
+        createdAt: new Date("2019-01-01T00:00:00.000Z"),
+      },
+      select: { id: true },
+    });
+    await admin.clubStrategy.create({
+      data: {
+        tenantId,
+        scopeType: ClubStrategyScopeType.CLUB,
+        scopeOrgUnitId: null,
+        title: `Newer club-wide ${RUN}`,
+        createdByUserId: userId,
+        updatedByUserId: userId,
+        createdAt: new Date("2025-06-01T00:00:00.000Z"),
+      },
+    });
+
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Canonical pick ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    await addClubStrategyFocusTarget(actor, userId, target.id);
+    const link = await admin.clubStrategyFocusTarget.findFirst({
+      where: { tenantId, targetId: target.id },
+      select: { clubStrategyId: true },
+    });
+    expect(link?.clubStrategyId).toBe(older.id);
+  });
+
+  it("lists TARGET-context tasks in Vorhaben workspace reads", async () => {
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Task list target ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true, title: true },
+    });
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: `TARGET task ${RUN}`,
+        status: TaskStatus.OPEN,
+        contextType: TaskContextType.TARGET,
+        contextId: target.id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const snapshot = await loadVorhabenWorkspace(actor, {});
+    const row = snapshot.tasks.find((entry) => entry.id === task.id);
+    expect(row).toBeDefined();
+    expect(row?.targetTitle).toBe(target.title);
+    expect(row?.targetId).toBe(target.id);
   });
 
   it("edits phase metadata in place while preserving slug and memberships", async () => {

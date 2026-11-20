@@ -13,10 +13,18 @@ describe("PR #1017 compatibility release handoff", () => {
   });
 
   it("orders rollout with PR preview UAT before merge", () => {
-    expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.rolloutOrder[0]).toMatch(/Keep PR #1017 open/);
+    expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.rolloutOrder[0]).toMatch(/Keep PR #1017/);
     expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.rolloutOrder.join(" ")).toMatch(
       /APPLY_DATABASE_MIGRATIONS unset/,
     );
+  });
+
+  it("names the STAGE delivery branch separate from PO-only Acceptance UAT", () => {
+    expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.deliveryBranch).toBe(
+      "cursor/vereinsentwicklung-connected-workspace-509e",
+    );
+    expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.deliveryBaseBranch).toBe("STAGE");
+    expect(SCE_CD_CONNECTED_COMPATIBILITY_RELEASE.poApprovalVerification.length).toBeGreaterThan(0);
   });
 
   it("scopes TARGET reads and canonical strategy selection", () => {

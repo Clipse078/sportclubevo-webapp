@@ -21,10 +21,31 @@ function parseLinkedInitiativeRefs(raw: unknown): JsonInitiativeRef[] {
   return raw.filter((item) => item && typeof item === "object") as JsonInitiativeRef[];
 }
 
+type JsonOrgRef = { id?: string; title?: string; name?: string };
+
+function firstOrgUnitLabelFromVisibilityRefs(raw: unknown): string | null {
+  if (!Array.isArray(raw)) return null;
+  for (const item of raw) {
+    if (item && typeof item === "object") {
+      const label = (item as JsonOrgRef).title ?? (item as JsonOrgRef).name;
+      if (typeof label === "string" && label.trim()) return label.trim();
+    }
+  }
+  return null;
+}
+
+function formatOrgUnitLabels(labels: string[]): string | null {
+  if (labels.length === 0) return null;
+  if (labels.length <= 2) return labels.join(", ");
+  return `${labels.slice(0, 2).join(", ")} +${labels.length - 2}`;
+}
+
 export type StrategyTargetOverview = {
   id: string;
   title: string;
   status: string;
+  responsibleLabel: string | null;
+  orgUnitLabel: string | null;
   outcomeProgressPercent: number | null;
   linkedInitiativeCount: number;
   deliveryProgressPercent: number | null;
@@ -70,6 +91,7 @@ export async function loadStrategyOverview(
         visibleOrgUnitRefs: true,
         visiblePersonRefs: true,
         visibleTargetGroupRefs: true,
+        createdByUserId: true,
         metrics: {
           select: {
             id: true,
@@ -103,6 +125,71 @@ export async function loadStrategyOverview(
       },
     }),
   ]);
+
+  const [focusLinks, creatorUsers, orgUnits] = await Promise.all([
+    prisma.clubStrategyFocusTarget.findMany({
+      where: { tenantId },
+      select: {
+        targetId: true,
+        clubStrategy: {
+          select: {
+            responsibleLabel: true,
+            scopeType: true,
+            scopeOrgUnitId: true,
+            orgUnitAssignments: { select: { orgUnitId: true } },
+          },
+        },
+      },
+    }),
+    targetRows.some((row) => row.createdByUserId)
+      ? prisma.user.findMany({
+          where: {
+            tenantId,
+            id: {
+              in: [
+                ...new Set(
+                  targetRows
+                    .map((row) => row.createdByUserId)
+                    .filter((id): id is string => Boolean(id)),
+                ),
+              ],
+            },
+          },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : Promise.resolve([]),
+    prisma.orgUnit.findMany({
+      where: { tenantId, status: "ACTIVE" },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  const orgUnitNameById = new Map(orgUnits.map((row) => [row.id, row.name]));
+  const responsibleByUserId = new Map(
+    creatorUsers.map((user) => [
+      user.id,
+      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || null,
+    ]),
+  );
+
+  const focusMetaByTargetId = new Map<
+    string,
+    { responsibleLabel: string | null; orgUnitLabel: string | null }
+  >();
+  for (const link of focusLinks) {
+    const strategy = link.clubStrategy;
+    const orgIds = [
+      ...strategy.orgUnitAssignments.map((row) => row.orgUnitId),
+      ...(strategy.scopeOrgUnitId ? [strategy.scopeOrgUnitId] : []),
+    ].filter((id, index, arr) => arr.indexOf(id) === index);
+    const orgLabels = orgIds
+      .map((id) => orgUnitNameById.get(id) ?? null)
+      .filter((label): label is string => Boolean(label));
+    focusMetaByTargetId.set(link.targetId, {
+      responsibleLabel: strategy.responsibleLabel?.trim() || null,
+      orgUnitLabel: strategy.scopeType === "CLUB" && orgLabels.length === 0 ? "Gesamtverein" : formatOrgUnitLabels(orgLabels),
+    });
+  }
 
   const visibleTargets = applyVisibilityFilter(targetRows, actor);
   const visibleInitiatives = applyVisibilityFilter(initiatives, actor);
@@ -146,10 +233,19 @@ export async function loadStrategyOverview(
     const deliveryProgressPercent =
       deliveryCount > 0 ? Math.round(deliverySum / deliveryCount) : null;
 
+    const focusMeta = focusMetaByTargetId.get(target.id);
+    const responsibleLabel =
+      focusMeta?.responsibleLabel ??
+      (target.createdByUserId ? responsibleByUserId.get(target.createdByUserId) ?? null : null);
+    const orgUnitLabel =
+      focusMeta?.orgUnitLabel ?? firstOrgUnitLabelFromVisibilityRefs(target.visibleOrgUnitRefs);
+
     targets.push({
       id: target.id,
       title: target.title,
       status: target.status,
+      responsibleLabel,
+      orgUnitLabel,
       outcomeProgressPercent,
       linkedInitiativeCount: deliveryTotal,
       deliveryProgressPercent,

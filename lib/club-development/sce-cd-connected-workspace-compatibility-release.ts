@@ -5,17 +5,30 @@
 
 export const SCE_CD_CONNECTED_COMPATIBILITY_RELEASE = {
   pullRequest: 1017 as const,
+  /**
+   * Application delivery vehicle for canonical STAGE (distinct from PO UX/UAT branch state until merge).
+   * After PO signs off: merge PR #1017 → STAGE; the resulting STAGE commit is the minimal compatibility release.
+   */
+  deliveryBranch: "cursor/vereinsentwicklung-connected-workspace-509e" as const,
+  deliveryBaseBranch: "STAGE" as const,
+  /** Set after merge to STAGE; until then rollout uses the PR head commit on the STAGE preview alias. */
+  canonicalStageReleaseCommit: null as string | null,
   /** Schema migrations are already recorded on shared STAGE — this release is application-only. */
   schemaMigrationsAlreadyOnSharedStage: [
     "20261120120000_sce_cd_connected_workspace",
     "20261120140000_sce_cd_connected_strategy_org_units",
   ] as const,
   rolloutOrder: [
-    "1. Keep PR #1017 open; merge only after PO signs off STAGE PR-preview UAT.",
-    "2. Deploy PR #1017 application to sportclubevo-webapp-stage with APPLY_DATABASE_MIGRATIONS unset (migrations already applied).",
-    "3. Run read-only STAGE inventories: cd-connected:stage-migration-verify and cd-connected:stage-reconciliation-outcome.",
-    "4. PO manual UAT on the STAGE-backed PR preview URL (readyPreviewOrigin in PO handoff ledger).",
-    "5. Optional Acceptance seed stays on sce_acceptance only — never on shared STAGE.",
+    "1. Keep PR #1017 (feature + compatibility code) open until PO finishes STAGE PR-preview UAT.",
+    "2. PO approval gate: merge PR #1017 → STAGE (no squash that drops migration-adjacent application files).",
+    "3. Deploy STAGE project sportclubevo-webapp-stage from the merge commit with APPLY_DATABASE_MIGRATIONS unset.",
+    "4. Run read-only STAGE inventories: npm run cd-connected:stage-migration-verify and npm run cd-connected:stage-reconciliation-outcome.",
+    "5. Smoke TARGET task list/detail + club-wide strategy pick on STAGE preview (read-only); PO Acceptance seed remains on sce_acceptance only.",
+  ] as const,
+  poApprovalVerification: [
+    "TEST_DATABASE_URL=… npm run cd-connected:disposable-migration-verify",
+    "TEST_DATABASE_URL=… npx vitest run lib/club-development/__tests__/sce-cd-connected-workflow.integration.test.ts",
+    "npm run cd-connected:stage-migration-verify (read-only shared STAGE)",
   ] as const,
   applicationScope: {
     targetTaskListDetailReads: [

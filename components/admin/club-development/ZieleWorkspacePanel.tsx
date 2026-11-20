@@ -58,6 +58,7 @@ export default function ZieleWorkspacePanel({
       />
 
       <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}>
+        {/* data-sce-contextual-create-flow="inline-collapsible" — CreateTargetWorkspaceCollapsibleCard */}
         {canManageTargets ? (
           <CreateTargetWorkspaceCollapsibleCard
             canCreate
@@ -93,14 +94,18 @@ export default function ZieleWorkspacePanel({
                 const isFocus = focusTargetIds.has(target.id);
                 const detailHref = `/vereinsleitung/targets/${encodeURIComponent(target.id)}`;
                 const strategyLabel = strategyTitleByTargetId.get(target.id) ?? "—";
+                const orgUnitLabel =
+                  target.orgUnitLabel?.trim() ||
+                  (isFocus ? "Schwerpunkt" : null) ||
+                  "—";
                 return (
                   <VereinsentwicklungWorkspaceRecordRow
                     key={target.id}
                     title={target.title}
                     titleHref={detailHref}
                     strategyLabel={strategyLabel}
-                    responsibleLabel={null}
-                    orgUnitLabel={isFocus ? "Schwerpunkt" : "—"}
+                    responsibleLabel={target.responsibleLabel}
+                    orgUnitLabel={orgUnitLabel}
                     progressPercent={target.deliveryProgressPercent}
                     progressCaption={
                       target.deliveryProgressPercent != null

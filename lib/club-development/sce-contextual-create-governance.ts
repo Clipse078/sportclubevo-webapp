@@ -95,6 +95,7 @@ export function collectContextualCreateEntryViolations(
   if (
     !src.includes("ContextualCollapsibleCard") &&
     !src.includes("CreateInitiativeWorkspaceCollapsibleCard") &&
+    !src.includes("CreateTargetWorkspaceCollapsibleCard") &&
     !src.includes('data-sce-contextual-create-flow="inline-collapsible"')
   ) {
     findings.push({

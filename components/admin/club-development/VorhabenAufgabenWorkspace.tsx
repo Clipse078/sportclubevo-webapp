@@ -25,6 +25,7 @@ import VorhabenZielFilterChip, {
 import VorhabenWorkspaceLoadingState from "./VorhabenWorkspaceLoadingState";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
 import { mapVorhabenTaskRowToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
+import VereinsentwicklungAufgabeWorkspaceCreateCard from "./VereinsentwicklungAufgabeWorkspaceCreateCard";
 
 export type VorhabenAufgabenWorkspaceVariant = "vorhaben" | "aufgaben";
 
@@ -77,6 +78,7 @@ export default function VorhabenAufgabenWorkspace({
   const [initiativeStatus, setInitiativeStatus] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [secondaryFiltersOpen, setSecondaryFiltersOpen] = useState(false);
+  const [taskCreateOpen, setTaskCreateOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const skipInitialFetchRef = useRef(true);
@@ -151,13 +153,14 @@ export default function VorhabenAufgabenWorkspace({
 
   const aufgabenPrimaryAction =
     snapshot.canManageTasks && !isVorhabenView ? (
-      <Link
-        href="/dashboard/aufgaben/neu"
+      <button
+        type="button"
         className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
         data-testid="aufgaben-toolbar-create"
+        onClick={() => setTaskCreateOpen(true)}
       >
         {CD_VORHABEN_WORKSPACE_COPY.createTaskAction}
-      </Link>
+      </button>
     ) : null;
 
   const filterBar = (
@@ -309,6 +312,18 @@ export default function VorhabenAufgabenWorkspace({
           </section>
         ) : (
           <section aria-labelledby="aufgaben-workspace-heading" className="space-y-3">
+            {/* data-sce-contextual-create-flow="inline-collapsible" — VereinsentwicklungAufgabeWorkspaceCreateCard */}
+            {snapshot.canManageTasks ? (
+              <VereinsentwicklungAufgabeWorkspaceCreateCard
+                canCreate
+                expanded={taskCreateOpen}
+                onExpandedChange={setTaskCreateOpen}
+                hideToolbarTrigger
+                initialTargetId={(filterTarget?.id ?? targetIdFilter) || null}
+                initialTargetTitle={filterTarget?.title ?? null}
+                onCreated={() => fetchWorkspace()}
+              />
+            ) : null}
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p id="aufgaben-workspace-heading" className="text-sm text-[var(--text-2)]">
                 {CD_VORHABEN_WORKSPACE_COPY.tasksSubheading}
@@ -340,12 +355,13 @@ export default function VorhabenAufgabenWorkspace({
                       {CD_VORHABEN_WORKSPACE_COPY.clearFiltersAction}
                     </button>
                   ) : snapshot.canManageTasks ? (
-                    <Link
-                      href="/dashboard/aufgaben/neu"
+                    <button
+                      type="button"
                       className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                      onClick={() => setTaskCreateOpen(true)}
                     >
                       {CD_VORHABEN_WORKSPACE_COPY.createTaskAction}
-                    </Link>
+                    </button>
                   ) : null
                 }
               />

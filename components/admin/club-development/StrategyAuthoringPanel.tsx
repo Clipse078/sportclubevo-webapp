@@ -32,7 +32,9 @@ import StrategyDocumentReferencesSection from "./StrategyDocumentReferencesSecti
 import StrategySupportingMaterialsCard from "./StrategySupportingMaterialsCard";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
-import TargetZieleCollapsibleCard from "@/components/admin/targets/TargetZieleCollapsibleCard";
+import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
+import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
+import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
@@ -243,7 +245,7 @@ export default function StrategyAuthoringPanel({
   };
 
   const addFocusTarget = (target: { id: string; title: string; status: string }) => {
-    if (!canManage || !editing) return;
+    if (!canManage) return;
     setFocusError(null);
     startFocus(async () => {
       const res = await fetch("/api/club-development/club-strategy/focus-targets", {
@@ -342,13 +344,12 @@ export default function StrategyAuthoringPanel({
     ) : null;
 
   return (
-    <div className="mb-8 space-y-5" data-testid="strategy-authoring-panel">
-      <SceClubDevelopmentSectionShell
-        title={strategyTitle}
-        headerAside={strategyEditAside}
-        bodyClassName="p-5 space-y-4"
-        testId="strategy-detail-section"
-      >
+    <div className={`mb-8 ${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-5`} data-testid="strategy-authoring-panel">
+      <section className="space-y-4" data-testid="strategy-detail-section">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">{strategyTitle}</h2>
+          {strategyEditAside}
+        </div>
         {editing && canManage ? (
           <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
             <label className="block text-sm">
@@ -496,18 +497,15 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         )}
-      </SceClubDevelopmentSectionShell>
+      </section>
 
-      <SceClubDevelopmentSectionShell
-        title={CD_STRATEGY_AUTHORING_COPY.focusHeading}
-        headerAside={
-          focusTargets.length > 0 ? (
+      <section className="space-y-3 border-t border-[var(--border)]/60 pt-4" data-testid="strategy-focus-section">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">{CD_STRATEGY_AUTHORING_COPY.focusHeading}</h3>
+          {focusTargets.length > 0 ? (
             <span className="text-xs text-[var(--muted)] tabular-nums">{focusTargets.length}</span>
-          ) : null
-        }
-        bodyClassName="p-5 space-y-3"
-        testId="strategy-focus-section"
-      >
+          ) : null}
+        </div>
         {focusError ? (
           <div className="space-y-1">
             <ClubDevelopmentFormError message={focusError} />
@@ -527,9 +525,34 @@ export default function StrategyAuthoringPanel({
         {focusTargets.length === 0 ? (
           <SceClubDevelopmentEmptyState message={CD_STRATEGY_AUTHORING_COPY.focusEmpty} />
         ) : (
-          <ul className="mb-3 space-y-3" data-testid="strategy-focus-cards">
+          <ul className="mb-3 space-y-2" data-testid="strategy-focus-cards">
             {focusTargetOverviews.map(({ focus, overview }) => (
               <li key={focus.target.id} className="space-y-1">
+                {overview ? (
+                  <VereinsentwicklungWorkspaceRecordRow
+                    title={overview.title}
+                    titleHref={`/vereinsleitung/targets/${focus.target.id}`}
+                    responsibleLabel={overview.responsibleLabel}
+                    orgUnitLabel={overview.orgUnitLabel}
+                    progressPercent={overview.deliveryProgressPercent}
+                    progressCaption={
+                      overview.deliveryProgressPercent != null
+                        ? `${overview.deliveryProgressPercent}%`
+                        : null
+                    }
+                    statusLabel={formatTargetStatusLabel(overview.status)}
+                    testId={`strategy-focus-row-${focus.target.id}`}
+                  />
+                ) : (
+                  <VereinsentwicklungWorkspaceRecordRow
+                    title={focus.target.title}
+                    titleHref={`/vereinsleitung/targets/${focus.target.id}`}
+                    responsibleLabel={null}
+                    orgUnitLabel="—"
+                    progressPercent={null}
+                    testId={`strategy-focus-row-${focus.target.id}`}
+                  />
+                )}
                 {canManage && editing ? (
                   <div className="flex justify-end">
                     <button
@@ -542,22 +565,12 @@ export default function StrategyAuthoringPanel({
                     </button>
                   </div>
                 ) : null}
-                {overview ? (
-                  <TargetZieleCollapsibleCard target={overview} isFocus showFocusBadge={false} />
-                ) : (
-                  <Link
-                    href={`/vereinsleitung/targets/${focus.target.id}`}
-                    className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--sce-primary)] shadow-sm hover:underline"
-                  >
-                    {focus.target.title}
-                  </Link>
-                )}
               </li>
             ))}
           </ul>
         )}
 
-        {canManage && editing ? (
+        {canManage ? (
           <div className="space-y-3">
             <CreateTargetContextualCollapsibleCard
               expanded={targetCreateExpanded}
@@ -589,7 +602,8 @@ export default function StrategyAuthoringPanel({
                 },
               }}
             />
-            <div className="flex flex-wrap items-start gap-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[var(--muted)]">{CD_TARGET_COPY.linkExistingTargetToStrategy}</p>
               <ClubDevelopmentTargetSearchPicker
                 excludeTargetIds={linkedTargetIds}
                 onSelect={addFocusTarget}
@@ -598,7 +612,7 @@ export default function StrategyAuthoringPanel({
             </div>
           </div>
         ) : null}
-      </SceClubDevelopmentSectionShell>
+      </section>
 
       <StrategySupportingMaterialsCard
         meetingCount={supportingCounts.meetings}

@@ -273,6 +273,8 @@ export const CD_TARGET_COPY = {
     "Vorhaben wurde erstellt, die Verknüpfung zum Ziel ist jedoch fehlgeschlagen.",
   preselectedTargetLabel: "Verknüpftes Ziel",
   createTargetAndLinkSchwerpunkt: "Ziel erstellen & verknüpfen",
+  linkExistingTargetToStrategy: "Bestehendes Ziel verknüpfen",
+  createTargetInStrategy: "+ Ziel anlegen",
   targetCreatedFocusLinkFailed:
     "Ziel wurde erstellt, die Verknüpfung als Schwerpunkt ist jedoch fehlgeschlagen.",
   focusLinkRetry: "Schwerpunkt-Verknüpfung erneut versuchen",
