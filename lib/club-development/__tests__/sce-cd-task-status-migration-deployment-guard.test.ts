@@ -51,7 +51,7 @@ describe("SCE TaskStatus WAITING migration deployment guard", () => {
     expect(stageScript).toContain("writePerformed: false");
     expect(stageScript).toContain("SCE_DATA_DATABASE_FINGERPRINT");
 
-  const disposableScript = readFileSync(
+    const disposableScript = readFileSync(
       resolve(process.cwd(), "scripts/sce-cd-task-status-disposable-migration-verify.ts"),
       "utf8",
     );
