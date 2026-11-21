@@ -27,7 +27,8 @@ export type VereinsentwicklungConnectedTaskTableRowModel = {
   status: TaskStatus;
   statusLabel: string;
   assignees: SprintTaskAssigneeViewModel[];
-  /** Optional Teilaufgaben / leaf rollup for inline progress. */
+  /** Optional Teilaufgaben rollup — bar only when true and totalCount > 0. */
+  progressHasChildRollup?: boolean;
   progressCompletedCount?: number | null;
   progressTotalCount?: number | null;
 };

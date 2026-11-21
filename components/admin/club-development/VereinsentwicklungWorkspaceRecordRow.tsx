@@ -83,20 +83,34 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
         <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
         <div className="min-w-0 text-xs text-[var(--text-2)]">
           <span className="sr-only">Strategie: </span>
-          {props.strategyHref && props.strategyLabel?.trim() ? (
-            <Link
-              href={props.strategyHref}
-              className="block truncate font-medium text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-              title={props.strategyLabel}
-            >
-              {props.strategyLabel}
-            </Link>
-          ) : (
-            <span className="truncate">{props.strategyLabel?.trim() || "—"}</span>
-          )}
-          {props.orgUnitLabel?.trim() ? (
-            <span className="mt-0.5 block truncate text-[0.65rem] text-[var(--muted)]">{props.orgUnitLabel}</span>
-          ) : null}
+          <p
+            className="flex min-w-0 items-center gap-1 truncate"
+            title={[props.strategyLabel?.trim(), props.orgUnitLabel?.trim()].filter(Boolean).join(" · ")}
+          >
+            {props.strategyHref && props.strategyLabel?.trim() ? (
+              <Link
+                href={props.strategyHref}
+                className="shrink-0 font-medium text-[var(--foreground)] hover:text-[var(--sce-primary)]"
+              >
+                {props.strategyLabel}
+              </Link>
+            ) : (
+              <span className="shrink-0 font-medium text-[var(--foreground)]">
+                {props.strategyLabel?.trim() || "—"}
+              </span>
+            )}
+            {props.orgUnitLabel?.trim() ? (
+              <>
+                <span className="shrink-0 text-[var(--muted)]" aria-hidden>
+                  ·
+                </span>
+                <span className="min-w-0 truncate text-[var(--muted)]">
+                  <span className="sr-only">Org-Einheit: </span>
+                  {props.orgUnitLabel}
+                </span>
+              </>
+            ) : null}
+          </p>
         </div>
         <VereinsentwicklungTargetStatusPill status={props.status} label={props.statusLabel} />
         <div className="min-w-0">{props.progressSlot}</div>

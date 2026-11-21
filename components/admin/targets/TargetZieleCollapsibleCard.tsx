@@ -72,9 +72,24 @@ export default function TargetZieleCollapsibleCard({
             unknownReason={target.outcomeProgressUnknownReason}
           />
           <StrategyProgressIndicator
+            variant="compact"
+            showEmptyReason
             label={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
-            percent={target.deliveryProgressPercent}
-            unknownReason={target.deliveryProgressUnknownReason}
+            percent={
+              target.deliveryProgressCaption === "Noch keine Aufgaben"
+                ? null
+                : target.deliveryProgressPercent
+            }
+            unknownReason={
+              target.deliveryProgressCaption === "Noch keine Aufgaben"
+                ? "Noch keine Aufgaben"
+                : target.deliveryProgressUnknownReason
+            }
+            countCaption={
+              target.deliveryProgressCaption === "Noch keine Aufgaben"
+                ? null
+                : target.deliveryProgressCaption
+            }
             accentClass="bg-[var(--sce-info)]"
           />
         </div>

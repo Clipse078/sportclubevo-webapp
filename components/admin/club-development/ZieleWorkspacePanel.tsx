@@ -139,7 +139,7 @@ export default function ZieleWorkspacePanel({
                   : strategyLinkByTargetId.get(target.id) ?? null;
               const strategyLabel = strategyLink?.title ?? "—";
               const orgUnitLabel =
-                target.orgUnitLabel?.trim() || (isFocus ? "Schwerpunkt" : null) || null;
+                target.orgUnitLabel?.trim() || (isFocus ? "Schwerpunkt" : null);
               const deliveryEmpty = target.deliveryProgressCaption === "Noch keine Aufgaben";
 
               return (

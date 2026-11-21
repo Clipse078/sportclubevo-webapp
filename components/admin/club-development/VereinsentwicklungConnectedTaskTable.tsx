@@ -220,15 +220,22 @@ function TaskTableRow({
         <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
         <AssigneeCell assignees={row.assignees} />
         {showRowProgress ? (
-          <SceCompletionProgressInline
-            metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
-            completedCount={row.progressCompletedCount ?? null}
-            totalCount={row.progressTotalCount ?? null}
-            countCaption={null}
-            emptyLabel="Noch keine Aufgaben"
-            accentClass="bg-[var(--sce-info)]"
-            testId={`task-row-progress-${row.taskId}`}
-          />
+          row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
+            <SceCompletionProgressInline
+              metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+              completedCount={row.progressCompletedCount ?? null}
+              totalCount={row.progressTotalCount ?? null}
+              countCaption={null}
+              emptyLabel="Noch keine Aufgaben"
+              countSuffix="erledigt"
+              accentClass="bg-[var(--sce-info)]"
+              testId={`task-row-progress-${row.taskId}`}
+            />
+          ) : (
+            <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
+              —
+            </div>
+          )
         ) : null}
         <div className="flex justify-end">
           {renderRowActions ? (

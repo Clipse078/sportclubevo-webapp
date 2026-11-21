@@ -74,4 +74,47 @@ describe("VereinsentwicklungConnectedTaskTable reorder drag handle", () => {
     fireEvent.dragStart(grip, { dataTransfer: { setData: () => {}, effectAllowed: "move" } });
     expect(onDragStart).toHaveBeenCalledWith("task-b");
   });
+
+  it("renders Strategie and Org-Einheit columns in full layout variant", () => {
+    render(
+      <VereinsentwicklungConnectedTaskTable
+        layoutVariant="full"
+        rows={[
+          {
+            ...rows[0]!,
+            strategyTitle: "Club 2030",
+            strategyHref: "/vereinsleitung/strategie-und-ziele?ansicht=strategie",
+            orgUnitLabel: "Herren",
+          },
+        ]}
+        testId="full-layout-table"
+      />,
+    );
+
+    expect(screen.getByText("Strategie")).toBeTruthy();
+    expect(screen.getByText("Org-Einheit")).toBeTruthy();
+    expect(screen.getByText("Club 2030")).toBeTruthy();
+    expect(screen.getByText("Herren")).toBeTruthy();
+  });
+
+  it("shows inline progress only for rows with child rollup", () => {
+    render(
+      <VereinsentwicklungConnectedTaskTable
+        showRowProgress
+        rows={[
+          {
+            ...rows[0]!,
+            progressHasChildRollup: true,
+            progressCompletedCount: 2,
+            progressTotalCount: 3,
+          },
+          rows[1]!,
+        ]}
+        testId="progress-table"
+      />,
+    );
+
+    expect(screen.getByText("66% – 2 von 3 erledigt")).toBeTruthy();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
 });

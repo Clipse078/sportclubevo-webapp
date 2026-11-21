@@ -23,6 +23,14 @@ export type SprintPlanningTaskDto = {
   taskHref: string;
   /** Present on Ungeplant catalog rows — persisted backlog rank when set. */
   unplannedRank?: number | null;
+  progressHasChildRollup?: boolean;
+  progressCompletedCount?: number | null;
+  progressTotalCount?: number | null;
+};
+
+export type SprintPlanningDeliveryAggregate = {
+  completedCount: number;
+  totalCount: number;
 };
 
 export type SprintPlanningInitiativeGroupDto = {
@@ -35,4 +43,6 @@ export type SprintPlanningInitiativeGroupDto = {
 export type SprintPlanningCatalogDto = {
   initiativeGroups: SprintPlanningInitiativeGroupDto[];
   standaloneGroup: { tasks: SprintPlanningTaskDto[] };
+  /** Eligible leaf rollup across selectable catalog tasks (Ungeplant header). */
+  aggregateDeliveryProgress?: SprintPlanningDeliveryAggregate;
 };

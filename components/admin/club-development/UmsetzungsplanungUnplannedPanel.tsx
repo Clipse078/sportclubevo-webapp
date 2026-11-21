@@ -19,6 +19,8 @@ import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetz
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
 
 type Props = {
@@ -94,6 +96,7 @@ export default function UmsetzungsplanungUnplannedPanel({
   }, [open, loadCatalog, serverSearch]);
 
   const headerCount = catalog ? countCatalogTasks(catalog) : null;
+  const headerDeliveryProgress = catalog?.aggregateDeliveryProgress ?? null;
 
   const rankedTasks = useMemo(
     () => (catalog ? flattenUnplannedCatalogTasks(catalog) : []),
@@ -262,6 +265,21 @@ export default function UmsetzungsplanungUnplannedPanel({
           Ungeplant
         </span>
       }
+      headerAside={
+        headerDeliveryProgress && headerDeliveryProgress.totalCount > 0 ? (
+          <SceCompletionProgressInline
+            metricLabel={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+            completedCount={headerDeliveryProgress.completedCount}
+            totalCount={headerDeliveryProgress.totalCount}
+            countCaption={null}
+            emptyLabel="Noch keine Aufgaben"
+            countSuffix="Aufgaben erledigt"
+            accentClass="bg-[var(--sce-info)]"
+            testId="umsetzungsplanung-unplanned-header-progress"
+            className="hidden shrink-0 sm:flex"
+          />
+        ) : null
+      }
     >
       <div
         className={cn(
@@ -344,6 +362,7 @@ export default function UmsetzungsplanungUnplannedPanel({
         {!loading && !error && filteredTasks.length > 0 ? (
           <VereinsentwicklungConnectedTaskTable
             rows={tableRows}
+            showRowProgress
             showReorderHandle
             reorder={{
               dragEnabled: phaseOptions.length > 0,

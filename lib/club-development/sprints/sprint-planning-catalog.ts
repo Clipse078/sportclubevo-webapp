@@ -34,6 +34,10 @@ import type {
   SprintPlanningInitiativeGroupDto,
   SprintPlanningTaskDto,
 } from "./sprint-planning-types";
+import {
+  computeGroupDeliveryProgressFromRootTaskIds,
+  loadTaskChildRollupProgressMap,
+} from "@/lib/club-development/task-child-rollup-progress";
 
 export type { SprintPlanningCatalogDto, SprintPlanningInitiativeGroupDto, SprintPlanningTaskDto } from "./sprint-planning-types";
 
@@ -574,21 +578,49 @@ export async function loadUnplannedTasksCatalog(
     compareTasksByUnplannedRank(a, b, rankMap),
   );
 
+  const initiativeGroups = mapGroups(pendingInitiativeGroups);
+  const standaloneTasks = sortedStandalone
+    .map((row) =>
+      toUnplannedTaskDto(
+        row,
+        standaloneMembershipMap.get(row.id)!,
+        assigneeByUserId,
+        contextLabels,
+        rankMap.get(row.id) ?? null,
+      ),
+    )
+    .filter((t) => t.selectable);
+
+  const selectableTaskIds = [
+    ...initiativeGroups.flatMap((g) => g.tasks.map((t) => t.id)),
+    ...standaloneTasks.map((t) => t.id),
+  ];
+  const childProgressMap = await loadTaskChildRollupProgressMap(taskCtx, selectableTaskIds);
+  const withChildProgress = (task: SprintPlanningTaskDto): SprintPlanningTaskDto => {
+    const rollup = childProgressMap.get(task.id);
+    if (!rollup?.hasChildRollup) return task;
+    return {
+      ...task,
+      progressHasChildRollup: true,
+      progressCompletedCount: rollup.completedCount,
+      progressTotalCount: rollup.totalCount,
+    };
+  };
+
+  const aggregateDeliveryProgress = await computeGroupDeliveryProgressFromRootTaskIds(
+    taskCtx,
+    selectableTaskIds,
+  );
+
   return {
-    initiativeGroups: mapGroups(pendingInitiativeGroups),
+    initiativeGroups: initiativeGroups.map((group) => ({
+      ...group,
+      tasks: group.tasks.map(withChildProgress),
+    })),
     standaloneGroup: {
-      tasks: sortedStandalone
-        .map((row) =>
-          toUnplannedTaskDto(
-            row,
-            standaloneMembershipMap.get(row.id)!,
-            assigneeByUserId,
-            contextLabels,
-            rankMap.get(row.id) ?? null,
-          ),
-        )
-        .filter((t) => t.selectable),
+      tasks: standaloneTasks.map(withChildProgress),
     },
+    aggregateDeliveryProgress,
   };
 }
 

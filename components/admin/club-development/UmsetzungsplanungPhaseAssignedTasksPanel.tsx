@@ -9,6 +9,8 @@ import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import type { SprintBoardCard } from "@/lib/club-development/sprints/sprint-board";
 import { mapSprintBoardCardToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
@@ -167,12 +169,22 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
         data-testid={`umsetzungsplanung-phase-tasks-toggle-${sprintSlug}`}
       >
         <span className="font-medium">{CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.assignedTasksSection}</span>
-        <span className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
-          {typeof taskCount === "number"
-            ? `${completedCount} von ${taskCount} Aufgaben erledigt`
-            : loading
-              ? "…"
-              : ""}
+        <span className="flex min-w-0 items-center gap-2">
+          {typeof taskCount === "number" && taskCount > 0 ? (
+            <SceCompletionProgressInline
+              metricLabel={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+              completedCount={completedCount}
+              totalCount={taskCount}
+              countCaption={null}
+              emptyLabel="Noch keine Aufgaben"
+              countSuffix="Aufgaben erledigt"
+              accentClass="bg-[var(--sce-info)]"
+              testId={`umsetzungsplanung-phase-header-progress-${sprintSlug}`}
+              className="hidden sm:flex"
+            />
+          ) : loading ? (
+            <span className="text-xs text-[var(--muted)]">…</span>
+          ) : null}
           <ChevronDown
             className={`h-4 w-4 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
             aria-hidden
@@ -249,6 +261,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
           {!loading && !error && cards && cards.length > 0 ? (
             <VereinsentwicklungConnectedTaskTable
               rows={tableRows}
+              showRowProgress
               testId={`umsetzungsplanung-phase-task-table-${sprintSlug}`}
               phaseDrag={
                 canManageAssignments

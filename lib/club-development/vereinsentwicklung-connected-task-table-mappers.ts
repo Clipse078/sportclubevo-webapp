@@ -28,6 +28,9 @@ export function mapVorhabenTaskRowToTableModel(row: VorhabenWorkspaceTaskRow): V
       displayName,
       imageUrl: null,
     })),
+    progressHasChildRollup: row.progressHasChildRollup,
+    progressCompletedCount: row.progressCompletedCount,
+    progressTotalCount: row.progressTotalCount,
   };
 }
 
@@ -47,6 +50,9 @@ export function mapSprintBoardCardToTableModel(card: SprintBoardCard): Vereinsen
     status: card.status,
     statusLabel: formatVereinsentwicklungTaskStatusLabel(card.status),
     assignees: card.assignees,
+    progressHasChildRollup: card.progressHasChildRollup,
+    progressCompletedCount: card.progressCompletedCount,
+    progressTotalCount: card.progressTotalCount,
   };
 }
 
@@ -66,5 +72,8 @@ export function mapPlanningTaskToTableModel(task: SprintPlanningTaskDto): Verein
     status: task.status,
     statusLabel: task.statusLabel,
     assignees: task.assignees,
+    progressHasChildRollup: task.progressHasChildRollup,
+    progressCompletedCount: task.progressCompletedCount,
+    progressTotalCount: task.progressTotalCount,
   };
 }
