@@ -72,6 +72,19 @@ export default function UmsetzungsplanungWorkspace({
     setSectionOpen((prev) => ({ ...prev, [key]: open }));
   };
 
+  const unplannedPrimary = canManageSprints && phaseOptions.length === 0;
+
+  const unplannedPanel = canManageSprints ? (
+    <UmsetzungsplanungUnplannedPanel
+      phaseOptions={phaseOptions}
+      assignDisabled={phaseOptions.length === 0}
+      open={sectionOpen.unplanned}
+      onOpenChange={(open) => touchSection("unplanned", open)}
+      onAssigned={() => router.refresh()}
+      searchQuery={search}
+    />
+  ) : null;
+
   const primaryAction = canManageSprints ? (
     <button
       type="button"
@@ -139,6 +152,8 @@ export default function UmsetzungsplanungWorkspace({
             hideHeader
           />
         ) : null}
+
+        {unplannedPrimary ? unplannedPanel : null}
 
         <UmsetzungsplanungCollapsibleSection
           title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.ongoingSection}
@@ -209,16 +224,7 @@ export default function UmsetzungsplanungWorkspace({
           )}
         </UmsetzungsplanungCollapsibleSection>
 
-        {canManageSprints ? (
-          <UmsetzungsplanungUnplannedPanel
-            phaseOptions={phaseOptions}
-            assignDisabled={phaseOptions.length === 0}
-            open={sectionOpen.unplanned}
-            onOpenChange={(open) => touchSection("unplanned", open)}
-            onAssigned={() => router.refresh()}
-            searchQuery={search}
-          />
-        ) : null}
+        {!unplannedPrimary ? unplannedPanel : null}
 
         <UmsetzungsplanungCollapsibleSection
           title={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.completedSection}

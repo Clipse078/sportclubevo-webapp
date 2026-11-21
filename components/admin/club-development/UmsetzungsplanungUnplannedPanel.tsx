@@ -346,8 +346,8 @@ export default function UmsetzungsplanungUnplannedPanel({
             rows={tableRows}
             showReorderHandle
             reorder={{
-              dragEnabled: !assignDisabled && phaseOptions.length > 0,
-              canReorder: !reorderBlocked && !assignDisabled,
+              dragEnabled: phaseOptions.length > 0,
+              canReorder: !reorderBlocked,
               pending: pending,
               allOrderedTaskIds,
               onPersistOrder: persistOrder,
@@ -366,7 +366,7 @@ export default function UmsetzungsplanungUnplannedPanel({
                 task?.selectable !== false;
               const isAssigning = assigningTaskId === row.taskId && pending;
               const idx = allOrderedTaskIds.indexOf(row.taskId);
-              const canMove = !reorderBlocked && !assignDisabled;
+              const canMove = !reorderBlocked;
               return (
                 <div className="flex flex-wrap items-center justify-end gap-1">
                   {canMove ? (

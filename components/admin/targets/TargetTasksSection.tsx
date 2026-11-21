@@ -37,14 +37,19 @@ export default function TargetTasksSection({
 
   return (
     <section className={VEREINSLEITUNG_PANEL_CLASS} data-testid="target-aufgaben-section">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+        <div
+          className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4"
+          data-testid="target-aufgabenfortschritt-header"
+        >
+          <h3 className="shrink-0 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
             Aufgaben
           </h3>
           {deliveryProgressCaption ? (
-            <div className="mt-2 max-w-md" data-testid="target-aufgabenfortschritt">
+            <div className="min-w-0 sm:max-w-md sm:flex-1" data-testid="target-aufgabenfortschritt">
               <StrategyProgressIndicator
+                variant="compact"
+                showEmptyReason
                 label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
                 percent={deliveryProgressCaption === "Noch keine Aufgaben" ? null : deliveryProgressPercent}
                 unknownReason={deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null}
@@ -58,7 +63,7 @@ export default function TargetTasksSection({
         {canCreate ? (
           <button
             type="button"
-            className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
+            className={`${VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS} shrink-0`}
             data-testid="target-aufgabe-erstellen"
             data-sce-contextual-create-flow="inline-collapsible"
             onClick={() => setCreateOpen(true)}

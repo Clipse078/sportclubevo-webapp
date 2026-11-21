@@ -110,6 +110,8 @@ describe("Umsetzungsplanung workspace", () => {
     expect(unplanned).toContain("einplanenAction");
     expect(unplanned).toContain("showReorderHandle");
     expect(unplanned).toContain("unplanned-order");
+    expect(unplanned).toContain("canReorder: !reorderBlocked");
+    expect(unplanned).not.toMatch(/canReorder:.*assignDisabled/);
     expect(workspace).toContain("UmsetzungsplanungDragProvider");
     expect(workspace).not.toContain("Dialog");
     expect(workspace).not.toContain("SceClubDevelopmentEmptyState");

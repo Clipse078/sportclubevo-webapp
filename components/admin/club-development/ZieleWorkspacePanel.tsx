@@ -144,26 +144,25 @@ export default function ZieleWorkspacePanel({
                     responsibleLabel={target.responsibleLabel}
                     orgUnitLabel={orgUnitLabel}
                     progressSlot={
-                      <div className="max-w-[14rem]">
-                        <StrategyProgressIndicator
-                          label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
-                          percent={
-                            target.deliveryProgressCaption === "Noch keine Aufgaben"
-                              ? null
-                              : target.deliveryProgressPercent
-                          }
-                          unknownReason={
-                            target.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
-                          }
-                          countCaption={
-                            target.deliveryProgressCaption === "Noch keine Aufgaben"
-                              ? null
-                              : target.deliveryProgressCaption
-                          }
-                          accentClass="bg-[var(--sce-info)]"
-                          testId={`ziele-task-progress-${target.id}`}
-                        />
-                      </div>
+                      <StrategyProgressIndicator
+                        variant="compact"
+                        label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                        percent={
+                          target.deliveryProgressCaption === "Noch keine Aufgaben"
+                            ? null
+                            : target.deliveryProgressPercent
+                        }
+                        unknownReason={
+                          target.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
+                        }
+                        countCaption={
+                          target.deliveryProgressCaption === "Noch keine Aufgaben"
+                            ? null
+                            : target.deliveryProgressCaption
+                        }
+                        accentClass="bg-[var(--sce-info)]"
+                        testId={`ziele-task-progress-${target.id}`}
+                      />
                     }
                     statusLabel={formatTargetStatusLabel(target.status)}
                     testId={`ziele-row-${target.id}`}
