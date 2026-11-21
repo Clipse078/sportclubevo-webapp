@@ -45,6 +45,17 @@ describe("SCE public reference migration deployment guard", () => {
     expect(script).toContain("SCE_DATA_DATABASE_FINGERPRINT");
   });
 
+  it("backfill CLI uses Prisma adapter and shared backfill service", () => {
+    const script = readFileSync(
+      resolve(process.cwd(), "scripts/sce-public-reference-backfill.ts"),
+      "utf8",
+    );
+    expect(script).toContain("PrismaPg");
+    expect(script).toContain("runScePublicReferenceBackfillCli");
+    expect(script).toContain("assertScePublicReferenceBackfillAllowed");
+    expect(script).not.toMatch(/new PrismaClient\(\s*\)/);
+  });
+
   it("aborts global conversion on cross-tenant collisions", () => {
     const sql = migrationSql(SCE_PUBLIC_REFERENCE_GLOBAL_CONVERSION_MIGRATION);
     expect(sql).toContain("SCE_PUBLIC_REFERENCE_GLOBAL_COLLISION");
