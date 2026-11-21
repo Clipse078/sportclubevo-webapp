@@ -19,6 +19,7 @@ import type { ClubStrategyDocumentReferenceDto } from "@/lib/club-development/cl
 import { strategySupportingMaterialCounts } from "@/lib/club-development/initiative-delivery-progress-presentation";
 import type { ClubStrategyAuthoringDto, ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import StrategyProgressIndicator from "./StrategyProgressIndicator";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import {
   formatStrategyDateLabel,
@@ -54,7 +55,12 @@ type Props = {
   initial: ClubStrategyAuthoringDto;
   strategyProgress: Pick<
     ClubStrategyListItemDto,
-    "goalAchievementPercent" | "goalAchievementCaption" | "deliveryProgressPercent" | "deliveryProgressCaption"
+    | "goalAchievementPercent"
+    | "goalAchievementCaption"
+    | "goalAchievementCompletedCount"
+    | "goalAchievementTotalCount"
+    | "deliveryProgressPercent"
+    | "deliveryProgressCaption"
   > | null;
   canManage: boolean;
   targets: StrategyTargetOverview[];
@@ -381,61 +387,31 @@ export default function StrategyAuthoringPanel({
           {strategyEditAside}
         </div>
         {strategyProgress ? (
-          <div
-            className="flex flex-col gap-4 border-b border-[var(--border)]/60 pb-4 sm:flex-row sm:items-start sm:gap-8"
-            data-testid="strategy-detail-progress"
-          >
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
-              </p>
-              <StrategyProgressIndicator
-                variant="compact"
-                showEmptyReason
-                label={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
-                percent={
-                  strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
-                    ? null
-                    : strategyProgress.goalAchievementPercent
-                }
-                unknownReason={
-                  strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
-                    ? CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
-                    : null
-                }
+          <div className="border-b border-[var(--border)]/60 pb-4" data-testid="strategy-detail-progress">
+            <p className="sr-only">{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</p>
+            {strategyProgress.goalAchievementTotalCount > 0 ? (
+              <SceCompletionProgressInline
+                metricLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+                completedCount={strategyProgress.goalAchievementCompletedCount}
+                totalCount={strategyProgress.goalAchievementTotalCount}
+                countCaption={null}
+                emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
+                countSuffix="erledigt"
+                testId="strategy-detail-goal-progress"
+              />
+            ) : (
+              <SceCompletionProgressInline
+                metricLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
                 countCaption={
                   strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
                     ? null
                     : strategyProgress.goalAchievementCaption
                 }
+                emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
+                countSuffix="erledigt"
                 testId="strategy-detail-goal-progress"
               />
-            </div>
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                {CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
-              </p>
-              <StrategyProgressIndicator
-                variant="compact"
-                showEmptyReason
-                label={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
-                percent={
-                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben"
-                    ? null
-                    : strategyProgress.deliveryProgressPercent
-                }
-                unknownReason={
-                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
-                }
-                countCaption={
-                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben"
-                    ? null
-                    : strategyProgress.deliveryProgressCaption
-                }
-                accentClass="bg-[var(--sce-info)]"
-                testId="strategy-detail-delivery-progress"
-              />
-            </div>
+            )}
           </div>
         ) : null}
         {editing && canManage ? (
