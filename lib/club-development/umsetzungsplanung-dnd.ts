@@ -21,3 +21,21 @@ export function parseUmsetzungsplanungDragPayload(raw: string): Umsetzungsplanun
     return null;
   }
 }
+
+/** Pure list reorder for Ungeplant rank drag-and-drop (drop index = insertion line index). */
+export function computeUnplannedListReorder<T extends { taskId: string }>(
+  rows: readonly T[],
+  draggedId: string,
+  dropIndex: number,
+): T[] | null {
+  const draggedIdx = rows.findIndex((r) => r.taskId === draggedId);
+  if (draggedIdx < 0) return null;
+
+  const rest = rows.filter((r) => r.taskId !== draggedId);
+  let insertIdx = dropIndex > draggedIdx ? dropIndex - 1 : dropIndex;
+  insertIdx = Math.max(0, Math.min(rest.length, insertIdx));
+  const moved = rows[draggedIdx]!;
+  const next = [...rest.slice(0, insertIdx), moved, ...rest.slice(insertIdx)];
+  const unchanged = next.map((r) => r.taskId).join(",") === rows.map((r) => r.taskId).join(",");
+  return unchanged ? null : next;
+}

@@ -17,7 +17,9 @@ import {
 } from "react";
 import type { ClubStrategyDocumentReferenceDto } from "@/lib/club-development/club-strategy-service";
 import { strategySupportingMaterialCounts } from "@/lib/club-development/initiative-delivery-progress-presentation";
-import type { ClubStrategyAuthoringDto } from "@/lib/club-development/club-strategy-service";
+import type { ClubStrategyAuthoringDto, ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
+import StrategyProgressIndicator from "./StrategyProgressIndicator";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import {
   formatStrategyDateLabel,
   formatStrategyPeriodSummary,
@@ -50,6 +52,10 @@ import {
 
 type Props = {
   initial: ClubStrategyAuthoringDto;
+  strategyProgress: Pick<
+    ClubStrategyListItemDto,
+    "goalAchievementPercent" | "goalAchievementCaption" | "deliveryProgressPercent" | "deliveryProgressCaption"
+  > | null;
   canManage: boolean;
   targets: StrategyTargetOverview[];
   availableMeetings: import("@/lib/linking/types").EntityRef[];
@@ -84,6 +90,7 @@ function narrativeSnapshot(dto: ClubStrategyAuthoringDto) {
 
 export default function StrategyAuthoringPanel({
   initial,
+  strategyProgress,
   canManage,
   targets,
   availableMeetings,
@@ -373,6 +380,64 @@ export default function StrategyAuthoringPanel({
           <h2 className="text-lg font-semibold text-[var(--foreground)]">{strategyTitle}</h2>
           {strategyEditAside}
         </div>
+        {strategyProgress ? (
+          <div
+            className="flex flex-col gap-4 border-b border-[var(--border)]/60 pb-4 sm:flex-row sm:items-start sm:gap-8"
+            data-testid="strategy-detail-progress"
+          >
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                {CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+              </p>
+              <StrategyProgressIndicator
+                variant="compact"
+                showEmptyReason
+                label={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+                percent={
+                  strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                    ? null
+                    : strategyProgress.goalAchievementPercent
+                }
+                unknownReason={
+                  strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                    ? CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                    : null
+                }
+                countCaption={
+                  strategyProgress.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                    ? null
+                    : strategyProgress.goalAchievementCaption
+                }
+                testId="strategy-detail-goal-progress"
+              />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                {CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+              </p>
+              <StrategyProgressIndicator
+                variant="compact"
+                showEmptyReason
+                label={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+                percent={
+                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben"
+                    ? null
+                    : strategyProgress.deliveryProgressPercent
+                }
+                unknownReason={
+                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
+                }
+                countCaption={
+                  strategyProgress.deliveryProgressCaption === "Noch keine Aufgaben"
+                    ? null
+                    : strategyProgress.deliveryProgressCaption
+                }
+                accentClass="bg-[var(--sce-info)]"
+                testId="strategy-detail-delivery-progress"
+              />
+            </div>
+          </div>
+        ) : null}
         {editing && canManage ? (
           <form onSubmit={onSave} className="max-w-3xl space-y-4" data-testid="strategy-narrative-form">
             <label className="block text-sm">
@@ -529,8 +594,27 @@ export default function StrategyAuthoringPanel({
                     titleHref={`/vereinsleitung/targets/${focus.target.id}`}
                     responsibleLabel={overview.responsibleLabel}
                     orgUnitLabel={overview.orgUnitLabel}
-                    progressPercent={overview.deliveryProgressPercent ?? 0}
-                    progressCaption={overview.deliveryProgressCaption}
+                    progressSlot={
+                      <StrategyProgressIndicator
+                        variant="compact"
+                        label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                        percent={
+                          overview.deliveryProgressCaption === "Noch keine Aufgaben"
+                            ? null
+                            : overview.deliveryProgressPercent
+                        }
+                        unknownReason={
+                          overview.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
+                        }
+                        countCaption={
+                          overview.deliveryProgressCaption === "Noch keine Aufgaben"
+                            ? null
+                            : overview.deliveryProgressCaption
+                        }
+                        accentClass="bg-[var(--sce-info)]"
+                        testId={`strategy-focus-task-progress-${focus.target.id}`}
+                      />
+                    }
                     statusLabel={formatTargetStatusLabel(overview.status)}
                     testId={`strategy-focus-row-${focus.target.id}`}
                   />

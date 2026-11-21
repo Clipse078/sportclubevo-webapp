@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
 import { flattenUnplannedCatalogTasks } from "@/lib/club-development/sprints/unplanned-catalog-flatten";
+import { applyUnplannedOrderToCatalog } from "@/lib/club-development/unplanned-catalog-reorder";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import { mapPlanningTaskToTableModel } from "@/lib/club-development/vereinsentwicklung-connected-task-table-mappers";
@@ -51,8 +52,9 @@ export default function UmsetzungsplanungUnplannedPanel({
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [reorderPending, setReorderPending] = useState(false);
   const submittingRef = useRef(false);
+  const persistGenerationRef = useRef(0);
+  const lastPersistedOrderRef = useRef<string | null>(null);
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
   const [returnDropActive, setReturnDropActive] = useState(false);
 
@@ -75,6 +77,9 @@ export default function UmsetzungsplanungUnplannedPanel({
       return;
     }
     setCatalog(result.data.catalog);
+    lastPersistedOrderRef.current = flattenUnplannedCatalogTasks(result.data.catalog)
+      .map((t) => t.id)
+      .join(",");
   }, []);
 
   useEffect(() => {
@@ -119,8 +124,14 @@ export default function UmsetzungsplanungUnplannedPanel({
 
   const persistOrder = useCallback(
     async (orderedTaskIds: string[]) => {
-      setReorderPending(true);
+      const orderKey = orderedTaskIds.join(",");
+      if (orderKey === lastPersistedOrderRef.current) {
+        return { ok: true as const };
+      }
+      const generation = persistGenerationRef.current + 1;
+      persistGenerationRef.current = generation;
       setError(null);
+      setCatalog((current) => (current ? applyUnplannedOrderToCatalog(current, orderedTaskIds) : current));
       try {
         const res = await fetch("/api/club-development/umsetzungsplanung/unplanned-order", {
           method: "PUT",
@@ -128,19 +139,28 @@ export default function UmsetzungsplanungUnplannedPanel({
           body: JSON.stringify({ orderedTaskIds }),
         });
         const data = await res.json().catch(() => ({}));
+        if (generation !== persistGenerationRef.current) {
+          return { ok: true as const };
+        }
         if (!res.ok) {
           const message =
             typeof data.error === "string"
               ? data.error
               : CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderFailed;
           setError(message);
+          await loadCatalog(serverSearch);
           return { ok: false as const, error: message };
         }
+        lastPersistedOrderRef.current = orderKey;
         setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderSaved);
-        await loadCatalog(serverSearch);
         return { ok: true as const };
-      } finally {
-        setReorderPending(false);
+      } catch {
+        if (generation === persistGenerationRef.current) {
+          await loadCatalog(serverSearch);
+        }
+        const message = CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.unplannedReorderFailed;
+        setError(message);
+        return { ok: false as const, error: message };
       }
     },
     [loadCatalog, serverSearch],
@@ -156,9 +176,7 @@ export default function UmsetzungsplanungUnplannedPanel({
     const [removed] = next.splice(idx, 1);
     if (!removed) return;
     next.splice(target, 0, removed);
-    startTransition(async () => {
-      await persistOrder(next);
-    });
+    void persistOrder(next);
   };
 
   const assignTaskToPhase = (taskId: string, phaseId: string) => {
@@ -328,9 +346,9 @@ export default function UmsetzungsplanungUnplannedPanel({
             rows={tableRows}
             showReorderHandle
             reorder={{
-              dragEnabled: !assignDisabled && phaseOptions.length > 0,
-              canReorder: !reorderBlocked && !reorderPending,
-              pending: pending || reorderPending,
+              dragEnabled: phaseOptions.length > 0,
+              canReorder: !reorderBlocked,
+              pending: pending,
               allOrderedTaskIds,
               onPersistOrder: persistOrder,
               onDragStart: (taskId) => {
@@ -348,7 +366,7 @@ export default function UmsetzungsplanungUnplannedPanel({
                 task?.selectable !== false;
               const isAssigning = assigningTaskId === row.taskId && pending;
               const idx = allOrderedTaskIds.indexOf(row.taskId);
-              const canMove = !reorderBlocked && !reorderPending;
+              const canMove = !reorderBlocked;
               return (
                 <div className="flex flex-wrap items-center justify-end gap-1">
                   {canMove ? (

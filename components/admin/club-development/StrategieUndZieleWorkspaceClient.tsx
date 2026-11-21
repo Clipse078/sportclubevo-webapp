@@ -73,6 +73,9 @@ export default function StrategieUndZieleWorkspaceClient({
           authoring ? (
             <StrategyAuthoringPanel
               initial={authoring}
+              strategyProgress={
+                strategies.find((row) => row.id === selectedStrategyId) ?? null
+              }
               canManage={canManageTargets}
               targets={targets}
               availableMeetings={availableMeetings}

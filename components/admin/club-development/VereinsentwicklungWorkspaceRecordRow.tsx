@@ -12,6 +12,8 @@ export type VereinsentwicklungWorkspaceRecordRowProps = {
   orgUnitLabel?: string | null;
   progressPercent?: number | null;
   progressCaption?: string | null;
+  progressSlot?: ReactNode;
+  secondaryProgressSlot?: ReactNode;
   statusLabel?: string | null;
   trailing?: ReactNode;
   testId?: string;
@@ -26,10 +28,13 @@ export default function VereinsentwicklungWorkspaceRecordRow({
   orgUnitLabel,
   progressPercent,
   progressCaption,
+  progressSlot,
+  secondaryProgressSlot,
   statusLabel,
   trailing,
   testId,
 }: VereinsentwicklungWorkspaceRecordRowProps) {
+  const dualProgress = Boolean(secondaryProgressSlot);
   const progress = progressPercent ?? 0;
   const titleNode = titleHref ? (
     <Link href={titleHref} className="font-medium text-[var(--foreground)] hover:text-[var(--sce-primary)]">
@@ -44,9 +49,11 @@ export default function VereinsentwicklungWorkspaceRecordRow({
       className={cn(
         "grid gap-3 rounded-lg border border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
         "bg-[color-mix(in_srgb,var(--surface)_96%,transparent)] px-3 py-2.5",
-        strategyLabel !== undefined
-          ? "sm:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.65fr))]"
-          : "sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.7fr))_auto]",
+        dualProgress
+          ? "sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.58fr)_minmax(0,0.58fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto]"
+          : strategyLabel !== undefined
+            ? "sm:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.65fr))]"
+            : "sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.7fr))_auto]",
         "sm:items-center",
       )}
       data-testid={testId}
@@ -75,28 +82,35 @@ export default function VereinsentwicklungWorkspaceRecordRow({
         <span className="sr-only">Org-Einheit: </span>
         {orgUnitLabel?.trim() || "Gesamtverein"}
       </div>
-      <div className="text-xs text-[var(--text-2)]">
-        {progressCaption ? (
-          <span>{progressCaption}</span>
-        ) : (
-          <span>{`${progress}% Fortschritt`}</span>
+      <div className="min-w-0 text-xs text-[var(--text-2)]">
+        {progressSlot ?? (
+          <>
+            {progressCaption ? (
+              <span>{progressCaption}</span>
+            ) : (
+              <span>{`${progress}% Fortschritt`}</span>
+            )}
+            {progressCaption !== "Noch keine Aufgaben" && progressCaption !== "Noch keine Ziele" ? (
+              <div
+                className="mt-1 h-1.5 w-full max-w-[8rem] overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={progressCaption ?? `${progress} Prozent Fortschritt`}
+              >
+                <div
+                  className="h-full bg-[var(--sce-primary)]"
+                  style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                />
+              </div>
+            ) : null}
+          </>
         )}
-        {progressCaption !== "Noch keine Aufgaben" ? (
-          <div
-            className="mt-1 h-1.5 w-full max-w-[8rem] overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={progressCaption ?? `${progress} Prozent Fortschritt`}
-          >
-            <div
-              className="h-full bg-[var(--sce-primary)]"
-              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-            />
-          </div>
-        ) : null}
       </div>
+      {secondaryProgressSlot ? (
+        <div className="min-w-0 text-xs text-[var(--text-2)]">{secondaryProgressSlot}</div>
+      ) : null}
       <div className="flex items-center gap-2 justify-self-end text-xs sm:col-span-1">
         {statusLabel ? (
           <span className="rounded-md border border-[var(--border)] px-2 py-0.5">{statusLabel}</span>

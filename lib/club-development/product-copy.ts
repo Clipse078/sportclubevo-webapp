@@ -70,7 +70,7 @@ export const CD_STRATEGY_AUTHORING_COPY = {
   docKindStrategy: "Vereinbarte Strategieunterlagen",
   docKindSupporting: "Weitere Unterlagen",
   progressHeading: "Fortschritt zu Zielen",
-  progressHint: "Zielerreichung (Kennzahlen) und Umsetzungsfortschritt (Vorhaben) sind getrennt.",
+  progressHint: "Zielerreichung (abgeschlossene Ziele) und Umsetzungsfortschritt (Aufgaben) sind getrennt.",
 } as const;
 
 /** Vereinsentwicklung — Sitzungen list & workspace chrome. */

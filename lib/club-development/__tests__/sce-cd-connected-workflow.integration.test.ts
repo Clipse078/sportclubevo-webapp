@@ -31,7 +31,11 @@ import {
   loadUnplannedTaskRankMap,
   persistUnplannedTaskOrder,
 } from "../sprints/unplanned-task-rank";
-import { computeStrategyDeliveryProgress, computeTargetDeliveryProgress } from "../vereinsentwicklung-workspace-progress";
+import {
+  computeStrategyDeliveryProgress,
+  computeStrategyGoalAchievementProgress,
+  computeTargetDeliveryProgress,
+} from "../vereinsentwicklung-workspace-progress";
 import { buildTaskServiceContextForActor, getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadVorhabenWorkspace } from "../vorhaben-workspace";
 
@@ -681,5 +685,23 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     const strategyRollup = await computeStrategyDeliveryProgress(actor, [targetOpen.id, targetDone.id]);
     expect(strategyRollup).toMatchObject({ completedCount: 1, totalCount: 2 });
     expect(strategyRollup.contributingTaskIds.sort()).toEqual([openTask.id, doneTask.id].sort());
+
+    const targetCompleted = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Completed goal ${RUN}`,
+        status: "COMPLETED",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+    const goalRollup = await computeStrategyGoalAchievementProgress(actor, [
+      targetOpen.id,
+      targetCompleted.id,
+    ]);
+    expect(goalRollup).toMatchObject({ completedCount: 1, totalCount: 2, percent: 50 });
   });
 });

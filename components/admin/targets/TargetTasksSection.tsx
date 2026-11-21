@@ -8,6 +8,8 @@ import { CD_VORHABEN_WORKSPACE_COPY, CD_TARGET_COPY } from "@/lib/club-developme
 import { VEREINSLEITUNG_PANEL_CLASS } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "@/components/admin/club-development/vereinsentwicklung-workspace-primary-button";
 import VereinsentwicklungAufgabeWorkspaceCreateCard from "@/components/admin/club-development/VereinsentwicklungAufgabeWorkspaceCreateCard";
+import StrategyProgressIndicator from "@/components/admin/club-development/StrategyProgressIndicator";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 
 type Props = {
   targetId: string;
@@ -35,24 +37,33 @@ export default function TargetTasksSection({
 
   return (
     <section className={VEREINSLEITUNG_PANEL_CLASS} data-testid="target-aufgaben-section">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+        <div
+          className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4"
+          data-testid="target-aufgabenfortschritt-header"
+        >
+          <h3 className="shrink-0 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
             Aufgaben
           </h3>
           {deliveryProgressCaption ? (
-            <p className="mt-1 text-xs text-[var(--text-2)]" data-testid="target-delivery-progress-caption">
-              Umsetzungsfortschritt: {deliveryProgressCaption}
-              {deliveryProgressCaption !== "Noch keine Aufgaben" && deliveryProgressPercent != null ? (
-                <span className="ml-1 tabular-nums">({deliveryProgressPercent}%)</span>
-              ) : null}
-            </p>
+            <div className="min-w-0 sm:max-w-md sm:flex-1" data-testid="target-aufgabenfortschritt">
+              <StrategyProgressIndicator
+                variant="compact"
+                showEmptyReason
+                label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                percent={deliveryProgressCaption === "Noch keine Aufgaben" ? null : deliveryProgressPercent}
+                unknownReason={deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null}
+                countCaption={deliveryProgressCaption === "Noch keine Aufgaben" ? null : deliveryProgressCaption}
+                accentClass="bg-[var(--sce-info)]"
+                testId="target-delivery-progress-bar"
+              />
+            </div>
           ) : null}
         </div>
         {canCreate ? (
           <button
             type="button"
-            className={VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS}
+            className={`${VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS} shrink-0`}
             data-testid="target-aufgabe-erstellen"
             data-sce-contextual-create-flow="inline-collapsible"
             onClick={() => setCreateOpen(true)}
