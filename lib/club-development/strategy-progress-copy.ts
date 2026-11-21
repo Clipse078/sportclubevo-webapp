@@ -1,8 +1,11 @@
 /** Client-safe copy for strategy/target progress surfaces (no server-only imports). */
 
 export const CD_STRATEGY_PROGRESS_COPY = {
+  goalAchievementLabel: "Zielerreichung",
   outcomeLabel: "Zielerreichung (Erwartetes Ergebnis)",
-  deliveryLabel: "Umsetzungsfortschritt (Aufgaben)",
+  deliveryLabel: "Umsetzungsfortschritt",
+  taskProgressLabel: "Aufgabenfortschritt",
+  goalAchievementEmpty: "Noch keine Ziele",
   outcomeUnknownNoMetrics: "Keine Kennzahlen — Zielerreichung nicht berechenbar.",
   outcomeUnknownNotComputable: "Kennzahlen ohne auswertbaren Zielwert.",
   deliveryUnknownNoInitiatives: "Noch keine Aufgaben.",

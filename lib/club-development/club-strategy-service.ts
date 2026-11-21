@@ -18,6 +18,8 @@ import type { WorkspaceDocumentAccessContext } from "@/lib/workspace/document-ac
 import { searchWorkspaceDocumentsForTaskLink } from "@/lib/workspace/document-access";
 import {
   computeStrategyDeliveryProgress,
+  computeStrategyGoalAchievementProgress,
+  formatGoalAchievementCountLabel,
   formatProgressCountLabel,
 } from "@/lib/club-development/vereinsentwicklung-workspace-progress";
 import { parseCreateClubStrategyScopeInput } from "@/lib/club-development/club-strategy-org-scope";
@@ -135,6 +137,8 @@ export type ClubStrategyListItemDto = {
   responsibleLabel: string | null;
   focusTargetCount: number;
   focusTargetIds: string[];
+  goalAchievementPercent: number;
+  goalAchievementCaption: string;
   deliveryProgressPercent: number;
   deliveryProgressCaption: string;
 };
@@ -214,10 +218,12 @@ export async function listClubStrategies(
       .sort((a, b) => a.localeCompare(b, "de"));
 
     const focusIds = row.focusTargets.map((ft) => ft.targetId);
-    const delivery =
+    const [goalAchievement, delivery] = await Promise.all([
+      computeStrategyGoalAchievementProgress(actor, focusIds),
       focusIds.length > 0
-        ? await computeStrategyDeliveryProgress(actor, focusIds)
-        : { completedCount: 0, totalCount: 0, percent: 0, contributingTaskIds: [] };
+        ? computeStrategyDeliveryProgress(actor, focusIds)
+        : Promise.resolve({ completedCount: 0, totalCount: 0, percent: 0, contributingTaskIds: [] }),
+    ]);
 
     const orgUnitLabelDisplay =
       orgUnitLabels.length === 0
@@ -236,6 +242,8 @@ export async function listClubStrategies(
       responsibleLabel: row.responsibleLabel,
       focusTargetCount: row._count.focusTargets,
       focusTargetIds: focusIds,
+      goalAchievementPercent: goalAchievement.percent,
+      goalAchievementCaption: formatGoalAchievementCountLabel(goalAchievement),
       deliveryProgressPercent: delivery.percent,
       deliveryProgressCaption: formatProgressCountLabel(delivery),
     });

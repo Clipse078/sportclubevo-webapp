@@ -8,6 +8,8 @@ import type { StrategyTargetOverview } from "@/lib/club-development/strategy-ove
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
+import StrategyProgressIndicator from "./StrategyProgressIndicator";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
@@ -111,7 +113,7 @@ export default function ZieleWorkspacePanel({
               <span>Strategie</span>
               <span>Verantwortlich</span>
               <span>Org-Einheit</span>
-              <span>Umsetzungsfortschritt</span>
+              <span>{CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}</span>
             </div>
             <div className="space-y-2" data-testid="ziele-workspace-list">
               {targets.map((target) => {
@@ -141,8 +143,28 @@ export default function ZieleWorkspacePanel({
                     strategyHref={strategyLink?.href ?? null}
                     responsibleLabel={target.responsibleLabel}
                     orgUnitLabel={orgUnitLabel}
-                    progressPercent={target.deliveryProgressPercent ?? 0}
-                    progressCaption={target.deliveryProgressCaption}
+                    progressSlot={
+                      <div className="max-w-[14rem]">
+                        <StrategyProgressIndicator
+                          label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                          percent={
+                            target.deliveryProgressCaption === "Noch keine Aufgaben"
+                              ? null
+                              : target.deliveryProgressPercent
+                          }
+                          unknownReason={
+                            target.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
+                          }
+                          countCaption={
+                            target.deliveryProgressCaption === "Noch keine Aufgaben"
+                              ? null
+                              : target.deliveryProgressCaption
+                          }
+                          accentClass="bg-[var(--sce-info)]"
+                          testId={`ziele-task-progress-${target.id}`}
+                        />
+                      </div>
+                    }
                     statusLabel={formatTargetStatusLabel(target.status)}
                     testId={`ziele-row-${target.id}`}
                     trailing={

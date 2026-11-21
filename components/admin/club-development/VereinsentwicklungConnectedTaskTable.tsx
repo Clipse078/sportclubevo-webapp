@@ -9,6 +9,7 @@ import {
   type VereinsentwicklungConnectedTaskTableRowModel,
 } from "@/lib/club-development/vereinsentwicklung-connected-task-table";
 import {
+  computeUnplannedListReorder,
   serializeUmsetzungsplanungDragPayload,
   UMSETZUNGSPLANUNG_DND_MIME,
 } from "@/lib/club-development/umsetzungsplanung-dnd";
@@ -133,11 +134,18 @@ function TaskTableRow({
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={reorderPending ? -1 : 0}
               aria-label={`${row.title} verschieben`}
+              aria-disabled={reorderPending || undefined}
               draggable={!reorderPending}
-              disabled={reorderPending}
+              onKeyDown={(event) => {
+                if (reorderPending) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                }
+              }}
               onDragStart={(event) => {
                 const payload = serializeUmsetzungsplanungDragPayload(
                   phaseHandle
@@ -161,7 +169,7 @@ function TaskTableRow({
                 if (phaseHandle) phaseDrag?.onDragEnd?.();
                 else onDragEndRow?.();
               }}
-              className="flex items-center text-[var(--muted)] cursor-grab rounded p-0.5 hover:bg-[var(--surface-2)] active:cursor-grabbing disabled:opacity-50"
+              className="flex items-center text-[var(--muted)] cursor-grab rounded p-0.5 hover:bg-[var(--surface-2)] active:cursor-grabbing aria-disabled:opacity-50"
               data-testid={
                 phaseHandle
                   ? `umsetzungsplanung-phase-drag-${row.taskId}`
@@ -169,7 +177,7 @@ function TaskTableRow({
               }
             >
               <GripVertical className="h-4 w-4" aria-hidden />
-            </button>
+            </div>
           ) : (
             <span className="flex items-center text-[var(--muted)]" aria-hidden>
               <GripVertical className="h-4 w-4" />
@@ -226,7 +234,9 @@ export default function VereinsentwicklungConnectedTaskTable({
     : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
 
   const reorderListActive = Boolean(showReorderHandle && reorder?.canReorder);
-  const dragHandleEnabled = Boolean(showReorderHandle && reorder?.dragEnabled);
+  const dragHandleEnabled = Boolean(
+    showReorderHandle && (reorder?.canReorder || reorder?.dragEnabled),
+  );
   const [displayRows, setDisplayRows] = useState(rows);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
@@ -262,17 +272,8 @@ export default function VereinsentwicklungConnectedTaskTable({
       reorder?.onDragEnd?.();
       if (!reorderListActive || currentDraggedId === null || currentDropIndex === null) return;
 
-      const draggedIdx = displayRows.findIndex((r) => r.taskId === currentDraggedId);
-      if (draggedIdx < 0) return;
-
-      const rest = displayRows.filter((r) => r.taskId !== currentDraggedId);
-      let insertIdx = currentDropIndex > draggedIdx ? currentDropIndex - 1 : currentDropIndex;
-      insertIdx = Math.max(0, Math.min(rest.length, insertIdx));
-      const moved = displayRows[draggedIdx]!;
-      const next = [...rest.slice(0, insertIdx), moved, ...rest.slice(insertIdx)];
-      const same =
-        next.map((r) => r.taskId).join(",") === displayRows.map((r) => r.taskId).join(",");
-      if (!same) void applyReorder(next);
+      const next = computeUnplannedListReorder(displayRows, currentDraggedId, currentDropIndex);
+      if (next) void applyReorder(next);
     },
     [applyReorder, displayRows, draggedId, dropIndex, reorder, reorderListActive],
   );

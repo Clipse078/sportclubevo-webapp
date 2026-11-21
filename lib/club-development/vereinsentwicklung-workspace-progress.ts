@@ -4,8 +4,10 @@
 
 import "server-only";
 
-import { TaskContextType, TaskStatus, type Prisma } from "@prisma/client";
+import { TargetStatus, TaskContextType, TaskStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import type { ActorContext } from "@/lib/visibility/actor-context";
+import { applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
 import {
   collectEligibleProgressLeafUnits,
   computeInitiativeProgressFromUnits,
@@ -16,7 +18,6 @@ import {
   initiativeTaskAssociationOrFilters,
 } from "./initiative-associated-tasks";
 import { listTargetInitiativeLinks } from "./initiative-target-links";
-import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
 
@@ -117,4 +118,46 @@ export async function computeStrategyDeliveryProgress(
 export function formatProgressCountLabel(snapshot: VereinsentwicklungProgressSnapshot): string {
   if (snapshot.totalCount === 0) return "Noch keine Aufgaben";
   return `${snapshot.completedCount} von ${snapshot.totalCount} Aufgaben erledigt`;
+}
+
+const TARGET_VISIBILITY_SELECT = {
+  id: true,
+  status: true,
+  visibilityScope: true,
+  createdByUserId: true,
+  visibleRoleRefs: true,
+  visibleUserRefs: true,
+  visibleTeamRefs: true,
+  visibleOrgUnitRefs: true,
+  visiblePersonRefs: true,
+  visibleTargetGroupRefs: true,
+} as const satisfies Prisma.TargetSelect;
+
+type TargetVisibilityRow = Prisma.TargetGetPayload<{ select: typeof TARGET_VISIBILITY_SELECT }>;
+
+/**
+ * Strategy Zielerreichung = share of visible, linked focus Ziele in canonical COMPLETED status.
+ */
+export async function computeStrategyGoalAchievementProgress(
+  actor: ActorContext,
+  targetIds: readonly string[],
+): Promise<VereinsentwicklungProgressSnapshot> {
+  if (!actor.tenantId || targetIds.length === 0) {
+    return { completedCount: 0, totalCount: 0, percent: 0, contributingTaskIds: [] };
+  }
+
+  const rows = await prisma.target.findMany({
+    where: { tenantId: actor.tenantId, id: { in: [...targetIds] } },
+    select: TARGET_VISIBILITY_SELECT,
+  });
+  const visible = applyVisibilityFilter(rows, actor) as TargetVisibilityRow[];
+  const completedCount = visible.filter((t) => t.status === TargetStatus.COMPLETED).length;
+  const totalCount = visible.length;
+  const percent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  return { completedCount, totalCount, percent, contributingTaskIds: [] };
+}
+
+export function formatGoalAchievementCountLabel(snapshot: VereinsentwicklungProgressSnapshot): string {
+  if (snapshot.totalCount === 0) return "Noch keine Ziele";
+  return `${snapshot.completedCount} von ${snapshot.totalCount} Zielen erreicht`;
 }

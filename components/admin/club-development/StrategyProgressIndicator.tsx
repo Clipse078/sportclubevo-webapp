@@ -2,6 +2,8 @@ type StrategyProgressIndicatorProps = {
   label: string;
   percent: number | null;
   unknownReason: string | null;
+  /** Shown under the bar and exposed via aria-valuetext when percent is set. */
+  countCaption?: string | null;
   accentClass?: string;
   testId?: string;
 };
@@ -15,6 +17,7 @@ export default function StrategyProgressIndicator({
   label,
   percent,
   unknownReason,
+  countCaption = null,
   accentClass = "bg-[var(--sce-primary)]",
   testId,
 }: StrategyProgressIndicatorProps) {
@@ -31,14 +34,26 @@ export default function StrategyProgressIndicator({
   }
 
   const width = Math.min(100, Math.max(0, percent));
+  const ariaValueText =
+    countCaption?.trim() ||
+    (unknownReason?.trim() ? unknownReason : `${label}: ${formatPercent(percent)}`);
 
   return (
     <div data-testid={testId}>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-[var(--text-2)]">{label}</span>
-        <span className="text-xs font-semibold text-[var(--foreground)]">{formatPercent(percent)}</span>
+        <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">{formatPercent(percent)}</span>
       </div>
-      <div className="h-2 rounded-full bg-[var(--surface-2)]">
+      {countCaption ? <p className="mb-1.5 text-[11px] text-[var(--muted)]">{countCaption}</p> : null}
+      <div
+        className="h-2 rounded-full bg-[var(--surface-2)]"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={width}
+        aria-label={label}
+        aria-valuetext={ariaValueText}
+      >
         <div className={`h-2 rounded-full ${accentClass}`} style={{ width: `${width}%` }} />
       </div>
     </div>

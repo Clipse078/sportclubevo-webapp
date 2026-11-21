@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
+import StrategyProgressIndicator from "./StrategyProgressIndicator";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import { buildStrategieUndZieleHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
@@ -96,7 +98,7 @@ export default function StrategienWorkspaceListPanel({
               <span>Titel</span>
               <span>Verantwortlich</span>
               <span>Org-Einheiten</span>
-              <span>Umsetzungsfortschritt</span>
+              <span>Fortschritt</span>
               <span className="sr-only">Aktionen</span>
             </div>
             <div className="space-y-2" data-testid="strategien-workspace-list">
@@ -118,8 +120,45 @@ export default function StrategienWorkspaceListPanel({
                       titleHref={href}
                       responsibleLabel={strategy.responsibleLabel}
                       orgUnitLabel={strategy.scopeOrgUnitLabel}
-                      progressPercent={strategy.deliveryProgressPercent}
-                      progressCaption={strategy.deliveryProgressCaption}
+                      progressSlot={
+                        <div className="max-w-[14rem] space-y-2">
+                          <StrategyProgressIndicator
+                            label={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+                            percent={
+                              strategy.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                                ? null
+                                : strategy.goalAchievementPercent
+                            }
+                            unknownReason={
+                              strategy.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                                ? CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                                : null
+                            }
+                            countCaption={
+                              strategy.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty
+                                ? null
+                                : strategy.goalAchievementCaption
+                            }
+                            testId={`strategien-goal-progress-${strategy.id}`}
+                          />
+                          <StrategyProgressIndicator
+                            label={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+                            percent={
+                              strategy.deliveryProgressCaption === "Noch keine Aufgaben" ? null : strategy.deliveryProgressPercent
+                            }
+                            unknownReason={
+                              strategy.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
+                            }
+                            countCaption={
+                              strategy.deliveryProgressCaption === "Noch keine Aufgaben"
+                                ? null
+                                : strategy.deliveryProgressCaption
+                            }
+                            accentClass="bg-[var(--sce-info)]"
+                            testId={`strategien-delivery-progress-${strategy.id}`}
+                          />
+                        </div>
+                      }
                       testId={`strategien-row-${strategy.id}`}
                       trailing={
                         <Link href={href} className="text-xs text-[var(--sce-primary)] hover:underline">

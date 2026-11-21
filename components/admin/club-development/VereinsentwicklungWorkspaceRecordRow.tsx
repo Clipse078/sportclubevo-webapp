@@ -12,6 +12,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps = {
   orgUnitLabel?: string | null;
   progressPercent?: number | null;
   progressCaption?: string | null;
+  progressSlot?: ReactNode;
   statusLabel?: string | null;
   trailing?: ReactNode;
   testId?: string;
@@ -26,6 +27,7 @@ export default function VereinsentwicklungWorkspaceRecordRow({
   orgUnitLabel,
   progressPercent,
   progressCaption,
+  progressSlot,
   statusLabel,
   trailing,
   testId,
@@ -76,26 +78,30 @@ export default function VereinsentwicklungWorkspaceRecordRow({
         {orgUnitLabel?.trim() || "Gesamtverein"}
       </div>
       <div className="text-xs text-[var(--text-2)]">
-        {progressCaption ? (
-          <span>{progressCaption}</span>
-        ) : (
-          <span>{`${progress}% Fortschritt`}</span>
+        {progressSlot ?? (
+          <>
+            {progressCaption ? (
+              <span>{progressCaption}</span>
+            ) : (
+              <span>{`${progress}% Fortschritt`}</span>
+            )}
+            {progressCaption !== "Noch keine Aufgaben" && progressCaption !== "Noch keine Ziele" ? (
+              <div
+                className="mt-1 h-1.5 w-full max-w-[8rem] overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={progressCaption ?? `${progress} Prozent Fortschritt`}
+              >
+                <div
+                  className="h-full bg-[var(--sce-primary)]"
+                  style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                />
+              </div>
+            ) : null}
+          </>
         )}
-        {progressCaption !== "Noch keine Aufgaben" ? (
-          <div
-            className="mt-1 h-1.5 w-full max-w-[8rem] overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={progressCaption ?? `${progress} Prozent Fortschritt`}
-          >
-            <div
-              className="h-full bg-[var(--sce-primary)]"
-              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-            />
-          </div>
-        ) : null}
       </div>
       <div className="flex items-center gap-2 justify-self-end text-xs sm:col-span-1">
         {statusLabel ? (

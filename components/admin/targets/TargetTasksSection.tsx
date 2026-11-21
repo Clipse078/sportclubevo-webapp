@@ -8,6 +8,8 @@ import { CD_VORHABEN_WORKSPACE_COPY, CD_TARGET_COPY } from "@/lib/club-developme
 import { VEREINSLEITUNG_PANEL_CLASS } from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "@/components/admin/club-development/vereinsentwicklung-workspace-primary-button";
 import VereinsentwicklungAufgabeWorkspaceCreateCard from "@/components/admin/club-development/VereinsentwicklungAufgabeWorkspaceCreateCard";
+import StrategyProgressIndicator from "@/components/admin/club-development/StrategyProgressIndicator";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 
 type Props = {
   targetId: string;
@@ -41,12 +43,16 @@ export default function TargetTasksSection({
             Aufgaben
           </h3>
           {deliveryProgressCaption ? (
-            <p className="mt-1 text-xs text-[var(--text-2)]" data-testid="target-delivery-progress-caption">
-              Umsetzungsfortschritt: {deliveryProgressCaption}
-              {deliveryProgressCaption !== "Noch keine Aufgaben" && deliveryProgressPercent != null ? (
-                <span className="ml-1 tabular-nums">({deliveryProgressPercent}%)</span>
-              ) : null}
-            </p>
+            <div className="mt-2 max-w-md" data-testid="target-aufgabenfortschritt">
+              <StrategyProgressIndicator
+                label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                percent={deliveryProgressCaption === "Noch keine Aufgaben" ? null : deliveryProgressPercent}
+                unknownReason={deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null}
+                countCaption={deliveryProgressCaption === "Noch keine Aufgaben" ? null : deliveryProgressCaption}
+                accentClass="bg-[var(--sce-info)]"
+                testId="target-delivery-progress-bar"
+              />
+            </div>
           ) : null}
         </div>
         {canCreate ? (
