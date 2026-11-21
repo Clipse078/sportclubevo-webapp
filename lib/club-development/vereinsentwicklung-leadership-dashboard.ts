@@ -75,7 +75,6 @@ export type LeadershipNextMeeting = {
 
 export type VereinsentwicklungLeadershipDashboard = {
   membership: LeadershipMembershipKpis;
-  umsetzung: LeadershipUmsetzungSnapshot;
   actionRows: LeadershipActionRow[];
   nextMeeting: LeadershipNextMeeting;
   meetingsListHref: string;
@@ -395,17 +394,15 @@ export async function loadLeadershipActionRows(
 
 export async function loadVereinsentwicklungLeadershipDashboard(input: {
   actor: ActorContext;
-  activeTargets: TargetListItem[];
   upcomingMeetings: MeetingListItem[];
   orgEinheit: VereinsentwicklungOrgEinheitFilter | null;
   now?: Date;
 }): Promise<VereinsentwicklungLeadershipDashboard> {
   const now = input.now ?? new Date();
-  const { actor, activeTargets, upcomingMeetings, orgEinheit } = input;
+  const { actor, upcomingMeetings, orgEinheit } = input;
 
-  const [membership, umsetzung, actionRows] = await Promise.all([
+  const [membership, actionRows] = await Promise.all([
     loadLeadershipMembershipKpis(actor, orgEinheit, now),
-    loadLeadershipUmsetzung(actor, activeTargets, orgEinheit),
     loadLeadershipActionRows(actor, now),
   ]);
 
@@ -432,7 +429,6 @@ export async function loadVereinsentwicklungLeadershipDashboard(input: {
 
   return {
     membership,
-    umsetzung,
     actionRows,
     nextMeeting,
     meetingsListHref: "/vereinsleitung/meetings",

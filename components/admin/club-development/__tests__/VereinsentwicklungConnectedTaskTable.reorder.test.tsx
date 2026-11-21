@@ -126,6 +126,7 @@ describe("VereinsentwicklungConnectedTaskTable reorder drag handle", () => {
   it("shows inline progress only for rows with child rollup", () => {
     render(
       <VereinsentwicklungConnectedTaskTable
+        layoutVariant="full"
         showRowProgress
         rows={[
           {

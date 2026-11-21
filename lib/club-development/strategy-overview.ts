@@ -47,6 +47,7 @@ function formatOrgUnitLabels(labels: string[]): string | null {
 
 export type StrategyTargetOverview = {
   id: string;
+  createdAt: string;
   publicReference: string | null;
   title: string;
   status: string;
@@ -89,6 +90,7 @@ export async function loadStrategyOverview(
       where: { tenantId, ...buildVisibilityWhere(actor) },
       select: {
         id: true,
+        createdAt: true,
         scePublicNumber: true,
         title: true,
         status: true,
@@ -229,6 +231,7 @@ export async function loadStrategyOverview(
 
     targets.push({
       id: target.id,
+      createdAt: target.createdAt.toISOString(),
       publicReference: scePublicReferenceFromNumber(target.scePublicNumber),
       title: target.title,
       status: target.status,

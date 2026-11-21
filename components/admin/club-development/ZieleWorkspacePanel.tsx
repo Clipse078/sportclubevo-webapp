@@ -18,7 +18,7 @@ import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-t
 import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import {
-  SCE_CD_BACKLOG_GRID_ZIEL,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
   SCE_CD_WORKSPACE_PANEL_CLASS,
 } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -113,7 +113,7 @@ export default function ZieleWorkspacePanel({
         ) : (
           <VereinsentwicklungBacklogTableShell
             testId="ziele-workspace-list"
-            gridClassName={SCE_CD_BACKLOG_GRID_ZIEL}
+            gridClassName={SCE_CD_OVERVIEW_UNIFIED_GRID}
             header={
               <>
                 <span>Referenz</span>

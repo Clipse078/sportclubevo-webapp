@@ -45,7 +45,14 @@ describe("Vereinsentwicklung backlog reference column", () => {
   });
 
   it("shows Referenz column before Titel with progress on the same row", () => {
-    render(<VereinsentwicklungConnectedTaskTable rows={[baseRow]} showRowProgress testId="task-table" />);
+    render(
+      <VereinsentwicklungConnectedTaskTable
+        layoutVariant="full"
+        rows={[baseRow]}
+        showRowProgress
+        testId="task-table"
+      />,
+    );
     expect(screen.getByText("Referenz")).toBeTruthy();
     expect(screen.getByText("SCE-001051")).toBeTruthy();
     expect(screen.getByText("66% – 2 von 3 erledigt")).toBeTruthy();

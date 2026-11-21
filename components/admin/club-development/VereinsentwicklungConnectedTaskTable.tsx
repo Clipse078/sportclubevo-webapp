@@ -17,25 +17,35 @@ import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorks
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
 import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
+import VereinsentwicklungOverviewGridReservedSlot from "./VereinsentwicklungOverviewGridReservedSlot";
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
 import {
-  SCE_CD_BACKLOG_GRID_TASK,
-  SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
   SCE_CD_BACKLOG_ROW_CLASS,
+  SCE_CD_OVERVIEW_ROW_CLASS,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
+  SCE_CD_OVERVIEW_UNIFIED_GRID_WITH_GRIP,
 } from "./sce-club-development-surface-styles";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
 import { useUmsetzungsplanungTaskRowPointerDrag } from "./useUmsetzungsplanungTaskRowPointerDrag";
 
-export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full";
+export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full" | "overview";
 
 function AssigneeCell({
   assignees,
+  overviewCol,
 }: {
   assignees: VereinsentwicklungConnectedTaskTableRowModel["assignees"];
+  overviewCol?: boolean;
 }) {
-  if (assignees.length === 0) return <span className="text-xs text-[var(--muted)]">—</span>;
+  if (assignees.length === 0) {
+    return (
+      <span className="text-xs text-[var(--muted)]" data-sce-overview-col={overviewCol ? "verantwortlich" : undefined}>
+        —
+      </span>
+    );
+  }
   const primary = assignees[0]!;
   const initials = primary.displayName
     .trim()
@@ -46,7 +56,10 @@ function AssigneeCell({
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
+    <div
+      className="flex min-w-0 w-full items-center gap-1.5"
+      data-sce-overview-col={overviewCol ? "verantwortlich" : undefined}
+    >
       {primary.imageUrl ? (
         <img
           src={primary.imageUrl}
@@ -70,17 +83,33 @@ function LinkCell({
   label,
   href,
   columnLabel,
+  overviewCol,
 }: {
   label: string | null;
   href: string | null;
   columnLabel: typeof VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel | typeof VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie;
+  overviewCol?: "kontext";
 }) {
   if (!label?.trim()) {
-    return <span className="text-xs text-[var(--muted)]">—</span>;
+    return (
+      <span className="min-w-0 text-xs text-[var(--muted)]" data-sce-overview-col={overviewCol}>
+        —
+      </span>
+    );
   }
-  if (!href) return <span className="text-xs text-[var(--text-2)]">{label}</span>;
+  if (!href) {
+    return (
+      <span className="min-w-0 truncate text-xs text-[var(--text-2)]" data-sce-overview-col={overviewCol}>
+        {label}
+      </span>
+    );
+  }
   return (
-    <Link href={href} className="text-xs text-[var(--text-2)] hover:text-[var(--sce-primary)]">
+    <Link
+      href={href}
+      className="min-w-0 truncate text-xs text-[var(--text-2)] hover:text-[var(--sce-primary)]"
+      data-sce-overview-col={overviewCol}
+    >
       <span className="sr-only">{columnLabel}: </span>
       {label}
     </Link>
@@ -147,6 +176,7 @@ function TaskTableRow({
   schedulingDragEnabled?: boolean;
 }) {
   const phaseHandle = Boolean(phaseDrag?.enabled);
+  const unifiedTaskLayout = layoutVariant === "overview" || layoutVariant === "backlog";
   const pointerDrag = useUmsetzungsplanungTaskRowPointerDrag();
 
   const startSchedulingPayload = (event: React.DragEvent) => {
@@ -172,9 +202,14 @@ function TaskTableRow({
   return (
     <>
       <div
-        className={cn(SCE_CD_BACKLOG_ROW_CLASS, "sm:items-center", gridCols)}
+        className={cn(
+          unifiedTaskLayout ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
+          "sm:items-center",
+          gridCols,
+        )}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
         data-sce-backlog-row="task"
+        data-sce-overview-unified-grid={unifiedTaskLayout ? "true" : undefined}
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
@@ -222,9 +257,13 @@ function TaskTableRow({
             </span>
           )
         ) : null}
-        <VereinsentwicklungBacklogReferenceCell reference={row.publicReference} />
+        <VereinsentwicklungBacklogReferenceCell
+          reference={row.publicReference}
+          dataSceOverviewCol={unifiedTaskLayout ? "referenz" : undefined}
+        />
         <div
           className="min-w-0"
+          data-sce-overview-col={unifiedTaskLayout ? "titel" : undefined}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
         >
@@ -251,6 +290,7 @@ function TaskTableRow({
           label={row.targetTitle}
           href={row.targetHref}
           columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}
+          overviewCol={unifiedTaskLayout ? "kontext" : undefined}
         />
         {layoutVariant === "full" ? (
           <>
@@ -262,27 +302,44 @@ function TaskTableRow({
             <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
           </>
         ) : null}
-        <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
-        <AssigneeCell assignees={row.assignees} />
-        {showRowProgress ? (
-          row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
-            <SceCompletionProgressInline
-              metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
-              completedCount={row.progressCompletedCount ?? null}
-              totalCount={row.progressTotalCount ?? null}
-              countCaption={null}
-              emptyLabel="Noch keine Teilaufgaben"
-              countSuffix="erledigt"
-              unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
-              testId={`task-row-progress-${row.taskId}`}
+        <div className="min-w-0 w-full" data-sce-overview-col={unifiedTaskLayout ? "status" : undefined}>
+          <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
+        </div>
+        {unifiedTaskLayout ? (
+          <>
+            <VereinsentwicklungOverviewGridReservedSlot
+              column="progress"
+              testId={`overview-task-progress-reserved-${row.taskId}`}
             />
-          ) : (
-            <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
-              —
-            </div>
-          )
-        ) : null}
-        <div className="flex justify-end">
+            <AssigneeCell assignees={row.assignees} overviewCol />
+          </>
+        ) : (
+          <>
+            <AssigneeCell assignees={row.assignees} />
+            {showRowProgress ? (
+              row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
+                <SceCompletionProgressInline
+                  metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                  completedCount={row.progressCompletedCount ?? null}
+                  totalCount={row.progressTotalCount ?? null}
+                  countCaption={null}
+                  emptyLabel="Noch keine Teilaufgaben"
+                  countSuffix="erledigt"
+                  unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
+                  testId={`task-row-progress-${row.taskId}`}
+                />
+              ) : (
+                <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
+                  —
+                </div>
+              )
+            ) : null}
+          </>
+        )}
+        <div
+          className="flex w-8 justify-end justify-self-end"
+          data-sce-overview-col={unifiedTaskLayout ? "actions" : undefined}
+        >
           {renderRowActions ? (
             renderRowActions(row)
           ) : (
@@ -308,17 +365,19 @@ export default function VereinsentwicklungConnectedTaskTable({
   testId,
 }: VereinsentwicklungConnectedTaskTableProps) {
   const showHandleColumn = showReorderHandle || Boolean(phaseDrag?.enabled);
-  const progressColumnActive =
-    showRowProgress &&
-  rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0);
-  const showProgressColumn = showRowProgress || progressColumnActive;
-  const backlogGrid = showProgressColumn ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
+  const unifiedTaskLayout = layoutVariant === "overview" || layoutVariant === "backlog";
+  const showProgressColumn =
+    layoutVariant === "full" &&
+    (showRowProgress ||
+      rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0));
   const gridCols =
-    layoutVariant === "backlog"
-      ? backlogGrid
-      : showHandleColumn
+    layoutVariant === "full"
+      ? showHandleColumn
         ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
-        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
+        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
+      : showHandleColumn
+        ? SCE_CD_OVERVIEW_UNIFIED_GRID_WITH_GRIP
+        : SCE_CD_OVERVIEW_UNIFIED_GRID;
 
   const reorderListActive = Boolean(showReorderHandle && reorder?.canReorder);
   const dragHandleEnabled = Boolean(
@@ -388,7 +447,7 @@ export default function VereinsentwicklungConnectedTaskTable({
     <div className="space-y-0" data-testid={testId}>
       <div
         className={cn(
-          "hidden gap-3 border-b border-[var(--border)]/60 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
+          "hidden gap-3 border-b border-[var(--border)]/60 px-0 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
           gridCols,
         )}
         data-testid="vereinsentwicklung-task-table-header"
@@ -404,10 +463,19 @@ export default function VereinsentwicklungConnectedTaskTable({
           </>
         ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
-        {showProgressColumn ? (
-          <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
-        ) : null}
+        {unifiedTaskLayout ? (
+          <>
+            <span aria-hidden />
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+          </>
+        ) : (
+          <>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+            {showProgressColumn ? (
+              <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+            ) : null}
+          </>
+        )}
         <span className="w-8" aria-hidden />
       </div>
 

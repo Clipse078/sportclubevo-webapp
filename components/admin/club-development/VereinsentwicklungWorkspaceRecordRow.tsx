@@ -6,10 +6,10 @@ import { formatTargetResponsiblePresentation } from "@/lib/club-development/vere
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
 import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungTargetStatusPill from "./VereinsentwicklungTargetStatusPill";
+import VereinsentwicklungOverviewGridReservedSlot from "./VereinsentwicklungOverviewGridReservedSlot";
 import {
-  SCE_CD_BACKLOG_GRID_STRATEGY,
-  SCE_CD_BACKLOG_GRID_ZIEL,
-  SCE_CD_BACKLOG_ROW_CLASS,
+  SCE_CD_OVERVIEW_ROW_CLASS,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
 } from "./sce-club-development-surface-styles";
 
 export type VereinsentwicklungWorkspaceRecordRowProps =
@@ -21,6 +21,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps =
       orgUnitLabel?: string | null;
       progressSlot: ReactNode;
       trailing?: ReactNode;
+      layout?: "workspace" | "overview";
       testId?: string;
     }
   | {
@@ -36,6 +37,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps =
       statusLabel: string;
       progressSlot: ReactNode;
       trailing?: ReactNode;
+      layout?: "workspace" | "overview";
       testId?: string;
     }
   | {
@@ -59,18 +61,39 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
   if (props.variant === "strategy") {
     return (
       <div
-        className={cn(SCE_CD_BACKLOG_ROW_CLASS, SCE_CD_BACKLOG_GRID_STRATEGY)}
+        className={cn(SCE_CD_OVERVIEW_ROW_CLASS, SCE_CD_OVERVIEW_UNIFIED_GRID)}
         data-testid={props.testId}
         data-sce-backlog-row="strategy"
+        data-sce-overview-unified-grid="true"
       >
-        <VereinsentwicklungBacklogReferenceCell reference={props.publicReference ?? null} />
-        <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
-        <div className="min-w-0 text-xs text-[var(--text-2)]">
+        <VereinsentwicklungBacklogReferenceCell
+          reference={props.publicReference ?? null}
+          dataSceOverviewCol="referenz"
+        />
+        <div className="min-w-0" data-sce-overview-col="titel">
+          <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
+        </div>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="kontext">
           <span className="sr-only">Org-Einheit: </span>
           <span className="truncate">{props.orgUnitLabel?.trim() || "Gesamtverein"}</span>
         </div>
-        <div className="min-w-0">{props.progressSlot}</div>
-        <div className="flex items-center justify-end gap-2">{props.trailing}</div>
+        <VereinsentwicklungOverviewGridReservedSlot
+          column="status"
+          testId={`${props.testId}-status-reserved`}
+        />
+        <div className="min-w-0 w-full" data-sce-overview-col="progress">
+          {props.progressSlot}
+        </div>
+        <VereinsentwicklungOverviewGridReservedSlot
+          column="verantwortlich"
+          testId={`${props.testId}-responsible-reserved`}
+        />
+        <div
+          className="flex w-8 items-center justify-end gap-2 justify-self-end"
+          data-sce-overview-col="actions"
+        >
+          {props.trailing}
+        </div>
       </div>
     );
   }
@@ -78,13 +101,19 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
   if (props.variant === "target") {
     return (
       <div
-        className={cn(SCE_CD_BACKLOG_ROW_CLASS, SCE_CD_BACKLOG_GRID_ZIEL)}
+        className={cn(SCE_CD_OVERVIEW_ROW_CLASS, SCE_CD_OVERVIEW_UNIFIED_GRID)}
         data-testid={props.testId}
         data-sce-backlog-row="target"
+        data-sce-overview-unified-grid="true"
       >
-        <VereinsentwicklungBacklogReferenceCell reference={props.publicReference ?? null} />
-        <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
-        <div className="min-w-0 text-xs text-[var(--text-2)]">
+        <VereinsentwicklungBacklogReferenceCell
+          reference={props.publicReference ?? null}
+          dataSceOverviewCol="referenz"
+        />
+        <div className="min-w-0" data-sce-overview-col="titel">
+          <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
+        </div>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="kontext">
           <span className="sr-only">Strategie: </span>
           <VereinsentwicklungBacklogTruncatingTitle
             title={props.strategyLabel?.trim() || "—"}
@@ -95,13 +124,22 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
             <span className="sr-only">{`, Org-Einheit: ${props.orgUnitLabel}`}</span>
           ) : null}
         </div>
-        <VereinsentwicklungTargetStatusPill status={props.status} label={props.statusLabel} />
-        <div className="min-w-0">{props.progressSlot}</div>
-        <div className="min-w-0 text-xs text-[var(--text-2)]">
+        <div className="min-w-0 w-full" data-sce-overview-col="status">
+          <VereinsentwicklungTargetStatusPill status={props.status} label={props.statusLabel} />
+        </div>
+        <div className="min-w-0 w-full" data-sce-overview-col="progress">
+          {props.progressSlot}
+        </div>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="verantwortlich">
           <span className="sr-only">Verantwortlich: </span>
           <span className="truncate">{formatTargetResponsiblePresentation(props.responsibleLabel)}</span>
         </div>
-        <div className="flex items-center justify-end gap-2">{props.trailing}</div>
+        <div
+          className="flex w-8 items-center justify-end gap-2 justify-self-end"
+          data-sce-overview-col="actions"
+        >
+          {props.trailing}
+        </div>
       </div>
     );
   }

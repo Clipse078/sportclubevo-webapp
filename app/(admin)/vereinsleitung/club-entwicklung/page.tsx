@@ -4,10 +4,8 @@ import ClubDevelopmentOverviewPageClient from "@/components/admin/club-developme
 import { hasSprintManagePermission } from "@/lib/club-development/sprints/queries";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
-import {
-  filterRelevantTargets,
-  filterUpcomingMeetings,
-} from "@/lib/club-development/overview-helpers";
+import { filterUpcomingMeetings } from "@/lib/club-development/overview-helpers";
+import { loadVereinsentwicklungOverviewPreview } from "@/lib/club-development/vereinsentwicklung-overview-preview";
 import { getMeetings } from "@/lib/meetings/queries";
 import { getTargets } from "@/lib/targets/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
@@ -47,16 +45,21 @@ export default async function ClubEntwicklungPage({ searchParams }: PageProps) {
     getMeetings(actor),
   ]);
 
-  const targets = filterRelevantTargets(allTargets);
   const upcomingMeetings = filterUpcomingMeetings(allMeetings, now);
 
-  const dashboard = await loadVereinsentwicklungLeadershipDashboard({
-    actor,
-    activeTargets: targets,
-    upcomingMeetings,
-    orgEinheit: orgEinheitFilter,
-    now,
-  });
+  const [dashboard, overviewPreview] = await Promise.all([
+    loadVereinsentwicklungLeadershipDashboard({
+      actor,
+      upcomingMeetings,
+      orgEinheit: orgEinheitFilter,
+      now,
+    }),
+    loadVereinsentwicklungOverviewPreview({
+      actor,
+      orgEinheit: orgEinheitFilter,
+      targetsForOrgScope: allTargets,
+    }),
+  ]);
 
   const orgEinheitQuery: Record<string, string> = orgEinheitFilter
     ? { [CD_WORKSPACE_ORG_UNIT_QUERY]: orgEinheitFilter.id }
@@ -76,6 +79,7 @@ export default async function ClubEntwicklungPage({ searchParams }: PageProps) {
           orgEinheitFilterLabel={orgEinheitFilter?.label ?? null}
           orgEinheitQuery={orgEinheitQuery}
           dashboard={dashboard}
+          overviewPreview={overviewPreview}
         />
       </ListPagePattern>
     </PageShell>

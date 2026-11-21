@@ -14,7 +14,7 @@ import { buildStrategieUndZieleHref } from "@/lib/club-development/vereinsentwic
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import {
-  SCE_CD_BACKLOG_GRID_STRATEGY,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
   SCE_CD_WORKSPACE_PANEL_CLASS,
 } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -97,13 +97,15 @@ export default function StrategienWorkspaceListPanel({
         ) : (
           <VereinsentwicklungBacklogTableShell
             testId="strategien-workspace-list"
-            gridClassName={SCE_CD_BACKLOG_GRID_STRATEGY}
+            gridClassName={SCE_CD_OVERVIEW_UNIFIED_GRID}
             header={
               <>
                 <span>Referenz</span>
                 <span>Titel</span>
                 <span>Org-Einheit</span>
+                <span aria-hidden />
                 <span>{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</span>
+                <span aria-hidden />
                 <span className="sr-only">Aktionen</span>
               </>
             }
@@ -137,6 +139,7 @@ export default function StrategienWorkspaceListPanel({
                           countCaption={null}
                           emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
                           countSuffix="erledigt"
+                          captionPriority
                           testId={`strategien-goal-progress-${strategy.id}`}
                         />
                       ) : (
@@ -145,6 +148,7 @@ export default function StrategienWorkspaceListPanel({
                           countCaption={goalEmpty ? null : strategy.goalAchievementCaption}
                           emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
                           countSuffix="erledigt"
+                          captionPriority
                           testId={`strategien-goal-progress-${strategy.id}`}
                         />
                       )

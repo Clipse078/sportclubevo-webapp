@@ -22,14 +22,38 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.sectionShell,
     );
+    expect(read("components/admin/club-development/VereinsentwicklungUebersichtRecordSections.tsx")).toContain(
+      "VereinsentwicklungWorkspaceRecordRow",
+    );
+    expect(read("components/admin/club-development/VereinsentwicklungWorkspaceTaskStatusPill.tsx")).toContain(
+      "vereinsentwicklungTaskStatusBadgeClass",
+    );
+    expect(read("lib/club-development/vereinsentwicklung-task-status-presentation.ts")).toContain(
+      "--sce-color-status-success",
+    );
+    expect(read("components/admin/club-development/sce-club-development-surface-styles.ts")).toContain(
+      "SCE_CD_OVERVIEW_UNIFIED_GRID",
+    );
+    const overviewGrid = read("components/admin/club-development/sce-club-development-surface-styles.ts");
+    const overviewGridLine = overviewGrid
+      .split("\n")
+      .find((line) => line.includes("SCE_CD_OVERVIEW_UNIFIED_GRID") || line.includes("grid-cols-[8.5rem"));
+    expect(overviewGrid).toContain("SCE_CD_OVERVIEW_UNIFIED_GRID");
+    expect(overviewGridLine ?? "").not.toContain("max-content");
     expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.surfaceStyles,
     );
     expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",
     );
+    expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
+      "SCE_CD_OVERVIEW_UNIFIED_GRID",
+    );
     expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "SCE_CD_OVERVIEW_UNIFIED_GRID",
     );
     expect(read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",

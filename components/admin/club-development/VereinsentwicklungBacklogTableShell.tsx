@@ -20,7 +20,7 @@ export default function VereinsentwicklungBacklogTableShell({
     <div data-testid={testId} className={cn("min-w-0", className)}>
       <div
         className={cn(
-          "mb-1 hidden gap-3 border-b border-[var(--border)]/60 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
+          "mb-1 hidden gap-3 border-b border-[var(--border)]/60 px-0 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
           gridClassName,
         )}
         data-testid={testId ? `${testId}-header` : undefined}

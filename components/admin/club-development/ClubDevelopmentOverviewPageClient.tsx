@@ -4,6 +4,7 @@ import VereinsentwicklungConnectedWorkspaceNav from "./VereinsentwicklungConnect
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import ClubDevelopmentOverview from "./ClubDevelopmentOverview";
 import type { VereinsentwicklungLeadershipDashboard } from "@/lib/club-development/vereinsentwicklung-leadership-dashboard";
+import type { VereinsentwicklungOverviewPreview } from "@/lib/club-development/vereinsentwicklung-overview-preview";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 type Props = {
@@ -12,10 +13,11 @@ type Props = {
   orgEinheitFilterLabel?: string | null;
   orgEinheitQuery: Record<string, string>;
   dashboard: VereinsentwicklungLeadershipDashboard;
+  overviewPreview: VereinsentwicklungOverviewPreview;
 };
 
 export default function ClubDevelopmentOverviewPageClient(props: Props) {
-  const { permissionKeys, hasPlanningAccess, orgEinheitFilterLabel, orgEinheitQuery, dashboard } =
+  const { permissionKeys, hasPlanningAccess, orgEinheitFilterLabel, orgEinheitQuery, dashboard, overviewPreview } =
     props;
   const canSeeMeetings =
     permissionKeys.includes(PERMISSIONS.MEETINGS_VIEW) ||
@@ -31,6 +33,7 @@ export default function ClubDevelopmentOverviewPageClient(props: Props) {
       <VereinsentwicklungWorkspaceToolbar orgEinheitFilterLabel={orgEinheitFilterLabel} />
       <ClubDevelopmentOverview
         dashboard={dashboard}
+        overviewPreview={overviewPreview}
         orgEinheitQuery={orgEinheitQuery}
         canSeeMeetings={canSeeMeetings}
       />

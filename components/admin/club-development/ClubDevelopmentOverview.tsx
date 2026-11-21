@@ -1,15 +1,20 @@
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
-import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
+import VereinsentwicklungUebersichtRecordSections from "./VereinsentwicklungUebersichtRecordSections";
+import {
+  SCE_CD_OVERVIEW_SECTION_STACK_CLASS,
+  SCE_CD_SECTION_BODY_COMPACT_CLASS,
+} from "./sce-club-development-surface-styles";
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import type { VereinsentwicklungLeadershipDashboard } from "@/lib/club-development/vereinsentwicklung-leadership-dashboard";
+import type { VereinsentwicklungOverviewPreview } from "@/lib/club-development/vereinsentwicklung-overview-preview";
 import { CD_LEADERSHIP_DASHBOARD_COPY } from "@/lib/club-development/product-copy";
-import { buildConnectedWorkspaceHref } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 
 type ClubDevelopmentOverviewProps = {
   dashboard: VereinsentwicklungLeadershipDashboard;
+  overviewPreview: VereinsentwicklungOverviewPreview;
   orgEinheitQuery?: Record<string, string>;
   canSeeMeetings: boolean;
 };
@@ -43,38 +48,6 @@ function ScopeBadge({ label }: { label: string }) {
   );
 }
 
-function ProgressStrip({
-  percent,
-  caption,
-  ariaLabel,
-}: {
-  percent: number;
-  caption: string;
-  ariaLabel: string;
-}) {
-  if (caption === "Noch keine Aufgaben") {
-    return <p className="text-xs text-[var(--text-2)]">{caption}</p>;
-  }
-  return (
-    <div>
-      <p className="text-xs font-medium text-[var(--foreground)]">{caption}</p>
-      <div
-        className="mt-1.5 h-2 w-full max-w-md overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
-        role="progressbar"
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={ariaLabel}
-      >
-        <div
-          className="h-full bg-[var(--sce-primary)]"
-          style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function StatBlock({
   label,
   value,
@@ -95,11 +68,11 @@ function StatBlock({
 
 export default function ClubDevelopmentOverview({
   dashboard,
+  overviewPreview,
   orgEinheitQuery = {},
   canSeeMeetings,
 }: ClubDevelopmentOverviewProps) {
-  const { membership, umsetzung, actionRows, nextMeeting, meetingsListHref } = dashboard;
-  const zieleHref = buildConnectedWorkspaceHref("ziele", orgEinheitQuery);
+  const { membership, actionRows, nextMeeting, meetingsListHref } = dashboard;
 
   const trendIcon =
     membership.trendKind === "up" ? (
@@ -109,16 +82,76 @@ export default function ClubDevelopmentOverview({
     ) : null;
 
   return (
-    <div className="space-y-8" data-testid="vereinsentwicklung-leadership-dashboard">
+    <div className={SCE_CD_OVERVIEW_SECTION_STACK_CLASS} data-testid="vereinsentwicklung-leadership-dashboard">
+      <VereinsentwicklungUebersichtRecordSections preview={overviewPreview} orgEinheitQuery={orgEinheitQuery} />
+
+      <SceClubDevelopmentSectionShell
+        title="Handlungsbedarf"
+        testId="vereinsentwicklung-section-handlungsbedarf"
+        bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
+      >
+        {actionRows.length === 0 ? (
+          <SceClubDevelopmentEmptyState message="Keine offenen Punkte, die Ihre Aufmerksamkeit brauchen." />
+        ) : (
+          <ul className="divide-y divide-[var(--border)]/55">
+            {actionRows.map((row) => (
+              <li key={row.id}>
+                <Link
+                  href={row.href}
+                  className="flex items-start gap-3 py-2 transition hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[var(--foreground)] truncate">
+                      {row.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--text-2)]">{row.meta}</p>
+                  </div>
+                  <ScopeBadge label={row.scope === "me" ? "Meine Aufgaben" : "Vereinsweit"} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SceClubDevelopmentSectionShell>
+
+      {canSeeMeetings ? (
+        <SceClubDevelopmentSectionShell
+          title="Nächste Sitzung"
+          href={meetingsListHref}
+          linkLabel="Alle Sitzungen"
+          testId="vereinsentwicklung-section-meetings"
+          bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
+        >
+          {!nextMeeting ? (
+            <SceClubDevelopmentEmptyState message="Keine geplanten Sitzungen in Sicht." />
+          ) : (
+            <Link
+              href={nextMeeting.href}
+              className="block py-1 transition hover:text-[var(--sce-primary)]"
+            >
+              <p className="text-sm font-semibold text-[var(--foreground)]">{nextMeeting.meeting.title}</p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--text-2)]">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span>{formatSwissDateTime(new Date(nextMeeting.meeting.meetingDate))}</span>
+                {nextMeeting.meeting.location ? (
+                  <span>· {formatMeetingLocationDisplay(nextMeeting.meeting.location)}</span>
+                ) : null}
+              </p>
+            </Link>
+          )}
+        </SceClubDevelopmentSectionShell>
+      ) : null}
+
       <SceClubDevelopmentSectionShell
         title="Verein in Zahlen"
         headerAside={<ScopeBadge label={membership.scopeLabel} />}
         testId="vereinsentwicklung-section-membership"
+        bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
       >
         {!membership.accessible ? (
           <SceClubDevelopmentEmptyState message="Keine Berechtigung für Mitgliederzahlen." />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-xs text-[var(--text-2)]">
               Zahlen gelten für den gewählten Bereich ({membership.scopeLabel}). Die Personen-Übersicht
               übernimmt keinen automatischen Org-Einheit- oder Zeitraumfilter.
@@ -163,122 +196,6 @@ export default function ClubDevelopmentOverview({
           </div>
         )}
       </SceClubDevelopmentSectionShell>
-
-      <SceClubDevelopmentSectionShell
-        title="Umsetzung"
-        href={umsetzung.drillDownHref}
-        linkLabel="Aufgaben"
-        headerAside={
-          <span className="text-xs text-[var(--text-2)]">
-            {umsetzung.activeTargetCount} aktive Ziele
-          </span>
-        }
-        testId="vereinsentwicklung-section-umsetzung"
-      >
-        <div className="space-y-4">
-          <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-              {CD_LEADERSHIP_DASHBOARD_COPY.umsetzungProgressLabel}
-            </p>
-            <ProgressStrip
-              percent={umsetzung.aggregate.percent}
-              caption={umsetzung.aggregateCaption}
-              ariaLabel={`${CD_LEADERSHIP_DASHBOARD_COPY.umsetzungProgressLabel}: ${umsetzung.aggregateCaption}`}
-            />
-          </div>
-          {umsetzung.targetRows.length === 0 ? (
-            <SceClubDevelopmentEmptyState message="Keine aktiven Ziele sichtbar." />
-          ) : (
-            <ul className="space-y-2">
-              {umsetzung.targetRows.map((row) => (
-                <li key={row.id}>
-                  <Link href={row.href} className={SCE_CD_RECORD_ROW_CLASS}>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-sm font-semibold text-[var(--foreground)] truncate">{row.title}</p>
-                      <span className="text-xs text-[var(--text-2)] shrink-0">{row.progressCaption}</span>
-                    </div>
-                    {row.progressCaption !== "Noch keine Aufgaben" ? (
-                      <div
-                        className="mt-2 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
-                        role="progressbar"
-                        aria-valuenow={row.progress.percent}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-label={`${row.title}: ${row.progressCaption}`}
-                      >
-                        <div
-                          className="h-full bg-[var(--sce-primary)]"
-                          style={{ width: `${Math.min(100, Math.max(0, row.progress.percent))}%` }}
-                        />
-                      </div>
-                    ) : null}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Link
-            href={zieleHref}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] hover:underline"
-          >
-            Alle Ziele
-            <ArrowRight className="h-3 w-3" aria-hidden />
-          </Link>
-        </div>
-      </SceClubDevelopmentSectionShell>
-
-      <SceClubDevelopmentSectionShell
-        title="Handlungsbedarf"
-        testId="vereinsentwicklung-section-handlungsbedarf"
-      >
-        {actionRows.length === 0 ? (
-          <SceClubDevelopmentEmptyState message="Keine offenen Punkte, die Ihre Aufmerksamkeit brauchen." />
-        ) : (
-          <ul className="space-y-2">
-            {actionRows.map((row) => (
-              <li key={row.id}>
-                <Link href={row.href} className={`flex gap-3 ${SCE_CD_RECORD_ROW_CLASS}`}>
-                  <AlertCircle
-                    className="h-4 w-4 shrink-0 text-[var(--foreground)]"
-                    aria-hidden
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[var(--foreground)] truncate">
-                      {row.title}
-                    </p>
-                    <p className="text-xs text-[var(--text-2)] mt-0.5">{row.meta}</p>
-                  </div>
-                  <ScopeBadge label={row.scope === "me" ? "Meine Aufgaben" : "Vereinsweit"} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SceClubDevelopmentSectionShell>
-
-      {canSeeMeetings ? (
-        <SceClubDevelopmentSectionShell
-          title="Nächste Sitzung"
-          href={meetingsListHref}
-          linkLabel="Alle Sitzungen"
-          testId="vereinsentwicklung-section-meetings"
-        >
-          {!nextMeeting ? (
-            <SceClubDevelopmentEmptyState message="Keine geplanten Sitzungen in Sicht." />
-          ) : (
-            <Link href={nextMeeting.href} className={SCE_CD_RECORD_ROW_CLASS}>
-              <p className="text-sm font-semibold text-[var(--foreground)]">{nextMeeting.meeting.title}</p>
-              <p className="mt-1 text-xs text-[var(--text-2)] flex flex-wrap items-center gap-x-2 gap-y-1">
-                <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span>{formatSwissDateTime(new Date(nextMeeting.meeting.meetingDate))}</span>
-                {nextMeeting.meeting.location ? (
-                  <span>· {formatMeetingLocationDisplay(nextMeeting.meeting.location)}</span>
-                ) : null}
-              </p>
-            </Link>
-          )}
-        </SceClubDevelopmentSectionShell>
-      ) : null}
     </div>
   );
 }
