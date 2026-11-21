@@ -137,6 +137,7 @@ async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) 
 
 export type ClubStrategyListItemDto = {
   id: string;
+  createdAt: string;
   publicReference: string | null;
   title: string;
   scopeType: ClubStrategyScopeType;
@@ -191,6 +192,7 @@ export async function listClubStrategies(
     orderBy: [{ scopeType: "asc" }, { title: "asc" }],
     select: {
       id: true,
+      createdAt: true,
       scePublicNumber: true,
       title: true,
       scopeType: true,
@@ -246,6 +248,7 @@ export async function listClubStrategies(
 
     items.push({
       id: row.id,
+      createdAt: row.createdAt.toISOString(),
       publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
       title: resolveStrategyTitle(row.title, row.scopeType, orgUnitLabels),
       scopeType: row.scopeType,

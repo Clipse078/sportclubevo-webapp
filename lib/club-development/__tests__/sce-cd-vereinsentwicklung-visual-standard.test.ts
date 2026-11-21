@@ -22,6 +22,9 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/ClubDevelopmentOverview.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.sectionShell,
     );
+    expect(read("components/admin/club-development/VereinsentwicklungUebersichtRecordSections.tsx")).toContain(
+      "VereinsentwicklungWorkspaceRecordRow",
+    );
     expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.surfaceStyles,
     );

@@ -75,6 +75,7 @@ const TASK_ROW_SELECT = {
   primaryInitiativeId: true,
   orgUnitId: true,
   dueAt: true,
+  createdAt: true,
   assignees: {
     select: { user: { select: { firstName: true, lastName: true } } },
     take: 3,
@@ -121,6 +122,7 @@ export type VorhabenWorkspaceTaskRow = {
   status: TaskStatus;
   statusLabel: string;
   dueAt: string | null;
+  createdAt: string;
   assigneeLabels: string[];
   href: string;
   initiativeId: string | null;
@@ -260,6 +262,7 @@ function mapTaskRows(
       status: row.status,
       statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
       dueAt: row.dueAt?.toISOString() ?? null,
+      createdAt: row.createdAt.toISOString(),
       assigneeLabels: assigneeLabels(row),
       href: taskWorkspaceHref(row.id, { returnTo }),
       initiativeId: initiative?.id ?? initiativeId,
@@ -276,10 +279,16 @@ function mapTaskRows(
   });
 }
 
+export type VorhabenWorkspaceLoadOptions = {
+  returnToPath?: string;
+  taskOrder?: "createdAtDesc" | "updatedAtDesc";
+  taskTake?: number;
+};
+
 export async function loadVorhabenWorkspace(
   actor: ActorContext,
   filters: VorhabenWorkspaceFilters = {},
-  options?: { returnToPath?: string },
+  options?: VorhabenWorkspaceLoadOptions,
 ): Promise<VorhabenWorkspaceSnapshot> {
   const canViewInitiatives = actorCanViewInitiatives(actor);
   const canViewTasks = actorCanViewTasks(actor);
@@ -452,8 +461,11 @@ export async function loadVorhabenWorkspace(
           OR: [...taskOr, targetTaskOr],
         },
         select: TASK_ROW_SELECT,
-        orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
-        take: 80,
+        orderBy:
+          options?.taskOrder === "createdAtDesc"
+            ? [{ createdAt: "desc" }, { id: "asc" }]
+            : [{ updatedAt: "desc" }, { title: "asc" }],
+        take: options?.taskTake ?? 80,
       });
 
       if (filters.search?.trim()) {
