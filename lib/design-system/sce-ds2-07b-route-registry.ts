@@ -2357,6 +2357,70 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/dashboard/dokumentation/p/[pageId]",
+    "routeKey": "/dashboard/dokumentation/p/[pageId]",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "LEGACY",
+    "migrationStatus": "NOT_STARTED",
+    "migrationPackage": "DS2-07F",
+    "priority": "Medium",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": true,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/dokumentation",
+    "routeKey": "/dashboard/dokumentation",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "REDIRECT_ALIAS",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+    "exceptionRationale": "Redirect alias to /dashboard. Not a visual surface and excluded from verified-page completion.",
+    "redirectDestination": "/dashboard",
+    "introducedAfterBaseline": true,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/dashboard/events/import",
     "routeKey": "/dashboard/events/import",
     "sourceFile": "app/(admin)/dashboard/events/import/page.tsx",
@@ -9510,34 +9574,34 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 294,
-  "authenticatedRenderableCount": 229,
-  "authenticatedVisualCount": 226,
-  "authenticatedRedirectCount": 24,
+  "pageCount": 296,
+  "authenticatedRenderableCount": 230,
+  "authenticatedVisualCount": 227,
+  "authenticatedRedirectCount": 25,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 692,
+  "routeHandlerCount": 697,
   "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 226,
     "PARTIAL": 0,
-    "LEGACY": 0,
+    "LEGACY": 1,
     "NOT_APPLICABLE": 0
   },
   "migrationStatus": {
-    "NOT_STARTED": 0,
+    "NOT_STARTED": 1,
     "IN_PROGRESS": 0,
     "IMPLEMENTED": 226,
     "VERIFIED": 0,
-    "EXCEPTION": 68
+    "EXCEPTION": 69
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
   "architecturalCanonicalCount": 226,
-  "architecturalCanonicalPercent": 100,
+  "architecturalCanonicalPercent": 99.6,
   "unassignedCount": 0,
   "exceptionsById": {
-    "SCE-DS2-07B-EX-REDIRECT": 25,
+    "SCE-DS2-07B-EX-REDIRECT": 26,
     "SCE-DS2-07B-EX-PUBLIC": 25,
     "SCE-DS2-07B-EX-PREVIEW": 15,
     "SCE-DS2-07B-EX-PRINT": 3
@@ -9546,10 +9610,10 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07C": 0,
     "DS2-07D": 0,
     "DS2-07E": 0,
-    "DS2-07F": 0,
+    "DS2-07F": 1,
     "DS2-07G": 226
   },
-  "introducedAfterBaselineCount": 0,
-  "blockingCount": 0,
+  "introducedAfterBaselineCount": 2,
+  "blockingCount": 4,
   "trackedDebtCount": 0
 };

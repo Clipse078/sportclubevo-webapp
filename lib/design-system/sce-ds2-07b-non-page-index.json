@@ -3271,6 +3271,36 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/collaboration/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/collaboration",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/publish/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/search/route.ts",
+    "urlPattern": "/api/tenant-documentation/search",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/[spaceId]/tree/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces/[spaceId]/tree",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant/dressing-room-occupancy-presets/route.ts",
     "urlPattern": "/api/tenant/dressing-room-occupancy-presets",
     "audience": "API"

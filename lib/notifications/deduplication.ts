@@ -73,6 +73,15 @@ export function buildMeldungMentionDedupKey(input: {
   return `MELDUNG_MENTION:${input.messageId}:${input.recipientUserId}`;
 }
 
+export function buildTenantDocMentionDedupKey(input: {
+  publishedVersionId: string;
+  recipientUserId: string;
+}): string {
+  return `TENANT_DOCUMENTATION_MENTION:${input.publishedVersionId}:${input.recipientUserId}`;
+}
+
+export { tenantDocumentationPageHref } from "@/lib/tenant-documentation/navigation";
+
 export function meldungHandlerDetailHref(tenantKey: string, meldungId: string): string {
   return `/tenant/${encodeURIComponent(tenantKey)}/cockpit/meldungen/${encodeURIComponent(meldungId)}`;
 }

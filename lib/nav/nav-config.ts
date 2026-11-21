@@ -669,6 +669,17 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        key: "tenant-documentation",
+        label: "Dokumentation",
+        href: "/dashboard/dokumentation",
+        permissionKeys: [
+          PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
+          PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
+          PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH,
+          PERMISSIONS.TENANT_DOCUMENTATION_MANAGE,
+        ],
+      },
+      {
         key: "formulare-freigaben",
         label: "Formulare & Freigaben",
         href: "/dashboard/formulare-freigaben",
