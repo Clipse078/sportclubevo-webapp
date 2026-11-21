@@ -120,7 +120,7 @@ export async function lookupScePublicReference(
     const taskCtx = await buildTaskServiceContextForActor(actor.userId, tenantId);
     if (taskCtx) {
       const readable = await prisma.task.findFirst({
-        where: buildTaskReadWhere(taskCtx, { id: task.id }),
+        where: { AND: [buildTaskReadWhere(taskCtx), { id: task.id }] },
         select: { id: true },
       });
       if (readable) {
