@@ -21,7 +21,7 @@ import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 
 export const PR_1020_DISPOSABLE_ORG_UNIT_ID = "pr-1020-junioren-org" as const;
 export const PR_1020_DISPOSABLE_TASK_ID = "pr-1020-ungeplant-task" as const;
-export const PR_1020_DISPOSABLE_SCE_PUBLIC_NUMBER = 202611210102042n;
+export const PR_1020_DISPOSABLE_SCE_PUBLIC_NUMBER = BigInt("202611210102042");
 export const PR_1020_DISPOSABLE_PHASE_IDS = {
   active: "pr-1020-phase-laufend",
   plannedA: "pr-1020-phase-geplant-alpha",
