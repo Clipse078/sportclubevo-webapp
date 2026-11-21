@@ -14,7 +14,7 @@ export default function VereinsentwicklungBacklogReferenceCell({ reference, test
   return (
     <span
       data-testid={testId}
-      className="min-w-0 truncate font-mono text-[0.68rem] font-medium tabular-nums tracking-tight text-[var(--text-2)]"
+      className="whitespace-nowrap font-mono text-[0.68rem] font-medium tabular-nums tracking-tight text-[var(--text-2)]"
       title={reference}
     >
       {reference}

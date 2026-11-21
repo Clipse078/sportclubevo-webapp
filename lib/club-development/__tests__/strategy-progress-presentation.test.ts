@@ -27,8 +27,8 @@ describe("strategy progress presentation", () => {
     ).toBeNull();
   });
 
-  it("uses Vorhaben terminology instead of Delivery", () => {
-    expect(CD_STRATEGY_PROGRESS_COPY.deliveryLabel).toContain("Vorhaben");
+  it("uses club-language delivery labels instead of English Delivery", () => {
+    expect(CD_STRATEGY_PROGRESS_COPY.deliveryLabel).toBe("Umsetzungsfortschritt");
     expect(CD_STRATEGY_PROGRESS_COPY.deliveryLabel).not.toMatch(/Delivery/i);
   });
 });

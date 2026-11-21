@@ -29,7 +29,15 @@ const baseRow: VereinsentwicklungConnectedTaskTableRowModel = {
 describe("Vereinsentwicklung backlog reference column", () => {
   it("renders tabular SCE reference without truncation", () => {
     render(<VereinsentwicklungBacklogReferenceCell reference="SCE-001042" testId="ref-cell" />);
-    expect(screen.getByTestId("ref-cell").textContent).toBe("SCE-001042");
+    const cell = screen.getByTestId("ref-cell");
+    expect(cell.textContent).toBe("SCE-001042");
+    expect(cell.className).toContain("whitespace-nowrap");
+    expect(cell.className).not.toContain("truncate");
+  });
+
+  it("fits seven-digit SCE references without ellipsis", () => {
+    render(<VereinsentwicklungBacklogReferenceCell reference="SCE-1000000" testId="ref-long" />);
+    expect(screen.getByTestId("ref-long").textContent).toBe("SCE-1000000");
   });
 
   it("shows Referenz column before Titel with progress on the same row", () => {
