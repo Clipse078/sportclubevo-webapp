@@ -28,6 +28,12 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/sce-club-development-surface-styles.ts")).toContain(
       "SCE_CD_OVERVIEW_UNIFIED_GRID",
     );
+    const overviewGrid = read("components/admin/club-development/sce-club-development-surface-styles.ts");
+    const overviewGridLine = overviewGrid
+      .split("\n")
+      .find((line) => line.includes("SCE_CD_OVERVIEW_UNIFIED_GRID") || line.includes("grid-cols-[8.5rem"));
+    expect(overviewGrid).toContain("SCE_CD_OVERVIEW_UNIFIED_GRID");
+    expect(overviewGridLine ?? "").not.toContain("max-content");
     expect(read("components/admin/club-development/VorhabenAufgabenWorkspace.tsx")).toContain(
       SCE_VEREINSENTWICKLUNG_VISUAL_SURFACE_MARKERS.surfaceStyles,
     );

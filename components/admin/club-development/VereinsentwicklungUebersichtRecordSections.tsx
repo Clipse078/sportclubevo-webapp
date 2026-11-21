@@ -96,6 +96,7 @@ function StrategienSection({
                         countCaption={null}
                         emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
                         countSuffix="erledigt"
+                        captionPriority
                         testId={`overview-strategien-goal-progress-${strategy.id}`}
                       />
                     ) : (
@@ -104,6 +105,7 @@ function StrategienSection({
                         countCaption={goalEmpty ? null : strategy.goalAchievementCaption}
                         emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
                         countSuffix="erledigt"
+                        captionPriority
                         testId={`overview-strategien-goal-progress-${strategy.id}`}
                       />
                     )

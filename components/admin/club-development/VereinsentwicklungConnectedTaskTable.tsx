@@ -24,6 +24,7 @@ import {
   SCE_CD_BACKLOG_GRID_TASK,
   SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
   SCE_CD_BACKLOG_ROW_CLASS,
+  SCE_CD_OVERVIEW_ROW_CLASS,
   SCE_CD_OVERVIEW_UNIFIED_GRID,
 } from "./sce-club-development-surface-styles";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
@@ -34,10 +35,18 @@ export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full" | "o
 
 function AssigneeCell({
   assignees,
+  overviewCol,
 }: {
   assignees: VereinsentwicklungConnectedTaskTableRowModel["assignees"];
+  overviewCol?: boolean;
 }) {
-  if (assignees.length === 0) return <span className="text-xs text-[var(--muted)]">—</span>;
+  if (assignees.length === 0) {
+    return (
+      <span className="text-xs text-[var(--muted)]" data-sce-overview-col={overviewCol ? "verantwortlich" : undefined}>
+        —
+      </span>
+    );
+  }
   const primary = assignees[0]!;
   const initials = primary.displayName
     .trim()
@@ -48,7 +57,10 @@ function AssigneeCell({
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
+    <div
+      className="flex min-w-0 w-full items-center gap-1.5"
+      data-sce-overview-col={overviewCol ? "verantwortlich" : undefined}
+    >
       {primary.imageUrl ? (
         <img
           src={primary.imageUrl}
@@ -72,17 +84,33 @@ function LinkCell({
   label,
   href,
   columnLabel,
+  overviewCol,
 }: {
   label: string | null;
   href: string | null;
   columnLabel: typeof VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel | typeof VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie;
+  overviewCol?: "kontext";
 }) {
   if (!label?.trim()) {
-    return <span className="text-xs text-[var(--muted)]">—</span>;
+    return (
+      <span className="min-w-0 text-xs text-[var(--muted)]" data-sce-overview-col={overviewCol}>
+        —
+      </span>
+    );
   }
-  if (!href) return <span className="text-xs text-[var(--text-2)]">{label}</span>;
+  if (!href) {
+    return (
+      <span className="min-w-0 truncate text-xs text-[var(--text-2)]" data-sce-overview-col={overviewCol}>
+        {label}
+      </span>
+    );
+  }
   return (
-    <Link href={href} className="text-xs text-[var(--text-2)] hover:text-[var(--sce-primary)]">
+    <Link
+      href={href}
+      className="min-w-0 truncate text-xs text-[var(--text-2)] hover:text-[var(--sce-primary)]"
+      data-sce-overview-col={overviewCol}
+    >
       <span className="sr-only">{columnLabel}: </span>
       {label}
     </Link>
@@ -174,7 +202,11 @@ function TaskTableRow({
   return (
     <>
       <div
-        className={cn(SCE_CD_BACKLOG_ROW_CLASS, "sm:items-center", gridCols)}
+        className={cn(
+          layoutVariant === "overview" ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
+          "sm:items-center",
+          gridCols,
+        )}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
         data-sce-backlog-row="task"
         data-sce-overview-unified-grid={layoutVariant === "overview" ? "true" : undefined}
@@ -225,9 +257,13 @@ function TaskTableRow({
             </span>
           )
         ) : null}
-        <VereinsentwicklungBacklogReferenceCell reference={row.publicReference} />
+        <VereinsentwicklungBacklogReferenceCell
+          reference={row.publicReference}
+          dataSceOverviewCol={layoutVariant === "overview" ? "referenz" : undefined}
+        />
         <div
           className="min-w-0"
+          data-sce-overview-col={layoutVariant === "overview" ? "titel" : undefined}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
         >
@@ -254,6 +290,7 @@ function TaskTableRow({
           label={row.targetTitle}
           href={row.targetHref}
           columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}
+          overviewCol={layoutVariant === "overview" ? "kontext" : undefined}
         />
         {layoutVariant === "full" ? (
           <>
@@ -265,11 +302,16 @@ function TaskTableRow({
             <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
           </>
         ) : null}
-        <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
+        <div className="min-w-0 w-full" data-sce-overview-col={layoutVariant === "overview" ? "status" : undefined}>
+          <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
+        </div>
         {layoutVariant === "overview" ? (
           <>
-            <VereinsentwicklungOverviewGridReservedSlot testId={`overview-task-progress-reserved-${row.taskId}`} />
-            <AssigneeCell assignees={row.assignees} />
+            <VereinsentwicklungOverviewGridReservedSlot
+              column="progress"
+              testId={`overview-task-progress-reserved-${row.taskId}`}
+            />
+            <AssigneeCell assignees={row.assignees} overviewCol />
           </>
         ) : (
           <>
@@ -294,7 +336,10 @@ function TaskTableRow({
             ) : null}
           </>
         )}
-        <div className="flex justify-end">
+        <div
+          className="flex w-8 justify-end justify-self-end"
+          data-sce-overview-col={layoutVariant === "overview" ? "actions" : undefined}
+        >
           {renderRowActions ? (
             renderRowActions(row)
           ) : (
@@ -402,7 +447,7 @@ export default function VereinsentwicklungConnectedTaskTable({
     <div className="space-y-0" data-testid={testId}>
       <div
         className={cn(
-          "hidden gap-3 border-b border-[var(--border)]/60 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
+          "hidden gap-3 border-b border-[var(--border)]/60 px-0 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)] sm:grid",
           gridCols,
         )}
         data-testid="vereinsentwicklung-task-table-header"

@@ -31,9 +31,29 @@ export const SCE_CD_BACKLOG_PROGRESS_ACCENT = "bg-[#d4843a]";
 /**
  * Shared Übersicht column tracks (Strategien, Ziele, Aufgaben).
  * Referenz · Titel · Kontext · Status · Fortschritt · Verantwortlich · Aktionen
+ *
+ * Fixed leading/trailing tracks so each section grid resolves identical geometry;
+ * progress width does not grow with caption (overflow is handled in-cell).
  */
 export const SCE_CD_OVERVIEW_UNIFIED_GRID =
-  "sm:grid-cols-[minmax(5.75rem,8.5rem)_minmax(0,1.15fr)_minmax(0,0.88fr)_minmax(5.25rem,5.75rem)_minmax(9.5rem,max-content)_minmax(5.5rem,0.82fr)_auto] sm:items-center";
+  "sm:grid-cols-[8.5rem_minmax(0,1.15fr)_minmax(0,0.88fr)_5.75rem_12.25rem_minmax(5.5rem,7.25rem)_2rem] sm:items-center";
+
+/** Übersicht rows — flush horizontal inset with section table headers. */
+export const SCE_CD_OVERVIEW_ROW_CLASS =
+  "grid gap-x-3 gap-y-0 px-0 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)] focus-within:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)] sm:gap-3 sm:py-1.5";
+
+/** `data-sce-overview-col` values — used for alignment regression tests. */
+export const SCE_CD_OVERVIEW_GRID_COLUMNS = [
+  "referenz",
+  "titel",
+  "kontext",
+  "status",
+  "progress",
+  "verantwortlich",
+  "actions",
+] as const;
+
+export type SceCdOverviewGridColumn = (typeof SCE_CD_OVERVIEW_GRID_COLUMNS)[number];
 
 /** Shared Vereinsentwicklung backlog table grids (desktop). */
 export const SCE_CD_BACKLOG_GRID_STRATEGY =
