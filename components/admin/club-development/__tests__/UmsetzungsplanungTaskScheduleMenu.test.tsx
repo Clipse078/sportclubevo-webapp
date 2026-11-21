@@ -28,7 +28,9 @@ describe("UmsetzungsplanungTaskScheduleMenu", () => {
 
     fireEvent.click(screen.getByTestId("schedule-menu-trigger"));
 
-    expect(screen.getByTestId("schedule-menu-menu")).toBeTruthy();
+    const menu = screen.getByTestId("schedule-menu-menu");
+    expect(menu).toBeTruthy();
+    expect(menu.getAttribute("data-sce-theme")).toBe("white");
     expect(screen.getByText(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveToPhaseMenuHeading)).toBeTruthy();
     expect(screen.getByText("Laufend")).toBeTruthy();
     expect(screen.getByText("Geplant")).toBeTruthy();

@@ -1,14 +1,26 @@
 "use client";
 
 import { Loader2, MoreVertical } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useId, useRef, useState } from "react";
+import { PopoverContent } from "@/components/ui/Popover";
 import { CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import {
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_ACTION_ITEM_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_DIVIDER_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_EMPTY_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_GROUP_HEADING_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_PHASE_ITEM_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_POPOVER_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_SECTION_HEADING_CLASS,
+  UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_THEME_SCOPE_CLASS,
+} from "@/lib/club-development/umsetzungsplanung-task-schedule-menu-styles";
 import {
   groupScheduleDestinationPhases,
   hasScheduleDestinationPhases,
   type UmsetzungsplanungPhaseOption,
 } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
+import { SCE_DS2_WHITE_EDITION } from "@/lib/design-system/sce-foundation-contract";
+import { resolveSceModalOverlayThemeAttribute } from "@/lib/ui/sce-modal-overlay-theme";
 
 type Props = {
   taskId: string;
@@ -36,44 +48,16 @@ export default function UmsetzungsplanungTaskScheduleMenu({
   testId,
 }: Props) {
   const menuId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const grouped = groupScheduleDestinationPhases(phaseOptions, sourcePhaseId);
   const hasDestinations = hasScheduleDestinationPhases(phaseOptions, sourcePhaseId);
+  const portalledTheme =
+    resolveSceModalOverlayThemeAttribute() ?? SCE_DS2_WHITE_EDITION.themeValue;
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        const panel = document.getElementById(menuId);
-        if (panel?.contains(event.target as Node)) return;
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [menuOpen, menuId]);
-
-  const positionPanel = () => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-    const rect = trigger.getBoundingClientRect();
-    const panelWidth = 260;
-    setPanelPos({
-      top: rect.bottom + 4,
-      left: Math.max(8, Math.min(rect.right - panelWidth, window.innerWidth - panelWidth - 8)),
-    });
-  };
-
-  const closeMenu = () => {
-    setMenuOpen(false);
-    setPanelPos(null);
-    window.requestAnimationFrame(() => triggerRef.current?.focus());
-  };
+  const closeMenu = () => setMenuOpen(false);
 
   const pickPhase = (phaseId: string) => {
     setActionError(null);
@@ -107,73 +91,8 @@ export default function UmsetzungsplanungTaskScheduleMenu({
     );
   }
 
-  const floatingMenu =
-    menuOpen && panelPos && typeof document !== "undefined"
-      ? createPortal(
-          <div
-            id={menuId}
-            role="menu"
-            aria-label={`Aktionen für ${taskTitle}`}
-            className="fixed z-[200] max-h-[min(24rem,70vh)] min-w-[14rem] max-w-[min(20rem,90vw)] overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--surface)] py-1 text-left shadow-lg"
-            style={{ top: panelPos.top, left: panelPos.left }}
-            data-testid={testId ? `${testId}-menu` : undefined}
-          >
-            <p
-              className="px-3 pb-1 pt-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]"
-              role="presentation"
-              data-testid={testId ? `${testId}-move-heading` : undefined}
-            >
-              {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveToPhaseMenuHeading}
-            </p>
-
-            {hasDestinations ? (
-              <>
-                {grouped.ongoing.length > 0 ? (
-                  <ScheduleDestinationGroup
-                    heading={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.scheduleDestinationOngoingGroup}
-                    phases={grouped.ongoing}
-                    taskId={taskId}
-                    onPick={pickPhase}
-                    testIdPrefix={testId ? `${testId}-ongoing` : undefined}
-                  />
-                ) : null}
-                {grouped.planned.length > 0 ? (
-                  <ScheduleDestinationGroup
-                    heading={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.scheduleDestinationPlannedGroup}
-                    phases={grouped.planned}
-                    taskId={taskId}
-                    onPick={pickPhase}
-                    testIdPrefix={testId ? `${testId}-planned` : undefined}
-                  />
-                ) : null}
-              </>
-            ) : (
-              <p className="px-3 py-2 text-xs text-[var(--muted)]" role="presentation" data-testid={testId ? `${testId}-empty` : undefined}>
-                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskScheduleDestinationEmpty}
-              </p>
-            )}
-
-            {canReturnToUnplanned && onReturnToUnplanned ? (
-              <>
-                <div className="mx-2 my-1 border-t border-[var(--border)]/60" role="separator" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3 py-2 text-left text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
-                  onClick={returnUnplanned}
-                  data-testid={testId ? `${testId}-return-unplanned` : undefined}
-                >
-                  {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveToUnplannedMenuAction}
-                </button>
-              </>
-            ) : null}
-          </div>,
-          document.body,
-        )
-      : null;
-
   return (
-    <div ref={rootRef} className="relative flex flex-col items-end justify-center" data-testid={testId}>
+    <div className="relative flex flex-col items-end justify-center" data-testid={testId}>
       <button
         ref={triggerRef}
         type="button"
@@ -186,12 +105,7 @@ export default function UmsetzungsplanungTaskScheduleMenu({
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
-          if (menuOpen) {
-            closeMenu();
-            return;
-          }
-          positionPanel();
-          setMenuOpen(true);
+          setMenuOpen((open) => !open);
         }}
       >
         {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <MoreVertical className="h-4 w-4" aria-hidden />}
@@ -202,7 +116,81 @@ export default function UmsetzungsplanungTaskScheduleMenu({
           {actionError}
         </p>
       ) : null}
-      {floatingMenu}
+      <PopoverContent
+        id={menuId}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        anchorRef={triggerRef}
+        placement="bottom-end"
+        matchAnchorWidth={false}
+        constrainHeight={false}
+        clipOverflow
+        role="dialog"
+        surfaceVariant="sce-light"
+        className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_POPOVER_CLASS}
+      >
+        <div
+          data-sce-theme={portalledTheme}
+          className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_THEME_SCOPE_CLASS}
+          role="menu"
+          aria-label={`Aktionen für ${taskTitle}`}
+          data-testid={testId ? `${testId}-menu` : undefined}
+        >
+          <p
+            className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_SECTION_HEADING_CLASS}
+            role="presentation"
+            data-testid={testId ? `${testId}-move-heading` : undefined}
+          >
+            {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveToPhaseMenuHeading}
+          </p>
+
+          {hasDestinations ? (
+            <>
+              {grouped.ongoing.length > 0 ? (
+                <ScheduleDestinationGroup
+                  heading={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.scheduleDestinationOngoingGroup}
+                  phases={grouped.ongoing}
+                  taskId={taskId}
+                  onPick={pickPhase}
+                  testIdPrefix={testId ? `${testId}-ongoing` : undefined}
+                />
+              ) : null}
+              {grouped.planned.length > 0 ? (
+                <ScheduleDestinationGroup
+                  heading={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.scheduleDestinationPlannedGroup}
+                  phases={grouped.planned}
+                  taskId={taskId}
+                  onPick={pickPhase}
+                  testIdPrefix={testId ? `${testId}-planned` : undefined}
+                />
+              ) : null}
+            </>
+          ) : (
+            <p
+              className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_EMPTY_CLASS}
+              role="presentation"
+              data-testid={testId ? `${testId}-empty` : undefined}
+            >
+              {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskScheduleDestinationEmpty}
+            </p>
+          )}
+
+          {canReturnToUnplanned && onReturnToUnplanned ? (
+            <>
+              <div className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_DIVIDER_CLASS} role="separator" />
+              <button
+                type="button"
+                role="menuitem"
+                className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_ACTION_ITEM_CLASS}
+                onClick={returnUnplanned}
+                data-testid={testId ? `${testId}-return-unplanned` : undefined}
+              >
+                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveToUnplannedMenuAction}
+              </button>
+            </>
+          ) : null}
+        </div>
+      </PopoverContent>
     </div>
   );
 }
@@ -222,7 +210,7 @@ function ScheduleDestinationGroup({
 }) {
   return (
     <div role="group" aria-label={heading} className="py-0.5">
-      <p className="px-3 pb-0.5 pt-1 text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]" role="presentation">
+      <p className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_GROUP_HEADING_CLASS} role="presentation">
         {heading}
       </p>
       {phases.map((phase) => (
@@ -230,7 +218,7 @@ function ScheduleDestinationGroup({
           key={phase.id}
           type="button"
           role="menuitem"
-          className="block w-full py-2 pl-5 pr-3 text-left text-xs text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+          className={UMSETZUNGSPLANUNG_TASK_SCHEDULE_MENU_PHASE_ITEM_CLASS}
           onClick={() => onPick(phase.id)}
           data-testid={testIdPrefix ? `${testIdPrefix}-${taskId}-${phase.id}` : undefined}
         >
