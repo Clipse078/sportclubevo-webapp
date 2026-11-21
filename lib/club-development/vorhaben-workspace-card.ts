@@ -9,7 +9,7 @@ import { listInitiativeTargetLinks } from "@/lib/club-development/initiative-tar
 import { initiativeTaskAssociationOrFilters } from "@/lib/club-development/initiative-associated-tasks";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
-import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { vereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { VORHABEN_WORKSPACE_ROOT_TASK_DISPLAY_LIMIT } from "@/lib/club-development/initiative-delivery-progress";
 import { buildVorhabenUndUmsetzungHref } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
@@ -103,7 +103,7 @@ export async function loadVorhabenWorkspacePanel(
       rootTasks = taskRows.map((row) => ({
         id: row.id,
         title: row.title,
-        statusLabel: TASK_STATUS_LABELS[row.status],
+        statusLabel: vereinsentwicklungTaskStatusLabel(row.status),
         href: taskWorkspaceHref(row.id, { returnTo }),
       }));
 

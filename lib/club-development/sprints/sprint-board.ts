@@ -9,10 +9,14 @@ import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } fro
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
 import { loadTaskChildRollupProgressMap } from "@/lib/club-development/task-child-rollup-progress";
 import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
+import {
+  mapTaskStatusToVereinsentwicklungBoardColumn,
+  type VereinsentwicklungTaskBoardColumn,
+} from "../vereinsentwicklung-task-status";
 
 export type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 
-export type SprintBoardColumnKey = "OPEN" | "IN_PROGRESS" | "DONE";
+export type SprintBoardColumnKey = VereinsentwicklungTaskBoardColumn;
 
 export type SprintBoardCard = {
   taskId: string;
@@ -38,9 +42,7 @@ export type SprintBoardCard = {
 };
 
 export function mapTaskStatusToBoardColumn(status: TaskStatus): SprintBoardColumnKey {
-  if (status === TaskStatus.DONE) return "DONE";
-  if (status === TaskStatus.IN_PROGRESS) return "IN_PROGRESS";
-  return "OPEN";
+  return mapTaskStatusToVereinsentwicklungBoardColumn(status);
 }
 
 export async function loadSprintBoard(
@@ -53,7 +55,12 @@ export async function loadSprintBoard(
     select: { taskId: true, addedAfterSprintStart: true },
   });
   if (memberships.length === 0) {
-    return { columns: { OPEN: [], IN_PROGRESS: [], DONE: [] } as Record<SprintBoardColumnKey, SprintBoardCard[]> };
+    return {
+      columns: { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [], CANCELLED: [] } as Record<
+        SprintBoardColumnKey,
+        SprintBoardCard[]
+      >,
+    };
   }
 
   const taskIds = memberships.map((m) => m.taskId);
@@ -100,7 +107,9 @@ export async function loadSprintBoard(
   const columns: Record<SprintBoardColumnKey, SprintBoardCard[]> = {
     OPEN: [],
     IN_PROGRESS: [],
+    WAITING: [],
     DONE: [],
+    CANCELLED: [],
   };
 
   const allAssigneeUserIds = tasks.flatMap((t) => t.assignees.map((a) => a.userId));

@@ -586,6 +586,7 @@ enum MeetingActionStatus {
 enum TaskStatus {
   OPEN
   IN_PROGRESS
+  WAITING
   DONE
   CANCELLED
 }

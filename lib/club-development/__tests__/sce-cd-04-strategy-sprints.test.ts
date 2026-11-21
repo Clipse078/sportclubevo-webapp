@@ -56,8 +56,9 @@ describe("SCE-CD-04 strategy & sprints", () => {
   it("maps sprint board columns from task status without blocked column", () => {
     expect(mapTaskStatusToBoardColumn(TaskStatus.OPEN)).toBe("OPEN");
     expect(mapTaskStatusToBoardColumn(TaskStatus.IN_PROGRESS)).toBe("IN_PROGRESS");
+    expect(mapTaskStatusToBoardColumn(TaskStatus.WAITING)).toBe("WAITING");
     expect(mapTaskStatusToBoardColumn(TaskStatus.DONE)).toBe("DONE");
-    expect(mapTaskStatusToBoardColumn(TaskStatus.CANCELLED)).toBe("OPEN");
+    expect(mapTaskStatusToBoardColumn(TaskStatus.CANCELLED)).toBe("CANCELLED");
   });
 
   it("classifies sprint close finished vs unfinished tasks", () => {

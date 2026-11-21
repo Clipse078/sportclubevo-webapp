@@ -27,6 +27,9 @@ import UmsetzungsplanungTaskScheduleMenu from "./UmsetzungsplanungTaskScheduleMe
 type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
   schedulingCapable?: boolean;
+  assignDisabled?: boolean;
+  /** When true, blocks Einplanen and inline status edits (read-only planning). */
+  disabled?: boolean;
   onAssigned?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -40,6 +43,8 @@ function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
 export default function UmsetzungsplanungUnplannedPanel({
   phaseOptions,
   schedulingCapable = false,
+  assignDisabled = false,
+  disabled = false,
   onAssigned,
   open,
   onOpenChange,
@@ -389,6 +394,9 @@ export default function UmsetzungsplanungUnplannedPanel({
               },
               onDragEnd: () => dragCtx?.endDrag(),
             }}
+            canEditStatus={!disabled}
+            onTaskStatusUpdated={() => void loadCatalog(serverSearch)}
+            onTaskStatusError={(message) => setError(message)}
             testId="umsetzungsplanung-unplanned-task-table"
             renderRowActions={(row) => {
               const task = filteredTasks.find((t) => t.id === row.taskId);

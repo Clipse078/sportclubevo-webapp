@@ -3,11 +3,13 @@ import { CD_SPRINT_API_COPY } from "@/lib/club-development/product-copy";
 import { TaskStatus } from "@prisma/client";
 import { getDevelopmentSprintById } from "@/lib/club-development/sprints/queries";
 import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
-import { updateTask } from "@/lib/tasks/task-service";
-import { TaskForbiddenError } from "@/lib/tasks/errors";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import { prisma } from "@/lib/db/prisma";
+import {
+  patchVereinsentwicklungTaskStatus,
+  VereinsentwicklungTaskStatusMutationError,
+} from "@/lib/club-development/vereinsentwicklung-task-status-mutation";
 
 type RouteContext = { params: Promise<{ id: string; taskId: string }> };
 
@@ -40,6 +42,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   const body = await req.json().catch(() => ({}));
   const status = body?.status as TaskStatus | undefined;
+  const currentStatus = body?.currentStatus as TaskStatus | undefined;
   if (!status || !Object.values(TaskStatus).includes(status)) {
     return NextResponse.json({ error: "Ungültiger status." }, { status: 400 });
   }
@@ -53,11 +56,18 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const task = await updateTask(taskCtx, taskId, { status });
+    const task = await patchVereinsentwicklungTaskStatus(
+      taskCtx,
+      taskId,
+      status,
+      currentStatus,
+    );
     return NextResponse.json({ task });
   } catch (err) {
-    if (err instanceof TaskForbiddenError) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (err instanceof VereinsentwicklungTaskStatusMutationError) {
+      const statusCode =
+        err.code === "FORBIDDEN" ? 403 : err.code === "INVALID_STATUS" ? 400 : 400;
+      return NextResponse.json({ error: err.message, code: err.code }, { status: statusCode });
     }
     throw err;
   }

@@ -1,4 +1,4 @@
-import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
+import { vereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status";
 import type { SprintBoardCard } from "./sprints/sprint-board";
 import type { SprintPlanningTaskDto } from "./sprints/sprint-planning-types";
 import type { VorhabenWorkspaceTaskRow } from "./vorhaben-workspace";
@@ -48,7 +48,7 @@ export function mapSprintBoardCardToTableModel(card: SprintBoardCard): Vereinsen
     strategyHref: card.strategyId ? buildStrategyWorkspaceHref(card.strategyId) : null,
     orgUnitLabel: card.orgUnitLabel,
     status: card.status,
-    statusLabel: formatVereinsentwicklungTaskStatusLabel(card.status),
+    statusLabel: vereinsentwicklungTaskStatusLabel(card.status),
     assignees: card.assignees,
     progressHasChildRollup: card.progressHasChildRollup,
     progressCompletedCount: card.progressCompletedCount,

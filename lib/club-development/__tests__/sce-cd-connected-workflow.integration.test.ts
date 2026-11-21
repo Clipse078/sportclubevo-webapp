@@ -1,5 +1,6 @@
 /**
- * PR #1017 — connected Vereinsentwicklung workflow on disposable local Postgres.
+ * Connected Vereinsentwicklung workflow on disposable local Postgres.
+ * Requires TaskStatus::WAITING on TEST_DATABASE_URL (see cd-task-status:disposable-migration-verify).
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -38,6 +39,9 @@ import {
 } from "../vereinsentwicklung-workspace-progress";
 import { buildTaskServiceContextForActor, getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadVorhabenWorkspace } from "../vorhaben-workspace";
+import { patchVereinsentwicklungTaskStatus } from "../vereinsentwicklung-task-status-mutation";
+import { loadSprintBoard } from "../sprints/sprint-board";
+import { mapTaskStatusToBoardColumn } from "../sprints/sprint-board";
 
 vi.mock("@/lib/tasks/server-context", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/tasks/server-context")>();
@@ -100,6 +104,19 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     const client = createSafeTestPrismaClient();
     admin = client.prisma;
     pool = client.pool;
+
+    const waitingEnum = await admin.$queryRaw<Array<{ enumlabel: string }>>`
+      SELECT e.enumlabel
+      FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'TaskStatus' AND e.enumlabel = 'WAITING'
+    `;
+    if (waitingEnum.length === 0) {
+      throw new Error(
+        "TaskStatus::WAITING is missing on TEST_DATABASE_URL. " +
+          "Run: TEST_DATABASE_URL=... npm run cd-task-status:disposable-migration-verify",
+      );
+    }
 
     const tenant = await admin.tenant.create({
       data: { key: `tenant-${RUN}`, name: "Connected workflow", timezone: "Europe/Zurich" },
@@ -703,5 +720,223 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
       targetCompleted.id,
     ]);
     expect(goalRollup).toMatchObject({ completedCount: 1, totalCount: 2, percent: 50 });
+  });
+
+  it("transitions linked task Offen→In Arbeit→Wartet→Erledigt; only DONE completes; reopen reverses", async () => {
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    expect(taskCtx).toBeTruthy();
+
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Status target ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Status probe",
+        status: TaskStatus.OPEN,
+        contextType: TaskContextType.TARGET,
+        contextId: target.id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true, status: true },
+    });
+
+    const sprint = await admin.developmentSprint.create({
+      data: {
+        tenantId,
+        slug: `status-phase-${RUN}`,
+        title: "Status Phase",
+        createdByUserId: userId,
+      },
+      select: { id: true },
+    });
+    await admin.developmentSprintTaskMembership.create({
+      data: { tenantId, sprintId: sprint.id, taskId: task.id },
+    });
+
+    const steps = [
+      TaskStatus.IN_PROGRESS,
+      TaskStatus.WAITING,
+      TaskStatus.DONE,
+    ] as const;
+
+    let currentStatus = TaskStatus.OPEN;
+    for (const step of steps) {
+      const updated = await patchVereinsentwicklungTaskStatus(taskCtx!, task.id, step, currentStatus);
+      currentStatus = updated.status;
+      const rollup = await computeTargetDeliveryProgress(actor, target.id);
+      if (step === TaskStatus.DONE) {
+        expect(rollup).toMatchObject({ completedCount: 1, totalCount: 1 });
+      } else {
+        expect(rollup).toMatchObject({ completedCount: 0, totalCount: 1 });
+      }
+    }
+
+    const boardAfterDone = await loadSprintBoard(taskCtx!, sprint.id);
+    expect(boardAfterDone.columns.DONE.some((card) => card.taskId === task.id)).toBe(true);
+
+    await patchVereinsentwicklungTaskStatus(taskCtx!, task.id, TaskStatus.OPEN, TaskStatus.DONE);
+    expect(await computeTargetDeliveryProgress(actor, target.id)).toMatchObject({ completedCount: 0 });
+
+    const reopened = await admin.task.findUniqueOrThrow({
+      where: { id: task.id },
+      select: { status: true },
+    });
+    expect(reopened.status).toBe(TaskStatus.OPEN);
+    expect(mapTaskStatusToBoardColumn(reopened.status)).toBe("OPEN");
+  });
+
+  it("maps CANCELLED tasks to Abgebrochen board column (not Offen)", async () => {
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    expect(taskCtx).toBeTruthy();
+
+    const sprint = await admin.developmentSprint.create({
+      data: {
+        tenantId,
+        slug: `cancelled-phase-${RUN}`,
+        title: "Cancelled Phase",
+        createdByUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Cancelled probe",
+        status: TaskStatus.CANCELLED,
+        contextType: TaskContextType.TARGET,
+        contextId: (
+          await admin.target.create({
+            data: {
+              tenantId,
+              title: "Cancel Ziel",
+              status: "ACTIVE",
+              category: "GOVERNANCE",
+              period: "YEAR",
+              createdByUserId: userId,
+            },
+            select: { id: true },
+          })
+        ).id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    await admin.developmentSprintTaskMembership.create({
+      data: { tenantId, sprintId: sprint.id, taskId: task.id },
+    });
+
+    const board = await loadSprintBoard(taskCtx!, sprint.id);
+    expect(board.columns.CANCELLED.some((c) => c.taskId === task.id)).toBe(true);
+    expect(board.columns.OPEN.some((c) => c.taskId === task.id)).toBe(false);
+    expect(mapTaskStatusToBoardColumn(TaskStatus.CANCELLED)).toBe("CANCELLED");
+  });
+
+  it("reads stored WAITING after migration and preserves label on workspace reload", async () => {
+    const taskCtx = await buildTaskServiceContextForActor(userId, tenantId);
+    const target = await admin.target.create({
+      data: {
+        tenantId,
+        title: `Waiting reload ${RUN}`,
+        status: "ACTIVE",
+        category: "GOVERNANCE",
+        period: "YEAR",
+        createdByUserId: userId,
+        visibilityScope: VisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Waiting stored",
+        status: TaskStatus.WAITING,
+        contextType: TaskContextType.TARGET,
+        contextId: target.id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const snapshot = await loadVorhabenWorkspace(actor, {});
+    const row = snapshot.tasks.find((t) => t.id === task.id);
+    expect(row?.status).toBe(TaskStatus.WAITING);
+    expect(row?.statusLabel).toBe("Wartet");
+
+    await patchVereinsentwicklungTaskStatus(taskCtx!, task.id, TaskStatus.OPEN, TaskStatus.WAITING);
+    const reopened = await loadVorhabenWorkspace(actor, {});
+    expect(reopened.tasks.find((t) => t.id === task.id)?.status).toBe(TaskStatus.OPEN);
+  });
+
+  it("denies status mutation for read-only tasks view", async () => {
+    const viewer = await admin.user.create({
+      data: {
+        email: `viewer-${RUN}@example.invalid`,
+        passwordHash: "unused",
+        firstName: "View",
+        lastName: "Only",
+        tenantId,
+      },
+      select: { id: true },
+    });
+
+    const viewerRole = await admin.role.create({
+      data: { tenantId, key: `viewer-${RUN}`, name: "Viewer" },
+      select: { id: true },
+    });
+    await attachPermissionsToRole(admin, viewerRole.id, [
+      PERMISSIONS.TASKS_VIEW,
+      PERMISSIONS.INITIATIVES_VIEW,
+    ]);
+    await admin.userRole.create({
+      data: { tenantId, userId: viewer.id, roleId: viewerRole.id },
+    });
+
+    const task = await admin.task.create({
+      data: {
+        tenantId,
+        title: "Read-only probe",
+        status: TaskStatus.OPEN,
+        contextType: TaskContextType.TARGET,
+        contextId: (
+          await admin.target.create({
+            data: {
+              tenantId,
+              title: "RO Ziel",
+              status: "ACTIVE",
+              category: "GOVERNANCE",
+              period: "YEAR",
+              createdByUserId: userId,
+            },
+            select: { id: true },
+          })
+        ).id,
+        createdByUserId: userId,
+        visibilityScope: TaskVisibilityScope.ORGANISATION,
+      },
+      select: { id: true },
+    });
+
+    const viewerCtx = await buildTaskServiceContextForActor(viewer.id, tenantId);
+    expect(viewerCtx).toBeTruthy();
+    await expect(
+      patchVereinsentwicklungTaskStatus(viewerCtx!, task.id, TaskStatus.DONE),
+    ).rejects.toThrow(/Berechtigung/i);
   });
 });

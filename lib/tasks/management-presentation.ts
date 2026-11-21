@@ -30,6 +30,14 @@ export function taskStatusPresentation(status: TaskStatus): TaskStatusPresentati
         icon: LoaderCircle,
         iconClassName: "text-[var(--sce-color-status-warning)]",
       };
+    case "WAITING":
+      return {
+        label: TASK_STATUS_LABELS.WAITING,
+        className:
+          "border-[var(--sce-border)] bg-[var(--surface-2)] text-[var(--text-2)]",
+        icon: CircleDashed,
+        iconClassName: "text-[var(--muted)]",
+      };
     case "DONE":
       return {
         label: TASK_STATUS_LABELS.DONE,

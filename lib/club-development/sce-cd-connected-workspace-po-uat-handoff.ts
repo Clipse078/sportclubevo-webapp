@@ -47,6 +47,8 @@ export const CONNECTED_WORKSPACE_PO_UAT_HANDOFF = {
   requiredMigration: "20261120120000_sce_cd_connected_workspace",
   /** Additive 1:n Org-Einheit — deploy after connected workspace migration. */
   orgUnitAssignmentMigration: "20261120140000_sce_cd_connected_strategy_org_units",
+  /** Additive TaskStatus::WAITING for Vereinsentwicklung «Wartet» (deploy before status UAT). */
+  taskStatusWaitingMigration: "20261120150100_sce_cd_task_status_waiting_ensure",
   acceptanceTenantSlug: SCE_CD_CONNECTED_PO_UAT_TENANT_KEY,
   fixture: {
     orgUnitId: SCE_CD_CONNECTED_PO_UAT_ORG_UNIT_ID,
@@ -155,4 +157,15 @@ export const CONNECTED_WORKSPACE_LEADERSHIP_PO_SCREENSHOT_CHECKLIST = [
   "6. Aufgaben tab — subtitle «Aufgaben zu Zielen und Strategien verwalten.»; no duplicate intro above the task table; Strategie column shows real strategy titles.",
   "7. Umsetzungsplanung tab — subtitle «Aufgaben priorisieren und in Umsetzungsphasen einplanen.»; phase groups use «Umsetzungsphasen» wording.",
   "8. Nächste Sitzung — title, date/time, location; «Alle Sitzungen» → /vereinsleitung/meetings.",
+] as const;
+
+/** PO manual UAT — unified Aufgabe status control (PR #1017 follow-up). */
+export const CONNECTED_WORKSPACE_TASK_STATUS_PO_SCREENSHOT_CHECKLIST = [
+  "1. Aufgaben tab — Status column shows labelled select (not read-only pill) when TASKS_MANAGE; labels Offen / In Arbeit / Wartet / Erledigt.",
+  "2. Same Aufgabe — open detail from title: Status control matches list label; change In Arbeit → list refresh shows In Arbeit.",
+  "3. Umsetzungsplanung → Ungeplant — inline status menu on a task row; move to Wartet.",
+  "4. Umsetzungsphase board — four columns (Offen, In Arbeit, Wartet, Erledigt); drag card to Erledigt OR use keyboard-focused status menu.",
+  "5. After Erledigt — Ziel detail Umsetzungsfortschritt increments completed count; WAITING/OPEN do not.",
+  "6. Reopen (Erledigt → Offen) — Übersicht Umsetzungsfortschritt and Ziel/Strategie rolls back completed count.",
+  "7. Read-only user (TASKS_VIEW only) — status control read-only pill everywhere; no PATCH.",
 ] as const;

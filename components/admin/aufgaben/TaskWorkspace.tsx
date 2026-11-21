@@ -68,6 +68,7 @@ import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { TaskDeleteControl } from "./TaskDeleteControl";
 import SceClubDevelopmentSectionShell from "@/components/admin/club-development/SceClubDevelopmentSectionShell";
+import VereinsentwicklungTaskStatusControl from "@/components/admin/club-development/VereinsentwicklungTaskStatusControl";
 
 function InlineTitle({
   task,
@@ -559,6 +560,7 @@ export function TaskWorkspacePanel({
     timeZone,
   });
   const displayStatus = !task.parentTaskId ? effectiveStatus : task.status;
+  const vereinsentwicklungStatusSurface = backHref.includes("/vereinsleitung");
 
   const runAction = useCallback(
     (runner: () => Promise<{ ok: boolean; message?: string }>) => {
@@ -805,7 +807,17 @@ export function TaskWorkspacePanel({
       <SceClubDevelopmentSectionShell title="Zusammenfassung" testId="task-workspace-summary-section">
       <dl className="space-y-3">
       <PropertyRow label="Status">
-        {capabilities.canEditStatus ? (
+        {capabilities.canEditStatus && vereinsentwicklungStatusSurface ? (
+          <VereinsentwicklungTaskStatusControl
+            taskId={task.id}
+            status={task.status}
+            canEdit
+            disabled={pending}
+            className="w-full"
+            onUpdated={() => router.refresh()}
+            onError={(message) => setActionError(message)}
+          />
+        ) : capabilities.canEditStatus ? (
           <select
             className="fca-input w-full text-sm"
             value={task.status}
@@ -820,16 +832,24 @@ export function TaskWorkspacePanel({
             }
             data-testid="task-workspace-status"
           >
-            {(["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] as TaskStatus[]).map((s) => (
+            {(["OPEN", "IN_PROGRESS", "WAITING", "DONE", "CANCELLED"] as TaskStatus[]).map((s) => (
               <option key={s} value={s}>
                 {taskStatusPresentation(s).label}
               </option>
             ))}
           </select>
         ) : (
-          <span className={taskStatusBadgeClass(task.status)}>
-            <TaskStatusLabel status={task.status} />
-          </span>
+          vereinsentwicklungStatusSurface ? (
+            <VereinsentwicklungTaskStatusControl
+              taskId={task.id}
+              status={task.status}
+              canEdit={false}
+            />
+          ) : (
+            <span className={taskStatusBadgeClass(task.status)}>
+              <TaskStatusLabel status={task.status} />
+            </span>
+          )
         )}
       </PropertyRow>
 

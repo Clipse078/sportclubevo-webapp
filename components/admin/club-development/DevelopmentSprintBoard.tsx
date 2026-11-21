@@ -22,36 +22,37 @@ import {
   SCE_CD_SECTION_HEADER_CLASS,
   SCE_CD_SECTION_SHELL_CLASS,
 } from "./sce-club-development-surface-styles";
+import {
+  VEREINSENTWICKLUNG_BOARD_COLUMNS,
+  isVereinsentwicklungWorkflowBoardColumn,
+  mapTaskStatusToVereinsentwicklungBoardColumn,
+} from "@/lib/club-development/vereinsentwicklung-task-status";
+import VereinsentwicklungTaskStatusControl from "./VereinsentwicklungTaskStatusControl";
 
-type BoardState = {
-  OPEN: SprintBoardCard[];
-  IN_PROGRESS: SprintBoardCard[];
-  DONE: SprintBoardCard[];
-};
+type BoardState = Record<SprintBoardColumnKey, SprintBoardCard[]>;
 
-const COLUMNS: { key: keyof BoardState; label: string }[] = [
-  { key: "OPEN", label: "Offen" },
-  { key: "IN_PROGRESS", label: "In Arbeit" },
-  { key: "DONE", label: "Erledigt" },
-];
+function emptyBoardState(): BoardState {
+  return { OPEN: [], IN_PROGRESS: [], WAITING: [], DONE: [], CANCELLED: [] };
+}
 
-const COLUMN_ACTIONS: Record<
-  keyof BoardState,
-  { label: string; status: TaskStatus }[]
-> = {
-  OPEN: [{ label: "In Arbeit", status: TaskStatus.IN_PROGRESS }],
-  IN_PROGRESS: [
-    { label: "Offen", status: TaskStatus.OPEN },
-    { label: "Erledigt", status: TaskStatus.DONE },
-  ],
-  DONE: [{ label: "Wieder öffnen", status: TaskStatus.OPEN }],
-};
+function allBoardCards(board: BoardState): SprintBoardCard[] {
+  return VEREINSENTWICKLUNG_BOARD_COLUMNS.flatMap((col) => board[col.key]);
+}
 
-const VALID_DND: Record<keyof BoardState, TaskStatus[]> = {
-  OPEN: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS],
-  IN_PROGRESS: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS, TaskStatus.DONE],
-  DONE: [TaskStatus.DONE, TaskStatus.OPEN],
-};
+function statusForBoardColumn(column: SprintBoardColumnKey): TaskStatus {
+  switch (column) {
+    case "DONE":
+      return TaskStatus.DONE;
+    case "IN_PROGRESS":
+      return TaskStatus.IN_PROGRESS;
+    case "WAITING":
+      return TaskStatus.WAITING;
+    case "CANCELLED":
+      return TaskStatus.CANCELLED;
+    default:
+      return TaskStatus.OPEN;
+  }
+}
 
 type Props = {
   sprintId: string;
@@ -82,10 +83,13 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
         setError(result.message);
         return;
       }
+      const columns = result.data.columns;
       setBoard({
-        OPEN: result.data.columns?.OPEN ?? [],
-        IN_PROGRESS: result.data.columns?.IN_PROGRESS ?? [],
-        DONE: result.data.columns?.DONE ?? [],
+        OPEN: columns?.OPEN ?? [],
+        IN_PROGRESS: columns?.IN_PROGRESS ?? [],
+        WAITING: columns?.WAITING ?? [],
+        DONE: columns?.DONE ?? [],
+        CANCELLED: columns?.CANCELLED ?? [],
       });
     });
   }, [sprintId]);
@@ -100,7 +104,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
         loadBoard();
       }
     };
-  const onPageShow = (event: PageTransitionEvent) => {
+    const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) loadBoard();
     };
     document.addEventListener("visibilitychange", refreshOnReturn);
@@ -113,7 +117,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 
   const allCards = useMemo(() => {
     if (!board) return [];
-    return [...board.OPEN, ...board.IN_PROGRESS, ...board.DONE];
+    return allBoardCards(board);
   }, [board]);
 
   const initiativeOptions = useMemo(() => {
@@ -134,8 +138,8 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 
   const filteredByColumn = useMemo(() => {
     if (!board) return null;
-    const next: BoardState = { OPEN: [], IN_PROGRESS: [], DONE: [] };
-    for (const col of COLUMNS) {
+    const next = emptyBoardState();
+    for (const col of VEREINSENTWICKLUNG_BOARD_COLUMNS) {
       next[col.key] = filterSprintBoardCards(board[col.key], filters, currentUserId);
     }
     return next;
@@ -143,6 +147,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 
   const moveCard = (taskId: string, status: TaskStatus) => {
     const previous = board;
+    const card = board ? allBoardCards(board).find((c) => c.taskId === taskId) : undefined;
     startTransition(async () => {
       if (board) {
         setBoard(optimisticMove(board, taskId, status));
@@ -150,7 +155,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
       const res = await fetch(`/api/club-development/sprints/${sprintId}/board/tasks/${taskId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, currentStatus: card?.status }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -162,19 +167,13 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
     });
   };
 
-  const onDropToColumn = (columnKey: keyof BoardState, taskId: string) => {
+  const onDropToColumn = (columnKey: SprintBoardColumnKey, taskId: string) => {
+    if (!canManage) return;
+    if (!isVereinsentwicklungWorkflowBoardColumn(columnKey)) return;
     const card = allCards.find((c) => c.taskId === taskId);
     if (!card) return;
-    const targetStatus =
-      columnKey === "DONE"
-        ? TaskStatus.DONE
-        : columnKey === "IN_PROGRESS"
-          ? TaskStatus.IN_PROGRESS
-          : TaskStatus.OPEN;
-    if (!VALID_DND[columnKey].includes(card.status) && card.status !== targetStatus) {
-      moveCard(taskId, targetStatus);
-      return;
-    }
+    if (card.status === TaskStatus.CANCELLED) return;
+    const targetStatus = statusForBoardColumn(columnKey);
     if (card.status !== targetStatus) moveCard(taskId, targetStatus);
   };
 
@@ -193,14 +192,13 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 
   if (!board || !filteredByColumn) return null;
 
-  const totalCards = board.OPEN.length + board.IN_PROGRESS.length + board.DONE.length;
-  const filteredTotal =
-    filteredByColumn.OPEN.length + filteredByColumn.IN_PROGRESS.length + filteredByColumn.DONE.length;
+  const totalCards = allBoardCards(board).length;
+  const filteredTotal = allBoardCards(filteredByColumn).length;
 
   return (
     <div className="space-y-4" data-testid="development-sprint-board">
       <p className="sr-only">
-        Aufgaben nach Status — jede Karte bietet Schaltflächen zum Verschieben ohne Ziehen.
+        Aufgaben nach Status — Karten lassen sich per Ziehen oder über das Status-Menü verschieben.
       </p>
 
       <SprintBoardWorkspaceToolbar
@@ -213,7 +211,10 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
       />
 
       {error ? (
-        <p className="rounded-md border border-amber-500/30 bg-amber-50 px-3 py-2 text-sm text-amber-950" role="alert">
+        <p
+          className="rounded-md border border-amber-500/30 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -245,6 +246,7 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
           onDragEnd={() => setDraggingId(null)}
           onDropToColumn={onDropToColumn}
           onRefresh={loadBoard}
+          onStatusError={setError}
         />
       )}
     </div>
@@ -252,35 +254,35 @@ export default function DevelopmentSprintBoard({ sprintId, canManage, currentUse
 }
 
 function optimisticMove(board: BoardState, taskId: string, status: TaskStatus): BoardState {
-  const card = [...board.OPEN, ...board.IN_PROGRESS, ...board.DONE].find((c) => c.taskId === taskId);
+  const card = allBoardCards(board).find((c) => c.taskId === taskId);
   if (!card) return board;
-  const next: BoardState = {
-    OPEN: board.OPEN.filter((c) => c.taskId !== taskId),
-    IN_PROGRESS: board.IN_PROGRESS.filter((c) => c.taskId !== taskId),
-    DONE: board.DONE.filter((c) => c.taskId !== taskId),
-  };
-  const column: SprintBoardColumnKey =
-    status === TaskStatus.DONE ? "DONE" : status === TaskStatus.IN_PROGRESS ? "IN_PROGRESS" : "OPEN";
+  const next = emptyBoardState();
+  for (const col of VEREINSENTWICKLUNG_BOARD_COLUMNS) {
+    next[col.key] = board[col.key].filter((c) => c.taskId !== taskId);
+  }
+  const column = mapTaskStatusToVereinsentwicklungBoardColumn(status);
   const updated = { ...card, status, column };
-  if (updated.column === "DONE") next.DONE.push(updated);
-  else if (updated.column === "IN_PROGRESS") next.IN_PROGRESS.push(updated);
-  else next.OPEN.push(updated);
+  next[column].push(updated);
   return next;
 }
 
 function BoardCardView({
   card,
-  columnKey,
   pending,
-  onMove,
+  canManage,
+  sprintId,
+  onBoardRefresh,
+  onStatusError,
   draggable,
   onDragStart,
   onDragEnd,
 }: {
   card: SprintBoardCard;
-  columnKey: keyof BoardState;
   pending: boolean;
-  onMove: (taskId: string, status: TaskStatus) => void;
+  canManage: boolean;
+  sprintId: string;
+  onBoardRefresh: () => void;
+  onStatusError: (message: string) => void;
   draggable: boolean;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
@@ -288,7 +290,7 @@ function BoardCardView({
   const priorityVisual = taskPriorityVisual(card.priority as TaskPriority);
   const due = formatDue(card.dueAt);
   const overdue = isTaskOverdue(card.dueAt);
-  const actions = COLUMN_ACTIONS[columnKey];
+  const patchUrl = `/api/club-development/sprints/${encodeURIComponent(sprintId)}/board/tasks/${encodeURIComponent(card.taskId)}/status`;
 
   return (
     <article className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm">
@@ -319,30 +321,29 @@ function BoardCardView({
               {priorityVisual.label}
             </span>
           </div>
-      {due ? (
-        <p className={`mt-1 text-xs ${overdue ? "font-medium text-red-600" : "text-[var(--muted)]"}`}>
-          Fällig {due}
-          {overdue ? " · überfällig" : ""}
-        </p>
-      ) : null}
+          {due ? (
+            <p className={`mt-1 text-xs ${overdue ? "font-medium text-red-600" : "text-[var(--muted)]"}`}>
+              Fällig {due}
+              {overdue ? " · überfällig" : ""}
+            </p>
+          ) : null}
           {card.initiativeLabel ? (
             <p className="mt-1 text-xs text-[var(--text-2)]">{card.initiativeLabel}</p>
           ) : null}
           <SprintTaskAssigneeDisplay assignees={card.assignees} className="mt-2" compact />
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {actions.map((action) => (
-          <button
-            key={action.status}
-            type="button"
-            disabled={pending}
-            onClick={() => onMove(card.taskId, action.status)}
-            className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)] disabled:opacity-50"
-          >
-            {action.label}
-          </button>
-        ))}
+      <div className="mt-3">
+        <VereinsentwicklungTaskStatusControl
+          taskId={card.taskId}
+          status={card.status}
+          canEdit={canManage}
+          disabled={pending}
+          patchUrl={patchUrl}
+          onUpdated={() => onBoardRefresh()}
+          onError={onStatusError}
+          fieldLabel={`Status für ${card.title}`}
+        />
       </div>
     </article>
   );
@@ -361,6 +362,7 @@ function BoardColumnsGrid({
   onDragEnd,
   onDropToColumn,
   onRefresh,
+  onStatusError,
 }: {
   board: BoardState;
   fullBoard: BoardState;
@@ -372,12 +374,13 @@ function BoardColumnsGrid({
   onMove: (taskId: string, status: TaskStatus) => void;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
-  onDropToColumn: (column: keyof BoardState, taskId: string) => void;
+  onDropToColumn: (column: SprintBoardColumnKey, taskId: string) => void;
   onRefresh: () => void;
+  onStatusError: (message: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      {COLUMNS.map((col) => {
+    <div className="grid gap-4 lg:grid-cols-5">
+      {VEREINSENTWICKLUNG_BOARD_COLUMNS.map((col) => {
         const cards = board[col.key];
         const fullCount = fullBoard[col.key].length;
         const swimlanes = filters.groupByInitiative ? groupBoardCardsByInitiative(cards) : null;
@@ -387,8 +390,12 @@ function BoardColumnsGrid({
             key={col.key}
             className={SCE_CD_SECTION_SHELL_CLASS}
             aria-label={col.label}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              if (!col.workflow) return;
+              e.preventDefault();
+            }}
             onDrop={(e) => {
+              if (!col.workflow) return;
               e.preventDefault();
               const taskId = draggingId ?? e.dataTransfer.getData("text/task-id");
               if (taskId) onDropToColumn(col.key, taskId);
@@ -401,37 +408,41 @@ function BoardColumnsGrid({
               </span>
             </div>
             <div className={SCE_CD_SECTION_BODY_CLASS}>
-            {swimlanes ? (
-              <div className="space-y-4">
-                {swimlanes.map((lane) => (
-                  <div key={lane.key}>
-                    <p className="mb-2 text-xs font-medium text-[var(--text-2)]">{lane.label}</p>
-                    <CardStack
-                      cards={lane.cards}
-                      columnKey={col.key}
-                      pending={pending}
-                      canManage={canManage}
-                      onMove={onMove}
-                      onDragStart={onDragStart}
-                      onDragEnd={onDragEnd}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <CardStack
-                cards={cards}
-                columnKey={col.key}
-                pending={pending}
-                canManage={canManage}
-                onMove={onMove}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-              />
-            )}
-            {col.key === "OPEN" && canManage ? (
-              <SprintInlineTaskCreate sprintId={sprintId} disabled={pending} onCreated={onRefresh} />
-            ) : null}
+              {swimlanes ? (
+                <div className="space-y-4">
+                  {swimlanes.map((lane) => (
+                    <div key={lane.key}>
+                      <p className="mb-2 text-xs font-medium text-[var(--text-2)]">{lane.label}</p>
+                      <CardStack
+                        cards={lane.cards}
+                        pending={pending}
+                        canManage={canManage && col.workflow}
+                        sprintId={sprintId}
+                        onBoardRefresh={onRefresh}
+                        onStatusError={onStatusError}
+                        onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
+                        readOnly={!col.workflow}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <CardStack
+                  cards={cards}
+                  pending={pending}
+                  canManage={canManage && col.workflow}
+                  sprintId={sprintId}
+                  onBoardRefresh={onRefresh}
+                  onStatusError={onStatusError}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  readOnly={!col.workflow}
+                />
+              )}
+              {col.key === "OPEN" && canManage ? (
+                <SprintInlineTaskCreate sprintId={sprintId} disabled={pending} onCreated={onRefresh} />
+              ) : null}
             </div>
           </section>
         );
@@ -442,21 +453,26 @@ function BoardColumnsGrid({
 
 function CardStack({
   cards,
-  columnKey,
   pending,
   canManage,
-  onMove,
+  sprintId,
+  onBoardRefresh,
+  onStatusError,
   onDragStart,
   onDragEnd,
+  readOnly = false,
 }: {
   cards: SprintBoardCard[];
-  columnKey: keyof BoardState;
   pending: boolean;
   canManage: boolean;
-  onMove: (taskId: string, status: TaskStatus) => void;
+  sprintId: string;
+  onBoardRefresh: () => void;
+  onStatusError: (message: string) => void;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
+  readOnly?: boolean;
 }) {
+  const actionable = canManage && !readOnly;
   return (
     <div className="space-y-2">
       {cards.length === 0 ? (
@@ -466,10 +482,12 @@ function CardStack({
           <BoardCardView
             key={card.taskId}
             card={card}
-            columnKey={columnKey}
             pending={pending}
-            onMove={onMove}
-            draggable={canManage}
+            canManage={actionable && card.status !== TaskStatus.CANCELLED}
+            sprintId={sprintId}
+            onBoardRefresh={onBoardRefresh}
+            onStatusError={onStatusError}
+            draggable={actionable && card.status !== TaskStatus.CANCELLED}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
           />

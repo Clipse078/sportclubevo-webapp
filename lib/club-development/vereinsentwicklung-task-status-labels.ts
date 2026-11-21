@@ -4,6 +4,7 @@ import type { TaskStatus } from "@prisma/client";
 export const VEREINSENTWICKLUNG_TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   OPEN: "Offen",
   IN_PROGRESS: "In Arbeit",
+  WAITING: "Wartet",
   DONE: "Erledigt",
   CANCELLED: "Abgebrochen",
 };
