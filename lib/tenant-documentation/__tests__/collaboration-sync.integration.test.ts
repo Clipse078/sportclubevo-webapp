@@ -24,7 +24,9 @@ async function seedDisposableTenant() {
     where: { email: "tdoc-editor-a@example.test" },
     create: {
       email: "tdoc-editor-a@example.test",
-      name: "Lara Keller",
+      firstName: "Lara",
+      lastName: "Keller",
+      passwordHash: "fixture",
       isActive: true,
     },
     update: {},
@@ -33,7 +35,9 @@ async function seedDisposableTenant() {
     where: { email: "tdoc-editor-b@example.test" },
     create: {
       email: "tdoc-editor-b@example.test",
-      name: "Marco Rüegsegger",
+      firstName: "Marco",
+      lastName: "Rüegsegger",
+      passwordHash: "fixture",
       isActive: true,
     },
     update: {},
@@ -57,10 +61,11 @@ describe.skipIf(!dbReady)("tenant documentation collaboration sync", () => {
 
   beforeEach(async () => {
     await seedDisposableTenant();
+    const runSlug = `it-space-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const space = await prisma.tenantDocumentationSpace.create({
       data: {
         tenantId: TENANT_ID,
-        slug: "it-space",
+        slug: runSlug,
         title: "IT Space",
       },
     });

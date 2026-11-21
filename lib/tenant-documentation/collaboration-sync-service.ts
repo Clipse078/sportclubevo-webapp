@@ -3,6 +3,7 @@ import {
   TenantDocumentationDraftSaveStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { extractMentionUserIdsFromTipTapJson } from "@/lib/collaboration/mentions/extract-mention-user-ids";
 import {
   diffYjsState,
   mergeYjsUpdate,
@@ -123,11 +124,26 @@ export async function synchronizePageCollaboration(
       "@/lib/tenant-documentation/draft-content-json"
     );
     const clientJson = parseDraftContentJson(input.contentJson);
+    const draftMentionIds = extractMentionUserIdsFromTipTapJson(draft.contentJson);
+    const clientMentionIds = clientJson
+      ? extractMentionUserIdsFromTipTapJson(clientJson)
+      : [];
+    const staleAutosaveDropsMentions =
+      Boolean(clientJson) &&
+      !(incomingUpdate && incomingUpdate.length > 0) &&
+      draftMentionIds.some((id) => !clientMentionIds.includes(id));
+
+    const resolvedClientJson = staleAutosaveDropsMentions ? null : clientJson;
+    const derivedFromYjs = yjsStateToRichTextSnapshot(mergedState);
+    const preserveMentionDraftJson =
+      Boolean(incomingUpdate?.length) && !resolvedClientJson && draftMentionIds.length > 0;
     const contentJson =
-      clientJson ??
-      (incomingUpdate && incomingUpdate.length > 0
-        ? yjsStateToRichTextSnapshot(mergedState)
-        : draft.contentJson);
+      resolvedClientJson ??
+      (preserveMentionDraftJson
+        ? draft.contentJson
+        : incomingUpdate && incomingUpdate.length > 0
+          ? derivedFromYjs
+          : draft.contentJson);
 
     await tx.tenantDocumentationPageDraft.update({
       where: { pageId: input.pageId },

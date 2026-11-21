@@ -3,7 +3,10 @@
  */
 
 export const SCE_TENANT_DOCUMENTATION_ROLLOUT = {
-  migrationId: "20261121160000_sce_tenant_documentation_foundation",
+  migrationIds: [
+    "20261121160000_sce_tenant_documentation_foundation",
+    "20261121170000_sce_tenant_documentation_mentions",
+  ],
   permissionSyncScript: "scripts/sync-tenant-documentation-permissions.ts",
   disposableVerifyScript: "scripts/sce-tenant-documentation-disposable-migration-verify.ts",
   deploymentDependencies: [
