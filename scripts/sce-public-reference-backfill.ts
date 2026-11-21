@@ -4,17 +4,11 @@
  *
  * Usage: npx tsx scripts/sce-public-reference-backfill.ts [--tenant <id>] [--dry-run]
  */
-import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { formatScePublicReference } from "@/lib/club-development/sce-public-reference";
-import { Pool } from "pg";
 import { runScePublicReferenceBackfill } from "@/lib/club-development/sce-public-reference-backfill";
 
-const connectionString = process.env.DATABASE_URL?.trim();
-if (!connectionString) throw new Error("DATABASE_URL is required.");
-const pool = new Pool({ connectionString });
-const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+const prisma = new PrismaClient();
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
@@ -50,5 +44,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end();
   });
