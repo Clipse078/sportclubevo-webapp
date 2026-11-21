@@ -1,19 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { MoreVertical } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ClubStrategyListItemDto } from "@/lib/club-development/club-strategy-service";
 import type { StrategyTargetOverview } from "@/lib/club-development/strategy-overview";
+import type { TargetStatus } from "@prisma/client";
 import { formatTargetStatusLabel } from "@/lib/targets/target-presentation";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
-import StrategyProgressIndicator from "./StrategyProgressIndicator";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
+import VereinsentwicklungBacklogTableShell from "./VereinsentwicklungBacklogTableShell";
+import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
-import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
+import {
+  SCE_CD_BACKLOG_GRID_ZIEL,
+  SCE_CD_WORKSPACE_PANEL_CLASS,
+} from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 import CreateTargetWorkspaceCollapsibleCard from "@/components/admin/targets/CreateTargetWorkspaceCollapsibleCard";
@@ -82,7 +89,7 @@ export default function ZieleWorkspacePanel({
         />
       ) : null}
 
-      <div className={`${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-3`}>
+      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
         {targets.length === 0 ? (
           <SceClubDevelopmentEmptyState
             testId="ziele-workspace-empty"
@@ -104,78 +111,77 @@ export default function ZieleWorkspacePanel({
             }
           />
         ) : (
-          <>
-            <div
-              className="hidden text-[10px] font-medium uppercase tracking-wide text-[var(--muted)] sm:grid sm:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.65fr))] sm:gap-3 sm:px-3"
-              aria-hidden
-            >
-              <span>Titel</span>
-              <span>Strategie</span>
-              <span>Verantwortlich</span>
-              <span>Org-Einheit</span>
-              <span>{CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}</span>
-            </div>
-            <div className="space-y-2" data-testid="ziele-workspace-list">
-              {targets.map((target) => {
-                const isFocus = focusTargetIds.has(target.id);
-                const detailHref = buildZielDetailHref(target.id, orgQuery);
-                const strategyLink =
-                  target.linkedClubStrategyTitle && target.linkedClubStrategyId
-                    ? {
-                        title: target.linkedClubStrategyTitle,
-                        href: buildStrategieReturnHref({
-                          orgUnitId: orgQuery,
-                          strategyId: target.linkedClubStrategyId,
-                        }),
-                      }
-                    : strategyLinkByTargetId.get(target.id) ?? null;
-                const strategyLabel = strategyLink?.title ?? "—";
-                const orgUnitLabel =
-                  target.orgUnitLabel?.trim() ||
-                  (isFocus ? "Schwerpunkt" : null) ||
-                  "—";
-                return (
-                  <VereinsentwicklungWorkspaceRecordRow
-                    key={target.id}
-                    title={target.title}
-                    titleHref={detailHref}
-                    strategyLabel={strategyLabel}
-                    strategyHref={strategyLink?.href ?? null}
-                    responsibleLabel={target.responsibleLabel}
-                    orgUnitLabel={orgUnitLabel}
-                    progressSlot={
-                      <StrategyProgressIndicator
-                        variant="compact"
-                        label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
-                        percent={
-                          target.deliveryProgressCaption === "Noch keine Aufgaben"
-                            ? null
-                            : target.deliveryProgressPercent
-                        }
-                        unknownReason={
-                          target.deliveryProgressCaption === "Noch keine Aufgaben" ? "Noch keine Aufgaben" : null
-                        }
-                        countCaption={
-                          target.deliveryProgressCaption === "Noch keine Aufgaben"
-                            ? null
-                            : target.deliveryProgressCaption
-                        }
-                        accentClass="bg-[var(--sce-info)]"
-                        testId={`ziele-task-progress-${target.id}`}
-                      />
+          <VereinsentwicklungBacklogTableShell
+            testId="ziele-workspace-list"
+            gridClassName={SCE_CD_BACKLOG_GRID_ZIEL}
+            header={
+              <>
+                <span>Referenz</span>
+                <span>Titel</span>
+                <span>Strategie</span>
+                <span>Status</span>
+                <VereinsentwicklungBacklogFortschrittHeader label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel} />
+                <span>Verantwortlich</span>
+                <span className="sr-only">Aktionen</span>
+              </>
+            }
+          >
+            {targets.map((target) => {
+              const isFocus = focusTargetIds.has(target.id);
+              const detailHref = buildZielDetailHref(target.id, orgQuery);
+              const strategyLink =
+                target.linkedClubStrategyTitle && target.linkedClubStrategyId
+                  ? {
+                      title: target.linkedClubStrategyTitle,
+                      href: buildStrategieReturnHref({
+                        orgUnitId: orgQuery,
+                        strategyId: target.linkedClubStrategyId,
+                      }),
                     }
-                    statusLabel={formatTargetStatusLabel(target.status)}
-                    testId={`ziele-row-${target.id}`}
-                    trailing={
-                      <Link href={detailHref} className="text-xs text-[var(--sce-primary)] hover:underline">
-                        Öffnen
-                      </Link>
-                    }
-                  />
-                );
-              })}
-            </div>
-          </>
+                  : strategyLinkByTargetId.get(target.id) ?? null;
+              const strategyLabel = strategyLink?.title ?? "—";
+              const orgUnitLabel =
+                target.orgUnitLabel?.trim() || (isFocus ? "Schwerpunkt" : null);
+              const deliveryEmpty = target.deliveryProgressCaption === "Noch keine Aufgaben";
+
+              return (
+                <VereinsentwicklungWorkspaceRecordRow
+                  key={target.id}
+                  variant="target"
+                  publicReference={target.publicReference}
+                  title={target.title}
+                  titleHref={detailHref}
+                  strategyLabel={strategyLabel}
+                  strategyHref={strategyLink?.href ?? null}
+                  orgUnitLabel={orgUnitLabel}
+                  responsibleLabel={target.responsibleLabel}
+                  status={target.status as TargetStatus}
+                  statusLabel={formatTargetStatusLabel(target.status)}
+                  progressSlot={
+                    <SceCompletionProgressInline
+                      metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                      countCaption={deliveryEmpty ? null : target.deliveryProgressCaption}
+                      emptyLabel="Noch keine Aufgaben"
+                      countSuffix="erledigt"
+                      showUnitShortLabel={false}
+                      captionPriority
+                      testId={`ziele-task-progress-${target.id}`}
+                    />
+                  }
+                  testId={`ziele-row-${target.id}`}
+                  trailing={
+                    <Link
+                      href={detailHref}
+                      className="inline-flex rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--sce-primary)]"
+                      aria-label={`${target.title} öffnen`}
+                    >
+                      <MoreVertical className="h-4 w-4" aria-hidden />
+                    </Link>
+                  }
+                />
+              );
+            })}
+          </VereinsentwicklungBacklogTableShell>
         )}
       </div>
     </div>

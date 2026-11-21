@@ -96,6 +96,14 @@ export default function VorhabenAufgabenWorkspace({
     [snapshot.initiatives],
   );
 
+  const showAufgabenRowProgress = useMemo(
+    () =>
+      snapshot.tasks.some(
+        (task) => task.progressHasChildRollup && (task.progressTotalCount ?? 0) > 0,
+      ),
+    [snapshot.tasks],
+  );
+
   const fetchWorkspace = useCallback(() => {
     if (!snapshot.canViewInitiatives && !snapshot.canViewTasks) {
       return;
@@ -365,6 +373,7 @@ export default function VorhabenAufgabenWorkspace({
             ) : (
               <VereinsentwicklungConnectedTaskTable
                 rows={snapshot.tasks.map(mapVorhabenTaskRowToTableModel)}
+                showRowProgress={showAufgabenRowProgress}
                 testId="vereinsentwicklung-aufgaben-task-table"
               />
             )}

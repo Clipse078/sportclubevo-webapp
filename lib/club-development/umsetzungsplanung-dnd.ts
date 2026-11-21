@@ -1,4 +1,5 @@
 export const UMSETZUNGSPLANUNG_DND_MIME = "application/x-sce-umsetzungsplanung-task";
+export const UMSETZUNGSPLANUNG_PHASE_DND_MIME = "application/x-sce-umsetzungsplanung-planned-phase";
 
 export type UmsetzungsplanungDragSource = "unplanned" | "phase";
 
@@ -38,4 +39,36 @@ export function computeUnplannedListReorder<T extends { taskId: string }>(
   const next = [...rest.slice(0, insertIdx), moved, ...rest.slice(insertIdx)];
   const unchanged = next.map((r) => r.taskId).join(",") === rows.map((r) => r.taskId).join(",");
   return unchanged ? null : next;
+}
+
+export type UmsetzungsplanungPhaseDragPayload = {
+  sprintId: string;
+};
+
+export function serializeUmsetzungsplanungPhaseDragPayload(payload: UmsetzungsplanungPhaseDragPayload): string {
+  return JSON.stringify(payload);
+}
+
+export function parseUmsetzungsplanungPhaseDragPayload(raw: string): UmsetzungsplanungPhaseDragPayload | null {
+  try {
+    const parsed = JSON.parse(raw) as UmsetzungsplanungPhaseDragPayload;
+    if (!parsed?.sprintId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function computePlannedPhaseListReorder(
+  orderedIds: readonly string[],
+  draggedId: string,
+  dropIndex: number,
+): string[] | null {
+  const draggedIdx = orderedIds.indexOf(draggedId);
+  if (draggedIdx < 0) return null;
+  const rest = orderedIds.filter((id) => id !== draggedId);
+  let insertIdx = dropIndex > draggedIdx ? dropIndex - 1 : dropIndex;
+  insertIdx = Math.max(0, Math.min(rest.length, insertIdx));
+  const next = [...rest.slice(0, insertIdx), draggedId, ...rest.slice(insertIdx)];
+  return next.join(",") === orderedIds.join(",") ? null : next;
 }

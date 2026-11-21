@@ -24,6 +24,11 @@ type SprintSnapshot = {
 type Props = {
   sprint: SprintSnapshot;
   canManage: boolean;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  reorderPending?: boolean;
 };
 
 function toDateInputValue(value: string | null): string {
@@ -33,7 +38,15 @@ function toDateInputValue(value: string | null): string {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DevelopmentSprintPhaseEditMenu({ sprint, canManage }: Props) {
+export default function DevelopmentSprintPhaseEditMenu({
+  sprint,
+  canManage,
+  canMoveUp = false,
+  canMoveDown = false,
+  onMoveUp,
+  onMoveDown,
+  reorderPending = false,
+}: Props) {
   const router = useRouter();
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -120,21 +133,54 @@ export default function DevelopmentSprintPhaseEditMenu({ sprint, canManage }: Pr
         <span className="sr-only">Aktionen</span>
       </button>
       {menuOpen ? (
-        <button
-          type="button"
+        <div
           id={menuId}
           role="menu"
           className="absolute right-0 z-20 mt-1 min-w-[12rem] rounded-md border border-[var(--border)] bg-[var(--surface)] py-1 text-left shadow-lg"
-          onClick={() => {
-            setMenuOpen(false);
-            setFormOpen(true);
-          }}
-          data-testid={`umsetzungsplanung-phase-edit-action-${sprint.slug}`}
         >
-          <span className="block px-3 py-2 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]">
+          {sprint.status === "PLANNED" && (onMoveUp || onMoveDown) ? (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                className="block w-full px-3 py-2 text-left text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                disabled={!canMoveUp || reorderPending}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onMoveUp?.();
+                }}
+                data-testid={`umsetzungsplanung-phase-move-up-${sprint.slug}`}
+              >
+                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.phaseMoveUpAction}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="block w-full px-3 py-2 text-left text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                disabled={!canMoveDown || reorderPending}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onMoveDown?.();
+                }}
+                data-testid={`umsetzungsplanung-phase-move-down-${sprint.slug}`}
+              >
+                {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.phaseMoveDownAction}
+              </button>
+            </>
+          ) : null}
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full px-3 py-2 text-left text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+            onClick={() => {
+              setMenuOpen(false);
+              setFormOpen(true);
+            }}
+            data-testid={`umsetzungsplanung-phase-edit-action-${sprint.slug}`}
+          >
             {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.phaseEditAction}
-          </span>
-        </button>
+          </button>
+        </div>
       ) : null}
       {formOpen ? (
         <form

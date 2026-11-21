@@ -64,7 +64,8 @@ export function computeInitiativeProgressFromUnits(
   const eligible = units.filter((u) => isProgressEligibleStatus(u.status));
   const totalCount = eligible.length;
   const completedCount = eligible.filter((u) => u.status === TaskStatus.DONE).length;
-  const percent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  const percent =
+    totalCount === 0 ? 0 : completedCount >= totalCount ? 100 : Math.floor((completedCount / totalCount) * 100);
   return { completedCount, totalCount, percent };
 }
 

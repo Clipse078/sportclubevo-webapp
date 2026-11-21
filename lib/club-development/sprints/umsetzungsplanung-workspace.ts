@@ -1,4 +1,5 @@
 import type { DevelopmentSprintStatus } from "@prisma/client";
+import { comparePlannedSprintsByRank } from "./planned-sprint-rank-ordering";
 
 export type UmsetzungsplanungSprintBuckets<T extends { status: DevelopmentSprintStatus; endsAt?: string | null }> = {
   active: T[];
@@ -8,12 +9,17 @@ export type UmsetzungsplanungSprintBuckets<T extends { status: DevelopmentSprint
 
 /** Presentation ordering for the consolidated Umsetzungsplanung workspace. */
 export function partitionSprintsForUmsetzungsplanung<
-  T extends { status: DevelopmentSprintStatus; endsAt?: string | null; startsAt?: string | null },
->(sprints: T[]): UmsetzungsplanungSprintBuckets<T> {
+  T extends {
+    id: string;
+    status: DevelopmentSprintStatus;
+    endsAt?: string | null;
+    startsAt?: string | null;
+  },
+>(sprints: T[], plannedRankMap: ReadonlyMap<string, number> = new Map()): UmsetzungsplanungSprintBuckets<T> {
   const active = sprints.filter((s) => s.status === "ACTIVE");
   const planned = sprints
     .filter((s) => s.status === "PLANNED")
-    .sort((a, b) => compareNullableIso(a.startsAt ?? null, b.startsAt ?? null));
+    .sort((a, b) => comparePlannedSprintsByRank(a, b, new Map(plannedRankMap)));
   const completed = sprints
     .filter((s) => s.status === "COMPLETED")
     .sort((a, b) => compareNullableIso(b.endsAt ?? null, a.endsAt ?? null));
@@ -38,6 +44,25 @@ export function openPhaseAssignmentOptions(
   buckets: UmsetzungsplanungSprintBuckets<UmsetzungsplanungPhaseOption>,
 ): UmsetzungsplanungPhaseOption[] {
   return [...buckets.active, ...buckets.planned];
+}
+
+export function groupScheduleDestinationPhases(
+  options: readonly UmsetzungsplanungPhaseOption[],
+  excludePhaseId?: string | null,
+) {
+  const filtered = excludePhaseId ? options.filter((p) => p.id !== excludePhaseId) : [...options];
+  return {
+    ongoing: filtered.filter((p) => p.status === "ACTIVE"),
+    planned: filtered.filter((p) => p.status === "PLANNED"),
+  };
+}
+
+export function hasScheduleDestinationPhases(
+  options: readonly UmsetzungsplanungPhaseOption[],
+  excludePhaseId?: string | null,
+): boolean {
+  const grouped = groupScheduleDestinationPhases(options, excludePhaseId);
+  return grouped.ongoing.length + grouped.planned.length > 0;
 }
 
 export type UmsetzungsplanungSectionKey = "ongoing" | "planned" | "unplanned" | "completed";

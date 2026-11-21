@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronDown, ChevronUp, Loader2, MoreVertical } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
@@ -19,11 +19,14 @@ import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetz
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
+import UmsetzungsplanungTaskScheduleMenu from "./UmsetzungsplanungTaskScheduleMenu";
 
 type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
-  assignDisabled?: boolean;
+  schedulingCapable?: boolean;
   onAssigned?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,7 +39,7 @@ function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
 
 export default function UmsetzungsplanungUnplannedPanel({
   phaseOptions,
-  assignDisabled = false,
+  schedulingCapable = false,
   onAssigned,
   open,
   onOpenChange,
@@ -94,6 +97,7 @@ export default function UmsetzungsplanungUnplannedPanel({
   }, [open, loadCatalog, serverSearch]);
 
   const headerCount = catalog ? countCatalogTasks(catalog) : null;
+  const headerDeliveryProgress = catalog?.aggregateDeliveryProgress ?? null;
 
   const rankedTasks = useMemo(
     () => (catalog ? flattenUnplannedCatalogTasks(catalog) : []),
@@ -166,45 +170,59 @@ export default function UmsetzungsplanungUnplannedPanel({
     [loadCatalog, serverSearch],
   );
 
-  const moveTaskByOffset = (taskId: string, offset: -1 | 1) => {
-    if (reorderBlocked) return;
-    const idx = allOrderedTaskIds.indexOf(taskId);
-    if (idx < 0) return;
-    const target = idx + offset;
-    if (target < 0 || target >= allOrderedTaskIds.length) return;
-    const next = [...allOrderedTaskIds];
-    const [removed] = next.splice(idx, 1);
-    if (!removed) return;
-    next.splice(target, 0, removed);
-    void persistOrder(next);
-  };
+  const optimisticRemoveTask = useCallback((taskId: string) => {
+    setCatalog((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        initiativeGroups: current.initiativeGroups
+          .map((group) => ({
+            ...group,
+            tasks: group.tasks.filter((t) => t.id !== taskId),
+          }))
+          .filter((group) => group.tasks.length > 0),
+        standaloneGroup: {
+          tasks: current.standaloneGroup.tasks.filter((t) => t.id !== taskId),
+        },
+      };
+    });
+  }, []);
 
-  const assignTaskToPhase = (taskId: string, phaseId: string) => {
-    if (!phaseId || submittingRef.current || assignDisabled) return;
+  useEffect(() => {
+    dragCtx?.registerUnplannedScheduleHooks({
+      onOptimisticRemove: optimisticRemoveTask,
+      onRollbackRestore: () => void loadCatalog(serverSearch),
+    });
+    return () => dragCtx?.registerUnplannedScheduleHooks(null);
+  }, [dragCtx, loadCatalog, optimisticRemoveTask, serverSearch]);
+
+  const assignTaskToPhase = async (taskId: string, phaseId: string) => {
+    if (!phaseId || submittingRef.current || !schedulingCapable) return;
     submittingRef.current = true;
     setAssigningTaskId(taskId);
     setError(null);
     setInfo(null);
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/club-development/sprints/${phaseId}/tasks/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ taskIds: [taskId] }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.");
-          return;
-        }
-        setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+    optimisticRemoveTask(taskId);
+    try {
+      const res = await fetch(`/api/club-development/sprints/${phaseId}/tasks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: [taskId] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.";
+        setError(message);
         await loadCatalog(serverSearch);
-        onAssigned?.();
-      } finally {
-        submittingRef.current = false;
-        setAssigningTaskId(null);
+        throw new Error(message);
       }
-    });
+      setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+      await loadCatalog(serverSearch);
+      onAssigned?.();
+    } finally {
+      submittingRef.current = false;
+      setAssigningTaskId(null);
+    }
   };
 
   const unassignFromPhase = (taskId: string, phaseId: string) => {
@@ -262,6 +280,21 @@ export default function UmsetzungsplanungUnplannedPanel({
           Ungeplant
         </span>
       }
+      headerAside={
+        headerDeliveryProgress && headerDeliveryProgress.totalCount > 0 ? (
+          <SceCompletionProgressInline
+            metricLabel={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
+            completedCount={headerDeliveryProgress.completedCount}
+            totalCount={headerDeliveryProgress.totalCount}
+            countCaption={null}
+            emptyLabel="Noch keine Aufgaben"
+            countSuffix="Aufgaben erledigt"
+            unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
+            testId="umsetzungsplanung-unplanned-header-progress"
+            className="hidden shrink-0 sm:flex"
+          />
+        ) : null
+      }
     >
       <div
         className={cn(
@@ -303,7 +336,7 @@ export default function UmsetzungsplanungUnplannedPanel({
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
                 value={defaultPhaseId}
                 onChange={(e) => setDefaultPhaseId(e.target.value)}
-                disabled={assignDisabled || pending}
+                disabled={!schedulingCapable || pending}
               >
                 {phaseOptions.map((phase) => (
                   <option key={phase.id} value={phase.id}>
@@ -359,65 +392,18 @@ export default function UmsetzungsplanungUnplannedPanel({
             testId="umsetzungsplanung-unplanned-task-table"
             renderRowActions={(row) => {
               const task = filteredTasks.find((t) => t.id === row.taskId);
-              const canPlan =
-                !assignDisabled &&
-                phaseOptions.length > 0 &&
-                Boolean(defaultPhaseId) &&
-                task?.selectable !== false;
+              const canPlan = schedulingCapable && task?.selectable !== false;
               const isAssigning = assigningTaskId === row.taskId && pending;
-              const idx = allOrderedTaskIds.indexOf(row.taskId);
-              const canMove = !reorderBlocked;
               return (
-                <div className="flex flex-wrap items-center justify-end gap-1">
-                  {canMove ? (
-                    <>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
-                        disabled={idx <= 0}
-                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveUpAction}
-                        onClick={() => moveTaskByOffset(row.taskId, -1)}
-                        data-testid={`umsetzungsplanung-move-up-${row.taskId}`}
-                      >
-                        <ChevronUp className="h-4 w-4" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
-                        disabled={idx < 0 || idx >= allOrderedTaskIds.length - 1}
-                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveDownAction}
-                        onClick={() => moveTaskByOffset(row.taskId, 1)}
-                        data-testid={`umsetzungsplanung-move-down-${row.taskId}`}
-                      >
-                        <ChevronDown className="h-4 w-4" aria-hidden />
-                      </button>
-                    </>
-                  ) : null}
-                  {canPlan ? (
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
-                      disabled={isAssigning || pending}
-                      onClick={() => assignTaskToPhase(row.taskId, defaultPhaseId)}
-                      data-testid={`umsetzungsplanung-einplanen-${row.taskId}`}
-                    >
-                      {isAssigning ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                      ) : (
-                        <Calendar className="h-3.5 w-3.5" aria-hidden />
-                      )}
-                      {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenAction}
-                    </button>
-                  ) : (
-                    <span
-                      className="text-[var(--muted)]"
-                      title={task?.exclusionReason ?? undefined}
-                      aria-hidden
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </span>
-                  )}
-                </div>
+                <UmsetzungsplanungTaskScheduleMenu
+                  taskId={row.taskId}
+                  taskTitle={row.title}
+                  phaseOptions={phaseOptions}
+                  canSchedule={canPlan}
+                  pending={isAssigning || pending}
+                  onMoveToPhase={(taskId, phaseId) => assignTaskToPhase(taskId, phaseId)}
+                  testId={`umsetzungsplanung-schedule-menu-${row.taskId}`}
+                />
               );
             }}
           />

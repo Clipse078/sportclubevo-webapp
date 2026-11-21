@@ -14,8 +14,21 @@ import {
   UMSETZUNGSPLANUNG_DND_MIME,
 } from "@/lib/club-development/umsetzungsplanung-dnd";
 import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorkspaceTaskStatusPill";
+import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
+import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
+import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
+import {
+  SCE_CD_BACKLOG_GRID_TASK,
+  SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
+  SCE_CD_BACKLOG_ROW_CLASS,
+} from "./sce-club-development-surface-styles";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
+import { useUmsetzungsplanungTaskRowPointerDrag } from "./useUmsetzungsplanungTaskRowPointerDrag";
+
+export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full";
 
 function AssigneeCell({
   assignees,
@@ -96,6 +109,8 @@ export type VereinsentwicklungPhaseDragConfig = {
 
 export type VereinsentwicklungConnectedTaskTableProps = {
   rows: VereinsentwicklungConnectedTaskTableRowModel[];
+  layoutVariant?: VereinsentwicklungConnectedTaskTableLayout;
+  showRowProgress?: boolean;
   showReorderHandle?: boolean;
   reorder?: VereinsentwicklungTaskTableReorderConfig;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
@@ -107,6 +122,8 @@ export type VereinsentwicklungConnectedTaskTableProps = {
 function TaskTableRow({
   row,
   gridCols,
+  layoutVariant,
+  showRowProgress,
   showReorderHandle,
   dragHandleEnabled,
   reorderPending,
@@ -114,9 +131,12 @@ function TaskTableRow({
   onDragEndRow,
   phaseDrag,
   renderRowActions,
+  schedulingDragEnabled = false,
 }: {
   row: VereinsentwicklungConnectedTaskTableRowModel;
   gridCols: string;
+  layoutVariant: VereinsentwicklungConnectedTaskTableLayout;
+  showRowProgress: boolean;
   showReorderHandle: boolean;
   dragHandleEnabled: boolean;
   reorderPending?: boolean;
@@ -124,13 +144,37 @@ function TaskTableRow({
   onDragEndRow?: () => void;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
   renderRowActions?: (row: VereinsentwicklungConnectedTaskTableRowModel) => ReactNode;
+  schedulingDragEnabled?: boolean;
 }) {
   const phaseHandle = Boolean(phaseDrag?.enabled);
+  const pointerDrag = useUmsetzungsplanungTaskRowPointerDrag();
+
+  const startSchedulingPayload = (event: React.DragEvent) => {
+    const payload = serializeUmsetzungsplanungDragPayload(
+      phaseHandle
+        ? {
+            taskId: row.taskId,
+            source: "phase",
+            sourcePhaseId: phaseDrag!.phaseId,
+          }
+        : {
+            taskId: row.taskId,
+            source: "unplanned",
+          },
+    );
+    event.dataTransfer.setData(UMSETZUNGSPLANUNG_DND_MIME, payload);
+    event.dataTransfer.setData("text/plain", payload);
+    event.dataTransfer.effectAllowed = "move";
+    if (phaseHandle) phaseDrag?.onDragStart?.(row.taskId);
+    else onDragStartRow?.(row.taskId);
+  };
+
   return (
     <>
       <div
-        className={cn("grid gap-2 px-1 py-2.5 sm:items-center", gridCols)}
+        className={cn(SCE_CD_BACKLOG_ROW_CLASS, "sm:items-center", gridCols)}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
+        data-sce-backlog-row="task"
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
@@ -146,26 +190,20 @@ function TaskTableRow({
                   event.preventDefault();
                 }
               }}
+              onPointerDown={pointerDrag.onPointerDown}
+              onPointerMove={pointerDrag.onPointerMove}
+              onPointerUp={pointerDrag.onPointerUp}
+              onPointerCancel={pointerDrag.onPointerCancel}
               onDragStart={(event) => {
-                const payload = serializeUmsetzungsplanungDragPayload(
-                  phaseHandle
-                    ? {
-                        taskId: row.taskId,
-                        source: "phase",
-                        sourcePhaseId: phaseDrag!.phaseId,
-                      }
-                    : {
-                        taskId: row.taskId,
-                        source: "unplanned",
-                      },
-                );
-                event.dataTransfer.setData(UMSETZUNGSPLANUNG_DND_MIME, payload);
-                event.dataTransfer.setData("text/plain", payload);
-                event.dataTransfer.effectAllowed = "move";
-                if (phaseHandle) phaseDrag?.onDragStart?.(row.taskId);
-                else onDragStartRow?.(row.taskId);
+                if (!pointerDrag.shouldAllowDragStart()) {
+                  event.preventDefault();
+                  return;
+                }
+                pointerDrag.onDragStartAfterThreshold();
+                startSchedulingPayload(event);
               }}
               onDragEnd={() => {
+                pointerDrag.resetPointerGesture();
                 if (phaseHandle) phaseDrag?.onDragEnd?.();
                 else onDragEndRow?.();
               }}
@@ -184,27 +222,66 @@ function TaskTableRow({
             </span>
           )
         ) : null}
-        <div className="min-w-0">
-          <Link
+        <VereinsentwicklungBacklogReferenceCell reference={row.publicReference} />
+        <div
+          className="min-w-0"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <VereinsentwicklungBacklogTruncatingTitle
+            title={row.title}
             href={row.taskHref}
-            className="text-sm font-medium text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-          >
-            {row.title}
-          </Link>
+            suppressNativeLinkDrag={Boolean(showReorderHandle || phaseHandle)}
+            schedulingDrag={
+              schedulingDragEnabled
+                ? {
+                    enabled: true,
+                    pending: reorderPending,
+                    onDragStart: startSchedulingPayload,
+                    onDragEnd: () => {
+                      if (phaseHandle) phaseDrag?.onDragEnd?.();
+                      else onDragEndRow?.();
+                    },
+                  }
+                : undefined
+            }
+          />
         </div>
         <LinkCell
           label={row.targetTitle}
           href={row.targetHref}
           columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}
         />
-        <LinkCell
-          label={row.strategyTitle}
-          href={row.strategyHref}
-          columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}
-        />
-        <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
+        {layoutVariant === "full" ? (
+          <>
+            <LinkCell
+              label={row.strategyTitle}
+              href={row.strategyHref}
+              columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}
+            />
+            <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
+          </>
+        ) : null}
         <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
         <AssigneeCell assignees={row.assignees} />
+        {showRowProgress ? (
+          row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
+            <SceCompletionProgressInline
+              metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+              completedCount={row.progressCompletedCount ?? null}
+              totalCount={row.progressTotalCount ?? null}
+              countCaption={null}
+              emptyLabel="Noch keine Teilaufgaben"
+              countSuffix="erledigt"
+              unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
+              testId={`task-row-progress-${row.taskId}`}
+            />
+          ) : (
+            <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
+              —
+            </div>
+          )
+        ) : null}
         <div className="flex justify-end">
           {renderRowActions ? (
             renderRowActions(row)
@@ -221,6 +298,8 @@ function TaskTableRow({
 
 export default function VereinsentwicklungConnectedTaskTable({
   rows,
+  layoutVariant = "backlog",
+  showRowProgress = false,
   showReorderHandle = false,
   reorder,
   phaseDrag,
@@ -229,9 +308,17 @@ export default function VereinsentwicklungConnectedTaskTable({
   testId,
 }: VereinsentwicklungConnectedTaskTableProps) {
   const showHandleColumn = showReorderHandle || Boolean(phaseDrag?.enabled);
-  const gridCols = showHandleColumn
-    ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
-    : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
+  const progressColumnActive =
+    showRowProgress &&
+  rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0);
+  const showProgressColumn = showRowProgress || progressColumnActive;
+  const backlogGrid = showProgressColumn ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
+  const gridCols =
+    layoutVariant === "backlog"
+      ? backlogGrid
+      : showHandleColumn
+        ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
+        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
 
   const reorderListActive = Boolean(showReorderHandle && reorder?.canReorder);
   const dragHandleEnabled = Boolean(
@@ -307,18 +394,26 @@ export default function VereinsentwicklungConnectedTaskTable({
         data-testid="vereinsentwicklung-task-table-header"
       >
         {showHandleColumn ? <span className="w-5" /> : null}
+        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.referenz}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.aufgabe}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.orgEinheit}</span>
+        {layoutVariant === "full" ? (
+          <>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}</span>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.orgEinheit}</span>
+          </>
+        ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+        {showProgressColumn ? (
+          <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+        ) : null}
         <span className="w-8" aria-hidden />
       </div>
 
       <div
         role="list"
-        className="divide-y divide-[var(--border)]/50"
+        className="list-none divide-y divide-[var(--border)]/50"
         onDragOver={(e) => {
           if (reorderListActive) e.preventDefault();
         }}
@@ -339,6 +434,7 @@ export default function VereinsentwicklungConnectedTaskTable({
           <li
             key={row.taskId}
             role="listitem"
+            className="list-none"
             onDragOver={
               reorderListActive
                 ? (e) => {
@@ -351,8 +447,11 @@ export default function VereinsentwicklungConnectedTaskTable({
             <TaskTableRow
               row={row}
               gridCols={gridCols}
+              layoutVariant={layoutVariant}
+              showRowProgress={showProgressColumn}
               showReorderHandle={showReorderHandle}
               dragHandleEnabled={dragHandleEnabled}
+              schedulingDragEnabled={dragHandleEnabled || Boolean(phaseDrag?.enabled)}
               reorderPending={reorder?.pending}
               onDragStartRow={onDragStartRow}
               onDragEndRow={onDragEndRow}

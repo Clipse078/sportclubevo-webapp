@@ -107,7 +107,8 @@ describe("Umsetzungsplanung workspace", () => {
     expect(workspace).toContain("UmsetzungsplanungUnplannedPanel");
     const unplanned = read("components/admin/club-development/UmsetzungsplanungUnplannedPanel.tsx");
     expect(unplanned).toContain("VereinsentwicklungConnectedTaskTable");
-    expect(unplanned).toContain("einplanenAction");
+    expect(unplanned).toContain("UmsetzungsplanungTaskScheduleMenu");
+    expect(unplanned).not.toContain("showRowProgress");
     expect(unplanned).toContain("showReorderHandle");
     expect(unplanned).toContain("unplanned-order");
     expect(unplanned).toContain("canReorder: !reorderBlocked");
@@ -130,8 +131,8 @@ describe("Umsetzungsplanung workspace", () => {
     expect(panel).toContain("VereinsentwicklungConnectedTaskTable");
     expect(panel).toContain("removeAssignmentAction");
     expect(panel).toContain("moveSelectedTasksAction");
-    expect(panel).toContain("von");
-    expect(panel).toContain("Aufgaben erledigt");
+    expect(panel).not.toContain("showRowProgress");
+    expect(panel).toContain("UmsetzungsplanungTaskScheduleMenu");
   });
 
   it("exposes Phase erstellen beside planned empty state", () => {

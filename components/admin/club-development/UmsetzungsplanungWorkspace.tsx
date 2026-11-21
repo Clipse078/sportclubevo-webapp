@@ -2,7 +2,8 @@
 
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
 import DevelopmentSprintCreateCard, {
   type DevelopmentSprintCreateCardHandle,
 } from "./DevelopmentSprintCreateCard";
@@ -26,6 +27,8 @@ import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetz
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import UmsetzungsplanungUnplannedPanel from "./UmsetzungsplanungUnplannedPanel";
 import { UmsetzungsplanungDragProvider } from "./UmsetzungsplanungDragContext";
+import { resolveScheduleDropSectionEligibility } from "@/lib/club-development/umsetzungsplanung-schedule-drop";
+import { partitionSprintsForUmsetzungsplanung as partitionForDrop } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -34,6 +37,7 @@ type Props = {
   sprints: UmsetzungsplanungPhaseCardItem[];
   canManageSprints: boolean;
   orgEinheitFilterLabel?: string | null;
+  plannedSprintRanks?: Record<string, number>;
 };
 
 function filterPhasesBySearch(items: UmsetzungsplanungPhaseCardItem[], query: string) {
@@ -46,19 +50,77 @@ export default function UmsetzungsplanungWorkspace({
   sprints,
   canManageSprints,
   orgEinheitFilterLabel = null,
+  plannedSprintRanks = {},
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const createRef = useRef<DevelopmentSprintCreateCardHandle>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const [pendingReorder, startReorder] = useTransition();
+
+  const plannedRankMap = useMemo(() => new Map(Object.entries(plannedSprintRanks)), [plannedSprintRanks]);
+  const phaseSearchActive = search.trim().length > 0;
 
   const filteredSprints = useMemo(
     () => filterPhasesBySearch(sprints, search),
     [search, sprints],
   );
 
-  const buckets = partitionSprintsForUmsetzungsplanung(filteredSprints);
+  const buckets = partitionSprintsForUmsetzungsplanung(filteredSprints, plannedRankMap);
+  const allPlannedIds = useMemo(
+    () => partitionSprintsForUmsetzungsplanung(sprints, plannedRankMap).planned.map((p) => p.id),
+    [plannedRankMap, sprints],
+  );
+  const [plannedOrderIds, setPlannedOrderIds] = useState<string[]>(allPlannedIds);
+
+  useEffect(() => {
+    setPlannedOrderIds(allPlannedIds);
+  }, [allPlannedIds]);
+
+  const plannedItems = useMemo(() => {
+    const byId = new Map(buckets.planned.map((item) => [item.id, item] as const));
+    if (phaseSearchActive) return buckets.planned;
+    return plannedOrderIds.map((id) => byId.get(id)).filter((row): row is UmsetzungsplanungPhaseCardItem => Boolean(row));
+  }, [buckets.planned, phaseSearchActive, plannedOrderIds]);
+
+  const persistPlannedOrder = useCallback(
+    async (orderedIds: string[]) => {
+      if (phaseSearchActive) return { ok: false as const };
+      setReorderError(null);
+      setPlannedOrderIds(orderedIds);
+      return new Promise<{ ok: boolean }>((resolve) => {
+        startReorder(async () => {
+          try {
+            const res = await fetch("/api/club-development/umsetzungsplanung/planned-order", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orderedSprintIds: orderedIds }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              const message =
+                typeof data.error === "string"
+                  ? data.error
+                  : CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.plannedReorderFailed;
+              setReorderError(message);
+              setPlannedOrderIds(allPlannedIds);
+              resolve({ ok: false });
+              return;
+            }
+            router.refresh();
+            resolve({ ok: true });
+          } catch {
+            setReorderError(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.plannedReorderFailed);
+            setPlannedOrderIds(allPlannedIds);
+            resolve({ ok: false });
+          }
+        });
+      });
+    },
+    [allPlannedIds, phaseSearchActive, router],
+  );
   const counts = countUmsetzungsplanungBuckets(buckets);
   const phaseOptions = openPhaseAssignmentOptions(buckets);
   const sectionFocus = parseUmsetzungsplanungSectionFocus(searchParams.get(CD_UMSETZUNGSPLANUNG_SECTION_QUERY));
@@ -73,11 +135,23 @@ export default function UmsetzungsplanungWorkspace({
   };
 
   const unplannedPrimary = canManageSprints && phaseOptions.length === 0;
+  const dropBuckets = useMemo(
+    () => partitionForDrop(sprints, plannedRankMap),
+    [plannedRankMap, sprints],
+  );
+  const ongoingDrop = useMemo(
+    () => resolveScheduleDropSectionEligibility("ongoing", dropBuckets),
+    [dropBuckets],
+  );
+  const plannedDrop = useMemo(
+    () => resolveScheduleDropSectionEligibility("planned", dropBuckets),
+    [dropBuckets],
+  );
 
   const unplannedPanel = canManageSprints ? (
     <UmsetzungsplanungUnplannedPanel
       phaseOptions={phaseOptions}
-      assignDisabled={phaseOptions.length === 0}
+      schedulingCapable
       open={sectionOpen.unplanned}
       onOpenChange={(open) => touchSection("unplanned", open)}
       onAssigned={() => router.refresh()}
@@ -160,6 +234,15 @@ export default function UmsetzungsplanungWorkspace({
           count={counts.ongoing}
           open={sectionOpen.ongoing}
           onOpenChange={(open) => touchSection("ongoing", open)}
+          scheduleDropHeader={
+            canManageSprints
+              ? {
+                  acceptsDrop: ongoingDrop.acceptsDrop,
+                  hasEligiblePhases: ongoingDrop.hasEligiblePhases,
+                  onRequestOpen: () => touchSection("ongoing", true),
+                }
+              : undefined
+          }
           testId="umsetzungsplanung-ongoing-section"
           headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.ongoing.headerClass}
           sectionBadge={
@@ -187,6 +270,15 @@ export default function UmsetzungsplanungWorkspace({
           count={counts.planned}
           open={sectionOpen.planned}
           onOpenChange={(open) => touchSection("planned", open)}
+          scheduleDropHeader={
+            canManageSprints
+              ? {
+                  acceptsDrop: plannedDrop.acceptsDrop,
+                  hasEligiblePhases: plannedDrop.hasEligiblePhases,
+                  onRequestOpen: () => touchSection("planned", true),
+                }
+              : undefined
+          }
           testId="umsetzungsplanung-future-section"
           headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.planned.headerClass}
           sectionBadge={
@@ -195,11 +287,31 @@ export default function UmsetzungsplanungWorkspace({
             </span>
           }
         >
+          {phaseSearchActive && canManageSprints ? (
+            <p className="px-1 pb-2 text-xs text-[var(--muted)]">
+              {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.plannedReorderFilteredHint}
+            </p>
+          ) : null}
+          {reorderError ? (
+            <div className="px-1 pb-2" data-testid="umsetzungsplanung-planned-reorder-error">
+              <ClubDevelopmentFormError message={reorderError} />
+            </div>
+          ) : null}
           {counts.planned > 0 ? (
             <UmsetzungsplanungPhaseList
-              items={buckets.planned}
+              items={plannedItems}
               canManageSprints={canManageSprints}
               phaseOptions={phaseOptions}
+              plannedReorder={
+                canManageSprints
+                  ? {
+                      enabled: !phaseSearchActive,
+                      pending: pendingReorder,
+                      orderedIds: plannedOrderIds,
+                      onPersistOrder: persistPlannedOrder,
+                    }
+                  : undefined
+              }
             />
           ) : (
             <UmsetzungsplanungInlineEmpty

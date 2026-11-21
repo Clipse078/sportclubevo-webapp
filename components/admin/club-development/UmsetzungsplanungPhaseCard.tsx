@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useTransition } from "react";
-import { Calendar, ChevronRight, ClipboardCheck, ExternalLink } from "lucide-react";
+import { useCallback, useState, useTransition } from "react";
+import { Calendar, ChevronRight, ClipboardCheck, ExternalLink, GripVertical } from "lucide-react";
+import {
+  serializeUmsetzungsplanungPhaseDragPayload,
+  UMSETZUNGSPLANUNG_PHASE_DND_MIME,
+} from "@/lib/club-development/umsetzungsplanung-dnd";
 import type { DevelopmentSprintStatus } from "@prisma/client";
 import {
   CD_SPRINT_STATUS_LABELS,
@@ -34,11 +38,23 @@ function formatDate(value: string | null) {
   );
 }
 
+export type UmsetzungsplanungPhaseReorderConfig = {
+  enabled: boolean;
+  pending?: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onPhaseDragStart?: () => void;
+  onPhaseDragEnd?: () => void;
+};
+
 type PhaseCardProps = {
   sprint: UmsetzungsplanungPhaseCardItem;
   canManageSprints: boolean;
   phaseOptions: UmsetzungsplanungPhaseOption[];
   readOnlyTasks?: boolean;
+  phaseReorder?: UmsetzungsplanungPhaseReorderConfig;
 };
 
 export default function UmsetzungsplanungPhaseCard({
@@ -46,9 +62,11 @@ export default function UmsetzungsplanungPhaseCard({
   canManageSprints,
   phaseOptions,
   readOnlyTasks = false,
+  phaseReorder,
 }: PhaseCardProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [assignedTasksExpandSignal, setAssignedTasksExpandSignal] = useState(0);
   const planningLabel =
     sprint.status === "ACTIVE"
       ? CD_SPRINT_WORKSPACE_COPY.tabPlanning
@@ -83,9 +101,32 @@ export default function UmsetzungsplanungPhaseCard({
         phaseTitle={sprint.title}
         acceptDrop={allowTaskMoves}
         onAssignTask={assignDraggedTask}
+        onExpandPhase={() => setAssignedTasksExpandSignal((value) => value + 1)}
       >
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface)] px-3 py-2.5">
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-start gap-2">
+          {phaseReorder?.enabled ? (
+            <div
+              role="button"
+              tabIndex={phaseReorder.pending ? -1 : 0}
+              aria-label={`${sprint.title} als Phase verschieben`}
+              aria-disabled={phaseReorder.pending || undefined}
+              draggable={!phaseReorder.pending}
+              onDragStart={(event) => {
+                const payload = serializeUmsetzungsplanungPhaseDragPayload({ sprintId: sprint.id });
+                event.dataTransfer.setData(UMSETZUNGSPLANUNG_PHASE_DND_MIME, payload);
+                event.dataTransfer.setData("text/plain", payload);
+                event.dataTransfer.effectAllowed = "move";
+                phaseReorder.onPhaseDragStart?.();
+              }}
+              onDragEnd={() => phaseReorder.onPhaseDragEnd?.()}
+              className="mt-0.5 flex shrink-0 cursor-grab rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-2)] active:cursor-grabbing aria-disabled:opacity-50"
+              data-testid={`umsetzungsplanung-phase-drag-${sprint.slug}`}
+            >
+              <GripVertical className="h-4 w-4" aria-hidden />
+            </div>
+          ) : null}
+          <div className="min-w-0 flex-1">
           <Link
             href={`/vereinsleitung/sprints/${sprint.slug}`}
             className="text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)]"
@@ -106,6 +147,7 @@ export default function UmsetzungsplanungPhaseCard({
               </>
             ) : null}
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <DevelopmentSprintPhaseEditMenu
@@ -119,6 +161,11 @@ export default function UmsetzungsplanungPhaseCard({
               endsAt: sprint.endsAt,
             }}
             canManage={canManageSprints}
+            canMoveUp={phaseReorder?.canMoveUp}
+            canMoveDown={phaseReorder?.canMoveDown}
+            onMoveUp={phaseReorder?.onMoveUp}
+            onMoveDown={phaseReorder?.onMoveDown}
+            reorderPending={phaseReorder?.pending}
           />
           <Link
             href={`/vereinsleitung/sprints/${sprint.slug}/board`}
@@ -154,36 +201,77 @@ export default function UmsetzungsplanungPhaseCard({
         sprintStatus={sprint.status}
         canManageAssignments={allowTaskMoves}
         moveTargetPhases={moveTargets}
+        schedulePhaseOptions={phaseOptions}
         defaultExpanded={sprint.status === "ACTIVE" || sprint.status === "PLANNED"}
+        expandSignal={assignedTasksExpandSignal}
       />
       </UmsetzungsplanungPhaseScheduleDropZone>
     </article>
   );
 }
 
+type PlannedPhaseListProps = {
+  items: UmsetzungsplanungPhaseCardItem[];
+  canManageSprints: boolean;
+  phaseOptions: UmsetzungsplanungPhaseOption[];
+  readOnlyTasks?: boolean;
+  plannedReorder?: {
+    enabled: boolean;
+    pending?: boolean;
+    orderedIds: string[];
+    onPersistOrder: (orderedIds: string[]) => Promise<{ ok: boolean }>;
+  };
+};
+
 export function UmsetzungsplanungPhaseList({
   items,
   canManageSprints,
   phaseOptions,
   readOnlyTasks,
-}: {
-  items: UmsetzungsplanungPhaseCardItem[];
-  canManageSprints: boolean;
-  phaseOptions: UmsetzungsplanungPhaseOption[];
-  readOnlyTasks?: boolean;
-}) {
+  plannedReorder,
+}: PlannedPhaseListProps) {
   return (
-    <ul className="space-y-0">
-      {items.map((sprint) => (
-        <li key={sprint.id}>
-          <UmsetzungsplanungPhaseCard
-            sprint={sprint}
-            canManageSprints={canManageSprints}
-            phaseOptions={phaseOptions}
-            readOnlyTasks={readOnlyTasks}
-          />
-        </li>
-      ))}
+    <ul className="space-y-0" data-testid="umsetzungsplanung-phase-list">
+      {items.map((sprint, index) => {
+        const reorderEnabled = Boolean(plannedReorder?.enabled && sprint.status === "PLANNED");
+        const reorderConfig: UmsetzungsplanungPhaseReorderConfig | undefined = reorderEnabled
+          ? {
+              enabled: true,
+              pending: plannedReorder?.pending,
+              canMoveUp: index > 0,
+              canMoveDown: index < items.length - 1,
+              onMoveUp: () => {
+                if (!plannedReorder) return;
+                const next = [...plannedReorder.orderedIds];
+                const idx = next.indexOf(sprint.id);
+                if (idx <= 0) return;
+                next.splice(idx, 1);
+                next.splice(idx - 1, 0, sprint.id);
+                void plannedReorder.onPersistOrder(next);
+              },
+              onMoveDown: () => {
+                if (!plannedReorder) return;
+                const next = [...plannedReorder.orderedIds];
+                const idx = next.indexOf(sprint.id);
+                if (idx < 0 || idx >= next.length - 1) return;
+                next.splice(idx, 1);
+                next.splice(idx + 1, 0, sprint.id);
+                void plannedReorder.onPersistOrder(next);
+              },
+            }
+          : undefined;
+        return (
+          <li key={sprint.id}>
+            <UmsetzungsplanungPhaseCard
+              sprint={sprint}
+              canManageSprints={canManageSprints}
+              phaseOptions={phaseOptions}
+              readOnlyTasks={readOnlyTasks}
+              phaseReorder={reorderConfig}
+            />
+          </li>
+        );
+      })}
     </ul>
   );
 }

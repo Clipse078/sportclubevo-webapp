@@ -27,6 +27,10 @@ export type VereinsentwicklungConnectedTaskTableRowModel = {
   status: TaskStatus;
   statusLabel: string;
   assignees: SprintTaskAssigneeViewModel[];
+  /** Optional Teilaufgaben rollup — bar only when true and totalCount > 0. */
+  progressHasChildRollup?: boolean;
+  progressCompletedCount?: number | null;
+  progressTotalCount?: number | null;
 };
 
 export function buildTargetDetailHref(targetId: string, returnTo?: string): string {

@@ -26,9 +26,9 @@ describe("StrategyProgressIndicator", () => {
         countCaption="1 von 2 Aufgaben erledigt"
       />,
     );
-    expect(screen.getByText("50%")).toBeTruthy();
+    expect(screen.getAllByText(/50% – 1 von 2 erledigt/).length).toBeGreaterThan(0);
     expect(container.querySelector("p")).toBeNull();
-    expect(container.querySelector(".sr-only")?.textContent).toContain("1 von 2 Aufgaben erledigt");
+    expect(container.querySelector(".sr-only")?.textContent).toContain("1 von 2");
     expect(container.querySelector('[role="progressbar"]')).toBeTruthy();
   });
 

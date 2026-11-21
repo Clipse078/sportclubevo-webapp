@@ -33,6 +33,7 @@ type Props = {
   filterTarget: FilterTarget | null;
   sprints: UmsetzungsplanungPhaseCardItem[];
   canManageSprints: boolean;
+  plannedSprintRanks?: Record<string, number>;
   showPrioritaetenDefault: boolean;
 };
 
@@ -50,6 +51,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
   filterTarget,
   sprints,
   canManageSprints,
+  plannedSprintRanks = {},
   showPrioritaetenDefault,
 }: Props) {
   const searchParams = useSearchParams();
@@ -108,6 +110,7 @@ export default function VorhabenUndUmsetzungWorkspaceClient({
           sprints={sprints}
           canManageSprints={canManageSprints}
           orgEinheitFilterLabel={orgEinheitFilterLabel}
+          plannedSprintRanks={plannedSprintRanks}
         />
       </div>
     </>

@@ -24,6 +24,7 @@ import { initiativeDeliveryProgressPercentFromSnapshot } from "@/lib/club-develo
 import { computeInitiativeProgressSnapshot } from "@/lib/club-development/initiative-progress";
 import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwicklung-task-context-labels";
 import { listInitiativeBacklog } from "@/lib/club-development/initiative-backlog";
+import { loadTaskChildRollupProgressMap } from "@/lib/club-development/task-child-rollup-progress";
 import { loadNextOpenMilestoneByInitiativeIds } from "@/lib/club-development/initiative-workspace-summaries";
 import type { VorhabenWorkspaceCardNextMilestone } from "@/lib/club-development/vorhaben-workspace-card-types";
 
@@ -132,6 +133,9 @@ export type VorhabenWorkspaceTaskRow = {
   orgUnitLabel: string | null;
   linkKind: VorhabenWorkspaceTaskLinkKind;
   isRootTask: true;
+  progressHasChildRollup?: boolean;
+  progressCompletedCount?: number | null;
+  progressTotalCount?: number | null;
 };
 
 export type VorhabenWorkspaceSnapshot = {
@@ -538,7 +542,21 @@ export async function loadVorhabenWorkspace(
       }
 
       const contextLabels = await loadTaskContextLabelBundles(actor.tenantId, taskRows);
-      tasks = mapTaskRows(taskRows, initiativeById, targetById, orgUnitLabels, contextLabels, returnTo);
+      const mappedTasks = mapTaskRows(taskRows, initiativeById, targetById, orgUnitLabels, contextLabels, returnTo);
+      const childProgressMap = await loadTaskChildRollupProgressMap(
+        taskCtx,
+        mappedTasks.map((t) => t.id),
+      );
+      tasks = mappedTasks.map((task) => {
+        const rollup = childProgressMap.get(task.id);
+        if (!rollup?.hasChildRollup) return task;
+        return {
+          ...task,
+          progressHasChildRollup: true,
+          progressCompletedCount: rollup.completedCount,
+          progressTotalCount: rollup.totalCount,
+        };
+      });
     }
   }
 

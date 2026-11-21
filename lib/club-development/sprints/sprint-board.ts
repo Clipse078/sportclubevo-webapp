@@ -7,6 +7,7 @@ import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwi
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
+import { loadTaskChildRollupProgressMap } from "@/lib/club-development/task-child-rollup-progress";
 import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
 
 export type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
@@ -31,6 +32,9 @@ export type SprintBoardCard = {
   orgUnitLabel: string | null;
   taskHref: string;
   addedAfterSprintStart: boolean;
+  progressHasChildRollup?: boolean;
+  progressCompletedCount?: number | null;
+  progressTotalCount?: number | null;
 };
 
 export function mapTaskStatusToBoardColumn(status: TaskStatus): SprintBoardColumnKey {
@@ -107,6 +111,10 @@ export async function loadSprintBoard(
   );
 
   const contextLabels = await loadTaskContextLabelBundles(tenantId, tasks);
+  const childProgressMap = await loadTaskChildRollupProgressMap(
+    taskCtx,
+    tasks.map((t) => t.id),
+  );
 
   for (const task of tasks) {
     const column = mapTaskStatusToBoardColumn(task.status);
@@ -117,6 +125,7 @@ export async function loadSprintBoard(
     const initiative = initiativeIdForLabel ? initiativeById.get(initiativeIdForLabel) : null;
     const labels = contextLabels.get(task.id);
 
+    const rollup = childProgressMap.get(task.id);
     const card: SprintBoardCard = {
       taskId: task.id,
       publicReference: scePublicReferenceFromNumber(task.scePublicNumber),
@@ -137,6 +146,13 @@ export async function loadSprintBoard(
       orgUnitLabel: labels?.orgUnitLabel ?? null,
       taskHref: taskWorkspaceHref(task.id),
       addedAfterSprintStart: addedFlagByTask.get(task.id) ?? false,
+      ...(rollup?.hasChildRollup
+        ? {
+            progressHasChildRollup: true,
+            progressCompletedCount: rollup.completedCount,
+            progressTotalCount: rollup.totalCount,
+          }
+        : {}),
     };
     columns[column].push(card);
   }

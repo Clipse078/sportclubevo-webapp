@@ -78,6 +78,8 @@
     "cd-connected:target-context-probe": "tsx scripts/sce-cd-connected-target-context-probe.ts",
     "cd-connected:disposable-migration-verify": "tsx scripts/sce-cd-connected-workspace-disposable-migration-verify.ts",
     "sce-public-reference:disposable-migration-verify": "tsx scripts/sce-public-reference-disposable-migration-verify.ts",
+    "pr-1020:disposable-fixture": "tsx scripts/pr-1020-disposable-umsetzungsplanung-fixture.ts",
+    "pr-1020:disposable-readiness": "tsx scripts/pr-1020-disposable-po-uat-readiness.ts",
     "sce-public-reference:stage-migration-verify": "tsx scripts/sce-public-reference-stage-migration-verify-readonly.ts",
     "ds2-07g:provision-verification-db": "tsx scripts/sce-ds2-07g-provision-verification-database.ts",
     "ds2-07g:seed-verification-fixtures": "tsx scripts/sce-ds2-07g-seed-verification-fixtures.ts",
