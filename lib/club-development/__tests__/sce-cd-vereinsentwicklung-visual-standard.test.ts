@@ -25,6 +25,12 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/VereinsentwicklungUebersichtRecordSections.tsx")).toContain(
       "VereinsentwicklungWorkspaceRecordRow",
     );
+    expect(read("components/admin/club-development/VereinsentwicklungWorkspaceTaskStatusPill.tsx")).toContain(
+      "vereinsentwicklungTaskStatusBadgeClass",
+    );
+    expect(read("lib/club-development/vereinsentwicklung-task-status-presentation.ts")).toContain(
+      "--sce-color-status-success",
+    );
     expect(read("components/admin/club-development/sce-club-development-surface-styles.ts")).toContain(
       "SCE_CD_OVERVIEW_UNIFIED_GRID",
     );
