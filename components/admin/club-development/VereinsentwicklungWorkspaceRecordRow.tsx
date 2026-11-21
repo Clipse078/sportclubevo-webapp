@@ -8,9 +8,6 @@ import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogR
 import VereinsentwicklungTargetStatusPill from "./VereinsentwicklungTargetStatusPill";
 import VereinsentwicklungOverviewGridReservedSlot from "./VereinsentwicklungOverviewGridReservedSlot";
 import {
-  SCE_CD_BACKLOG_GRID_STRATEGY,
-  SCE_CD_BACKLOG_GRID_ZIEL,
-  SCE_CD_BACKLOG_ROW_CLASS,
   SCE_CD_OVERVIEW_ROW_CLASS,
   SCE_CD_OVERVIEW_UNIFIED_GRID,
 } from "./sce-club-development-surface-styles";
@@ -62,46 +59,38 @@ export type VereinsentwicklungWorkspaceRecordRowProps =
 
 export default function VereinsentwicklungWorkspaceRecordRow(props: VereinsentwicklungWorkspaceRecordRowProps) {
   if (props.variant === "strategy") {
-    const overview = props.layout === "overview";
     return (
       <div
-        className={cn(
-          overview ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
-          overview ? SCE_CD_OVERVIEW_UNIFIED_GRID : SCE_CD_BACKLOG_GRID_STRATEGY,
-        )}
+        className={cn(SCE_CD_OVERVIEW_ROW_CLASS, SCE_CD_OVERVIEW_UNIFIED_GRID)}
         data-testid={props.testId}
         data-sce-backlog-row="strategy"
-        data-sce-overview-unified-grid={overview ? "true" : undefined}
+        data-sce-overview-unified-grid="true"
       >
         <VereinsentwicklungBacklogReferenceCell
           reference={props.publicReference ?? null}
-          dataSceOverviewCol={overview ? "referenz" : undefined}
+          dataSceOverviewCol="referenz"
         />
-        <div className={overview ? "min-w-0" : undefined} data-sce-overview-col={overview ? "titel" : undefined}>
+        <div className="min-w-0" data-sce-overview-col="titel">
           <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
         </div>
-        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col={overview ? "kontext" : undefined}>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="kontext">
           <span className="sr-only">Org-Einheit: </span>
           <span className="truncate">{props.orgUnitLabel?.trim() || "Gesamtverein"}</span>
         </div>
-        {overview ? (
-          <VereinsentwicklungOverviewGridReservedSlot
-            column="status"
-            testId={`${props.testId}-status-reserved`}
-          />
-        ) : null}
-        <div className="min-w-0 w-full" data-sce-overview-col={overview ? "progress" : undefined}>
+        <VereinsentwicklungOverviewGridReservedSlot
+          column="status"
+          testId={`${props.testId}-status-reserved`}
+        />
+        <div className="min-w-0 w-full" data-sce-overview-col="progress">
           {props.progressSlot}
         </div>
-        {overview ? (
-          <VereinsentwicklungOverviewGridReservedSlot
-            column="verantwortlich"
-            testId={`${props.testId}-responsible-reserved`}
-          />
-        ) : null}
+        <VereinsentwicklungOverviewGridReservedSlot
+          column="verantwortlich"
+          testId={`${props.testId}-responsible-reserved`}
+        />
         <div
           className="flex w-8 items-center justify-end gap-2 justify-self-end"
-          data-sce-overview-col={overview ? "actions" : undefined}
+          data-sce-overview-col="actions"
         >
           {props.trailing}
         </div>
@@ -110,25 +99,21 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
   }
 
   if (props.variant === "target") {
-    const overview = props.layout === "overview";
     return (
       <div
-        className={cn(
-          overview ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
-          overview ? SCE_CD_OVERVIEW_UNIFIED_GRID : SCE_CD_BACKLOG_GRID_ZIEL,
-        )}
+        className={cn(SCE_CD_OVERVIEW_ROW_CLASS, SCE_CD_OVERVIEW_UNIFIED_GRID)}
         data-testid={props.testId}
         data-sce-backlog-row="target"
-        data-sce-overview-unified-grid={overview ? "true" : undefined}
+        data-sce-overview-unified-grid="true"
       >
         <VereinsentwicklungBacklogReferenceCell
           reference={props.publicReference ?? null}
-          dataSceOverviewCol={overview ? "referenz" : undefined}
+          dataSceOverviewCol="referenz"
         />
-        <div className={overview ? "min-w-0" : undefined} data-sce-overview-col={overview ? "titel" : undefined}>
+        <div className="min-w-0" data-sce-overview-col="titel">
           <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
         </div>
-        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col={overview ? "kontext" : undefined}>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="kontext">
           <span className="sr-only">Strategie: </span>
           <VereinsentwicklungBacklogTruncatingTitle
             title={props.strategyLabel?.trim() || "—"}
@@ -139,19 +124,19 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
             <span className="sr-only">{`, Org-Einheit: ${props.orgUnitLabel}`}</span>
           ) : null}
         </div>
-        <div className="min-w-0 w-full" data-sce-overview-col={overview ? "status" : undefined}>
+        <div className="min-w-0 w-full" data-sce-overview-col="status">
           <VereinsentwicklungTargetStatusPill status={props.status} label={props.statusLabel} />
         </div>
-        <div className="min-w-0 w-full" data-sce-overview-col={overview ? "progress" : undefined}>
+        <div className="min-w-0 w-full" data-sce-overview-col="progress">
           {props.progressSlot}
         </div>
-        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col={overview ? "verantwortlich" : undefined}>
+        <div className="min-w-0 text-xs text-[var(--text-2)]" data-sce-overview-col="verantwortlich">
           <span className="sr-only">Verantwortlich: </span>
           <span className="truncate">{formatTargetResponsiblePresentation(props.responsibleLabel)}</span>
         </div>
         <div
           className="flex w-8 items-center justify-end gap-2 justify-self-end"
-          data-sce-overview-col={overview ? "actions" : undefined}
+          data-sce-overview-col="actions"
         >
           {props.trailing}
         </div>

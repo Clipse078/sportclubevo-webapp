@@ -16,6 +16,12 @@ describe("Vereinsentwicklung overview PO handoff URLs", () => {
     );
     expect(urls.uebersichtJunioren).toContain(STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID);
     expect(urls.uebersichtJunioren).toContain("dpl=aabbccddeeff");
+    expect(urls.strategieJunioren).toContain("ansicht=strategie");
+    expect(urls.zieleJunioren).toContain("ansicht=ziele");
+    expect(urls.aufgabenJunioren).toContain("ansicht=aufgaben");
+    expect(urls.umsetzungsphasenJunioren).toContain("ansicht=umsetzungsphasen");
+    expect(urls.umsetzungJuniorenUngeplant).toContain("umsetzungsabschnitt=ungeplant");
+    expect(urls.strategieJunioren).toContain("dpl=aabbccddeeff");
   });
 
   it("documents 1280px PO checklist for the three preview sections", () => {

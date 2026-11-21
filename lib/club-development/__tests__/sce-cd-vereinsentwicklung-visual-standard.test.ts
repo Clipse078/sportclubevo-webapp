@@ -46,8 +46,14 @@ describe("SCE Vereinsentwicklung visual standard (ClubDevelopmentOverview refere
     expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",
     );
+    expect(read("components/admin/club-development/StrategienWorkspaceListPanel.tsx")).toContain(
+      "SCE_CD_OVERVIEW_UNIFIED_GRID",
+    );
     expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",
+    );
+    expect(read("components/admin/club-development/ZieleWorkspacePanel.tsx")).toContain(
+      "SCE_CD_OVERVIEW_UNIFIED_GRID",
     );
     expect(read("components/admin/club-development/UmsetzungsplanungWorkspace.tsx")).toContain(
       "VereinsentwicklungWorkspaceToolbar",

@@ -21,11 +21,10 @@ import VereinsentwicklungOverviewGridReservedSlot from "./VereinsentwicklungOver
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
 import {
-  SCE_CD_BACKLOG_GRID_TASK,
-  SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
   SCE_CD_BACKLOG_ROW_CLASS,
   SCE_CD_OVERVIEW_ROW_CLASS,
   SCE_CD_OVERVIEW_UNIFIED_GRID,
+  SCE_CD_OVERVIEW_UNIFIED_GRID_WITH_GRIP,
 } from "./sce-club-development-surface-styles";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
@@ -177,6 +176,7 @@ function TaskTableRow({
   schedulingDragEnabled?: boolean;
 }) {
   const phaseHandle = Boolean(phaseDrag?.enabled);
+  const unifiedTaskLayout = layoutVariant === "overview" || layoutVariant === "backlog";
   const pointerDrag = useUmsetzungsplanungTaskRowPointerDrag();
 
   const startSchedulingPayload = (event: React.DragEvent) => {
@@ -203,13 +203,13 @@ function TaskTableRow({
     <>
       <div
         className={cn(
-          layoutVariant === "overview" ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
+          unifiedTaskLayout ? SCE_CD_OVERVIEW_ROW_CLASS : SCE_CD_BACKLOG_ROW_CLASS,
           "sm:items-center",
           gridCols,
         )}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
         data-sce-backlog-row="task"
-        data-sce-overview-unified-grid={layoutVariant === "overview" ? "true" : undefined}
+        data-sce-overview-unified-grid={unifiedTaskLayout ? "true" : undefined}
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
@@ -259,11 +259,11 @@ function TaskTableRow({
         ) : null}
         <VereinsentwicklungBacklogReferenceCell
           reference={row.publicReference}
-          dataSceOverviewCol={layoutVariant === "overview" ? "referenz" : undefined}
+          dataSceOverviewCol={unifiedTaskLayout ? "referenz" : undefined}
         />
         <div
           className="min-w-0"
-          data-sce-overview-col={layoutVariant === "overview" ? "titel" : undefined}
+          data-sce-overview-col={unifiedTaskLayout ? "titel" : undefined}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
         >
@@ -290,7 +290,7 @@ function TaskTableRow({
           label={row.targetTitle}
           href={row.targetHref}
           columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}
-          overviewCol={layoutVariant === "overview" ? "kontext" : undefined}
+          overviewCol={unifiedTaskLayout ? "kontext" : undefined}
         />
         {layoutVariant === "full" ? (
           <>
@@ -302,10 +302,10 @@ function TaskTableRow({
             <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
           </>
         ) : null}
-        <div className="min-w-0 w-full" data-sce-overview-col={layoutVariant === "overview" ? "status" : undefined}>
+        <div className="min-w-0 w-full" data-sce-overview-col={unifiedTaskLayout ? "status" : undefined}>
           <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
         </div>
-        {layoutVariant === "overview" ? (
+        {unifiedTaskLayout ? (
           <>
             <VereinsentwicklungOverviewGridReservedSlot
               column="progress"
@@ -338,7 +338,7 @@ function TaskTableRow({
         )}
         <div
           className="flex w-8 justify-end justify-self-end"
-          data-sce-overview-col={layoutVariant === "overview" ? "actions" : undefined}
+          data-sce-overview-col={unifiedTaskLayout ? "actions" : undefined}
         >
           {renderRowActions ? (
             renderRowActions(row)
@@ -365,19 +365,19 @@ export default function VereinsentwicklungConnectedTaskTable({
   testId,
 }: VereinsentwicklungConnectedTaskTableProps) {
   const showHandleColumn = showReorderHandle || Boolean(phaseDrag?.enabled);
-  const progressColumnActive =
-    showRowProgress &&
-  rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0);
-  const showProgressColumn = showRowProgress || progressColumnActive;
-  const backlogGrid = showProgressColumn ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
+  const unifiedTaskLayout = layoutVariant === "overview" || layoutVariant === "backlog";
+  const showProgressColumn =
+    layoutVariant === "full" &&
+    (showRowProgress ||
+      rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0));
   const gridCols =
-    layoutVariant === "overview"
-      ? SCE_CD_OVERVIEW_UNIFIED_GRID
-      : layoutVariant === "backlog"
-      ? backlogGrid
-      : showHandleColumn
+    layoutVariant === "full"
+      ? showHandleColumn
         ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
-        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
+        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
+      : showHandleColumn
+        ? SCE_CD_OVERVIEW_UNIFIED_GRID_WITH_GRIP
+        : SCE_CD_OVERVIEW_UNIFIED_GRID;
 
   const reorderListActive = Boolean(showReorderHandle && reorder?.canReorder);
   const dragHandleEnabled = Boolean(
@@ -463,7 +463,7 @@ export default function VereinsentwicklungConnectedTaskTable({
           </>
         ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
-        {layoutVariant === "overview" ? (
+        {unifiedTaskLayout ? (
           <>
             <span aria-hidden />
             <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>

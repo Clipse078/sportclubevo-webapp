@@ -38,6 +38,10 @@ export const SCE_CD_BACKLOG_PROGRESS_ACCENT = "bg-[#d4843a]";
 export const SCE_CD_OVERVIEW_UNIFIED_GRID =
   "sm:grid-cols-[8.5rem_minmax(0,1.15fr)_minmax(0,0.88fr)_5.75rem_12.25rem_minmax(5.5rem,7.25rem)_2rem] sm:items-center";
 
+/** Unified Übersicht tracks with leading reorder/scheduling grip (Umsetzungsplanung). */
+export const SCE_CD_OVERVIEW_UNIFIED_GRID_WITH_GRIP =
+  "sm:grid-cols-[auto_8.5rem_minmax(0,1.15fr)_minmax(0,0.88fr)_5.75rem_12.25rem_minmax(5.5rem,7.25rem)_2rem] sm:items-center";
+
 /** Übersicht rows — flush horizontal inset with section table headers. */
 export const SCE_CD_OVERVIEW_ROW_CLASS =
   "grid gap-x-3 gap-y-0 px-0 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)] focus-within:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)] sm:gap-3 sm:py-1.5";

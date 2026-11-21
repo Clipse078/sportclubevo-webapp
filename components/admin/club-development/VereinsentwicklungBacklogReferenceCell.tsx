@@ -31,7 +31,7 @@ export default function VereinsentwicklungBacklogReferenceCell({
       data-testid={testId}
       data-sce-overview-col={dataSceOverviewCol}
       className={cn(
-        "min-w-0 truncate font-mono text-[0.68rem] font-medium tabular-nums tracking-tight text-[var(--text-2)]",
+        "whitespace-nowrap font-mono text-[0.68rem] font-medium tabular-nums tracking-tight text-[var(--text-2)]",
         className,
       )}
       title={reference}
