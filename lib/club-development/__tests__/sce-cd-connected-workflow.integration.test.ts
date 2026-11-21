@@ -1,5 +1,6 @@
 /**
- * PR #1017 — connected Vereinsentwicklung workflow on disposable local Postgres.
+ * Connected Vereinsentwicklung workflow on disposable local Postgres.
+ * Requires TaskStatus::WAITING on TEST_DATABASE_URL (see cd-task-status:disposable-migration-verify).
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -103,6 +104,19 @@ describeIntegration("PR #1017 connected workspace workflow (disposable Postgres)
     const client = createSafeTestPrismaClient();
     admin = client.prisma;
     pool = client.pool;
+
+    const waitingEnum = await admin.$queryRaw<Array<{ enumlabel: string }>>`
+      SELECT e.enumlabel
+      FROM pg_enum e
+      JOIN pg_type t ON t.oid = e.enumtypid
+      WHERE t.typname = 'TaskStatus' AND e.enumlabel = 'WAITING'
+    `;
+    if (waitingEnum.length === 0) {
+      throw new Error(
+        "TaskStatus::WAITING is missing on TEST_DATABASE_URL. " +
+          "Run: TEST_DATABASE_URL=... npm run cd-task-status:disposable-migration-verify",
+      );
+    }
 
     const tenant = await admin.tenant.create({
       data: { key: `tenant-${RUN}`, name: "Connected workflow", timezone: "Europe/Zurich" },
