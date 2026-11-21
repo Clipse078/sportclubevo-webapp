@@ -19,12 +19,9 @@ import {
   assertVerificationMutationAuthorized,
 } from "@/lib/test/safe-verification-database";
 import {
-  SCE_DS2_07G_VERIFICATION_PERSONA_EMAIL,
-  SCE_DS2_07G_VERIFICATION_PERSONA_PASSWORD_ENV,
   SCE_DS2_07G_VERIFICATION_TENANT_ID,
   SCE_DS2_07G_VERIFICATION_USER_ID,
 } from "@/lib/design-system/sce-ds2-07g-verification-fixture-constants";
-import { hashPassword } from "@/lib/auth/password";
 
 const ORG_ID = "pr-1019-junioren-org";
 const PREFIX = "pr-1019-unplanned-";
@@ -38,15 +35,7 @@ async function main() {
   const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
   const tenantId = SCE_DS2_07G_VERIFICATION_TENANT_ID;
   const userId = SCE_DS2_07G_VERIFICATION_USER_ID;
-  const password =
-    process.env.PR_1019_VERIFICATION_PASSWORD?.trim() ||
-    process.env[SCE_DS2_07G_VERIFICATION_PERSONA_PASSWORD_ENV]?.trim() ||
-    "pr-1019-verification-local";
-  const passwordHash = await hashPassword(password);
-  await prisma.user.update({
-    where: { id: userId },
-    data: { email: SCE_DS2_07G_VERIFICATION_PERSONA_EMAIL, passwordHash },
-  });
+  // Login persona must come from SCE-DS2-07G provision; do not mutate user passwords in verification seeds (SCE-DS-GOV-SECURITY-001).
 
   await prisma.orgUnit.upsert({
     where: { id: ORG_ID },
