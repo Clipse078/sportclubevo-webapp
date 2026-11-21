@@ -104,7 +104,7 @@ export async function lookupScePublicReference(
       select: { id: true, title: true, scePublicNumber: true, scopeType: true },
     }),
     prisma.target.findFirst({
-      where: { tenantId, scePublicNumber: sequenceNumber, ...buildVisibilityWhere(actor) },
+      where: { tenantId, scePublicNumber: sequenceNumber },
       select: {
         id: true,
         title: true,

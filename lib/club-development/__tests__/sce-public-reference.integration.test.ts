@@ -13,11 +13,15 @@ import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 import { createSafeTestPrismaClient } from "@/lib/test/safe-test-prisma";
 import {
   allocateScePublicNumber,
+  ensureScePublicNumberLedgerEntry,
   formatScePublicReference,
   parseScePublicReference,
+  SCE_PUBLIC_NUMBER_SEQUENCE_ID,
   scePublicReferenceFromNumber,
+  syncScePublicNumberSequenceFromAssignments,
 } from "../sce-public-reference";
 import { lookupScePublicReference } from "../sce-public-reference-lookup";
+import { runScePublicReferenceBackfill } from "../sce-public-reference-backfill";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 
@@ -98,9 +102,8 @@ describe("SCE public reference (disposable Postgres)", () => {
     await prisma.task.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
     await prisma.target.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
     await prisma.clubStrategy.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
-    await prisma.tenantScePublicNumberSequence.deleteMany({
-      where: { tenantId: { in: [tenantAId, tenantBId] } },
-    });
+    await prisma.scePublicNumberLedger.deleteMany({});
+    await prisma.scePublicNumberSequence.deleteMany({});
     await pool.end();
   });
 
@@ -109,10 +112,10 @@ describe("SCE public reference (disposable Postgres)", () => {
     expect(parseScePublicReference("SCE-1000000")).toEqual({ sequenceNumber: 1_000_000 });
   });
 
-  it("allocates one interleaved tenant-wide sequence per tenant across four kinds", async () => {
+  it("allocates one global interleaved sequence across tenants and four kinds", async () => {
     const numbersA: number[] = [];
     await prisma.$transaction(async (tx) => {
-      numbersA.push(await allocateScePublicNumber(tx, tenantAId));
+      numbersA.push(await allocateScePublicNumber(tx));
       const strategy = await tx.clubStrategy.create({
         data: {
           tenantId: tenantAId,
@@ -121,7 +124,7 @@ describe("SCE public reference (disposable Postgres)", () => {
           title: `S ${RUN}`,
         },
       });
-      numbersA.push(await allocateScePublicNumber(tx, tenantAId));
+      numbersA.push(await allocateScePublicNumber(tx));
       await tx.target.create({
         data: {
           tenantId: tenantAId,
@@ -129,7 +132,7 @@ describe("SCE public reference (disposable Postgres)", () => {
           title: `T ${RUN}`,
         },
       });
-      numbersA.push(await allocateScePublicNumber(tx, tenantAId));
+      numbersA.push(await allocateScePublicNumber(tx));
       await tx.task.create({
         data: {
           tenantId: tenantAId,
@@ -137,7 +140,7 @@ describe("SCE public reference (disposable Postgres)", () => {
           title: `Task ${RUN}`,
         },
       });
-      numbersA.push(await allocateScePublicNumber(tx, tenantAId));
+      numbersA.push(await allocateScePublicNumber(tx));
       await tx.clubMeldung.create({
         data: {
           tenantId: tenantAId,
@@ -159,7 +162,7 @@ describe("SCE public reference (disposable Postgres)", () => {
     const numbersB: number[] = [];
     await prisma.$transaction(async (tx) => {
       for (let i = 0; i < 2; i++) {
-        const n = await allocateScePublicNumber(tx, tenantBId);
+        const n = await allocateScePublicNumber(tx);
         numbersB.push(n);
         await tx.task.create({
           data: {
@@ -170,14 +173,35 @@ describe("SCE public reference (disposable Postgres)", () => {
         });
       }
     });
-    expect(numbersB).toEqual([1, 2]);
+    expect(numbersB).toEqual([5, 6]);
+  });
+
+  it("does not resolve canonical SCE references across actor tenants", async () => {
+    const ref = await prisma.$transaction(async (tx) => {
+      const n = await allocateScePublicNumber(tx);
+      await tx.task.create({
+        data: { tenantId: tenantAId, scePublicNumber: n, title: `Cross ${RUN}` },
+      });
+      return formatScePublicReference(n);
+    });
+
+    const actorB: ActorContext = {
+      tenantId: tenantBId,
+      userId: viewerBId,
+      permissionKeys: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE],
+      roleKeys: [],
+      teamIds: [],
+      personId: null,
+      orgUnitIds: [],
+    };
+    expect(await lookupScePublicReference(actorB, ref)).toBeNull();
   });
 
   it("survives concurrent allocations without duplicate numbers", async () => {
     const results = await Promise.all(
       Array.from({ length: 8 }, () =>
         prisma.$transaction(async (tx) => {
-          const n = await allocateScePublicNumber(tx, tenantAId);
+          const n = await allocateScePublicNumber(tx);
           await tx.task.create({
             data: {
               tenantId: tenantAId,
@@ -195,7 +219,7 @@ describe("SCE public reference (disposable Postgres)", () => {
 
   it("does not reuse numbers after delete", async () => {
     const created = await prisma.$transaction(async (tx) => {
-      const n = await allocateScePublicNumber(tx, tenantAId);
+      const n = await allocateScePublicNumber(tx);
       const row = await tx.target.create({
         data: { tenantId: tenantAId, scePublicNumber: n, title: `Delete me ${RUN}` },
         select: { id: true, scePublicNumber: true },
@@ -205,16 +229,15 @@ describe("SCE public reference (disposable Postgres)", () => {
     const ref = scePublicReferenceFromNumber(created.scePublicNumber)!;
     await prisma.target.delete({ where: { id: created.id } });
 
-    const next = await prisma.$transaction(async (tx) => allocateScePublicNumber(tx, tenantAId));
+    const next = await prisma.$transaction(async (tx) => allocateScePublicNumber(tx));
     expect(next).toBeGreaterThan(created.scePublicNumber!);
     expect(ref).toBe(formatScePublicReference(created.scePublicNumber!));
   });
 
-  it("backfill is idempotent when numbers already exist", async () => {
-    const tenantId = tenantAId;
+  it("preserves existing canonical references when backfill skips assigned rows", async () => {
     const legacyStrategy = await prisma.clubStrategy.create({
       data: {
-        tenantId,
+        tenantId: tenantAId,
         title: `Legacy ${RUN}`,
         scopeType: ClubStrategyScopeType.CLUB,
         createdAt: new Date("2020-01-01"),
@@ -222,16 +245,13 @@ describe("SCE public reference (disposable Postgres)", () => {
     });
     const existingNumber = 99_001;
     await prisma.$transaction(async (tx) => {
-      await tx.tenantScePublicNumberSequence.upsert({
-        where: { tenantId },
-        create: { tenantId, nextNumber: existingNumber + 1 },
-        update: { nextNumber: existingNumber + 1 },
-      });
       await tx.clubStrategy.update({
         where: { id: legacyStrategy.id },
         data: { scePublicNumber: existingNumber },
       });
+      await ensureScePublicNumberLedgerEntry(tx, existingNumber);
     });
+    await syncScePublicNumberSequenceFromAssignments(prisma);
 
     const before = await prisma.clubStrategy.findUnique({
       where: { id: legacyStrategy.id },
@@ -239,16 +259,61 @@ describe("SCE public reference (disposable Postgres)", () => {
     });
     expect(before?.scePublicNumber).toBe(existingNumber);
 
-    // Second assign attempt must not overwrite.
-    await prisma.clubStrategy.updateMany({
-      where: { tenantId, scePublicNumber: null },
-      data: { scePublicNumber: existingNumber + 5 },
-    });
+    const backfill = await runScePublicReferenceBackfill(prisma);
+    expect(backfill.collisions).toEqual([]);
+
     const after = await prisma.clubStrategy.findUnique({
       where: { id: legacyStrategy.id },
       select: { scePublicNumber: true },
     });
     expect(after?.scePublicNumber).toBe(existingNumber);
+  });
+
+  it("backfills null rows via the global allocator and tolerates safe rerun", async () => {
+    const unnumbered = await prisma.target.create({
+      data: {
+        tenantId: tenantBId,
+        title: `Backfill me ${RUN}`,
+        createdAt: new Date("2019-06-01"),
+      },
+    });
+
+    const first = await runScePublicReferenceBackfill(prisma);
+    expect(first.collisions).toEqual([]);
+    expect(first.assigned).toBeGreaterThanOrEqual(1);
+
+    const filled = await prisma.target.findUnique({
+      where: { id: unnumbered.id },
+      select: { scePublicNumber: true },
+    });
+    expect(filled?.scePublicNumber).toBeGreaterThan(0);
+
+    const second = await runScePublicReferenceBackfill(prisma);
+    expect(second.assigned).toBe(0);
+    expect(
+      (await prisma.target.findUnique({
+        where: { id: unnumbered.id },
+        select: { scePublicNumber: true },
+      }))?.scePublicNumber,
+    ).toBe(filled?.scePublicNumber);
+  });
+
+  it("allocates across the six-to-seven digit boundary", async () => {
+    const boundary = 999_999;
+    await prisma.scePublicNumberSequence.upsert({
+      where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
+      create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber: boundary },
+      update: { nextNumber: boundary },
+    });
+
+    const pair = await prisma.$transaction(async (tx) => {
+      const lastSix = await allocateScePublicNumber(tx);
+      const firstSeven = await allocateScePublicNumber(tx);
+      return { lastSix, firstSeven };
+    });
+
+    expect(formatScePublicReference(pair.lastSix)).toBe("SCE-999999");
+    expect(formatScePublicReference(pair.firstSeven)).toBe("SCE-1000000");
   });
 
   it("resolves acceptance-style caseNumber without scePublicNumber", async () => {
@@ -287,7 +352,7 @@ describe("SCE public reference (disposable Postgres)", () => {
   it("resolves legacy caseNumber when SCE parse fails", async () => {
     const legacyCase = `M-2026-${RUN.slice(-6)}`;
     const { ref } = await prisma.$transaction(async (tx) => {
-      const n = await allocateScePublicNumber(tx, tenantAId);
+      const n = await allocateScePublicNumber(tx);
       const row = await tx.clubMeldung.create({
         data: {
           tenantId: tenantAId,
@@ -321,7 +386,7 @@ describe("SCE public reference (disposable Postgres)", () => {
 
   it("resolves Anliegen references with permission-aware internal lookup", async () => {
     const { meldungId, ref } = await prisma.$transaction(async (tx) => {
-      const n = await allocateScePublicNumber(tx, tenantAId);
+      const n = await allocateScePublicNumber(tx);
       const row = await tx.clubMeldung.create({
         data: {
           tenantId: tenantAId,

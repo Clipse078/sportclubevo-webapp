@@ -357,7 +357,7 @@ export async function createTask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
+    const scePublicNumber = await allocateScePublicNumber(tx);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
@@ -493,7 +493,7 @@ export async function createQuickTask(
   const orgVisibility = await resolveQuickCreateOrgVisibility(ctx, selfOnly);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
+    const scePublicNumber = await allocateScePublicNumber(tx);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
@@ -713,7 +713,7 @@ export async function createSubtask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
+    const scePublicNumber = await allocateScePublicNumber(tx);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,

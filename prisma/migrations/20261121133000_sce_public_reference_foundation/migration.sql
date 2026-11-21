@@ -1,20 +1,23 @@
--- SCE public reference foundation (tenant-wide sequence for Strategie, Ziel, Aufgabe, Anliegen).
+-- SCE public reference foundation (global sequence for Strategie, Ziel, Aufgabe, Anliegen).
 
-CREATE TABLE "TenantScePublicNumberSequence" (
-    "tenantId" TEXT NOT NULL,
+CREATE TABLE "ScePublicNumberSequence" (
+    "id" TEXT NOT NULL,
     "nextNumber" INTEGER NOT NULL DEFAULT 1,
-    CONSTRAINT "TenantScePublicNumberSequence_pkey" PRIMARY KEY ("tenantId")
+    CONSTRAINT "ScePublicNumberSequence_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "TenantScePublicNumberSequence" ADD CONSTRAINT "TenantScePublicNumberSequence_tenantId_fkey"
-    FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE "ScePublicNumberLedger" (
+    "scePublicNumber" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ScePublicNumberLedger_pkey" PRIMARY KEY ("scePublicNumber")
+);
 
 ALTER TABLE "ClubStrategy" ADD COLUMN "scePublicNumber" INTEGER;
 ALTER TABLE "Target" ADD COLUMN "scePublicNumber" INTEGER;
 ALTER TABLE "Task" ADD COLUMN "scePublicNumber" INTEGER;
 ALTER TABLE "ClubMeldung" ADD COLUMN "scePublicNumber" INTEGER;
 
-CREATE UNIQUE INDEX "ClubStrategy_tenantId_scePublicNumber_key" ON "ClubStrategy"("tenantId", "scePublicNumber");
-CREATE UNIQUE INDEX "Target_tenantId_scePublicNumber_key" ON "Target"("tenantId", "scePublicNumber");
-CREATE UNIQUE INDEX "Task_tenantId_scePublicNumber_key" ON "Task"("tenantId", "scePublicNumber");
-CREATE UNIQUE INDEX "ClubMeldung_tenantId_scePublicNumber_key" ON "ClubMeldung"("tenantId", "scePublicNumber");
+CREATE UNIQUE INDEX "ClubStrategy_scePublicNumber_key" ON "ClubStrategy"("scePublicNumber");
+CREATE UNIQUE INDEX "Target_scePublicNumber_key" ON "Target"("scePublicNumber");
+CREATE UNIQUE INDEX "Task_scePublicNumber_key" ON "Task"("scePublicNumber");
+CREATE UNIQUE INDEX "ClubMeldung_scePublicNumber_key" ON "ClubMeldung"("scePublicNumber");

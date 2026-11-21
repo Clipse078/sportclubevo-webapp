@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     const created = await prisma.$transaction(async (tx) => {
-      const scePublicNumber = await allocateScePublicNumber(tx, tenantId);
+      const scePublicNumber = await allocateScePublicNumber(tx);
       return tx.target.create({
       data: {
         tenantId,

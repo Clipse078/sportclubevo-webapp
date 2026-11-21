@@ -1440,7 +1440,6 @@ model Tenant {
   clubMeldungHistoryEvents        ClubMeldungHistoryEvent[]
   clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[]
   clubMeldungNumberSequence       ClubMeldungNumberSequence?
-  tenantScePublicNumberSequence   TenantScePublicNumberSequence?
   // TEAM-COCKPIT-02B: canonical per-event attendance records
   attendanceRecords               AttendanceRecord[]               @relation("TenantAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses
@@ -1959,12 +1958,17 @@ model ClubMeldungNumberSequence {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
-/// Tenant-wide SCE record numbering (Strategie, Ziel, Aufgabe, Anliegen).
-model TenantScePublicNumberSequence {
-  tenantId   String @id
+/// Global SCE record numbering (Strategie, Ziel, Aufgabe, Anliegen) — one sequence for all SCE tenants.
+model ScePublicNumberSequence {
+  /// Singleton row id (`global`).
+  id         String @id
   nextNumber Int    @default(1)
+}
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+/// Enforces that a sequence number is issued at most once (cross-type, cross-tenant).
+model ScePublicNumberLedger {
+  scePublicNumber Int      @id
+  createdAt       DateTime @default(now())
 }
 
 model ClubMeldung {
@@ -2020,7 +2024,7 @@ model ClubMeldung {
   idempotencyRows ClubMeldungCreateIdempotency[]
 
   @@unique([tenantId, caseNumber])
-  @@unique([tenantId, scePublicNumber])
+  @@unique([scePublicNumber])
   @@index([tenantId, status])
   @@index([tenantId, reporterUserId])
   @@index([tenantId, accountableUserId])
@@ -3707,7 +3711,7 @@ model ClubStrategy {
   documentReferences ClubStrategyDocumentReference[]
   orgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
-  @@unique([tenantId, scePublicNumber])
+  @@unique([scePublicNumber])
   @@index([tenantId])
   @@index([tenantId, scopeType, scopeOrgUnitId])
 }
@@ -5056,7 +5060,7 @@ model Task {
   primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])
-  @@unique([tenantId, scePublicNumber])
+  @@unique([scePublicNumber])
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, dueAt])
@@ -6116,7 +6120,7 @@ model Target {
   initiativeTargetLinks InitiativeTargetLink[]
   clubStrategyFocusLinks ClubStrategyFocusTarget[]
 
-  @@unique([tenantId, scePublicNumber])
+  @@unique([scePublicNumber])
   @@index([tenantId])
   @@index([category])
   @@index([status])

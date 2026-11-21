@@ -94,7 +94,7 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
     const caseNumber = await allocateClubMeldungCaseNumber(tx, input.tenantId, {
       createdAt,
     });
-    const scePublicNumber = await allocateScePublicNumber(tx, input.tenantId);
+    const scePublicNumber = await allocateScePublicNumber(tx);
     const row = await tx.clubMeldung.create({
       data: {
         tenantId: input.tenantId,

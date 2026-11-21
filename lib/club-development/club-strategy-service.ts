@@ -119,7 +119,7 @@ async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) 
   const existingId = await findClubWideStrategyId(tenantId);
   if (existingId) return existingId;
   const created = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx, tenantId);
+    const scePublicNumber = await allocateScePublicNumber(tx);
     return tx.clubStrategy.create({
       data: {
         tenantId,
@@ -364,7 +364,7 @@ export async function createClubStrategy(
   let created: { id: string };
   try {
     created = await prisma.$transaction(async (tx) => {
-      const scePublicNumber = await allocateScePublicNumber(tx, actor.tenantId!);
+      const scePublicNumber = await allocateScePublicNumber(tx);
       const tenantId = actor.tenantId!;
       return tx.clubStrategy.create({
         data: {
