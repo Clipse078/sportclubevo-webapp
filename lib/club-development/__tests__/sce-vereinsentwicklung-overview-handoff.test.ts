@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildVereinsentwicklungOverviewHandoffUrls,
   VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280,
+  VEREINSENTWICKLUNG_OVERVIEW_PULL_REQUEST,
 } from "../sce-vereinsentwicklung-overview-handoff";
 import { STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID } from "../sce-cd-connected-workspace-po-uat-handoff";
 
@@ -18,8 +19,9 @@ describe("Vereinsentwicklung overview PO handoff URLs", () => {
   });
 
   it("documents 1280px PO checklist for the three preview sections", () => {
+    expect(VEREINSENTWICKLUNG_OVERVIEW_PULL_REQUEST).toBe(1023);
     expect(VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280.length).toBeGreaterThanOrEqual(6);
-    expect(VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280.join(" ")).toContain("1280px");
-    expect(VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280.join(" ")).toContain("Zielerreichung");
+    expect(VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280.join(" ")).toContain("1280");
+    expect(VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280.join(" ")).toContain("column track");
   });
 });

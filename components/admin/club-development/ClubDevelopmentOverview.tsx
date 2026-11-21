@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
 import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import SceClubDevelopmentSectionShell from "./SceClubDevelopmentSectionShell";
 import VereinsentwicklungUebersichtRecordSections from "./VereinsentwicklungUebersichtRecordSections";
-import { SCE_CD_RECORD_ROW_CLASS } from "./sce-club-development-surface-styles";
+import {
+  SCE_CD_OVERVIEW_SECTION_STACK_CLASS,
+  SCE_CD_SECTION_BODY_COMPACT_CLASS,
+} from "./sce-club-development-surface-styles";
 import { formatMeetingLocationDisplay } from "@/lib/meetings/meeting-presence-location";
 import type { VereinsentwicklungLeadershipDashboard } from "@/lib/club-development/vereinsentwicklung-leadership-dashboard";
 import type { VereinsentwicklungOverviewPreview } from "@/lib/club-development/vereinsentwicklung-overview-preview";
@@ -79,29 +82,29 @@ export default function ClubDevelopmentOverview({
     ) : null;
 
   return (
-    <div className="space-y-8" data-testid="vereinsentwicklung-leadership-dashboard">
+    <div className={SCE_CD_OVERVIEW_SECTION_STACK_CLASS} data-testid="vereinsentwicklung-leadership-dashboard">
       <VereinsentwicklungUebersichtRecordSections preview={overviewPreview} orgEinheitQuery={orgEinheitQuery} />
 
       <SceClubDevelopmentSectionShell
         title="Handlungsbedarf"
         testId="vereinsentwicklung-section-handlungsbedarf"
+        bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
       >
         {actionRows.length === 0 ? (
           <SceClubDevelopmentEmptyState message="Keine offenen Punkte, die Ihre Aufmerksamkeit brauchen." />
         ) : (
-          <ul className="space-y-2">
+          <ul className="divide-y divide-[var(--border)]/55">
             {actionRows.map((row) => (
               <li key={row.id}>
-                <Link href={row.href} className={`flex gap-3 ${SCE_CD_RECORD_ROW_CLASS}`}>
-                  <AlertCircle
-                    className="h-4 w-4 shrink-0 text-[var(--foreground)]"
-                    aria-hidden
-                  />
+                <Link
+                  href={row.href}
+                  className="flex items-start gap-3 py-2 transition hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                       {row.title}
                     </p>
-                    <p className="text-xs text-[var(--text-2)] mt-0.5">{row.meta}</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-2)]">{row.meta}</p>
                   </div>
                   <ScopeBadge label={row.scope === "me" ? "Meine Aufgaben" : "Vereinsweit"} />
                 </Link>
@@ -117,13 +120,17 @@ export default function ClubDevelopmentOverview({
           href={meetingsListHref}
           linkLabel="Alle Sitzungen"
           testId="vereinsentwicklung-section-meetings"
+          bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
         >
           {!nextMeeting ? (
             <SceClubDevelopmentEmptyState message="Keine geplanten Sitzungen in Sicht." />
           ) : (
-            <Link href={nextMeeting.href} className={SCE_CD_RECORD_ROW_CLASS}>
+            <Link
+              href={nextMeeting.href}
+              className="block py-1 transition hover:text-[var(--sce-primary)]"
+            >
               <p className="text-sm font-semibold text-[var(--foreground)]">{nextMeeting.meeting.title}</p>
-              <p className="mt-1 text-xs text-[var(--text-2)] flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--text-2)]">
                 <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span>{formatSwissDateTime(new Date(nextMeeting.meeting.meetingDate))}</span>
                 {nextMeeting.meeting.location ? (
@@ -139,11 +146,12 @@ export default function ClubDevelopmentOverview({
         title="Verein in Zahlen"
         headerAside={<ScopeBadge label={membership.scopeLabel} />}
         testId="vereinsentwicklung-section-membership"
+        bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
       >
         {!membership.accessible ? (
           <SceClubDevelopmentEmptyState message="Keine Berechtigung für Mitgliederzahlen." />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-xs text-[var(--text-2)]">
               Zahlen gelten für den gewählten Bereich ({membership.scopeLabel}). Die Personen-Übersicht
               übernimmt keinen automatischen Org-Einheit- oder Zeitraumfilter.

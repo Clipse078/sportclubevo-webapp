@@ -20,9 +20,9 @@ import VereinsentwicklungBacklogTableShell from "./VereinsentwicklungBacklogTabl
 import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedTaskTable";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
 import {
-  SCE_CD_BACKLOG_GRID_STRATEGY,
-  SCE_CD_BACKLOG_GRID_ZIEL,
-  SCE_CD_WORKSPACE_PANEL_CLASS,
+  SCE_CD_OVERVIEW_SECTION_STACK_CLASS,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
+  SCE_CD_SECTION_BODY_COMPACT_CLASS,
 } from "./sce-club-development-surface-styles";
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "@/lib/club-development/vereinsentwicklung-connected-workspace";
 
@@ -52,24 +52,26 @@ function StrategienSection({
       linkLabel="Alle anzeigen"
       linkTestId="vereinsentwicklung-overview-strategien-all"
       testId="vereinsentwicklung-section-strategien"
+      bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
     >
-      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
-        {strategies.length === 0 ? (
-          <SceClubDevelopmentEmptyState message="Keine Strategie sichtbar." testId="vereinsentwicklung-overview-strategien-empty" />
-        ) : (
-          <VereinsentwicklungBacklogTableShell
-            testId="vereinsentwicklung-overview-strategien-list"
-            gridClassName={SCE_CD_BACKLOG_GRID_STRATEGY}
-            header={
-              <>
-                <span>Referenz</span>
-                <span>Titel</span>
-                <span>Org-Einheit</span>
-                <span>{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</span>
-                <span className="sr-only">Aktionen</span>
-              </>
-            }
-          >
+      {strategies.length === 0 ? (
+        <SceClubDevelopmentEmptyState message="Keine Strategie sichtbar." testId="vereinsentwicklung-overview-strategien-empty" />
+      ) : (
+        <VereinsentwicklungBacklogTableShell
+          testId="vereinsentwicklung-overview-strategien-list"
+          gridClassName={SCE_CD_OVERVIEW_UNIFIED_GRID}
+          header={
+            <>
+              <span>Referenz</span>
+              <span>Titel</span>
+              <span>Org-Einheit</span>
+              <span aria-hidden />
+              <span>{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</span>
+              <span aria-hidden />
+              <span className="sr-only">Aktionen</span>
+            </>
+          }
+        >
             {strategies.map((strategy) => {
               const detailParams: Record<string, string | undefined> = { strategyId: strategy.id };
               if (orgQuery) detailParams[CD_WORKSPACE_ORG_UNIT_QUERY] = orgQuery;
@@ -80,6 +82,7 @@ function StrategienSection({
                 <VereinsentwicklungWorkspaceRecordRow
                   key={strategy.id}
                   variant="strategy"
+                  layout="overview"
                   publicReference={strategy.publicReference}
                   title={strategy.title}
                   titleHref={detailHref}
@@ -118,9 +121,8 @@ function StrategienSection({
                 />
               );
             })}
-          </VereinsentwicklungBacklogTableShell>
-        )}
-      </div>
+        </VereinsentwicklungBacklogTableShell>
+      )}
     </SceClubDevelopmentSectionShell>
   );
 }
@@ -142,15 +144,15 @@ function ZieleSection({
       linkLabel="Alle anzeigen"
       linkTestId="vereinsentwicklung-overview-ziele-all"
       testId="vereinsentwicklung-section-ziele"
+      bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
     >
-      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
-        {targets.length === 0 ? (
-          <SceClubDevelopmentEmptyState message="Keine strategischen Ziele sichtbar." testId="vereinsentwicklung-overview-ziele-empty" />
-        ) : (
-          <VereinsentwicklungBacklogTableShell
-            testId="vereinsentwicklung-overview-ziele-list"
-            gridClassName={SCE_CD_BACKLOG_GRID_ZIEL}
-            header={
+      {targets.length === 0 ? (
+        <SceClubDevelopmentEmptyState message="Keine strategischen Ziele sichtbar." testId="vereinsentwicklung-overview-ziele-empty" />
+      ) : (
+        <VereinsentwicklungBacklogTableShell
+          testId="vereinsentwicklung-overview-ziele-list"
+          gridClassName={SCE_CD_OVERVIEW_UNIFIED_GRID}
+          header={
               <>
                 <span>Referenz</span>
                 <span>Titel</span>
@@ -176,6 +178,7 @@ function ZieleSection({
                 <VereinsentwicklungWorkspaceRecordRow
                   key={target.id}
                   variant="target"
+                  layout="overview"
                   publicReference={target.publicReference}
                   title={target.title}
                   titleHref={detailHref}
@@ -209,9 +212,8 @@ function ZieleSection({
                 />
               );
             })}
-          </VereinsentwicklungBacklogTableShell>
-        )}
-      </div>
+        </VereinsentwicklungBacklogTableShell>
+      )}
     </SceClubDevelopmentSectionShell>
   );
 }
@@ -233,26 +235,25 @@ function AufgabenSection({
       linkLabel="Alle anzeigen"
       linkTestId="vereinsentwicklung-overview-aufgaben-all"
       testId="vereinsentwicklung-section-aufgaben"
+      bodyClassName={SCE_CD_SECTION_BODY_COMPACT_CLASS}
     >
-      <div className={SCE_CD_WORKSPACE_PANEL_CLASS}>
-        {tableRows.length === 0 ? (
-          <SceClubDevelopmentEmptyState message="Keine Aufgaben sichtbar." testId="vereinsentwicklung-overview-aufgaben-empty" />
-        ) : (
-          <VereinsentwicklungConnectedTaskTable
-            rows={tableRows}
-            layoutVariant="backlog"
-            showRowProgress={false}
-            testId="vereinsentwicklung-overview-aufgaben-list"
-          />
-        )}
-      </div>
+      {tableRows.length === 0 ? (
+        <SceClubDevelopmentEmptyState message="Keine Aufgaben sichtbar." testId="vereinsentwicklung-overview-aufgaben-empty" />
+      ) : (
+        <VereinsentwicklungConnectedTaskTable
+          rows={tableRows}
+          layoutVariant="overview"
+          showRowProgress={false}
+          testId="vereinsentwicklung-overview-aufgaben-list"
+        />
+      )}
     </SceClubDevelopmentSectionShell>
   );
 }
 
 export default function VereinsentwicklungUebersichtRecordSections({ preview, orgEinheitQuery }: Props) {
   return (
-    <div className="space-y-8" data-testid="vereinsentwicklung-overview-record-sections">
+    <div className={SCE_CD_OVERVIEW_SECTION_STACK_CLASS} data-testid="vereinsentwicklung-overview-record-sections">
       {preview.showStrategien ? (
         <StrategienSection strategies={preview.strategies} orgEinheitQuery={orgEinheitQuery} />
       ) : null}

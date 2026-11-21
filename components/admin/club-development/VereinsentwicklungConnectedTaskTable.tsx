@@ -17,18 +17,20 @@ import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorks
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
 import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
+import VereinsentwicklungOverviewGridReservedSlot from "./VereinsentwicklungOverviewGridReservedSlot";
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
 import {
   SCE_CD_BACKLOG_GRID_TASK,
   SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
   SCE_CD_BACKLOG_ROW_CLASS,
+  SCE_CD_OVERVIEW_UNIFIED_GRID,
 } from "./sce-club-development-surface-styles";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
 import { useUmsetzungsplanungTaskRowPointerDrag } from "./useUmsetzungsplanungTaskRowPointerDrag";
 
-export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full";
+export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full" | "overview";
 
 function AssigneeCell({
   assignees,
@@ -175,6 +177,7 @@ function TaskTableRow({
         className={cn(SCE_CD_BACKLOG_ROW_CLASS, "sm:items-center", gridCols)}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
         data-sce-backlog-row="task"
+        data-sce-overview-unified-grid={layoutVariant === "overview" ? "true" : undefined}
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
@@ -263,25 +266,34 @@ function TaskTableRow({
           </>
         ) : null}
         <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
-        <AssigneeCell assignees={row.assignees} />
-        {showRowProgress ? (
-          row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
-            <SceCompletionProgressInline
-              metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
-              completedCount={row.progressCompletedCount ?? null}
-              totalCount={row.progressTotalCount ?? null}
-              countCaption={null}
-              emptyLabel="Noch keine Teilaufgaben"
-              countSuffix="erledigt"
-              unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
-              testId={`task-row-progress-${row.taskId}`}
-            />
-          ) : (
-            <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
-              —
-            </div>
-          )
-        ) : null}
+        {layoutVariant === "overview" ? (
+          <>
+            <VereinsentwicklungOverviewGridReservedSlot testId={`overview-task-progress-reserved-${row.taskId}`} />
+            <AssigneeCell assignees={row.assignees} />
+          </>
+        ) : (
+          <>
+            <AssigneeCell assignees={row.assignees} />
+            {showRowProgress ? (
+              row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0 ? (
+                <SceCompletionProgressInline
+                  metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+                  completedCount={row.progressCompletedCount ?? null}
+                  totalCount={row.progressTotalCount ?? null}
+                  countCaption={null}
+                  emptyLabel="Noch keine Teilaufgaben"
+                  countSuffix="erledigt"
+                  unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
+                  testId={`task-row-progress-${row.taskId}`}
+                />
+              ) : (
+                <div className="min-w-0 text-xs text-[var(--muted)]" aria-hidden>
+                  —
+                </div>
+              )
+            ) : null}
+          </>
+        )}
         <div className="flex justify-end">
           {renderRowActions ? (
             renderRowActions(row)
@@ -314,7 +326,9 @@ export default function VereinsentwicklungConnectedTaskTable({
   const showProgressColumn = showRowProgress || progressColumnActive;
   const backlogGrid = showProgressColumn ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
   const gridCols =
-    layoutVariant === "backlog"
+    layoutVariant === "overview"
+      ? SCE_CD_OVERVIEW_UNIFIED_GRID
+      : layoutVariant === "backlog"
       ? backlogGrid
       : showHandleColumn
         ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
@@ -404,10 +418,19 @@ export default function VereinsentwicklungConnectedTaskTable({
           </>
         ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
-        {showProgressColumn ? (
-          <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
-        ) : null}
+        {layoutVariant === "overview" ? (
+          <>
+            <span aria-hidden />
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+          </>
+        ) : (
+          <>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+            {showProgressColumn ? (
+              <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+            ) : null}
+          </>
+        )}
         <span className="w-8" aria-hidden />
       </div>
 

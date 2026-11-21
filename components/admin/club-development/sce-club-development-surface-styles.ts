@@ -11,6 +11,11 @@ export const SCE_CD_SECTION_HEADER_CLASS =
 
 export const SCE_CD_SECTION_BODY_CLASS = "p-5 space-y-3";
 
+/** Übersicht Zielboard — flush rows, no nested panel padding. */
+export const SCE_CD_SECTION_BODY_COMPACT_CLASS = "px-4 py-2";
+
+export const SCE_CD_OVERVIEW_SECTION_STACK_CLASS = "space-y-3";
+
 export const SCE_CD_EMPTY_STATE_CLASS =
   "rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-6 text-center text-sm text-[var(--muted)]";
 
@@ -22,6 +27,13 @@ export const SCE_CD_WORKSPACE_PANEL_CLASS =
 
 /** PO Zielboard — copper thin progress bar accent. */
 export const SCE_CD_BACKLOG_PROGRESS_ACCENT = "bg-[#d4843a]";
+
+/**
+ * Shared Übersicht column tracks (Strategien, Ziele, Aufgaben).
+ * Referenz · Titel · Kontext · Status · Fortschritt · Verantwortlich · Aktionen
+ */
+export const SCE_CD_OVERVIEW_UNIFIED_GRID =
+  "sm:grid-cols-[minmax(5.75rem,8.5rem)_minmax(0,1.15fr)_minmax(0,0.88fr)_minmax(5.25rem,5.75rem)_minmax(9.5rem,max-content)_minmax(5.5rem,0.82fr)_auto] sm:items-center";
 
 /** Shared Vereinsentwicklung backlog table grids (desktop). */
 export const SCE_CD_BACKLOG_GRID_STRATEGY =

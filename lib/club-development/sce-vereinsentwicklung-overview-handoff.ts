@@ -4,7 +4,11 @@
 import { CD_WORKSPACE_ORG_UNIT_QUERY } from "./vereinsentwicklung-connected-workspace";
 import { STAGE_PREVIEW_JUNIOREN_ORG_UNIT_ID } from "./sce-cd-connected-workspace-po-uat-handoff";
 
-export const VEREINSENTWICKLUNG_OVERVIEW_PULL_REQUEST = 1021 as const;
+export const VEREINSENTWICKLUNG_OVERVIEW_PULL_REQUEST = 1023 as const;
+
+/** STAGE-backed PR preview hostname (commit-bound `dpl` query). */
+export const VEREINSENTWICKLUNG_OVERVIEW_PREVIEW_ORIGIN =
+  "https://sportclubevo-webapp-stage-git-curs-e07387-mds-projects-462da62c.vercel.app" as const;
 
 export function buildVereinsentwicklungUebersichtPreviewUrl(
   previewBase: string,
@@ -35,12 +39,11 @@ export function buildVereinsentwicklungOverviewHandoffUrls(previewBase: string, 
 
 /** PO manual UAT — desktop 1280px; automation covers sort/scope; PO owns screenshots. */
 export const VEREINSENTWICKLUNG_OVERVIEW_PO_CHECKLIST_1280 = [
-  "Übersicht at 1280px width: Strategien, Ziele, and Aufgaben appear directly under tabs (no Umsetzung aggregate block).",
-  "Each section shows at most three compact desktop rows on one line; titles link to record destinations.",
-  "Strategien rows show Zielerreichung only (copper progress bar + caption).",
-  "Ziele rows show Aufgabenfortschritt with status pill and Verantwortlich.",
-  "Aufgaben rows show Status, Verantwortlich, and linked Ziel (no row progress bar).",
-  "Header «Alle anzeigen» in each section opens the matching workspace with the same orgEinheit filter when set.",
-  "Handlungsbedarf, Nächste Sitzung, and Verein in Zahlen remain below the three preview lists.",
-  "Repeat with orgEinheit=Junioren — scoped lists and scoped «Alle anzeigen» links only.",
+  "At 1280×900 CSS px: section headings for Strategien, Ziele, and Aufgaben visible without scroll; first Aufgaben row visible.",
+  "Referenz, Titel, Kontext, Status, Fortschritt, Verantwortlich, and action menu share one column track across all three sections.",
+  "Empty progress or status cells reserve grid space only (no em-dash placeholders).",
+  "Strategien: Org-Einheit + Zielerreichung; Ziele: Strategie + Aufgabenfortschritt + status pill; Aufgaben: Ziel, no row progress bar.",
+  "Nested panel cards removed; rows flush with light section header and «Alle anzeigen» right-aligned.",
+  "Handlungsbedarf and Nächste Sitzung use compact divided rows below the Zielboard.",
+  "Header «Alle anzeigen» preserves orgEinheit scope; Junioren filter smoke on scoped lists and links.",
 ] as const;
