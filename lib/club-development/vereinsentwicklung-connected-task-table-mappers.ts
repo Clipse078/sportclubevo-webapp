@@ -1,4 +1,4 @@
-import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
 import type { SprintBoardCard } from "./sprints/sprint-board";
 import type { SprintPlanningTaskDto } from "./sprints/sprint-planning-types";
 import type { VorhabenWorkspaceTaskRow } from "./vorhaben-workspace";
@@ -11,6 +11,7 @@ import {
 export function mapVorhabenTaskRowToTableModel(row: VorhabenWorkspaceTaskRow): VereinsentwicklungConnectedTaskTableRowModel {
   return {
     taskId: row.id,
+    publicReference: row.publicReference,
     title: row.title,
     taskHref: row.href,
     targetId: row.targetId,
@@ -33,6 +34,7 @@ export function mapVorhabenTaskRowToTableModel(row: VorhabenWorkspaceTaskRow): V
 export function mapSprintBoardCardToTableModel(card: SprintBoardCard): VereinsentwicklungConnectedTaskTableRowModel {
   return {
     taskId: card.taskId,
+    publicReference: card.publicReference ?? null,
     title: card.title,
     taskHref: card.taskHref,
     targetId: card.targetId,
@@ -43,7 +45,7 @@ export function mapSprintBoardCardToTableModel(card: SprintBoardCard): Vereinsen
     strategyHref: card.strategyId ? buildStrategyWorkspaceHref(card.strategyId) : null,
     orgUnitLabel: card.orgUnitLabel,
     status: card.status,
-    statusLabel: TASK_STATUS_LABELS[card.status],
+    statusLabel: formatVereinsentwicklungTaskStatusLabel(card.status),
     assignees: card.assignees,
   };
 }
@@ -51,6 +53,7 @@ export function mapSprintBoardCardToTableModel(card: SprintBoardCard): Vereinsen
 export function mapPlanningTaskToTableModel(task: SprintPlanningTaskDto): VereinsentwicklungConnectedTaskTableRowModel {
   return {
     taskId: task.id,
+    publicReference: task.publicReference,
     title: task.title,
     taskHref: task.taskHref,
     targetId: task.targetId,

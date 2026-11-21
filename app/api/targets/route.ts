@@ -5,6 +5,7 @@ import { getTargets } from "@/lib/targets/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import { normalizeTargetMetricsFromBody } from "@/lib/targets/target-metric-payload";
+import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -54,9 +55,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: metricsResult.error }, { status: 400 });
     }
 
-    const created = await prisma.target.create({
+    const created = await prisma.$transaction(async (tx) => {
+      const scePublicNumber = await allocateScePublicNumber(tx);
+      return tx.target.create({
       data: {
         tenantId,
+        scePublicNumber,
         title,
         description: body?.description?.trim() || null,
         category,
@@ -90,6 +94,7 @@ export async function POST(request: NextRequest) {
         },
       },
       select: { id: true, title: true },
+    });
     });
 
     return NextResponse.json({ target: created }, { status: 201 });

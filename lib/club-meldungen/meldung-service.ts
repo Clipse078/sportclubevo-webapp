@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { allocateClubMeldungCaseNumber } from "./case-number";
+import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
 import { assertAttachmentLinkableForMeldung } from "./attachment-link";
 import { recordClubMeldungHistory } from "./history-service";
 import {
@@ -93,10 +94,12 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
     const caseNumber = await allocateClubMeldungCaseNumber(tx, input.tenantId, {
       createdAt,
     });
+    const scePublicNumber = await allocateScePublicNumber(tx);
     const row = await tx.clubMeldung.create({
       data: {
         tenantId: input.tenantId,
         caseNumber,
+        scePublicNumber,
         subject: input.subject.trim(),
         description: input.description.trim(),
         category: input.category,

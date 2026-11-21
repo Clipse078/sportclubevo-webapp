@@ -35,6 +35,10 @@ import {
   resolveWorkspaceDocumentVersionForLink,
   WorkspaceVersionLinkValidationError,
 } from "@/lib/workspace/reference/workspace-version-link-validation";
+import {
+  allocateScePublicNumber,
+  scePublicReferenceFromNumber,
+} from "@/lib/club-development/sce-public-reference";
 
 export type ClubStrategyDocumentReferenceDto = {
   referenceId: string;
@@ -114,21 +118,26 @@ async function findClubWideStrategyId(tenantId: string): Promise<string | null> 
 async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) {
   const existingId = await findClubWideStrategyId(tenantId);
   if (existingId) return existingId;
-  const created = await prisma.clubStrategy.create({
-    data: {
-      tenantId,
-      scopeType: ClubStrategyScopeType.CLUB,
-      createdByUserId,
-      updatedByUserId: createdByUserId,
-      title: "Gesamtverein",
-    },
-    select: { id: true },
+  const created = await prisma.$transaction(async (tx) => {
+    const scePublicNumber = await allocateScePublicNumber(tx);
+    return tx.clubStrategy.create({
+      data: {
+        tenantId,
+        scePublicNumber,
+        scopeType: ClubStrategyScopeType.CLUB,
+        createdByUserId,
+        updatedByUserId: createdByUserId,
+        title: "Gesamtverein",
+      },
+      select: { id: true },
+    });
   });
   return created.id;
 }
 
 export type ClubStrategyListItemDto = {
   id: string;
+  publicReference: string | null;
   title: string;
   scopeType: ClubStrategyScopeType;
   scopeOrgUnitId: string | null;
@@ -180,6 +189,7 @@ export async function listClubStrategies(
     orderBy: [{ scopeType: "asc" }, { title: "asc" }],
     select: {
       id: true,
+      scePublicNumber: true,
       title: true,
       scopeType: true,
       scopeOrgUnitId: true,
@@ -234,6 +244,7 @@ export async function listClubStrategies(
 
     items.push({
       id: row.id,
+      publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
       title: resolveStrategyTitle(row.title, row.scopeType, orgUnitLabels),
       scopeType: row.scopeType,
       scopeOrgUnitId: row.scopeOrgUnitId,
@@ -352,29 +363,34 @@ export async function createClubStrategy(
 
   let created: { id: string };
   try {
-    created = await prisma.clubStrategy.create({
-      data: {
-        tenantId: actor.tenantId,
-        scopeType,
-        scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
-        title,
-        situationText,
-        responsiblePersonId,
-        responsibleLabel,
-        nextReviewAt,
-        createdByUserId: actorUserId,
-        updatedByUserId: actorUserId,
-        orgUnitAssignments:
-          orgUnitIds.length > 0
-            ? {
-                create: orgUnitIds.map((orgUnitId) => ({
-                  tenantId: actor.tenantId!,
-                  orgUnitId,
-                })),
-              }
-            : undefined,
-      },
-      select: { id: true },
+    created = await prisma.$transaction(async (tx) => {
+      const scePublicNumber = await allocateScePublicNumber(tx);
+      const tenantId = actor.tenantId!;
+      return tx.clubStrategy.create({
+        data: {
+          tenantId,
+          scePublicNumber,
+          scopeType,
+          scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
+          title,
+          situationText,
+          responsiblePersonId,
+          responsibleLabel,
+          nextReviewAt,
+          createdByUserId: actorUserId,
+          updatedByUserId: actorUserId,
+          orgUnitAssignments:
+            orgUnitIds.length > 0
+              ? {
+                  create: orgUnitIds.map((orgUnitId) => ({
+                    tenantId,
+                    orgUnitId,
+                  })),
+                }
+              : undefined,
+        },
+        select: { id: true },
+      });
     });
   } catch (error) {
     if (
