@@ -27,6 +27,9 @@ export type VereinsentwicklungConnectedTaskTableRowModel = {
   status: TaskStatus;
   statusLabel: string;
   assignees: SprintTaskAssigneeViewModel[];
+  /** Optional Teilaufgaben / leaf rollup for inline progress. */
+  progressCompletedCount?: number | null;
+  progressTotalCount?: number | null;
 };
 
 export function buildTargetDetailHref(targetId: string, returnTo?: string): string {

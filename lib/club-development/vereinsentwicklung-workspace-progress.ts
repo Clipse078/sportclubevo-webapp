@@ -153,7 +153,8 @@ export async function computeStrategyGoalAchievementProgress(
   const visible = applyVisibilityFilter(rows, actor) as TargetVisibilityRow[];
   const completedCount = visible.filter((t) => t.status === TargetStatus.COMPLETED).length;
   const totalCount = visible.length;
-  const percent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  const percent =
+    totalCount === 0 ? 0 : completedCount >= totalCount ? 100 : Math.floor((completedCount / totalCount) * 100);
   return { completedCount, totalCount, percent, contributingTaskIds: [] };
 }
 

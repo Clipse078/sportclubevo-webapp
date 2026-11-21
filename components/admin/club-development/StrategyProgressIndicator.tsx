@@ -1,4 +1,6 @@
 import { cn } from "@/lib/cn";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
+import { parseVereinsentwicklungCountCaption } from "@/lib/club-development/sce-completion-progress";
 
 type StrategyProgressIndicatorProps = {
   label: string;
@@ -32,15 +34,16 @@ export default function StrategyProgressIndicator({
   className,
 }: StrategyProgressIndicatorProps) {
   if (variant === "compact") {
+    const emptyLabel = unknownReason?.trim() || "Nicht verfügbar.";
     if (percent == null) {
       return (
         <div data-testid={testId} className={cn("min-w-0", className)}>
-          <span className="text-xs font-semibold text-[var(--muted)] tabular-nums" aria-hidden>
-            —
-          </span>
-          <span className="sr-only">
-            {label}: {unknownReason ?? "Nicht verfügbar."}
-          </span>
+          <SceCompletionProgressInline
+            metricLabel={label}
+            countCaption={null}
+            emptyLabel={emptyLabel}
+            accentClass={accentClass}
+          />
           {showEmptyReason && unknownReason ? (
             <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">{unknownReason}</p>
           ) : null}
@@ -48,29 +51,18 @@ export default function StrategyProgressIndicator({
       );
     }
 
-    const width = Math.min(100, Math.max(0, percent));
-    const ariaValueText =
-      countCaption?.trim() ||
-      (unknownReason?.trim() ? unknownReason : `${label}: ${formatPercent(percent)}`);
-
+  const counts = parseVereinsentwicklungCountCaption(countCaption);
     return (
-      <div data-testid={testId} className={cn("flex min-w-0 items-center gap-2", className)}>
-        <div
-          className="h-1.5 min-w-[2.75rem] max-w-[5.5rem] flex-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={width}
-          aria-label={label}
-          aria-valuetext={ariaValueText}
-        >
-          <div className={cn("h-full rounded-full", accentClass)} style={{ width: `${width}%` }} />
-        </div>
-        <span className="shrink-0 text-xs font-semibold text-[var(--foreground)] tabular-nums" aria-hidden>
-          {formatPercent(percent)}
-        </span>
-        <span className="sr-only">{ariaValueText}</span>
-      </div>
+      <SceCompletionProgressInline
+        metricLabel={label}
+        countCaption={countCaption}
+        emptyLabel={emptyLabel}
+        completedCount={counts?.completed ?? null}
+        totalCount={counts?.total ?? null}
+        accentClass={accentClass}
+        testId={testId}
+        className={className}
+      />
     );
   }
 

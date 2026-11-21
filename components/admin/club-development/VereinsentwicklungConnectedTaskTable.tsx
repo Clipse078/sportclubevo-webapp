@@ -14,8 +14,18 @@ import {
   UMSETZUNGSPLANUNG_DND_MIME,
 } from "@/lib/club-development/umsetzungsplanung-dnd";
 import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorkspaceTaskStatusPill";
+import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
+import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
+import {
+  SCE_CD_BACKLOG_GRID_TASK,
+  SCE_CD_BACKLOG_GRID_TASK_PROGRESS,
+  SCE_CD_BACKLOG_ROW_CLASS,
+} from "./sce-club-development-surface-styles";
+import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
+
+export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full";
 
 function AssigneeCell({
   assignees,
@@ -96,6 +106,8 @@ export type VereinsentwicklungPhaseDragConfig = {
 
 export type VereinsentwicklungConnectedTaskTableProps = {
   rows: VereinsentwicklungConnectedTaskTableRowModel[];
+  layoutVariant?: VereinsentwicklungConnectedTaskTableLayout;
+  showRowProgress?: boolean;
   showReorderHandle?: boolean;
   reorder?: VereinsentwicklungTaskTableReorderConfig;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
@@ -107,6 +119,8 @@ export type VereinsentwicklungConnectedTaskTableProps = {
 function TaskTableRow({
   row,
   gridCols,
+  layoutVariant,
+  showRowProgress,
   showReorderHandle,
   dragHandleEnabled,
   reorderPending,
@@ -117,6 +131,8 @@ function TaskTableRow({
 }: {
   row: VereinsentwicklungConnectedTaskTableRowModel;
   gridCols: string;
+  layoutVariant: VereinsentwicklungConnectedTaskTableLayout;
+  showRowProgress: boolean;
   showReorderHandle: boolean;
   dragHandleEnabled: boolean;
   reorderPending?: boolean;
@@ -129,8 +145,9 @@ function TaskTableRow({
   return (
     <>
       <div
-        className={cn("grid gap-2 px-1 py-2.5 sm:items-center", gridCols)}
+        className={cn(SCE_CD_BACKLOG_ROW_CLASS, "sm:items-center", gridCols)}
         data-testid={`vereinsentwicklung-task-row-${row.taskId}`}
+        data-sce-backlog-row="task"
       >
         {showReorderHandle || phaseHandle ? (
           dragHandleEnabled || phaseHandle ? (
@@ -184,27 +201,35 @@ function TaskTableRow({
             </span>
           )
         ) : null}
-        <div className="min-w-0">
-          <Link
-            href={row.taskHref}
-            className="text-sm font-medium text-[var(--foreground)] hover:text-[var(--sce-primary)]"
-          >
-            {row.title}
-          </Link>
-        </div>
+        <VereinsentwicklungBacklogTruncatingTitle title={row.title} href={row.taskHref} />
         <LinkCell
           label={row.targetTitle}
           href={row.targetHref}
           columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}
         />
-        <LinkCell
-          label={row.strategyTitle}
-          href={row.strategyHref}
-          columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}
-        />
-        <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
+        {layoutVariant === "full" ? (
+          <>
+            <LinkCell
+              label={row.strategyTitle}
+              href={row.strategyHref}
+              columnLabel={VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}
+            />
+            <span className="text-xs text-[var(--text-2)]">{row.orgUnitLabel?.trim() || "Gesamtverein"}</span>
+          </>
+        ) : null}
         <VereinsentwicklungWorkspaceTaskStatusPill status={row.status} label={row.statusLabel} />
         <AssigneeCell assignees={row.assignees} />
+        {showRowProgress ? (
+          <SceCompletionProgressInline
+            metricLabel={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}
+            completedCount={row.progressCompletedCount ?? null}
+            totalCount={row.progressTotalCount ?? null}
+            countCaption={null}
+            emptyLabel="Noch keine Aufgaben"
+            accentClass="bg-[var(--sce-info)]"
+            testId={`task-row-progress-${row.taskId}`}
+          />
+        ) : null}
         <div className="flex justify-end">
           {renderRowActions ? (
             renderRowActions(row)
@@ -221,6 +246,8 @@ function TaskTableRow({
 
 export default function VereinsentwicklungConnectedTaskTable({
   rows,
+  layoutVariant = "backlog",
+  showRowProgress = false,
   showReorderHandle = false,
   reorder,
   phaseDrag,
@@ -229,9 +256,13 @@ export default function VereinsentwicklungConnectedTaskTable({
   testId,
 }: VereinsentwicklungConnectedTaskTableProps) {
   const showHandleColumn = showReorderHandle || Boolean(phaseDrag?.enabled);
-  const gridCols = showHandleColumn
-    ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
-    : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
+  const backlogGrid = showRowProgress ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
+  const gridCols =
+    layoutVariant === "backlog"
+      ? backlogGrid
+      : showHandleColumn
+        ? "sm:grid-cols-[auto_minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]"
+        : "sm:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.8fr)_minmax(0,1fr)_auto]";
 
   const reorderListActive = Boolean(showReorderHandle && reorder?.canReorder);
   const dragHandleEnabled = Boolean(
@@ -309,10 +340,15 @@ export default function VereinsentwicklungConnectedTaskTable({
         {showHandleColumn ? <span className="w-5" /> : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.aufgabe}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}</span>
-        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.orgEinheit}</span>
+        {layoutVariant === "full" ? (
+          <>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.strategie}</span>
+            <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.orgEinheit}</span>
+          </>
+        ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
+        {showRowProgress ? <span>{CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}</span> : null}
         <span className="w-8" aria-hidden />
       </div>
 
@@ -351,6 +387,8 @@ export default function VereinsentwicklungConnectedTaskTable({
             <TaskTableRow
               row={row}
               gridCols={gridCols}
+              layoutVariant={layoutVariant}
+              showRowProgress={showRowProgress}
               showReorderHandle={showReorderHandle}
               dragHandleEnabled={dragHandleEnabled}
               reorderPending={reorder?.pending}

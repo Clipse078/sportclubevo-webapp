@@ -590,6 +590,7 @@ export default function StrategyAuthoringPanel({
               <li key={focus.target.id} className="space-y-1">
                 {overview ? (
                   <VereinsentwicklungWorkspaceRecordRow
+                    variant="legacy"
                     title={overview.title}
                     titleHref={`/vereinsleitung/targets/${focus.target.id}`}
                     responsibleLabel={overview.responsibleLabel}
@@ -620,6 +621,7 @@ export default function StrategyAuthoringPanel({
                   />
                 ) : (
                   <VereinsentwicklungWorkspaceRecordRow
+                    variant="legacy"
                     title={focus.target.title}
                     titleHref={`/vereinsleitung/targets/${focus.target.id}`}
                     responsibleLabel={null}
