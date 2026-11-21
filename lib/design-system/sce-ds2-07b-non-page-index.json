@@ -3271,6 +3271,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/mentions/candidates/route.ts",
+    "urlPattern": "/api/tenant-documentation/mentions/candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant-documentation/pages/[pageId]/collaboration/route.ts",
     "urlPattern": "/api/tenant-documentation/pages/[pageId]/collaboration",
     "audience": "API"

@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
+import { PageShell } from "@/components/ui/page";
 import { isRichTextValue } from "@/lib/cms/rich-text";
 import { enrichTipTapMentionLabels } from "@/lib/collaboration/mentions/enrich-mention-labels";
 import { richTextDocumentToHtmlWithMentions } from "@/lib/collaboration/mentions/render-inline-mentions-html";
@@ -89,19 +91,35 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
     "Editor";
 
   return (
-    <TenantDocumentationWorkspaceClient
-      pageId={page.id}
-      pageTitle={page.title}
-      spaceTitle={page.space.title}
-      breadcrumb={breadcrumb}
-      publishedHtml={
-        publishedContent ? richTextDocumentToHtmlWithMentions(publishedContent) : null
-      }
-      publishedMeta={publishedMeta}
-      publishedContent={publishedContent}
-      canEdit={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
-      canPublish={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.PUBLISH)}
-      displayName={displayName}
-    />
+    <PageShell fullWidth>
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Dokumentation", href: "/dashboard/dokumentation" },
+          { label: page.title },
+        ]}
+        header={{
+          eyebrow: "Dokumentation",
+          title: page.title,
+          description: page.space.title,
+        }}
+        density="dense"
+      >
+        <TenantDocumentationWorkspaceClient
+          pageId={page.id}
+          pageTitle={page.title}
+          spaceTitle={page.space.title}
+          breadcrumb={breadcrumb}
+          publishedHtml={
+            publishedContent ? richTextDocumentToHtmlWithMentions(publishedContent) : null
+          }
+          publishedMeta={publishedMeta}
+          publishedContent={publishedContent}
+          canEdit={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
+          canPublish={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.PUBLISH)}
+          displayName={displayName}
+        />
+      </SceWorkspaceChrome>
+    </PageShell>
   );
 }

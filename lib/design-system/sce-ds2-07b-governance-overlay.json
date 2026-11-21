@@ -1,6 +1,18 @@
 {
   "lifecycle": [],
   "recordOverrides": {
+    "app/(admin)/dashboard/dokumentation/page.tsx": {
+      "routeKind": "REDIRECT_ALIAS",
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+      "exceptionRationale": "Hub redirect to default documentation page (not a visual surface).",
+      "redirectDestination": "/dashboard/dokumentation/p/:param",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
     "app/(admin)/vereinsleitung/targets/new/page.tsx": {
       "routeKind": "REDIRECT_ALIAS",
       "architecture": "NOT_APPLICABLE",

@@ -70,6 +70,8 @@
   "app/(admin)/dashboard/communication/zielgruppen/page.tsx",
   "app/(admin)/dashboard/competitions/page.tsx",
   "app/(admin)/dashboard/dev/sce-icons/page.tsx",
+  "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
+  "app/(admin)/dashboard/dokumentation/page.tsx",
   "app/(admin)/dashboard/events/import/page.tsx",
   "app/(admin)/dashboard/events/matches/new/page.tsx",
   "app/(admin)/dashboard/events/other/new/page.tsx",

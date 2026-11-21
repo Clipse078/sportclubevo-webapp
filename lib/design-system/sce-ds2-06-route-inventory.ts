@@ -873,14 +873,14 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
   {
     "route": "/dashboard/dokumentation/p/[pageId]",
     "source": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
-    "pageArchitecture": "legacy",
-    "headerFinanceAligned": false,
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
     "tabsFinanceAligned": false,
-    "typographyConsistent": false,
-    "colorsContrastRisk": true,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Medium",
-    "action": "DS2-07: migrate to unified workspace chrome"
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
   },
   {
     "route": "/dashboard/dokumentation",
