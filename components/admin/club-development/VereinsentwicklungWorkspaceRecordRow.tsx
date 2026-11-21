@@ -19,8 +19,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps =
       title: string;
       titleHref?: string;
       orgUnitLabel?: string | null;
-      goalProgressSlot: ReactNode;
-      deliveryProgressSlot: ReactNode;
+      progressSlot: ReactNode;
       trailing?: ReactNode;
       testId?: string;
     }
@@ -70,8 +69,7 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
           <span className="sr-only">Org-Einheit: </span>
           <span className="truncate">{props.orgUnitLabel?.trim() || "Gesamtverein"}</span>
         </div>
-        <div className="min-w-0">{props.goalProgressSlot}</div>
-        <div className="min-w-0">{props.deliveryProgressSlot}</div>
+        <div className="min-w-0">{props.progressSlot}</div>
         <div className="flex items-center justify-end gap-2">{props.trailing}</div>
       </div>
     );

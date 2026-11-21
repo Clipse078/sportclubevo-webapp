@@ -17,7 +17,6 @@ import {
   SCE_CD_BACKLOG_GRID_STRATEGY,
   SCE_CD_WORKSPACE_PANEL_CLASS,
 } from "./sce-club-development-surface-styles";
-import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
 import CreateStrategieWorkspaceCollapsibleCard from "./CreateStrategieWorkspaceCollapsibleCard";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
@@ -104,8 +103,7 @@ export default function StrategienWorkspaceListPanel({
                 <span>Referenz</span>
                 <span>Titel</span>
                 <span>Org-Einheit</span>
-                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.goalUnitShortLabel} />
-                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+                <span>{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</span>
                 <span className="sr-only">Aktionen</span>
               </>
             }
@@ -119,8 +117,6 @@ export default function StrategienWorkspaceListPanel({
               const isSelected = selectedStrategyId === strategy.id;
               const goalEmpty =
                 strategy.goalAchievementCaption === CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty;
-              const deliveryEmpty = strategy.deliveryProgressCaption === "Noch keine Aufgaben";
-
               return (
                 <div
                   key={strategy.id}
@@ -132,25 +128,26 @@ export default function StrategienWorkspaceListPanel({
                     title={strategy.title}
                     titleHref={href}
                     orgUnitLabel={strategy.scopeOrgUnitLabel}
-                    goalProgressSlot={
-                      <SceCompletionProgressInline
-                        metricLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
-                        countCaption={goalEmpty ? null : strategy.goalAchievementCaption}
-                        emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
-                        countSuffix="Zielen erreicht"
-                        unitShortLabel={CD_STRATEGY_PROGRESS_COPY.goalUnitShortLabel}
-                        testId={`strategien-goal-progress-${strategy.id}`}
-                      />
-                    }
-                    deliveryProgressSlot={
-                      <SceCompletionProgressInline
-                        metricLabel={CD_STRATEGY_PROGRESS_COPY.deliveryLabel}
-                        countCaption={deliveryEmpty ? null : strategy.deliveryProgressCaption}
-                        emptyLabel="Noch keine Aufgaben"
-                        countSuffix="erledigt"
-                        unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
-                        testId={`strategien-delivery-progress-${strategy.id}`}
-                      />
+                    progressSlot={
+                      strategy.goalAchievementTotalCount > 0 ? (
+                        <SceCompletionProgressInline
+                          metricLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+                          completedCount={strategy.goalAchievementCompletedCount}
+                          totalCount={strategy.goalAchievementTotalCount}
+                          countCaption={null}
+                          emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
+                          countSuffix="erledigt"
+                          testId={`strategien-goal-progress-${strategy.id}`}
+                        />
+                      ) : (
+                        <SceCompletionProgressInline
+                          metricLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}
+                          countCaption={goalEmpty ? null : strategy.goalAchievementCaption}
+                          emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
+                          countSuffix="erledigt"
+                          testId={`strategien-goal-progress-${strategy.id}`}
+                        />
+                      )
                     }
                     testId={`strategien-row-${strategy.id}`}
                     trailing={

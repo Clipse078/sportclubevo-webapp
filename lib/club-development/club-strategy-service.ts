@@ -147,6 +147,8 @@ export type ClubStrategyListItemDto = {
   focusTargetCount: number;
   focusTargetIds: string[];
   goalAchievementPercent: number;
+  goalAchievementCompletedCount: number;
+  goalAchievementTotalCount: number;
   goalAchievementCaption: string;
   deliveryProgressPercent: number;
   deliveryProgressCaption: string;
@@ -254,6 +256,8 @@ export async function listClubStrategies(
       focusTargetCount: row._count.focusTargets,
       focusTargetIds: focusIds,
       goalAchievementPercent: goalAchievement.percent,
+      goalAchievementCompletedCount: goalAchievement.completedCount,
+      goalAchievementTotalCount: goalAchievement.totalCount,
       goalAchievementCaption: formatGoalAchievementCountLabel(goalAchievement),
       deliveryProgressPercent: delivery.percent,
       deliveryProgressCaption: formatProgressCountLabel(delivery),

@@ -25,7 +25,7 @@ export const SCE_CD_BACKLOG_PROGRESS_ACCENT = "bg-[#d4843a]";
 
 /** Shared Vereinsentwicklung backlog table grids (desktop). */
 export const SCE_CD_BACKLOG_GRID_STRATEGY =
-  "sm:grid-cols-[minmax(0,5.5rem)_minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center";
+  "sm:grid-cols-[minmax(0,5.5rem)_minmax(0,1.35fr)_minmax(0,0.75fr)_minmax(0,1.2fr)_auto] sm:items-center";
 
 export const SCE_CD_BACKLOG_GRID_ZIEL =
   "sm:grid-cols-[minmax(0,5.5rem)_minmax(0,1.2fr)_minmax(0,0.78fr)_minmax(0,5.75rem)_minmax(0,1.05fr)_minmax(0,0.82fr)_auto] sm:items-center";
