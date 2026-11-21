@@ -1440,6 +1440,7 @@ model Tenant {
   clubMeldungHistoryEvents        ClubMeldungHistoryEvent[]
   clubMeldungCreateIdempotency    ClubMeldungCreateIdempotency[]
   clubMeldungNumberSequence       ClubMeldungNumberSequence?
+  tenantScePublicNumberSequence   TenantScePublicNumberSequence?
   // TEAM-COCKPIT-02B: canonical per-event attendance records
   attendanceRecords               AttendanceRecord[]               @relation("TenantAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses
@@ -1958,10 +1959,20 @@ model ClubMeldungNumberSequence {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
+/// Tenant-wide SCE record numbering (Strategie, Ziel, Aufgabe, Anliegen).
+model TenantScePublicNumberSequence {
+  tenantId   String @id
+  nextNumber Int    @default(1)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
 model ClubMeldung {
   id        String @id @default(cuid())
   tenantId  String
   caseNumber String
+  /// Optional SCE-wide public number (alongside caseNumber).
+  scePublicNumber Int?
 
   subject     String
   description String
@@ -2009,6 +2020,7 @@ model ClubMeldung {
   idempotencyRows ClubMeldungCreateIdempotency[]
 
   @@unique([tenantId, caseNumber])
+  @@unique([tenantId, scePublicNumber])
   @@index([tenantId, status])
   @@index([tenantId, reporterUserId])
   @@index([tenantId, accountableUserId])
@@ -3669,6 +3681,8 @@ model ClubDevelopmentProcessApprovalVote {
 model ClubStrategy {
   id                    String   @id @default(cuid())
   tenantId              String
+  /// Global SCE reference sequence number (display: SCE-000042).
+  scePublicNumber       Int?
   scopeType             ClubStrategyScopeType @default(CLUB)
   scopeOrgUnitId        String?
   title                 String?
@@ -3693,6 +3707,7 @@ model ClubStrategy {
   documentReferences ClubStrategyDocumentReference[]
   orgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
+  @@unique([tenantId, scePublicNumber])
   @@index([tenantId])
   @@index([tenantId, scopeType, scopeOrgUnitId])
 }
@@ -4994,6 +5009,7 @@ model MeetingAction {
 model Task {
   id              String        @id @default(cuid())
   tenantId        String
+  scePublicNumber Int?
   title           String
   description     String?
   status          TaskStatus    @default(OPEN)
@@ -5040,6 +5056,7 @@ model Task {
   primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])
+  @@unique([tenantId, scePublicNumber])
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, dueAt])
@@ -6055,6 +6072,7 @@ model MeetingParticipant {
 model Target {
   id            String         @id @default(cuid())
   tenantId      String
+  scePublicNumber Int?
   title         String
   description   String?
   category      TargetCategory @default(SPORTLICHE_ENTWICKLUNG)
@@ -6098,6 +6116,7 @@ model Target {
   initiativeTargetLinks InitiativeTargetLink[]
   clubStrategyFocusLinks ClubStrategyFocusTarget[]
 
+  @@unique([tenantId, scePublicNumber])
   @@index([tenantId])
   @@index([category])
   @@index([status])

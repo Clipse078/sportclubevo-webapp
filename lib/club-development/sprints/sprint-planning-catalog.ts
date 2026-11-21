@@ -13,7 +13,8 @@ import {
 } from "@/lib/visibility/visibility-filter";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
-import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
+import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
 import type { TaskServiceContext } from "@/lib/tasks/types";
 import { CD_SPRINT_API_COPY, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import {
@@ -38,6 +39,7 @@ export type { SprintPlanningCatalogDto, SprintPlanningInitiativeGroupDto, Sprint
 
 const PLANNING_TASK_SELECT = {
   id: true,
+  scePublicNumber: true,
   title: true,
   status: true,
   dueAt: true,
@@ -88,9 +90,10 @@ function toPlanningTaskDto(
   const labels = contextLabels.get(row.id);
   return {
     id: row.id,
+    publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
     title: row.title,
     status: row.status,
-    statusLabel: TASK_STATUS_LABELS[row.status],
+    statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
     assignees,
     assigneeLabels: assignees.map((a) => a.displayName),
     dueAt: row.dueAt?.toISOString() ?? null,
@@ -360,9 +363,10 @@ function toUnplannedTaskDto(
   const labels = contextLabels.get(row.id);
   return {
     id: row.id,
+    publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
     title: row.title,
     status: row.status,
-    statusLabel: TASK_STATUS_LABELS[row.status],
+    statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
     assignees,
     assigneeLabels: assignees.map((a) => a.displayName),
     dueAt: row.dueAt?.toISOString() ?? null,

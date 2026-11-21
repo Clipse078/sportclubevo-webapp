@@ -12,7 +12,8 @@ import { applyVisibilityFilter } from "@/lib/visibility/visibility-filter";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
-import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
+import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
+import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import {
   dedupeTasksById,
@@ -65,6 +66,7 @@ const TARGET_VISIBILITY_SELECT = {
 
 const TASK_ROW_SELECT = {
   id: true,
+  scePublicNumber: true,
   title: true,
   status: true,
   contextType: true,
@@ -113,6 +115,7 @@ export type VorhabenWorkspaceTaskLinkKind =
 
 export type VorhabenWorkspaceTaskRow = {
   id: string;
+  publicReference: string | null;
   title: string;
   status: TaskStatus;
   statusLabel: string;
@@ -248,9 +251,10 @@ function mapTaskRows(
     const labels = contextLabels.get(row.id);
     return {
       id: row.id,
+      publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
       title: row.title,
       status: row.status,
-      statusLabel: TASK_STATUS_LABELS[row.status],
+      statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
       dueAt: row.dueAt?.toISOString() ?? null,
       assigneeLabels: assigneeLabels(row),
       href: taskWorkspaceHref(row.id, { returnTo }),

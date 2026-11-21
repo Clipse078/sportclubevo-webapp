@@ -3,7 +3,8 @@ import type { SprintTaskAssigneeViewModel } from "./sprints/sprint-task-assignee
 
 /** Accessible column labels for connected Vereinsentwicklung task tables (exact copy, no qualifiers). */
 export const VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS = {
-  aufgabe: "Aufgabe",
+  referenz: "Referenz",
+  aufgabe: "Titel",
   ziel: "Ziel",
   strategie: "Strategie",
   orgEinheit: "Org-Einheit",
@@ -13,6 +14,7 @@ export const VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS = {
 
 export type VereinsentwicklungConnectedTaskTableRowModel = {
   taskId: string;
+  publicReference: string | null;
   title: string;
   taskHref: string;
   targetId: string | null;

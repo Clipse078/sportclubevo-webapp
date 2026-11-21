@@ -11,6 +11,7 @@ import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
 import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
+import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
 
 function schedulePersonalDashboardRebuildForTaskUsers(
   tenantId: string,
@@ -356,9 +357,11 @@ export async function createTask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
+    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
+        scePublicNumber,
         title,
         description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
@@ -490,9 +493,11 @@ export async function createQuickTask(
   const orgVisibility = await resolveQuickCreateOrgVisibility(ctx, selfOnly);
 
   const task = await prisma.$transaction(async (tx) => {
+    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
+        scePublicNumber,
         title,
         description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
@@ -708,9 +713,11 @@ export async function createSubtask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
+    const scePublicNumber = await allocateScePublicNumber(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
+        scePublicNumber,
         parentTaskId: parent.id,
         title,
         description: normalizeTaskDescriptionInput(input.description),

@@ -7,6 +7,7 @@ import { loadTaskContextLabelBundles } from "@/lib/club-development/vereinsentwi
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
+import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
 
 export type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 
@@ -14,6 +15,7 @@ export type SprintBoardColumnKey = "OPEN" | "IN_PROGRESS" | "DONE";
 
 export type SprintBoardCard = {
   taskId: string;
+  publicReference: string | null;
   title: string;
   status: TaskStatus;
   column: SprintBoardColumnKey;
@@ -57,6 +59,7 @@ export async function loadSprintBoard(
     where: taskIdsPassingReadWhere(taskCtx, { id: { in: taskIds } }),
     select: {
       id: true,
+      scePublicNumber: true,
       title: true,
       status: true,
       priority: true,
@@ -116,6 +119,7 @@ export async function loadSprintBoard(
 
     const card: SprintBoardCard = {
       taskId: task.id,
+      publicReference: scePublicReferenceFromNumber(task.scePublicNumber),
       title: task.title,
       status: task.status,
       column,

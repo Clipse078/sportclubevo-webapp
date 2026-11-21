@@ -3,6 +3,7 @@ import type { SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 
 export type SprintPlanningTaskDto = {
   id: string;
+  publicReference: string | null;
   title: string;
   status: TaskStatus;
   statusLabel: string;

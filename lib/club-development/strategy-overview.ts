@@ -17,6 +17,7 @@ import {
 } from "./vereinsentwicklung-workspace-progress";
 import { resolveStrategyTitle } from "./club-strategy-service";
 import { resolveTargetAssigneeLabelsById } from "./vereinsentwicklung-target-responsible-display";
+import { scePublicReferenceFromNumber } from "./sce-public-reference";
 
 type JsonInitiativeRef = { slug?: string; title?: string };
 
@@ -46,6 +47,7 @@ function formatOrgUnitLabels(labels: string[]): string | null {
 
 export type StrategyTargetOverview = {
   id: string;
+  publicReference: string | null;
   title: string;
   status: string;
   responsibleLabel: string | null;
@@ -87,6 +89,7 @@ export async function loadStrategyOverview(
       where: { tenantId, ...buildVisibilityWhere(actor) },
       select: {
         id: true,
+        scePublicNumber: true,
         title: true,
         status: true,
         linkedInitiativeRefs: true,
@@ -226,6 +229,7 @@ export async function loadStrategyOverview(
 
     targets.push({
       id: target.id,
+      publicReference: scePublicReferenceFromNumber(target.scePublicNumber),
       title: target.title,
       status: target.status,
       responsibleLabel,
