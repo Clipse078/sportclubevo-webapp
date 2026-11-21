@@ -22,8 +22,10 @@ export type ScePublicReferenceLookupResult =
   | {
       kind: ScePublicReferenceLookupKind;
       id: string;
+      /** Canonical SCE-… when scePublicNumber exists; legacy Anliegen may return caseNumber. */
       publicReference: string;
       title: string;
+      legacyAnliegenCaseNumber?: boolean;
     }
   | null;
 
@@ -43,16 +45,56 @@ function canViewClubDevelopment(actor: ActorContext): boolean {
   );
 }
 
+async function lookupMeldungByLegacyCaseNumber(
+  actor: ActorContext,
+  tenantId: string,
+  caseNumber: string,
+): Promise<ScePublicReferenceLookupResult | null> {
+  if (!actor.userId) return null;
+  const meldung = await prisma.clubMeldung.findFirst({
+    where: { tenantId, caseNumber: { equals: caseNumber, mode: "insensitive" } },
+    select: {
+      id: true,
+      subject: true,
+      caseNumber: true,
+      scePublicNumber: true,
+      reporterUserId: true,
+      accountableUserId: true,
+    },
+  });
+  if (!meldung) return null;
+  const accessCtx = {
+    actorUserId: actor.userId,
+    permissionKeys: actor.permissionKeys,
+  };
+  if (!canViewMeldungInternal(meldung, accessCtx) && !canViewMeldung(meldung, accessCtx)) {
+    return null;
+  }
+  const sceRef = scePublicReferenceFromNumber(meldung.scePublicNumber);
+  return {
+    kind: "meldung",
+    id: meldung.id,
+    publicReference: sceRef ?? meldung.caseNumber,
+    title: meldung.subject,
+    legacyAnliegenCaseNumber: !sceRef,
+  };
+}
+
 /**
- * Permission-aware resolution of a formatted SCE reference within the actor tenant.
+ * Permission-aware resolution of SCE-… or legacy Anliegen case numbers within the actor tenant.
  */
 export async function lookupScePublicReference(
   actor: ActorContext,
   referenceInput: string,
 ): Promise<ScePublicReferenceLookupResult> {
   const tenantId = actorTenantId(actor);
-  const parsed = parseScePublicReference(referenceInput);
-  if (!tenantId || !parsed) return null;
+  const trimmed = referenceInput.trim();
+  if (!tenantId || !trimmed) return null;
+
+  const parsed = parseScePublicReference(trimmed);
+  if (!parsed) {
+    return lookupMeldungByLegacyCaseNumber(actor, tenantId, trimmed);
+  }
 
   const sequenceNumber = parsed.sequenceNumber;
 

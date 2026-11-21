@@ -251,6 +251,74 @@ describe("SCE public reference (disposable Postgres)", () => {
     expect(after?.scePublicNumber).toBe(existingNumber);
   });
 
+  it("resolves acceptance-style caseNumber without scePublicNumber", async () => {
+    const legacyOnly = `7${RUN.replace(/\D/g, "").slice(-5).padStart(5, "0")}01`;
+    const { ref } = await prisma.$transaction(async (tx) => {
+      const row = await tx.clubMeldung.create({
+        data: {
+          tenantId: tenantAId,
+          caseNumber: legacyOnly,
+          subject: `Acceptance-style ${RUN}`,
+          description: "x",
+          category: ClubMeldungCategory.DAMAGE_OR_PROBLEM,
+          reporterUserId: viewerAId,
+          status: ClubMeldungStatus.RECEIVED,
+        },
+        select: { caseNumber: true },
+      });
+      return { ref: row.caseNumber };
+    });
+
+    const actor: ActorContext = {
+      tenantId: tenantAId,
+      userId: viewerAId,
+      permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL, PERMISSIONS.MELDUNGEN_SUBMIT],
+      roleKeys: [],
+      teamIds: [],
+      personId: null,
+      orgUnitIds: [],
+    };
+    const hit = await lookupScePublicReference(actor, ref);
+    expect(hit?.kind).toBe("meldung");
+    expect(hit?.publicReference).toBe(legacyOnly);
+    expect(hit?.legacyAnliegenCaseNumber).toBe(true);
+  });
+
+  it("resolves legacy caseNumber when SCE parse fails", async () => {
+    const legacyCase = `M-2026-${RUN.slice(-6)}`;
+    const { ref } = await prisma.$transaction(async (tx) => {
+      const n = await allocateScePublicNumber(tx, tenantAId);
+      const row = await tx.clubMeldung.create({
+        data: {
+          tenantId: tenantAId,
+          scePublicNumber: n,
+          caseNumber: legacyCase,
+          subject: `Legacy case ${RUN}`,
+          description: "x",
+          category: ClubMeldungCategory.DAMAGE_OR_PROBLEM,
+          reporterUserId: viewerAId,
+          status: ClubMeldungStatus.RECEIVED,
+        },
+        select: { id: true, caseNumber: true },
+      });
+      return { ref: row.caseNumber };
+    });
+
+    const actor: import("@/lib/visibility/actor-context").ActorContext = {
+      tenantId: tenantAId,
+      userId: viewerAId,
+      permissionKeys: [PERMISSIONS.MELDUNGEN_VIEW_ALL, PERMISSIONS.MELDUNGEN_SUBMIT],
+      roleKeys: [],
+      teamIds: [],
+      personId: null,
+      orgUnitIds: [],
+    };
+    const byLegacy = await lookupScePublicReference(actor, ref);
+    expect(byLegacy?.kind).toBe("meldung");
+    expect(byLegacy?.legacyAnliegenCaseNumber).toBe(false);
+    expect(parseScePublicReference(ref)).toBeNull();
+  });
+
   it("resolves Anliegen references with permission-aware internal lookup", async () => {
     const { meldungId, ref } = await prisma.$transaction(async (tx) => {
       const n = await allocateScePublicNumber(tx, tenantAId);
