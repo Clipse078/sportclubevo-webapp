@@ -17,6 +17,7 @@ import {
   SCE_CD_BACKLOG_GRID_STRATEGY,
   SCE_CD_WORKSPACE_PANEL_CLASS,
 } from "./sce-club-development-surface-styles";
+import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
 import CreateStrategieWorkspaceCollapsibleCard from "./CreateStrategieWorkspaceCollapsibleCard";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
@@ -100,10 +101,11 @@ export default function StrategienWorkspaceListPanel({
             gridClassName={SCE_CD_BACKLOG_GRID_STRATEGY}
             header={
               <>
+                <span>Referenz</span>
                 <span>Titel</span>
                 <span>Org-Einheit</span>
-                <span>{CD_STRATEGY_PROGRESS_COPY.goalAchievementLabel}</span>
-                <span>{CD_STRATEGY_PROGRESS_COPY.deliveryLabel}</span>
+                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.goalUnitShortLabel} />
+                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
                 <span className="sr-only">Aktionen</span>
               </>
             }
@@ -126,6 +128,7 @@ export default function StrategienWorkspaceListPanel({
                 >
                   <VereinsentwicklungWorkspaceRecordRow
                     variant="strategy"
+                    publicReference={strategy.publicReference}
                     title={strategy.title}
                     titleHref={href}
                     orgUnitLabel={strategy.scopeOrgUnitLabel}
@@ -135,6 +138,7 @@ export default function StrategienWorkspaceListPanel({
                         countCaption={goalEmpty ? null : strategy.goalAchievementCaption}
                         emptyLabel={CD_STRATEGY_PROGRESS_COPY.goalAchievementEmpty}
                         countSuffix="Zielen erreicht"
+                        unitShortLabel={CD_STRATEGY_PROGRESS_COPY.goalUnitShortLabel}
                         testId={`strategien-goal-progress-${strategy.id}`}
                       />
                     }
@@ -144,27 +148,19 @@ export default function StrategienWorkspaceListPanel({
                         countCaption={deliveryEmpty ? null : strategy.deliveryProgressCaption}
                         emptyLabel="Noch keine Aufgaben"
                         countSuffix="erledigt"
-                        accentClass="bg-[var(--sce-info)]"
+                        unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
                         testId={`strategien-delivery-progress-${strategy.id}`}
                       />
                     }
                     testId={`strategien-row-${strategy.id}`}
                     trailing={
-                      <>
-                        <Link
-                          href={href}
-                          className="hidden text-xs font-medium text-[var(--sce-primary)] hover:underline sm:inline"
-                        >
-                          Öffnen
-                        </Link>
-                        <Link
-                          href={href}
-                          className="inline-flex rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)]"
-                          aria-label={`${strategy.title} öffnen`}
-                        >
-                          <MoreVertical className="h-4 w-4" aria-hidden />
-                        </Link>
-                      </>
+                      <Link
+                        href={href}
+                        className="inline-flex rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--sce-primary)]"
+                        aria-label={`${strategy.title} öffnen`}
+                      >
+                        <MoreVertical className="h-4 w-4" aria-hidden />
+                      </Link>
                     }
                   />
                 </div>

@@ -4,6 +4,7 @@ import type { TargetStatus } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import { formatTargetResponsiblePresentation } from "@/lib/club-development/vereinsentwicklung-target-responsible-presentation";
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
+import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungTargetStatusPill from "./VereinsentwicklungTargetStatusPill";
 import {
   SCE_CD_BACKLOG_GRID_STRATEGY,
@@ -14,6 +15,7 @@ import {
 export type VereinsentwicklungWorkspaceRecordRowProps =
   | {
       variant: "strategy";
+      publicReference?: string | null;
       title: string;
       titleHref?: string;
       orgUnitLabel?: string | null;
@@ -24,6 +26,7 @@ export type VereinsentwicklungWorkspaceRecordRowProps =
     }
   | {
       variant: "target";
+      publicReference?: string | null;
       title: string;
       titleHref?: string;
       strategyLabel?: string | null;
@@ -61,6 +64,7 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
         data-testid={props.testId}
         data-sce-backlog-row="strategy"
       >
+        <VereinsentwicklungBacklogReferenceCell reference={props.publicReference ?? null} />
         <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
         <div className="min-w-0 text-xs text-[var(--text-2)]">
           <span className="sr-only">Org-Einheit: </span>
@@ -80,6 +84,7 @@ export default function VereinsentwicklungWorkspaceRecordRow(props: Vereinsentwi
         data-testid={props.testId}
         data-sce-backlog-row="target"
       >
+        <VereinsentwicklungBacklogReferenceCell reference={props.publicReference ?? null} />
         <VereinsentwicklungBacklogTruncatingTitle title={props.title} href={props.titleHref} />
         <div className="min-w-0 text-xs text-[var(--text-2)]">
           <span className="sr-only">Strategie: </span>

@@ -15,6 +15,8 @@ import {
 } from "@/lib/club-development/umsetzungsplanung-dnd";
 import VereinsentwicklungWorkspaceTaskStatusPill from "./VereinsentwicklungWorkspaceTaskStatusPill";
 import VereinsentwicklungBacklogTruncatingTitle from "./VereinsentwicklungBacklogTruncatingTitle";
+import VereinsentwicklungBacklogReferenceCell from "./VereinsentwicklungBacklogReferenceCell";
+import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import UmsetzungsplanungInsertionLine from "./UmsetzungsplanungInsertionLine";
 import {
@@ -201,6 +203,7 @@ function TaskTableRow({
             </span>
           )
         ) : null}
+        <VereinsentwicklungBacklogReferenceCell reference={row.publicReference} />
         <VereinsentwicklungBacklogTruncatingTitle title={row.title} href={row.taskHref} />
         <LinkCell
           label={row.targetTitle}
@@ -226,9 +229,9 @@ function TaskTableRow({
               completedCount={row.progressCompletedCount ?? null}
               totalCount={row.progressTotalCount ?? null}
               countCaption={null}
-              emptyLabel="Noch keine Aufgaben"
+              emptyLabel="Noch keine Teilaufgaben"
               countSuffix="erledigt"
-              accentClass="bg-[var(--sce-info)]"
+              unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
               testId={`task-row-progress-${row.taskId}`}
             />
           ) : (
@@ -263,7 +266,11 @@ export default function VereinsentwicklungConnectedTaskTable({
   testId,
 }: VereinsentwicklungConnectedTaskTableProps) {
   const showHandleColumn = showReorderHandle || Boolean(phaseDrag?.enabled);
-  const backlogGrid = showRowProgress ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
+  const progressColumnActive =
+    showRowProgress &&
+  rows.some((row) => row.progressHasChildRollup && (row.progressTotalCount ?? 0) > 0);
+  const showProgressColumn = showRowProgress || progressColumnActive;
+  const backlogGrid = showProgressColumn ? SCE_CD_BACKLOG_GRID_TASK_PROGRESS : SCE_CD_BACKLOG_GRID_TASK;
   const gridCols =
     layoutVariant === "backlog"
       ? backlogGrid
@@ -345,6 +352,7 @@ export default function VereinsentwicklungConnectedTaskTable({
         data-testid="vereinsentwicklung-task-table-header"
       >
         {showHandleColumn ? <span className="w-5" /> : null}
+        <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.referenz}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.aufgabe}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.ziel}</span>
         {layoutVariant === "full" ? (
@@ -355,13 +363,15 @@ export default function VereinsentwicklungConnectedTaskTable({
         ) : null}
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.status}</span>
         <span>{VEREINSENTWICKLUNG_CONNECTED_TASK_TABLE_COLUMNS.verantwortlich}</span>
-        {showRowProgress ? <span>{CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}</span> : null}
+        {showProgressColumn ? (
+          <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+        ) : null}
         <span className="w-8" aria-hidden />
       </div>
 
       <div
         role="list"
-        className="divide-y divide-[var(--border)]/50"
+        className="list-none divide-y divide-[var(--border)]/50"
         onDragOver={(e) => {
           if (reorderListActive) e.preventDefault();
         }}
@@ -382,6 +392,7 @@ export default function VereinsentwicklungConnectedTaskTable({
           <li
             key={row.taskId}
             role="listitem"
+            className="list-none"
             onDragOver={
               reorderListActive
                 ? (e) => {
@@ -395,7 +406,7 @@ export default function VereinsentwicklungConnectedTaskTable({
               row={row}
               gridCols={gridCols}
               layoutVariant={layoutVariant}
-              showRowProgress={showRowProgress}
+              showRowProgress={showProgressColumn}
               showReorderHandle={showReorderHandle}
               dragHandleEnabled={dragHandleEnabled}
               reorderPending={reorder?.pending}

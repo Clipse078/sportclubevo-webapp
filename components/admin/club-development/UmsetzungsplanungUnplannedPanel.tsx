@@ -274,7 +274,7 @@ export default function UmsetzungsplanungUnplannedPanel({
             countCaption={null}
             emptyLabel="Noch keine Aufgaben"
             countSuffix="Aufgaben erledigt"
-            accentClass="bg-[var(--sce-info)]"
+            unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
             testId="umsetzungsplanung-unplanned-header-progress"
             className="hidden shrink-0 sm:flex"
           />

@@ -3,6 +3,7 @@ import {
   type SceCompletionCountSuffix,
   sceCompletionFromCaption,
 } from "@/lib/club-development/sce-completion-progress";
+import { SCE_CD_BACKLOG_PROGRESS_ACCENT } from "./sce-club-development-surface-styles";
 
 export type SceCompletionProgressInlineProps = {
   metricLabel: string;
@@ -12,6 +13,7 @@ export type SceCompletionProgressInlineProps = {
   completedCount?: number | null;
   totalCount?: number | null;
   accentClass?: string;
+  unitShortLabel?: string | null;
   testId?: string;
   className?: string;
 };
@@ -23,7 +25,8 @@ export default function SceCompletionProgressInline({
   countSuffix = "erledigt",
   completedCount = null,
   totalCount = null,
-  accentClass = "bg-[var(--sce-primary)]",
+  accentClass = SCE_CD_BACKLOG_PROGRESS_ACCENT,
+  unitShortLabel = null,
   testId,
   className,
 }: SceCompletionProgressInlineProps) {
@@ -64,10 +67,15 @@ export default function SceCompletionProgressInline({
   return (
     <div
       data-testid={testId}
-      className={cn("flex min-w-0 items-center gap-2 text-xs text-[var(--foreground)]", className)}
+      className={cn("flex min-w-0 items-center gap-1.5 text-xs text-[var(--foreground)]", className)}
     >
+      {unitShortLabel?.trim() ? (
+        <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {unitShortLabel}
+        </span>
+      ) : null}
       <div
-        className="h-1.5 w-[4.5rem] shrink-0 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)] sm:w-[5.5rem]"
+        className="h-1 w-[4.25rem] shrink-0 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)] sm:w-[5rem]"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}

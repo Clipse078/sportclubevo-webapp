@@ -1,6 +1,9 @@
 /** Client-safe copy for strategy/target progress surfaces (no server-only imports). */
 
 export const CD_STRATEGY_PROGRESS_COPY = {
+  progressHeading: "Fortschritt",
+  goalUnitShortLabel: "Ziele",
+  deliveryUnitShortLabel: "Aufgaben",
   goalAchievementLabel: "Zielerreichung",
   outcomeLabel: "Zielerreichung (Erwartetes Ergebnis)",
   deliveryLabel: "Umsetzungsfortschritt",

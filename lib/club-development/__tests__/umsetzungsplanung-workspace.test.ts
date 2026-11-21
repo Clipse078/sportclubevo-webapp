@@ -130,7 +130,7 @@ describe("Umsetzungsplanung workspace", () => {
     expect(panel).toContain("VereinsentwicklungConnectedTaskTable");
     expect(panel).toContain("removeAssignmentAction");
     expect(panel).toContain("moveSelectedTasksAction");
-    expect(panel).toContain("von");
+    expect(panel).toContain("SceCompletionProgressInline");
     expect(panel).toContain("Aufgaben erledigt");
   });
 

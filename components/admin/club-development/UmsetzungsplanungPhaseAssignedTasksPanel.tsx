@@ -178,7 +178,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
               countCaption={null}
               emptyLabel="Noch keine Aufgaben"
               countSuffix="Aufgaben erledigt"
-              accentClass="bg-[var(--sce-info)]"
+              unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
               testId={`umsetzungsplanung-phase-header-progress-${sprintSlug}`}
               className="hidden sm:flex"
             />

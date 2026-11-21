@@ -12,6 +12,7 @@ import SceClubDevelopmentEmptyState from "./SceClubDevelopmentEmptyState";
 import VereinsentwicklungWorkspaceRecordRow from "./VereinsentwicklungWorkspaceRecordRow";
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import VereinsentwicklungBacklogTableShell from "./VereinsentwicklungBacklogTableShell";
+import VereinsentwicklungBacklogFortschrittHeader from "./VereinsentwicklungBacklogFortschrittHeader";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { buildZielDetailHref } from "@/lib/club-development/vereinsentwicklung-target-task-create-routing";
 import { buildStrategieReturnHref } from "@/lib/club-development/vereinsentwicklung-create-routing";
@@ -115,10 +116,11 @@ export default function ZieleWorkspacePanel({
             gridClassName={SCE_CD_BACKLOG_GRID_ZIEL}
             header={
               <>
+                <span>Referenz</span>
                 <span>Titel</span>
                 <span>Strategie</span>
                 <span>Status</span>
-                <span>{CD_STRATEGY_PROGRESS_COPY.taskProgressLabel}</span>
+                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
                 <span>Verantwortlich</span>
                 <span className="sr-only">Aktionen</span>
               </>
@@ -146,6 +148,7 @@ export default function ZieleWorkspacePanel({
                 <VereinsentwicklungWorkspaceRecordRow
                   key={target.id}
                   variant="target"
+                  publicReference={target.publicReference}
                   title={target.title}
                   titleHref={detailHref}
                   strategyLabel={strategyLabel}
@@ -160,27 +163,19 @@ export default function ZieleWorkspacePanel({
                       countCaption={deliveryEmpty ? null : target.deliveryProgressCaption}
                       emptyLabel="Noch keine Aufgaben"
                       countSuffix="erledigt"
-                      accentClass="bg-[var(--sce-info)]"
+                      unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
                       testId={`ziele-task-progress-${target.id}`}
                     />
                   }
                   testId={`ziele-row-${target.id}`}
                   trailing={
-                    <>
-                      <Link
-                        href={detailHref}
-                        className="hidden text-xs font-medium text-[var(--sce-primary)] hover:underline sm:inline"
-                      >
-                        Öffnen
-                      </Link>
-                      <Link
-                        href={detailHref}
-                        className="inline-flex rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)]"
-                        aria-label={`${target.title} öffnen`}
-                      >
-                        <MoreVertical className="h-4 w-4" aria-hidden />
-                      </Link>
-                    </>
+                    <Link
+                      href={detailHref}
+                      className="inline-flex rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--sce-primary)]"
+                      aria-label={`${target.title} öffnen`}
+                    >
+                      <MoreVertical className="h-4 w-4" aria-hidden />
+                    </Link>
                   }
                 />
               );
