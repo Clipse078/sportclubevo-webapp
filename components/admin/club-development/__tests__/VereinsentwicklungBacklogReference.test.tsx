@@ -1,6 +1,10 @@
 /** @vitest-environment jsdom */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 import { render, screen } from "@testing-library/react";
 import VereinsentwicklungBacklogReferenceCell from "../VereinsentwicklungBacklogReferenceCell";
 import VereinsentwicklungConnectedTaskTable from "../VereinsentwicklungConnectedTaskTable";

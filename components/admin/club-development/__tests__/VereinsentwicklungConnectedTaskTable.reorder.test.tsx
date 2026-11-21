@@ -1,6 +1,10 @@
 /** @vitest-environment jsdom */
 
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 import { fireEvent, render, screen } from "@testing-library/react";
 import VereinsentwicklungConnectedTaskTable from "../VereinsentwicklungConnectedTaskTable";
 
@@ -54,6 +58,26 @@ describe("VereinsentwicklungConnectedTaskTable reorder drag handle", () => {
     expect(grip.tagName.toLowerCase()).toBe("div");
   });
 
+  it("uses a non-anchor title surface when row scheduling drag is enabled", () => {
+    render(
+      <VereinsentwicklungConnectedTaskTable
+        rows={rows}
+        showReorderHandle
+        reorder={{
+          dragEnabled: true,
+          canReorder: true,
+          allOrderedTaskIds: ["task-a", "task-b"],
+          onPersistOrder: vi.fn(async () => ({ ok: true })),
+        }}
+      />,
+    );
+
+    const titleSurface = screen.getAllByTestId("vereinsentwicklung-backlog-title-link")[0]!;
+    expect(titleSurface.tagName.toLowerCase()).toBe("span");
+    expect(titleSurface.getAttribute("role")).toBe("link");
+    expect(titleSurface.getAttribute("draggable")).toBe("true");
+  });
+
   it("starts a reorder drag session from the grip", () => {
     const onDragStart = vi.fn();
     render(
@@ -71,6 +95,8 @@ describe("VereinsentwicklungConnectedTaskTable reorder drag handle", () => {
     );
 
     const grip = screen.getByTestId("umsetzungsplanung-unplanned-drag-task-b");
+    fireEvent.pointerDown(grip, { clientX: 0, clientY: 0, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(grip, { clientX: 8, clientY: 0, pointerId: 1 });
     fireEvent.dragStart(grip, { dataTransfer: { setData: () => {}, effectAllowed: "move" } });
     expect(onDragStart).toHaveBeenCalledWith("task-b");
   });

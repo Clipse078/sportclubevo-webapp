@@ -26,7 +26,7 @@ import UmsetzungsplanungTaskScheduleMenu from "./UmsetzungsplanungTaskScheduleMe
 
 type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
-  assignDisabled?: boolean;
+  schedulingCapable?: boolean;
   onAssigned?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,7 +39,7 @@ function countCatalogTasks(catalog: SprintPlanningCatalogDto): number {
 
 export default function UmsetzungsplanungUnplannedPanel({
   phaseOptions,
-  assignDisabled = false,
+  schedulingCapable = false,
   onAssigned,
   open,
   onOpenChange,
@@ -170,32 +170,59 @@ export default function UmsetzungsplanungUnplannedPanel({
     [loadCatalog, serverSearch],
   );
 
-  const assignTaskToPhase = (taskId: string, phaseId: string) => {
-    if (!phaseId || submittingRef.current || assignDisabled) return;
+  const optimisticRemoveTask = useCallback((taskId: string) => {
+    setCatalog((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        initiativeGroups: current.initiativeGroups
+          .map((group) => ({
+            ...group,
+            tasks: group.tasks.filter((t) => t.id !== taskId),
+          }))
+          .filter((group) => group.tasks.length > 0),
+        standaloneGroup: {
+          tasks: current.standaloneGroup.tasks.filter((t) => t.id !== taskId),
+        },
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    dragCtx?.registerUnplannedScheduleHooks({
+      onOptimisticRemove: optimisticRemoveTask,
+      onRollbackRestore: () => void loadCatalog(serverSearch),
+    });
+    return () => dragCtx?.registerUnplannedScheduleHooks(null);
+  }, [dragCtx, loadCatalog, optimisticRemoveTask, serverSearch]);
+
+  const assignTaskToPhase = async (taskId: string, phaseId: string) => {
+    if (!phaseId || submittingRef.current || !schedulingCapable) return;
     submittingRef.current = true;
     setAssigningTaskId(taskId);
     setError(null);
     setInfo(null);
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/club-development/sprints/${phaseId}/tasks/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ taskIds: [taskId] }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.");
-          return;
-        }
-        setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+    optimisticRemoveTask(taskId);
+    try {
+      const res = await fetch(`/api/club-development/sprints/${phaseId}/tasks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: [taskId] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = typeof data.error === "string" ? data.error : "Einplanen fehlgeschlagen.";
+        setError(message);
         await loadCatalog(serverSearch);
-        onAssigned?.();
-      } finally {
-        submittingRef.current = false;
-        setAssigningTaskId(null);
+        throw new Error(message);
       }
-    });
+      setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+      await loadCatalog(serverSearch);
+      onAssigned?.();
+    } finally {
+      submittingRef.current = false;
+      setAssigningTaskId(null);
+    }
   };
 
   const unassignFromPhase = (taskId: string, phaseId: string) => {
@@ -309,7 +336,7 @@ export default function UmsetzungsplanungUnplannedPanel({
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
                 value={defaultPhaseId}
                 onChange={(e) => setDefaultPhaseId(e.target.value)}
-                disabled={assignDisabled || pending}
+                disabled={!schedulingCapable || pending}
               >
                 {phaseOptions.map((phase) => (
                   <option key={phase.id} value={phase.id}>
@@ -365,7 +392,7 @@ export default function UmsetzungsplanungUnplannedPanel({
             testId="umsetzungsplanung-unplanned-task-table"
             renderRowActions={(row) => {
               const task = filteredTasks.find((t) => t.id === row.taskId);
-              const canPlan = !assignDisabled && phaseOptions.length > 0 && task?.selectable !== false;
+              const canPlan = schedulingCapable && task?.selectable !== false;
               const isAssigning = assigningTaskId === row.taskId && pending;
               return (
                 <UmsetzungsplanungTaskScheduleMenu

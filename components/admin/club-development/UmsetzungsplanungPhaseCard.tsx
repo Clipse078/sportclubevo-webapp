@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { Calendar, ChevronRight, ClipboardCheck, ExternalLink, GripVertical } from "lucide-react";
 import {
   serializeUmsetzungsplanungPhaseDragPayload,
@@ -66,6 +66,7 @@ export default function UmsetzungsplanungPhaseCard({
 }: PhaseCardProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [assignedTasksExpandSignal, setAssignedTasksExpandSignal] = useState(0);
   const planningLabel =
     sprint.status === "ACTIVE"
       ? CD_SPRINT_WORKSPACE_COPY.tabPlanning
@@ -100,6 +101,7 @@ export default function UmsetzungsplanungPhaseCard({
         phaseTitle={sprint.title}
         acceptDrop={allowTaskMoves}
         onAssignTask={assignDraggedTask}
+        onExpandPhase={() => setAssignedTasksExpandSignal((value) => value + 1)}
       >
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface)] px-3 py-2.5">
         <div className="flex min-w-0 flex-1 items-start gap-2">
@@ -201,6 +203,7 @@ export default function UmsetzungsplanungPhaseCard({
         moveTargetPhases={moveTargets}
         schedulePhaseOptions={phaseOptions}
         defaultExpanded={sprint.status === "ACTIVE" || sprint.status === "PLANNED"}
+        expandSignal={assignedTasksExpandSignal}
       />
       </UmsetzungsplanungPhaseScheduleDropZone>
     </article>

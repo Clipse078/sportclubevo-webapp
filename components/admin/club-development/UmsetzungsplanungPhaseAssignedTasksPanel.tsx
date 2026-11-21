@@ -34,6 +34,8 @@ type Props = {
   moveTargetPhases: UmsetzungsplanungPhaseOption[];
   schedulePhaseOptions: UmsetzungsplanungPhaseOption[];
   defaultExpanded?: boolean;
+  /** Increment to expand assigned tasks (e.g. schedule drag hover). */
+  expandSignal?: number;
 };
 
 function flattenBoardCards(data: BoardResponse): SprintBoardCard[] {
@@ -52,6 +54,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
   moveTargetPhases,
   schedulePhaseOptions,
   defaultExpanded = false,
+  expandSignal = 0,
 }: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -70,6 +73,10 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
       setMoveTargetId(moveTargetPhases[0].id);
     }
   }, [moveTargetId, moveTargetPhases]);
+
+  useEffect(() => {
+    if (expandSignal > 0) setExpanded(true);
+  }, [expandSignal]);
 
   const loadAssignedTasks = useCallback(async () => {
     setLoading(true);
@@ -327,7 +334,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
                       taskTitle={row.title}
                       phaseOptions={schedulePhaseOptions}
                       sourcePhaseId={sprintId}
-                      canSchedule={schedulePhaseOptions.length > 0}
+                      canSchedule={canManageAssignments}
                       canReturnToUnplanned
                       pending={pending}
                       onMoveToPhase={moveTaskToPhase}

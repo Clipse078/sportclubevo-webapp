@@ -27,6 +27,8 @@ import { UMSETZUNGSPLANUNG_SECTION_ACCENTS } from "@/lib/club-development/umsetz
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import UmsetzungsplanungUnplannedPanel from "./UmsetzungsplanungUnplannedPanel";
 import { UmsetzungsplanungDragProvider } from "./UmsetzungsplanungDragContext";
+import { resolveScheduleDropSectionEligibility } from "@/lib/club-development/umsetzungsplanung-schedule-drop";
+import { partitionSprintsForUmsetzungsplanung as partitionForDrop } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import VereinsentwicklungWorkspaceToolbar from "./VereinsentwicklungWorkspaceToolbar";
 import { SCE_CD_WORKSPACE_PANEL_CLASS } from "./sce-club-development-surface-styles";
 import { VEREINSENTWICKLUNG_WORKSPACE_PRIMARY_BUTTON_CLASS } from "./vereinsentwicklung-workspace-primary-button";
@@ -133,11 +135,23 @@ export default function UmsetzungsplanungWorkspace({
   };
 
   const unplannedPrimary = canManageSprints && phaseOptions.length === 0;
+  const dropBuckets = useMemo(
+    () => partitionForDrop(sprints, plannedRankMap),
+    [plannedRankMap, sprints],
+  );
+  const ongoingDrop = useMemo(
+    () => resolveScheduleDropSectionEligibility("ongoing", dropBuckets),
+    [dropBuckets],
+  );
+  const plannedDrop = useMemo(
+    () => resolveScheduleDropSectionEligibility("planned", dropBuckets),
+    [dropBuckets],
+  );
 
   const unplannedPanel = canManageSprints ? (
     <UmsetzungsplanungUnplannedPanel
       phaseOptions={phaseOptions}
-      assignDisabled={phaseOptions.length === 0}
+      schedulingCapable
       open={sectionOpen.unplanned}
       onOpenChange={(open) => touchSection("unplanned", open)}
       onAssigned={() => router.refresh()}
@@ -220,6 +234,15 @@ export default function UmsetzungsplanungWorkspace({
           count={counts.ongoing}
           open={sectionOpen.ongoing}
           onOpenChange={(open) => touchSection("ongoing", open)}
+          scheduleDropHeader={
+            canManageSprints
+              ? {
+                  acceptsDrop: ongoingDrop.acceptsDrop,
+                  hasEligiblePhases: ongoingDrop.hasEligiblePhases,
+                  onRequestOpen: () => touchSection("ongoing", true),
+                }
+              : undefined
+          }
           testId="umsetzungsplanung-ongoing-section"
           headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.ongoing.headerClass}
           sectionBadge={
@@ -247,6 +270,15 @@ export default function UmsetzungsplanungWorkspace({
           count={counts.planned}
           open={sectionOpen.planned}
           onOpenChange={(open) => touchSection("planned", open)}
+          scheduleDropHeader={
+            canManageSprints
+              ? {
+                  acceptsDrop: plannedDrop.acceptsDrop,
+                  hasEligiblePhases: plannedDrop.hasEligiblePhases,
+                  onRequestOpen: () => touchSection("planned", true),
+                }
+              : undefined
+          }
           testId="umsetzungsplanung-future-section"
           headerAccentClass={UMSETZUNGSPLANUNG_SECTION_ACCENTS.planned.headerClass}
           sectionBadge={

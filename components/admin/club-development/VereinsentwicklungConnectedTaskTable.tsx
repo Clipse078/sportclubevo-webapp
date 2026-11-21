@@ -26,6 +26,7 @@ import {
 } from "./sce-club-development-surface-styles";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { cn } from "@/lib/cn";
+import { useUmsetzungsplanungTaskRowPointerDrag } from "./useUmsetzungsplanungTaskRowPointerDrag";
 
 export type VereinsentwicklungConnectedTaskTableLayout = "backlog" | "full";
 
@@ -130,6 +131,7 @@ function TaskTableRow({
   onDragEndRow,
   phaseDrag,
   renderRowActions,
+  schedulingDragEnabled = false,
 }: {
   row: VereinsentwicklungConnectedTaskTableRowModel;
   gridCols: string;
@@ -142,8 +144,31 @@ function TaskTableRow({
   onDragEndRow?: () => void;
   phaseDrag?: VereinsentwicklungPhaseDragConfig;
   renderRowActions?: (row: VereinsentwicklungConnectedTaskTableRowModel) => ReactNode;
+  schedulingDragEnabled?: boolean;
 }) {
   const phaseHandle = Boolean(phaseDrag?.enabled);
+  const pointerDrag = useUmsetzungsplanungTaskRowPointerDrag();
+
+  const startSchedulingPayload = (event: React.DragEvent) => {
+    const payload = serializeUmsetzungsplanungDragPayload(
+      phaseHandle
+        ? {
+            taskId: row.taskId,
+            source: "phase",
+            sourcePhaseId: phaseDrag!.phaseId,
+          }
+        : {
+            taskId: row.taskId,
+            source: "unplanned",
+          },
+    );
+    event.dataTransfer.setData(UMSETZUNGSPLANUNG_DND_MIME, payload);
+    event.dataTransfer.setData("text/plain", payload);
+    event.dataTransfer.effectAllowed = "move";
+    if (phaseHandle) phaseDrag?.onDragStart?.(row.taskId);
+    else onDragStartRow?.(row.taskId);
+  };
+
   return (
     <>
       <div
@@ -165,26 +190,20 @@ function TaskTableRow({
                   event.preventDefault();
                 }
               }}
+              onPointerDown={pointerDrag.onPointerDown}
+              onPointerMove={pointerDrag.onPointerMove}
+              onPointerUp={pointerDrag.onPointerUp}
+              onPointerCancel={pointerDrag.onPointerCancel}
               onDragStart={(event) => {
-                const payload = serializeUmsetzungsplanungDragPayload(
-                  phaseHandle
-                    ? {
-                        taskId: row.taskId,
-                        source: "phase",
-                        sourcePhaseId: phaseDrag!.phaseId,
-                      }
-                    : {
-                        taskId: row.taskId,
-                        source: "unplanned",
-                      },
-                );
-                event.dataTransfer.setData(UMSETZUNGSPLANUNG_DND_MIME, payload);
-                event.dataTransfer.setData("text/plain", payload);
-                event.dataTransfer.effectAllowed = "move";
-                if (phaseHandle) phaseDrag?.onDragStart?.(row.taskId);
-                else onDragStartRow?.(row.taskId);
+                if (!pointerDrag.shouldAllowDragStart()) {
+                  event.preventDefault();
+                  return;
+                }
+                pointerDrag.onDragStartAfterThreshold();
+                startSchedulingPayload(event);
               }}
               onDragEnd={() => {
+                pointerDrag.resetPointerGesture();
                 if (phaseHandle) phaseDrag?.onDragEnd?.();
                 else onDragEndRow?.();
               }}
@@ -204,7 +223,30 @@ function TaskTableRow({
           )
         ) : null}
         <VereinsentwicklungBacklogReferenceCell reference={row.publicReference} />
-        <VereinsentwicklungBacklogTruncatingTitle title={row.title} href={row.taskHref} />
+        <div
+          className="min-w-0"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <VereinsentwicklungBacklogTruncatingTitle
+            title={row.title}
+            href={row.taskHref}
+            suppressNativeLinkDrag={Boolean(showReorderHandle || phaseHandle)}
+            schedulingDrag={
+              schedulingDragEnabled
+                ? {
+                    enabled: true,
+                    pending: reorderPending,
+                    onDragStart: startSchedulingPayload,
+                    onDragEnd: () => {
+                      if (phaseHandle) phaseDrag?.onDragEnd?.();
+                      else onDragEndRow?.();
+                    },
+                  }
+                : undefined
+            }
+          />
+        </div>
         <LinkCell
           label={row.targetTitle}
           href={row.targetHref}
@@ -409,6 +451,7 @@ export default function VereinsentwicklungConnectedTaskTable({
               showRowProgress={showProgressColumn}
               showReorderHandle={showReorderHandle}
               dragHandleEnabled={dragHandleEnabled}
+              schedulingDragEnabled={dragHandleEnabled || Boolean(phaseDrag?.enabled)}
               reorderPending={reorder?.pending}
               onDragStartRow={onDragStartRow}
               onDragEndRow={onDragEndRow}
