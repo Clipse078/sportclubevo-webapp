@@ -12,6 +12,7 @@ import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedT
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
+import UmsetzungsplanungTaskScheduleMenu from "./UmsetzungsplanungTaskScheduleMenu";
 import type { UmsetzungsplanungPhaseOption } from "@/lib/club-development/sprints/umsetzungsplanung-workspace";
 import UmsetzungsplanungInlineEmpty from "./UmsetzungsplanungInlineEmpty";
 import ClubDevelopmentFormError from "./ClubDevelopmentFormError";
@@ -31,6 +32,7 @@ type Props = {
   sprintStatus: DevelopmentSprintStatus;
   canManageAssignments: boolean;
   moveTargetPhases: UmsetzungsplanungPhaseOption[];
+  schedulePhaseOptions: UmsetzungsplanungPhaseOption[];
   defaultExpanded?: boolean;
 };
 
@@ -48,6 +50,7 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
   sprintSlug,
   canManageAssignments,
   moveTargetPhases,
+  schedulePhaseOptions,
   defaultExpanded = false,
 }: Props) {
   const router = useRouter();
@@ -129,6 +132,48 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
         }
       }
       setInfo(`${count} Zuordnung${count === 1 ? "" : "en"} entfernt.`);
+    });
+  };
+
+  const moveTaskToPhase = (taskId: string, targetPhaseId: string) => {
+    if (!targetPhaseId || targetPhaseId === sprintId) return;
+    runBulkMutation(async () => {
+      const addRes = await fetch(`/api/club-development/sprints/${targetPhaseId}/tasks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds: [taskId] }),
+      });
+      const addData = await addRes.json().catch(() => ({}));
+      if (!addRes.ok) {
+        throw new Error(typeof addData.error === "string" ? addData.error : "Verschieben fehlgeschlagen.");
+      }
+      const res = await fetch(
+        `/api/club-development/sprints/${sprintId}/tasks?taskId=${encodeURIComponent(taskId)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Zuordnung konnte nicht entfernt werden.",
+        );
+      }
+      setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenSuccess);
+    });
+  };
+
+  const returnTaskToUnplanned = (taskId: string) => {
+    runBulkMutation(async () => {
+      const res = await fetch(
+        `/api/club-development/sprints/${sprintId}/tasks?taskId=${encodeURIComponent(taskId)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Zuordnung konnte nicht entfernt werden.",
+        );
+      }
+      setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnedUnplannedInfo);
     });
   };
 
@@ -261,7 +306,6 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
           {!loading && !error && cards && cards.length > 0 ? (
             <VereinsentwicklungConnectedTaskTable
               rows={tableRows}
-              showRowProgress
               testId={`umsetzungsplanung-phase-task-table-${sprintSlug}`}
               phaseDrag={
                 canManageAssignments
@@ -277,32 +321,19 @@ export default function UmsetzungsplanungPhaseAssignedTasksPanel({
               }
               renderRowActions={(row) =>
                 canManageAssignments ? (
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
-                      disabled={pending}
-                      onClick={() => {
-                        runBulkMutation(async () => {
-                          const res = await fetch(
-                            `/api/club-development/sprints/${sprintId}/tasks?taskId=${encodeURIComponent(row.taskId)}`,
-                            { method: "DELETE" },
-                          );
-                          const data = await res.json().catch(() => ({}));
-                          if (!res.ok) {
-                            throw new Error(
-                              typeof data.error === "string"
-                                ? data.error
-                                : "Zuordnung konnte nicht entfernt werden.",
-                            );
-                          }
-                          setInfo(CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnUnplannedAction);
-                        });
-                      }}
-                      data-testid={`umsetzungsplanung-return-unplanned-${row.taskId}`}
-                    >
-                      {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskReturnUnplannedAction}
-                    </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <UmsetzungsplanungTaskScheduleMenu
+                      taskId={row.taskId}
+                      taskTitle={row.title}
+                      phaseOptions={schedulePhaseOptions}
+                      sourcePhaseId={sprintId}
+                      canSchedule={schedulePhaseOptions.length > 0}
+                      canReturnToUnplanned
+                      pending={pending}
+                      onMoveToPhase={moveTaskToPhase}
+                      onReturnToUnplanned={returnTaskToUnplanned}
+                      testId={`umsetzungsplanung-schedule-menu-${row.taskId}`}
+                    />
                     <SceCheckbox
                       checked={selectedIds.has(row.taskId)}
                       disabled={pending}

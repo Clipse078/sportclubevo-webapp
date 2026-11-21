@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronDown, ChevronUp, Loader2, MoreVertical } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import type { SprintPlanningCatalogDto, SprintPlanningTaskDto } from "@/lib/club-development/sprints/sprint-planning-types";
@@ -22,6 +22,7 @@ import VereinsentwicklungConnectedTaskTable from "./VereinsentwicklungConnectedT
 import SceCompletionProgressInline from "./SceCompletionProgressInline";
 import { CD_STRATEGY_PROGRESS_COPY } from "@/lib/club-development/strategy-progress-copy";
 import { useUmsetzungsplanungDragOptional } from "./UmsetzungsplanungDragContext";
+import UmsetzungsplanungTaskScheduleMenu from "./UmsetzungsplanungTaskScheduleMenu";
 
 type Props = {
   phaseOptions: UmsetzungsplanungPhaseOption[];
@@ -168,19 +169,6 @@ export default function UmsetzungsplanungUnplannedPanel({
     },
     [loadCatalog, serverSearch],
   );
-
-  const moveTaskByOffset = (taskId: string, offset: -1 | 1) => {
-    if (reorderBlocked) return;
-    const idx = allOrderedTaskIds.indexOf(taskId);
-    if (idx < 0) return;
-    const target = idx + offset;
-    if (target < 0 || target >= allOrderedTaskIds.length) return;
-    const next = [...allOrderedTaskIds];
-    const [removed] = next.splice(idx, 1);
-    if (!removed) return;
-    next.splice(target, 0, removed);
-    void persistOrder(next);
-  };
 
   const assignTaskToPhase = (taskId: string, phaseId: string) => {
     if (!phaseId || submittingRef.current || assignDisabled) return;
@@ -362,7 +350,6 @@ export default function UmsetzungsplanungUnplannedPanel({
         {!loading && !error && filteredTasks.length > 0 ? (
           <VereinsentwicklungConnectedTaskTable
             rows={tableRows}
-            showRowProgress
             showReorderHandle
             reorder={{
               dragEnabled: phaseOptions.length > 0,
@@ -378,65 +365,18 @@ export default function UmsetzungsplanungUnplannedPanel({
             testId="umsetzungsplanung-unplanned-task-table"
             renderRowActions={(row) => {
               const task = filteredTasks.find((t) => t.id === row.taskId);
-              const canPlan =
-                !assignDisabled &&
-                phaseOptions.length > 0 &&
-                Boolean(defaultPhaseId) &&
-                task?.selectable !== false;
+              const canPlan = !assignDisabled && phaseOptions.length > 0 && task?.selectable !== false;
               const isAssigning = assigningTaskId === row.taskId && pending;
-              const idx = allOrderedTaskIds.indexOf(row.taskId);
-              const canMove = !reorderBlocked;
               return (
-                <div className="flex flex-wrap items-center justify-end gap-1">
-                  {canMove ? (
-                    <>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
-                        disabled={idx <= 0}
-                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveUpAction}
-                        onClick={() => moveTaskByOffset(row.taskId, -1)}
-                        data-testid={`umsetzungsplanung-move-up-${row.taskId}`}
-                      >
-                        <ChevronUp className="h-4 w-4" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
-                        disabled={idx < 0 || idx >= allOrderedTaskIds.length - 1}
-                        aria-label={CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.taskMoveDownAction}
-                        onClick={() => moveTaskByOffset(row.taskId, 1)}
-                        data-testid={`umsetzungsplanung-move-down-${row.taskId}`}
-                      >
-                        <ChevronDown className="h-4 w-4" aria-hidden />
-                      </button>
-                    </>
-                  ) : null}
-                  {canPlan ? (
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
-                      disabled={isAssigning || pending}
-                      onClick={() => assignTaskToPhase(row.taskId, defaultPhaseId)}
-                      data-testid={`umsetzungsplanung-einplanen-${row.taskId}`}
-                    >
-                      {isAssigning ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                      ) : (
-                        <Calendar className="h-3.5 w-3.5" aria-hidden />
-                      )}
-                      {CD_UMSETZUNGSPLANUNG_WORKSPACE_COPY.einplanenAction}
-                    </button>
-                  ) : (
-                    <span
-                      className="text-[var(--muted)]"
-                      title={task?.exclusionReason ?? undefined}
-                      aria-hidden
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </span>
-                  )}
-                </div>
+                <UmsetzungsplanungTaskScheduleMenu
+                  taskId={row.taskId}
+                  taskTitle={row.title}
+                  phaseOptions={phaseOptions}
+                  canSchedule={canPlan}
+                  pending={isAssigning || pending}
+                  onMoveToPhase={(taskId, phaseId) => assignTaskToPhase(taskId, phaseId)}
+                  testId={`umsetzungsplanung-schedule-menu-${row.taskId}`}
+                />
               );
             }}
           />

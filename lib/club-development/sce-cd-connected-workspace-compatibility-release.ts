@@ -23,6 +23,8 @@ export const SCE_CD_CONNECTED_COMPATIBILITY_RELEASE = {
     "20261120180000_sce_cd_multi_club_wide_strategy" as const,
   pendingSchemaMigrationForUnplannedTaskRank:
     "20261120200000_sce_cd_unplanned_task_rank" as const,
+  pendingSchemaMigrationForPlannedSprintRank:
+    "20261121180000_sce_cd_planned_sprint_rank" as const,
   rolloutOrder: [
     "1. Keep PR #1017 (feature + compatibility code) open until PO finishes STAGE PR-preview UAT.",
     "2. PO approval gate: merge PR #1017 → STAGE (no squash that drops migration-adjacent application files).",

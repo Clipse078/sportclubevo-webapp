@@ -120,7 +120,7 @@ export default function ZieleWorkspacePanel({
                 <span>Titel</span>
                 <span>Strategie</span>
                 <span>Status</span>
-                <VereinsentwicklungBacklogFortschrittHeader unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel} />
+                <VereinsentwicklungBacklogFortschrittHeader label={CD_STRATEGY_PROGRESS_COPY.taskProgressLabel} />
                 <span>Verantwortlich</span>
                 <span className="sr-only">Aktionen</span>
               </>
@@ -163,7 +163,8 @@ export default function ZieleWorkspacePanel({
                       countCaption={deliveryEmpty ? null : target.deliveryProgressCaption}
                       emptyLabel="Noch keine Aufgaben"
                       countSuffix="erledigt"
-                      unitShortLabel={CD_STRATEGY_PROGRESS_COPY.deliveryUnitShortLabel}
+                      showUnitShortLabel={false}
+                      captionPriority
                       testId={`ziele-task-progress-${target.id}`}
                     />
                   }

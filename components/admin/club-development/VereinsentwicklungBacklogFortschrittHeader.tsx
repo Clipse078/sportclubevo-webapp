@@ -1,8 +1,13 @@
 type Props = {
-  unitShortLabel: string;
+  /** @deprecated Prefer `label` for single Aufgabenfortschritt column header. */
+  unitShortLabel?: string;
+  label?: string;
 };
 
-export default function VereinsentwicklungBacklogFortschrittHeader({ unitShortLabel }: Props) {
+export default function VereinsentwicklungBacklogFortschrittHeader({ unitShortLabel, label }: Props) {
+  if (label?.trim()) {
+    return <span>{label}</span>;
+  }
   return (
     <span className="flex min-w-0 flex-col leading-tight">
       <span>Fortschritt</span>

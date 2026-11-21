@@ -1300,6 +1300,7 @@ model Tenant {
   developmentSprints               DevelopmentSprint[]
   developmentSprintTaskMemberships DevelopmentSprintTaskMembership[]
   developmentUnplannedTaskRanks    DevelopmentUnplannedTaskRank[]
+  developmentPlannedSprintRanks    DevelopmentPlannedSprintRank[]
   clubDevelopmentProcesses         ClubDevelopmentProcess[]
   clubDevelopmentProcessApprovalVotes ClubDevelopmentProcessApprovalVote[]
   clubStrategies                   ClubStrategy[]
@@ -3558,6 +3559,7 @@ model DevelopmentSprint {
 
   tenant      Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   memberships DevelopmentSprintTaskMembership[]
+  plannedWorkspaceRank DevelopmentPlannedSprintRank?
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -3597,6 +3599,21 @@ model DevelopmentUnplannedTaskRank {
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([tenantId, taskId])
+  @@index([tenantId, rank])
+}
+
+/// Manual display order for geplante Umsetzungsphasen (per tenant).
+model DevelopmentPlannedSprintRank {
+  id        String   @id @default(cuid())
+  tenantId  String
+  sprintId  String   @unique
+  rank      Int
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sprint DevelopmentSprint @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, sprintId])
   @@index([tenantId, rank])
 }
 

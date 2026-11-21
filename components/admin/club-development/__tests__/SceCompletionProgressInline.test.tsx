@@ -18,4 +18,21 @@ describe("SceCompletionProgressInline", () => {
     expect(screen.getByText("66% – 2 von 3 erledigt")).toBeTruthy();
     expect(document.querySelector('[role="progressbar"]')).toBeTruthy();
   });
+
+  it("keeps caption visible when captionPriority is set", () => {
+    render(
+      <SceCompletionProgressInline
+        metricLabel="Aufgabenfortschritt"
+        completedCount={2}
+        totalCount={2}
+        countCaption={null}
+        emptyLabel="Noch keine Aufgaben"
+        showUnitShortLabel={false}
+        captionPriority
+      />,
+    );
+    const caption = screen.getByText("100% – 2 von 2 erledigt");
+    expect(caption.className).toContain("whitespace-nowrap");
+    expect(screen.queryByText("Aufgaben")).toBeNull();
+  });
 });

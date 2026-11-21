@@ -11,6 +11,7 @@ import {
   hasSprintManagePermission,
   listDevelopmentSprints,
 } from "@/lib/club-development/sprints/queries";
+import { loadPlannedSprintRankMap } from "@/lib/club-development/sprints/planned-sprint-rank";
 import VorhabenUndUmsetzungWorkspaceClient from "@/components/admin/club-development/VorhabenUndUmsetzungWorkspaceClient";
 import { CD_WORKSPACE_PRIORITAETEN_QUERY } from "@/lib/club-development/vereinsentwicklung-workspace-routing";
 import {
@@ -137,6 +138,13 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
         })
       : null;
 
+  const plannedIds = sprints.filter((s) => s.status === "PLANNED").map((s) => s.id);
+  const plannedRankMap =
+    actor.tenantId && plannedIds.length > 0
+      ? await loadPlannedSprintRankMap(actor.tenantId, plannedIds)
+      : new Map<string, number>();
+  const plannedSprintRanks = Object.fromEntries(plannedRankMap);
+
   const sprintItems = sprints.map((sprint) => ({
     id: sprint.id,
     slug: sprint.slug,
@@ -171,6 +179,7 @@ export default async function VorhabenUndUmsetzungPage({ searchParams }: PagePro
           filterTarget={filterTarget}
           sprints={sprintItems}
           canManageSprints={hasSprintManagePermission(actor)}
+          plannedSprintRanks={plannedSprintRanks}
           showPrioritaetenDefault={showPrioritaetenDefault}
         />
       </ListPagePattern>
