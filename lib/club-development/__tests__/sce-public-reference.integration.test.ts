@@ -109,7 +109,9 @@ describe("SCE public reference (disposable Postgres)", () => {
 
   it("formats references beyond SCE-999999 without truncation", () => {
     expect(formatScePublicReference(1_000_000)).toBe("SCE-1000000");
-    expect(parseScePublicReference("SCE-1000000")).toEqual({ sequenceNumber: 1_000_000 });
+    expect(parseScePublicReference("SCE-1000000")).toEqual({
+      sequenceNumber: 1_000_000n,
+    });
   });
 
   it("allocates one global interleaved sequence across tenants and four kinds", async () => {
@@ -156,7 +158,7 @@ describe("SCE public reference (disposable Postgres)", () => {
       expect(strategy.id).toBeTruthy();
     });
 
-    expect(numbersA).toEqual([1, 2, 3, 4]);
+    expect(numbersA).toEqual([1n, 2n, 3n, 4n]);
     expect(new Set(numbersA).size).toBe(4);
 
     const numbersB: number[] = [];
@@ -173,7 +175,7 @@ describe("SCE public reference (disposable Postgres)", () => {
         });
       }
     });
-    expect(numbersB).toEqual([5, 6]);
+    expect(numbersB).toEqual([5n, 6n]);
   });
 
   it("does not resolve canonical SCE references across actor tenants", async () => {
@@ -243,7 +245,7 @@ describe("SCE public reference (disposable Postgres)", () => {
         createdAt: new Date("2020-01-01"),
       },
     });
-    const existingNumber = 99_001;
+    const existingNumber = 99_001n;
     await prisma.$transaction(async (tx) => {
       await tx.clubStrategy.update({
         where: { id: legacyStrategy.id },
@@ -286,7 +288,7 @@ describe("SCE public reference (disposable Postgres)", () => {
       where: { id: unnumbered.id },
       select: { scePublicNumber: true },
     });
-    expect(filled?.scePublicNumber).toBeGreaterThan(0);
+    expect(filled?.scePublicNumber).toBeGreaterThan(0n);
 
     const second = await runScePublicReferenceBackfill(prisma);
     expect(second.assigned).toBe(0);
@@ -299,7 +301,7 @@ describe("SCE public reference (disposable Postgres)", () => {
   });
 
   it("allocates across the six-to-seven digit boundary", async () => {
-    const boundary = 999_999;
+    const boundary = 999_999n;
     await prisma.scePublicNumberSequence.upsert({
       where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
       create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber: boundary },
@@ -314,6 +316,56 @@ describe("SCE public reference (disposable Postgres)", () => {
 
     expect(formatScePublicReference(pair.lastSix)).toBe("SCE-999999");
     expect(formatScePublicReference(pair.firstSeven)).toBe("SCE-1000000");
+  });
+
+  it("allocates above the PostgreSQL INT32 ceiling", async () => {
+    const floor = 2_147_483_646n;
+    await prisma.scePublicNumberSequence.upsert({
+      where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
+      create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber: floor },
+      update: { nextNumber: floor },
+    });
+
+    const pair = await prisma.$transaction(async (tx) => {
+      const atCeiling = await allocateScePublicNumber(tx);
+      const aboveCeiling = await allocateScePublicNumber(tx);
+      return { atCeiling, aboveCeiling };
+    });
+
+    expect(pair.atCeiling).toBe(2_147_483_646n);
+    expect(pair.aboveCeiling).toBe(2_147_483_647n);
+    expect(formatScePublicReference(pair.aboveCeiling)).toBe("SCE-2147483647");
+    const parsed = parseScePublicReference(formatScePublicReference(pair.aboveCeiling))!;
+    expect(parsed.sequenceNumber).toBe(pair.aboveCeiling);
+  });
+
+  it("lookup resolves BIGINT sequence numbers from canonical strings", async () => {
+    const big = 9_007_199_254_740_992n;
+    const ref = await prisma.$transaction(async (tx) => {
+      await ensureScePublicNumberLedgerEntry(tx, big);
+      await tx.clubStrategy.create({
+        data: {
+          tenantId: tenantAId,
+          scePublicNumber: big,
+          scopeType: ClubStrategyScopeType.CLUB,
+          title: `BigInt ref ${RUN}`,
+        },
+      });
+      return formatScePublicReference(big);
+    });
+
+    const actor: ActorContext = {
+      tenantId: tenantAId,
+      userId: viewerAId,
+      permissionKeys: [PERMISSIONS.TARGETS_VIEW, PERMISSIONS.TARGETS_MANAGE],
+      roleKeys: [],
+      teamIds: [],
+      personId: null,
+      orgUnitIds: [],
+    };
+    const hit = await lookupScePublicReference(actor, ref);
+    expect(hit?.kind).toBe("strategy");
+    expect(hit?.publicReference).toBe(ref);
   });
 
   it("resolves acceptance-style caseNumber without scePublicNumber", async () => {

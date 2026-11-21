@@ -8,13 +8,33 @@ export const SCE_PUBLIC_NUMBER_SEQUENCE_ID = "global";
 /** Minimum digit width for formatted references (PO: at least six digits). */
 export const SCE_PUBLIC_REFERENCE_MIN_DIGITS = 6;
 
+/** PostgreSQL BIGINT upper bound for positive issuance (signed 63-bit payload). */
+export const SCE_PUBLIC_SEQUENCE_MAX = BigInt("9223372036854775807");
+
+const SCE_SEQUENCE_ONE = BigInt(1);
+const SCE_SEQUENCE_TWO = BigInt(2);
+
 const SCE_PUBLIC_REFERENCE_PATTERN = /^SCE-(\d+)$/i;
 
-export function formatScePublicReference(sequenceNumber: number): string {
-  if (!Number.isInteger(sequenceNumber) || sequenceNumber < 1) {
+export type ScePublicSequenceNumber = bigint;
+
+export function coerceScePublicSequenceNumber(
+  value: bigint | number | null | undefined,
+): ScePublicSequenceNumber | null {
+  if (value == null) return null;
+  const n = typeof value === "bigint" ? value : BigInt(value);
+  if (n < SCE_SEQUENCE_ONE || n > SCE_PUBLIC_SEQUENCE_MAX) return null;
+  return n;
+}
+
+export function formatScePublicReference(
+  sequenceNumber: bigint | number,
+): string {
+  const n = coerceScePublicSequenceNumber(sequenceNumber);
+  if (n == null) {
     throw new Error("SCE_PUBLIC_REFERENCE_SEQUENCE_INVALID");
   }
-  return `${SCE_PUBLIC_REFERENCE_PREFIX}${String(sequenceNumber).padStart(
+  return `${SCE_PUBLIC_REFERENCE_PREFIX}${n.toString().padStart(
     SCE_PUBLIC_REFERENCE_MIN_DIGITS,
     "0",
   )}`;
@@ -22,20 +42,32 @@ export function formatScePublicReference(sequenceNumber: number): string {
 
 export function parseScePublicReference(
   input: string,
-): { sequenceNumber: number } | null {
+): { sequenceNumber: ScePublicSequenceNumber } | null {
   const trimmed = input.trim();
   const match = SCE_PUBLIC_REFERENCE_PATTERN.exec(trimmed);
   if (!match) return null;
-  const sequenceNumber = Number.parseInt(match[1]!, 10);
-  if (!Number.isFinite(sequenceNumber) || sequenceNumber < 1) return null;
+  const digits = match[1]!;
+  if (!/^\d+$/.test(digits) || digits.length > 19) return null;
+  if (digits.length === 19 && digits > SCE_PUBLIC_SEQUENCE_MAX.toString()) {
+    return null;
+  }
+  let sequenceNumber: bigint;
+  try {
+    sequenceNumber = BigInt(digits);
+  } catch {
+    return null;
+  }
+  if (sequenceNumber < SCE_SEQUENCE_ONE) return null;
+  if (sequenceNumber > SCE_PUBLIC_SEQUENCE_MAX) return null;
   return { sequenceNumber };
 }
 
 export function scePublicReferenceFromNumber(
-  scePublicNumber: number | null | undefined,
+  scePublicNumber: bigint | number | null | undefined,
 ): string | null {
-  if (scePublicNumber == null || scePublicNumber < 1) return null;
-  return formatScePublicReference(scePublicNumber);
+  const n = coerceScePublicSequenceNumber(scePublicNumber);
+  if (n == null) return null;
+  return formatScePublicReference(n);
 }
 
 /**
@@ -46,14 +78,17 @@ export function scePublicReferenceFromNumber(
  */
 export async function allocateScePublicNumber(
   tx: Prisma.TransactionClient,
-): Promise<number> {
+): Promise<ScePublicSequenceNumber> {
   const seq = await tx.scePublicNumberSequence.upsert({
     where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
-    create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber: 2 },
+    create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber: SCE_SEQUENCE_TWO },
     update: { nextNumber: { increment: 1 } },
     select: { nextNumber: true },
   });
-  const number = seq.nextNumber === 2 ? 1 : seq.nextNumber - 1;
+  const number =
+    seq.nextNumber === SCE_SEQUENCE_TWO
+      ? SCE_SEQUENCE_ONE
+      : seq.nextNumber - SCE_SEQUENCE_ONE;
   await tx.scePublicNumberLedger.create({
     data: { scePublicNumber: number },
   });
@@ -62,7 +97,7 @@ export async function allocateScePublicNumber(
 
 export async function ensureScePublicNumberLedgerEntry(
   tx: Prisma.TransactionClient,
-  scePublicNumber: number,
+  scePublicNumber: ScePublicSequenceNumber,
 ): Promise<void> {
   await tx.scePublicNumberLedger.upsert({
     where: { scePublicNumber },
@@ -71,26 +106,34 @@ export async function ensureScePublicNumberLedgerEntry(
   });
 }
 
+function maxBigInt(values: readonly (bigint | null | undefined)[]): bigint | null {
+  let max: bigint | null = null;
+  for (const v of values) {
+    if (v == null || v < SCE_SEQUENCE_ONE) continue;
+    if (max == null || v > max) max = v;
+  }
+  return max;
+}
+
 export async function findMaxAssignedScePublicNumber(
   client: PrismaClient | Prisma.TransactionClient,
-): Promise<number | null> {
+): Promise<ScePublicSequenceNumber | null> {
   const [strategies, targets, tasks, meldungen] = await Promise.all([
     client.clubStrategy.aggregate({ _max: { scePublicNumber: true } }),
     client.target.aggregate({ _max: { scePublicNumber: true } }),
     client.task.aggregate({ _max: { scePublicNumber: true } }),
     client.clubMeldung.aggregate({ _max: { scePublicNumber: true } }),
   ]);
-  const max = Math.max(
-    strategies._max.scePublicNumber ?? 0,
-    targets._max.scePublicNumber ?? 0,
-    tasks._max.scePublicNumber ?? 0,
-    meldungen._max.scePublicNumber ?? 0,
-  );
-  return max > 0 ? max : null;
+  return maxBigInt([
+    strategies._max.scePublicNumber,
+    targets._max.scePublicNumber,
+    tasks._max.scePublicNumber,
+    meldungen._max.scePublicNumber,
+  ]);
 }
 
 export type ScePublicNumberCollision = {
-  scePublicNumber: number;
+  scePublicNumber: ScePublicSequenceNumber;
   occurrences: number;
 };
 
@@ -120,29 +163,38 @@ export async function findScePublicNumberCollisions(
     }),
   ]);
 
-  const counts = new Map<number, number>();
+  const counts = new Map<string, { n: ScePublicSequenceNumber; count: number }>();
   for (const row of [...strategies, ...targets, ...tasks, ...meldungen]) {
     if (row.scePublicNumber == null) continue;
-    counts.set(row.scePublicNumber, (counts.get(row.scePublicNumber) ?? 0) + 1);
+    const key = row.scePublicNumber.toString();
+    const existing = counts.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      counts.set(key, { n: row.scePublicNumber, count: 1 });
+    }
   }
 
-  return [...counts.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([scePublicNumber, occurrences]) => ({ scePublicNumber, occurrences }))
-    .sort((a, b) => a.scePublicNumber - b.scePublicNumber);
+  return [...counts.values()]
+    .filter(({ count }) => count > 1)
+    .map(({ n, count }) => ({ scePublicNumber: n, occurrences: count }))
+    .sort((a, b) => (a.scePublicNumber < b.scePublicNumber ? -1 : a.scePublicNumber > b.scePublicNumber ? 1 : 0));
 }
 
 export async function syncScePublicNumberSequenceFromAssignments(
   client: PrismaClient | Prisma.TransactionClient,
-): Promise<number | null> {
+): Promise<ScePublicSequenceNumber | null> {
   const max = await findMaxAssignedScePublicNumber(client);
   if (max == null) return null;
-  const floor = max + 1;
+  const floor = max + SCE_SEQUENCE_ONE;
   const existing = await client.scePublicNumberSequence.findUnique({
     where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
     select: { nextNumber: true },
   });
-  const nextNumber = Math.max(floor, existing?.nextNumber ?? floor);
+  const nextNumber =
+    existing?.nextNumber != null && existing.nextNumber > floor
+      ? existing.nextNumber
+      : floor;
   await client.scePublicNumberSequence.upsert({
     where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
     create: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID, nextNumber },

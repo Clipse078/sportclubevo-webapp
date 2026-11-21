@@ -6,6 +6,7 @@ import {
   formatScePublicReference,
   SCE_PUBLIC_NUMBER_SEQUENCE_ID,
   syncScePublicNumberSequenceFromAssignments,
+  type ScePublicSequenceNumber,
 } from "@/lib/club-development/sce-public-reference";
 
 export type ScePublicReferenceBackfillRow = {
@@ -61,7 +62,7 @@ export async function loadScePublicReferenceBackfillRows(
 async function applyScePublicNumber(
   tx: Prisma.TransactionClient,
   row: ScePublicReferenceBackfillRow,
-  number: number,
+  number: ScePublicSequenceNumber,
 ): Promise<void> {
   if (row.kind === "strategy") {
     await tx.clubStrategy.update({ where: { id: row.id }, data: { scePublicNumber: number } });
@@ -96,14 +97,18 @@ export async function runScePublicReferenceBackfill(
   const tenantIds = new Set(rows.map((r) => r.tenantId));
 
   if (dryRun) {
-    const maxAssigned = (await findMaxAssignedScePublicNumber(prisma)) ?? 0;
+    const one = BigInt(1);
+    const maxAssigned = (await findMaxAssignedScePublicNumber(prisma)) ?? BigInt(0);
     const seq = await prisma.scePublicNumberSequence.findUnique({
       where: { id: SCE_PUBLIC_NUMBER_SEQUENCE_ID },
       select: { nextNumber: true },
     });
-    let cursorPreview = Math.max(maxAssigned + 1, seq?.nextNumber ?? 1);
+    const seqFloor = seq?.nextNumber ?? one;
+    const nextFromMax = maxAssigned + one;
+    let cursorPreview = nextFromMax > seqFloor ? nextFromMax : seqFloor;
     for (const row of rows) {
-      const number = cursorPreview++;
+      const number = cursorPreview;
+      cursorPreview += one;
       console.log(
         `[dry-run] ${row.kind} ${row.id} (tenant ${row.tenantId}) -> ${formatScePublicReference(number)}`,
       );

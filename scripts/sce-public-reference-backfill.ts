@@ -5,6 +5,7 @@
  * Usage: npx tsx scripts/sce-public-reference-backfill.ts [--tenant <id>] [--dry-run]
  */
 import { PrismaClient } from "@prisma/client";
+import { formatScePublicReference } from "@/lib/club-development/sce-public-reference";
 import { runScePublicReferenceBackfill } from "@/lib/club-development/sce-public-reference-backfill";
 
 const prisma = new PrismaClient();
@@ -21,7 +22,9 @@ async function main() {
       `Aborting backfill — found ${result.collisions.length} duplicate scePublicNumber value(s) already issued:`,
     );
     for (const row of result.collisions) {
-      console.error(`  SCE-${row.scePublicNumber}: ${row.occurrences} assignments`);
+      console.error(
+        `  ${formatScePublicReference(row.scePublicNumber)}: ${row.occurrences} assignments`,
+      );
     }
     process.exitCode = 2;
     return;

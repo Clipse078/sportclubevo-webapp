@@ -1962,12 +1962,12 @@ model ClubMeldungNumberSequence {
 model ScePublicNumberSequence {
   /// Singleton row id (`global`).
   id         String @id
-  nextNumber Int    @default(1)
+  nextNumber BigInt @default(1)
 }
 
 /// Enforces that a sequence number is issued at most once (cross-type, cross-tenant).
 model ScePublicNumberLedger {
-  scePublicNumber Int      @id
+  scePublicNumber BigInt   @id
   createdAt       DateTime @default(now())
 }
 
@@ -1976,7 +1976,7 @@ model ClubMeldung {
   tenantId  String
   caseNumber String
   /// Optional SCE-wide public number (alongside caseNumber).
-  scePublicNumber Int?
+  scePublicNumber BigInt?
 
   subject     String
   description String
@@ -3686,7 +3686,7 @@ model ClubStrategy {
   id                    String   @id @default(cuid())
   tenantId              String
   /// Global SCE reference sequence number (display: SCE-000042).
-  scePublicNumber       Int?
+  scePublicNumber       BigInt?
   scopeType             ClubStrategyScopeType @default(CLUB)
   scopeOrgUnitId        String?
   title                 String?
@@ -5013,7 +5013,7 @@ model MeetingAction {
 model Task {
   id              String        @id @default(cuid())
   tenantId        String
-  scePublicNumber Int?
+  scePublicNumber BigInt?
   title           String
   description     String?
   status          TaskStatus    @default(OPEN)
@@ -6076,7 +6076,7 @@ model MeetingParticipant {
 model Target {
   id            String         @id @default(cuid())
   tenantId      String
-  scePublicNumber Int?
+  scePublicNumber BigInt?
   title         String
   description   String?
   category      TargetCategory @default(SPORTLICHE_ENTWICKLUNG)
