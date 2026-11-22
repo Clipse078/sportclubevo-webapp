@@ -32,20 +32,20 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 226 |
-| PARTIAL | 1 |
+| CANONICAL | 227 |
+| PARTIAL | 0 |
 | LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **226 / 227 (99.6%)**.
+Architectural canonical adoption: **227 / 227 (100%)**.
 
 ## Verification
 
 | Migration status | Count |
 | --- | ---: |
-| NOT_STARTED | 1 |
+| NOT_STARTED | 0 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 226 |
+| IMPLEMENTED | 227 |
 | VERIFIED | 0 |
 | EXCEPTION | 72 |
 
@@ -62,8 +62,8 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07C | 0 | Admin and configuration |
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
-| DS2-07F | 1 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 226 | Authenticated visual/accessibility verification and closure |
+| DS2-07F | 0 | Vereinsleitung and remaining workspaces |
+| DS2-07G | 227 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -122,9 +122,7 @@ None.
 
 ### DS2-07F
 
-| URL pattern | Architecture | Status | Priority | Source |
-| --- | --- | --- | --- | --- |
-| `/dashboard/dokumentation/p/[pageId]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx` |
+None.
 
 ### DS2-07G
 
@@ -196,6 +194,7 @@ None.
 | `/dashboard/communication/zielgruppen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/new/page.tsx` |
 | `/dashboard/competitions` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/competitions/page.tsx` |
 | `/dashboard/dev/sce-icons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/dev/sce-icons/page.tsx` |
+| `/dashboard/dokumentation/p/[pageId]` | CANONICAL | IMPLEMENTED | Medium | `app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx` |
 | `/dashboard/events` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/page.tsx` |
 | `/dashboard/events/import` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/import/page.tsx` |
 | `/dashboard/events/matches/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/matches/new/page.tsx` |
@@ -359,15 +358,13 @@ None.
 
 ## Changes since the baseline
 
-New routes introduced since the previous baseline: **3**.
+New routes introduced since the previous baseline: **0**.
 
-- `app/(admin)/dashboard/dokumentation/archiv/page.tsx` (`/dashboard/dokumentation/archiv`)
-- `app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx` (`/dashboard/dokumentation/p/[pageId]/v/[versionId]`)
-- `app/(admin)/dashboard/dokumentation/papierkorb/page.tsx` (`/dashboard/dokumentation/papierkorb`)
+None.
 
 ## CI
 
-Blocking violations: **0**. Tracked existing debt: **1**.
+Blocking violations: **0**. Tracked existing debt: **0**.
 
 Blocking codes cover unregistered pages, duplicate URLs, missing lifecycle reconciliation, non-canonical new authenticated pages, missing verification evidence, redirect aliases marked verified, and invalid package assignments. Tracked debt is reported and does not fail the job.
 

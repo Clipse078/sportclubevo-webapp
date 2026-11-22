@@ -34,6 +34,17 @@
       "accessibilityVerificationStatus": "NOT_APPLICABLE",
       "functionalVerificationStatus": "NOT_APPLICABLE"
     },
+    "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx": {
+      "architecture": "CANONICAL",
+      "migrationStatus": "IMPLEMENTED",
+      "migrationPackage": "DS2-07G",
+      "exceptionId": null,
+      "exceptionRationale": null,
+      "priority": "Medium",
+      "visualVerificationStatus": "PENDING",
+      "accessibilityVerificationStatus": "PENDING",
+      "functionalVerificationStatus": "PENDING"
+    },
     "app/(admin)/dashboard/dokumentation/page.tsx": {
       "routeKind": "RENDERABLE_PAGE",
       "architecture": "NOT_APPLICABLE",

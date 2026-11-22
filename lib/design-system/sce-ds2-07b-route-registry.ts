@@ -2380,7 +2380,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
     "exceptionRationale": "PR #1025 manage-only Archiv list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
     "redirectDestination": null,
-    "introducedAfterBaseline": true,
+    "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
       "accessibility": null,
@@ -2402,9 +2402,9 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKind": "RENDERABLE_PAGE",
     "intercept": false,
     "parallelSlot": null,
-    "architecture": "PARTIAL",
-    "migrationStatus": "NOT_STARTED",
-    "migrationPackage": "DS2-07F",
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
     "priority": "Medium",
     "visualVerificationStatus": "PENDING",
     "accessibilityVerificationStatus": "PENDING",
@@ -2444,7 +2444,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
     "exceptionRationale": "PR #1025 read-only published version snapshot; reuses Dokumentation workspace client. DS2-07F canonical shell tracked separately.",
     "redirectDestination": null,
-    "introducedAfterBaseline": true,
+    "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
       "accessibility": null,
@@ -2508,7 +2508,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
     "exceptionRationale": "PR #1025 manage-only Papierkorb list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
     "redirectDestination": null,
-    "introducedAfterBaseline": true,
+    "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
       "accessibility": null,
@@ -9679,22 +9679,22 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "routeHandlerCount": 706,
   "frameworkFileCount": 41,
   "architecture": {
-    "CANONICAL": 226,
-    "PARTIAL": 1,
+    "CANONICAL": 227,
+    "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
   },
   "migrationStatus": {
-    "NOT_STARTED": 1,
+    "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 226,
+    "IMPLEMENTED": 227,
     "VERIFIED": 0,
     "EXCEPTION": 72
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 226,
-  "architecturalCanonicalPercent": 99.6,
+  "architecturalCanonicalCount": 227,
+  "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
     "SCE-DS2-07B-EX-REDIRECT": 26,
@@ -9706,10 +9706,10 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07C": 0,
     "DS2-07D": 0,
     "DS2-07E": 0,
-    "DS2-07F": 1,
-    "DS2-07G": 226
+    "DS2-07F": 0,
+    "DS2-07G": 227
   },
-  "introducedAfterBaselineCount": 3,
+  "introducedAfterBaselineCount": 0,
   "blockingCount": 0,
-  "trackedDebtCount": 1
+  "trackedDebtCount": 0
 };
