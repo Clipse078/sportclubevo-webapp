@@ -1,6 +1,6 @@
 import { TenantDocumentationAccessLevel } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { de } from "date-fns/locale";
 
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
@@ -78,13 +78,17 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
       ? publishedRaw
       : null;
 
-  const publishedMeta = page.publishedVersion
-    ? `Version ${page.publishedVersion.versionNumber} — Veröffentlicht am ${format(
-        page.publishedVersion.publishedAt,
-        "d. MMM yyyy, HH:mm",
-        { locale: de },
-      )}`
-    : null;
+  const publishedAt = page.publishedVersion?.publishedAt;
+  const publishedMeta =
+    page.publishedVersion && publishedAt && isValid(publishedAt)
+      ? `Version ${page.publishedVersion.versionNumber} — Veröffentlicht am ${format(
+          publishedAt,
+          "d. MMM yyyy, HH:mm",
+          { locale: de },
+        )}`
+      : page.publishedVersion
+        ? `Version ${page.publishedVersion.versionNumber}`
+        : null;
 
   const breadcrumb = [
     page.space.title,

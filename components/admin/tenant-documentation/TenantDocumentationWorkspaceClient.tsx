@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -9,10 +10,24 @@ import {
   Users,
 } from "lucide-react";
 
-import { TenantDocumentationCollabEditor } from "@/components/admin/tenant-documentation/TenantDocumentationCollabEditor";
 import { useTenantDocCollaboration } from "@/components/admin/tenant-documentation/useTenantDocCollaboration";
 import { richTextToHtml } from "@/lib/cms/rich-text";
 import type { RichTextValue } from "@/lib/cms/rich-text";
+
+const TenantDocumentationCollabEditor = dynamic(
+  () =>
+    import("@/components/admin/tenant-documentation/TenantDocumentationCollabEditor").then(
+      (mod) => mod.TenantDocumentationCollabEditor,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[320px] rounded-lg border border-[var(--border)] bg-white px-6 py-4 text-sm text-[var(--muted)]">
+        Editor wird geladen…
+      </div>
+    ),
+  },
+);
 
 export type PageTreeNode = {
   id: string;
@@ -106,9 +121,7 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
         : `${Date.now()}`,
     [],
   );
-  const [mode, setMode] = useState<"read" | "edit">(
-    props.canEdit ? "edit" : "read",
-  );
+  const [mode, setMode] = useState<"read" | "edit">("read");
   const [publishing, setPublishing] = useState(false);
   const [tree, setTree] = useState<PageTreeNode[]>([]);
   const [spaceTitle, setSpaceTitle] = useState(props.spaceTitle);

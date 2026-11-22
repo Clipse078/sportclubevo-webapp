@@ -194,10 +194,31 @@ export async function moveDocumentationPage(input: {
   });
 }
 
+async function seedDocumentationPageDraft(
+  tx: Pick<typeof prisma, "tenantDocumentationPageDraft">,
+  tenantId: string,
+  pageId: string,
+) {
+  const initialState = emptyYjsState();
+  const contentJson = yjsStateToRichTextSnapshot(initialState);
+  await tx.tenantDocumentationPageDraft.create({
+    data: {
+      pageId,
+      tenantId,
+      contentJson,
+      yjsState: Buffer.from(initialState),
+      revision: BigInt(0),
+      saveStatus: TenantDocumentationDraftSaveStatus.SAVED,
+    },
+  });
+}
+
 async function seedDefaultVereinsleitungPages(
   tx: Pick<
     typeof prisma,
-    "tenantDocumentationPage" | "tenantDocumentationAccessGrant"
+    | "tenantDocumentationPage"
+    | "tenantDocumentationAccessGrant"
+    | "tenantDocumentationPageDraft"
   >,
   tenantId: string,
   spaceId: string,
@@ -231,8 +252,9 @@ async function seedDefaultVereinsleitungPages(
       sortOrder: 0,
     },
   });
+  await seedDocumentationPageDraft(tx, tenantId, folder.id);
 
-  await tx.tenantDocumentationPage.create({
+  const child = await tx.tenantDocumentationPage.create({
     data: {
       tenantId,
       spaceId,
@@ -242,6 +264,7 @@ async function seedDefaultVereinsleitungPages(
       sortOrder: 0,
     },
   });
+  await seedDocumentationPageDraft(tx, tenantId, child.id);
 }
 
 export async function ensureDefaultSpace(

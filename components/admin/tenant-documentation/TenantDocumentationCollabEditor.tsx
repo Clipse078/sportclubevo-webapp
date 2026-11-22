@@ -44,6 +44,7 @@ export function TenantDocumentationCollabEditor({
   }, []);
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable: !disabled,
     extensions: [
       StarterKit.configure({

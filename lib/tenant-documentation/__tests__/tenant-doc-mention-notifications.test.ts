@@ -22,8 +22,8 @@ vi.mock("@/lib/permissions/request-effective-permissions", () => ({
   })),
 }));
 
-vi.mock("@/lib/tenant-documentation/page-access-service", () => ({
-  resolvePageEffectiveAccess: vi.fn(async () => "VIEW"),
+vi.mock("@/lib/tenant-documentation/page-visibility-service", () => ({
+  actorCanViewPublishedPage: vi.fn(async () => true),
 }));
 
 vi.mock("@/lib/tenant-documentation/authorization", () => ({
@@ -78,12 +78,10 @@ describe("tenant documentation mention notifications", () => {
   });
 
   it("does not notify when recipient lacks page read access", async () => {
-    const { resolvePageEffectiveAccess } = await import(
-      "@/lib/tenant-documentation/page-access-service"
+    const { actorCanViewPublishedPage } = await import(
+      "@/lib/tenant-documentation/page-visibility-service"
     );
-  const { accessLevelPermits } = await import("@/lib/tenant-documentation/authorization");
-    vi.mocked(resolvePageEffectiveAccess).mockResolvedValueOnce(null);
-    vi.mocked(accessLevelPermits).mockReturnValueOnce(false);
+    vi.mocked(actorCanViewPublishedPage).mockResolvedValueOnce(false);
 
     await emitTenantDocumentationMentionNotifications({
       tenantId: "t1",

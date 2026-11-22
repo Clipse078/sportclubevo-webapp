@@ -13,8 +13,10 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { hasTenantDocumentationModuleView } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 import { actorMatchesAudience } from "@/lib/workspace/access/audience-match";
 import type { AudienceRef } from "@/lib/workspace/access/audience";
-import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
+import { resolveActorWorkspaceIdentity } from "@/lib/workspace/access/identity";
+import { createEmptyWorkspaceResourceGraph } from "@/lib/workspace/access/resource-graph";
 import type { WorkspaceActorContext } from "@/lib/workspace/access/workspace-authorization";
+import { prisma } from "@/lib/db/prisma";
 
 const LEVEL_RANK: Record<TenantDocumentationAccessLevel, number> = {
   VIEW: 1,
@@ -25,12 +27,40 @@ const LEVEL_RANK: Record<TenantDocumentationAccessLevel, number> = {
 
 export type TenantDocumentationActorContext = WorkspaceActorContext;
 
+async function lookupPersonForUser(
+  tenantId: string,
+  userId: string,
+): Promise<{ personId: string | null } | null> {
+  const person = await prisma.person.findFirst({
+    where: { tenantId, userId },
+    select: { id: true },
+  });
+  return { personId: person?.id ?? null };
+}
+
+/** Tenant Documentation ACL does not use the Workspace folder/document graph. */
 export async function resolveTenantDocumentationActor(input: {
   tenantId: string;
   userId: string;
   permissionKeys: readonly string[];
 }): Promise<TenantDocumentationActorContext> {
-  return resolveWorkspaceActor(input);
+  const { createWorkspaceActorContext } = await import(
+    "@/lib/workspace/access/workspace-authorization"
+  );
+
+  const identity = await resolveActorWorkspaceIdentity(
+    input.tenantId,
+    input.userId,
+    lookupPersonForUser,
+  );
+
+  return createWorkspaceActorContext({
+    tenantId: input.tenantId,
+    userId: input.userId,
+    personId: identity.personId,
+    permissionKeys: input.permissionKeys,
+    graph: createEmptyWorkspaceResourceGraph(input.tenantId),
+  });
 }
 
 function grantToAudience(grant: TenantDocumentationAccessGrant): AudienceRef | null {
