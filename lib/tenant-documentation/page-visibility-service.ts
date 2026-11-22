@@ -7,6 +7,10 @@ import {
 } from "@/lib/tenant-documentation/authorization";
 import { resolvePageEffectiveAccess } from "@/lib/tenant-documentation/page-access-service";
 import {
+  deriveTenantDocumentationPageLifecycle,
+  type TenantDocumentationPageLifecycleState,
+} from "@/lib/tenant-documentation/page-lifecycle";
+import {
   actorMatchesPublishAudience,
   resolveEffectivePublishAudience,
 } from "@/lib/tenant-documentation/publish-audience";
@@ -42,13 +46,34 @@ export async function actorCanDiscoverPage(
 ): Promise<boolean> {
   const page = await prisma.tenantDocumentationPage.findFirst({
     where: { id: pageId, tenantId: actor.identity.tenantId },
-    select: { publishedVersionId: true },
+    select: { publishedVersionId: true, archivedAt: true, trashedAt: true },
   });
   if (!page) return false;
+
+  const lifecycle = deriveTenantDocumentationPageLifecycle(page);
+  if (lifecycle !== "ACTIVE") {
+    return actorCanCollaborateOnPage(
+      actor,
+      pageId,
+      TenantDocumentationAccessLevel.MANAGE,
+    );
+  }
 
   if (page.publishedVersionId) {
     return actorCanViewPublishedPage(actor, pageId);
   }
 
   return actorCanCollaborateOnPage(actor, pageId, TenantDocumentationAccessLevel.VIEW);
+}
+
+export async function loadPageLifecycleState(
+  pageId: string,
+  tenantId: string,
+): Promise<TenantDocumentationPageLifecycleState | null> {
+  const page = await prisma.tenantDocumentationPage.findFirst({
+    where: { id: pageId, tenantId },
+    select: { archivedAt: true, trashedAt: true },
+  });
+  if (!page) return null;
+  return deriveTenantDocumentationPageLifecycle(page);
 }

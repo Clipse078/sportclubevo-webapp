@@ -2,11 +2,14 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Check, Clock, Pencil } from "lucide-react";
 
-import { richTextToHtml } from "@/lib/cms/rich-text";
+import { TenantDocumentationPageActionsMenu } from "@/components/admin/tenant-documentation/TenantDocumentationPageActionsMenu";
+import { TENANT_DOCUMENTATION_READ_CONTENT_CLASS } from "@/components/admin/tenant-documentation/tenant-documentation-content-styles";
 import type { RichTextValue } from "@/lib/cms/rich-text";
+import type { TenantDocumentationPageLifecycleState } from "@/lib/tenant-documentation/page-lifecycle";
 
 const TenantDocumentationEditPanel = dynamic(
   () =>
@@ -33,6 +36,12 @@ export type PageTreeNode = {
   canView: boolean;
 };
 
+type SearchHit = {
+  pageId: string;
+  title: string;
+  snippet: string;
+};
+
 type Props = {
   pageId: string;
   spaceId: string;
@@ -44,8 +53,10 @@ type Props = {
   canEdit: boolean;
   canPublish: boolean;
   canCreatePages: boolean;
+  canManage: boolean;
   displayName: string;
   publishedContent: RichTextValue | null;
+  lifecycleState: TenantDocumentationPageLifecycleState;
   visibilitySummary: {
     inheritedLabel: string;
     effectiveLabel: string;
@@ -108,13 +119,18 @@ function TreeNodes({
 }
 
 export function TenantDocumentationWorkspaceClient(props: Props) {
+  const router = useRouter();
   const [mode, setMode] = useState<"read" | "edit">("read");
   const [publishing, setPublishing] = useState(false);
   const [tree, setTree] = useState<PageTreeNode[]>([]);
   const [spaceTitle, setSpaceTitle] = useState(props.spaceTitle);
   const [spaceId, setSpaceId] = useState(props.spaceId);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchHits, setSearchHits] = useState<SearchHit[]>([]);
   const [creating, setCreating] = useState(false);
+
+  const lifecycleBlocksEditing =
+    props.lifecycleState === "ARCHIVED" || props.lifecycleState === "TRASHED";
 
   async function loadTree() {
     const spacesRes = await fetch("/api/tenant-documentation/spaces");
@@ -135,6 +151,21 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
   useEffect(() => {
     void loadTree();
   }, [props.pageId]);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setSearchHits([]);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      void fetch(`/api/tenant-documentation/search?q=${encodeURIComponent(q)}`)
+        .then((res) => (res.ok ? res.json() : { hits: [] }))
+        .then((payload: { hits: SearchHit[] }) => setSearchHits(payload.hits ?? []))
+        .catch(() => setSearchHits([]));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
 
   async function createPage(parentId: string | null) {
     if (!props.canCreatePages || creating) return;
@@ -172,26 +203,58 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
     }
   }
 
+  function handleLifecycleRedirect(redirectHref: string) {
+    router.push(redirectHref);
+  }
+
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-[var(--surface-1)]">
-      <aside className="w-72 shrink-0 border-r border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <div className="mb-3 text-sm font-semibold text-[var(--foreground)]">Dokumentation</div>
+    <div
+      className="-mx-4 -mt-2 flex min-h-[calc(100vh-3.5rem)] border-t border-[var(--border)] bg-[var(--surface-1)] sm:-mx-6 lg:-mx-8"
+      data-testid="tenant-documentation-workspace"
+    >
+      <aside className="w-72 shrink-0 border-r border-[var(--border)] bg-zinc-50 p-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+          Dokumentation
+        </div>
         <input
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Seiten suchen"
-          className="mb-3 w-full rounded-md border border-[var(--border)] px-2 py-1.5 text-sm"
+          className="mb-2 w-full rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm"
         />
+        {searchHits.length > 0 ? (
+          <ul className="mb-3 max-h-40 overflow-y-auto rounded-md border border-[var(--border)] bg-white text-sm">
+            {searchHits.map((hit) => (
+              <li key={hit.pageId}>
+                <Link
+                  href={`/dashboard/dokumentation/p/${hit.pageId}`}
+                  className="block px-2 py-1.5 hover:bg-[var(--surface-2)]"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <span className="font-medium">{hit.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <label className="mb-1 block text-xs text-[var(--muted)]">Bereich</label>
-        <select className="mb-4 w-full rounded-md border border-[var(--border)] px-2 py-1.5 text-sm">
+        <select className="mb-3 w-full rounded-md border border-[var(--border)] bg-white px-2 py-1.5 text-sm">
           <option>{spaceTitle}</option>
         </select>
+        {props.canManage ? (
+          <Link
+            href="/dashboard/dokumentation/archiv"
+            className="mb-3 block rounded-md px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-white"
+          >
+            Archiv
+          </Link>
+        ) : null}
         {props.canCreatePages ? (
           <button
             type="button"
             disabled={creating}
-            className="mb-3 w-full rounded-md border border-dashed border-[var(--border)] px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-[var(--surface-1)]"
+            className="mb-3 w-full rounded-md border border-dashed border-[var(--border)] bg-white px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-[var(--surface-1)]"
             onClick={() => void createPage(null)}
           >
             Seite erstellen
@@ -205,52 +268,67 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
         />
       </aside>
 
-      <main className="flex-1 p-6">
-        <nav className="mb-2 text-xs text-[var(--muted)]">{props.breadcrumb.join(" > ")}</nav>
-        <h1 className="mb-2 text-2xl font-semibold text-[var(--foreground)]">{props.pageTitle}</h1>
-        <div className="mb-4 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
-          <div className="font-medium text-[var(--foreground)]">Sichtbarkeit</div>
-          <div className="text-[var(--text-2)]">
-            Geerbt: {props.visibilitySummary.inheritedLabel}
-            {" · "}
-            Wirksam: {props.visibilitySummary.effectiveLabel}
-            {props.visibilitySummary.hasExplicit ? " (eigene Einstellung)" : " (geerbt)"}
-          </div>
-        </div>
+      <main className="flex-1 bg-white px-6 py-5 lg:px-10">
+        <nav className="mb-1 text-xs text-[var(--muted)]">{props.breadcrumb.join(" > ")}</nav>
+        <h1
+          className="mb-3 text-2xl font-semibold tracking-tight text-[var(--foreground)]"
+          data-testid="workspace-page-title"
+        >
+          {props.pageTitle}
+        </h1>
+
+        {props.lifecycleState === "ARCHIVED" ? (
+          <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Diese Seite ist archiviert und erscheint nicht in der Seitennavigation.
+          </p>
+        ) : null}
+        {props.lifecycleState === "TRASHED" ? (
+          <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+            Diese Seite befindet sich im Papierkorb.
+          </p>
+        ) : null}
 
         {mode === "read" ? (
           <>
             {props.publishedMeta ? (
-              <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-800">
-                  <Check className="h-4 w-4" /> Veröffentlicht
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-800">
+                  <Check className="h-4 w-4" aria-hidden /> Veröffentlicht
                 </span>
                 <span className="text-[var(--muted)]">{props.publishedMeta}</span>
               </div>
             ) : (
-              <div className="mb-4 text-sm text-[var(--muted)]">Noch nicht veröffentlicht</div>
+              <div className="mb-3 text-sm text-[var(--muted)]">Noch nicht veröffentlicht</div>
             )}
 
-            <div className="mb-4 flex gap-2">
-              {props.canEdit ? (
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              {props.canEdit && !lifecycleBlocksEditing ? (
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+                  className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
                   onClick={() => setMode("edit")}
                 >
-                  <Pencil className="h-4 w-4" /> Bearbeiten
+                  <Pencil className="h-4 w-4" aria-hidden /> Bearbeiten
                 </button>
               ) : null}
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+                className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
               >
-                <Clock className="h-4 w-4" /> Versionsverlauf
+                <Clock className="h-4 w-4" aria-hidden /> Versionsverlauf
               </button>
+              {props.canManage && !lifecycleBlocksEditing ? (
+                <TenantDocumentationPageActionsMenu
+                  pageId={props.pageId}
+                  pageTitle={props.pageTitle}
+                  canManage={props.canManage}
+                  onLifecycleAction={handleLifecycleRedirect}
+                />
+              ) : null}
             </div>
 
             <article
-              className="prose prose-sm max-w-none rounded-lg border border-[var(--border)] bg-white px-6 py-4"
+              className={TENANT_DOCUMENTATION_READ_CONTENT_CLASS}
               dangerouslySetInnerHTML={{
                 __html: props.publishedHtml ?? "<p><em>Noch kein veröffentlichter Inhalt.</em></p>",
               }}

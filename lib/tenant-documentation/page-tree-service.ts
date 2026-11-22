@@ -16,6 +16,7 @@ import { actorCanDiscoverPage } from "@/lib/tenant-documentation/page-visibility
 import {
   wouldMoveBroadenPublishAudience,
 } from "@/lib/tenant-documentation/publish-audience";
+import { TENANT_DOCUMENTATION_ACTIVE_PAGE_WHERE } from "@/lib/tenant-documentation/page-lifecycle";
 import { emptyYjsState, yjsStateToRichTextSnapshot } from "@/lib/tenant-documentation/yjs-document";
 
 export type TenantDocumentationTreeNode = {
@@ -33,7 +34,11 @@ export async function listAccessiblePageTree(
   spaceId: string,
 ): Promise<TenantDocumentationTreeNode[]> {
   const pages = await prisma.tenantDocumentationPage.findMany({
-    where: { tenantId: actor.identity.tenantId, spaceId },
+    where: {
+      tenantId: actor.identity.tenantId,
+      spaceId,
+      ...TENANT_DOCUMENTATION_ACTIVE_PAGE_WHERE,
+    },
     orderBy: [{ parentId: "asc" }, { sortOrder: "asc" }, { title: "asc" }],
     select: {
       id: true,

@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation";
 import { format, isValid } from "date-fns";
 import { de } from "date-fns/locale";
 
-import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
@@ -16,7 +15,12 @@ import {
   resolveTenantDocumentationActor,
 } from "@/lib/tenant-documentation/authorization";
 import { resolvePageEffectiveAccess } from "@/lib/tenant-documentation/page-access-service";
-import { actorCanDiscoverPage } from "@/lib/tenant-documentation/page-visibility-service";
+import { deriveTenantDocumentationPageLifecycle } from "@/lib/tenant-documentation/page-lifecycle";
+import {
+  actorCanDiscoverPage,
+  loadPageLifecycleState,
+} from "@/lib/tenant-documentation/page-visibility-service";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   resolvePublishAudienceView,
   publishAudienceToLabel,
@@ -81,7 +85,7 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
   const publishedAt = page.publishedVersion?.publishedAt;
   const publishedMeta =
     page.publishedVersion && publishedAt && isValid(publishedAt)
-      ? `Version ${page.publishedVersion.versionNumber} — Veröffentlicht am ${format(
+      ? `Version ${page.publishedVersion.versionNumber} • Veröffentlicht am ${format(
           publishedAt,
           "d. MMM yyyy, HH:mm",
           { locale: de },
@@ -105,46 +109,42 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
     user?.email ||
     "Editor";
 
+  const lifecycleState =
+    (await loadPageLifecycleState(page.id, tenantId)) ??
+    deriveTenantDocumentationPageLifecycle({
+      archivedAt: null,
+      trashedAt: null,
+    });
+
+  const canManage =
+    access.permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_MANAGE) &&
+    accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.MANAGE);
+
   return (
     <PageShell fullWidth>
-      <SceWorkspaceChrome
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Dokumentation", href: "/dashboard/dokumentation" },
-          { label: page.title },
-        ]}
-        header={{
-          eyebrow: "Dokumentation",
-          title: page.title,
-          description: page.space.title,
+      <TenantDocumentationWorkspaceClient
+        pageId={page.id}
+        spaceId={page.spaceId}
+        pageTitle={page.title}
+        spaceTitle={page.space.title}
+        breadcrumb={breadcrumb}
+        lifecycleState={lifecycleState}
+        canManage={canManage}
+        canCreatePages={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
+        visibilitySummary={{
+          inheritedLabel: publishAudienceToLabel(visibility.inherited),
+          effectiveLabel: publishAudienceToLabel(visibility.effective),
+          hasExplicit: visibility.explicit !== null,
         }}
-        density="dense"
-      >
-        <TenantDocumentationWorkspaceClient
-          pageId={page.id}
-          spaceId={page.spaceId}
-          pageTitle={page.title}
-          spaceTitle={page.space.title}
-          breadcrumb={breadcrumb}
-          canCreatePages={accessLevelPermits(
-            pageAccess,
-            TenantDocumentationAccessLevel.EDIT,
-          )}
-          visibilitySummary={{
-            inheritedLabel: publishAudienceToLabel(visibility.inherited),
-            effectiveLabel: publishAudienceToLabel(visibility.effective),
-            hasExplicit: visibility.explicit !== null,
-          }}
-          publishedHtml={
-            publishedContent ? richTextDocumentToHtmlWithMentions(publishedContent) : null
-          }
-          publishedMeta={publishedMeta}
-          publishedContent={publishedContent}
-          canEdit={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
-          canPublish={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.PUBLISH)}
-          displayName={displayName}
-        />
-      </SceWorkspaceChrome>
+        publishedHtml={
+          publishedContent ? richTextDocumentToHtmlWithMentions(publishedContent) : null
+        }
+        publishedMeta={publishedMeta}
+        publishedContent={publishedContent}
+        canEdit={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
+        canPublish={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.PUBLISH)}
+        displayName={displayName}
+      />
     </PageShell>
   );
 }

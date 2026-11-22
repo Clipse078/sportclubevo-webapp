@@ -37,6 +37,7 @@ vi.mock("@/lib/tenant-documentation/authorization", async (importOriginal) => {
 
 vi.mock("@/lib/tenant-documentation/page-visibility-service", () => ({
   actorCanDiscoverPage: mocks.actorCanDiscoverPage,
+  loadPageLifecycleState: vi.fn(async () => "ACTIVE"),
 }));
 
 vi.mock("@/lib/tenant-documentation/page-access-service", () => ({

@@ -64,7 +64,7 @@ async function main(): Promise<void> {
   });
 
   execSync(
-    `npx vitest run lib/tenant-documentation/__tests__/collaboration-sync.integration.test.ts lib/tenant-documentation/__tests__/publish-persistence.integration.test.ts`,
+    `npx vitest run lib/tenant-documentation/__tests__/collaboration-sync.integration.test.ts lib/tenant-documentation/__tests__/publish-persistence.integration.test.ts lib/tenant-documentation/__tests__/page-lifecycle.integration.test.ts`,
     { stdio: "inherit", env: migrateEnv },
   );
 
@@ -91,6 +91,7 @@ async function main(): Promise<void> {
         integrationTests: [
           "lib/tenant-documentation/__tests__/collaboration-sync.integration.test.ts",
           "lib/tenant-documentation/__tests__/publish-persistence.integration.test.ts",
+          "lib/tenant-documentation/__tests__/page-lifecycle.integration.test.ts",
         ],
         note: "Executed on guarded disposable Postgres; shared STAGE not mutated.",
       },

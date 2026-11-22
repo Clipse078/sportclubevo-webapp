@@ -24,7 +24,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   await prisma.$queryRaw`SELECT 1 FROM "TenantDocumentationSpace" LIMIT 0`;
-  await prisma.$queryRaw`SELECT 1 FROM "TenantDocumentationPage" LIMIT 0`;
+  await prisma.$queryRaw`SELECT "archivedAt", "trashedAt" FROM "TenantDocumentationPage" LIMIT 0`;
   await prisma.$queryRaw`SELECT 1 FROM "TenantDocumentationPageDraft" LIMIT 0`;
   await prisma.$queryRaw`SELECT 1 FROM "TenantDocumentationPageVersion" LIMIT 0`;
   await prisma.$queryRaw`SELECT 1 FROM "TenantDocumentationCollaborationPresence" LIMIT 0`;

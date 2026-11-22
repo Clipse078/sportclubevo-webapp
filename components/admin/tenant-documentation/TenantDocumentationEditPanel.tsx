@@ -57,7 +57,7 @@ export function TenantDocumentationEditPanel(props: Props) {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--border)] bg-white px-4 py-3">
+      <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-[var(--border)] pb-3">
         <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-sm text-orange-800">
           <Pencil className="h-4 w-4" /> Entwurf
         </span>
@@ -91,7 +91,11 @@ export function TenantDocumentationEditPanel(props: Props) {
           {props.canPublish ? (
             <button
               type="button"
-              disabled={props.publishing}
+              disabled={
+                props.publishing ||
+                !collaboration.draftHydrated ||
+                collaboration.saveStatus !== "saved"
+              }
               onClick={props.onPublish}
               className="rounded-md bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
             >

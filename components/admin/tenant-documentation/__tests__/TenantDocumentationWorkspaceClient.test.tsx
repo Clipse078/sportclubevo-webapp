@@ -9,6 +9,10 @@ vi.mock("next/dynamic", () => ({
   default: () => () => <div data-testid="edit-panel-stub">Edit panel</div>,
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 import { TenantDocumentationWorkspaceClient } from "../TenantDocumentationWorkspaceClient";
 
 describe("TenantDocumentationWorkspaceClient", () => {
@@ -30,6 +34,8 @@ describe("TenantDocumentationWorkspaceClient", () => {
         canCreatePages
         canEdit
         canPublish
+        canManage
+        lifecycleState="ACTIVE"
         displayName="Club Admin"
         publishedHtml={null}
         publishedMeta={null}

@@ -7494,6 +7494,10 @@ model TenantDocumentationPage {
   title                String
   sortOrder            Int      @default(0)
   publishedVersionId   String?  @unique
+  /// Set when archived (hidden from active tree/search). Preserved for restore.
+  archivedAt           DateTime?
+  /// Set when moved to Papierkorb (soft delete). Preserved for restore.
+  trashedAt            DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -7511,6 +7515,8 @@ model TenantDocumentationPage {
   @@index([tenantId])
   @@index([spaceId])
   @@index([parentId])
+  @@index([tenantId, archivedAt])
+  @@index([tenantId, trashedAt])
 }
 
 model TenantDocumentationPageDraft {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import type { TenantDocumentationActorContext } from "@/lib/tenant-documentation/authorization";
+import { TENANT_DOCUMENTATION_ACTIVE_PAGE_WHERE } from "@/lib/tenant-documentation/page-lifecycle";
 import { actorCanViewPublishedPage } from "@/lib/tenant-documentation/page-visibility-service";
 
 export type TenantDocumentationSearchHit = {
@@ -23,6 +24,7 @@ export async function searchPublishedDocumentation(
   const pages = await prisma.tenantDocumentationPage.findMany({
     where: {
       tenantId,
+      ...TENANT_DOCUMENTATION_ACTIVE_PAGE_WHERE,
       publishedVersionId: { not: null },
       OR: [
         { title: { contains: normalized, mode: "insensitive" } },
