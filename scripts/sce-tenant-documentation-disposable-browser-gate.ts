@@ -67,6 +67,7 @@ async function main(): Promise<void> {
   });
 
   killListenersOnPorts([Number(editPort)]);
+  execSync("sleep 3");
 
   const lifeEnv = {
     ...baseEnv,
@@ -74,9 +75,10 @@ async function main(): Promise<void> {
     NEXTAUTH_URL: `http://127.0.0.1:${lifePort}`,
     AUTH_URL: `http://127.0.0.1:${lifePort}`,
   };
+  const lifeNodeOptions = "--max-old-space-size=8192";
   execSync("npm run tenant-documentation:lifecycle-browser-regression", {
     stdio: "inherit",
-    env: lifeEnv,
+    env: { ...lifeEnv, NODE_OPTIONS: lifeNodeOptions },
   });
 
   console.log(JSON.stringify({ status: "PASS", browserGate: true }));
