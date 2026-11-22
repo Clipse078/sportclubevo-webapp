@@ -8,7 +8,7 @@ import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Heading2, Link2, List, ListOrdered } from "lucide-react";
 import { useCallback, useEffect } from "react";
-import type * as Y from "yjs";
+import type { YDoc } from "@/lib/tenant-documentation/tenant-doc-yjs-client";
 
 import { SceInlineMentionMark } from "@/lib/collaboration/mentions/inline-mention-mark";
 import { SceInlineMentionSuggest } from "@/components/admin/shared/mentions/SceInlineMentionSuggest";
@@ -17,7 +17,7 @@ import type { CollaborationPresence } from "@/components/admin/tenant-documentat
 import type { TaskDescriptionDocument } from "@/lib/tasks/task-description";
 
 type Props = {
-  ydoc: Y.Doc;
+  ydoc: YDoc;
   fragmentName: string;
   presences: CollaborationPresence[];
   disabled?: boolean;
@@ -146,6 +146,7 @@ export function TenantDocumentationCollabEditor({
       </div>
       <EditorContent
         editor={editor}
+        data-testid="tenant-doc-collab-editor"
         className="prose prose-sm max-w-none px-6 py-4 min-h-[320px] [&_.ProseMirror]:outline-none"
       />
       <SceInlineMentionSuggest

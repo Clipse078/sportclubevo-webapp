@@ -6,6 +6,12 @@ const withNextIntl = createNextIntlPlugin();
 
 export const nextConfig: NextConfig = {
   poweredByHeader: false,
+  transpilePackages: [
+    "yjs",
+    "@tiptap/y-tiptap",
+    "@tiptap/extension-collaboration",
+    "@tiptap/extension-collaboration-caret",
+  ],
   typescript: {
     tsconfigPath: "tsconfig.build.json",
   },

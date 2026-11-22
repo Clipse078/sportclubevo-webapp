@@ -1,7 +1,8 @@
 import * as Y from "yjs";
 import { isRichTextValue, type RichTextValue } from "@/lib/cms/rich-text";
+import { TENANT_DOC_YJS_FRAGMENT } from "@/lib/tenant-documentation/tenant-doc-yjs-fragment";
 
-export const TENANT_DOC_YJS_FRAGMENT = "default";
+export { TENANT_DOC_YJS_FRAGMENT };
 
 export function emptyYjsState(): Uint8Array {
   const doc = new Y.Doc();
@@ -58,16 +59,6 @@ export function richTextToPlainText(value: RichTextValue): string {
   };
   for (const block of value.content) walk(block);
   return parts.join(" ").replace(/\s+/g, " ").trim();
-}
-
-export function applyYjsUpdateToDoc(doc: Y.Doc, updateBase64: string) {
-  const update =
-    typeof atob === "function"
-      ? Uint8Array.from(atob(updateBase64), (c) => c.charCodeAt(0))
-      : Buffer.from(updateBase64, "base64");
-  if (update.length > 0) {
-    Y.applyUpdate(doc, update);
-  }
 }
 
 export function yjsStateToRichTextSnapshot(state: Uint8Array): RichTextValue {

@@ -73,6 +73,15 @@ async function main(): Promise<void> {
     env: migrateEnv,
   });
 
+  if (process.env.TENANT_DOC_BROWSER_REGRESSION === "1") {
+    migrateEnv.TENANT_DOC_BROWSER_SKIP_BUILD = "1";
+    execSync("npm run build", { stdio: "inherit", env: migrateEnv });
+    execSync("npm run tenant-documentation:edit-browser-regression", {
+      stdio: "inherit",
+      env: migrateEnv,
+    });
+  }
+
   console.log(
     JSON.stringify(
       {

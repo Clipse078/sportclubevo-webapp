@@ -6,17 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 vi.mock("next/dynamic", () => ({
-  default: () => () => <div data-testid="collab-editor-stub">Editor</div>,
-}));
-
-vi.mock("@/components/admin/tenant-documentation/useTenantDocCollaboration", () => ({
-  useTenantDocCollaboration: () => ({
-    ydoc: {},
-    fragmentName: "default",
-    presences: [],
-    saveStatus: "saved",
-    markDirty: vi.fn(),
-  }),
+  default: () => () => <div data-testid="edit-panel-stub">Edit panel</div>,
 }));
 
 import { TenantDocumentationWorkspaceClient } from "../TenantDocumentationWorkspaceClient";
@@ -54,6 +44,6 @@ describe("TenantDocumentationWorkspaceClient", () => {
 
     expect(screen.getByText("Noch nicht veröffentlicht")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Bearbeiten/i })).toBeInTheDocument();
-    expect(screen.queryByTestId("collab-editor-stub")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("edit-panel-stub")).not.toBeInTheDocument();
   });
 });

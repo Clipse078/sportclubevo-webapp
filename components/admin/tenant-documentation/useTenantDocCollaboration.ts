@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as Y from "yjs";
 
 import {
+  Y,
   applyYjsUpdateToDoc,
   TENANT_DOC_YJS_FRAGMENT,
-} from "@/lib/tenant-documentation/yjs-document";
+} from "@/lib/tenant-documentation/tenant-doc-yjs-client";
 
 export type CollaborationPresence = {
   userId: string;
