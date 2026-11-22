@@ -89,11 +89,20 @@ async function main(): Promise<void> {
 
     migrateEnv.TENANT_DOC_BROWSER_SKIP_BUILD = "1";
     execSync("npm run build", { stdio: "inherit", env: migrateEnv });
+
+    const editPort = process.env.TENANT_DOC_EDIT_BROWSER_PORT?.trim() || "3191";
+    migrateEnv.TENANT_DOC_BROWSER_PORT = editPort;
+    migrateEnv.NEXTAUTH_URL = `http://127.0.0.1:${editPort}`;
+    migrateEnv.AUTH_URL = migrateEnv.NEXTAUTH_URL;
     execSync("npm run tenant-documentation:edit-browser-regression", {
       stdio: "inherit",
       env: migrateEnv,
     });
-    migrateEnv.TENANT_DOC_BROWSER_PORT = "3098";
+
+    const lifePort = process.env.TENANT_DOC_LIFECYCLE_BROWSER_PORT?.trim() || "3190";
+    migrateEnv.TENANT_DOC_BROWSER_PORT = lifePort;
+    migrateEnv.NEXTAUTH_URL = `http://127.0.0.1:${lifePort}`;
+    migrateEnv.AUTH_URL = migrateEnv.NEXTAUTH_URL;
     execSync("npm run tenant-documentation:lifecycle-browser-regression", {
       stdio: "inherit",
       env: migrateEnv,
