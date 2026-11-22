@@ -74,9 +74,27 @@ async function main(): Promise<void> {
   });
 
   if (process.env.TENANT_DOC_BROWSER_REGRESSION === "1") {
+    const authSecret =
+      process.env.AUTH_SECRET?.trim() ||
+      process.env.NEXTAUTH_SECRET?.trim() ||
+      migrateEnv.AUTH_SECRET?.trim() ||
+      migrateEnv.NEXTAUTH_SECRET?.trim();
+    if (!authSecret) {
+      throw new Error(
+        "AUTH_SECRET or NEXTAUTH_SECRET required for browser regression (set in .env or shell)",
+      );
+    }
+    migrateEnv.AUTH_SECRET = authSecret;
+    migrateEnv.NEXTAUTH_SECRET = authSecret;
+
     migrateEnv.TENANT_DOC_BROWSER_SKIP_BUILD = "1";
     execSync("npm run build", { stdio: "inherit", env: migrateEnv });
     execSync("npm run tenant-documentation:edit-browser-regression", {
+      stdio: "inherit",
+      env: migrateEnv,
+    });
+    migrateEnv.TENANT_DOC_BROWSER_PORT = "3098";
+    execSync("npm run tenant-documentation:lifecycle-browser-regression", {
       stdio: "inherit",
       env: migrateEnv,
     });

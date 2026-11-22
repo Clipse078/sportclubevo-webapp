@@ -15,13 +15,13 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 296 |
-| Authenticated renderable pages | 231 |
-| Authenticated visual pages (completion denominator) | 227 |
+| Page entries | 297 |
+| Authenticated renderable pages | 232 |
+| Authenticated visual pages (completion denominator) | 228 |
 | Authenticated redirect aliases | 24 |
 | Public renderable pages | 40 |
 | Public redirect aliases | 1 |
-| Route handlers | 701 |
+| Route handlers | 705 |
 | Special Next.js framework files | 41 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -32,24 +32,24 @@ Counts below are authenticated renderable pages excluding approved exceptions. T
 
 | Architecture | Count |
 | --- | ---: |
-| CANONICAL | 227 |
-| PARTIAL | 0 |
+| CANONICAL | 226 |
+| PARTIAL | 2 |
 | LEGACY | 0 |
 | NOT_APPLICABLE | 0 |
 
-Architectural canonical adoption: **227 / 227 (100%)**.
+Architectural canonical adoption: **226 / 228 (99.1%)**.
 
 ## Verification
 
 | Migration status | Count |
 | --- | ---: |
-| NOT_STARTED | 0 |
+| NOT_STARTED | 2 |
 | IN_PROGRESS | 0 |
-| IMPLEMENTED | 227 |
+| IMPLEMENTED | 226 |
 | VERIFIED | 0 |
 | EXCEPTION | 69 |
 
-Verified authenticated visual pages: **0 / 227 (0%)**.
+Verified authenticated visual pages: **0 / 228 (0%)**.
 
 `IMPLEMENTED` means canonical workspace architecture is present. `VERIFIED` additionally requires recorded visual, accessibility, functional, and responsive evidence.
 
@@ -62,8 +62,8 @@ Unassigned authenticated visual routes: **0**.
 | DS2-07C | 0 | Admin and configuration |
 | DS2-07D | 0 | Communication and website CMS |
 | DS2-07E | 0 | Planning, matches, training, tournaments and events |
-| DS2-07F | 0 | Vereinsleitung and remaining workspaces |
-| DS2-07G | 227 | Authenticated visual/accessibility verification and closure |
+| DS2-07F | 2 | Vereinsleitung and remaining workspaces |
+| DS2-07G | 226 | Authenticated visual/accessibility verification and closure |
 
 Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and partial pages stay on DS2-07C–F. Existing tracked debt does not fail CI.
 
@@ -122,7 +122,10 @@ None.
 
 ### DS2-07F
 
-None.
+| URL pattern | Architecture | Status | Priority | Source |
+| --- | --- | --- | --- | --- |
+| `/dashboard/dokumentation/archiv` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/dokumentation/archiv/page.tsx` |
+| `/dashboard/dokumentation/p/[pageId]` | PARTIAL | NOT_STARTED | Medium | `app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx` |
 
 ### DS2-07G
 
@@ -194,7 +197,6 @@ None.
 | `/dashboard/communication/zielgruppen/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/communication/zielgruppen/new/page.tsx` |
 | `/dashboard/competitions` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/competitions/page.tsx` |
 | `/dashboard/dev/sce-icons` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/dev/sce-icons/page.tsx` |
-| `/dashboard/dokumentation/p/[pageId]` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx` |
 | `/dashboard/events` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/page.tsx` |
 | `/dashboard/events/import` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/import/page.tsx` |
 | `/dashboard/events/matches/new` | CANONICAL | IMPLEMENTED | Low | `app/(admin)/dashboard/events/matches/new/page.tsx` |
@@ -358,14 +360,20 @@ None.
 
 ## Changes since the baseline
 
-New routes introduced since the previous baseline: **0**.
+New routes introduced since the previous baseline: **1**.
 
-None.
+- `app/(admin)/dashboard/dokumentation/archiv/page.tsx` (`/dashboard/dokumentation/archiv`)
 
 ## CI
 
-Blocking violations: **0**. Tracked existing debt: **0**.
+Blocking violations: **3**. Tracked existing debt: **1**.
 
 Blocking codes cover unregistered pages, duplicate URLs, missing lifecycle reconciliation, non-canonical new authenticated pages, missing verification evidence, redirect aliases marked verified, and invalid package assignments. Tracked debt is reported and does not fail the job.
+
+### Blocking violations
+
+- `DS2-07B-NEW-PAGE-EVIDENCE` app/(admin)/dashboard/dokumentation/archiv/page.tsx New authenticated page requires responsive, accessibility, functional, and visual verification evidence
+- `DS2-07B-NONCANONICAL` app/(admin)/dashboard/dokumentation/archiv/page.tsx New authenticated page bypasses canonical Design System 2.0 architecture
+- `DS2-07B-TYPOGRAPHY` app/(admin)/dashboard/dokumentation/archiv/page.tsx New authenticated page is missing typography and page hierarchy
 
 Regenerate with `node scripts/sce-ds2-06-route-inventory-scan.mjs`. Check with `node scripts/sce-ds2-07b-route-governance-check.mjs`.

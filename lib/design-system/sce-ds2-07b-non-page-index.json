@@ -3277,6 +3277,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/archive/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant-documentation/pages/[pageId]/collaboration/route.ts",
     "urlPattern": "/api/tenant-documentation/pages/[pageId]/collaboration",
     "audience": "API"
@@ -3295,6 +3301,18 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/restore/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/trash/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/trash",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant-documentation/pages/[pageId]/visibility/route.ts",
     "urlPattern": "/api/tenant-documentation/pages/[pageId]/visibility",
     "audience": "API"
@@ -3303,6 +3321,12 @@
     "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant-documentation/search/route.ts",
     "urlPattern": "/api/tenant-documentation/search",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/[spaceId]/archived/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces/[spaceId]/archived",
     "audience": "API"
   },
   {

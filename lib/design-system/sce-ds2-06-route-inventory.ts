@@ -871,16 +871,28 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
-    "route": "/dashboard/dokumentation/p/[pageId]",
-    "source": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
-    "pageArchitecture": "canonical",
-    "headerFinanceAligned": true,
+    "route": "/dashboard/dokumentation/archiv",
+    "source": "app/(admin)/dashboard/dokumentation/archiv/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
     "tabsFinanceAligned": false,
     "typographyConsistent": true,
     "colorsContrastRisk": false,
     "interactionsLegacy": false,
-    "priority": "Low",
-    "action": "DS2-07: align header/tabs tokens"
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+  },
+  {
+    "route": "/dashboard/dokumentation/p/[pageId]",
+    "source": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
   },
   {
     "route": "/dashboard/dokumentation",

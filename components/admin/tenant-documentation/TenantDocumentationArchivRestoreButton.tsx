@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function TenantDocumentationArchivRestoreButton({ pageId }: { pageId: string }) {
+type RestoreSource = "archive" | "trash";
+
+export function TenantDocumentationArchivRestoreButton({
+  pageId,
+  source = "archive",
+}: {
+  pageId: string;
+  source?: RestoreSource;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +23,7 @@ export function TenantDocumentationArchivRestoreButton({ pageId }: { pageId: str
       const res = await fetch(`/api/tenant-documentation/pages/${pageId}/restore`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "archive" }),
+        body: JSON.stringify({ source }),
       });
       const payload = (await res.json()) as { href?: string; error?: string };
       if (!res.ok) {

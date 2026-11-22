@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Check, Clock, Pencil } from "lucide-react";
 
+import { TenantDocumentationArchivRestoreButton } from "@/components/admin/tenant-documentation/TenantDocumentationArchivRestoreButton";
 import { TenantDocumentationPageActionsMenu } from "@/components/admin/tenant-documentation/TenantDocumentationPageActionsMenu";
 import { TENANT_DOCUMENTATION_READ_CONTENT_CLASS } from "@/components/admin/tenant-documentation/tenant-documentation-content-styles";
 import type { RichTextValue } from "@/lib/cms/rich-text";
@@ -283,9 +284,12 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
           </p>
         ) : null}
         {props.lifecycleState === "TRASHED" ? (
-          <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
-            Diese Seite befindet sich im Papierkorb.
-          </p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+            <p>Diese Seite befindet sich im Papierkorb.</p>
+            {props.canManage ? (
+              <TenantDocumentationArchivRestoreButton pageId={props.pageId} source="trash" />
+            ) : null}
+          </div>
         ) : null}
 
         {mode === "read" ? (

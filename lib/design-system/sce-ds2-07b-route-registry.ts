@@ -2357,6 +2357,38 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/dashboard/dokumentation/archiv",
+    "routeKey": "/dashboard/dokumentation/archiv",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/archiv/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "PARTIAL",
+    "migrationStatus": "NOT_STARTED",
+    "migrationPackage": "DS2-07F",
+    "priority": "Medium",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": true,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/dashboard/dokumentation/p/[pageId]",
     "routeKey": "/dashboard/dokumentation/p/[pageId]",
     "sourceFile": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
@@ -2370,10 +2402,10 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKind": "RENDERABLE_PAGE",
     "intercept": false,
     "parallelSlot": null,
-    "architecture": "CANONICAL",
-    "migrationStatus": "IMPLEMENTED",
-    "migrationPackage": "DS2-07G",
-    "priority": "Low",
+    "architecture": "PARTIAL",
+    "migrationStatus": "NOT_STARTED",
+    "migrationPackage": "DS2-07F",
+    "priority": "Medium",
     "visualVerificationStatus": "PENDING",
     "accessibilityVerificationStatus": "PENDING",
     "functionalVerificationStatus": "PENDING",
@@ -9574,31 +9606,31 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 296,
-  "authenticatedRenderableCount": 231,
-  "authenticatedVisualCount": 227,
+  "pageCount": 297,
+  "authenticatedRenderableCount": 232,
+  "authenticatedVisualCount": 228,
   "authenticatedRedirectCount": 24,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 701,
+  "routeHandlerCount": 705,
   "frameworkFileCount": 41,
   "architecture": {
-    "CANONICAL": 227,
-    "PARTIAL": 0,
+    "CANONICAL": 226,
+    "PARTIAL": 2,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
   },
   "migrationStatus": {
-    "NOT_STARTED": 0,
+    "NOT_STARTED": 2,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 227,
+    "IMPLEMENTED": 226,
     "VERIFIED": 0,
     "EXCEPTION": 69
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 227,
-  "architecturalCanonicalPercent": 100,
+  "architecturalCanonicalCount": 226,
+  "architecturalCanonicalPercent": 99.1,
   "unassignedCount": 0,
   "exceptionsById": {
     "SCE-DS2-07B-EX-REDIRECT": 26,
@@ -9610,10 +9642,10 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07C": 0,
     "DS2-07D": 0,
     "DS2-07E": 0,
-    "DS2-07F": 0,
-    "DS2-07G": 227
+    "DS2-07F": 2,
+    "DS2-07G": 226
   },
-  "introducedAfterBaselineCount": 0,
-  "blockingCount": 0,
-  "trackedDebtCount": 0
+  "introducedAfterBaselineCount": 1,
+  "blockingCount": 3,
+  "trackedDebtCount": 1
 };

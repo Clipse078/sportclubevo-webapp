@@ -48,7 +48,7 @@ async function login(page, email, password) {
 }
 
 function startProductionServer(env) {
-  return spawn("npm", ["run", "start", "--", "-p", String(PORT)], {
+  return spawn("npm", ["run", "start", "--", "-H", "127.0.0.1", "-p", String(PORT)], {
     cwd: process.cwd(),
     env: { ...process.env, ...env, PORT: String(PORT) },
     stdio: ["ignore", "pipe", "pipe"],
@@ -64,6 +64,9 @@ function releasePort(port) {
       } catch {
         //
       }
+    }
+    if (out) {
+      execSync("sleep 2");
     }
   } catch {
     // port free
@@ -228,18 +231,32 @@ async function main() {
       await btn.waitFor({ state: "visible", timeout: 60_000 });
       const eventsBefore = collaborationEvents.length;
       await btn.click({ timeout: 60_000 });
-      await page
+      const collabResponse = await page
         .waitForResponse(
           (res) =>
             res.url().includes("/collaboration") &&
-            res.request().method() === "POST" &&
-            res.ok(),
+            res.request().method() === "POST",
           { timeout: 90_000 },
         )
         .catch(() => null);
+      if (!collabResponse?.ok()) {
+        const body = await collabResponse?.text().catch(() => "");
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-collaboration-failure.json",
+          JSON.stringify({ status: collabResponse?.status(), body }, null, 2),
+        );
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-collaboration-failure.html",
+          await page.content(),
+        );
+        throw new Error(
+          `Collaboration sync failed HTTP ${collabResponse?.status() ?? "timeout"} ${body?.slice(0, 200)}`,
+        );
+      }
       const firstSyncAfterOpen = collaborationEvents[eventsBefore] ?? null;
+      await page.getByTestId("tenant-doc-save-status").waitFor({ state: "visible", timeout: 90_000 });
       const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
-      await editor.waitFor({ state: "visible", timeout: 90_000 });
+      await editor.waitFor({ state: "visible", timeout: 120_000 });
       return { editor, firstSyncAfterOpen, label };
     }
 

@@ -12,9 +12,11 @@ import { resolveTenantDocumentationActor } from "@/lib/tenant-documentation/auth
 import {
   archiveDocumentationPage,
   restoreArchivedDocumentationPage,
+  restoreTrashedDocumentationPage,
   TenantDocumentationLifecycleError,
   trashDocumentationPage,
 } from "@/lib/tenant-documentation/page-lifecycle-service";
+import { publishPageDraft } from "@/lib/tenant-documentation/publish-service";
 import { createDocumentationPage, ensureDefaultSpace } from "@/lib/tenant-documentation/page-tree-service";
 import { searchPublishedDocumentation } from "@/lib/tenant-documentation/search-service";
 import { listAccessiblePageTree } from "@/lib/tenant-documentation/page-tree-service";
@@ -50,13 +52,19 @@ describe.skipIf(!dbReady)("tenant documentation page lifecycle", () => {
   let parentId: string;
   let childId: string;
   let actor: Awaited<ReturnType<typeof resolveTenantDocumentationActor>>;
+  let managerUserId: string;
+  let viewOnlyActor: Awaited<ReturnType<typeof resolveTenantDocumentationActor>>;
 
   beforeAll(async () => {
     assertSafeTestDatabase();
     await ensurePermissions();
 
     await prisma.tenant.create({
-      data: { id: TENANT_ID, slug: `tdoc-life-${RUN}`, name: `Doc Life ${RUN}` },
+      data: {
+        id: TENANT_ID,
+        key: `key-${RUN}`,
+        name: `Doc Life ${RUN}`,
+      },
     });
 
     const user = await prisma.user.create({
@@ -96,6 +104,42 @@ describe.skipIf(!dbReady)("tenant documentation page lifecycle", () => {
 
     await prisma.userRole.create({
       data: { userId: user.id, roleId: role.id, tenantId: TENANT_ID },
+    });
+    managerUserId = user.id;
+
+    const viewOnlyUser = await prisma.user.create({
+      data: {
+        email: `doc-view-${RUN}@fixture.local`,
+        passwordHash: "fixture",
+        firstName: "Doc",
+        lastName: "Viewer",
+        isActive: true,
+      },
+    });
+    await prisma.tenantMembership.create({
+      data: { tenantId: TENANT_ID, userId: viewOnlyUser.id, isActive: true },
+    });
+    const viewRole = await prisma.role.create({
+      data: {
+        tenantId: TENANT_ID,
+        scope: "TENANT",
+        key: `doc_view_${RUN}`,
+        name: "Doc view",
+      },
+    });
+    const viewPerm = await prisma.permission.findUnique({
+      where: { key: PERMISSIONS.TENANT_DOCUMENTATION_VIEW },
+    });
+    await prisma.rolePermission.create({
+      data: { roleId: viewRole.id, permissionId: viewPerm!.id },
+    });
+    await prisma.userRole.create({
+      data: { userId: viewOnlyUser.id, roleId: viewRole.id, tenantId: TENANT_ID },
+    });
+    viewOnlyActor = await resolveTenantDocumentationActor({
+      tenantId: TENANT_ID,
+      userId: viewOnlyUser.id,
+      permissionKeys: [PERMISSIONS.TENANT_DOCUMENTATION_VIEW],
     });
 
     actor = await resolveTenantDocumentationActor({
@@ -163,5 +207,43 @@ describe.skipIf(!dbReady)("tenant documentation page lifecycle", () => {
     await trashDocumentationPage({ actor, pageId: childId });
     const hits = await searchPublishedDocumentation(actor, `SearchUnique-${RUN}`);
     expect(hits.some((h) => h.pageId === childId)).toBe(false);
+  });
+
+  it("denies lifecycle changes without manage permission", async () => {
+    await expect(
+      archiveDocumentationPage({ actor: viewOnlyActor, pageId: parentId }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" } satisfies Partial<TenantDocumentationLifecycleError>);
+  });
+
+  it("restore from trash preserves page id, versions, and visibility", async () => {
+    await restoreTrashedDocumentationPage({ actor, pageId: childId });
+
+    const published = await publishPageDraft(actor, managerUserId, childId);
+    const versionId = published.id;
+    const versionCount = await prisma.tenantDocumentationPageVersion.count({
+      where: { pageId: childId },
+    });
+    expect(versionCount).toBeGreaterThanOrEqual(1);
+
+    const beforeTrash = await prisma.tenantDocumentationPage.findUnique({
+      where: { id: childId },
+      select: { publishedVersionId: true },
+    });
+
+    await trashDocumentationPage({ actor, pageId: childId });
+    const restored = await restoreTrashedDocumentationPage({ actor, pageId: childId });
+    expect(restored.pageId).toBe(childId);
+
+    const afterRestore = await prisma.tenantDocumentationPage.findUnique({
+      where: { id: childId },
+      select: { publishedVersionId: true, archivedAt: true, trashedAt: true },
+    });
+    expect(afterRestore?.trashedAt).toBeNull();
+    expect(afterRestore?.archivedAt).toBeNull();
+    expect(afterRestore?.publishedVersionId).toBe(beforeTrash?.publishedVersionId);
+    expect(afterRestore?.publishedVersionId).toBe(versionId);
+
+    const tree = await listAccessiblePageTree(actor, spaceId);
+    expect(JSON.stringify(tree)).toContain(childId);
   });
 });
