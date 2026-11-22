@@ -4,7 +4,7 @@
 
 | Gate | Result |
 | --- | --- |
-| Disposable migrate + integration (`npm run tenant-documentation:disposable-release-gate`) | **PASS** (integration 10/10 on disposable Postgres; see agent `tenant-documentation-disposable-release-gate-final2.log`) |
+| Disposable migrate + integration (`npm run tenant-documentation:disposable-release-gate`) | **PASS** (integration **12/12** on disposable Postgres; log `tenant-documentation-disposable-release-gate-b8ba7a7.log`) |
 | Edit browser regression (`TENANT_DOC_BROWSER_REGRESSION=1`, requires Playwright + auth secret) | **PASS** — `/opt/cursor/artifacts/tenant-documentation-edit-browser-regression.json` |
 | Lifecycle browser regression (⋯ menu, Archiv, Papierkorb, restore) | **PASS** — `/opt/cursor/artifacts/tenant-documentation-lifecycle-browser-regression.json` |
 | DS2-07B route registry sync (`node scripts/sce-ds2-06-route-inventory-scan.mjs`) | **PASS** locally (`npm run test:route-governance`) |
@@ -28,7 +28,8 @@
 
 - **⋯ menu** — `Archivieren` / `Seite löschen` for manage-capable users; parent **HAS_ACTIVE_CHILDREN** guard (API + UI menu on parent).
 - **Archiv** — `/dashboard/dokumentation/archiv` list + `Wiederherstellen`.
-- **Papierkorb** — trash banner on direct page view with **Wiederherstellen** (`source: trash`).
+- **Papierkorb** — sidebar link + `/dashboard/dokumentation/papierkorb` list; trash banner **Wiederherstellen** on direct URL.
+- **Versionsverlauf** — popover lists published versions; `/dashboard/dokumentation/p/.../v/...` read-only snapshot (no compare/rollback in MVP).
 - **Restore invariants** — integration asserts stable `pageId`, `publishedVersionId`, and tree membership after trash restore.
 
 ## STAGE read-only inventory
