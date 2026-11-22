@@ -390,6 +390,12 @@ async function main() {
     { key: "workspace.governance.manage", name: "Manage workspace governance operations", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "workspace.break_glass", name: "Activate workspace break-glass exceptional access", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
 
+  // PR #1025 — Tenant Documentation (canonical catalog; flows to club_admin via contract filter)
+    { key: "tenant_documentation.view", name: "Dokumentation anzeigen", module: PermissionModule.TENANT_DOCUMENTATION, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tenant_documentation.edit", name: "Dokumentation bearbeiten", module: PermissionModule.TENANT_DOCUMENTATION, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tenant_documentation.publish", name: "Dokumentation veröffentlichen", module: PermissionModule.TENANT_DOCUMENTATION, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tenant_documentation.manage", name: "Dokumentation verwalten", module: PermissionModule.TENANT_DOCUMENTATION, scope: PermissionScope.TENANT, grantableByAdmin: true },
+
     // SCE-FINANCE-01B — tenant organisation finance (distinct from people.finance.* and billing.*)
     { key: "finance.view", name: "View organisation finance", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "finance.structure.manage", name: "Manage finance structure", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },

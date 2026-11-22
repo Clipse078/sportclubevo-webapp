@@ -1,0 +1,3 @@
+/** Published read-mode prose — orange section dividers per SCE Dokumentation reference. */
+export const TENANT_DOCUMENTATION_READ_CONTENT_CLASS =
+  "tenant-documentation-read prose prose-sm max-w-none rounded-lg border border-[var(--border)] bg-white px-6 py-5 prose-headings:font-semibold prose-h2:mt-8 prose-h2:border-t prose-h2:border-orange-200 prose-h2:pt-4 prose-h2:first:mt-0 prose-h2:first:border-t-0 prose-h2:first:pt-0 prose-ul:my-3";

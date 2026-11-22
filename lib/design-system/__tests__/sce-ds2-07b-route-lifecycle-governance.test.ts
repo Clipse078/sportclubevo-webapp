@@ -109,6 +109,11 @@ describe("SCE-DS2-07B route lifecycle governance", () => {
         expect(entry?.visualVerificationStatus).toBe("NOT_APPLICABLE");
         expect(row.action).toContain(entry?.redirectDestination ?? "");
         expect(isVerifiedAuthenticatedVisual(entry)).toBe(false);
+      } else if (entry?.migrationStatus === "EXCEPTION") {
+        expect(entry?.architecture).toBe("NOT_APPLICABLE");
+        expect(entry?.visualVerificationStatus).toBe("NOT_APPLICABLE");
+        expect(entry?.exceptionId).toBeTruthy();
+        expect(entry?.exceptionRationale).toBeTruthy();
       } else if (row.pageArchitecture === "canonical") {
         expect(entry?.architecture).toBe("CANONICAL");
         expect(entry?.migrationStatus).toBe("IMPLEMENTED");

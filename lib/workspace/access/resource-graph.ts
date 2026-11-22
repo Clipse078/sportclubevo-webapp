@@ -14,6 +14,18 @@ import type {
   WorkspaceResourceAccessNode,
 } from "@/lib/workspace/access/types";
 
+export function createEmptyWorkspaceResourceGraph(
+  tenantId: string,
+): WorkspaceResourceGraph {
+  return {
+    tenantId,
+    folders: new Map(),
+    documents: new Map(),
+    folderGrants: new Map(),
+    documentGrants: new Map(),
+  };
+}
+
 export type WorkspaceResourceGraph = {
   tenantId: string;
   folders: Map<

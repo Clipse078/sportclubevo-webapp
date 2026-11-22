@@ -19,6 +19,7 @@ import {
   VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
 } from "@/lib/nav/vereinsleitung-access";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
+import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -667,6 +668,13 @@ export const NAV_SECTIONS: NavSection[] = [
           PERMISSIONS.WORKSPACE_VIEW,
           PERMISSIONS.WORKSPACE_MANAGE,
         ],
+      },
+      {
+        key: "tenant-documentation",
+        label: "Dokumentation",
+        href: "/dashboard/dokumentation",
+        navContexts: ["club"],
+        permissionKeys: [...TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS],
       },
       {
         key: "formulare-freigaben",

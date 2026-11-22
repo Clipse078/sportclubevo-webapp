@@ -20,6 +20,7 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   vereine: "club",
   personen: "people",
   workspace: "documents",
+  "tenant-documentation": "documents",
   aufgaben: "tasks",
   communication: "communication",
   "communication-overview": "communication",

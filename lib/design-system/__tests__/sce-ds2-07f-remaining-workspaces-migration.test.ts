@@ -76,10 +76,10 @@ describe("SCE-DS2-07F remaining workspaces migration", () => {
     expect(SCE_DS2_07F_ASSIGNED_SOURCES).toHaveLength(45);
     expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07F"]).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.verifiedAuthenticatedVisualCount).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(226);
+    expect(SCE_DS2_07B_SUMMARY.architecture.CANONICAL).toBe(227);
     expect(SCE_DS2_07B_SUMMARY.architecture.PARTIAL).toBe(0);
     expect(SCE_DS2_07B_SUMMARY.architecture.LEGACY).toBe(0);
-    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(226);
+    expect(SCE_DS2_07B_SUMMARY.outstandingByPackage["DS2-07G"]).toBe(227);
 
     for (const sourceFile of SCE_DS2_07F_ASSIGNED_SOURCES) {
       const entry = SCE_DS2_07B_ROUTE_REGISTRY.find((item) => item.sourceFile === sourceFile);

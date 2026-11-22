@@ -871,6 +871,66 @@ export const SCE_DS2_06_ROUTE_INVENTORY: SceDs206RouteInventoryEntry[] = [
     "action": "DS2-07: align header/tabs tokens"
   },
   {
+    "route": "/dashboard/dokumentation/archiv",
+    "source": "app/(admin)/dashboard/dokumentation/archiv/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+  },
+  {
+    "route": "/dashboard/dokumentation/p/[pageId]",
+    "source": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
+    "pageArchitecture": "canonical",
+    "headerFinanceAligned": true,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Low",
+    "action": "DS2-07: align header/tabs tokens"
+  },
+  {
+    "route": "/dashboard/dokumentation/p/[pageId]/v/[versionId]",
+    "source": "app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+  },
+  {
+    "route": "/dashboard/dokumentation",
+    "source": "app/(admin)/dashboard/dokumentation/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+  },
+  {
+    "route": "/dashboard/dokumentation/papierkorb",
+    "source": "app/(admin)/dashboard/dokumentation/papierkorb/page.tsx",
+    "pageArchitecture": "partial",
+    "headerFinanceAligned": false,
+    "tabsFinanceAligned": false,
+    "typographyConsistent": true,
+    "colorsContrastRisk": false,
+    "interactionsLegacy": false,
+    "priority": "Medium",
+    "action": "DS2-07: adopt ListPagePattern or DetailPagePattern"
+  },
+  {
     "route": "/dashboard/events/import",
     "source": "app/(admin)/dashboard/events/import/page.tsx",
     "pageArchitecture": "canonical",

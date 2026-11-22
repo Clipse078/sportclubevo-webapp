@@ -2357,6 +2357,166 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     }
   },
   {
+    "urlPattern": "/dashboard/dokumentation/archiv",
+    "routeKey": "/dashboard/dokumentation/archiv",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/archiv/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+    "exceptionRationale": "PR #1025 manage-only Archiv list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/dokumentation/p/[pageId]",
+    "routeKey": "/dashboard/dokumentation/p/[pageId]",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "CANONICAL",
+    "migrationStatus": "IMPLEMENTED",
+    "migrationPackage": "DS2-07G",
+    "priority": "Medium",
+    "visualVerificationStatus": "PENDING",
+    "accessibilityVerificationStatus": "PENDING",
+    "functionalVerificationStatus": "PENDING",
+    "exceptionId": null,
+    "exceptionRationale": null,
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/dokumentation/p/[pageId]/v/[versionId]",
+    "routeKey": "/dashboard/dokumentation/p/[pageId]/v/[versionId]",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+    "exceptionRationale": "PR #1025 read-only published version snapshot; reuses Dokumentation workspace client. DS2-07F canonical shell tracked separately.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/dokumentation",
+    "routeKey": "/dashboard/dokumentation",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+    "exceptionRationale": "PR #1025 hub entry: explicit access-denied surface when RBAC lacks Dokumentation; redirects to default page when granted.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
+    "urlPattern": "/dashboard/dokumentation/papierkorb",
+    "routeKey": "/dashboard/dokumentation/papierkorb",
+    "sourceFile": "app/(admin)/dashboard/dokumentation/papierkorb/page.tsx",
+    "inheritedLayouts": [
+      "app/(admin)/dashboard/layout.tsx",
+      "app/(admin)/layout.tsx",
+      "app/layout.tsx"
+    ],
+    "module": "dashboard",
+    "authenticationScope": "AUTHENTICATED",
+    "routeKind": "RENDERABLE_PAGE",
+    "intercept": false,
+    "parallelSlot": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+    "exceptionRationale": "PR #1025 manage-only Papierkorb list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+    "redirectDestination": null,
+    "introducedAfterBaseline": false,
+    "verificationEvidence": {
+      "visual": null,
+      "accessibility": null,
+      "functional": null,
+      "responsive": null
+    }
+  },
+  {
     "urlPattern": "/dashboard/events/import",
     "routeKey": "/dashboard/events/import",
     "sourceFile": "app/(admin)/dashboard/events/import/page.tsx",
@@ -9510,16 +9670,16 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 ];
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
-  "pageCount": 294,
-  "authenticatedRenderableCount": 229,
-  "authenticatedVisualCount": 226,
+  "pageCount": 299,
+  "authenticatedRenderableCount": 234,
+  "authenticatedVisualCount": 227,
   "authenticatedRedirectCount": 24,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 692,
+  "routeHandlerCount": 706,
   "frameworkFileCount": 41,
   "architecture": {
-    "CANONICAL": 226,
+    "CANONICAL": 227,
     "PARTIAL": 0,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
@@ -9527,19 +9687,19 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "migrationStatus": {
     "NOT_STARTED": 0,
     "IN_PROGRESS": 0,
-    "IMPLEMENTED": 226,
+    "IMPLEMENTED": 227,
     "VERIFIED": 0,
-    "EXCEPTION": 68
+    "EXCEPTION": 72
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
-  "architecturalCanonicalCount": 226,
+  "architecturalCanonicalCount": 227,
   "architecturalCanonicalPercent": 100,
   "unassignedCount": 0,
   "exceptionsById": {
-    "SCE-DS2-07B-EX-REDIRECT": 25,
+    "SCE-DS2-07B-EX-REDIRECT": 26,
     "SCE-DS2-07B-EX-PUBLIC": 25,
-    "SCE-DS2-07B-EX-PREVIEW": 15,
+    "SCE-DS2-07B-EX-PREVIEW": 18,
     "SCE-DS2-07B-EX-PRINT": 3
   },
   "outstandingByPackage": {
@@ -9547,7 +9707,7 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
     "DS2-07D": 0,
     "DS2-07E": 0,
     "DS2-07F": 0,
-    "DS2-07G": 226
+    "DS2-07G": 227
   },
   "introducedAfterBaselineCount": 0,
   "blockingCount": 0,

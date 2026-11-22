@@ -3271,6 +3271,90 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/mentions/candidates/route.ts",
+    "urlPattern": "/api/tenant-documentation/mentions/candidates",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/archive/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/archive",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/collaboration/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/collaboration",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/move/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/move",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/publish/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/publish",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/restore/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/restore",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/trash/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/trash",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/versions/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/versions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/visibility/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/visibility",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/search/route.ts",
+    "urlPattern": "/api/tenant-documentation/search",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/[spaceId]/archived/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces/[spaceId]/archived",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/[spaceId]/pages/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces/[spaceId]/pages",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/[spaceId]/tree/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces/[spaceId]/tree",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/spaces/route.ts",
+    "urlPattern": "/api/tenant-documentation/spaces",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant/dressing-room-occupancy-presets/route.ts",
     "urlPattern": "/api/tenant/dressing-room-occupancy-presets",
     "audience": "API"

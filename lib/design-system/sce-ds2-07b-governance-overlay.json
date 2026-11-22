@@ -1,6 +1,63 @@
 {
   "lifecycle": [],
   "recordOverrides": {
+    "app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 read-only published version snapshot; reuses Dokumentation workspace client. DS2-07F canonical shell tracked separately.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
+    "app/(admin)/dashboard/dokumentation/papierkorb/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 manage-only Papierkorb list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
+    "app/(admin)/dashboard/dokumentation/archiv/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 manage-only Archiv list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
+    "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx": {
+      "architecture": "CANONICAL",
+      "migrationStatus": "IMPLEMENTED",
+      "migrationPackage": "DS2-07G",
+      "exceptionId": null,
+      "exceptionRationale": null,
+      "priority": "Medium",
+      "visualVerificationStatus": "PENDING",
+      "accessibilityVerificationStatus": "PENDING",
+      "functionalVerificationStatus": "PENDING"
+    },
+    "app/(admin)/dashboard/dokumentation/page.tsx": {
+      "routeKind": "RENDERABLE_PAGE",
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
+      "exceptionRationale": "PR #1025 hub entry: explicit access-denied surface when RBAC lacks Dokumentation; redirects to default page when granted.",
+      "redirectDestination": null,
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
     "app/(admin)/vereinsleitung/targets/new/page.tsx": {
       "routeKind": "REDIRECT_ALIAS",
       "architecture": "NOT_APPLICABLE",

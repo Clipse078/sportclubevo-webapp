@@ -269,6 +269,12 @@ export const PERMISSIONS = {
   /** WORKSPACE-08-02 — explicit exceptional Workspace read access (not manage). */
   WORKSPACE_BREAK_GLASS: "workspace.break_glass",
 
+  /** SCE Tenant Documentation — Confluence-style wiki workspace */
+  TENANT_DOCUMENTATION_VIEW: "tenant_documentation.view",
+  TENANT_DOCUMENTATION_EDIT: "tenant_documentation.edit",
+  TENANT_DOCUMENTATION_PUBLISH: "tenant_documentation.publish",
+  TENANT_DOCUMENTATION_MANAGE: "tenant_documentation.manage",
+
   TRAININGS_VIEW: "trainings.view",
   TRAININGS_MANAGE: "trainings.manage",
   /** SCE-PILOT-03 — Wochenplaner allocation read without TrainingCenter manage. */

@@ -76,6 +76,7 @@ enum PermissionModule {
   SPONSORING
   FINANCE
   MELDUNGEN
+  TENANT_DOCUMENTATION
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -700,6 +701,7 @@ enum NotificationType {
   MELDUNG_REPORTER_REPLY
   MELDUNG_RESOLVED
   MELDUNG_MENTION
+  TENANT_DOCUMENTATION_MENTION
 }
 
 enum NotificationEntityType {
@@ -710,6 +712,7 @@ enum NotificationEntityType {
   COMMUNICATION
   PLAYER_RELEASE
   CLUB_MELDUNG
+  TENANT_DOCUMENTATION_PAGE
 }
 
 enum NotificationChannel {
@@ -1261,6 +1264,13 @@ model Tenant {
   workspaceBackgroundJobs           WorkspaceBackgroundJob[]
   workspaceSubtreeOperations        WorkspaceSubtreeOperation[]
 
+  tenantDocumentationSpaces               TenantDocumentationSpace[]
+  tenantDocumentationPages                TenantDocumentationPage[]
+  tenantDocumentationPageDrafts           TenantDocumentationPageDraft[]
+  tenantDocumentationPageVersions         TenantDocumentationPageVersion[]
+  tenantDocumentationAccessGrants         TenantDocumentationAccessGrant[]
+  tenantDocumentationCollaborationPresence TenantDocumentationCollaborationPresence[]
+
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
   sfvConfig                        TenantSfvConfig?
@@ -1578,6 +1588,10 @@ model User {
   createdWorkspaceDocumentVersions WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersionCreatedBy")
   workspaceFavorites               WorkspaceFavorite[]        @relation("WorkspaceFavoriteUser")
   workspaceRecentAccess            WorkspaceRecentAccess[]    @relation("WorkspaceRecentAccessUser")
+  ownedTenantDocumentationSpaces     TenantDocumentationSpace[] @relation("TenantDocumentationSpaceOwner")
+  tenantDocumentationDraftsUpdated   TenantDocumentationPageDraft[] @relation("TenantDocumentationDraftUpdatedBy")
+  tenantDocumentationVersionsPublished TenantDocumentationPageVersion[] @relation("TenantDocumentationVersionPublishedBy")
+  tenantDocumentationPresence        TenantDocumentationCollaborationPresence[] @relation("TenantDocumentationPresenceUser")
   workspaceBreakGlassSessions      WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassActor")
   workspaceBreakGlassSessionsRevoked WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassRevokedBy")
   workspaceGovernanceHoldsCreated    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldCreatedBy")
@@ -2560,6 +2574,7 @@ model Person {
   /// PERSON-UX-07: private person-bound documents (SEPARATE from WorkspaceDocument)
   personDocuments PersonDocument[] @relation("PersonDocuments")
   workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantPerson")
+  tenantDocumentationAccessGrants TenantDocumentationAccessGrant[] @relation("TenantDocumentationAccessGrantPerson")
 
   // PERSON-UX-10: canonical guardian relationships.
   // This Person is the CHILD in these relationships.
@@ -2792,6 +2807,7 @@ model Team {
   platformCommunicationConversations PlatformCommunicationConversation[]
   communicationReminderSchedules CommunicationReminderSchedule[]
   workspaceAccessGrants    WorkspaceAccessGrant[]  @relation("WorkspaceAccessGrantTeam")
+  tenantDocumentationAccessGrants TenantDocumentationAccessGrant[] @relation("TenantDocumentationAccessGrantTeam")
 
   @@unique([tenantId, slug])
   @@index([category, sortOrder])
@@ -3917,6 +3933,7 @@ model OrgUnit {
   taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
   taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantOrgUnit")
   workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantOrgUnit")
+  tenantDocumentationAccessGrants TenantDocumentationAccessGrant[] @relation("TenantDocumentationAccessGrantOrgUnit")
   clubStrategyOrgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@unique([tenantId, key])
@@ -7423,6 +7440,178 @@ model WorkspaceRecentAccess {
   @@index([tenantId, userId, accessedAt])
   @@index([tenantId, userId, documentId])
   @@index([tenantId, userId, folderId])
+}
+
+// ---------------------------------------------------------------------------
+// SCE Tenant Documentation — Confluence-style wiki (spaces, pages, drafts)
+// ---------------------------------------------------------------------------
+
+enum TenantDocumentationResourceType {
+  SPACE
+  PAGE
+}
+
+enum TenantDocumentationAccessLevel {
+  VIEW
+  EDIT
+  PUBLISH
+  MANAGE
+}
+
+enum TenantDocumentationAccessSubjectType {
+  CLUB
+  ORG_UNIT
+  TEAM
+  PERSON
+  ROLE_FUNCTION
+}
+
+model TenantDocumentationSpace {
+  id              String   @id @default(cuid())
+  tenantId        String
+  slug            String
+  title           String
+  description     String?
+  ownerUserId     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant   Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  owner    User?                    @relation("TenantDocumentationSpaceOwner", fields: [ownerUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  pages    TenantDocumentationPage[]
+  grants   TenantDocumentationAccessGrant[] @relation("TenantDocumentationSpaceGrants")
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+model TenantDocumentationPage {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  spaceId              String
+  parentId             String?
+  slug                 String
+  title                String
+  sortOrder            Int      @default(0)
+  publishedVersionId   String?  @unique
+  /// Set when archived (hidden from active tree/search). Preserved for restore.
+  archivedAt           DateTime?
+  /// Set when moved to Papierkorb (soft delete). Preserved for restore.
+  trashedAt            DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant             Tenant                          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  space              TenantDocumentationSpace        @relation(fields: [spaceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parent             TenantDocumentationPage?        @relation("TenantDocumentationPageTree", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children           TenantDocumentationPage[]       @relation("TenantDocumentationPageTree")
+  draft              TenantDocumentationPageDraft?
+  versions           TenantDocumentationPageVersion[] @relation("TenantDocumentationPageVersions")
+  publishedVersion   TenantDocumentationPageVersion?  @relation("TenantDocumentationPagePublished", fields: [publishedVersionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  grants             TenantDocumentationAccessGrant[] @relation("TenantDocumentationPageGrants")
+  collaborationPresence TenantDocumentationCollaborationPresence[]
+
+  @@unique([spaceId, parentId, slug])
+  @@index([tenantId])
+  @@index([spaceId])
+  @@index([parentId])
+  @@index([tenantId, archivedAt])
+  @@index([tenantId, trashedAt])
+}
+
+model TenantDocumentationPageDraft {
+  pageId          String   @id
+  tenantId        String
+  contentJson     Json
+  yjsState        Bytes    @default(dbgenerated("'\\x'::bytea"))
+  revision        BigInt   @default(0)
+  saveStatus      TenantDocumentationDraftSaveStatus @default(SAVED)
+  updatedAt       DateTime @updatedAt
+  updatedByUserId String?
+
+  page          TenantDocumentationPage @relation(fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tenant        Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updatedByUser User?                   @relation("TenantDocumentationDraftUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId])
+}
+
+enum TenantDocumentationDraftSaveStatus {
+  SAVING
+  SAVED
+  DISCONNECTED
+}
+
+model TenantDocumentationPageVersion {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  pageId              String
+  versionNumber       Int
+  contentJson         Json
+  plainText           String   @default("")
+  publishedAt         DateTime @default(now())
+  publishedByUserId   String?
+
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  page            TenantDocumentationPage @relation("TenantDocumentationPageVersions", fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  publishedByUser User?                   @relation("TenantDocumentationVersionPublishedBy", fields: [publishedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  currentForPage  TenantDocumentationPage? @relation("TenantDocumentationPagePublished")
+
+  @@unique([pageId, versionNumber])
+  @@index([tenantId])
+  @@index([tenantId, plainText])
+}
+
+model TenantDocumentationAccessGrant {
+  id           String                              @id @default(cuid())
+  tenantId     String
+  resourceType TenantDocumentationResourceType
+  spaceId      String?
+  pageId       String?
+  subjectType  TenantDocumentationAccessSubjectType
+  accessLevel  TenantDocumentationAccessLevel
+
+  personId           String?
+  orgUnitId          String?
+  teamId             String?
+  roleFunctionKey    String?
+  roleScopeOrgUnitId String?
+  roleScopeTeamId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  space  TenantDocumentationSpace? @relation("TenantDocumentationSpaceGrants", fields: [spaceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  page   TenantDocumentationPage?  @relation("TenantDocumentationPageGrants", fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person Person?                  @relation("TenantDocumentationAccessGrantPerson", fields: [personId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit OrgUnit?                @relation("TenantDocumentationAccessGrantOrgUnit", fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team   Team?                    @relation("TenantDocumentationAccessGrantTeam", fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, spaceId])
+  @@index([tenantId, pageId])
+}
+
+model TenantDocumentationCollaborationPresence {
+  id          String   @id @default(cuid())
+  tenantId    String
+  pageId      String
+  userId      String
+  clientId    String
+  color       String
+  displayName String
+  cursorJson  Json?
+  lastSeenAt  DateTime @updatedAt
+  disconnectedAt DateTime?
+
+  tenant Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  page   TenantDocumentationPage @relation(fields: [pageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User                    @relation("TenantDocumentationPresenceUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([pageId, userId, clientId])
+  @@index([pageId, lastSeenAt])
+  @@index([tenantId, pageId])
 }
 
 // ---------------------------------------------------------------------------

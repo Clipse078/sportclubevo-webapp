@@ -3111,6 +3111,39 @@ body:has(.sce-theme-white) {
   background-color: #ffffff;
 }
 
+/* Dokumentation — suppress dark app canvas bleed behind white-edition routes */
+.tenant-documentation-white-surface {
+  --sce-app-background-image: none;
+}
+
+main.sce-page-shell:has(.tenant-documentation-white-surface) {
+  background-color: var(--sce-surface-subtle, #f8fafc);
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface) {
+  --sce-app-background-image: none;
+  background-image: none;
+  background-color: #ffffff;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface)
+  .sce-app-main-with-mobile-nav {
+  background-color: #ffffff;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav:has(
+    .tenant-documentation-white-surface
+  )
+  .sce-app-shell-page-grid {
+  padding-inline: 0;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface)
+  [data-sce-app-shell-workspace] {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 @media print {
   @page {
     size: A4 portrait;
