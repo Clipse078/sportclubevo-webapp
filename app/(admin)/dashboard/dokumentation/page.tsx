@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -27,6 +27,6 @@ export default async function TenantDocumentationHubPage() {
     select: { id: true },
   });
 
-  if (!page) redirect("/dashboard");
+  if (!page) notFound();
   redirect(`/dashboard/dokumentation/p/${page.id}`);
 }

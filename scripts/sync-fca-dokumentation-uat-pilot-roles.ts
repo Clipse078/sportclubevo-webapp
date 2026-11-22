@@ -164,7 +164,9 @@ async function ensureRolePermissions(
   if (role) {
     const currentKeys = role.rolePermissions.map((rp) => rp.permission.key);
     const docOnRole = currentKeys.filter((k) => DOC_KEYS.has(k));
-    const unexpectedDoc = docOnRole.filter((k) => !targetSet.has(k));
+    const unexpectedDoc = docOnRole.filter(
+      (k) => !targetSet.has(k as (typeof def.permissionKeys)[number]),
+    );
     const missingDoc = def.permissionKeys.filter((k) => !currentKeys.includes(k));
   const nonDocExtras = currentKeys.filter((k) => !DOC_KEYS.has(k));
 
@@ -217,7 +219,7 @@ async function ensureRolePermissions(
 
   if (!apply) throw new Error("apply=false in ensureRolePermissions");
 
-  role = await prisma.role.create({
+  const createdRole = await prisma.role.create({
     data: {
       tenantId,
       scope: "TENANT",
@@ -225,7 +227,7 @@ async function ensureRolePermissions(
       name: def.name,
       description: def.description,
     },
-    select: { id: true, key: true, rolePermissions: { select: { permission: true } } },
+    select: { id: true, key: true, name: true, scope: true },
   });
   created = true;
 
@@ -236,11 +238,11 @@ async function ensureRolePermissions(
     });
     if (!permission) throw new Error(`Catalog missing ${permissionKey}`);
     await prisma.rolePermission.create({
-      data: { roleId: role.id, permissionId: permission.id },
+      data: { roleId: createdRole.id, permissionId: permission.id },
     });
   }
 
-  return { roleId: role.id, created, repaired: false };
+  return { roleId: createdRole.id, created, repaired: false };
 }
 
 async function main() {

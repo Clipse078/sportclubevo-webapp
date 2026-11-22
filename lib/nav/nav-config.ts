@@ -672,6 +672,7 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "tenant-documentation",
         label: "Dokumentation",
         href: "/dashboard/dokumentation",
+        navContexts: ["club"],
         permissionKeys: [
           PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
           PERMISSIONS.TENANT_DOCUMENTATION_EDIT,

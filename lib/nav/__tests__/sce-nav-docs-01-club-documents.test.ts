@@ -17,6 +17,7 @@ import { getVisibleNavSections, NAV_SECTIONS } from "@/lib/nav/nav-config";
 import { resolveClubWorkspaceNavItemDomainId } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
 
 const WORKSPACE_USER: PermissionKey[] = [PERMISSIONS.WORKSPACE_VIEW];
+const DOC_USER: PermissionKey[] = [PERMISSIONS.TENANT_DOCUMENTATION_VIEW];
 const NO_WORKSPACE: PermissionKey[] = [PERMISSIONS.TEAMS_VIEW];
 const CLUB_ADMIN: PermissionKey[] = Object.values(PERMISSIONS) as PermissionKey[];
 
@@ -94,5 +95,36 @@ describe("SCE-NAV-DOCS-01 club documents navigation", () => {
   it("H: no duplicate Dokumente nav item for club admin", () => {
     const labels = visibleTopLevelLabels(CLUB_ADMIN);
     expect(labels.filter((l) => l === "Dokumente")).toHaveLength(1);
+  });
+
+  it("I: Dokumentation is a Club Dokumente mega-menu destination", () => {
+    expect(clubDestinationKeys(DOC_USER)).toContain("tenant-documentation");
+    expect(CLUB_NAV_ITEM_TO_DOMAIN["tenant-documentation"]).toBe("club");
+    expect(resolveClubWorkspaceNavItemDomainId("tenant-documentation")).toBe("club");
+  });
+
+  it("J: eligible documentation user sees Dokumentation and Dokumente labels", () => {
+    const keys = [...DOC_USER, PERMISSIONS.WORKSPACE_VIEW];
+    const labels = visibleTopLevelLabels(keys);
+    expect(labels).toContain("Dokumentation");
+    expect(labels).toContain("Dokumente");
+  });
+
+  it("K: active-state grouping resolves nested documentation pages to tenant-documentation", () => {
+    const model = buildAppNavigationModelForUser(DOC_USER, "club");
+  const routes = [
+    "/dashboard/dokumentation",
+    "/dashboard/dokumentation/p/sample-page-id",
+  ];
+    for (const pathname of routes) {
+      const active = resolveActiveAppNavigation(pathname, model);
+      expect(active.activeDomainId, pathname).toBe("club");
+      expect(active.activeDestinationKey, pathname).toBe("tenant-documentation");
+    }
+  });
+
+  it("L: user without documentation permission does not see Dokumentation", () => {
+    expect(visibleTopLevelLabels(NO_WORKSPACE)).not.toContain("Dokumentation");
+    expect(clubDestinationKeys(NO_WORKSPACE)).not.toContain("tenant-documentation");
   });
 });

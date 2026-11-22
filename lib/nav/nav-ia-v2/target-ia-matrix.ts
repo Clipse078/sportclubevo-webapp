@@ -73,7 +73,7 @@ const CLUB_OPERATIONS_KEYS = new Set([
   "vorfaelle-disziplin",
 ]);
 
-const CLUB_DOCUMENTS_KEYS = new Set(["workspace"]);
+const CLUB_DOCUMENTS_KEYS = new Set(["workspace", "tenant-documentation"]);
 
 const CLUB_FINANCE_KEYS = new Set(["finanzen"]);
 const CLUB_SPONSORING_KEYS = new Set(["sponsoring"]);
@@ -421,7 +421,7 @@ export const CLUB_TARGET_L2_GROUPS = [
     id: "dokumente",
     label: "Dokumente",
     headerVisible: true,
-    keys: ["workspace"],
+    keys: ["workspace", "tenant-documentation"],
   },
 ] as const;
 

@@ -147,6 +147,56 @@ export async function moveDocumentationPage(input: {
   });
 }
 
+async function seedDefaultVereinsleitungPages(
+  tx: Pick<
+    typeof prisma,
+    "tenantDocumentationPage" | "tenantDocumentationAccessGrant"
+  >,
+  tenantId: string,
+  spaceId: string,
+) {
+  const pageCount = await tx.tenantDocumentationPage.count({
+    where: { tenantId, spaceId },
+  });
+  if (pageCount > 0) return;
+
+  const grantCount = await tx.tenantDocumentationAccessGrant.count({
+    where: { tenantId, spaceId, resourceType: TenantDocumentationResourceType.SPACE },
+  });
+  if (grantCount === 0) {
+    await tx.tenantDocumentationAccessGrant.create({
+      data: {
+        tenantId,
+        resourceType: TenantDocumentationResourceType.SPACE,
+        spaceId,
+        subjectType: TenantDocumentationAccessSubjectType.CLUB,
+        accessLevel: TenantDocumentationAccessLevel.VIEW,
+      },
+    });
+  }
+
+  const folder = await tx.tenantDocumentationPage.create({
+    data: {
+      tenantId,
+      spaceId,
+      title: "Sitzungsprotokolle",
+      slug: "sitzungsprotokolle",
+      sortOrder: 0,
+    },
+  });
+
+  await tx.tenantDocumentationPage.create({
+    data: {
+      tenantId,
+      spaceId,
+      parentId: folder.id,
+      title: "Sitzung vom 15. Dezember",
+      slug: "sitzung-vom-15-dezember",
+      sortOrder: 0,
+    },
+  });
+}
+
 export async function ensureDefaultSpace(
   tenantId: string,
   ownerUserId: string | null,
@@ -154,7 +204,13 @@ export async function ensureDefaultSpace(
   const existing = await prisma.tenantDocumentationSpace.findFirst({
     where: { tenantId, slug: "vereinsleitung" },
   });
-  if (existing) return existing;
+
+  if (existing) {
+    await prisma.$transaction(async (tx) => {
+      await seedDefaultVereinsleitungPages(tx, tenantId, existing.id);
+    });
+    return existing;
+  }
 
   return prisma.$transaction(async (tx) => {
     const space = await tx.tenantDocumentationSpace.create({
@@ -167,36 +223,7 @@ export async function ensureDefaultSpace(
       },
     });
 
-    await tx.tenantDocumentationAccessGrant.create({
-      data: {
-        tenantId,
-        resourceType: TenantDocumentationResourceType.SPACE,
-        spaceId: space.id,
-        subjectType: TenantDocumentationAccessSubjectType.CLUB,
-        accessLevel: TenantDocumentationAccessLevel.VIEW,
-      },
-    });
-
-    const folder = await tx.tenantDocumentationPage.create({
-      data: {
-        tenantId,
-        spaceId: space.id,
-        title: "Sitzungsprotokolle",
-        slug: "sitzungsprotokolle",
-        sortOrder: 0,
-      },
-    });
-
-    await tx.tenantDocumentationPage.create({
-      data: {
-        tenantId,
-        spaceId: space.id,
-        parentId: folder.id,
-        title: "Sitzung vom 15. Dezember",
-        slug: "sitzung-vom-15-dezember",
-        sortOrder: 0,
-      },
-    });
+    await seedDefaultVereinsleitungPages(tx, tenantId, space.id);
 
     return space;
   });
