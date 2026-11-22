@@ -19,7 +19,7 @@ export function TenantDocumentationWhiteSurface({
       {...TENANT_DOCUMENTATION_WHITE_SURFACE_ATTR}
       className={cn(
         TENANT_DOCUMENTATION_WHITE_SURFACE_ATTR.className,
-        "min-h-[calc(100vh-3.5rem)] min-w-0 w-full flex-1 bg-[var(--sce-surface-subtle,#f8fafc)] text-[var(--sce-color-text-primary,#0f172a)]",
+        "min-h-[calc(100vh-3.5rem)] min-w-0 w-full flex-1 bg-white text-[var(--sce-color-text-primary,#0f172a)]",
         className,
       )}
       data-testid="tenant-documentation-white-surface"

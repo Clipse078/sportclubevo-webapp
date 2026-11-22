@@ -3123,12 +3123,25 @@ main.sce-page-shell:has(.tenant-documentation-white-surface) {
 [data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface) {
   --sce-app-background-image: none;
   background-image: none;
-  background-color: #f8fafc;
+  background-color: #ffffff;
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface)
   .sce-app-main-with-mobile-nav {
-  background-color: #f8fafc;
+  background-color: #ffffff;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav:has(
+    .tenant-documentation-white-surface
+  )
+  .sce-app-shell-page-grid {
+  padding-inline: 0;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell:has(.tenant-documentation-white-surface)
+  [data-sce-app-shell-workspace] {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 @media print {
