@@ -71,12 +71,12 @@ describe("TaskDescriptionEditor", () => {
   });
 
   it("A50/E2 Mod+K uses the same canonical link handler as toolbar", async () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/admin/aufgaben/TaskDescriptionEditor.tsx"),
+    const shortcut = readFileSync(
+      join(process.cwd(), "lib/sce-writing/use-sce-writing-link-shortcut.ts"),
       "utf8",
     );
-    expect(src).toMatch(/metaKey.*ctrlKey.*["']k["']/i);
-    expect(src).toContain("addLink()");
+    expect(shortcut).toMatch(/metaKey.*ctrlKey.*["']k["']/i);
+    expect(shortcut).toContain("addLink()");
 
     const promptSpy = vi.spyOn(window, "prompt").mockReturnValue(null);
     const user = userEvent.setup();

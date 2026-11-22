@@ -30,10 +30,14 @@ describe("AUFGABEN-06F2-UX1-A2 acceptance", () => {
   });
 
   it("E1/E2 Mod+K link shortcut uses canonical toolbar link handler", () => {
-    const editor = read("components/admin/aufgaben/TaskDescriptionEditor.tsx");
-    expect(editor).toMatch(/metaKey.*ctrlKey.*["']k["']/i);
-    expect(editor).toContain("onAddLink={addLink}");
-    expect(editor).toContain("isAllowedEditorLinkHref");
+    const wrapper = read("components/admin/aufgaben/TaskDescriptionEditor.tsx");
+    const engine = read("components/sce-writing/SceWritingEngine.tsx");
+    const shortcut = read("lib/sce-writing/use-sce-writing-link-shortcut.ts");
+    expect(wrapper).toContain("SceWritingEngine");
+    expect(engine).toContain("useSceWritingLinkShortcut");
+    expect(shortcut).toMatch(/metaKey.*ctrlKey.*["']k["']/i);
+    expect(shortcut).toContain("addLink()");
+    expect(read("lib/sce-writing/sce-writing-link.ts")).toContain("isAllowedEditorLinkHref");
   });
 
   it("A1 assignee picker uses tenant people search, not role preload dropdown", () => {

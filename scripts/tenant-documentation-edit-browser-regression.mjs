@@ -293,6 +293,15 @@ async function main() {
       }
       const firstSyncAfterOpen = collaborationEvents[eventsBefore] ?? null;
       await page.getByTestId("tenant-doc-save-status").waitFor({ state: "visible", timeout: 90_000 });
+      const engineShell = page.getByTestId("tenant-doc-collab-editor");
+      await engineShell.waitFor({ state: "visible", timeout: 120_000 });
+      const profile = await engineShell.getAttribute("data-sce-writing-profile");
+      const shared = await engineShell.getAttribute("data-sce-writing-engine");
+      if (shared !== "true" || profile !== "documentation") {
+        throw new Error(
+          `Expected shared SceWritingEngine (documentation), got engine=${shared} profile=${profile}`,
+        );
+      }
       const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
       await editor.waitFor({ state: "visible", timeout: 120_000 });
       return { editor, firstSyncAfterOpen, label };
