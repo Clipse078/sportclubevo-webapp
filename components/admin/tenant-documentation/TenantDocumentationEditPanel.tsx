@@ -101,13 +101,19 @@ export function TenantDocumentationEditPanel(props: Props) {
         </div>
       </div>
 
-      <TenantDocumentationCollabEditor
-        ydoc={collaboration.ydoc}
-        fragmentName={collaboration.fragmentName}
-        presences={collaboration.presences}
-        actorDisplayName={props.displayName}
-        onContentJsonChange={onContentJsonChange}
-      />
+      {collaboration.draftHydrated ? (
+        <TenantDocumentationCollabEditor
+          ydoc={collaboration.ydoc}
+          fragmentName={collaboration.fragmentName}
+          presences={collaboration.presences}
+          actorDisplayName={props.displayName}
+          onContentJsonChange={onContentJsonChange}
+        />
+      ) : (
+        <div className="min-h-[320px] rounded-lg border border-[var(--border)] bg-white px-6 py-4 text-sm text-[var(--muted)]">
+          Entwurf wird geladen…
+        </div>
+      )}
     </>
   );
 }

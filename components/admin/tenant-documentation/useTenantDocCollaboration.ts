@@ -51,8 +51,10 @@ export function useTenantDocCollaboration(input: {
   const [presences, setPresences] = useState<CollaborationPresence[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [revision, setRevision] = useState<string>("0");
+  const [draftHydrated, setDraftHydrated] = useState(false);
   const dirtyRef = useRef(false);
   const syncingRef = useRef(false);
+  const lastSyncedStateVectorRef = useRef<Uint8Array | null>(null);
 
   const pushLocalUpdate = useCallback(() => {
     if (!input.enabled || !input.canEdit) return;
@@ -69,7 +71,11 @@ export function useTenantDocCollaboration(input: {
       try {
         const update =
           dirtyRef.current && input.canEdit
-            ? toBase64(Y.encodeStateAsUpdate(ydoc))
+            ? toBase64(
+                lastSyncedStateVectorRef.current
+                  ? Y.encodeStateAsUpdate(ydoc, lastSyncedStateVectorRef.current)
+                  : Y.encodeStateAsUpdate(ydoc),
+              )
             : undefined;
         const stateVector = toBase64(Y.encodeStateVector(ydoc));
 
@@ -104,6 +110,8 @@ export function useTenantDocCollaboration(input: {
         if (payload.updateBase64) {
           applyYjsUpdateToDoc(ydoc, payload.updateBase64);
         }
+        lastSyncedStateVectorRef.current = Y.encodeStateVector(ydoc);
+        setDraftHydrated(true);
 
         setPresences(payload.presences);
         setRevision(payload.revision);
@@ -162,6 +170,7 @@ export function useTenantDocCollaboration(input: {
     presences,
     saveStatus,
     revision,
+    draftHydrated,
     markDirty: pushLocalUpdate,
   };
 }

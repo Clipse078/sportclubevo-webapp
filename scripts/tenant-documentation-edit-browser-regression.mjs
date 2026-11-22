@@ -7,14 +7,15 @@
  *   TENANT_DOC_BROWSER_REGRESSION=1 npm run tenant-documentation:edit-browser-regression
  */
 import { execSync, spawn } from "node:child_process";
-import { chmodSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
 
 const require = createRequire(import.meta.url);
 
-const BASE_URL = process.env.TENANT_DOC_BROWSER_BASE_URL?.trim() || "http://127.0.0.1:3099";
 const PORT = Number.parseInt(process.env.TENANT_DOC_BROWSER_PORT ?? "3099", 10);
+const BASE_URL =
+  process.env.TENANT_DOC_BROWSER_BASE_URL?.trim() || `http://127.0.0.1:${PORT}`;
 const TEST_DB = process.env.TEST_DATABASE_URL?.trim();
 
 function assertLocalTestDb(url) {
@@ -54,6 +55,21 @@ function startProductionServer(env) {
   return child;
 }
 
+function releasePort(port) {
+  try {
+    const out = execSync(`lsof -ti :${port}`, { encoding: "utf8" }).trim();
+    for (const pid of out.split("\n").filter(Boolean)) {
+      try {
+        process.kill(Number(pid), "SIGTERM");
+      } catch {
+        //
+      }
+    }
+  } catch {
+    // port free
+  }
+}
+
 async function waitForServer(timeoutMs = 120_000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -65,7 +81,9 @@ async function waitForServer(timeoutMs = 120_000) {
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error("Production server did not become ready");
+  throw new Error(
+    `Production server did not become ready at ${BASE_URL} (see server log in test output)`,
+  );
 }
 
 async function main() {
@@ -75,16 +93,13 @@ async function main() {
     throw new Error("AUTH_SECRET or NEXTAUTH_SECRET required for credentials login");
   }
 
-  try {
-    execSync(`fuser -k ${PORT}/tcp`, { stdio: "ignore" });
-  } catch {
-    // port already free
-  }
+  releasePort(PORT);
 
   const migrateEnv = {
     ...process.env,
     DATABASE_URL: TEST_DB,
     DIRECT_URL: TEST_DB,
+    SCE_DATA_ENVIRONMENT: "LOCAL",
     SCE_OPERATION_AUTHORIZATION: "tenant-documentation-edit-browser-regression",
     NEXTAUTH_URL: BASE_URL,
     AUTH_URL: BASE_URL,
@@ -109,8 +124,11 @@ async function main() {
     DATABASE_URL: TEST_DB,
     DIRECT_URL: TEST_DB,
     APP_ENV: "test",
+    SCE_DATA_ENVIRONMENT: "LOCAL",
     NEXTAUTH_URL: BASE_URL,
     AUTH_URL: BASE_URL,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   };
   const server = startProductionServer(serverEnv);
   const serverLog = [];
@@ -118,64 +136,142 @@ async function main() {
   server.stderr?.on("data", (c) => serverLog.push(String(c)));
 
   const shutdown = () => {
-    server.kill("SIGTERM");
+    try {
+      server.kill("SIGKILL");
+    } catch {
+      //
+    }
+    releasePort(PORT);
   };
   process.on("exit", shutdown);
   process.on("SIGINT", () => process.exit(1));
 
   try {
-    await waitForServer();
+    try {
+      await waitForServer();
+    } catch (err) {
+      writeFileSync(
+        "/opt/cursor/artifacts/tenant-doc-browser-server.log",
+        serverLog.join(""),
+      );
+      throw err;
+    }
 
     const browser = await chromium.launch();
     const page = await browser.newPage();
     const pageErrors = [];
     const consoleErrors = [];
+    const requestFailures = [];
     page.on("pageerror", (err) => pageErrors.push(String(err)));
     page.on("console", (msg) => {
-      if (msg.type() === "error") consoleErrors.push(msg.text());
+      const text = msg.text();
+      if (msg.type() === "error" || /Yjs was already imported/i.test(text)) {
+        consoleErrors.push(`[${msg.type()}] ${text}`);
+      }
+    });
+    page.on("requestfailed", (req) => {
+      requestFailures.push(`${req.url()} :: ${req.failure()?.errorText ?? "failed"}`);
     });
 
     await login(page, fixture.email, fixture.password);
 
     const pageUrl = `${BASE_URL}/dashboard/dokumentation/p/${fixture.pageId}`;
     const initial = await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await page.waitForResponse(
+      (res) =>
+        res.url().includes("/api/tenant-documentation/spaces") && res.request().method() === "GET",
+      { timeout: 60_000 },
+    );
     if (!initial || initial.status() >= 500) {
       throw new Error(`Detail page failed HTTP ${initial?.status()}`);
     }
-  if (await page.getByText("couldn't load").count()) {
+    if (await page.getByText("couldn't load").count()) {
       throw new Error("Detail page showed error boundary on open");
     }
 
-    await page.getByRole("button", { name: /Bearbeiten/i }).click();
-    const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
-    try {
-      await editor.waitFor({ state: "visible", timeout: 90_000 });
-    } catch (err) {
-      const body = await page.content();
-      writeFileSync("/opt/cursor/artifacts/tenant-doc-edit-failure.html", body);
+    const bearbeitenVisible = await page
+      .getByRole("button", { name: /Bearbeiten/i })
+      .isVisible()
+      .catch(() => false);
+    if (!bearbeitenVisible) {
+      writeFileSync(
+        "/opt/cursor/artifacts/tenant-doc-detail-no-bearbeiten.html",
+        await page.content(),
+      );
       throw new Error(
-        `Editor did not mount. pageErrors=${pageErrors.join(" | ")} console=${consoleErrors.join(" | ")} cause=${err}`,
+        `Bearbeiten control missing on direct page load (canEdit denied?). url=${page.url()} console=${consoleErrors.join(" | ")}`,
       );
     }
 
+    async function openEditorFromReadView(label) {
+      const btn = page.getByRole("button", { name: /Bearbeiten/i });
+      await btn.waitFor({ state: "visible", timeout: 60_000 });
+      await btn.click({ timeout: 60_000 });
+      await page
+        .waitForResponse(
+          (res) =>
+            res.url().includes("/collaboration") &&
+            res.request().method() === "POST" &&
+            res.ok(),
+          { timeout: 90_000 },
+        )
+        .catch(() => null);
+      const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
+      try {
+        await editor.waitFor({ state: "visible", timeout: 90_000 });
+      } catch (err) {
+        const body = await page.content();
+        writeFileSync(
+          `/opt/cursor/artifacts/tenant-doc-edit-failure-${label}.html`,
+          body,
+        );
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-edit-browser-console.json",
+          JSON.stringify({ label, pageErrors, consoleErrors, requestFailures }, null, 2),
+        );
+        throw new Error(
+          `Editor did not mount (${label}). pageErrors=${pageErrors.join(" | ")} console=${consoleErrors.join(" | ")} requests=${requestFailures.join(" | ")} cause=${err}`,
+        );
+      }
+      return editor;
+    }
+
+    const editor = await openEditorFromReadView("read-then-bearbeiten");
+
     const token = `E2E-${Date.now()}`;
     await editor.click();
-    await page.keyboard.type(token);
+    await page.keyboard.type(token, { delay: 15 });
 
-    await page.getByTestId("tenant-doc-save-status").getByText(/gespeichert/i).waitFor({
-      timeout: 30_000,
-    });
+    const saveStatus = page.getByTestId("tenant-doc-save-status");
+    try {
+      await saveStatus.getByText(/gespeichert/i).waitFor({ timeout: 90_000 });
+    } catch {
+      const label = await saveStatus.innerText();
+      throw new Error(`Autosave did not complete (status="${label}")`);
+    }
+
+    const beforeReloadText = await editor.evaluate((el) => el.textContent ?? "");
+    if (!beforeReloadText.includes(token)) {
+      throw new Error(`Typed token missing before reload (got "${beforeReloadText}")`);
+    }
+
+    await page.waitForTimeout(3_500);
 
     await page.reload({ waitUntil: "domcontentloaded" });
     if (await page.getByText("couldn't load").count()) {
       throw new Error("Error boundary after reload");
     }
 
-    await page.getByRole("button", { name: /Bearbeiten/i }).click();
-    await editor.waitFor({ state: "visible", timeout: 60_000 });
-    const bodyText = await editor.innerText();
+    const editorAfterReload = await openEditorFromReadView("direct-reload-then-bearbeiten");
+    let bodyText = "";
+    const persistenceDeadline = Date.now() + 60_000;
+    while (Date.now() < persistenceDeadline) {
+      bodyText = await editorAfterReload.evaluate((el) => el.textContent ?? "");
+      if (bodyText.includes(token)) break;
+      await page.waitForTimeout(500);
+    }
     if (!bodyText.includes(token)) {
-      throw new Error(`Draft text not persisted after reload (expected ${token})`);
+      throw new Error(`Draft text not persisted after reload (expected ${token}, got "${bodyText.slice(0, 200)}")`);
     }
 
     const yjsDup = pageErrors.find((e) => /Yjs was already imported/i.test(e));

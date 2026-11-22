@@ -1,7 +1,8 @@
 "use client";
 
+import "@/lib/tenant-documentation/tenant-doc-yjs-client";
+
 import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
@@ -56,15 +57,6 @@ export function TenantDocumentationCollabEditor({
       Collaboration.configure({
         document: ydoc,
         field: fragmentName,
-      }),
-      CollaborationCaret.configure({
-        provider: null,
-        user: presences[0]
-          ? {
-              name: presences[0].displayName,
-              color: presences[0].color,
-            }
-          : { name: "Editor", color: "#7c3aed" },
       }),
     ],
     onUpdate: ({ editor: current }) => {
