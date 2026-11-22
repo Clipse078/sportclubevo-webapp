@@ -1,6 +1,17 @@
 {
   "lifecycle": [],
   "recordOverrides": {
+    "app/(admin)/dashboard/dokumentation/archiv/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 manage-only Archiv list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
     "app/(admin)/dashboard/dokumentation/page.tsx": {
       "routeKind": "RENDERABLE_PAGE",
       "architecture": "NOT_APPLICABLE",

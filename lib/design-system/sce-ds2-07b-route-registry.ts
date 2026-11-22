@@ -2370,15 +2370,15 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "routeKind": "RENDERABLE_PAGE",
     "intercept": false,
     "parallelSlot": null,
-    "architecture": "PARTIAL",
-    "migrationStatus": "NOT_STARTED",
-    "migrationPackage": "DS2-07F",
-    "priority": "Medium",
-    "visualVerificationStatus": "PENDING",
-    "accessibilityVerificationStatus": "PENDING",
-    "functionalVerificationStatus": "PENDING",
-    "exceptionId": null,
-    "exceptionRationale": null,
+    "architecture": "NOT_APPLICABLE",
+    "migrationStatus": "EXCEPTION",
+    "migrationPackage": null,
+    "priority": "Low",
+    "visualVerificationStatus": "NOT_APPLICABLE",
+    "accessibilityVerificationStatus": "NOT_APPLICABLE",
+    "functionalVerificationStatus": "NOT_APPLICABLE",
+    "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+    "exceptionRationale": "PR #1025 manage-only Archiv list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
     "redirectDestination": null,
     "introducedAfterBaseline": true,
     "verificationEvidence": {
@@ -9608,7 +9608,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "pageCount": 297,
   "authenticatedRenderableCount": 232,
-  "authenticatedVisualCount": 228,
+  "authenticatedVisualCount": 227,
   "authenticatedRedirectCount": 24,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
@@ -9616,36 +9616,36 @@ export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 226,
-    "PARTIAL": 2,
+    "PARTIAL": 1,
     "LEGACY": 0,
     "NOT_APPLICABLE": 0
   },
   "migrationStatus": {
-    "NOT_STARTED": 2,
+    "NOT_STARTED": 1,
     "IN_PROGRESS": 0,
     "IMPLEMENTED": 226,
     "VERIFIED": 0,
-    "EXCEPTION": 69
+    "EXCEPTION": 70
   },
   "verifiedAuthenticatedVisualCount": 0,
   "verifiedAuthenticatedVisualPercent": 0,
   "architecturalCanonicalCount": 226,
-  "architecturalCanonicalPercent": 99.1,
+  "architecturalCanonicalPercent": 99.6,
   "unassignedCount": 0,
   "exceptionsById": {
     "SCE-DS2-07B-EX-REDIRECT": 26,
     "SCE-DS2-07B-EX-PUBLIC": 25,
-    "SCE-DS2-07B-EX-PREVIEW": 15,
+    "SCE-DS2-07B-EX-PREVIEW": 16,
     "SCE-DS2-07B-EX-PRINT": 3
   },
   "outstandingByPackage": {
     "DS2-07C": 0,
     "DS2-07D": 0,
     "DS2-07E": 0,
-    "DS2-07F": 2,
+    "DS2-07F": 1,
     "DS2-07G": 226
   },
   "introducedAfterBaselineCount": 1,
-  "blockingCount": 3,
+  "blockingCount": 0,
   "trackedDebtCount": 1
 };
