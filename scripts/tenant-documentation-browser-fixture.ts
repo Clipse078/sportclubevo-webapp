@@ -141,6 +141,8 @@ async function main() {
   console.log(
     JSON.stringify({
       tenantId: TENANT_ID,
+      spaceId: space.id,
+      userId: user.id,
       pageId: page.id,
       email: EMAIL,
       password: PASSWORD,

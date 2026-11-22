@@ -6,6 +6,7 @@ import {
   Y,
   applyYjsUpdateToDoc,
   TENANT_DOC_YJS_FRAGMENT,
+  TENANT_DOC_YJS_REMOTE_ORIGIN,
 } from "@/lib/tenant-documentation/tenant-doc-yjs-client";
 
 export type CollaborationPresence = {
@@ -140,15 +141,14 @@ export function useTenantDocCollaboration(input: {
     if (!input.enabled) return undefined;
     void sync();
 
-    const onUpdate = () => pushLocalUpdate();
+    const onUpdate = (_update: Uint8Array, origin: unknown) => {
+      if (origin === TENANT_DOC_YJS_REMOTE_ORIGIN) return;
+      pushLocalUpdate();
+    };
     ydoc.on("update", onUpdate);
 
     const timer = window.setInterval(() => {
-      if (dirtyRef.current || saveStatus === "saving") {
-        void sync();
-      } else {
-        void sync();
-      }
+      void sync();
     }, POLL_MS);
 
   const disconnect = () => {
@@ -162,7 +162,7 @@ export function useTenantDocCollaboration(input: {
       window.removeEventListener("beforeunload", disconnect);
       void sync(true);
     };
-  }, [input.enabled, pushLocalUpdate, saveStatus, sync, ydoc]);
+  }, [input.enabled, pushLocalUpdate, sync, ydoc]);
 
   return {
     ydoc,

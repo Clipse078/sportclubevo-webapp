@@ -7,9 +7,11 @@ import { extractMentionUserIdsFromTipTapJson } from "@/lib/collaboration/mention
 import {
   diffYjsState,
   mergeYjsUpdate,
+  richTextToPlainText,
   TENANT_DOC_YJS_FRAGMENT,
   yjsStateToRichTextSnapshot,
 } from "@/lib/tenant-documentation/yjs-document";
+import type { RichTextValue } from "@/lib/cms/rich-text";
 import type { TenantDocumentationActorContext } from "@/lib/tenant-documentation/authorization";
 import { assertPageAccess } from "@/lib/tenant-documentation/page-access-service";
 
@@ -36,6 +38,8 @@ export type CollaborationSyncInput = {
 export type CollaborationSyncResult = {
   revision: string;
   saveStatus: TenantDocumentationDraftSaveStatus;
+  /** Canonical draft body after this sync (for client hydrate verification). */
+  draftPlainText: string;
   updateBase64: string;
   presences: Array<{
     userId: string;
@@ -201,7 +205,7 @@ export async function synchronizePageCollaboration(
     }
 
     const diff = diffYjsState(mergedState, clientVector);
-    return { mergedState, diff, nextRevision };
+    return { mergedState, diff, nextRevision, savedContentJson: contentJson };
   });
 
   const staleBefore = new Date(Date.now() - PRESENCE_STALE_MS);
@@ -225,6 +229,7 @@ export async function synchronizePageCollaboration(
       input.markDisconnected === true
         ? TenantDocumentationDraftSaveStatus.DISCONNECTED
         : TenantDocumentationDraftSaveStatus.SAVED,
+    draftPlainText: richTextToPlainText(result.savedContentJson as RichTextValue),
     updateBase64: encodeBase64(result.diff),
     presences: presences.map((p) => ({
       userId: p.userId,

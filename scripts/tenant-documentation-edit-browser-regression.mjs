@@ -8,10 +8,7 @@
  */
 import { execSync, spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { chromium } from "playwright";
-
-const require = createRequire(import.meta.url);
 
 const PORT = Number.parseInt(process.env.TENANT_DOC_BROWSER_PORT ?? "3099", 10);
 const BASE_URL =
@@ -25,6 +22,10 @@ function assertLocalTestDb(url) {
   if (host !== "localhost" && host !== "127.0.0.1") {
     throw new Error("Refusing browser regression on non-local TEST_DATABASE_URL");
   }
+}
+
+function editorPlainText(editor) {
+  return editor.evaluate((el) => el.textContent ?? "");
 }
 
 async function login(page, email, password) {
@@ -47,12 +48,11 @@ async function login(page, email, password) {
 }
 
 function startProductionServer(env) {
-  const child = spawn("npm", ["run", "start", "--", "-p", String(PORT)], {
+  return spawn("npm", ["run", "start", "--", "-p", String(PORT)], {
     cwd: process.cwd(),
     env: { ...process.env, ...env, PORT: String(PORT) },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  return child;
 }
 
 function releasePort(port) {
@@ -60,7 +60,7 @@ function releasePort(port) {
     const out = execSync(`lsof -ti :${port}`, { encoding: "utf8" }).trim();
     for (const pid of out.split("\n").filter(Boolean)) {
       try {
-        process.kill(Number(pid), "SIGTERM");
+        process.kill(Number(pid), "SIGKILL");
       } catch {
         //
       }
@@ -146,6 +146,8 @@ async function main() {
   process.on("exit", shutdown);
   process.on("SIGINT", () => process.exit(1));
 
+  const collaborationEvents = [];
+
   try {
     try {
       await waitForServer();
@@ -161,7 +163,7 @@ async function main() {
     const page = await browser.newPage();
     const pageErrors = [];
     const consoleErrors = [];
-    const requestFailures = [];
+
     page.on("pageerror", (err) => pageErrors.push(String(err)));
     page.on("console", (msg) => {
       const text = msg.text();
@@ -169,43 +171,62 @@ async function main() {
         consoleErrors.push(`[${msg.type()}] ${text}`);
       }
     });
-    page.on("requestfailed", (req) => {
-      requestFailures.push(`${req.url()} :: ${req.failure()?.errorText ?? "failed"}`);
+
+    page.on("response", async (res) => {
+      if (
+        !res.url().includes("/collaboration") ||
+        res.request().method() !== "POST" ||
+        !res.ok()
+      ) {
+        return;
+      }
+      const body = await res.json().catch(() => null);
+      if (body && typeof body.draftPlainText === "string") {
+        collaborationEvents.push({
+          at: Date.now(),
+          draftPlainText: body.draftPlainText,
+          revision: body.revision,
+        });
+      }
     });
 
     await login(page, fixture.email, fixture.password);
 
-    const pageUrl = `${BASE_URL}/dashboard/dokumentation/p/${fixture.pageId}`;
-    const initial = await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
-    await page.waitForResponse(
-      (res) =>
-        res.url().includes("/api/tenant-documentation/spaces") && res.request().method() === "GET",
-      { timeout: 60_000 },
-    );
-    if (!initial || initial.status() >= 500) {
-      throw new Error(`Detail page failed HTTP ${initial?.status()}`);
-    }
-    if (await page.getByText("couldn't load").count()) {
-      throw new Error("Detail page showed error boundary on open");
-    }
-
-    const bearbeitenVisible = await page
-      .getByRole("button", { name: /Bearbeiten/i })
-      .isVisible()
-      .catch(() => false);
-    if (!bearbeitenVisible) {
-      writeFileSync(
-        "/opt/cursor/artifacts/tenant-doc-detail-no-bearbeiten.html",
-        await page.content(),
-      );
-      throw new Error(
-        `Bearbeiten control missing on direct page load (canEdit denied?). url=${page.url()} console=${consoleErrors.join(" | ")}`,
-      );
+    async function openReadDetail(pageId) {
+      const pageUrl = `${BASE_URL}/dashboard/dokumentation/p/${pageId}`;
+      const initial = await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
+      await page
+        .waitForResponse(
+          (res) =>
+            res.url().includes("/api/tenant-documentation/spaces") &&
+            res.request().method() === "GET",
+          { timeout: 60_000 },
+        )
+        .catch(() => null);
+      if (!initial || initial.status() >= 500) {
+        throw new Error(`Detail page failed HTTP ${initial?.status()}`);
+      }
+      if (await page.getByText("couldn't load").count()) {
+        throw new Error("Detail page showed error boundary on open");
+      }
+      const bearbeitenVisible = await page
+        .getByRole("button", { name: /Bearbeiten/i })
+        .isVisible()
+        .catch(() => false);
+      if (!bearbeitenVisible) {
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-detail-no-bearbeiten.html",
+          await page.content(),
+        );
+        throw new Error(`Bearbeiten missing on ${pageUrl}`);
+      }
+      return pageUrl;
     }
 
     async function openEditorFromReadView(label) {
       const btn = page.getByRole("button", { name: /Bearbeiten/i });
       await btn.waitFor({ state: "visible", timeout: 60_000 });
+      const eventsBefore = collaborationEvents.length;
       await btn.click({ timeout: 60_000 });
       await page
         .waitForResponse(
@@ -216,78 +237,150 @@ async function main() {
           { timeout: 90_000 },
         )
         .catch(() => null);
+      const firstSyncAfterOpen = collaborationEvents[eventsBefore] ?? null;
       const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
+      await editor.waitFor({ state: "visible", timeout: 90_000 });
+      return { editor, firstSyncAfterOpen, label };
+    }
+
+    async function waitForAutosaved() {
+      const saveStatus = page.getByTestId("tenant-doc-save-status");
       try {
-        await editor.waitFor({ state: "visible", timeout: 90_000 });
-      } catch (err) {
-        const body = await page.content();
-        writeFileSync(
-          `/opt/cursor/artifacts/tenant-doc-edit-failure-${label}.html`,
-          body,
-        );
-        writeFileSync(
-          "/opt/cursor/artifacts/tenant-doc-edit-browser-console.json",
-          JSON.stringify({ label, pageErrors, consoleErrors, requestFailures }, null, 2),
-        );
+        await saveStatus.getByText(/gespeichert/i).waitFor({ timeout: 90_000 });
+      } catch {
+        throw new Error(`Autosave stuck (status="${await saveStatus.innerText()}")`);
+      }
+      const lastEvent = collaborationEvents[collaborationEvents.length - 1];
+      if (!lastEvent?.draftPlainText) {
+        throw new Error("No collaboration response with draftPlainText after autosave");
+      }
+      return lastEvent;
+    }
+
+    async function typeInEditor(editor, text) {
+      await editor.click();
+      await page.keyboard.type(text, { delay: 12 });
+    }
+
+    async function runDraftPersistenceScenario(scenarioLabel, pageId, textToType, expectedBeforeReload) {
+      collaborationEvents.length = 0;
+      const pageUrl = await openReadDetail(pageId);
+      const { editor, firstSyncAfterOpen } = await openEditorFromReadView(`${scenarioLabel}-open`);
+
+      if (expectedBeforeReload) {
+        const pre = await editorPlainText(editor);
+        if (!pre.includes(expectedBeforeReload)) {
+          throw new Error(
+            `${scenarioLabel}: expected existing draft "${expectedBeforeReload}" before typing, got "${pre.slice(0, 200)}"`,
+          );
+        }
+      }
+
+      await typeInEditor(editor, textToType);
+      const lastAutosave = await waitForAutosaved();
+      const fullExpected = `${expectedBeforeReload ?? ""}${textToType}`;
+
+      const preReload = await editorPlainText(editor);
+      if (!preReload.includes(fullExpected)) {
         throw new Error(
-          `Editor did not mount (${label}). pageErrors=${pageErrors.join(" | ")} console=${consoleErrors.join(" | ")} requests=${requestFailures.join(" | ")} cause=${err}`,
+          `${scenarioLabel}: editor missing full text before reload (expected "${fullExpected}", got "${preReload.slice(0, 200)}")`,
         );
       }
-      return editor;
+
+      const comparison = {
+        lastAcknowledgedAutosave: lastAutosave.draftPlainText,
+        firstSyncAfterReload: null,
+        tiptapAfterHydration: null,
+        expectedFull: fullExpected,
+      };
+
+      if (!comparison.lastAcknowledgedAutosave.includes(fullExpected)) {
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-truncation-comparison.json",
+          JSON.stringify({ scenarioLabel, comparison, collaborationEvents }, null, 2),
+        );
+        throw new Error(
+          `${scenarioLabel}: truncation at last acknowledged autosave — expected "${fullExpected}", server draftPlainText="${comparison.lastAcknowledgedAutosave}"`,
+        );
+      }
+
+      await page.waitForTimeout(2_000);
+      await page.reload({ waitUntil: "domcontentloaded" });
+      if (await page.getByText("couldn't load").count()) {
+        throw new Error("Error boundary after reload");
+      }
+
+      const { editor: editorAfterReload, firstSyncAfterOpen: syncAfterReload } =
+        await openEditorFromReadView(`${scenarioLabel}-after-reload`);
+      comparison.firstSyncAfterReload = syncAfterReload?.draftPlainText ?? null;
+
+      if (
+        comparison.firstSyncAfterReload &&
+        !comparison.firstSyncAfterReload.includes(fullExpected)
+      ) {
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-truncation-comparison.json",
+          JSON.stringify({ scenarioLabel, comparison, collaborationEvents }, null, 2),
+        );
+        throw new Error(
+          `${scenarioLabel}: truncation at first sync after reload — expected "${fullExpected}", draftPlainText="${comparison.firstSyncAfterReload}"`,
+        );
+      }
+
+      const hydrationDeadline = Date.now() + 60_000;
+      let visibleAfterHydration = "";
+      while (Date.now() < hydrationDeadline) {
+        visibleAfterHydration = await editorPlainText(editorAfterReload);
+        if (visibleAfterHydration.includes(fullExpected)) break;
+        await page.waitForTimeout(400);
+      }
+      comparison.tiptapAfterHydration = visibleAfterHydration.trim();
+
+      if (!comparison.tiptapAfterHydration.includes(fullExpected)) {
+        writeFileSync(
+          "/opt/cursor/artifacts/tenant-doc-truncation-comparison.json",
+          JSON.stringify({ scenarioLabel, comparison, collaborationEvents }, null, 2),
+        );
+        throw new Error(
+          `${scenarioLabel}: truncation in TipTap after hydration — expected "${fullExpected}", visible="${comparison.tiptapAfterHydration.slice(0, 200)}"`,
+        );
+      }
+
+      return { scenarioLabel, pageUrl, comparison, firstSyncOnOpen: firstSyncAfterOpen?.draftPlainText };
     }
 
-    const editor = await openEditorFromReadView("read-then-bearbeiten");
+    const freshToken = `E2E-FRESH-${Date.now()}`;
+    const freshResult = await runDraftPersistenceScenario(
+      "fresh-page",
+      fixture.pageId,
+      freshToken,
+      null,
+    );
 
-    const token = `E2E-${Date.now()}`;
-    await editor.click();
-    await page.keyboard.type(token, { delay: 15 });
-
-    const saveStatus = page.getByTestId("tenant-doc-save-status");
-    try {
-      await saveStatus.getByText(/gespeichert/i).waitFor({ timeout: 90_000 });
-    } catch {
-      const label = await saveStatus.innerText();
-      throw new Error(`Autosave did not complete (status="${label}")`);
-    }
-
-    const beforeReloadText = await editor.evaluate((el) => el.textContent ?? "");
-    if (!beforeReloadText.includes(token)) {
-      throw new Error(`Typed token missing before reload (got "${beforeReloadText}")`);
-    }
-
-    await page.waitForTimeout(3_500);
-
-    await page.reload({ waitUntil: "domcontentloaded" });
-    if (await page.getByText("couldn't load").count()) {
-      throw new Error("Error boundary after reload");
-    }
-
-    const editorAfterReload = await openEditorFromReadView("direct-reload-then-bearbeiten");
-    let bodyText = "";
-    const persistenceDeadline = Date.now() + 60_000;
-    while (Date.now() < persistenceDeadline) {
-      bodyText = await editorAfterReload.evaluate((el) => el.textContent ?? "");
-      if (bodyText.includes(token)) break;
-      await page.waitForTimeout(500);
-    }
-    if (!bodyText.includes(token)) {
-      throw new Error(`Draft text not persisted after reload (expected ${token}, got "${bodyText.slice(0, 200)}")`);
-    }
+    const appendToken = `E2E-APPEND-${Date.now()}`;
+    const existingResult = await runDraftPersistenceScenario(
+      "existing-draft-page",
+      fixture.pageId,
+      appendToken,
+      freshToken,
+    );
 
     const yjsDup = pageErrors.find((e) => /Yjs was already imported/i.test(e));
-    if (yjsDup) {
-      throw new Error(`Yjs duplicate import: ${yjsDup}`);
-    }
-    if (pageErrors.length > 0) {
-      throw new Error(`Page errors: ${pageErrors.join(" | ")}`);
-    }
+    if (yjsDup) throw new Error(`Yjs duplicate import: ${yjsDup}`);
+    if (pageErrors.length > 0) throw new Error(`Page errors: ${pageErrors.join(" | ")}`);
 
     await browser.close();
+
+    const report = {
+      status: "PASS",
+      fresh: freshResult,
+      existing: existingResult,
+    };
     writeFileSync(
       "/opt/cursor/artifacts/tenant-documentation-edit-browser-regression.json",
-      JSON.stringify({ status: "PASS", pageUrl, pageId: fixture.pageId, token }, null, 2),
+      JSON.stringify(report, null, 2),
     );
-    console.log(JSON.stringify({ status: "PASS", pageUrl, pageId: fixture.pageId }));
+    console.log(JSON.stringify({ status: "PASS", freshToken, existing: existingResult.comparison }));
   } finally {
     shutdown();
   }
