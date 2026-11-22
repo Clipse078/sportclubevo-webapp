@@ -309,6 +309,13 @@ export type ArchivedPageListItem = {
   spaceTitle: string;
 };
 
+export type TrashedPageListItem = {
+  id: string;
+  title: string;
+  trashedAt: string;
+  spaceTitle: string;
+};
+
 export async function listArchivedDocumentationPages(
   actor: TenantDocumentationActorContext,
   spaceId: string,
@@ -339,6 +346,39 @@ export async function listArchivedDocumentationPages(
       id: p.id,
       title: p.title,
       archivedAt: p.archivedAt!.toISOString(),
+      spaceTitle: p.space.title,
+    }));
+}
+
+export async function listTrashedDocumentationPages(
+  actor: TenantDocumentationActorContext,
+  spaceId: string,
+): Promise<TrashedPageListItem[]> {
+  if (!actor.permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_MANAGE)) {
+    throw new TenantDocumentationLifecycleError("FORBIDDEN", "Forbidden");
+  }
+
+  const pages = await prisma.tenantDocumentationPage.findMany({
+    where: {
+      tenantId: actor.identity.tenantId,
+      spaceId,
+      trashedAt: { not: null },
+    },
+    orderBy: [{ trashedAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      trashedAt: true,
+      space: { select: { title: true } },
+    },
+  });
+
+  return pages
+    .filter((p) => p.trashedAt)
+    .map((p) => ({
+      id: p.id,
+      title: p.title,
+      trashedAt: p.trashedAt!.toISOString(),
       spaceTitle: p.space.title,
     }));
 }

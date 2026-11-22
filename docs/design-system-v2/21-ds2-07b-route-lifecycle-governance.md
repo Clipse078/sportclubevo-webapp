@@ -15,13 +15,13 @@ Authenticated browser coverage for this package: **none**.
 
 | Classification | Count |
 | --- | ---: |
-| Page entries | 297 |
-| Authenticated renderable pages | 232 |
+| Page entries | 299 |
+| Authenticated renderable pages | 234 |
 | Authenticated visual pages (completion denominator) | 227 |
 | Authenticated redirect aliases | 24 |
 | Public renderable pages | 40 |
 | Public redirect aliases | 1 |
-| Route handlers | 705 |
+| Route handlers | 706 |
 | Special Next.js framework files | 41 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -47,7 +47,7 @@ Architectural canonical adoption: **226 / 227 (99.6%)**.
 | IN_PROGRESS | 0 |
 | IMPLEMENTED | 226 |
 | VERIFIED | 0 |
-| EXCEPTION | 70 |
+| EXCEPTION | 72 |
 
 Verified authenticated visual pages: **0 / 227 (0%)**.
 
@@ -71,7 +71,7 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 
 | Id | Routes |
 | --- | ---: |
-| SCE-DS2-07B-EX-PREVIEW | 16 |
+| SCE-DS2-07B-EX-PREVIEW | 18 |
 | SCE-DS2-07B-EX-PRINT | 3 |
 | SCE-DS2-07B-EX-PUBLIC | 25 |
 | SCE-DS2-07B-EX-REDIRECT | 26 |
@@ -359,9 +359,11 @@ None.
 
 ## Changes since the baseline
 
-New routes introduced since the previous baseline: **1**.
+New routes introduced since the previous baseline: **3**.
 
 - `app/(admin)/dashboard/dokumentation/archiv/page.tsx` (`/dashboard/dokumentation/archiv`)
+- `app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx` (`/dashboard/dokumentation/p/[pageId]/v/[versionId]`)
+- `app/(admin)/dashboard/dokumentation/papierkorb/page.tsx` (`/dashboard/dokumentation/papierkorb`)
 
 ## CI
 

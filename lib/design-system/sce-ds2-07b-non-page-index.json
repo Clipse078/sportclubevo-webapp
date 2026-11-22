@@ -3313,6 +3313,12 @@
   },
   {
     "kind": "ROUTE_HANDLER",
+    "sourceFile": "app/api/tenant-documentation/pages/[pageId]/versions/route.ts",
+    "urlPattern": "/api/tenant-documentation/pages/[pageId]/versions",
+    "audience": "API"
+  },
+  {
+    "kind": "ROUTE_HANDLER",
     "sourceFile": "app/api/tenant-documentation/pages/[pageId]/visibility/route.ts",
     "urlPattern": "/api/tenant-documentation/pages/[pageId]/visibility",
     "audience": "API"

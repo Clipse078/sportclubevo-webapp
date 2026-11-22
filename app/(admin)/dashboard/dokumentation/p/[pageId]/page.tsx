@@ -94,11 +94,7 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
         ? `Version ${page.publishedVersion.versionNumber}`
         : null;
 
-  const breadcrumb = [
-    page.space.title,
-    page.parent?.title,
-    page.title,
-  ].filter(Boolean) as string[];
+  const breadcrumb = [page.space.title, page.parent?.title].filter(Boolean) as string[];
 
   const user = await prisma.user.findUnique({
     where: { id: actorUserId },

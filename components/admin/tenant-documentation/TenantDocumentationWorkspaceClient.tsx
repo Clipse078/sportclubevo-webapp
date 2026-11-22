@@ -4,10 +4,12 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Check, Clock, Pencil } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 
 import { TenantDocumentationArchivRestoreButton } from "@/components/admin/tenant-documentation/TenantDocumentationArchivRestoreButton";
 import { TenantDocumentationPageActionsMenu } from "@/components/admin/tenant-documentation/TenantDocumentationPageActionsMenu";
+import { TenantDocumentationVersionHistoryButton } from "@/components/admin/tenant-documentation/TenantDocumentationVersionHistoryButton";
+import { TENANT_DOCUMENTATION_PAPIERKORB_PATH } from "@/lib/tenant-documentation/sce-tenant-documentation-handoff";
 import { TENANT_DOCUMENTATION_READ_CONTENT_CLASS } from "@/components/admin/tenant-documentation/tenant-documentation-content-styles";
 import type { RichTextValue } from "@/lib/cms/rich-text";
 import type { TenantDocumentationPageLifecycleState } from "@/lib/tenant-documentation/page-lifecycle";
@@ -63,6 +65,11 @@ type Props = {
     effectiveLabel: string;
     hasExplicit: boolean;
   };
+  versionView?: {
+    versionId: string;
+    versionNumber: number;
+    isCurrent: boolean;
+  } | null;
 };
 
 function TreeNodes({
@@ -132,6 +139,7 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
 
   const lifecycleBlocksEditing =
     props.lifecycleState === "ARCHIVED" || props.lifecycleState === "TRASHED";
+  const readOnlyVersion = Boolean(props.versionView);
 
   async function loadTree() {
     const spacesRes = await fetch("/api/tenant-documentation/spaces");
@@ -244,12 +252,21 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
           <option>{spaceTitle}</option>
         </select>
         {props.canManage ? (
-          <Link
-            href="/dashboard/dokumentation/archiv"
-            className="mb-3 block rounded-md px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-white"
-          >
-            Archiv
-          </Link>
+          <>
+            <Link
+              href="/dashboard/dokumentation/archiv"
+              className="mb-1 block rounded-md px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-white"
+            >
+              Archiv
+            </Link>
+            <Link
+              href={TENANT_DOCUMENTATION_PAPIERKORB_PATH}
+              className="mb-3 block rounded-md px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-white"
+              data-testid="tenant-doc-papierkorb-link"
+            >
+              Papierkorb
+            </Link>
+          </>
         ) : null}
         {props.canCreatePages ? (
           <button
@@ -269,14 +286,35 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
         />
       </aside>
 
-      <main className="flex-1 bg-white px-6 py-5 lg:px-10">
-        <nav className="mb-1 text-xs text-[var(--muted)]">{props.breadcrumb.join(" > ")}</nav>
-        <h1
-          className="mb-3 text-2xl font-semibold tracking-tight text-[var(--foreground)]"
-          data-testid="workspace-page-title"
-        >
-          {props.pageTitle}
-        </h1>
+      <main className="mx-auto w-full max-w-4xl flex-1 bg-white px-6 py-5 lg:px-10">
+        <header className="mb-4">
+          <nav className="mb-1 text-xs text-[var(--muted)]">{props.breadcrumb.join(" › ")}</nav>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1
+              className="text-2xl font-semibold tracking-tight text-[var(--foreground)]"
+              data-testid="workspace-page-title"
+            >
+              {props.pageTitle}
+              {readOnlyVersion && props.versionView ? (
+                <span className="ml-2 text-base font-normal text-[var(--muted)]">
+                  (Version {props.versionView.versionNumber})
+                </span>
+              ) : null}
+            </h1>
+            {!readOnlyVersion ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {props.canManage && !lifecycleBlocksEditing ? (
+                  <TenantDocumentationPageActionsMenu
+                    pageId={props.pageId}
+                    pageTitle={props.pageTitle}
+                    canManage={props.canManage}
+                    onLifecycleAction={handleLifecycleRedirect}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </header>
 
         {props.lifecycleState === "ARCHIVED" ? (
           <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -306,7 +344,7 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
             )}
 
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              {props.canEdit && !lifecycleBlocksEditing ? (
+              {props.canEdit && !lifecycleBlocksEditing && !readOnlyVersion ? (
                 <button
                   type="button"
                   className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
@@ -315,20 +353,7 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
                   <Pencil className="h-4 w-4" aria-hidden /> Bearbeiten
                 </button>
               ) : null}
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
-              >
-                <Clock className="h-4 w-4" aria-hidden /> Versionsverlauf
-              </button>
-              {props.canManage && !lifecycleBlocksEditing ? (
-                <TenantDocumentationPageActionsMenu
-                  pageId={props.pageId}
-                  pageTitle={props.pageTitle}
-                  canManage={props.canManage}
-                  onLifecycleAction={handleLifecycleRedirect}
-                />
-              ) : null}
+              <TenantDocumentationVersionHistoryButton pageId={props.pageId} />
             </div>
 
             <article

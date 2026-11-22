@@ -14,6 +14,12 @@ export function tenantDocumentationPagePath(pageId: string): string {
   return `/dashboard/dokumentation/p/${encodeURIComponent(pageId)}`;
 }
 
+export function tenantDocumentationVersionPath(pageId: string, versionId: string): string {
+  return `/dashboard/dokumentation/p/${encodeURIComponent(pageId)}/v/${encodeURIComponent(versionId)}`;
+}
+
+export const TENANT_DOCUMENTATION_PAPIERKORB_PATH = "/dashboard/dokumentation/papierkorb" as const;
+
 export function buildTenantDocumentationPreviewUrl(
   previewBase: string,
   commitSha: string,

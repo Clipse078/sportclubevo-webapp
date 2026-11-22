@@ -180,11 +180,12 @@ async function main() {
     await page.getByRole("menuitem", { name: /Seite löschen/i }).click();
     await page.getByRole("button", { name: /In Papierkorb verschieben/i }).click();
     await page.waitForURL(/\/dashboard\/dokumentation/, { timeout: 60_000 });
-
-    await page.goto(leafUrl, { waitUntil: "domcontentloaded" });
-    await page.getByText(/Papierkorb/i).waitFor({ state: "visible" });
+    await page.goto(parentUrl, { waitUntil: "domcontentloaded" });
+    await page.getByTestId("tenant-doc-papierkorb-link").click();
+    await page.waitForURL(/\/dashboard\/dokumentation\/papierkorb/, { timeout: 60_000 });
+    await page.getByText(fixture.leafTitle).waitFor({ state: "visible", timeout: 30_000 });
     await page.screenshot({ path: "/opt/cursor/artifacts/dokumentation-lifecycle-papierkorb.png" });
-    await page.getByRole("button", { name: /Wiederherstellen/i }).click();
+    await page.getByRole("button", { name: /Wiederherstellen/i }).first().click();
     await page.waitForURL(new RegExp(fixture.leafPageId), { timeout: 60_000 });
     await page.getByTestId("workspace-page-title").waitFor({ state: "visible" });
 

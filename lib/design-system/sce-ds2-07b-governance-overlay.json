@@ -1,6 +1,28 @@
 {
   "lifecycle": [],
   "recordOverrides": {
+    "app/(admin)/dashboard/dokumentation/p/[pageId]/v/[versionId]/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 read-only published version snapshot; reuses Dokumentation workspace client. DS2-07F canonical shell tracked separately.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
+    "app/(admin)/dashboard/dokumentation/papierkorb/page.tsx": {
+      "architecture": "NOT_APPLICABLE",
+      "migrationStatus": "EXCEPTION",
+      "migrationPackage": null,
+      "exceptionId": "SCE-DS2-07B-EX-PREVIEW",
+      "exceptionRationale": "PR #1025 manage-only Papierkorb list for Dokumentation lifecycle MVP; canonical DS2 workspace shell tracked under DS2-07F.",
+      "priority": "Low",
+      "visualVerificationStatus": "NOT_APPLICABLE",
+      "accessibilityVerificationStatus": "NOT_APPLICABLE",
+      "functionalVerificationStatus": "NOT_APPLICABLE"
+    },
     "app/(admin)/dashboard/dokumentation/archiv/page.tsx": {
       "architecture": "NOT_APPLICABLE",
       "migrationStatus": "EXCEPTION",
