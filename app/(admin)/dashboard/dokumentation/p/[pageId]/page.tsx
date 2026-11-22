@@ -16,6 +16,11 @@ import {
   resolveTenantDocumentationActor,
 } from "@/lib/tenant-documentation/authorization";
 import { resolvePageEffectiveAccess } from "@/lib/tenant-documentation/page-access-service";
+import { actorCanDiscoverPage } from "@/lib/tenant-documentation/page-visibility-service";
+import {
+  resolvePublishAudienceView,
+  publishAudienceToLabel,
+} from "@/lib/tenant-documentation/publish-audience";
 import { resolveTenantDocumentationHubRouteAccess } from "@/lib/tenant-documentation/route-access";
 
 type PageProps = { params: Promise<{ pageId: string }> };
@@ -56,10 +61,12 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
     permissionKeys,
   });
 
-  const pageAccess = await resolvePageEffectiveAccess(actor, pageId);
-  if (!accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.VIEW)) {
+  if (!(await actorCanDiscoverPage(actor, pageId))) {
     notFound();
   }
+
+  const pageAccess = await resolvePageEffectiveAccess(actor, pageId);
+  const visibility = await resolvePublishAudienceView(pageId, tenantId);
 
   const publishedRaw = page.publishedVersion?.contentJson;
   const publishedEnriched = publishedRaw
@@ -111,9 +118,19 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
       >
         <TenantDocumentationWorkspaceClient
           pageId={page.id}
+          spaceId={page.spaceId}
           pageTitle={page.title}
           spaceTitle={page.space.title}
           breadcrumb={breadcrumb}
+          canCreatePages={accessLevelPermits(
+            pageAccess,
+            TenantDocumentationAccessLevel.EDIT,
+          )}
+          visibilitySummary={{
+            inheritedLabel: publishAudienceToLabel(visibility.inherited),
+            effectiveLabel: publishAudienceToLabel(visibility.effective),
+            hasExplicit: visibility.explicit !== null,
+          }}
           publishedHtml={
             publishedContent ? richTextDocumentToHtmlWithMentions(publishedContent) : null
           }

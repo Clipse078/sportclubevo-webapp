@@ -73,7 +73,7 @@ const CLUB_OPERATIONS_KEYS = new Set([
   "vorfaelle-disziplin",
 ]);
 
-const CLUB_DOCUMENTS_KEYS = new Set(["workspace", "tenant-documentation"]);
+const CLUB_WISSEN_UNTERLAGEN_KEYS = new Set(["tenant-documentation", "workspace"]);
 
 const CLUB_FINANCE_KEYS = new Set(["finanzen"]);
 const CLUB_SPONSORING_KEYS = new Set(["sponsoring"]);
@@ -154,7 +154,7 @@ export function resolveNavKeyTargetL1(
     CLUB_PEOPLE_KEYS.has(key) ||
     CLUB_MEMBERSHIP_KEYS.has(key) ||
     CLUB_DEVELOPMENT_KEYS.has(key) ||
-    CLUB_DOCUMENTS_KEYS.has(key) ||
+    CLUB_WISSEN_UNTERLAGEN_KEYS.has(key) ||
     CLUB_OPERATIONS_KEYS.has(key) ||
     CLUB_FINANCE_KEYS.has(key) ||
     CLUB_SPONSORING_KEYS.has(key)
@@ -186,7 +186,7 @@ function resolveTargetL2(key: string): string {
   if (CLUB_PEOPLE_KEYS.has(key)) return "Personen & Teams";
   if (CLUB_MEMBERSHIP_KEYS.has(key)) return "Mitgliedschaft";
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
-  if (CLUB_DOCUMENTS_KEYS.has(key)) return "Dokumente";
+  if (CLUB_WISSEN_UNTERLAGEN_KEYS.has(key)) return "Wissen & Unterlagen";
   if (CLUB_OPERATIONS_KEYS.has(key)) return "Vereinsbetrieb";
   if (CLUB_FINANCE_KEYS.has(key)) return "Finanzen";
   if (CLUB_SPONSORING_KEYS.has(key)) return "Sponsoring";
@@ -350,7 +350,7 @@ export const CLUB_VEREIN_L2_LABEL_ORDER = [
   "Aufgaben",
   "Finanzen",
   "Sponsoring",
-  "Dokumente",
+  "Wissen & Unterlagen",
 ] as const;
 
 /** Club L2 taxonomy (header-visible subset vs explorer-only deep admin). */
@@ -418,10 +418,10 @@ export const CLUB_TARGET_L2_GROUPS = [
     keys: ["sponsoring"],
   },
   {
-    id: "dokumente",
-    label: "Dokumente",
+    id: "wissen-unterlagen",
+    label: "Wissen & Unterlagen",
     headerVisible: true,
-    keys: ["workspace", "tenant-documentation"],
+    keys: ["tenant-documentation", "workspace"],
   },
 ] as const;
 

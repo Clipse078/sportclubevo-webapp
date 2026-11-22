@@ -48,8 +48,10 @@ export async function emitTenantDocumentationMentionNotifications(
         userId,
         permissionKeys,
       });
-      const pageAccess = await resolvePageEffectiveAccess(actor, input.pageId);
-      if (accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.VIEW)) {
+      const { actorCanViewPublishedPage } = await import(
+        "@/lib/tenant-documentation/page-visibility-service"
+      );
+      if (await actorCanViewPublishedPage(actor, input.pageId)) {
         eligible.push(userId);
       }
     }

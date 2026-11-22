@@ -1,5 +1,11 @@
 /**
- * Idempotent Tenant Documentation permission sync.
+ * Idempotent Tenant Documentation permission catalog + Club Admin reconciliation preview.
+ *
+ *   npx tsx scripts/sync-tenant-documentation-permissions.ts
+ *   APPLY_PERMISSION_SYNC=true npx tsx scripts/sync-tenant-documentation-permissions.ts
+ *
+ * After catalog rows exist, standard Club Admin backfill uses:
+ *   npx tsx scripts/sync-tenant-club-admin-permissions.ts
  */
 
 import { loadEnvConfig } from "@next/env";
@@ -10,28 +16,33 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PermissionModule, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { reconcileTenantClubAdminPermissions } from "@/lib/permissions/tenant-club-admin-permission-reconciliation";
+import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 
 const DRY_RUN = process.env.APPLY_PERMISSION_SYNC !== "true";
+const FCA_TENANT_KEY = "fc-allschwil";
+const FCA_CLUB_ADMIN_ROLE = getTenantClubAdminRoleKey(FCA_TENANT_KEY);
 
 const TENANT_DOC_PERMISSIONS = [
   {
-    key: "tenant_documentation.view",
+    key: PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
     name: "Dokumentation anzeigen",
     module: PermissionModule.TENANT_DOCUMENTATION,
   },
   {
-    key: "tenant_documentation.edit",
+    key: PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
     name: "Dokumentation bearbeiten",
     module: PermissionModule.TENANT_DOCUMENTATION,
   },
   {
-    key: "tenant_documentation.publish",
+    key: PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH,
     name: "Dokumentation veröffentlichen",
     module: PermissionModule.TENANT_DOCUMENTATION,
   },
   {
-    key: "tenant_documentation.manage",
+    key: PERMISSIONS.TENANT_DOCUMENTATION_MANAGE,
     name: "Dokumentation verwalten",
     module: PermissionModule.TENANT_DOCUMENTATION,
   },
@@ -59,6 +70,8 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  console.log(`[tenant-documentation-sync] mode=${DRY_RUN ? "dry-run" : "apply"}`);
+
   for (const def of TENANT_DOC_PERMISSIONS) {
     if (DRY_RUN) {
       console.log(`[dry-run] ensure permission ${def.key}`);
@@ -76,9 +89,33 @@ async function main() {
       update: {
         name: def.name,
         module: def.module,
+        grantableByAdmin: true,
+        scope: "TENANT",
       },
     });
   }
+
+  const reconciliation = await reconcileTenantClubAdminPermissions(prisma, DRY_RUN);
+  const docKeySet = new Set<string>(TENANT_DOC_PERMISSIONS.map((p) => p.key));
+  const fcaDocAssignments = reconciliation.tenantClubAdminRoles.filter(
+    (row) => row.roleKey === FCA_CLUB_ADMIN_ROLE && docKeySet.has(row.permissionKey),
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        clubAdminRole: FCA_CLUB_ADMIN_ROLE,
+        dokumentationKeysExpected: TENANT_DOC_PERMISSIONS.map((p) => p.key),
+        dokumentationClubAdminReconciliation: fcaDocAssignments,
+        assignedCount: fcaDocAssignments.filter((r) => r.action === "assigned").length,
+        alreadyAssignedCount: fcaDocAssignments.filter((r) => r.action === "already_assigned")
+          .length,
+        dryRun: DRY_RUN,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 main()

@@ -1,11 +1,6 @@
-import {
-  TenantDocumentationAccessLevel,
-} from "@prisma/client";
-
 import { prisma } from "@/lib/db/prisma";
 import type { TenantDocumentationActorContext } from "@/lib/tenant-documentation/authorization";
-import { accessLevelPermits } from "@/lib/tenant-documentation/authorization";
-import { resolvePageEffectiveAccess } from "@/lib/tenant-documentation/page-access-service";
+import { actorCanViewPublishedPage } from "@/lib/tenant-documentation/page-visibility-service";
 
 export type TenantDocumentationSearchHit = {
   pageId: string;
@@ -50,8 +45,7 @@ export async function searchPublishedDocumentation(
   const hits: TenantDocumentationSearchHit[] = [];
   for (const page of pages) {
     if (!page.publishedVersion) continue;
-    const effective = await resolvePageEffectiveAccess(actor, page.id);
-    if (!accessLevelPermits(effective, TenantDocumentationAccessLevel.VIEW)) {
+    if (!(await actorCanViewPublishedPage(actor, page.id))) {
       continue;
     }
     const plain = page.publishedVersion.plainText;

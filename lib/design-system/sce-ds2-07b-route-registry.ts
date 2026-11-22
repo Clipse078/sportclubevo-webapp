@@ -2399,7 +2399,7 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     ],
     "module": "dashboard",
     "authenticationScope": "AUTHENTICATED",
-    "routeKind": "REDIRECT_ALIAS",
+    "routeKind": "RENDERABLE_PAGE",
     "intercept": false,
     "parallelSlot": null,
     "architecture": "NOT_APPLICABLE",
@@ -2410,8 +2410,8 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
     "accessibilityVerificationStatus": "NOT_APPLICABLE",
     "functionalVerificationStatus": "NOT_APPLICABLE",
     "exceptionId": "SCE-DS2-07B-EX-REDIRECT",
-    "exceptionRationale": "Hub redirect to default documentation page (not a visual surface).",
-    "redirectDestination": "/dashboard",
+    "exceptionRationale": "PR #1025 hub entry: explicit access-denied surface when RBAC lacks Dokumentation; redirects to default page when granted.",
+    "redirectDestination": null,
     "introducedAfterBaseline": false,
     "verificationEvidence": {
       "visual": null,
@@ -9575,12 +9575,12 @@ export const SCE_DS2_07B_ROUTE_REGISTRY: SceDs207bRegistryEntry[] = [
 
 export const SCE_DS2_07B_SUMMARY: SceDs207bSummary = {
   "pageCount": 296,
-  "authenticatedRenderableCount": 230,
+  "authenticatedRenderableCount": 231,
   "authenticatedVisualCount": 227,
-  "authenticatedRedirectCount": 25,
+  "authenticatedRedirectCount": 24,
   "publicRenderableCount": 40,
   "publicRedirectCount": 1,
-  "routeHandlerCount": 698,
+  "routeHandlerCount": 701,
   "frameworkFileCount": 41,
   "architecture": {
     "CANONICAL": 227,

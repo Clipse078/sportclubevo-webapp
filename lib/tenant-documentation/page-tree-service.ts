@@ -2,6 +2,7 @@ import {
   TenantDocumentationAccessLevel,
   TenantDocumentationAccessSubjectType,
   TenantDocumentationResourceType,
+  TenantDocumentationDraftSaveStatus,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
@@ -11,6 +12,11 @@ import {
   loadPageAccessContext,
   resolvePageEffectiveAccess,
 } from "@/lib/tenant-documentation/page-access-service";
+import { actorCanDiscoverPage } from "@/lib/tenant-documentation/page-visibility-service";
+import {
+  wouldMoveBroadenPublishAudience,
+} from "@/lib/tenant-documentation/publish-audience";
+import { emptyYjsState, yjsStateToRichTextSnapshot } from "@/lib/tenant-documentation/yjs-document";
 
 export type TenantDocumentationTreeNode = {
   id: string;
@@ -40,11 +46,7 @@ export async function listAccessiblePageTree(
 
   const visibility = new Map<string, boolean>();
   for (const page of pages) {
-    const effective = await resolvePageEffectiveAccess(actor, page.id);
-    visibility.set(
-      page.id,
-      accessLevelPermits(effective, TenantDocumentationAccessLevel.VIEW),
-    );
+    visibility.set(page.id, await actorCanDiscoverPage(actor, page.id));
   }
 
   const nodes = new Map<string, TenantDocumentationTreeNode>();
@@ -105,21 +107,57 @@ export async function createDocumentationPage(input: {
     }
   }
 
-  return prisma.tenantDocumentationPage.create({
-    data: {
-      tenantId: input.actor.identity.tenantId,
-      spaceId: input.spaceId,
-      parentId: input.parentId,
-      title: input.title,
-      slug: input.slug,
-    },
+  const maxSort = await prisma.tenantDocumentationPage.aggregate({
+    where: { spaceId: input.spaceId, parentId: input.parentId },
+    _max: { sortOrder: true },
   });
+
+  return prisma.$transaction(async (tx) => {
+    const page = await tx.tenantDocumentationPage.create({
+      data: {
+        tenantId: input.actor.identity.tenantId,
+        spaceId: input.spaceId,
+        parentId: input.parentId,
+        title: input.title,
+        slug: input.slug,
+        sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
+      },
+    });
+
+    const initialState = emptyYjsState();
+    const contentJson = yjsStateToRichTextSnapshot(initialState);
+    await tx.tenantDocumentationPageDraft.create({
+      data: {
+        pageId: page.id,
+        tenantId: input.actor.identity.tenantId,
+        contentJson,
+        yjsState: Buffer.from(initialState),
+        revision: BigInt(0),
+        saveStatus: TenantDocumentationDraftSaveStatus.SAVED,
+        updatedByUserId: input.actorUserId,
+      },
+    });
+
+    return page;
+  });
+}
+
+export function slugifyDocumentationTitle(title: string): string {
+  const base = title
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return base || `seite-${Date.now()}`;
 }
 
 export async function moveDocumentationPage(input: {
   actor: TenantDocumentationActorContext;
   pageId: string;
   newParentId: string | null;
+  confirmAudienceBroaden?: boolean;
 }) {
   const ctx = await loadPageAccessContext(
     input.pageId,
@@ -139,6 +177,15 @@ export async function moveDocumentationPage(input: {
     if (!accessLevelPermits(destAccess, TenantDocumentationAccessLevel.EDIT)) {
       throw new Error("Forbidden destination");
     }
+  }
+
+  const broaden = await wouldMoveBroadenPublishAudience({
+    pageId: input.pageId,
+    tenantId: input.actor.identity.tenantId,
+    newParentId: input.newParentId,
+  });
+  if (broaden.broadens && !input.confirmAudienceBroaden) {
+    throw new Error("AUDIENCE_BROADEN_CONFIRM_REQUIRED");
   }
 
   return prisma.tenantDocumentationPage.update({

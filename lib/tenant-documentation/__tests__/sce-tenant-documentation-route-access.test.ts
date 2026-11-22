@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { NAV_SECTIONS, getVisibleNavSections } from "@/lib/nav/nav-config";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/route-access";
+import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
 describe("tenant documentation nav ↔ route permission parity", () => {
   it("nav-config uses the canonical hub route permission bundle", () => {

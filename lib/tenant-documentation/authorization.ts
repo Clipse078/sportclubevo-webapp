@@ -10,6 +10,7 @@ import {
 } from "@prisma/client";
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { hasTenantDocumentationModuleView } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 import { actorMatchesAudience } from "@/lib/workspace/access/audience-match";
 import type { AudienceRef } from "@/lib/workspace/access/audience";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
@@ -83,16 +84,7 @@ function tenantPermissionFloor(
   return null;
 }
 
-export function hasTenantDocumentationModuleView(
-  permissionKeys: readonly string[],
-): boolean {
-  return (
-    permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_VIEW) ||
-    permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_EDIT) ||
-    permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH) ||
-    permissionKeys.includes(PERMISSIONS.TENANT_DOCUMENTATION_MANAGE)
-  );
-}
+export { hasTenantDocumentationModuleView } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
 export function evaluateGrantLevelForActor(
   actor: TenantDocumentationActorContext,

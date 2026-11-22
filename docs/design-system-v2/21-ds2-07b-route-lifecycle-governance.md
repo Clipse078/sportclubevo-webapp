@@ -16,12 +16,12 @@ Authenticated browser coverage for this package: **none**.
 | Classification | Count |
 | --- | ---: |
 | Page entries | 296 |
-| Authenticated renderable pages | 230 |
+| Authenticated renderable pages | 231 |
 | Authenticated visual pages (completion denominator) | 227 |
-| Authenticated redirect aliases | 25 |
+| Authenticated redirect aliases | 24 |
 | Public renderable pages | 40 |
 | Public redirect aliases | 1 |
-| Route handlers | 698 |
+| Route handlers | 701 |
 | Special Next.js framework files | 41 |
 
 Redirect aliases reference a destination and are excluded from visual completion. Public pages keep public design-system rules and are not forced into authenticated workspace chrome. Print documents are an approved semantic exception.
@@ -86,7 +86,6 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | `/dashboard/admin/users` | `/dashboard/admin/people-access` | `app/(admin)/dashboard/admin/users/page.tsx` |
 | `/dashboard/admin/users/new` | `/dashboard/admin/people-access/new` | `app/(admin)/dashboard/admin/users/new/page.tsx` |
 | `/dashboard/anliegen-meldungen` | `dynamic` | `app/(admin)/dashboard/anliegen-meldungen/page.tsx` |
-| `/dashboard/dokumentation` | `/dashboard/dokumentation/p/:pageId` (or access-denied surface) | `app/(admin)/dashboard/dokumentation/page.tsx` |
 | `/dashboard/finance/income_statement` | `/dashboard/finance/reports` | `app/(admin)/dashboard/finance/income_statement/page.tsx` |
 | `/dashboard/planner` | `/dashboard/planner/week` | `app/(admin)/dashboard/planner/page.tsx` |
 | `/dashboard/registrations` | `/tenant/:param/cockpit/registrations` | `app/(admin)/dashboard/registrations/page.tsx` |

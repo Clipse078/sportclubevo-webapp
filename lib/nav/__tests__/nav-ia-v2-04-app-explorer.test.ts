@@ -73,7 +73,12 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
       "Aufgaben",
       "Finanzen",
       "Sponsoring",
-      "Dokumente",
+      "Wissen & Unterlagen",
+    ]);
+    const wissenGroup = groups.find((group) => group.id === "wissen-unterlagen");
+    expect(wissenGroup?.modules.map((module) => module.key)).toEqual([
+      "tenant-documentation",
+      "workspace",
     ]);
     expect(groups.some((group) => group.id === "administration")).toBe(false);
 

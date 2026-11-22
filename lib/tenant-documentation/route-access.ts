@@ -1,22 +1,23 @@
 /**
- * PR #1025 — Dokumentation hub + navigation route access (live RBAC, additive roles).
+ * PR #1025 — Dokumentation hub route access resolver (server-only).
  */
 
+import "server-only";
+
 import { getRequestAuthSession } from "@/lib/auth/get-request-auth-session";
-import type { PermissionKey } from "@/lib/permissions/permissions";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { resolveRequestAnyPermission } from "@/lib/permissions/resolve-request-any-permission";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { hasTenantDocumentationModuleView } from "@/lib/tenant-documentation/authorization";
+import {
+  hasTenantDocumentationModuleView,
+  TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS,
+  tenantDocumentationNavVisible,
+} from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
-/** Users who may open the Dokumentation hub or any documentation page route. */
-export const TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS = [
-  PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
-  PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
-  PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH,
-  PERMISSIONS.TENANT_DOCUMENTATION_MANAGE,
-] as const satisfies readonly PermissionKey[];
+export {
+  TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS,
+  tenantDocumentationNavVisible,
+} from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
 export type TenantDocumentationHubRouteAccess =
   | { kind: "unauthenticated" }
@@ -29,10 +30,6 @@ export type TenantDocumentationHubRouteAccess =
       actorUserId: string;
       permissionKeys: readonly string[];
     };
-
-export function tenantDocumentationNavVisible(permissionKeys: readonly PermissionKey[]): boolean {
-  return hasTenantDocumentationModuleView(permissionKeys);
-}
 
 /**
  * Same live evaluation used by hub/detail routes and shell navigation parity tests.

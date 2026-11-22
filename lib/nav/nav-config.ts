@@ -19,7 +19,7 @@ import {
   VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
 } from "@/lib/nav/vereinsleitung-access";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
-import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/route-access";
+import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@
  */
 
 import { PermissionModule } from "@prisma/client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "@/lib/db/prisma";
 import { buildAppNavigationModelForUser } from "@/lib/nav/app-navigation-model";
@@ -14,13 +14,14 @@ import {
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { assertSafeTestDatabase } from "@/lib/test/safe-test-database";
 import {
   tenantDocumentationNavVisible,
   TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS,
-} from "@/lib/tenant-documentation/route-access";
+} from "@/lib/tenant-documentation/tenant-documentation-route-permissions";
 
-const TENANT_ID = `tdoc-route-access-${Date.now()}`;
-const RUN = `${Date.now()}`;
+const RUN = `tdoc-ra-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+const TENANT_ID = `tdoc-route-access-${RUN}`;
 
 const dbReady = Boolean(process.env.TEST_DATABASE_URL);
 
@@ -42,14 +43,15 @@ async function ensurePermissionCatalog() {
 }
 
 async function createUserWithAdditiveRole(input: {
-  email: string;
+  label: string;
   permissionKeys: readonly (typeof TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS)[number][];
 }) {
+  const email = `${input.label}-${RUN}@fixture.local`;
   const user = await prisma.user.create({
     data: {
-      email: input.email,
+      email,
       firstName: "Route",
-      lastName: "Access",
+      lastName: input.label,
       passwordHash: "fixture",
       isActive: true,
     },
@@ -63,8 +65,8 @@ async function createUserWithAdditiveRole(input: {
     data: {
       tenantId: TENANT_ID,
       scope: "TENANT",
-      key: `pilot_doc_${RUN}_${input.email.split("@")[0]}`,
-      name: "Doc pilot",
+      key: `pilot_doc_${RUN}_${input.label}`,
+      name: `Doc pilot ${input.label}`,
     },
     select: { id: true },
   });
@@ -96,7 +98,8 @@ describe.skipIf(!dbReady)("tenant documentation route + nav access (additive rol
   let editorId: string;
   let deniedId: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    assertSafeTestDatabase();
     await ensurePermissionCatalog();
     await prisma.tenant.upsert({
       where: { id: TENANT_ID },
@@ -105,11 +108,11 @@ describe.skipIf(!dbReady)("tenant documentation route + nav access (additive rol
     });
 
     const reader = await createUserWithAdditiveRole({
-      email: `reader-${RUN}@example.test`,
+      label: "reader",
       permissionKeys: [PERMISSIONS.TENANT_DOCUMENTATION_VIEW],
     });
     const editor = await createUserWithAdditiveRole({
-      email: `editor-${RUN}@example.test`,
+      label: "editor",
       permissionKeys: [
         PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
         PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
@@ -117,7 +120,7 @@ describe.skipIf(!dbReady)("tenant documentation route + nav access (additive rol
     });
     const denied = await prisma.user.create({
       data: {
-        email: `denied-${RUN}@example.test`,
+        email: `denied-${RUN}@fixture.local`,
         firstName: "None",
         lastName: "Access",
         passwordHash: "fixture",

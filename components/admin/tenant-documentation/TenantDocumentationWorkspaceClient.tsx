@@ -26,6 +26,7 @@ export type PageTreeNode = {
 
 type Props = {
   pageId: string;
+  spaceId: string;
   pageTitle: string;
   spaceTitle: string;
   breadcrumb: string[];
@@ -33,35 +34,63 @@ type Props = {
   publishedMeta: string | null;
   canEdit: boolean;
   canPublish: boolean;
+  canCreatePages: boolean;
   displayName: string;
   publishedContent: RichTextValue | null;
+  visibilitySummary: {
+    inheritedLabel: string;
+    effectiveLabel: string;
+    hasExplicit: boolean;
+  };
 };
 
 function TreeNodes({
   nodes,
   activePageId,
   depth = 0,
+  canCreatePages,
+  onCreateChild,
 }: {
   nodes: PageTreeNode[];
   activePageId: string;
   depth?: number;
+  canCreatePages: boolean;
+  onCreateChild: (parentId: string) => void;
 }) {
   return (
     <ul className={depth > 0 ? "ml-3 border-l border-[var(--border)] pl-2" : ""}>
       {nodes.map((node) => (
         <li key={node.id} className="py-0.5">
-          <Link
-            href={`/dashboard/dokumentation/p/${node.id}`}
-            className={`block rounded px-2 py-1 text-sm ${
-              node.id === activePageId
-                ? "bg-orange-50 font-medium text-orange-800"
-                : "text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-            }`}
-          >
-            {node.title}
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/dashboard/dokumentation/p/${node.id}`}
+              className={`block flex-1 rounded px-2 py-1 text-sm ${
+                node.id === activePageId
+                  ? "bg-orange-50 font-medium text-orange-800"
+                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              }`}
+            >
+              {node.title}
+            </Link>
+            {canCreatePages ? (
+              <button
+                type="button"
+                title="Unterseite erstellen"
+                className="rounded px-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-2)]"
+                onClick={() => onCreateChild(node.id)}
+              >
+                +
+              </button>
+            ) : null}
+          </div>
           {node.children.length > 0 ? (
-            <TreeNodes nodes={node.children} activePageId={activePageId} depth={depth + 1} />
+            <TreeNodes
+              nodes={node.children}
+              activePageId={activePageId}
+              depth={depth + 1}
+              canCreatePages={canCreatePages}
+              onCreateChild={onCreateChild}
+            />
           ) : null}
         </li>
       ))}
@@ -83,7 +112,9 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
   const [publishing, setPublishing] = useState(false);
   const [tree, setTree] = useState<PageTreeNode[]>([]);
   const [spaceTitle, setSpaceTitle] = useState(props.spaceTitle);
+  const [spaceId, setSpaceId] = useState(props.spaceId);
   const [searchQuery, setSearchQuery] = useState("");
+  const [creating, setCreating] = useState(false);
   const contentJsonRef = useRef<unknown>(null);
 
   const getContentJson = useCallback(() => contentJsonRef.current, []);
@@ -113,6 +144,7 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
     const first = spacesPayload.spaces[0];
     if (!first) return;
     setSpaceTitle(first.title);
+    setSpaceId(first.id);
     const treeRes = await fetch(`/api/tenant-documentation/spaces/${first.id}/tree`);
     if (!treeRes.ok) return;
     const treePayload = (await treeRes.json()) as { tree: PageTreeNode[] };
@@ -122,6 +154,30 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
   useEffect(() => {
     void loadTree();
   }, [props.pageId]);
+
+  async function createPage(parentId: string | null) {
+    if (!props.canCreatePages || creating) return;
+    const title = window.prompt(
+      parentId ? "Titel der Unterseite" : "Titel der neuen Seite",
+    );
+    if (!title?.trim()) return;
+    setCreating(true);
+    try {
+      const res = await fetch(`/api/tenant-documentation/spaces/${spaceId}/pages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), parentId }),
+      });
+      const payload = (await res.json()) as { page?: { href: string }; error?: string };
+      if (!res.ok || !payload.page?.href) {
+        window.alert(payload.error ?? "Seite konnte nicht erstellt werden.");
+        return;
+      }
+      window.location.href = payload.page.href;
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function publish() {
     setPublishing(true);
@@ -157,12 +213,36 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
         <select className="mb-4 w-full rounded-md border border-[var(--border)] px-2 py-1.5 text-sm">
           <option>{spaceTitle}</option>
         </select>
-        <TreeNodes nodes={tree} activePageId={props.pageId} />
+        {props.canCreatePages ? (
+          <button
+            type="button"
+            disabled={creating}
+            className="mb-3 w-full rounded-md border border-dashed border-[var(--border)] px-2 py-1.5 text-sm text-[var(--text-2)] hover:bg-[var(--surface-1)]"
+            onClick={() => void createPage(null)}
+          >
+            Seite erstellen
+          </button>
+        ) : null}
+        <TreeNodes
+          nodes={tree}
+          activePageId={props.pageId}
+          canCreatePages={props.canCreatePages}
+          onCreateChild={(parentId) => void createPage(parentId)}
+        />
       </aside>
 
       <main className="flex-1 p-6">
         <nav className="mb-2 text-xs text-[var(--muted)]">{props.breadcrumb.join(" > ")}</nav>
-        <h1 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">{props.pageTitle}</h1>
+        <h1 className="mb-2 text-2xl font-semibold text-[var(--foreground)]">{props.pageTitle}</h1>
+        <div className="mb-4 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
+          <div className="font-medium text-[var(--foreground)]">Sichtbarkeit</div>
+          <div className="text-[var(--text-2)]">
+            Geerbt: {props.visibilitySummary.inheritedLabel}
+            {" · "}
+            Wirksam: {props.visibilitySummary.effectiveLabel}
+            {props.visibilitySummary.hasExplicit ? " (eigene Einstellung)" : " (geerbt)"}
+          </div>
+        </div>
 
         {mode === "read" ? (
           <>
