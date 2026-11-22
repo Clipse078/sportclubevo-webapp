@@ -211,7 +211,11 @@ async function main() {
     }
     await page.waitForURL(/\/dashboard\/dokumentation/, { timeout: 60_000 });
 
-    await page.goto(`${BASE_URL}/dashboard/dokumentation/archiv`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/dashboard/dokumentation/archiv`, { waitUntil: "domcontentloaded" });
+    await page.getByTestId("tenant-documentation-white-surface").waitFor({
+      state: "visible",
+      timeout: 90_000,
+    });
     const archivedDeadline = Date.now() + 60_000;
     while (Date.now() < archivedDeadline) {
       if (await page.getByText(fixture.leafTitle).isVisible().catch(() => false)) break;
@@ -239,6 +243,10 @@ async function main() {
     await page.goto(parentUrl, { waitUntil: "domcontentloaded" });
     await page.getByTestId("tenant-doc-papierkorb-link").click();
     await page.waitForURL(/\/dashboard\/dokumentation\/papierkorb/, { timeout: 60_000 });
+    await page.getByTestId("tenant-documentation-white-surface").waitFor({
+      state: "visible",
+      timeout: 90_000,
+    });
     await page.getByText(fixture.leafTitle).waitFor({ state: "visible", timeout: 30_000 });
     await page.screenshot({ path: shot("papierkorb") });
     await page.getByRole("button", { name: /Wiederherstellen/i }).first().click();
@@ -246,6 +254,15 @@ async function main() {
     await page.getByTestId("workspace-page-title").waitFor({ state: "visible" });
 
     await page.goto(parentUrl, { waitUntil: "domcontentloaded" });
+    await page.getByTestId("tenant-documentation-white-surface").waitFor({
+      state: "visible",
+      timeout: 90_000,
+    });
+    await page.getByTestId("workspace-page-title").waitFor({ state: "visible", timeout: 90_000 });
+    await page
+      .getByText("Modul wird geladen", { exact: false })
+      .waitFor({ state: "hidden", timeout: 90_000 })
+      .catch(() => undefined);
     await page.screenshot({ path: shot("read") });
     await page.getByRole("button", { name: /Bearbeiten/i }).click();
     await page
