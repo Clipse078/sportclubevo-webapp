@@ -5,7 +5,12 @@ import { de } from "date-fns/locale";
 
 import { TenantDocumentationArchivRestoreButton } from "@/components/admin/tenant-documentation/TenantDocumentationArchivRestoreButton";
 import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
+import { TenantDocumentationWhiteSurface } from "@/components/admin/tenant-documentation/TenantDocumentationWhiteSurface";
 import { PageShell } from "@/components/ui/page";
+import {
+  TENANT_DOCUMENTATION_LIST_PANEL_CLASS,
+  TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS,
+} from "@/lib/tenant-documentation/tenant-documentation-visual-styles";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listArchivedDocumentationPages } from "@/lib/tenant-documentation/page-lifecycle-service";
@@ -58,23 +63,24 @@ export default async function TenantDocumentationArchivPage() {
 
   return (
     <PageShell fullWidth>
-      <div className="mx-auto max-w-3xl px-4 py-6">
-        <nav className="mb-2 text-xs text-[var(--muted)]">
+      <TenantDocumentationWhiteSurface>
+        <div className={TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS}>
+        <nav className="mb-2 text-xs text-[var(--sce-color-text-muted)]">
           <Link href="/dashboard/dokumentation" className="hover:underline">
             Dokumentation
           </Link>
           {" > Archiv"}
         </nav>
-        <h1 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">Archiv</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-[var(--sce-color-text-primary)]">Archiv</h1>
         {pages.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">Keine archivierten Seiten.</p>
+          <p className="text-sm text-[var(--sce-color-text-muted)]">Keine archivierten Seiten.</p>
         ) : (
-          <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-white">
+          <ul className={TENANT_DOCUMENTATION_LIST_PANEL_CLASS}>
             {pages.map((page) => (
               <li key={page.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
-                  <p className="font-medium text-[var(--foreground)]">{page.title}</p>
-                  <p className="text-xs text-[var(--muted)]">
+                  <p className="font-medium text-[var(--sce-color-text-primary)]">{page.title}</p>
+                  <p className="text-xs text-[var(--sce-color-text-muted)]">
                     {page.spaceTitle}
                     {isValid(new Date(page.archivedAt))
                       ? ` · Archiviert am ${format(new Date(page.archivedAt), "d. MMM yyyy", { locale: de })}`
@@ -86,7 +92,8 @@ export default async function TenantDocumentationArchivPage() {
             ))}
           </ul>
         )}
-      </div>
+        </div>
+      </TenantDocumentationWhiteSurface>
     </PageShell>
   );
 }

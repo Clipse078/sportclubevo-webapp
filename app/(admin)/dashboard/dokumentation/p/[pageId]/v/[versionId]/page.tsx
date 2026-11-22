@@ -4,6 +4,7 @@ import { format, isValid } from "date-fns";
 import { de } from "date-fns/locale";
 
 import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
+import { TenantDocumentationWhiteSurface } from "@/components/admin/tenant-documentation/TenantDocumentationWhiteSurface";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
 import { isRichTextValue } from "@/lib/cms/rich-text";
@@ -74,6 +75,7 @@ export default async function TenantDocumentationVersionPage({ params }: PagePro
           </Link>
         </div>
       ) : null}
+      <TenantDocumentationWhiteSurface>
       <TenantDocumentationWorkspaceClient
         pageId={page.id}
         spaceId={page.spaceId}
@@ -100,6 +102,7 @@ export default async function TenantDocumentationVersionPage({ params }: PagePro
           isCurrent,
         }}
       />
+      </TenantDocumentationWhiteSurface>
     </PageShell>
   );
 }

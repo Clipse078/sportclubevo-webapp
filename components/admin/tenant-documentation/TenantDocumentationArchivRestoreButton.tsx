@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { TENANT_DOCUMENTATION_SECONDARY_BUTTON_CLASS } from "@/lib/tenant-documentation/tenant-documentation-visual-styles";
+
 type RestoreSource = "archive" | "trash";
 
 export function TenantDocumentationArchivRestoreButton({
@@ -44,7 +46,7 @@ export function TenantDocumentationArchivRestoreButton({
         type="button"
         disabled={busy}
         onClick={() => void restore()}
-        className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)] disabled:opacity-50"
+        className={TENANT_DOCUMENTATION_SECONDARY_BUTTON_CLASS}
       >
         Wiederherstellen
       </button>

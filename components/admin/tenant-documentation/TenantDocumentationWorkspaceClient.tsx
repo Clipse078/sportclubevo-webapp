@@ -11,6 +11,11 @@ import { TenantDocumentationPageActionsMenu } from "@/components/admin/tenant-do
 import { TenantDocumentationVersionHistoryButton } from "@/components/admin/tenant-documentation/TenantDocumentationVersionHistoryButton";
 import { TENANT_DOCUMENTATION_PAPIERKORB_PATH } from "@/lib/tenant-documentation/sce-tenant-documentation-handoff";
 import { TENANT_DOCUMENTATION_READ_CONTENT_CLASS } from "@/components/admin/tenant-documentation/tenant-documentation-content-styles";
+import {
+  TENANT_DOCUMENTATION_MAIN_CANVAS_CLASS,
+  TENANT_DOCUMENTATION_SIDEBAR_CLASS,
+  TENANT_DOCUMENTATION_WORKSPACE_ROOT_CLASS,
+} from "@/lib/tenant-documentation/tenant-documentation-visual-styles";
 import type { RichTextValue } from "@/lib/cms/rich-text";
 import type { TenantDocumentationPageLifecycleState } from "@/lib/tenant-documentation/page-lifecycle";
 
@@ -95,7 +100,7 @@ function TreeNodes({
               className={`block flex-1 rounded px-2 py-1 text-sm ${
                 node.id === activePageId
                   ? "bg-orange-50 font-medium text-orange-800"
-                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                  : "text-[var(--sce-color-text-secondary)] hover:bg-[var(--sce-color-surface-hover)]"
               }`}
             >
               {node.title}
@@ -218,11 +223,11 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
 
   return (
     <div
-      className="-mx-4 -mt-2 flex min-h-[calc(100vh-3.5rem)] border-t border-[var(--border)] bg-[var(--surface-1)] sm:-mx-6 lg:-mx-8"
+      className={TENANT_DOCUMENTATION_WORKSPACE_ROOT_CLASS}
       data-testid="tenant-documentation-workspace"
     >
-      <aside className="w-72 shrink-0 border-r border-[var(--border)] bg-zinc-50 p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+      <aside className={TENANT_DOCUMENTATION_SIDEBAR_CLASS}>
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--sce-color-text-primary)]">
           Dokumentation
         </div>
         <input
@@ -286,12 +291,14 @@ export function TenantDocumentationWorkspaceClient(props: Props) {
         />
       </aside>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 bg-white px-6 py-5 lg:px-10">
+      <main className={TENANT_DOCUMENTATION_MAIN_CANVAS_CLASS}>
         <header className="mb-4">
-          <nav className="mb-1 text-xs text-[var(--muted)]">{props.breadcrumb.join(" › ")}</nav>
+          <nav className="mb-1 text-xs text-[var(--sce-color-text-muted)]">
+            {props.breadcrumb.join(" › ")}
+          </nav>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h1
-              className="text-2xl font-semibold tracking-tight text-[var(--foreground)]"
+              className="text-2xl font-semibold tracking-tight text-[var(--sce-color-text-primary)]"
               data-testid="workspace-page-title"
             >
               {props.pageTitle}

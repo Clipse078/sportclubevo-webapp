@@ -212,7 +212,14 @@ async function main() {
       await page.waitForTimeout(500);
     }
     await page.getByText(fixture.leafTitle).waitFor({ state: "visible", timeout: 5_000 });
-    await page.screenshot({ path: "/opt/cursor/artifacts/dokumentation-lifecycle-archiv.png" });
+    const label = [
+      process.env.TENANT_DOC_GATE_SHA?.slice(0, 12) ?? "local",
+      fixture.tenantId,
+      "Lifecycle-Browser-E2E",
+    ].join("_");
+    const shot = (name) =>
+      `/opt/cursor/artifacts/dokumentation-${name}-${label}-1440.png`;
+    await page.screenshot({ path: shot("archiv") });
 
     await page.getByRole("button", { name: /Wiederherstellen/i }).first().click();
     await page.waitForURL(new RegExp(fixture.leafPageId), { timeout: 60_000 });
@@ -226,18 +233,18 @@ async function main() {
     await page.getByTestId("tenant-doc-papierkorb-link").click();
     await page.waitForURL(/\/dashboard\/dokumentation\/papierkorb/, { timeout: 60_000 });
     await page.getByText(fixture.leafTitle).waitFor({ state: "visible", timeout: 30_000 });
-    await page.screenshot({ path: "/opt/cursor/artifacts/dokumentation-lifecycle-papierkorb.png" });
+    await page.screenshot({ path: shot("papierkorb") });
     await page.getByRole("button", { name: /Wiederherstellen/i }).first().click();
     await page.waitForURL(new RegExp(fixture.leafPageId), { timeout: 60_000 });
     await page.getByTestId("workspace-page-title").waitFor({ state: "visible" });
 
     await page.goto(parentUrl, { waitUntil: "domcontentloaded" });
-    await page.screenshot({ path: "/opt/cursor/artifacts/dokumentation-workspace-read-1440.png" });
+    await page.screenshot({ path: shot("read") });
     await page.getByRole("button", { name: /Bearbeiten/i }).click();
     await page
       .locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror')
       .waitFor({ state: "visible", timeout: 90_000 });
-    await page.screenshot({ path: "/opt/cursor/artifacts/dokumentation-workspace-edit-1440.png" });
+    await page.screenshot({ path: shot("edit") });
 
     await browser.close();
 

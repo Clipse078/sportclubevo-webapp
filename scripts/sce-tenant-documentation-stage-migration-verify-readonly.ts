@@ -33,6 +33,10 @@ const TENANT_DOC_PERMISSION_KEYS = [
   "tenant_documentation.manage",
 ] as const;
 
+const FCA_CLUB_ADMIN_ROLE_KEY = "club_admin__fc-allschwil";
+const FCA_CLUB_ADMIN_EMAIL =
+  process.env.SCE_DS2_07G_LOGIN_EMAIL?.trim() || process.env.FCA_CLUB_ADMIN_EMAIL?.trim() || "";
+
 function migrationChecksum(name: string): string {
   const sqlPath = path.join(process.cwd(), `prisma/migrations/${name}/migration.sql`);
   return crypto.createHash("sha256").update(fs.readFileSync(sqlPath)).digest("hex");
@@ -132,6 +136,21 @@ async function main(): Promise<void> {
     migrationReport.every((m) => !m.applied || m.checksumMatch) &&
     pendingMigrations.length <= SCE_TENANT_DOCUMENTATION_MIGRATION_ORDER.length;
 
+  const rolePermissionRows = await prisma.rolePermission.findMany({
+    where: {
+      role: { key: FCA_CLUB_ADMIN_ROLE_KEY },
+      permission: { key: { in: [...TENANT_DOC_PERMISSION_KEYS] } },
+    },
+    select: { permission: { select: { key: true } } },
+  });
+  const clubAdminRoleKeys = rolePermissionRows.map((r) => r.permission.key).sort();
+  const clubAdminUser = FCA_CLUB_ADMIN_EMAIL
+    ? await prisma.user.findUnique({
+        where: { email: FCA_CLUB_ADMIN_EMAIL },
+        select: { id: true, email: true },
+      })
+    : null;
+
   console.log(
     JSON.stringify(
       {
@@ -156,6 +175,14 @@ async function main(): Promise<void> {
           expectedKeys: [...TENANT_DOC_PERMISSION_KEYS],
           presentKeys: permissionRows.map((r) => r.key),
           catalogReady: permissionRows.length === TENANT_DOC_PERMISSION_KEYS.length,
+        },
+        fcaClubAdmin: {
+          roleKey: FCA_CLUB_ADMIN_ROLE_KEY,
+          userEmail: FCA_CLUB_ADMIN_EMAIL,
+          userPresent: Boolean(clubAdminUser),
+          rolePermissionKeys: clubAdminRoleKeys,
+          roleHasAllTenantDocPermissions:
+            TENANT_DOC_PERMISSION_KEYS.every((key) => clubAdminRoleKeys.includes(key)),
         },
         sampleStagePages: samplePages,
         poApprovalScope: {

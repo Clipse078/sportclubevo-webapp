@@ -4,6 +4,7 @@ import { format, isValid } from "date-fns";
 import { de } from "date-fns/locale";
 
 import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
+import { TenantDocumentationWhiteSurface } from "@/components/admin/tenant-documentation/TenantDocumentationWhiteSurface";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
 
@@ -120,7 +121,8 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
 
   return (
     <PageShell fullWidth>
-      <TenantDocumentationWorkspaceClient
+      <TenantDocumentationWhiteSurface>
+        <TenantDocumentationWorkspaceClient
         pageId={page.id}
         spaceId={page.spaceId}
         pageTitle={page.title}
@@ -142,7 +144,8 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
         canEdit={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.EDIT)}
         canPublish={accessLevelPermits(pageAccess, TenantDocumentationAccessLevel.PUBLISH)}
         displayName={displayName}
-      />
+        />
+      </TenantDocumentationWhiteSurface>
     </PageShell>
   );
 }

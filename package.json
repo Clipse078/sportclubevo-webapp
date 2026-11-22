@@ -81,6 +81,7 @@
     "cd-task-status:stage-migration-verify": "tsx scripts/sce-cd-task-status-stage-migration-verify-readonly.ts",
     "tenant-documentation:disposable-migration-verify": "tsx scripts/sce-tenant-documentation-disposable-migration-verify.ts",
     "tenant-documentation:disposable-release-gate": "tsx scripts/sce-tenant-documentation-disposable-release-gate.ts",
+    "tenant-documentation:disposable-gate-legs": "node scripts/sce-tenant-documentation-disposable-gate-legs.mjs",
     "tenant-documentation:edit-browser-regression": "node scripts/tenant-documentation-edit-browser-regression.mjs",
     "tenant-documentation:lifecycle-browser-regression": "node scripts/tenant-documentation-lifecycle-browser-regression.mjs",
     "tenant-documentation:stage-migration-verify": "tsx scripts/sce-tenant-documentation-stage-migration-verify-readonly.ts",

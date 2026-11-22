@@ -4,7 +4,8 @@
  * Required env: TEST_DATABASE_URL, AUTH_SECRET or NEXTAUTH_SECRET
  */
 import "dotenv/config";
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
+import path from "node:path";
 
 function killListenersOnPorts(ports: number[]): void {
   for (const port of ports) {
@@ -61,10 +62,14 @@ async function main(): Promise<void> {
     NEXTAUTH_URL: `http://127.0.0.1:${editPort}`,
     AUTH_URL: `http://127.0.0.1:${editPort}`,
   };
-  execSync("npm run tenant-documentation:edit-browser-regression", {
+  const editScript = path.join(process.cwd(), "scripts/tenant-documentation-edit-browser-regression.mjs");
+  const editRun = spawnSync(process.execPath, [editScript], {
     stdio: "inherit",
     env: editEnv,
   });
+  if (editRun.status !== 0) {
+    throw new Error("edit-browser-regression failed");
+  }
 
   killListenersOnPorts([Number(editPort)]);
   execSync("sleep 3");
@@ -75,11 +80,17 @@ async function main(): Promise<void> {
     NEXTAUTH_URL: `http://127.0.0.1:${lifePort}`,
     AUTH_URL: `http://127.0.0.1:${lifePort}`,
   };
-  const lifeNodeOptions = "--max-old-space-size=8192";
-  execSync("npm run tenant-documentation:lifecycle-browser-regression", {
+  const lifeScript = path.join(
+    process.cwd(),
+    "scripts/tenant-documentation-lifecycle-browser-regression.mjs",
+  );
+  const lifeRun = spawnSync(process.execPath, [lifeScript], {
     stdio: "inherit",
-    env: { ...lifeEnv, NODE_OPTIONS: lifeNodeOptions },
+    env: { ...lifeEnv, NODE_OPTIONS: "--max-old-space-size=8192" },
   });
+  if (lifeRun.status !== 0) {
+    throw new Error("lifecycle-browser-regression failed");
+  }
 
   console.log(JSON.stringify({ status: "PASS", browserGate: true }));
 }
