@@ -10,6 +10,7 @@ import { PageShell } from "@/components/ui/page";
 import {
   TENANT_DOCUMENTATION_LIST_PANEL_CLASS,
   TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS,
+  TENANT_DOCUMENTATION_MANAGE_ROUTE_ROOT_CLASS,
 } from "@/lib/tenant-documentation/tenant-documentation-visual-styles";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -64,23 +65,24 @@ export default async function TenantDocumentationArchivPage() {
   return (
     <PageShell fullWidth>
       <TenantDocumentationWhiteSurface>
+        <div className={TENANT_DOCUMENTATION_MANAGE_ROUTE_ROOT_CLASS}>
         <div className={TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS}>
-        <nav className="mb-2 text-xs text-[var(--sce-color-text-muted)]">
+        <nav className="mb-2 text-xs text-slate-600">
           <Link href="/dashboard/dokumentation" className="hover:underline">
             Dokumentation
           </Link>
           {" > Archiv"}
         </nav>
-        <h1 className="mb-4 text-2xl font-semibold text-[var(--sce-color-text-primary)]">Archiv</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-slate-900">Archiv</h1>
         {pages.length === 0 ? (
-          <p className="text-sm text-[var(--sce-color-text-muted)]">Keine archivierten Seiten.</p>
+          <p className="text-sm text-slate-600">Keine archivierten Seiten.</p>
         ) : (
           <ul className={TENANT_DOCUMENTATION_LIST_PANEL_CLASS}>
             {pages.map((page) => (
               <li key={page.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
-                  <p className="font-medium text-[var(--sce-color-text-primary)]">{page.title}</p>
-                  <p className="text-xs text-[var(--sce-color-text-muted)]">
+                  <p className="font-medium text-slate-900">{page.title}</p>
+                  <p className="text-xs text-slate-600">
                     {page.spaceTitle}
                     {isValid(new Date(page.archivedAt))
                       ? ` · Archiviert am ${format(new Date(page.archivedAt), "d. MMM yyyy", { locale: de })}`
@@ -92,6 +94,7 @@ export default async function TenantDocumentationArchivPage() {
             ))}
           </ul>
         )}
+        </div>
         </div>
       </TenantDocumentationWhiteSurface>
     </PageShell>

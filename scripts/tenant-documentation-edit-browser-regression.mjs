@@ -79,6 +79,11 @@ function startProductionServer(env) {
 
 function releasePort(port) {
   try {
+    execSync(`fuser -k ${port}/tcp 2>/dev/null || true`, { stdio: "ignore" });
+  } catch {
+    //
+  }
+  try {
     const out = execSync(`lsof -ti :${port}`, { encoding: "utf8" }).trim();
     for (const pid of out.split("\n").filter(Boolean)) {
       try {
@@ -87,11 +92,13 @@ function releasePort(port) {
         //
       }
     }
-    if (out) {
-      execSync("sleep 2");
-    }
   } catch {
     // port free
+  }
+  try {
+    execSync("sleep 2");
+  } catch {
+    //
   }
 }
 

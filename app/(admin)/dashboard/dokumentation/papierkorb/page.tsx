@@ -10,6 +10,7 @@ import { PageShell } from "@/components/ui/page";
 import {
   TENANT_DOCUMENTATION_LIST_PANEL_CLASS,
   TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS,
+  TENANT_DOCUMENTATION_MANAGE_ROUTE_ROOT_CLASS,
 } from "@/lib/tenant-documentation/tenant-documentation-visual-styles";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -63,16 +64,17 @@ export default async function TenantDocumentationPapierkorbPage() {
   return (
     <PageShell fullWidth>
       <TenantDocumentationWhiteSurface>
+        <div className={TENANT_DOCUMENTATION_MANAGE_ROUTE_ROOT_CLASS}>
         <div className={TENANT_DOCUMENTATION_MANAGE_PAGE_CLASS}>
-        <nav className="mb-2 text-xs text-[var(--sce-color-text-muted)]">
+        <nav className="mb-2 text-xs text-slate-600">
           <Link href="/dashboard/dokumentation" className="hover:underline">
             Dokumentation
           </Link>
           {" > Papierkorb"}
         </nav>
-        <h1 className="mb-4 text-2xl font-semibold text-[var(--sce-color-text-primary)]">Papierkorb</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-slate-900">Papierkorb</h1>
         {pages.length === 0 ? (
-          <p className="text-sm text-[var(--sce-color-text-muted)]">Keine Seiten im Papierkorb.</p>
+          <p className="text-sm text-slate-600">Keine Seiten im Papierkorb.</p>
         ) : (
           <ul className={TENANT_DOCUMENTATION_LIST_PANEL_CLASS}>
             {pages.map((page) => (
@@ -80,11 +82,11 @@ export default async function TenantDocumentationPapierkorbPage() {
                 <div>
                   <Link
                     href={tenantDocumentationPagePath(page.id)}
-                    className="font-medium text-[var(--sce-color-text-primary)] hover:underline"
+                    className="font-medium text-slate-900 hover:underline"
                   >
                     {page.title}
                   </Link>
-                  <p className="text-xs text-[var(--sce-color-text-muted)]">
+                  <p className="text-xs text-slate-600">
                     {page.spaceTitle}
                     {isValid(new Date(page.trashedAt))
                       ? ` · Gelöscht am ${format(new Date(page.trashedAt), "d. MMM yyyy", { locale: de })}`
@@ -96,6 +98,7 @@ export default async function TenantDocumentationPapierkorbPage() {
             ))}
           </ul>
         )}
+        </div>
         </div>
       </TenantDocumentationWhiteSurface>
     </PageShell>
