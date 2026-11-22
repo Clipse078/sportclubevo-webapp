@@ -1856,29 +1856,6 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
     "defects": []
   },
   {
-    "urlPattern": "/dashboard/dokumentation/p/[pageId]",
-    "sourceFile": "app/(admin)/dashboard/dokumentation/p/[pageId]/page.tsx",
-    "module": "dashboard",
-    "requiredPermissions": [
-      "dashboard.view"
-    ],
-    "testPersona": "Tenant documentation editor",
-    "pageArchetype": "workspace-hub",
-    "intercept": false,
-    "parallelSlot": null,
-    "architectureAdoption": "IMPLEMENTED",
-    "automatedChecks": "PASSED",
-    "desktop": "PENDING",
-    "compactDesktop": "PENDING",
-    "tablet": "PENDING",
-    "mobile": "PENDING",
-    "accessibility": "PENDING",
-    "functional": "PENDING",
-    "authenticatedVisual": "PENDING",
-    "evidenceReferences": [],
-    "defects": []
-  },
-  {
     "urlPattern": "/dashboard/events",
     "sourceFile": "app/(admin)/dashboard/events/page.tsx",
     "module": "events",
@@ -6288,12 +6265,12 @@ export const SCE_DS2_07G_VERIFICATION_MATRIX: SceDs207gVerificationMatrixEntry[]
 export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
   "matrixVersion": "2026-11-11-batch-11",
   "evidenceContractVersion": "2026-11-11-batch-11",
-  "generatedAt": "2026-11-21T22:34:13.764Z",
-  "totalCanonicalRoutes": 227,
+  "generatedAt": "2026-11-22T19:56:49.261Z",
+  "totalCanonicalRoutes": 226,
   "verifiedAuthenticatedVisualCount": 0,
-  "pendingAuthenticatedVisualCount": 227,
+  "pendingAuthenticatedVisualCount": 226,
   "blockedCount": 0,
-  "automatedChecksPassedCount": 227,
+  "automatedChecksPassedCount": 226,
   "highRiskBatchSize": 41,
   "highRiskVerifiedCount": 0,
   "highRiskResponsiveVerifiedCount": 41,
@@ -6313,6 +6290,6 @@ export const SCE_DS2_07G_VERIFICATION_SUMMARY: SceDs207gVerificationSummary = {
 };
 
 export const SCE_DS2_07G_STATIC_AUDIT = {
-  "entriesScanned": 227,
+  "entriesScanned": 226,
   "defects": []
 };

@@ -92,7 +92,7 @@ describe("SCE-DS2-07G visual and functional verification", () => {
   });
 
   it("runs static canonical audit without blocking defects", () => {
-    expect(SCE_DS2_07G_STATIC_AUDIT.entriesScanned).toBe(227);
+    expect(SCE_DS2_07G_STATIC_AUDIT.entriesScanned).toBe(226);
     expect(SCE_DS2_07G_STATIC_AUDIT.defects).toEqual([]);
   });
 
