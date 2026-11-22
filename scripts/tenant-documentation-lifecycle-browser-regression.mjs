@@ -10,6 +10,28 @@ const BASE_URL =
   process.env.TENANT_DOC_BROWSER_BASE_URL?.trim() || `http://127.0.0.1:${PORT}`;
 const TEST_DB = process.env.TEST_DATABASE_URL?.trim();
 
+function parseFixtureStdout(stdout) {
+  const line = stdout
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("{"))
+    .pop();
+  if (!line) throw new Error("Fixture did not print JSON on stdout");
+  return JSON.parse(line);
+}
+
+function fixtureProcessEnv() {
+  return {
+    ...process.env,
+    DATABASE_URL: TEST_DB,
+    DIRECT_URL: TEST_DB,
+    TEST_DATABASE_URL: TEST_DB,
+    SCE_DATA_ENVIRONMENT: "LOCAL",
+    SCE_OPERATION_AUTHORIZATION: "tenant-documentation-lifecycle-browser-regression",
+  };
+}
+
 function assertLocalTestDb(url) {
   if (!url) throw new Error("TEST_DATABASE_URL required (local disposable only)");
   const host = new URL(url).hostname.toLowerCase();
@@ -95,17 +117,23 @@ async function main() {
   if (process.env.TENANT_DOC_BROWSER_SKIP_BUILD !== "1") {
     execSync("npm run build", { stdio: "inherit", env: migrateEnv });
   }
-  execSync("npx prisma migrate deploy", { stdio: "inherit", env: migrateEnv });
+  if (process.env.TENANT_DOC_BROWSER_SKIP_MIGRATE !== "1") {
+    execSync("npx prisma migrate deploy", { stdio: "inherit", env: migrateEnv });
+  }
 
   const fixtureJson = execSync("npx tsx scripts/tenant-documentation-lifecycle-browser-fixture.ts", {
     encoding: "utf8",
-    env: { ...process.env, DATABASE_URL: TEST_DB, DIRECT_URL: TEST_DB },
+    maxBuffer: 10 * 1024 * 1024,
+    env: fixtureProcessEnv(),
   });
-  const fixture = JSON.parse(fixtureJson.trim().split("\n").pop());
+  const fixture = parseFixtureStdout(fixtureJson);
 
   const serverEnv = {
+    ...process.env,
     DATABASE_URL: TEST_DB,
     DIRECT_URL: TEST_DB,
+    TEST_DATABASE_URL: TEST_DB,
+    NODE_ENV: "production",
     APP_ENV: "test",
     SCE_DATA_ENVIRONMENT: "LOCAL",
     NEXTAUTH_URL: BASE_URL,
@@ -114,6 +142,9 @@ async function main() {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   };
   const server = startProductionServer(serverEnv);
+  const serverLog = [];
+  server.stdout?.on("data", (c) => serverLog.push(String(c)));
+  server.stderr?.on("data", (c) => serverLog.push(String(c)));
   const shutdown = () => {
     try {
       server.kill("SIGKILL");
@@ -122,10 +153,21 @@ async function main() {
     }
     releasePort(PORT);
   };
-  process.on("exit", shutdown);
+  process.on("SIGINT", () => {
+    shutdown();
+    process.exit(1);
+  });
 
   try {
-    await waitForServer();
+    try {
+      await waitForServer();
+    } catch (err) {
+      writeFileSync(
+        "/opt/cursor/artifacts/tenant-doc-lifecycle-browser-server.log",
+        serverLog.join(""),
+      );
+      throw err;
+    }
     const browser = await chromium.launch();
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
@@ -205,8 +247,13 @@ async function main() {
       JSON.stringify(report, null, 2),
     );
     console.log(JSON.stringify(report));
-  } finally {
     shutdown();
+    process.removeAllListeners("SIGINT");
+    process.exit(0);
+  } catch (error) {
+    shutdown();
+    process.removeAllListeners("SIGINT");
+    throw error;
   }
 }
 

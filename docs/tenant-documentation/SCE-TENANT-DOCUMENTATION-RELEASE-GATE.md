@@ -4,7 +4,7 @@
 
 | Gate | Result |
 | --- | --- |
-| Disposable migrate + integration (`npm run tenant-documentation:disposable-release-gate`) | **PASS** (integration **12/12** on disposable Postgres; log `tenant-documentation-disposable-release-gate-b8ba7a7.log`) |
+| Disposable migrate + integration (`TENANT_DOC_BROWSER_REGRESSION=1 npm run tenant-documentation:disposable-release-gate`) | **PASS** — integration **12/12** + production-build browser legs (log `tenant-documentation-disposable-release-gate-head.log`) |
 | Edit browser regression (`TENANT_DOC_BROWSER_REGRESSION=1`, requires Playwright + auth secret) | **PASS** — `/opt/cursor/artifacts/tenant-documentation-edit-browser-regression.json` |
 | Lifecycle browser regression (⋯ menu, Archiv, Papierkorb, restore) | **PASS** — `/opt/cursor/artifacts/tenant-documentation-lifecycle-browser-regression.json` |
 | DS2-07B route registry sync (`node scripts/sce-ds2-06-route-inventory-scan.mjs`) | **PASS** locally (`npm run test:route-governance`) |

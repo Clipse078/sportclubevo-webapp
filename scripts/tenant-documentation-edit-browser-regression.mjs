@@ -15,6 +15,28 @@ const BASE_URL =
   process.env.TENANT_DOC_BROWSER_BASE_URL?.trim() || `http://127.0.0.1:${PORT}`;
 const TEST_DB = process.env.TEST_DATABASE_URL?.trim();
 
+function parseFixtureStdout(stdout) {
+  const line = stdout
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("{"))
+    .pop();
+  if (!line) throw new Error("Fixture did not print JSON on stdout");
+  return JSON.parse(line);
+}
+
+function fixtureProcessEnv() {
+  return {
+    ...process.env,
+    DATABASE_URL: TEST_DB,
+    DIRECT_URL: TEST_DB,
+    TEST_DATABASE_URL: TEST_DB,
+    SCE_DATA_ENVIRONMENT: "LOCAL",
+    SCE_OPERATION_AUTHORIZATION: "tenant-documentation-edit-browser-regression",
+  };
+}
+
 function assertLocalTestDb(url) {
   if (!url) throw new Error("TEST_DATABASE_URL required (local disposable only)");
   const parsed = new URL(url);
@@ -111,21 +133,23 @@ async function main() {
   if (process.env.TENANT_DOC_BROWSER_SKIP_BUILD !== "1") {
     execSync("npm run build", { stdio: "inherit", env: migrateEnv });
   }
-  execSync("npx prisma migrate deploy", { stdio: "inherit", env: migrateEnv });
+  if (process.env.TENANT_DOC_BROWSER_SKIP_MIGRATE !== "1") {
+    execSync("npx prisma migrate deploy", { stdio: "inherit", env: migrateEnv });
+  }
 
   const fixtureJson = execSync("npx tsx scripts/tenant-documentation-browser-fixture.ts", {
     encoding: "utf8",
-    env: {
-      ...process.env,
-      DATABASE_URL: TEST_DB,
-      DIRECT_URL: TEST_DB,
-    },
+    maxBuffer: 10 * 1024 * 1024,
+    env: fixtureProcessEnv(),
   });
-  const fixture = JSON.parse(fixtureJson.trim().split("\n").pop());
+  const fixture = parseFixtureStdout(fixtureJson);
 
   const serverEnv = {
+    ...process.env,
     DATABASE_URL: TEST_DB,
     DIRECT_URL: TEST_DB,
+    TEST_DATABASE_URL: TEST_DB,
+    NODE_ENV: "production",
     APP_ENV: "test",
     SCE_DATA_ENVIRONMENT: "LOCAL",
     NEXTAUTH_URL: BASE_URL,
@@ -137,6 +161,11 @@ async function main() {
   const serverLog = [];
   server.stdout?.on("data", (c) => serverLog.push(String(c)));
   server.stderr?.on("data", (c) => serverLog.push(String(c)));
+  server.on("exit", (code, signal) => {
+    if (code !== 0 && code !== null) {
+      serverLog.push(`\n[server exited code=${code} signal=${signal ?? ""}]\n`);
+    }
+  });
 
   const shutdown = () => {
     try {
@@ -146,8 +175,10 @@ async function main() {
     }
     releasePort(PORT);
   };
-  process.on("exit", shutdown);
-  process.on("SIGINT", () => process.exit(1));
+  process.on("SIGINT", () => {
+    shutdown();
+    process.exit(1);
+  });
 
   const collaborationEvents = [];
 
@@ -398,8 +429,13 @@ async function main() {
       JSON.stringify(report, null, 2),
     );
     console.log(JSON.stringify({ status: "PASS", freshToken, existing: existingResult.comparison }));
-  } finally {
     shutdown();
+    process.removeAllListeners("SIGINT");
+    process.exit(0);
+  } catch (error) {
+    shutdown();
+    process.removeAllListeners("SIGINT");
+    throw error;
   }
 }
 
