@@ -15,6 +15,7 @@ import {
 } from "@/lib/nav/app-navigation-model";
 import { getVisibleNavSections, NAV_SECTIONS } from "@/lib/nav/nav-config";
 import { resolveClubWorkspaceNavItemDomainId } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
+import { TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS } from "@/lib/tenant-documentation/route-access";
 
 const WORKSPACE_USER: PermissionKey[] = [PERMISSIONS.WORKSPACE_VIEW];
 const DOC_USER: PermissionKey[] = [PERMISSIONS.TENANT_DOCUMENTATION_VIEW];
@@ -62,6 +63,13 @@ describe("SCE-NAV-DOCS-01 club documents navigation", () => {
   it("D: ineligible user does not gain Dokumente via Club placement", () => {
     expect(visibleTopLevelLabels(NO_WORKSPACE)).not.toContain("Dokumente");
     expect(clubDestinationKeys(NO_WORKSPACE)).not.toContain("workspace");
+  });
+
+  it("E2: Dokumentation nav permission keys match hub route contract", () => {
+    const docItem = NAV_SECTIONS.flatMap((s) => s.items).find(
+      (i) => i.key === "tenant-documentation",
+    );
+    expect(docItem?.permissionKeys).toEqual([...TENANT_DOCUMENTATION_HUB_ROUTE_PERMISSIONS]);
   });
 
   it("E: canonical Dokumente route unchanged", () => {

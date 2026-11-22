@@ -86,7 +86,7 @@ Canonical pages that are not yet visually verified stay on DS2-07G. Legacy and p
 | `/dashboard/admin/users` | `/dashboard/admin/people-access` | `app/(admin)/dashboard/admin/users/page.tsx` |
 | `/dashboard/admin/users/new` | `/dashboard/admin/people-access/new` | `app/(admin)/dashboard/admin/users/new/page.tsx` |
 | `/dashboard/anliegen-meldungen` | `dynamic` | `app/(admin)/dashboard/anliegen-meldungen/page.tsx` |
-| `/dashboard/dokumentation` | `/dashboard` | `app/(admin)/dashboard/dokumentation/page.tsx` |
+| `/dashboard/dokumentation` | `/dashboard/dokumentation/p/:pageId` (or access-denied surface) | `app/(admin)/dashboard/dokumentation/page.tsx` |
 | `/dashboard/finance/income_statement` | `/dashboard/finance/reports` | `app/(admin)/dashboard/finance/income_statement/page.tsx` |
 | `/dashboard/planner` | `/dashboard/planner/week` | `app/(admin)/dashboard/planner/page.tsx` |
 | `/dashboard/registrations` | `/tenant/:param/cockpit/registrations` | `app/(admin)/dashboard/registrations/page.tsx` |

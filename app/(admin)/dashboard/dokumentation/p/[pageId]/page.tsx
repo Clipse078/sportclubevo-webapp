@@ -1,38 +1,43 @@
 import { TenantDocumentationAccessLevel } from "@prisma/client";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
 import { PageShell } from "@/components/ui/page";
 import { isRichTextValue } from "@/lib/cms/rich-text";
 import { enrichTipTapMentionLabels } from "@/lib/collaboration/mentions/enrich-mention-labels";
 import { richTextDocumentToHtmlWithMentions } from "@/lib/collaboration/mentions/render-inline-mentions-html";
 import { prisma } from "@/lib/db/prisma";
-import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import {
   accessLevelPermits,
   resolveTenantDocumentationActor,
 } from "@/lib/tenant-documentation/authorization";
 import { resolvePageEffectiveAccess } from "@/lib/tenant-documentation/page-access-service";
+import { resolveTenantDocumentationHubRouteAccess } from "@/lib/tenant-documentation/route-access";
 
 type PageProps = { params: Promise<{ pageId: string }> };
 
 export default async function TenantDocumentationPage({ params }: PageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
-    PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
-    PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH,
-    PERMISSIONS.TENANT_DOCUMENTATION_MANAGE,
-  ]);
+  const access = await resolveTenantDocumentationHubRouteAccess();
+
+  if (access.kind === "unauthenticated") {
+    redirect("/login");
+  }
+
+  if (access.kind === "forbidden" || access.kind === "no_tenant_context") {
+    return (
+      <PageShell fullWidth>
+        <TenantDocumentationUnauthorizedState reason={access.kind} />
+      </PageShell>
+    );
+  }
 
   const { pageId } = await params;
-  const tenantId = session.user?.activeTenantId;
-  const actorUserId = session.user?.effectiveUserId ?? session.user?.id;
-  if (!tenantId || !actorUserId) notFound();
+  const tenantId = access.tenantId;
+  const actorUserId = access.actorUserId;
 
   const page = await prisma.tenantDocumentationPage.findFirst({
     where: { id: pageId, tenantId },
@@ -44,8 +49,7 @@ export default async function TenantDocumentationPage({ params }: PageProps) {
   });
   if (!page) notFound();
 
-  const effective = await getRequestEffectivePermissions(actorUserId, tenantId);
-  const permissionKeys = [...effective.platform, ...effective.tenant];
+  const permissionKeys = access.permissionKeys;
   const actor = await resolveTenantDocumentationActor({
     tenantId,
     userId: actorUserId,

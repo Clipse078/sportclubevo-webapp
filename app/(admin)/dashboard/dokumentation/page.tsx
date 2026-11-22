@@ -1,25 +1,37 @@
 import { notFound, redirect } from "next/navigation";
 
+import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
+import { PageShell } from "@/components/ui/page";
 import { prisma } from "@/lib/db/prisma";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { ensureDefaultSpace } from "@/lib/tenant-documentation/page-tree-service";
+import { resolveTenantDocumentationHubRouteAccess } from "@/lib/tenant-documentation/route-access";
 
 export default async function TenantDocumentationHubPage() {
-  const session = await requireAnyPermission([
-    PERMISSIONS.TENANT_DOCUMENTATION_VIEW,
-    PERMISSIONS.TENANT_DOCUMENTATION_EDIT,
-    PERMISSIONS.TENANT_DOCUMENTATION_PUBLISH,
-    PERMISSIONS.TENANT_DOCUMENTATION_MANAGE,
-  ]);
+  const access = await resolveTenantDocumentationHubRouteAccess();
+
+  if (access.kind === "unauthenticated") {
+    redirect("/login");
+  }
+
+  if (access.kind === "forbidden" || access.kind === "no_tenant_context") {
+    return (
+      <PageShell>
+        <TenantDocumentationUnauthorizedState reason={access.kind} />
+      </PageShell>
+    );
+  }
 
   const tenant = await getActiveTenant();
-  if (!tenant) redirect("/dashboard");
+  if (!tenant) {
+    return (
+      <PageShell>
+        <TenantDocumentationUnauthorizedState reason="no_tenant_context" />
+      </PageShell>
+    );
+  }
 
-  const actorUserId = session.user?.id ?? null;
-
-  await ensureDefaultSpace(tenant.id, actorUserId);
+  await ensureDefaultSpace(tenant.id, access.actorUserId);
 
   const page = await prisma.tenantDocumentationPage.findFirst({
     where: { tenantId: tenant.id },
