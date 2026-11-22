@@ -15,3 +15,7 @@ export const SCE_TENANT_DOCUMENTATION_MIGRATION_ORDER = [
 
 export const SCE_TENANT_DOCUMENTATION_PERMISSION_SYNC_OPERATION =
   "sync-tenant-documentation-permissions" as const;
+
+/** Narrow STAGE reconcile: club_admin__fc-allschwil only (no catalog / cross-tenant sweep). */
+export const SCE_TENANT_DOCUMENTATION_FCA_CLUB_ADMIN_SYNC_OPERATION =
+  "sync-tenant-documentation-club-admin-fca" as const;

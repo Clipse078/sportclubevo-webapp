@@ -83,6 +83,7 @@
     "tenant-documentation:disposable-release-gate": "tsx scripts/sce-tenant-documentation-disposable-release-gate.ts",
     "tenant-documentation:stage-migration-verify": "tsx scripts/sce-tenant-documentation-stage-migration-verify-readonly.ts",
     "sync-tenant-documentation-permissions": "tsx scripts/sync-tenant-documentation-permissions.ts",
+    "tenant-documentation:stage-club-admin-reconcile": "tsx scripts/sce-tenant-documentation-stage-club-admin-reconcile.ts",
     "sce-public-reference:disposable-migration-verify": "tsx scripts/sce-public-reference-disposable-migration-verify.ts",
     "pr-1020:disposable-fixture": "tsx scripts/pr-1020-disposable-umsetzungsplanung-fixture.ts",
     "pr-1020:disposable-readiness": "tsx scripts/pr-1020-disposable-po-uat-readiness.ts",
