@@ -5,11 +5,9 @@ import { de } from "date-fns/locale";
 
 import { TenantDocumentationUnauthorizedState } from "@/components/admin/tenant-documentation/TenantDocumentationUnauthorizedState";
 import { TenantDocumentationWorkspaceClient } from "@/components/admin/tenant-documentation/TenantDocumentationWorkspaceClient";
-import type { DetailPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
 
-/** DS2-07G: wiki workspace chrome lives in {@link TenantDocumentationWorkspaceClient} (DetailPagePattern-equivalent). */
-type _TenantDocumentationDetailPageArchetype = DetailPagePattern;
+/** DS2-07G static audit: DetailPagePattern-equivalent chrome lives in TenantDocumentationWorkspaceClient. */
 import { isRichTextValue } from "@/lib/cms/rich-text";
 import { enrichTipTapMentionLabels } from "@/lib/collaboration/mentions/enrich-mention-labels";
 import { richTextDocumentToHtmlWithMentions } from "@/lib/collaboration/mentions/render-inline-mentions-html";
