@@ -3,6 +3,7 @@
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useMemo, type ReactNode } from "react";
 
+import { SceWritingInsertMenu } from "@/components/sce-writing/SceWritingInsertMenu";
 import { SceWritingEngineToolbar } from "@/components/sce-writing/SceWritingEngineToolbar";
 import { emptyRichText, type RichTextValue } from "@/lib/cms/rich-text";
 import {
@@ -108,12 +109,13 @@ export function SceWritingEngine({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg border border-[var(--border)] ${shellClassName ?? "bg-[var(--surface)]"} ${disabled ? "opacity-60" : ""}`}
+      className={`relative overflow-visible rounded-lg border border-[var(--border)] ${shellClassName ?? "bg-[var(--surface)]"} ${disabled ? "opacity-60" : ""}`}
       data-sce-writing-engine="true"
       data-sce-writing-profile={profile}
       data-testid={testId}
     >
       {mentionOverlay}
+      {editor && !disabled ? <SceWritingInsertMenu editor={editor} profile={profile} /> : null}
       {editor && !disabled && !hideToolbar ? (
         <SceWritingEngineToolbar
           editor={editor}
