@@ -1,66 +1,150 @@
 /**
- * Disposable migration verify for SCE tenant-wide public references (Aufgabe first).
+ * PR #1028 — disposable Postgres migration replay (never STAGE / production).
  *
- *   APPLY_DATABASE_MIGRATIONS=false npm run sce-tenant-task-references:disposable-migration-verify
+ *   TEST_DATABASE_URL=postgresql://localhost/sce_tenant_task_refs_fresh \
+ *     npm run sce-tenant-task-references:disposable-migration-verify
+ *
+ * Applies repo migrations only when every Prisma endpoint matches TEST_DATABASE_URL.
  */
+import "dotenv/config";
+import { execSync } from "node:child_process";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { SCE_TENANT_PUBLIC_REFERENCES_MIGRATION } from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
+import { Pool } from "pg";
 
-const prisma = new PrismaClient();
+import {
+  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
+  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER,
+} from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
+import {
+  buildDisposablePrismaMigrateProcessEnv,
+  collectPrismaMigrationEndpointReport,
+} from "@/lib/test/safe-disposable-migration-env";
+import { maskDatabaseUrl } from "@/lib/test/safe-test-database";
 
-async function tableExists(name: string): Promise<boolean> {
+function migrationChecksum(name: string): string {
+  const sqlPath = path.join(process.cwd(), `prisma/migrations/${name}/migration.sql`);
+  return crypto.createHash("sha256").update(fs.readFileSync(sqlPath)).digest("hex");
+}
+
+async function tableExists(
+  prisma: PrismaClient,
+  name: string,
+): Promise<boolean> {
   const rows = await prisma.$queryRawUnsafe<Array<{ reg: string | null }>>(
     `SELECT to_regclass('public."${name}"')::text AS reg`,
   );
   return Boolean(rows[0]?.reg);
 }
 
-async function main() {
-  const migrationApplied = await prisma.$queryRaw<
-    Array<{ migration_name: string }>
-  >`SELECT migration_name FROM "_prisma_migrations" WHERE migration_name = ${SCE_TENANT_PUBLIC_REFERENCES_MIGRATION}`;
-
-  if (migrationApplied.length === 0) {
-    console.error(
-      `[sce-tenant-public-ref] migration ${SCE_TENANT_PUBLIC_REFERENCES_MIGRATION} not applied on disposable DB`,
-    );
-    process.exit(1);
-  }
-
-  const checks = {
-    tenantShortCodeColumn: await prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
-      `SELECT EXISTS (
+async function verifySchema(prisma: PrismaClient): Promise<boolean> {
+  const tenantShortCodeColumn = await prisma.$queryRawUnsafe<
+    Array<{ exists: boolean }>
+  >(
+    `SELECT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_name = 'Tenant' AND column_name = 'publicReferenceShortCode'
       ) AS exists`,
-    ),
-    tenantPublicNumberColumn: await prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
-      `SELECT EXISTS (
+  );
+  const tenantPublicNumberColumn = await prisma.$queryRawUnsafe<
+    Array<{ exists: boolean }>
+  >(
+    `SELECT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_name = 'Task' AND column_name = 'tenantPublicNumber'
       ) AS exists`,
-    ),
-    sceTenantPublicNumberSequence: await tableExists("SceTenantPublicNumberSequence"),
-    sceTenantPublicNumberLedger: await tableExists("SceTenantPublicNumberLedger"),
-  };
+  );
 
-  if (
-    !checks.tenantShortCodeColumn[0]?.exists ||
-    !checks.tenantPublicNumberColumn[0]?.exists ||
-    !checks.sceTenantPublicNumberSequence ||
-    !checks.sceTenantPublicNumberLedger
-  ) {
-    console.error("[sce-tenant-public-ref] schema verification failed", checks);
-    process.exit(1);
-  }
-
-  console.log("sce-tenant-public-references: disposable migration verify OK");
+  return (
+    Boolean(tenantShortCodeColumn[0]?.exists) &&
+    Boolean(tenantPublicNumberColumn[0]?.exists) &&
+    (await tableExists(prisma, "SceTenantPublicNumberSequence")) &&
+    (await tableExists(prisma, "SceTenantPublicNumberLedger"))
+  );
 }
 
-main()
-  .catch((error) => {
-    console.error("[sce-tenant-task-references-disposable-migration-verify] FAILED:", error);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+async function loadAppliedMigrations(connectionString: string) {
+  const pool = new Pool({ connectionString });
+  const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+  try {
+    const rows = await prisma.$queryRaw<
+      Array<{ migration_name: string; checksum: string; finished_at: Date | null }>
+    >`
+      SELECT migration_name, checksum, finished_at
+      FROM "_prisma_migrations"
+      WHERE migration_name = ANY(${[...SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER]}::text[])
+        AND finished_at IS NOT NULL
+        AND rolled_back_at IS NULL
+    `;
+    const schemaOk = await verifySchema(prisma);
+    return { rows, schemaOk };
+  } finally {
+    await prisma.$disconnect();
+    await pool.end();
+  }
+}
+
+async function main(): Promise<void> {
+  const endpointsBefore = collectPrismaMigrationEndpointReport(process.env);
+  const migrateEnv = buildDisposablePrismaMigrateProcessEnv(process.env);
+
+  execSync("npx prisma migrate deploy", {
+    stdio: "inherit",
+    env: migrateEnv,
+  });
+
+  const connectionString = migrateEnv.DATABASE_URL?.trim();
+  if (!connectionString) {
+    throw new Error("Disposable DATABASE_URL missing after guard.");
+  }
+
+  const { rows, schemaOk } = await loadAppliedMigrations(connectionString);
+  const repoChecksum = migrationChecksum(SCE_TENANT_PUBLIC_REFERENCES_MIGRATION);
+
+  const migrationReport = SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER.map((name) => {
+    const row = rows.find((r) => r.migration_name === name);
+    return {
+      name,
+      applied: Boolean(row),
+      checksumInDb: row?.checksum ?? null,
+      repoChecksum,
+      checksumMatch: row?.checksum === repoChecksum,
+      finishedAt: row?.finished_at?.toISOString?.() ?? null,
+    };
+  });
+
+  console.log(
+    JSON.stringify(
+      {
+        pullRequest: 1028,
+        writePerformed: true,
+        disposableTarget: maskDatabaseUrl(connectionString),
+        endpointsBeforeGuard: endpointsBefore,
+        endpointsAfterGuard: collectPrismaMigrationEndpointReport(migrateEnv),
+        migrationReport,
+        schemaVerification: schemaOk ? "OK" : "FAILED",
+        note: "Replayed on disposable Postgres only; shared STAGE was not targeted.",
+      },
+      null,
+      2,
+    ),
+  );
+
+  if (!migrationReport.every((row) => row.applied && row.checksumMatch) || !schemaOk) {
+    process.exitCode = 1;
+  } else {
+    console.log("sce-tenant-public-references: disposable migration verify OK");
+  }
+}
+
+main().catch((error) => {
+  console.error(
+    "[sce-tenant-task-references-disposable-migration-verify] FAILED:",
+    error instanceof Error ? error.message : error,
+  );
+  process.exit(1);
+});
