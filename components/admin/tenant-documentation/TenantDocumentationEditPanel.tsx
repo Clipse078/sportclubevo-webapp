@@ -114,8 +114,12 @@ export function TenantDocumentationEditPanel(props: Props) {
           onContentJsonChange={onContentJsonChange}
         />
       ) : (
-        <div className="min-h-[320px] rounded-lg border border-[var(--border)] bg-white px-6 py-4 text-sm text-[var(--muted)]">
-          Entwurf wird geladen…
+        <div
+          className="overflow-hidden rounded-lg border border-[var(--border)] bg-white text-sm text-[var(--muted)]"
+          data-testid="tenant-doc-collab-editor-mount-shell"
+        >
+          <div className="border-b border-[var(--border)] bg-[var(--surface-2)]/80 px-2 py-1.5 min-h-[42px]" />
+          <div className="px-6 py-4 min-h-[320px]">Entwurf wird geladen…</div>
         </div>
       )}
     </>
