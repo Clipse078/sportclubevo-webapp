@@ -4,11 +4,16 @@
 import { execSync, spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
+import {
+  assertAuthenticatedWhiteEditionShell,
+  captureFullViewportShellEvidence,
+} from "./sce-white-edition-rendered-shell-assert.mjs";
 
 const PORT = Number.parseInt(process.env.SCE_WRITING_AUFGABE_PORT ?? "3101", 10);
 const BASE_URL =
   process.env.SCE_WRITING_AUFGABE_BASE_URL?.trim() || `http://127.0.0.1:${PORT}`;
 const TEST_DB = process.env.TEST_DATABASE_URL?.trim();
+const SHA_LABEL = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 12);
 
 function parseFixtureStdout(stdout) {
   const line = stdout
@@ -54,12 +59,72 @@ async function login(page, email, password) {
   await page.goto(`${BASE_URL}/dashboard`, { waitUntil: "domcontentloaded", timeout: 120_000 });
 }
 
+function releasePort(port) {
+  try {
+    const out = execSync(`lsof -ti :${port}`, { encoding: "utf8" }).trim();
+    for (const pid of out.split("\n").filter(Boolean)) {
+      try {
+        process.kill(Number(pid), "SIGKILL");
+      } catch {
+        //
+      }
+    }
+  } catch {
+    // port free
+  }
+}
+
 function startProductionServer(env) {
   return spawn("npm", ["run", "start", "--", "-H", "127.0.0.1", "-p", String(PORT)], {
     cwd: process.cwd(),
     env: { ...process.env, ...env, PORT: String(PORT) },
     stdio: ["ignore", "pipe", "pipe"],
   });
+}
+
+async function assertSharedTaskEditor(page) {
+  const editorShell = page.getByTestId("task-description-editor");
+  await editorShell.waitFor({ state: "visible", timeout: 120_000 });
+  const profile = await editorShell.getAttribute("data-sce-writing-profile");
+  const shared = await editorShell.getAttribute("data-sce-writing-engine");
+  if (shared !== "true" || profile !== "task") {
+    throw new Error(
+      `Expected shared SceWritingEngine (task), got engine=${shared} profile=${profile}`,
+    );
+  }
+  return page.locator('[data-testid="task-description-editor"] .ProseMirror');
+}
+
+async function exerciseEditorTyping(page, prose) {
+  await prose.click();
+  const token = `WRITING-${Date.now()}`;
+  await page.keyboard.type(token, { delay: 10 });
+  await page.keyboard.press("Control+z");
+  const afterUndo = await prose.innerText();
+  if (afterUndo.includes(token)) {
+    throw new Error("Undo did not remove typed token");
+  }
+  await page.keyboard.press("Control+Shift+z");
+  const afterRedo = await prose.innerText();
+  if (!afterRedo.includes(token)) {
+    throw new Error("Redo did not restore typed token");
+  }
+
+  const boldBtn = page.getByTitle("Fett (Strg+B)");
+  await boldBtn.click();
+  await page.keyboard.type(" bold", { delay: 8 });
+
+  const text = await prose.innerText();
+  if (!text.includes(token) || !text.includes("bold")) {
+    throw new Error(`Description round-trip failed in editor: "${text.slice(0, 120)}"`);
+  }
+  const hasBold = await prose.evaluate(
+    (el) => el.querySelector("strong")?.textContent?.includes("bold") ?? false,
+  );
+  if (!hasBold) {
+    throw new Error("Bold formatting not present in ProseMirror DOM");
+  }
+  return { token, text };
 }
 
 async function main() {
@@ -80,8 +145,11 @@ async function main() {
     NEXTAUTH_SECRET: authSecret,
     NEXTAUTH_URL: BASE_URL,
     APP_BASE_URL: BASE_URL,
+    NODE_ENV: "production",
+    SCE_WHITE_EDITION: process.env.SCE_WHITE_EDITION ?? "1",
   };
 
+  releasePort(PORT);
   const server = startProductionServer(serverEnv);
   let serverExited = false;
   server.on("exit", () => {
@@ -89,7 +157,12 @@ async function main() {
   });
 
   const shutdown = () => {
-    if (!serverExited) server.kill("SIGTERM");
+    try {
+      if (!serverExited) server.kill("SIGKILL");
+    } catch {
+      //
+    }
+    releasePort(PORT);
   };
   process.on("SIGINT", shutdown);
 
@@ -123,33 +196,50 @@ async function main() {
       waitUntil: "domcontentloaded",
       timeout: 120_000,
     });
+    await assertAuthenticatedWhiteEditionShell(page, { label: "aufgabe-neu" });
 
-    const editorShell = page.getByTestId("task-description-editor");
-    await editorShell.waitFor({ state: "visible", timeout: 120_000 });
-    const profile = await editorShell.getAttribute("data-sce-writing-profile");
-    const shared = await editorShell.getAttribute("data-sce-writing-engine");
-    if (shared !== "true" || profile !== "task") {
-      throw new Error(
-        `Expected shared SceWritingEngine (task), got engine=${shared} profile=${profile}`,
-      );
+    const proseCreate = await assertSharedTaskEditor(page);
+    await proseCreate.waitFor({ state: "visible", timeout: 60_000 });
+    const createTyping = await exerciseEditorTyping(page, proseCreate);
+
+    await captureFullViewportShellEvidence(
+      page,
+      `/opt/cursor/artifacts/aufgabe-create-${SHA_LABEL}-1440.png`,
+    );
+
+    await page.goto(`${BASE_URL}/dashboard/aufgaben/${fixture.existingTaskId}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 120_000,
+    });
+    await assertAuthenticatedWhiteEditionShell(page, { label: "aufgabe-edit" });
+
+    const descriptionOpen = page.getByTestId("task-workspace-description");
+    await descriptionOpen.waitFor({ state: "visible", timeout: 60_000 });
+    await descriptionOpen.click();
+
+    const proseEdit = await assertSharedTaskEditor(page);
+    await proseEdit.waitFor({ state: "visible", timeout: 60_000 });
+    const editPre = await proseEdit.innerText();
+    if (!editPre.includes("Fixture seed")) {
+      throw new Error(`Existing description not hydrated: "${editPre.slice(0, 160)}"`);
+    }
+  if (!editPre.includes("bold")) {
+      throw new Error("Existing bold content missing after hydration");
     }
 
-    const prose = page.locator('[data-testid="task-description-editor"] .ProseMirror');
-    await prose.waitFor({ state: "visible", timeout: 60_000 });
-    await prose.click();
-    const token = `WRITING-${Date.now()}`;
-    await page.keyboard.type(token, { delay: 10 });
-    await page.keyboard.press("Control+z");
-    await page.keyboard.type(token, { delay: 10 });
-
-    const boldBtn = page.getByTitle("Fett (Strg+B)");
-    await boldBtn.click();
-    await page.keyboard.type(" bold", { delay: 8 });
-
-    const text = await prose.innerText();
-    if (!text.includes(token) || !text.includes("bold")) {
-      throw new Error(`Description round-trip failed in editor: "${text.slice(0, 120)}"`);
+    await proseEdit.click();
+    await page.keyboard.press("End");
+    const append = ` APPEND-${Date.now()}`;
+    await page.keyboard.type(append, { delay: 8 });
+    const editPost = await proseEdit.innerText();
+    if (!editPost.includes(append.trim())) {
+      throw new Error("Append edit failed on existing task");
     }
+
+    await captureFullViewportShellEvidence(
+      page,
+      `/opt/cursor/artifacts/aufgabe-edit-${SHA_LABEL}-1440.png`,
+    );
 
     await browser.close();
 
@@ -158,7 +248,10 @@ async function main() {
       status: "PASS",
       testedSha: sha,
       profile: "task",
-      surfaces: ["aufgabe"],
+      sceWhiteEdition: serverEnv.SCE_WHITE_EDITION,
+      whiteEditionShellAsserted: true,
+      surfaces: ["aufgabe-create", "aufgabe-edit"],
+      createTyping,
     };
     writeFileSync("/opt/cursor/artifacts/sce-writing-aufgabe-browser-regression.json", JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report));

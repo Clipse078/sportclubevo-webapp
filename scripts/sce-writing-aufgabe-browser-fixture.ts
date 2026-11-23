@@ -75,11 +75,33 @@ async function main() {
     data: { tenantId: TENANT_ID, userId: user.id, roleId: role.id },
   });
 
+  const seedDescription =
+    '<p>Fixture seed with <strong>bold</strong> for round-trip checks.</p>';
+  const existingTask = await prisma.task.create({
+    data: {
+      tenantId: TENANT_ID,
+      title: "Browser regression seed task",
+      description: seedDescription,
+      createdByUserId: user.id,
+    },
+  });
+
+  await prisma.taskAssignee.create({
+    data: {
+      tenantId: TENANT_ID,
+      taskId: existingTask.id,
+      userId: user.id,
+      assignedByUserId: user.id,
+    },
+  });
+
   console.log(
     JSON.stringify({
       tenantId: TENANT_ID,
       email: EMAIL,
       password: PASSWORD,
+      existingTaskId: existingTask.id,
+      seedDescriptionPlain: "Fixture seed with bold for round-trip checks.",
     }),
   );
 }

@@ -9,6 +9,10 @@
 import { execSync, spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
+import {
+  assertAuthenticatedWhiteEditionShell,
+  captureFullViewportShellEvidence,
+} from "./sce-white-edition-rendered-shell-assert.mjs";
 
 const PORT = Number.parseInt(process.env.TENANT_DOC_BROWSER_PORT ?? "3099", 10);
 const BASE_URL =
@@ -163,6 +167,7 @@ async function main() {
     AUTH_URL: BASE_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    SCE_WHITE_EDITION: process.env.SCE_WHITE_EDITION ?? "1",
   };
   const server = startProductionServer(serverEnv);
   const serverLog = [];
@@ -232,6 +237,9 @@ async function main() {
     });
 
     await login(page, fixture.email, fixture.password);
+    await assertAuthenticatedWhiteEditionShell(page, {
+      label: "dokumentation-dashboard",
+    });
 
     async function openReadDetail(pageId) {
       const pageUrl = `${BASE_URL}/dashboard/dokumentation/p/${pageId}`;
@@ -302,6 +310,10 @@ async function main() {
           `Expected shared SceWritingEngine (documentation), got engine=${shared} profile=${profile}`,
         );
       }
+      await assertAuthenticatedWhiteEditionShell(page, {
+        label: `dokumentation-edit-${label}`,
+        allowDocumentationWhiteSurface: true,
+      });
       const editor = page.locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror');
       await editor.waitFor({ state: "visible", timeout: 120_000 });
       return { editor, firstSyncAfterOpen, label };
@@ -433,10 +445,30 @@ async function main() {
     if (yjsDup) throw new Error(`Yjs duplicate import: ${yjsDup}`);
     if (pageErrors.length > 0) throw new Error(`Page errors: ${pageErrors.join(" | ")}`);
 
+    const shaLabel = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 12);
+    await page.goto(`${BASE_URL}/dashboard/dokumentation/p/${fixture.pageId}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 120_000,
+    });
+    await page.getByRole("button", { name: /Bearbeiten/i }).click();
+    await page
+      .locator('[data-testid="tenant-doc-collab-editor"] .ProseMirror')
+      .waitFor({ state: "visible", timeout: 120_000 });
+    await assertAuthenticatedWhiteEditionShell(page, {
+      label: "dokumentation-edit-screenshot",
+      allowDocumentationWhiteSurface: true,
+    });
+    await captureFullViewportShellEvidence(
+      page,
+      `/opt/cursor/artifacts/dokumentation-edit-${shaLabel}-1440.png`,
+    );
+
     await browser.close();
 
     const report = {
       status: "PASS",
+      sceWhiteEdition: serverEnv.SCE_WHITE_EDITION,
+      whiteEditionShellAsserted: true,
       fresh: freshResult,
       existing: existingResult,
     };

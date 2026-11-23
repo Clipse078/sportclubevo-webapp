@@ -23,6 +23,8 @@ const baseEnv = {
   AUTH_SECRET: authSecret,
   NEXTAUTH_SECRET: authSecret,
   SCE_DATA_ENVIRONMENT: "LOCAL",
+  /** Mirror STAGE White Edition — disposable gates must fail on legacy blue canvas. */
+  SCE_WHITE_EDITION: "1",
 };
 
 if (process.env.SCE_WRITING_BROWSER_SKIP_BUILD !== "1") {
@@ -49,6 +51,8 @@ execSync("node scripts/sce-writing-aufgabe-browser-regression.mjs", {
 const report = {
   status: "PASS",
   testedSha: sha,
+  sceWhiteEdition: "1",
+  whiteEditionShellAsserted: true,
   waveOne: ["dokumentation", "aufgabe"],
   rolloutOrder: [
     "dokumentation",

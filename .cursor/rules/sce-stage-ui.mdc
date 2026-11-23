@@ -1,0 +1,16 @@
+---
+description: STAGE authenticated UI handoffs require White Edition baseline evidence
+globs:
+alwaysApply: true
+---
+
+# SCE STAGE authenticated UI evidence
+
+When validating or handing off **authenticated** SportClubEvo UI on STAGE (or disposable production builds that mirror STAGE):
+
+1. **Baseline:** DS 2.0 White Edition — `SCE_WHITE_EDITION=1`, shell root `data-sce-theme="white"`, solid `#ffffff` canvas, **no** `SCE_background.png` / tactical wallpaper, no blue route gutters.
+2. **Record:** role (fixture email or PO role), route path, viewport (default desktop `1440×900`), and **full-viewport** screenshot or recording while the relevant editor/surface is interactive.
+3. **Disposable gates:** `scripts/sce-white-edition-rendered-shell-assert.mjs` must pass before editor functional assertions; production `npm run build` and `npm start` for browser legs must inherit `SCE_WHITE_EDITION=1`.
+4. **Do not** treat green editor-only Playwright legs as visual acceptance without shell/theme assertions.
+
+Reference: `lib/design-system/sce-white-edition-flag.ts`, `app/(admin)/layout.tsx`, `scripts/sce-writing-engine-disposable-browser-gate.mjs`.
