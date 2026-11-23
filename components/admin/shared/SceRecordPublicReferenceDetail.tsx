@@ -21,7 +21,7 @@ export default function SceRecordPublicReferenceDetail({
   label = "Referenz",
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const value = reference?.trim();
+  const value = reference?.trim() ?? "";
   if (!value) return null;
 
   async function copyReference() {
