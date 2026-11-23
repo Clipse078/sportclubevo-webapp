@@ -6,9 +6,12 @@
 - **Wave 1 surfaces:** Dokumentation draft editor, Aufgabe description (create + detail).
 - **Shared behavior:** StarterKit profiles, link validation + Strg+K, paste HTML cleanup (Word / Google Docs), `@mentions` mark, toolbar primitives.
 
-## Out of scope
+## Wave 2 (`/` insert menu)
 
-- `/` insert menu and richer blocks (next PR).
+- **`SceWritingInsertMenu`** — profile-filtered block picker on `/` (keyboard + Escape), shared across Dokumentation and Aufgabe.
+- Initial blocks: Absatz, Überschriften (Dokumentation only), Aufzählung, nummerierte Liste, Checkliste (Aufgabe only).
+
+## Out of scope (wave 2+)
 - Shared **Aktivität** / comment threads (separate workstream).
 - CMS `RichTextEditor`, personal signatures (later rollout wave).
 

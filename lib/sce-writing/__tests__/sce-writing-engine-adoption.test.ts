@@ -41,4 +41,13 @@ describe("SCE shared writing engine — wave one", () => {
     expect(doc).toContain("immediatelyRender={false}");
     expect(doc).toContain("min-h-[320px]");
   });
+
+  it("shared insert menu is mounted on both profiles", () => {
+    const engine = read("components/sce-writing/SceWritingEngine.tsx");
+    const items = read("lib/sce-writing/sce-writing-insert-menu-items.ts");
+    expect(engine).toContain("SceWritingInsertMenu");
+    expect(items).toContain("listSceWritingInsertMenuItems");
+    expect(items).toContain('"documentation"');
+    expect(items).toContain('"task"');
+  });
 });

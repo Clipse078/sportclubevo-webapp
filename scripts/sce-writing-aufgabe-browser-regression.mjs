@@ -8,6 +8,7 @@ import {
   assertAuthenticatedWhiteEditionShell,
   captureFullViewportShellEvidence,
 } from "./sce-white-edition-rendered-shell-assert.mjs";
+import { exerciseSceWritingInsertMenu } from "./sce-writing-insert-menu-browser-probe.mjs";
 
 const PORT = Number.parseInt(process.env.SCE_WRITING_AUFGABE_PORT ?? "3101", 10);
 const BASE_URL =
@@ -112,9 +113,9 @@ async function exerciseEditorTyping(page, prose) {
     throw new Error("Redo did not restore typed token");
   }
 
-  const boldBtn = page.getByTitle("Fett (Strg+B)");
-  await boldBtn.click();
+  await page.keyboard.press("Control+b");
   await page.keyboard.type(" bold", { delay: 8 });
+  await page.keyboard.press("Control+b");
 
   const text = await prose.innerText();
   if (!text.includes(token) || !text.includes("bold")) {
@@ -199,6 +200,7 @@ async function main() {
 
     const browser = await chromium.launch({ args: BROWSER_ARGS });
     const page = await browser.newPage();
+    await page.setViewportSize({ width: 1440, height: 900 });
     await login(page, fixture.email, fixture.password);
 
     await page.goto(`${BASE_URL}/dashboard/aufgaben/neu`, {
@@ -209,6 +211,10 @@ async function main() {
 
     const proseCreate = await assertSharedTaskEditor(page);
     await proseCreate.waitFor({ state: "visible", timeout: 60_000 });
+    const insertMenu = await exerciseSceWritingInsertMenu(page, proseCreate, {
+      selectItemId: "task-list",
+      filterText: "check",
+    });
     const createTyping = await exerciseEditorTyping(page, proseCreate);
     const createTitle = `Writing E2E ${Date.now()}`;
     await page.locator('input[name="title"]').fill(createTitle);
@@ -303,6 +309,7 @@ async function main() {
       sceWhiteEdition: serverEnv.SCE_WHITE_EDITION,
       whiteEditionShellAsserted: true,
       surfaces: ["aufgabe-create", "aufgabe-edit"],
+      insertMenu,
       createTyping,
       createdTaskId,
       createSaveReopen: { title: createTitle, afterReloadPreview: afterReloadPreview.slice(0, 120) },

@@ -13,6 +13,7 @@ import {
   assertAuthenticatedWhiteEditionShell,
   captureFullViewportShellEvidence,
 } from "./sce-white-edition-rendered-shell-assert.mjs";
+import { exerciseSceWritingInsertMenu } from "./sce-writing-insert-menu-browser-probe.mjs";
 
 const PORT = Number.parseInt(process.env.TENANT_DOC_BROWSER_PORT ?? "3099", 10);
 const BASE_URL =
@@ -557,6 +558,17 @@ async function main() {
     collaborationEvents.length = 0;
     await openReadDetail(fixture.pageId);
     const { editor: richEditor } = await openEditorFromReadView("rich-text");
+    const insertMenu = await exerciseSceWritingInsertMenu(page, richEditor, {
+      selectItemId: "heading-2",
+      filterText: "über",
+    });
+    await waitForAutosaved();
+    const insertMenuHeading = await richEditor.evaluate((el) => !!el.querySelector("h2"));
+    if (!insertMenuHeading) throw new Error("Insert menu heading 2 missing before rich-text scenario");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const { editor: richAfterInsertReload } = await openEditorFromReadView("insert-menu-reload");
+    const insertReloadHasHeading = await richAfterInsertReload.evaluate((el) => !!el.querySelector("h2"));
+    if (!insertReloadHasHeading) throw new Error("Insert menu heading lost after reload");
     const wordHtml = `<!--[if gte mso 9]><![endif]--><p class="MsoNormal" style="mso-margin-top-alt:auto">${richTextToken}</p>`;
     await pasteHtmlIntoEditor(page, richEditor, wordHtml, richTextToken);
     await page.getByTitle("Aufzählung").click();
@@ -590,6 +602,7 @@ async function main() {
     }
     const richFormatting = {
       coEdit: { coEditTokenA, coEditTokenB, reloaded: true },
+      insertMenu: { ...insertMenu, insertReloadHasHeading },
       pasteListLink: { richTextToken, hasBullet, hasLink, richPlainSnippet: richPlain.slice(0, 120) },
     };
 
