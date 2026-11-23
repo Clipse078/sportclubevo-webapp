@@ -23,7 +23,9 @@ import {
 const RUN = `tdoc-br-${Date.now()}`;
 const TENANT_ID = `tenant-${RUN}`;
 const EMAIL = `tdoc-browser-${RUN}@fixture.local`;
+const EMAIL_B = `tdoc-browser-b-${RUN}@fixture.local`;
 const PASSWORD = process.env.TENANT_DOC_BROWSER_PASSWORD?.trim() || "TenantDocBrowserE2eFixture";
+const PASSWORD_B = process.env.TENANT_DOC_BROWSER_PASSWORD_B?.trim() || PASSWORD;
 
 async function ensurePermissions() {
   for (const key of [
@@ -95,6 +97,25 @@ async function main() {
     data: { tenantId: TENANT_ID, userId: user.id, roleId: role.id },
   });
 
+  const passwordHashB = await bcrypt.hash(PASSWORD_B, 10);
+  const userB = await prisma.user.create({
+    data: {
+      email: EMAIL_B,
+      firstName: "Co",
+      lastName: "Editor",
+      passwordHash: passwordHashB,
+      isActive: true,
+    },
+  });
+
+  await prisma.tenantMembership.create({
+    data: { tenantId: TENANT_ID, userId: userB.id, isActive: true },
+  });
+
+  await prisma.userRole.create({
+    data: { tenantId: TENANT_ID, userId: userB.id, roleId: role.id },
+  });
+
   const space = await prisma.tenantDocumentationSpace.create({
     data: {
       tenantId: TENANT_ID,
@@ -146,6 +167,8 @@ async function main() {
       pageId: page.id,
       email: EMAIL,
       password: PASSWORD,
+      secondEmail: EMAIL_B,
+      secondPassword: PASSWORD_B,
     }),
   );
 }

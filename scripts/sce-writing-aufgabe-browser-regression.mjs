@@ -13,6 +13,8 @@ const PORT = Number.parseInt(process.env.SCE_WRITING_AUFGABE_PORT ?? "3101", 10)
 const BASE_URL =
   process.env.SCE_WRITING_AUFGABE_BASE_URL?.trim() || `http://127.0.0.1:${PORT}`;
 const TEST_DB = process.env.TEST_DATABASE_URL?.trim();
+const USE_EXTERNAL_SERVER = process.env.SCE_WRITING_AUFGABE_EXTERNAL_SERVER === "1";
+const BROWSER_ARGS = ["--disable-dev-shm-usage", "--no-sandbox"];
 const SHA_LABEL = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 12);
 
 function parseFixtureStdout(stdout) {
@@ -149,20 +151,27 @@ async function main() {
     SCE_WHITE_EDITION: process.env.SCE_WHITE_EDITION ?? "1",
   };
 
-  releasePort(PORT);
-  const server = startProductionServer(serverEnv);
+  let server = null;
   let serverExited = false;
-  server.on("exit", () => {
-    serverExited = true;
-  });
+  if (!USE_EXTERNAL_SERVER) {
+    releasePort(PORT);
+    server = startProductionServer(serverEnv);
+    server.on("exit", () => {
+      serverExited = true;
+    });
+  }
 
   const shutdown = () => {
-    try {
-      if (!serverExited) server.kill("SIGKILL");
-    } catch {
-      //
+    if (server) {
+      try {
+        if (!serverExited) server.kill("SIGKILL");
+      } catch {
+        //
+      }
     }
-    releasePort(PORT);
+    if (!USE_EXTERNAL_SERVER) {
+      releasePort(PORT);
+    }
   };
   process.on("SIGINT", shutdown);
 
@@ -188,7 +197,7 @@ async function main() {
       tick();
     });
 
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({ args: BROWSER_ARGS });
     const page = await browser.newPage();
     await login(page, fixture.email, fixture.password);
 
@@ -201,6 +210,34 @@ async function main() {
     const proseCreate = await assertSharedTaskEditor(page);
     await proseCreate.waitFor({ state: "visible", timeout: 60_000 });
     const createTyping = await exerciseEditorTyping(page, proseCreate);
+    const createTitle = `Writing E2E ${Date.now()}`;
+    await page.locator('input[name="title"]').fill(createTitle);
+    await page.getByTestId("aufgaben-full-create-submit").click();
+    await page.waitForURL(/\/dashboard\/aufgaben\/(?!neu)[^/?#]+$/, { timeout: 120_000 });
+    const createdTaskUrl = page.url();
+    const createdTaskId = createdTaskUrl.split("/").pop();
+    const descriptionOpenCreated = page.getByTestId("task-workspace-description");
+    await descriptionOpenCreated.waitFor({ state: "visible", timeout: 60_000 });
+    const createdDescriptionPreview = await descriptionOpenCreated.innerText();
+    if (!createdDescriptionPreview.includes(createTyping.token) || !createdDescriptionPreview.includes("bold")) {
+      throw new Error(
+        `Created task description missing undo/redo/bold round-trip: "${createdDescriptionPreview.slice(0, 200)}"`,
+      );
+    }
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await descriptionOpenCreated.waitFor({ state: "visible", timeout: 60_000 });
+    const afterReloadPreview = await descriptionOpenCreated.innerText();
+    if (!afterReloadPreview.includes(createTyping.token)) {
+      throw new Error(`Created task description lost after reload: "${afterReloadPreview.slice(0, 200)}"`);
+    }
+
+    await page.goto(`${BASE_URL}/dashboard/aufgaben/neu`, {
+      waitUntil: "domcontentloaded",
+      timeout: 120_000,
+    });
+    await assertAuthenticatedWhiteEditionShell(page, { label: "aufgabe-neu-screenshot" });
+    const proseCreateShot = await assertSharedTaskEditor(page);
+    await proseCreateShot.waitFor({ state: "visible", timeout: 60_000 });
 
     await captureFullViewportShellEvidence(
       page,
@@ -235,6 +272,21 @@ async function main() {
     if (!editPost.includes(append.trim())) {
       throw new Error("Append edit failed on existing task");
     }
+    await page.keyboard.press("Control+End");
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(800);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await descriptionOpen.waitFor({ state: "visible", timeout: 60_000 });
+    await descriptionOpen.click();
+    const proseReopen = await assertSharedTaskEditor(page);
+    const reopenedText = await proseReopen.innerText();
+    if (!reopenedText.includes("Fixture seed") || !reopenedText.includes(append.trim())) {
+      throw new Error(`Edit save/reopen failed: "${reopenedText.slice(0, 200)}"`);
+    }
+    await page.keyboard.press("Control+z");
+    await page.keyboard.press("Control+End");
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(800);
 
     await captureFullViewportShellEvidence(
       page,
@@ -252,6 +304,9 @@ async function main() {
       whiteEditionShellAsserted: true,
       surfaces: ["aufgabe-create", "aufgabe-edit"],
       createTyping,
+      createdTaskId,
+      createSaveReopen: { title: createTitle, afterReloadPreview: afterReloadPreview.slice(0, 120) },
+      editSaveReopen: { append: append.trim() },
     };
     writeFileSync("/opt/cursor/artifacts/sce-writing-aufgabe-browser-regression.json", JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report));
