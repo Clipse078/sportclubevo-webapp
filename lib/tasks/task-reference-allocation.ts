@@ -1,25 +1,17 @@
 import { SceTenantPublicRecordKind, type Prisma } from "@prisma/client";
-import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
 import {
-  allocateTenantPublicNumber,
-  registerTenantPublicNumberLedger,
-} from "@/lib/tenant-public-reference/sce-tenant-public-number-allocation";
+  allocateSceRecordReferenceFields,
+  linkTenantRecordPublicReference,
+  type SceRecordReferenceAllocation,
+} from "@/lib/tenant-public-reference/sce-tenant-record-reference-allocation";
 
-export type TaskReferenceAllocation = {
-  scePublicNumber: bigint;
-  tenantPublicNumber: bigint | null;
-};
+export type TaskReferenceAllocation = SceRecordReferenceAllocation;
 
 export async function allocateTaskReferenceFields(
   tx: Prisma.TransactionClient,
   tenantId: string,
 ): Promise<TaskReferenceAllocation> {
-  const scePublicNumber = await allocateScePublicNumber(tx);
-  const tenant = await allocateTenantPublicNumber(tx, tenantId);
-  return {
-    scePublicNumber,
-    tenantPublicNumber: tenant?.tenantPublicNumber ?? null,
-  };
+  return allocateSceRecordReferenceFields(tx, tenantId);
 }
 
 export async function linkTaskTenantPublicReference(
@@ -30,7 +22,7 @@ export async function linkTaskTenantPublicReference(
     tenantPublicNumber: bigint;
   },
 ): Promise<void> {
-  await registerTenantPublicNumberLedger(tx, {
+  await linkTenantRecordPublicReference(tx, {
     tenantId: input.tenantId,
     tenantPublicNumber: input.tenantPublicNumber,
     recordKind: SceTenantPublicRecordKind.TASK,

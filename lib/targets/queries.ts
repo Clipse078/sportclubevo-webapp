@@ -78,6 +78,8 @@ export async function getTargetById(id: string, actor: ActorContext) {
     where: { id, tenantId: actor.tenantId },
     select: {
       id: true,
+      scePublicNumber: true,
+      tenantPublicNumber: true,
       title: true,
       description: true,
       category: true,

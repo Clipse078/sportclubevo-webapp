@@ -38,8 +38,10 @@ import {
   formatTargetPeriodLabel,
   formatTargetStatusLabel,
 } from "@/lib/targets/target-presentation";
+import SceRecordPublicReferenceDetail from "@/components/admin/shared/SceRecordPublicReferenceDetail";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import { resolveTenantPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 import { Edit, ArrowLeft, Calendar, Tag } from "lucide-react";
 
 function formatSwissDate(value: Date | string) {
@@ -91,12 +93,24 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
   const canCreateTargetTasks =
     actor.permissionKeys.includes(PERMISSIONS.TARGETS_VIEW) &&
     actor.permissionKeys.includes(PERMISSIONS.TASKS_MANAGE);
-  const [connectedTasks, creatorDisplayName, linkedStrategy, targetDelivery] = await Promise.all([
+  const [connectedTasks, creatorDisplayName, linkedStrategy, targetDelivery, tenantRow] =
+    await Promise.all([
     loadTargetConnectedTasks(actor, id, detailReturnTo),
     tenantId ? resolveTargetCreatorDisplayName(tenantId, target.createdByUserId) : Promise.resolve(null),
     tenantId ? loadTargetLinkedClubStrategy(tenantId, id) : Promise.resolve(null),
     computeTargetDeliveryProgress(actor, id),
+    tenantId
+      ? prisma.tenant.findUnique({
+          where: { id: tenantId },
+          select: { publicReferenceShortCode: true },
+        })
+      : Promise.resolve(null),
   ]);
+  const targetPublicReference = resolveTenantPublicReferenceDisplay({
+    tenantShortCode: tenantRow?.publicReferenceShortCode,
+    tenantPublicNumber: target.tenantPublicNumber,
+    legacyScePublicNumber: target.scePublicNumber,
+  });
   const targetDeliveryCaption = formatProgressCountLabel(targetDelivery);
   const targetDeliveryPercent =
     targetDelivery.totalCount > 0 ? targetDelivery.percent : 0;
@@ -110,6 +124,12 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
       <DetailPagePattern
         eyebrow="Ziele"
         title={target.title}
+        summary={
+          <SceRecordPublicReferenceDetail
+            reference={targetPublicReference}
+            testId="target-detail-public-reference"
+          />
+        }
         description={target.description ?? undefined}
         breadcrumbs={[
           { label: "Vereinsleitung", href: "/vereinsleitung" },

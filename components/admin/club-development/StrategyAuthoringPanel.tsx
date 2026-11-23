@@ -46,6 +46,7 @@ import { clubDevelopmentFetchJson } from "@/lib/club-development/client-fetch";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { ClubStrategyScopeType } from "@prisma/client";
 import ClubStrategyOrgUnitScopePicker from "./ClubStrategyOrgUnitScopePicker";
+import SceRecordPublicReferenceDetail from "@/components/admin/shared/SceRecordPublicReferenceDetail";
 import {
   defaultClubStrategyOrgScopeSelection,
   parseClubStrategyOrgScopeSelection,
@@ -55,6 +56,7 @@ type Props = {
   initial: ClubStrategyAuthoringDto;
   strategyProgress: Pick<
     ClubStrategyListItemDto,
+    | "publicReference"
     | "goalAchievementPercent"
     | "goalAchievementCaption"
     | "goalAchievementCompletedCount"
@@ -383,7 +385,13 @@ export default function StrategyAuthoringPanel({
     <div className={`mb-8 ${SCE_CD_WORKSPACE_PANEL_CLASS} space-y-5`} data-testid="strategy-authoring-panel">
       <section className="space-y-4" data-testid="strategy-detail-section">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">{strategyTitle}</h2>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">{strategyTitle}</h2>
+            <SceRecordPublicReferenceDetail
+              reference={strategyProgress?.publicReference}
+              testId="strategy-detail-public-reference"
+            />
+          </div>
           {strategyEditAside}
         </div>
         {strategyProgress ? (

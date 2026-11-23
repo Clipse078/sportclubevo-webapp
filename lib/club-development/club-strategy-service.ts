@@ -4,6 +4,7 @@ import {
   ClubStrategyDocumentKind,
   ClubStrategyScopeType,
   Prisma,
+  SceTenantPublicRecordKind,
   TaskDocumentReferenceVersionBinding,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
@@ -36,9 +37,13 @@ import {
   WorkspaceVersionLinkValidationError,
 } from "@/lib/workspace/reference/workspace-version-link-validation";
 import {
-  allocateScePublicNumber,
-  scePublicReferenceFromNumber,
-} from "@/lib/club-development/sce-public-reference";
+  allocateSceRecordReferenceFields,
+  linkTenantRecordPublicReference,
+} from "@/lib/tenant-public-reference/sce-tenant-record-reference-allocation";
+import {
+  loadTenantPublicReferenceShortCode,
+  resolveTenantPublicReferenceDisplay,
+} from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 
 export type ClubStrategyDocumentReferenceDto = {
   referenceId: string;
@@ -119,11 +124,12 @@ async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) 
   const existingId = await findClubWideStrategyId(tenantId);
   if (existingId) return existingId;
   const created = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx);
-    return tx.clubStrategy.create({
+    const refs = await allocateSceRecordReferenceFields(tx, tenantId);
+    const row = await tx.clubStrategy.create({
       data: {
         tenantId,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         scopeType: ClubStrategyScopeType.CLUB,
         createdByUserId,
         updatedByUserId: createdByUserId,
@@ -131,6 +137,15 @@ async function ensureClubStrategyRow(tenantId: string, createdByUserId: string) 
       },
       select: { id: true },
     });
+    if (refs.tenantPublicNumber != null) {
+      await linkTenantRecordPublicReference(tx, {
+        tenantId,
+        tenantPublicNumber: refs.tenantPublicNumber,
+        recordKind: SceTenantPublicRecordKind.STRATEGY,
+        entityId: row.id,
+      });
+    }
+    return row;
   });
   return created.id;
 }
@@ -187,6 +202,8 @@ export async function listClubStrategies(
     ];
   }
 
+  const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, actor.tenantId);
+
   const rows = await prisma.clubStrategy.findMany({
     where,
     orderBy: [{ scopeType: "asc" }, { title: "asc" }],
@@ -194,6 +211,7 @@ export async function listClubStrategies(
       id: true,
       createdAt: true,
       scePublicNumber: true,
+      tenantPublicNumber: true,
       title: true,
       scopeType: true,
       scopeOrgUnitId: true,
@@ -249,7 +267,11 @@ export async function listClubStrategies(
     items.push({
       id: row.id,
       createdAt: row.createdAt.toISOString(),
-      publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
+      publicReference: resolveTenantPublicReferenceDisplay({
+        tenantShortCode,
+        tenantPublicNumber: row.tenantPublicNumber,
+        legacyScePublicNumber: row.scePublicNumber,
+      }),
       title: resolveStrategyTitle(row.title, row.scopeType, orgUnitLabels),
       scopeType: row.scopeType,
       scopeOrgUnitId: row.scopeOrgUnitId,
@@ -314,7 +336,7 @@ export async function createClubStrategy(
   actor: ActorContext,
   actorUserId: string,
   input: CreateClubStrategyInput,
-): Promise<{ id: string }> {
+): Promise<{ id: string; publicReference: string | null }> {
   if (!canManageClubStrategy(actor) || !actor.tenantId) throw new Error("FORBIDDEN");
   const title = input.title?.trim();
   if (!title) throw new Error("TITLE_REQUIRED");
@@ -368,15 +390,17 @@ export async function createClubStrategy(
     throw new Error("INVALID_NEXT_REVIEW");
   }
 
-  let created: { id: string };
+  let created: { id: string; scePublicNumber: bigint | null; tenantPublicNumber: bigint | null };
+  const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, actor.tenantId!);
   try {
     created = await prisma.$transaction(async (tx) => {
-      const scePublicNumber = await allocateScePublicNumber(tx);
+      const refs = await allocateSceRecordReferenceFields(tx, actor.tenantId!);
       const tenantId = actor.tenantId!;
-      return tx.clubStrategy.create({
+      const row = await tx.clubStrategy.create({
         data: {
           tenantId,
-          scePublicNumber,
+          scePublicNumber: refs.scePublicNumber,
+          tenantPublicNumber: refs.tenantPublicNumber,
           scopeType,
           scopeOrgUnitId: orgUnitIds.length === 1 ? orgUnitIds[0] : null,
           title,
@@ -396,8 +420,17 @@ export async function createClubStrategy(
                 }
               : undefined,
         },
-        select: { id: true },
+        select: { id: true, scePublicNumber: true, tenantPublicNumber: true },
       });
+      if (refs.tenantPublicNumber != null) {
+        await linkTenantRecordPublicReference(tx, {
+          tenantId,
+          tenantPublicNumber: refs.tenantPublicNumber,
+          recordKind: SceTenantPublicRecordKind.STRATEGY,
+          entityId: row.id,
+        });
+      }
+      return row;
     });
   } catch (error) {
     if (
@@ -419,7 +452,14 @@ export async function createClubStrategy(
     metadata: { clubStrategy: true },
   });
 
-  return { id: created.id };
+  return {
+    id: created.id,
+    publicReference: resolveTenantPublicReferenceDisplay({
+      tenantShortCode,
+      tenantPublicNumber: created.tenantPublicNumber,
+      legacyScePublicNumber: created.scePublicNumber,
+    }),
+  };
 }
 
 export type ReplaceClubStrategyOrgUnitsInput = {

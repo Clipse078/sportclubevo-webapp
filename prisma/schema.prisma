@@ -2028,6 +2028,8 @@ model ClubMeldung {
   caseNumber String
   /// Optional SCE-wide public number (alongside caseNumber).
   scePublicNumber BigInt?
+  /// Tenant-prefixed public reference number when configured (e.g. FCA-123).
+  tenantPublicNumber BigInt?
 
   subject     String
   description String
@@ -2076,6 +2078,7 @@ model ClubMeldung {
 
   @@unique([tenantId, caseNumber])
   @@unique([scePublicNumber])
+  @@unique([tenantId, tenantPublicNumber])
   @@index([tenantId, status])
   @@index([tenantId, reporterUserId])
   @@index([tenantId, accountableUserId])
@@ -3756,6 +3759,8 @@ model ClubStrategy {
   tenantId              String
   /// Global SCE reference sequence number (display: SCE-000042).
   scePublicNumber       BigInt?
+  /// Tenant-prefixed public reference number when configured (e.g. FCA-123).
+  tenantPublicNumber    BigInt?
   scopeType             ClubStrategyScopeType @default(CLUB)
   scopeOrgUnitId        String?
   title                 String?
@@ -3781,6 +3786,7 @@ model ClubStrategy {
   orgUnitAssignments ClubStrategyOrgUnitAssignment[]
 
   @@unique([scePublicNumber])
+  @@unique([tenantId, tenantPublicNumber])
   @@index([tenantId])
   @@index([tenantId, scopeType, scopeOrgUnitId])
 }
@@ -6150,6 +6156,8 @@ model Target {
   id            String         @id @default(cuid())
   tenantId      String
   scePublicNumber BigInt?
+  /// Tenant-prefixed public reference number when configured (e.g. FCA-123).
+  tenantPublicNumber BigInt?
   title         String
   description   String?
   category      TargetCategory @default(SPORTLICHE_ENTWICKLUNG)
@@ -6194,6 +6202,7 @@ model Target {
   clubStrategyFocusLinks ClubStrategyFocusTarget[]
 
   @@unique([scePublicNumber])
+  @@unique([tenantId, tenantPublicNumber])
   @@index([tenantId])
   @@index([category])
   @@index([status])

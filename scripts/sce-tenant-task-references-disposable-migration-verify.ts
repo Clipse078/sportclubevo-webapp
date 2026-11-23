@@ -50,18 +50,21 @@ async function verifySchema(prisma: PrismaClient): Promise<boolean> {
         WHERE table_name = 'Tenant' AND column_name = 'publicReferenceShortCode'
       ) AS exists`,
   );
-  const tenantPublicNumberColumn = await prisma.$queryRawUnsafe<
-    Array<{ exists: boolean }>
+  const tenantPublicNumberColumns = await prisma.$queryRawUnsafe<
+    Array<{ table_name: string; exists: boolean }>
   >(
-    `SELECT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'Task' AND column_name = 'tenantPublicNumber'
-      ) AS exists`,
+    `SELECT table_name, EXISTS (
+        SELECT 1 FROM information_schema.columns c
+        WHERE c.table_name = t.table_name AND c.column_name = 'tenantPublicNumber'
+      ) AS exists
+     FROM (VALUES ('Task'), ('ClubStrategy'), ('Target'), ('ClubMeldung')) AS t(table_name)`,
   );
+
+  const allRecordColumnsReady = tenantPublicNumberColumns.every((row) => row.exists);
 
   return (
     Boolean(tenantShortCodeColumn[0]?.exists) &&
-    Boolean(tenantPublicNumberColumn[0]?.exists) &&
+    allRecordColumnsReady &&
     (await tableExists(prisma, "SceTenantPublicNumberSequence")) &&
     (await tableExists(prisma, "SceTenantPublicNumberLedger"))
   );

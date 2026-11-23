@@ -11,6 +11,8 @@ import { DetailPagePattern } from "@/components/ui/patterns";
 import ClubMeldungDetailPanel from "@/components/admin/club-meldungen/ClubMeldungDetailPanel";
 import ClubMeldungSchemaUnavailable from "@/components/admin/club-meldungen/ClubMeldungSchemaUnavailable";
 import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
+import { resolveMeldungPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-meldung-public-reference";
+import { loadTenantPublicReferenceShortCode } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 
 type Props = {
   params: Promise<{ tenantSlug: string; meldungId: string }>;
@@ -50,6 +52,14 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
     notFound();
   }
 
+  const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, tenant.id);
+  const publicReference = resolveMeldungPublicReferenceDisplay({
+    tenantShortCode,
+    tenantPublicNumber: meldung.tenantPublicNumber,
+    scePublicNumber: meldung.scePublicNumber,
+    caseNumber: meldung.caseNumber,
+  });
+
   const timeline = await listClubMeldungReporterTimeline(tenant.id, meldungId, false);
 
   return (
@@ -57,10 +67,9 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
       <DetailPagePattern
         eyebrow="Meine Meldung"
         title={meldung.subject}
-        description={meldung.caseNumber}
         breadcrumbs={[
           { label: "Anliegen", href: `/tenant/${tenantSlug}/anliegen` },
-          { label: meldung.caseNumber },
+          { label: publicReference },
         ]}
       >
         <ClubMeldungDetailPanel
@@ -68,6 +77,7 @@ export default async function TenantAnliegenDetailPage({ params, searchParams }:
           meldungId={meldung.id}
           mode="reporter"
           caseNumber={meldung.caseNumber}
+          publicReference={publicReference}
           subject={meldung.subject}
           description={meldung.description}
           category={meldung.category}

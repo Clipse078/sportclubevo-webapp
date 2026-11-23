@@ -2348,5 +2348,18 @@
       "platformCommercial": "Commercial",
       "platformOperations": "Operations"
     }
+  },
+  "sce": {
+    "tenantPublicReference": {
+      "detailLabel": "Referenz",
+      "copyAction": "Kopieren",
+      "copiedAction": "Kopiert",
+      "recordKind": {
+        "task": "Aufgabe",
+        "strategy": "Strategie",
+        "target": "Ziel",
+        "meldung": "Anliegen"
+      }
+    }
   }
 }
