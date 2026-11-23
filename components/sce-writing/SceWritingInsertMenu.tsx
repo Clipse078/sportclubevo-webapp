@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 
 import { cn } from "@/lib/cn";
@@ -45,6 +45,10 @@ export function SceWritingInsertMenu({ editor, profile, disabled }: Props) {
   const [range, setRange] = useState<{ from: number; to: number } | null>(null);
   const [items, setItems] = useState<SceWritingInsertMenuItem[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const itemsRef = useRef(items);
+  const activeIndexRef = useRef(activeIndex);
+  itemsRef.current = items;
+  activeIndexRef.current = activeIndex;
 
   const reset = useCallback(() => {
     setOpen(false);
@@ -96,26 +100,32 @@ export function SceWritingInsertMenu({ editor, profile, disabled }: Props) {
     if (!editor || disabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!open) return;
+      const menuItems = itemsRef.current;
       if (event.key === "Escape") {
         event.preventDefault();
+        event.stopPropagation();
         reset();
         return;
       }
-      if (items.length === 0) return;
+      if (menuItems.length === 0) return;
       if (event.key === "ArrowDown") {
         event.preventDefault();
-        setActiveIndex((index) => (index + 1) % items.length);
+        event.stopPropagation();
+        setActiveIndex((index) => (index + 1) % menuItems.length);
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
-        setActiveIndex((index) => (index - 1 + items.length) % items.length);
+        event.stopPropagation();
+        setActiveIndex((index) => (index - 1 + menuItems.length) % menuItems.length);
       } else if (event.key === "Enter" || event.key === "Tab") {
         event.preventDefault();
-        applyItem(items[activeIndex]!);
+        event.stopPropagation();
+        applyItem(menuItems[activeIndexRef.current]!);
       }
     };
-    editor.view.dom.addEventListener("keydown", onKeyDown);
-    return () => editor.view.dom.removeEventListener("keydown", onKeyDown);
-  }, [editor, open, items, activeIndex, applyItem, reset, disabled]);
+    // Capture phase so TipTap keymaps cannot consume Enter/arrow keys while the menu is open.
+    editor.view.dom.addEventListener("keydown", onKeyDown, true);
+    return () => editor.view.dom.removeEventListener("keydown", onKeyDown, true);
+  }, [editor, open, applyItem, reset, disabled]);
 
   if (!open) return null;
 

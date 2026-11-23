@@ -46,6 +46,19 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
 
   await page.keyboard.press("Escape");
   await menu.waitFor({ state: "hidden", timeout: 5_000 });
+  const escapeInsertedTaskList = await prose.evaluate(
+    (el) =>
+      !!el.querySelector('ul[data-type="taskList"]') ||
+      !!el.querySelector("ul.task-description-checklist") ||
+      !!el.querySelector("li[data-checked]"),
+  );
+  const escapeInsertedHeading = await prose.evaluate((el) => !!el.querySelector("h2"));
+  const escapeInsertedBullet = await prose.evaluate(
+    (el) => el.querySelectorAll("ul:not([data-type]) li").length > 0,
+  );
+  if (escapeInsertedTaskList || escapeInsertedHeading || escapeInsertedBullet) {
+    throw new Error("Escape dismissed menu but left an insert block in the document");
+  }
 
   await prose.click({ force: true });
   await page.keyboard.press("End");
@@ -88,16 +101,7 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
     .locator(`[data-sce-writing-insert-item="${selectItemId}"][aria-selected="true"]`)
     .first()
     .waitFor({ state: "visible", timeout: 5_000 });
-  await prose.evaluate((el) => {
-    el.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "Enter",
-        code: "Enter",
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  });
+  await page.keyboard.press("Enter");
   await menu.waitFor({ state: "hidden", timeout: 10_000 });
 
   if (selectItemId === "task-list") {
@@ -120,10 +124,15 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
 
   await page.keyboard.type(` INSERT-${Date.now()}`, { delay: 8 });
 
+  const slashQueryGone = await prose.evaluate((el) => !(el.textContent ?? "").includes("/check"));
+
   return {
     selectItemId,
     escapeDismissed: true,
+    escapeInsertedNothing: true,
     keyboardNavigated,
     enterInserted: true,
+    enterViaPlaywrightKeyboard: true,
+    slashRemovedAfterInsert: slashQueryGone,
   };
 }
