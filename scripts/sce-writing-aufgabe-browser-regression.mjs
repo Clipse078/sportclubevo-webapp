@@ -214,6 +214,7 @@ async function main() {
     const insertMenu = await exerciseSceWritingInsertMenu(page, proseCreate, {
       selectItemId: "task-list",
       filterText: "check",
+      menuScreenshotPath: `/opt/cursor/artifacts/aufgabe-insert-menu-${SHA_LABEL}-1440.png`,
     });
     const createTyping = await exerciseEditorTyping(page, proseCreate);
     const createTitle = `Writing E2E ${Date.now()}`;

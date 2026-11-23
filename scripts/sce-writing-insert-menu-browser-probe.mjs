@@ -1,8 +1,10 @@
 /**
  * Shared `/` insert menu probe for SCE writing engine browser gates.
  */
+import { captureFullViewportShellEvidence } from "./sce-white-edition-rendered-shell-assert.mjs";
+
 export async function exerciseSceWritingInsertMenu(page, _prose, options) {
-  const { selectItemId, filterText = "" } = options;
+  const { selectItemId, filterText = "", menuScreenshotPath } = options;
   const prose = page.locator('[data-testid="task-description-editor"] .ProseMirror, [data-testid="tenant-doc-collab-editor"] .ProseMirror').first();
 
   await prose.scrollIntoViewIfNeeded();
@@ -17,6 +19,29 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
   await menu.scrollIntoViewIfNeeded();
   if (!(await menu.isVisible())) {
     throw new Error("Insert menu attached but not visible — check shell overflow clipping");
+  }
+
+  let keyboardNavigated = false;
+  const initialItemCount = await page.locator("[data-sce-writing-insert-item]").count();
+  if (initialItemCount > 1) {
+    const firstSelected = await page
+      .locator('[data-sce-writing-insert-item][aria-selected="true"]')
+      .first()
+      .getAttribute("data-sce-writing-insert-item");
+    await page.keyboard.press("ArrowDown");
+    const afterDown = await page
+      .locator('[data-sce-writing-insert-item][aria-selected="true"]')
+      .first()
+      .getAttribute("data-sce-writing-insert-item");
+    keyboardNavigated = firstSelected !== afterDown;
+    if (!keyboardNavigated) {
+      throw new Error("ArrowDown did not change insert menu selection (initial menu)");
+    }
+    await page.keyboard.press("ArrowUp");
+  }
+
+  if (menuScreenshotPath) {
+    await captureFullViewportShellEvidence(page, menuScreenshotPath);
   }
 
   await page.keyboard.press("Escape");
@@ -40,7 +65,39 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
   const item = page.locator(`[data-sce-writing-insert-item="${selectItemId}"]`).first();
   await item.waitFor({ state: "visible", timeout: 10_000 });
 
-  await item.click();
+  const itemCount = await page.locator("[data-sce-writing-insert-item]").count();
+
+  let activeId = await page
+    .locator('[data-sce-writing-insert-item][aria-selected="true"]')
+    .first()
+    .getAttribute("data-sce-writing-insert-item");
+  for (let step = 0; step < Math.max(itemCount, 1) + 2 && activeId !== selectItemId; step += 1) {
+    await page.keyboard.press("ArrowDown");
+    activeId = await page
+      .locator('[data-sce-writing-insert-item][aria-selected="true"]')
+      .first()
+      .getAttribute("data-sce-writing-insert-item");
+  }
+  if (activeId !== selectItemId) {
+    throw new Error(
+      `Enter insert target mismatch: expected ${selectItemId}, active ${activeId ?? "null"}`,
+    );
+  }
+
+  await page
+    .locator(`[data-sce-writing-insert-item="${selectItemId}"][aria-selected="true"]`)
+    .first()
+    .waitFor({ state: "visible", timeout: 5_000 });
+  await prose.evaluate((el) => {
+    el.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        code: "Enter",
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  });
   await menu.waitFor({ state: "hidden", timeout: 10_000 });
 
   if (selectItemId === "task-list") {
@@ -66,6 +123,7 @@ export async function exerciseSceWritingInsertMenu(page, _prose, options) {
   return {
     selectItemId,
     escapeDismissed: true,
-    keyboardSelected: true,
+    keyboardNavigated,
+    enterInserted: true,
   };
 }

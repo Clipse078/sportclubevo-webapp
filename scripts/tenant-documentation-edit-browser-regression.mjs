@@ -558,9 +558,11 @@ async function main() {
     collaborationEvents.length = 0;
     await openReadDetail(fixture.pageId);
     const { editor: richEditor } = await openEditorFromReadView("rich-text");
+    const shaLabelForMenu = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 12);
     const insertMenu = await exerciseSceWritingInsertMenu(page, richEditor, {
       selectItemId: "heading-2",
       filterText: "über",
+      menuScreenshotPath: `/opt/cursor/artifacts/dokumentation-insert-menu-${shaLabelForMenu}-1440.png`,
     });
     await waitForAutosaved();
     const insertMenuHeading = await richEditor.evaluate((el) => !!el.querySelector("h2"));
