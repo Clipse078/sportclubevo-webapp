@@ -11,6 +11,7 @@ import {
   SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
   SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER,
   SCE_TENANT_RECORD_REFERENCE_COLUMNS_MIGRATION,
+  SCE_TENANT_RECORD_REFERENCE_COLUMNS_STAGE_VERIFY_SCRIPT,
 } from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
 
 describe("SCE tenant task reference migration deployment guard", () => {
@@ -41,5 +42,15 @@ describe("SCE tenant task reference migration deployment guard", () => {
     expect(script).toContain("buildDisposablePrismaMigrateProcessEnv");
     expect(script).toContain("PrismaPg");
     expect(script).toContain("sce-tenant-public-reference-migration-handoff");
+  });
+
+  it("provides designated STAGE verifier for record reference columns migration", () => {
+    const script = readFileSync(
+      resolve(process.cwd(), SCE_TENANT_RECORD_REFERENCE_COLUMNS_STAGE_VERIFY_SCRIPT),
+      "utf8",
+    );
+    expect(script).toContain("sce-tenant-public-reference-migration-handoff");
+    expect(script).toContain("post-deploy-tenant-club-admin-reconciliation");
+    expect(script).toContain("db:migrate:deploy-if-enabled");
   });
 });
