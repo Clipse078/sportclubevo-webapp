@@ -49,6 +49,8 @@ export type TaskDto = {
   createdAt: string;
   updatedAt: string;
   assignees: TaskAssigneeDto[];
+  /** Tenant-prefixed reference when configured (e.g. FCA-123); otherwise legacy SCE-… */
+  publicReference: string | null;
 };
 
 export type PersonalTaskDto = TaskDto & {
@@ -135,6 +137,8 @@ export type TaskServiceContext = {
   tenantId: string;
   userId: string;
   permissionKeys: readonly string[];
+  /** Tenant-wide public reference short code (e.g. FCA); optional in unit tests. */
+  tenantPublicReferenceShortCode?: string | null;
   /** Hydrated by getTaskServiceContext; optional in unit tests. */
   auth?: TaskAuthScope;
 };

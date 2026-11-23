@@ -144,6 +144,7 @@ function mapRowToPersonalTaskDto(
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.createdAt.toISOString(),
     assignees: [],
+    publicReference: null,
     parentTask: parent,
   };
 }

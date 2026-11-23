@@ -25,6 +25,7 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
+import { mapTaskRowToDto } from "./task-dto-mapper";
 import {
   buildTaskVisibilityWhere,
   loadAuthorizedParentTaskRefs,
@@ -61,38 +62,8 @@ const TASK_INCLUDE = {
 
 type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
 
-function mapTask(row: TaskRow): TaskDto {
-  return {
-    id: row.id,
-    tenantId: row.tenantId,
-    title: row.title,
-    description: row.description,
-    status: row.status,
-    priority: row.priority,
-    dueAt: row.dueAt?.toISOString() ?? null,
-    reminder1At: row.reminder1At?.toISOString() ?? null,
-    reminder2At: row.reminder2At?.toISOString() ?? null,
-    reminder1PresetKey: row.reminder1PresetKey,
-    reminder2PresetKey: row.reminder2PresetKey,
-    completedAt: row.completedAt?.toISOString() ?? null,
-    contextType: row.contextType,
-    contextId: row.contextId,
-    primaryInitiativeId: row.primaryInitiativeId,
-    parentTaskId: row.parentTaskId,
-    taskSeriesId: row.taskSeriesId,
-    orgUnitId: row.orgUnitId,
-    visibilityScope: row.visibilityScope,
-    createdByUserId: row.createdByUserId,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    assignees: row.assignees.map((a) => ({
-      userId: a.userId,
-      firstName: a.user.firstName,
-      lastName: a.user.lastName,
-      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
-      assignedAt: a.assignedAt.toISOString(),
-    })),
-  };
+function mapTask(row: TaskRow, ctx: TaskServiceContext): TaskDto {
+  return mapTaskRowToDto(row, ctx.tenantPublicReferenceShortCode);
 }
 
 async function loadVisibleSubtasks(
@@ -109,7 +80,7 @@ async function loadVisibleSubtasks(
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
 
-  return rows.map(mapTask);
+  return rows.map((row) => mapTask(row, ctx));
 }
 
 export type TaskWorkspaceCreator = {
@@ -150,7 +121,7 @@ export async function loadTaskWorkspace(
   options?: { canDeletePermanently?: boolean },
 ): Promise<TaskWorkspaceBundle> {
   const visibleTask = await requireVisibleTask(ctx, taskId);
-  let task = mapTask(visibleTask);
+  let task = mapTask(visibleTask, ctx);
 
   const seriesRowPromise = task.taskSeriesId
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)

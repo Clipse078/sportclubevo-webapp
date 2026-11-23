@@ -14,7 +14,7 @@ import {
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import { buildTaskReadWhere } from "@/lib/tasks/visibility";
 import { formatVereinsentwicklungTaskStatusLabel } from "@/lib/club-development/vereinsentwicklung-task-status-labels";
-import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
+import { resolveTenantPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 import type { TaskServiceContext } from "@/lib/tasks/types";
 import { CD_SPRINT_API_COPY, CD_SPRINT_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
 import {
@@ -44,6 +44,7 @@ export type { SprintPlanningCatalogDto, SprintPlanningInitiativeGroupDto, Sprint
 const PLANNING_TASK_SELECT = {
   id: true,
   scePublicNumber: true,
+  tenantPublicNumber: true,
   title: true,
   status: true,
   dueAt: true,
@@ -77,6 +78,7 @@ function toPlanningTaskDto(
   membership: { inTarget: boolean; otherTitle: string | null },
   byUserId: Map<string, SprintTaskAssigneeViewModel>,
   contextLabels: Map<string, import("@/lib/club-development/vereinsentwicklung-task-context-labels-types").TaskContextLabelBundle>,
+  tenantShortCode: string | null | undefined,
 ): SprintPlanningTaskDto {
   const assignees = assigneesForRow(row, byUserId);
   const inTargetSprint = membership.inTarget;
@@ -94,7 +96,11 @@ function toPlanningTaskDto(
   const labels = contextLabels.get(row.id);
   return {
     id: row.id,
-    publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
+    publicReference: resolveTenantPublicReferenceDisplay({
+      tenantShortCode,
+      tenantPublicNumber: row.tenantPublicNumber,
+      legacyScePublicNumber: row.scePublicNumber,
+    }),
     title: row.title,
     status: row.status,
     statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
@@ -305,7 +311,13 @@ export async function loadSprintPlanningCatalog(
     title: group.title,
     slug: group.slug,
     tasks: group.deduped.map((row) =>
-      toPlanningTaskDto(row, group.membershipMap.get(row.id)!, assigneeByUserId, contextLabels),
+      toPlanningTaskDto(
+        row,
+        group.membershipMap.get(row.id)!,
+        assigneeByUserId,
+        contextLabels,
+        taskCtx.tenantPublicReferenceShortCode,
+      ),
     ),
   }));
 
@@ -313,7 +325,13 @@ export async function loadSprintPlanningCatalog(
     initiativeGroups,
     standaloneGroup: {
       tasks: finalStandalone.map((row) =>
-        toPlanningTaskDto(row, standaloneMembershipMap.get(row.id)!, assigneeByUserId, contextLabels),
+        toPlanningTaskDto(
+          row,
+          standaloneMembershipMap.get(row.id)!,
+          assigneeByUserId,
+          contextLabels,
+          taskCtx.tenantPublicReferenceShortCode,
+        ),
       ),
     },
   };
@@ -353,6 +371,7 @@ function toUnplannedTaskDto(
   membership: OpenPhaseMembership,
   byUserId: Map<string, SprintTaskAssigneeViewModel>,
   contextLabels: Map<string, import("@/lib/club-development/vereinsentwicklung-task-context-labels-types").TaskContextLabelBundle>,
+  tenantShortCode: string | null | undefined,
   unplannedRank?: number | null,
 ): SprintPlanningTaskDto {
   const assignees = assigneesForRow(row, byUserId);
@@ -367,7 +386,11 @@ function toUnplannedTaskDto(
   const labels = contextLabels.get(row.id);
   return {
     id: row.id,
-    publicReference: scePublicReferenceFromNumber(row.scePublicNumber),
+    publicReference: resolveTenantPublicReferenceDisplay({
+      tenantShortCode,
+      tenantPublicNumber: row.tenantPublicNumber,
+      legacyScePublicNumber: row.scePublicNumber,
+    }),
     title: row.title,
     status: row.status,
     statusLabel: formatVereinsentwicklungTaskStatusLabel(row.status),
@@ -542,7 +565,13 @@ export async function loadUnplannedTasksCatalog(
           .find((g) => g.deduped.some((r) => r.id === row.id))!
           .membershipMap.get(row.id)!
       : standaloneMembershipMap.get(row.id)!;
-    return toUnplannedTaskDto(row, membership, assigneeByUserId, contextLabels).selectable;
+    return toUnplannedTaskDto(
+      row,
+      membership,
+      assigneeByUserId,
+      contextLabels,
+      taskCtx.tenantPublicReferenceShortCode,
+    ).selectable;
   });
   const rankMap = await loadUnplannedTaskRankMap(
     tenantId,
@@ -566,6 +595,7 @@ export async function loadUnplannedTasksCatalog(
                 group.membershipMap.get(row.id)!,
                 assigneeByUserId,
                 contextLabels,
+                taskCtx.tenantPublicReferenceShortCode,
                 rankMap.get(row.id) ?? null,
               ),
             )
@@ -586,6 +616,7 @@ export async function loadUnplannedTasksCatalog(
         standaloneMembershipMap.get(row.id)!,
         assigneeByUserId,
         contextLabels,
+        taskCtx.tenantPublicReferenceShortCode,
         rankMap.get(row.id) ?? null,
       ),
     )

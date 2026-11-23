@@ -41,6 +41,7 @@ async function main() {
     where: { key: "fc-allschwil" },
     update: {
       name: "FC Allschwil",
+      publicReferenceShortCode: "FCA",
       status: TenantStatus.ACTIVE,
       // Config v1 — safe to apply on re-seed; only overwrites if values differ
       countryCode: "CH",
@@ -58,6 +59,7 @@ async function main() {
     create: {
       key: "fc-allschwil",
       name: "FC Allschwil",
+      publicReferenceShortCode: "FCA",
       status: TenantStatus.ACTIVE,
       countryCode: "CH",
       sportCategory: "FOOTBALL",

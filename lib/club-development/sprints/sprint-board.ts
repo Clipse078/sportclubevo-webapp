@@ -8,7 +8,7 @@ import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { mapTaskAssigneeRowsToViewModels, type SprintTaskAssigneeViewModel } from "./sprint-task-assignee";
 import { taskIdsPassingReadWhere } from "./sprint-task-visibility";
 import { loadTaskChildRollupProgressMap } from "@/lib/club-development/task-child-rollup-progress";
-import { scePublicReferenceFromNumber } from "@/lib/club-development/sce-public-reference";
+import { resolveTenantPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 import {
   mapTaskStatusToVereinsentwicklungBoardColumn,
   type VereinsentwicklungTaskBoardColumn,
@@ -71,6 +71,7 @@ export async function loadSprintBoard(
     select: {
       id: true,
       scePublicNumber: true,
+      tenantPublicNumber: true,
       title: true,
       status: true,
       priority: true,
@@ -137,7 +138,11 @@ export async function loadSprintBoard(
     const rollup = childProgressMap.get(task.id);
     const card: SprintBoardCard = {
       taskId: task.id,
-      publicReference: scePublicReferenceFromNumber(task.scePublicNumber),
+      publicReference: resolveTenantPublicReferenceDisplay({
+        tenantShortCode: taskCtx.tenantPublicReferenceShortCode,
+        tenantPublicNumber: task.tenantPublicNumber,
+        legacyScePublicNumber: task.scePublicNumber,
+      }),
       title: task.title,
       status: task.status,
       column,
