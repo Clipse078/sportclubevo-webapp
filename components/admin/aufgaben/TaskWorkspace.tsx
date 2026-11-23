@@ -1020,18 +1020,29 @@ export function TaskWorkspacePanel({
           eyebrow="Aufgabe"
           title={task.title}
           summary={
-            parentTask ? (
-              <p className="text-sm text-[var(--muted)]">
-                Übergeordnete Aufgabe:{" "}
-                <button
-                  type="button"
-                  className="text-[var(--primary)] hover:underline"
-                  onClick={() => navigateToTask(parentTask.id)}
+            <>
+              {task.publicReference ? (
+                <p
+                  className="text-sm font-medium text-[var(--text-2)]"
+                  data-testid="task-workspace-public-reference"
                 >
-                  {parentTask.title}
-                </button>
-              </p>
-            ) : null
+                  Referenz:{" "}
+                  <span className="font-mono text-[var(--foreground)]">{task.publicReference}</span>
+                </p>
+              ) : null}
+              {parentTask ? (
+                <p className="text-sm text-[var(--muted)]">
+                  Übergeordnete Aufgabe:{" "}
+                  <button
+                    type="button"
+                    className="text-[var(--primary)] hover:underline"
+                    onClick={() => navigateToTask(parentTask.id)}
+                  >
+                    {parentTask.title}
+                  </button>
+                </p>
+              ) : null}
+            </>
           }
           headerBadge={headerStatus}
           breadcrumbs={

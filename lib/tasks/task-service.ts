@@ -11,7 +11,11 @@ import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
 import { refreshInitiativeProgressForTaskContext } from "@/lib/club-development/initiative-progress-hooks";
-import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
+import {
+  allocateTaskReferenceFields,
+  linkTaskTenantPublicReference,
+} from "@/lib/tasks/task-reference-allocation";
+import { mapTaskRowToDto } from "@/lib/tasks/task-dto-mapper";
 
 function schedulePersonalDashboardRebuildForTaskUsers(
   tenantId: string,
@@ -83,38 +87,8 @@ const TASK_INCLUDE = TASK_AUTH_INCLUDE;
 
 type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
 
-function mapTask(row: TaskRow): TaskDto {
-  return {
-    id: row.id,
-    tenantId: row.tenantId,
-    title: row.title,
-    description: row.description,
-    status: row.status,
-    priority: row.priority,
-    dueAt: row.dueAt?.toISOString() ?? null,
-    reminder1At: row.reminder1At?.toISOString() ?? null,
-    reminder2At: row.reminder2At?.toISOString() ?? null,
-    reminder1PresetKey: row.reminder1PresetKey,
-    reminder2PresetKey: row.reminder2PresetKey,
-    completedAt: row.completedAt?.toISOString() ?? null,
-    contextType: row.contextType,
-    contextId: row.contextId,
-    primaryInitiativeId: row.primaryInitiativeId,
-    parentTaskId: row.parentTaskId,
-    taskSeriesId: row.taskSeriesId,
-    orgUnitId: row.orgUnitId,
-    visibilityScope: row.visibilityScope,
-    createdByUserId: row.createdByUserId,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    assignees: row.assignees.map((a) => ({
-      userId: a.userId,
-      firstName: a.user.firstName,
-      lastName: a.user.lastName,
-      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
-      assignedAt: a.assignedAt.toISOString(),
-    })),
-  };
+function mapTask(row: TaskRow, ctx: TaskServiceContext): TaskDto {
+  return mapTaskRowToDto(row, ctx.tenantPublicReferenceShortCode);
 }
 
 function assertCanView(ctx: TaskServiceContext): void {
@@ -357,11 +331,12 @@ export async function createTask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx);
+    const refs = await allocateTaskReferenceFields(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         title,
         description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
@@ -380,6 +355,14 @@ export async function createTask(
       },
       include: TASK_INCLUDE,
     });
+
+    if (refs.tenantPublicNumber != null) {
+      await linkTaskTenantPublicReference(tx, {
+        tenantId: ctx.tenantId,
+        taskId: created.id,
+        tenantPublicNumber: refs.tenantPublicNumber,
+      });
+    }
 
     await replaceTaskAccessGrants(
       tx,
@@ -449,7 +432,7 @@ export async function createTask(
     ctx.userId,
     ...assigneeUserIds,
   ]);
-  return mapTask(task);
+  return mapTask(task, ctx);
 }
 
 /**
@@ -493,11 +476,12 @@ export async function createQuickTask(
   const orgVisibility = await resolveQuickCreateOrgVisibility(ctx, selfOnly);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx);
+    const refs = await allocateTaskReferenceFields(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         title,
         description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
@@ -515,6 +499,14 @@ export async function createQuickTask(
       },
       include: TASK_INCLUDE,
     });
+
+    if (refs.tenantPublicNumber != null) {
+      await linkTaskTenantPublicReference(tx, {
+        tenantId: ctx.tenantId,
+        taskId: created.id,
+        tenantPublicNumber: refs.tenantPublicNumber,
+      });
+    }
 
     if (assigneeUserIds.length > 0) {
       if (!selfOnly) {
@@ -577,7 +569,7 @@ export async function createQuickTask(
     ctx.userId,
     ...assigneeUserIds,
   ]);
-  return mapTask(task);
+  return mapTask(task, ctx);
 }
 
 export async function getTask(
@@ -585,7 +577,7 @@ export async function getTask(
   taskId: string,
 ): Promise<TaskDto> {
   const task = await requireVisibleTask(ctx, taskId);
-  return mapTask(task);
+  return mapTask(task, ctx);
 }
 
 function buildListWhere(
@@ -625,7 +617,7 @@ export async function listTasks(
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
   });
 
-  return rows.map(mapTask);
+  return rows.map((row) => mapTask(row, ctx));
 }
 
 export async function listMyTasks(
@@ -676,7 +668,7 @@ export async function listMyTasks(
       : new Map<string, { id: string; title: string }>();
 
   const personal = rows.map((row) => {
-    const dto = mapTask(row);
+    const dto = mapTask(row, ctx);
     const parent = row.parentTaskId ? parentById.get(row.parentTaskId) : null;
     return {
       ...dto,
@@ -713,11 +705,12 @@ export async function createSubtask(
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const task = await prisma.$transaction(async (tx) => {
-    const scePublicNumber = await allocateScePublicNumber(tx);
+    const refs = await allocateTaskReferenceFields(tx, ctx.tenantId);
     const created = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         parentTaskId: parent.id,
         title,
         description: normalizeTaskDescriptionInput(input.description),
@@ -736,6 +729,14 @@ export async function createSubtask(
       },
       include: TASK_INCLUDE,
     });
+
+    if (refs.tenantPublicNumber != null) {
+      await linkTaskTenantPublicReference(tx, {
+        tenantId: ctx.tenantId,
+        taskId: created.id,
+        tenantPublicNumber: refs.tenantPublicNumber,
+      });
+    }
 
     await snapshotTaskAccessGrantsToChild(
       tx,
@@ -795,7 +796,7 @@ export async function createSubtask(
     ctx.userId,
     ...assigneeUserIds,
   ]);
-  return mapTask(task);
+  return mapTask(task, ctx);
 }
 
 export async function listSubtasks(
@@ -812,7 +813,7 @@ export async function listSubtasks(
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
 
-  return rows.map(mapTask);
+  return rows.map((row) => mapTask(row, ctx));
 }
 
 export async function getTaskProgress(
@@ -1136,7 +1137,7 @@ export async function updateTask(
     }
   }
 
-  return mapTask(updated);
+  return mapTask(updated, ctx);
 }
 
 export async function assignTask(
@@ -1201,7 +1202,7 @@ export async function assignTask(
     ...previousUserIds,
     ...unique,
   ]);
-  return mapTask(updated);
+  return mapTask(updated, ctx);
 }
 
 export async function completeTask(
@@ -1266,7 +1267,7 @@ export async function completeTask(
     updated.contextId,
   );
 
-  return mapTask(updated);
+  return mapTask(updated, ctx);
 }
 
 export async function cancelTask(
@@ -1304,7 +1305,7 @@ export async function cancelTask(
     ctx.userId,
     ...existing.assignees.map((a) => a.userId),
   ]);
-  return mapTask(updated);
+  return mapTask(updated, ctx);
 }
 
 export async function countMyOpenTasks(ctx: TaskServiceContext): Promise<number> {

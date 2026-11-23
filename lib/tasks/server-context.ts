@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import type { TaskServiceContext } from "./types";
 import { loadTaskAuthScope } from "./task-authorization";
@@ -9,15 +10,20 @@ export async function buildTaskServiceContextForActor(
 ): Promise<TaskServiceContext | null> {
   if (!userId || !tenantId) return null;
 
-  const [{ platform, tenant }, taskAuth] = await Promise.all([
+  const [{ platform, tenant }, taskAuth, tenantRow] = await Promise.all([
     getRequestEffectivePermissions(userId, tenantId),
     loadTaskAuthScope(userId, tenantId),
+    prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { publicReferenceShortCode: true },
+    }),
   ]);
 
   return {
     tenantId,
     userId,
     permissionKeys: [...platform, ...tenant],
+    tenantPublicReferenceShortCode: tenantRow?.publicReferenceShortCode ?? null,
     auth: taskAuth,
   };
 }

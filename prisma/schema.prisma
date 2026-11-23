@@ -1222,6 +1222,9 @@ model Tenant {
   // Non-destructive: existing tenants receive defaults automatically without migration data.
   websiteDesignSystem Json?
 
+  /// Tenant-wide public reference code prefix (e.g. FCA for `{code}-{n}`). Stored uppercase; unique case-insensitively.
+  publicReferenceShortCode String?
+
   registrations             Registration[]
   users                     User[]
   events                    Event[]
@@ -1270,6 +1273,8 @@ model Tenant {
   tenantDocumentationPageVersions         TenantDocumentationPageVersion[]
   tenantDocumentationAccessGrants         TenantDocumentationAccessGrant[]
   tenantDocumentationCollaborationPresence TenantDocumentationCollaborationPresence[]
+  sceTenantPublicNumberSequence            SceTenantPublicNumberSequence?
+  sceTenantPublicNumberLedger              SceTenantPublicNumberLedger[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -1985,6 +1990,36 @@ model ScePublicNumberSequence {
 model ScePublicNumberLedger {
   scePublicNumber BigInt   @id
   createdAt       DateTime @default(now())
+}
+
+/// One issued number per tenant across SCE record kinds (Task first; others follow in later PRs).
+enum SceTenantPublicRecordKind {
+  TASK
+  STRATEGY
+  TARGET
+  MELDUNG
+}
+
+/// Per-tenant sequence for `{publicReferenceShortCode}-{n}` issuance.
+model SceTenantPublicNumberSequence {
+  tenantId   String @id
+  nextNumber BigInt @default(1)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// Resolves a tenant reference to exactly one record kind + entity (concurrent-safe issuance).
+model SceTenantPublicNumberLedger {
+  tenantId             String
+  tenantPublicNumber   BigInt
+  recordKind           SceTenantPublicRecordKind
+  entityId             String
+  createdAt            DateTime                  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([tenantId, tenantPublicNumber])
+  @@index([tenantId, recordKind, entityId])
 }
 
 model ClubMeldung {
@@ -5049,6 +5084,8 @@ model Task {
   id              String        @id @default(cuid())
   tenantId        String
   scePublicNumber BigInt?
+  /// Tenant-wide public number (`{publicReferenceShortCode}-{n}`); unique per tenant across record kinds.
+  tenantPublicNumber BigInt?
   title           String
   description     String?
   status          TaskStatus    @default(OPEN)
@@ -5095,6 +5132,7 @@ model Task {
   primaryInitiative Initiative? @relation("TaskPrimaryInitiative", fields: [primaryInitiativeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([tenantId, seriesOccurrenceKey])
+  @@unique([tenantId, tenantPublicNumber])
   @@unique([scePublicNumber])
   @@index([tenantId])
   @@index([tenantId, status])

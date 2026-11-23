@@ -31,6 +31,17 @@ vi.mock("@/lib/notifications/task-producer", () => ({
       .map((userId) => ({ userId, assignedAt })),
 }));
 
+vi.mock("@/lib/tasks/eligible-task-assignee-persons", () => ({
+  assertEligibleTaskAssigneeUserIds: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/tasks/task-reference-allocation", () => ({
+  allocateTaskReferenceFields: vi.fn(async () => ({
+    scePublicNumber: 42n,
+    tenantPublicNumber: null,
+  })),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -110,7 +121,16 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     status: TaskStatus.OPEN,
     priority: "NORMAL",
     dueAt: null,
+    reminder1At: null,
+    reminder2At: null,
+    reminder1PresetKey: null,
+    reminder2PresetKey: null,
     completedAt: null,
+    scePublicNumber: 42n,
+    tenantPublicNumber: null,
+    primaryInitiativeId: null,
+    orgUnitId: null,
+    visibilityScope: TaskVisibilityScope.CLUB,
     contextType: null,
     contextId: null,
     parentTaskId: null,
@@ -210,11 +230,17 @@ describe("AUFGABEN-01 tenancy isolation", () => {
   });
 
   it("rejects cross-tenant assignee membership during assignment", async () => {
+    const { assertEligibleTaskAssigneeUserIds } = await import(
+      "@/lib/tasks/eligible-task-assignee-persons"
+    );
+    vi.mocked(assertEligibleTaskAssigneeUserIds).mockRejectedValueOnce(
+      new Error("ineligible assignee"),
+    );
     mocks.taskFindFirst.mockResolvedValue(taskRow());
     mocks.tenantMembershipFindMany.mockResolvedValue([]);
     await expect(
       assignTask(managerCtx(), TASK_ID, [USER_OTHER]),
-    ).rejects.toThrow(/not active members/i);
+    ).rejects.toThrow(/eligible Person-linked members/i);
   });
 });
 

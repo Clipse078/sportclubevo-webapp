@@ -84,7 +84,7 @@ import {
 import type { WorkspaceDocumentPickerOption } from "@/lib/workspace/document-access";
 
 export type AufgabenActionResult =
-  | { ok: true; taskId?: string }
+  | { ok: true; taskId?: string; publicReference?: string | null }
   | { ok: false; message: string };
 
 export type TaskTimelineActionResult =
@@ -290,7 +290,7 @@ export async function createQuickAufgabeAction(
     });
 
     revalidateTaskPaths(created.id);
-    return { ok: true, taskId: created.id };
+    return { ok: true, taskId: created.id, publicReference: created.publicReference };
   } catch (error) {
     return failure(error);
   }
@@ -360,7 +360,7 @@ export async function createAufgabeAction(
     });
 
     revalidateTaskPaths(created.id);
-    return { ok: true, taskId: created.id };
+    return { ok: true, taskId: created.id, publicReference: created.publicReference };
   } catch (error) {
     return failure(error);
   }
@@ -1113,7 +1113,7 @@ export async function createContextualAufgabeAction(
 
     revalidateTaskPaths(created.id);
     revalidatePath("/dashboard/matchcenter");
-    return { ok: true, taskId: created.id };
+    return { ok: true, taskId: created.id, publicReference: created.publicReference };
   } catch (error) {
     return failure(error);
   }
@@ -1167,7 +1167,7 @@ export async function createAufgabeFullAction(
     });
 
     revalidateTaskPaths(created.id);
-    return { ok: true, taskId: created.id };
+    return { ok: true, taskId: created.id, publicReference: created.publicReference };
   } catch (error) {
     return failure(error);
   }

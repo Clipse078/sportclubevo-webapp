@@ -14,6 +14,10 @@ import {
   TaskVisibilityScope,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  allocateTaskReferenceFields,
+  linkTaskTenantPublicReference,
+} from "@/lib/tasks/task-reference-allocation";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { TaskForbiddenError, TaskNotFoundError, TaskValidationError } from "./errors";
@@ -625,11 +629,15 @@ async function createOccurrenceTree(
     orgUnitId: series.orgUnitId,
   });
 
+  const refs = await allocateTaskReferenceFields(tx, ctx.tenantId);
+
   let parent: { id: string };
   try {
     parent = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         title: series.title,
         description: series.description,
         priority: series.priority,
@@ -655,6 +663,14 @@ async function createOccurrenceTree(
       if (raced) return raced.id;
     }
     throw error;
+  }
+
+  if (refs.tenantPublicNumber != null) {
+    await linkTaskTenantPublicReference(tx, {
+      tenantId: ctx.tenantId,
+      taskId: parent.id,
+      tenantPublicNumber: refs.tenantPublicNumber,
+    });
   }
 
   const parentAssignees = series.assigneeTemplates.map((a) => a.userId);
@@ -714,9 +730,12 @@ async function createOccurrenceTree(
       timeZone: series.timezone,
     });
 
+    const childRefs = await allocateTaskReferenceFields(tx, ctx.tenantId);
     const child = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
+        scePublicNumber: childRefs.scePublicNumber,
+        tenantPublicNumber: childRefs.tenantPublicNumber,
         parentTaskId: parent.id,
         title: template.title,
         description: template.description,
@@ -732,6 +751,14 @@ async function createOccurrenceTree(
         createdByUserId: series.createdByUserId ?? ctx.userId,
       },
     });
+
+    if (childRefs.tenantPublicNumber != null) {
+      await linkTaskTenantPublicReference(tx, {
+        tenantId: ctx.tenantId,
+        taskId: child.id,
+        tenantPublicNumber: childRefs.tenantPublicNumber,
+      });
+    }
 
     const childAssignees = template.assignees.map((a) => a.userId);
     if (childAssignees.length) {

@@ -48,6 +48,11 @@ import {
   resolveTaskContextsBatch,
   type TaskContextPresentation,
 } from "./context-presentation";
+import { mapTaskRowToDto } from "./task-dto-mapper";
+import {
+  exactTaskReferenceWhere,
+  parseExactTaskReferenceSearch,
+} from "./management-exact-reference-search";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -100,61 +105,42 @@ export type TaskSeriesManagementRow = {
   openOccurrenceCount: number;
 };
 
-function mapTask(row: TaskRow): TaskDto {
-  return {
-    id: row.id,
-    tenantId: row.tenantId,
-    title: row.title,
-    description: row.description,
-    status: row.status,
-    priority: row.priority,
-    dueAt: row.dueAt?.toISOString() ?? null,
-    reminder1At: row.reminder1At?.toISOString() ?? null,
-    reminder2At: row.reminder2At?.toISOString() ?? null,
-    reminder1PresetKey: row.reminder1PresetKey,
-    reminder2PresetKey: row.reminder2PresetKey,
-    completedAt: row.completedAt?.toISOString() ?? null,
-    contextType: row.contextType,
-    contextId: row.contextId,
-    primaryInitiativeId: row.primaryInitiativeId,
-    parentTaskId: row.parentTaskId,
-    taskSeriesId: row.taskSeriesId,
-    orgUnitId: row.orgUnitId,
-    visibilityScope: row.visibilityScope,
-    createdByUserId: row.createdByUserId,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    assignees: row.assignees.map((a) => ({
-      userId: a.userId,
-      firstName: a.user.firstName,
-      lastName: a.user.lastName,
-      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
-      assignedAt: a.assignedAt.toISOString(),
-    })),
-  };
+function mapTask(row: TaskRow, ctx: TaskServiceContext): TaskDto {
+  return mapTaskRowToDto(row, ctx.tenantPublicReferenceShortCode);
 }
 
 function mapPersonal(
   row: TaskRow,
   parentById: Map<string, { id: string; title: string }>,
+  ctx: TaskServiceContext,
 ): PersonalTaskDto {
-  const dto = mapTask(row);
+  const dto = mapTask(row, ctx);
   const parent = row.parentTaskId ? parentById.get(row.parentTaskId) ?? null : null;
   return { ...dto, parentTask: parent };
 }
 
-function buildSecondaryFilters(
+async function buildSecondaryFilters(
   ctx: TaskServiceContext,
   query: TaskManagementQueryState,
   now: Date,
   timeZone: string,
-): Prisma.TaskWhereInput[] {
+): Promise<Prisma.TaskWhereInput[]> {
   const and: Prisma.TaskWhereInput[] = [];
 
   if (query.search) {
-    and.push({
-      title: { contains: query.search, mode: "insensitive" },
-    });
+    const exact = await parseExactTaskReferenceSearch(
+      query.search,
+      ctx.tenantId,
+      ctx.tenantPublicReferenceShortCode,
+    );
+    const exactWhere = exactTaskReferenceWhere(ctx.tenantId, exact);
+    if (exactWhere) {
+      and.push(exactWhere);
+    } else {
+      and.push({
+        title: { contains: query.search, mode: "insensitive" },
+      });
+    }
   }
 
   if (query.status === "ACTIVE") {
@@ -360,7 +346,7 @@ async function batchEnrichRoots(
   for (const row of childRows) {
     const parentId = row.parentTaskId!;
     const list = childrenByParent.get(parentId) ?? [];
-    list.push(mapTask(row));
+    list.push(mapTask(row, ctx));
     childrenByParent.set(parentId, list);
   }
 
@@ -440,7 +426,7 @@ async function batchEnrichPersonalRows(
     for (const row of childRows) {
       const parentId = row.parentTaskId!;
       const list = childrenByParent.get(parentId) ?? [];
-      list.push(mapTask(row));
+      list.push(mapTask(row, ctx));
       childrenByParent.set(parentId, list);
     }
   }
@@ -588,7 +574,7 @@ export async function listTaskManagementItems(
 
   const visibility = buildTaskVisibilityWhere(ctx);
   const viewFilters = buildViewWhere(ctx, query.view, now, timeZone);
-  const secondary = buildSecondaryFilters(ctx, query, now, timeZone);
+  const secondary = await buildSecondaryFilters(ctx, query, now, timeZone);
 
   const where: Prisma.TaskWhereInput = {
     AND: [visibility, ...viewFilters, ...secondary],
@@ -628,8 +614,8 @@ export async function listTaskManagementItems(
     const parentById = await loadAuthorizedParentTaskRefs(ctx, parentIds);
     const personal =
       query.view === "MEINE"
-        ? sortPersonalTasks(rows.map((r) => mapPersonal(r, parentById)))
-        : rows.map((r) => mapPersonal(r, parentById));
+        ? sortPersonalTasks(rows.map((r) => mapPersonal(r, parentById, ctx)))
+        : rows.map((r) => mapPersonal(r, parentById, ctx));
     const items = await batchEnrichPersonalRows(
       ctx,
       personal,
@@ -640,7 +626,9 @@ export async function listTaskManagementItems(
     return { items, totalCount, page, pageCount };
   }
 
-  const roots = rows.filter((r) => !r.parentTaskId).map(mapTask);
+  const roots = rows
+    .filter((r) => !r.parentTaskId)
+    .map((r) => mapTask(r, ctx));
   const items = await batchEnrichRoots(ctx, roots, seriesLabels, locale, timeZone);
   return { items, totalCount, page, pageCount };
 }

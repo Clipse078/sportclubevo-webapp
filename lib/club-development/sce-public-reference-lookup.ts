@@ -11,6 +11,11 @@ import {
   parseScePublicReference,
   scePublicReferenceFromNumber,
 } from "@/lib/club-development/sce-public-reference";
+import { lookupTenantTaskReference } from "@/lib/tasks/sce-tenant-task-reference-lookup";
+import {
+  parseTenantPublicReference,
+  resolveTenantPublicReferenceDisplay,
+} from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 
 export type ScePublicReferenceLookupKind =
   | "strategy"
@@ -91,6 +96,19 @@ export async function lookupScePublicReference(
   const trimmed = referenceInput.trim();
   if (!tenantId || !trimmed) return null;
 
+  if (parseTenantPublicReference(trimmed)) {
+    const tenantTask = await lookupTenantTaskReference(actor, trimmed);
+    if (tenantTask) {
+      return {
+        kind: "task",
+        id: tenantTask.id,
+        publicReference: tenantTask.publicReference,
+        title: tenantTask.title,
+      };
+    }
+    return null;
+  }
+
   const parsed = parseScePublicReference(trimmed);
   if (!parsed) {
     return lookupMeldungByLegacyCaseNumber(actor, tenantId, trimmed);
@@ -121,7 +139,13 @@ export async function lookupScePublicReference(
     }),
     prisma.task.findFirst({
       where: { tenantId, scePublicNumber: sequenceNumber },
-      select: { id: true, title: true, scePublicNumber: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        scePublicNumber: true,
+        tenantPublicNumber: true,
+        status: true,
+      },
     }),
     prisma.clubMeldung.findFirst({
       where: { tenantId, scePublicNumber: sequenceNumber },
@@ -169,7 +193,12 @@ export async function lookupScePublicReference(
         return {
           kind: "task",
           id: task.id,
-          publicReference: scePublicReferenceFromNumber(task.scePublicNumber)!,
+          publicReference:
+            resolveTenantPublicReferenceDisplay({
+              tenantShortCode: taskCtx.tenantPublicReferenceShortCode,
+              tenantPublicNumber: task.tenantPublicNumber,
+              legacyScePublicNumber: task.scePublicNumber,
+            }) ?? scePublicReferenceFromNumber(task.scePublicNumber)!,
           title: task.title,
         };
       }
