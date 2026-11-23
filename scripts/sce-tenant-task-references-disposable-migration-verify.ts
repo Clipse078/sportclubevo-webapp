@@ -16,10 +16,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
-import {
-  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
-  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER,
-} from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
+import { SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER } from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
 import {
   buildDisposablePrismaMigrateProcessEnv,
   collectPrismaMigrationEndpointReport,
@@ -106,7 +103,12 @@ async function main(): Promise<void> {
   }
 
   const { rows, schemaOk } = await loadAppliedMigrations(connectionString);
-  const repoChecksum = migrationChecksum(SCE_TENANT_PUBLIC_REFERENCES_MIGRATION);
+  const repoChecksums = Object.fromEntries(
+    SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER.map((name) => [
+      name,
+      migrationChecksum(name),
+    ]),
+  );
 
   const migrationReport = SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER.map((name) => {
     const row = rows.find((r) => r.migration_name === name);
@@ -114,8 +116,8 @@ async function main(): Promise<void> {
       name,
       applied: Boolean(row),
       checksumInDb: row?.checksum ?? null,
-      repoChecksum,
-      checksumMatch: row?.checksum === repoChecksum,
+      repoChecksum: repoChecksums[name],
+      checksumMatch: row?.checksum === repoChecksums[name],
       finishedAt: row?.finished_at?.toISOString?.() ?? null,
     };
   });
