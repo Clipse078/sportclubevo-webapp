@@ -40,3 +40,6 @@ export const SCE_TENANT_PUBLIC_REFERENCE_BACKFILL_SCOPE =
  */
 export const SCE_TENANT_PUBLIC_REFERENCE_DISPOSABLE_VERIFY_SCRIPT =
   "scripts/sce-tenant-task-references-disposable-migration-verify.ts" as const;
+
+export const SCE_TENANT_RECORD_REFERENCE_COLUMNS_STAGE_VERIFY_SCRIPT =
+  "scripts/sce-tenant-record-reference-columns-stage-migration-verify.ts" as const;
