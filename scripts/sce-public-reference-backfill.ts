@@ -1,39 +1,75 @@
 /**
  * Backfill global SCE public numbers for existing Strategie, Ziel, Aufgabe, and Anliegen rows.
- * Run only against disposable / guarded databases — not shared STAGE without explicit approval.
  *
- * Usage: npx tsx scripts/sce-public-reference-backfill.ts [--tenant <id>] [--dry-run]
+ * Dry-run performs no writes. Live mode requires SCE_OPERATION_AUTHORIZATION on remote STAGE.
+ *
+ * Usage:
+ *   npx tsx scripts/sce-public-reference-backfill.ts [--tenant <id>] [--dry-run]
+ *
+ * STAGE dry-run (read-only):
+ *   APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+ *     DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
+ *     npx tsx scripts/sce-public-reference-backfill.ts --dry-run
  */
-import { PrismaClient } from "@prisma/client";
-import { formatScePublicReference } from "@/lib/club-development/sce-public-reference";
-import { runScePublicReferenceBackfill } from "@/lib/club-development/sce-public-reference-backfill";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+
+import { formatScePublicReference } from "@/lib/club-development/sce-public-reference";
+import {
+  assertScePublicReferenceBackfillAllowed,
+  runScePublicReferenceBackfillCli,
+} from "@/lib/club-development/sce-public-reference-backfill-cli";
+
+const dryRun = process.argv.includes("--dry-run");
+const tenantArgIdx = process.argv.indexOf("--tenant");
+const tenantFilter =
+  tenantArgIdx >= 0 ? process.argv[tenantArgIdx + 1]?.trim() ?? null : null;
+
+const connectionString = process.env.DATABASE_URL?.trim();
+assertScePublicReferenceBackfillAllowed({
+  dryRun,
+  tenantFilter,
+  databaseUrl: connectionString,
+});
+
+const pool = new Pool({ connectionString });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 async function main() {
-  const dryRun = process.argv.includes("--dry-run");
-  const tenantArgIdx = process.argv.indexOf("--tenant");
-  const tenantFilter = tenantArgIdx >= 0 ? process.argv[tenantArgIdx + 1]?.trim() : null;
+  const report = await runScePublicReferenceBackfillCli(prisma, {
+    dryRun,
+    tenantFilter,
+    databaseUrl: connectionString,
+  });
 
-  const result = await runScePublicReferenceBackfill(prisma, { tenantFilter, dryRun });
-
-  if (result.collisions.length > 0) {
+  if (report.collisionAbort) {
     console.error(
-      `Aborting backfill — found ${result.collisions.length} duplicate scePublicNumber value(s) already issued:`,
+      `Aborting backfill — found ${report.collisions.length} duplicate scePublicNumber value(s) already issued:`,
     );
-    for (const row of result.collisions) {
+    for (const row of report.collisions) {
       console.error(
-        `  ${formatScePublicReference(row.scePublicNumber)}: ${row.occurrences} assignments`,
+        `  ${formatScePublicReference(BigInt(row.scePublicNumber))}: ${row.occurrences} assignments`,
       );
     }
+    console.log(JSON.stringify(report, null, 2));
     process.exitCode = 2;
     return;
   }
 
   console.log(
-    dryRun
-      ? `Dry run complete — ${result.assigned} rows would receive SCE numbers across ${result.tenantCount} tenant(s).`
-      : `Backfill complete — assigned ${result.assigned} SCE numbers across ${result.tenantCount} tenant(s).`,
+    JSON.stringify(
+      {
+        ...report,
+        message: dryRun
+          ? `Dry run complete — ${report.assigned} rows would receive SCE numbers across ${report.tenantCount} tenant(s).`
+          : `Backfill complete — assigned ${report.assigned} SCE numbers across ${report.tenantCount} tenant(s).`,
+      },
+      null,
+      2,
+    ),
   );
 }
 
@@ -44,4 +80,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
