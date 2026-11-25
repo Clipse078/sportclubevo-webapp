@@ -11,7 +11,7 @@ import {
   parseScePublicReference,
   scePublicReferenceFromNumber,
 } from "@/lib/club-development/sce-public-reference";
-import { lookupTenantTaskReference } from "@/lib/tasks/sce-tenant-task-reference-lookup";
+import { lookupTenantPublicRecordReference } from "@/lib/tenant-public-reference/sce-tenant-record-reference-lookup";
 import {
   parseTenantPublicReference,
   resolveTenantPublicReferenceDisplay,
@@ -97,13 +97,17 @@ export async function lookupScePublicReference(
   if (!tenantId || !trimmed) return null;
 
   if (parseTenantPublicReference(trimmed)) {
-    const tenantTask = await lookupTenantTaskReference(actor, trimmed);
-    if (tenantTask) {
+    const tenantHit = await lookupTenantPublicRecordReference(actor, trimmed);
+    if (tenantHit) {
       return {
-        kind: "task",
-        id: tenantTask.id,
-        publicReference: tenantTask.publicReference,
-        title: tenantTask.title,
+        kind: tenantHit.kind,
+        id: tenantHit.id,
+        publicReference: tenantHit.publicReference,
+        title: tenantHit.title,
+        legacyAnliegenCaseNumber:
+          tenantHit.kind === "meldung" && !tenantHit.legacyScePublicReference
+            ? true
+            : undefined,
       };
     }
     return null;
@@ -115,11 +119,16 @@ export async function lookupScePublicReference(
   }
 
   const sequenceNumber = parsed.sequenceNumber;
+  const tenantShortCodeRow = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { publicReferenceShortCode: true },
+  });
+  const tenantShortCode = tenantShortCodeRow?.publicReferenceShortCode ?? null;
 
   const [strategy, target, task, meldung] = await Promise.all([
     prisma.clubStrategy.findFirst({
       where: { tenantId, scePublicNumber: sequenceNumber },
-      select: { id: true, title: true, scePublicNumber: true, scopeType: true },
+      select: { id: true, title: true, scePublicNumber: true, tenantPublicNumber: true, scopeType: true },
     }),
     prisma.target.findFirst({
       where: { tenantId, scePublicNumber: sequenceNumber },
@@ -127,6 +136,7 @@ export async function lookupScePublicReference(
         id: true,
         title: true,
         scePublicNumber: true,
+        tenantPublicNumber: true,
         visibilityScope: true,
         createdByUserId: true,
         visibleRoleRefs: true,
@@ -153,6 +163,7 @@ export async function lookupScePublicReference(
         id: true,
         subject: true,
         scePublicNumber: true,
+        tenantPublicNumber: true,
         status: true,
         reporterUserId: true,
         accountableUserId: true,
@@ -165,7 +176,12 @@ export async function lookupScePublicReference(
     return {
       kind: "strategy",
       id: strategy.id,
-      publicReference: scePublicReferenceFromNumber(strategy.scePublicNumber)!,
+      publicReference:
+        resolveTenantPublicReferenceDisplay({
+          tenantShortCode,
+          tenantPublicNumber: strategy.tenantPublicNumber,
+          legacyScePublicNumber: strategy.scePublicNumber,
+        }) ?? scePublicReferenceFromNumber(strategy.scePublicNumber)!,
       title: strategy.title?.trim() || "Strategie",
     };
   }
@@ -176,7 +192,12 @@ export async function lookupScePublicReference(
       return {
         kind: "target",
         id: target.id,
-        publicReference: scePublicReferenceFromNumber(target.scePublicNumber)!,
+        publicReference:
+          resolveTenantPublicReferenceDisplay({
+            tenantShortCode,
+            tenantPublicNumber: target.tenantPublicNumber,
+            legacyScePublicNumber: target.scePublicNumber,
+          }) ?? scePublicReferenceFromNumber(target.scePublicNumber)!,
         title: target.title,
       };
     }
@@ -216,7 +237,12 @@ export async function lookupScePublicReference(
       return {
         kind: "meldung",
         id: meldung.id,
-        publicReference: scePublicReferenceFromNumber(meldung.scePublicNumber)!,
+        publicReference:
+          resolveTenantPublicReferenceDisplay({
+            tenantShortCode,
+            tenantPublicNumber: meldung.tenantPublicNumber,
+            legacyScePublicNumber: meldung.scePublicNumber,
+          }) ?? scePublicReferenceFromNumber(meldung.scePublicNumber)!,
         title: meldung.subject,
       };
     }

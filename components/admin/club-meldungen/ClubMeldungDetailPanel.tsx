@@ -10,6 +10,7 @@ import {
 } from "@/lib/club-meldungen/copy";
 import type { ClubMeldungCategory, ClubMeldungStatus } from "@prisma/client";
 import { cn } from "@/lib/cn";
+import SceRecordPublicReferenceDetail from "@/components/admin/shared/SceRecordPublicReferenceDetail";
 
 type Message = {
   id: string;
@@ -29,6 +30,7 @@ type Props = {
   meldungId: string;
   mode: "reporter" | "internal";
   caseNumber: string;
+  publicReference?: string | null;
   subject: string;
   description: string;
   category: ClubMeldungCategory;
@@ -43,6 +45,7 @@ export default function ClubMeldungDetailPanel({
   meldungId,
   mode,
   caseNumber,
+  publicReference,
   subject,
   description,
   category,
@@ -93,9 +96,10 @@ export default function ClubMeldungDetailPanel({
       ) : null}
 
       <header className={cn(SCE_CD_WORKSPACE_PANEL_CLASS, "space-y-2")}>
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-          {caseNumber}
-        </p>
+        <SceRecordPublicReferenceDetail
+          reference={publicReference ?? caseNumber}
+          testId="meldung-reporter-detail-public-reference"
+        />
         <h1 className="text-2xl font-semibold text-[var(--foreground)]">{subject}</h1>
         <p className="text-sm text-[var(--text-2)]">
           {CLUB_MELDUNG_CATEGORY_LABELS[category]} · {CLUB_MELDUNG_STATUS_LABELS[status]}

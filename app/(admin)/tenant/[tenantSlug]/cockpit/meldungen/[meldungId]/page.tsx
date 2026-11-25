@@ -16,6 +16,8 @@ import { isClubMeldungSchemaReady } from "@/lib/club-meldungen/schema-ready";
 import { isClubMeldungMentionSchemaReady } from "@/lib/club-meldungen/schema-mention-ready";
 import { CLUB_MELDUNG_WORKSPACE_COPY } from "@/lib/club-meldungen/copy";
 import { mapClubMeldungMessageMentionsForTimeline } from "@/lib/club-meldungen/timeline";
+import { resolveMeldungPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-meldung-public-reference";
+import { loadTenantPublicReferenceShortCode } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
 
 type Props = { params: Promise<{ tenantSlug: string; meldungId: string }> };
 
@@ -86,6 +88,14 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
     ? await loadClubMeldungAssignOptions(tenant.id)
     : null;
 
+  const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, tenant.id);
+  const publicReference = resolveMeldungPublicReferenceDisplay({
+    tenantShortCode,
+    tenantPublicNumber: meldung.tenantPublicNumber,
+    scePublicNumber: meldung.scePublicNumber,
+    caseNumber: meldung.caseNumber,
+  });
+
   return (
     <PageShell fullWidth>
       <SceWorkspaceChrome
@@ -95,7 +105,7 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
             label: CLUB_MELDUNG_WORKSPACE_COPY.moduleTitle,
             href: `/tenant/${tenantSlug}/cockpit/meldungen`,
           },
-          { label: meldung.caseNumber },
+          { label: publicReference },
         ]}
       >
         <ClubMeldungHandlerDetailView
@@ -105,6 +115,7 @@ export default async function TenantMeldungCockpitDetailPage({ params }: Props) 
           canMutate={canMutate}
           actorUserId={actorUserId}
           caseNumber={meldung.caseNumber}
+          publicReference={publicReference}
           subject={meldung.subject}
           description={meldung.description}
           category={meldung.category}

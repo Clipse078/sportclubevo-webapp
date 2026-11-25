@@ -105,7 +105,11 @@ export async function POST(
         : [],
     });
     return NextResponse.json(
-      { meldung: result.meldung, created: result.created },
+      {
+        meldung: result.meldung,
+        created: result.created,
+        publicReference: result.publicReference,
+      },
       { status: result.created ? 201 : 200 },
     );
   } catch (error) {

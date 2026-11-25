@@ -17,6 +17,7 @@ import { ClubMeldungMessageBody } from "@/components/admin/club-meldungen/ClubMe
 import { ClubMeldungReplyComposer } from "@/components/admin/club-meldungen/ClubMeldungReplyComposer";
 import { ClubMeldungAssigneePicker } from "@/components/admin/club-meldungen/ClubMeldungAssigneePicker";
 import { meldungMentionDisplayName } from "@/lib/club-meldungen/meldung-mention-tokens";
+import SceRecordPublicReferenceDetail from "@/components/admin/shared/SceRecordPublicReferenceDetail";
 
 type Message = {
   id: string;
@@ -60,6 +61,7 @@ type Props = {
   canMutate: boolean;
   actorUserId: string;
   caseNumber: string;
+  publicReference?: string | null;
   subject: string;
   description: string;
   category: ClubMeldungCategory;
@@ -338,6 +340,10 @@ export default function ClubMeldungHandlerDetailView(props: Props) {
     >
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold text-[var(--foreground)]">{props.subject}</h1>
+        <SceRecordPublicReferenceDetail
+          reference={props.publicReference ?? props.caseNumber}
+          testId="meldung-handler-detail-public-reference"
+        />
         <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-2)]">
           <span className="font-mono text-xs tracking-wide text-[var(--muted)]">
             {props.caseNumber}

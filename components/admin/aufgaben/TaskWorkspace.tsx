@@ -64,6 +64,7 @@ import {
 import { TaskWorkspaceAssociationsSection } from "./TaskWorkspaceAssociationsSection";
 import { taskWorkspaceContextSectionLabel } from "@/lib/tasks/task-workspace-context-section-labels";
 import { CD_TASK_WORKSPACE_COPY } from "@/lib/club-development/product-copy";
+import SceRecordPublicReferenceDetail from "@/components/admin/shared/SceRecordPublicReferenceDetail";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
 import { TaskDeleteControl } from "./TaskDeleteControl";
@@ -1021,15 +1022,10 @@ export function TaskWorkspacePanel({
           title={task.title}
           summary={
             <>
-              {task.publicReference ? (
-                <p
-                  className="text-sm font-medium text-[var(--text-2)]"
-                  data-testid="task-workspace-public-reference"
-                >
-                  Referenz:{" "}
-                  <span className="font-mono text-[var(--foreground)]">{task.publicReference}</span>
-                </p>
-              ) : null}
+              <SceRecordPublicReferenceDetail
+                reference={task.publicReference}
+                testId="task-workspace-public-reference"
+              />
               {parentTask ? (
                 <p className="text-sm text-[var(--muted)]">
                   Übergeordnete Aufgabe:{" "}

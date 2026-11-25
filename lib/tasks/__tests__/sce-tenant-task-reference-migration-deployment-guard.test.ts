@@ -10,12 +10,14 @@ import {
   SCE_TENANT_PUBLIC_REFERENCE_DISPOSABLE_VERIFY_SCRIPT,
   SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
   SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER,
+  SCE_TENANT_RECORD_REFERENCE_COLUMNS_MIGRATION,
 } from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
 
 describe("SCE tenant task reference migration deployment guard", () => {
-  it("orders the tenant reference foundation migration", () => {
+  it("orders the tenant reference migrations", () => {
     expect(SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER).toEqual([
       SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
+      SCE_TENANT_RECORD_REFERENCE_COLUMNS_MIGRATION,
     ]);
   });
 

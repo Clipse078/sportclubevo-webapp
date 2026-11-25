@@ -7,7 +7,13 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { allocateClubMeldungCaseNumber } from "./case-number";
-import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
+import {
+  allocateSceRecordReferenceFields,
+  linkTenantRecordPublicReference,
+} from "@/lib/tenant-public-reference/sce-tenant-record-reference-allocation";
+import { resolveMeldungPublicReferenceDisplay } from "@/lib/tenant-public-reference/sce-meldung-public-reference";
+import { loadTenantPublicReferenceShortCode } from "@/lib/tenant-public-reference/sce-tenant-public-reference";
+import { SceTenantPublicRecordKind } from "@prisma/client";
 import { assertAttachmentLinkableForMeldung } from "./attachment-link";
 import { recordClubMeldungHistory } from "./history-service";
 import {
@@ -53,6 +59,22 @@ export type CreateClubMeldungInput = {
   attachmentIds?: string[];
 };
 
+function resolveMeldungPublicReferenceFromRow(
+  row: {
+    caseNumber: string;
+    scePublicNumber: bigint | null;
+    tenantPublicNumber: bigint | null;
+  },
+  tenantShortCode: string | null,
+): string {
+  return resolveMeldungPublicReferenceDisplay({
+    tenantShortCode,
+    tenantPublicNumber: row.tenantPublicNumber,
+    scePublicNumber: row.scePublicNumber,
+    caseNumber: row.caseNumber,
+  });
+}
+
 async function assertActiveTenantMember(tenantId: string, userId: string): Promise<void> {
   const membership = await prisma.tenantMembership.findFirst({
     where: {
@@ -82,24 +104,29 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
     include: { meldung: true },
   });
   if (existingIdem) {
-    return { meldung: existingIdem.meldung, created: false as const };
+    const shortCode = await loadTenantPublicReferenceShortCode(prisma, input.tenantId);
+    const publicReference = resolveMeldungPublicReferenceFromRow(existingIdem.meldung, shortCode);
+    return { meldung: existingIdem.meldung, created: false as const, publicReference };
   }
 
   if (input.urgent && !input.urgentNote?.trim()) {
     throw new ClubMeldungServiceError("Dringend erfordert eine kurze Erläuterung", "VALIDATION");
   }
 
+  const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, input.tenantId);
+
   const meldung = await prisma.$transaction(async (tx) => {
     const createdAt = new Date();
     const caseNumber = await allocateClubMeldungCaseNumber(tx, input.tenantId, {
       createdAt,
     });
-    const scePublicNumber = await allocateScePublicNumber(tx);
+    const refs = await allocateSceRecordReferenceFields(tx, input.tenantId);
     const row = await tx.clubMeldung.create({
       data: {
         tenantId: input.tenantId,
         caseNumber,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         subject: input.subject.trim(),
         description: input.description.trim(),
         category: input.category,
@@ -139,10 +166,23 @@ export async function createClubMeldung(input: CreateClubMeldungInput) {
       });
     }
 
+    if (refs.tenantPublicNumber != null) {
+      await linkTenantRecordPublicReference(tx, {
+        tenantId: input.tenantId,
+        tenantPublicNumber: refs.tenantPublicNumber,
+        recordKind: SceTenantPublicRecordKind.MELDUNG,
+        entityId: row.id,
+      });
+    }
+
     return row;
   });
 
-  return { meldung, created: true as const };
+  return {
+    meldung,
+    created: true as const,
+    publicReference: resolveMeldungPublicReferenceFromRow(meldung, tenantShortCode),
+  };
 }
 
 async function linkAttachmentsTx(

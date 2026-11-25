@@ -16,10 +16,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
-import {
-  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION,
-  SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER,
-} from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
+import { SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER } from "@/lib/tenant-public-reference/sce-tenant-public-reference-migration-handoff";
 import {
   buildDisposablePrismaMigrateProcessEnv,
   collectPrismaMigrationEndpointReport,
@@ -50,18 +47,21 @@ async function verifySchema(prisma: PrismaClient): Promise<boolean> {
         WHERE table_name = 'Tenant' AND column_name = 'publicReferenceShortCode'
       ) AS exists`,
   );
-  const tenantPublicNumberColumn = await prisma.$queryRawUnsafe<
-    Array<{ exists: boolean }>
+  const tenantPublicNumberColumns = await prisma.$queryRawUnsafe<
+    Array<{ table_name: string; exists: boolean }>
   >(
-    `SELECT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'Task' AND column_name = 'tenantPublicNumber'
-      ) AS exists`,
+    `SELECT table_name, EXISTS (
+        SELECT 1 FROM information_schema.columns c
+        WHERE c.table_name = t.table_name AND c.column_name = 'tenantPublicNumber'
+      ) AS exists
+     FROM (VALUES ('Task'), ('ClubStrategy'), ('Target'), ('ClubMeldung')) AS t(table_name)`,
   );
+
+  const allRecordColumnsReady = tenantPublicNumberColumns.every((row) => row.exists);
 
   return (
     Boolean(tenantShortCodeColumn[0]?.exists) &&
-    Boolean(tenantPublicNumberColumn[0]?.exists) &&
+    allRecordColumnsReady &&
     (await tableExists(prisma, "SceTenantPublicNumberSequence")) &&
     (await tableExists(prisma, "SceTenantPublicNumberLedger"))
   );
@@ -103,7 +103,12 @@ async function main(): Promise<void> {
   }
 
   const { rows, schemaOk } = await loadAppliedMigrations(connectionString);
-  const repoChecksum = migrationChecksum(SCE_TENANT_PUBLIC_REFERENCES_MIGRATION);
+  const repoChecksums = Object.fromEntries(
+    SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER.map((name) => [
+      name,
+      migrationChecksum(name),
+    ]),
+  );
 
   const migrationReport = SCE_TENANT_PUBLIC_REFERENCES_MIGRATION_ORDER.map((name) => {
     const row = rows.find((r) => r.migration_name === name);
@@ -111,8 +116,8 @@ async function main(): Promise<void> {
       name,
       applied: Boolean(row),
       checksumInDb: row?.checksum ?? null,
-      repoChecksum,
-      checksumMatch: row?.checksum === repoChecksum,
+      repoChecksum: repoChecksums[name],
+      checksumMatch: row?.checksum === repoChecksums[name],
       finishedAt: row?.finished_at?.toISOString?.() ?? null,
     };
   });

@@ -5,7 +5,15 @@ import { getTargets } from "@/lib/targets/queries";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireStrategicApiContext } from "@/lib/permissions/require-strategic-api-context";
 import { normalizeTargetMetricsFromBody } from "@/lib/targets/target-metric-payload";
-import { allocateScePublicNumber } from "@/lib/club-development/sce-public-reference";
+import {
+  allocateSceRecordReferenceFields,
+  linkTenantRecordPublicReference,
+} from "@/lib/tenant-public-reference/sce-tenant-record-reference-allocation";
+import {
+  loadTenantPublicReferenceShortCode,
+  resolveTenantPublicReferenceDisplay,
+} from "@/lib/tenant-public-reference/sce-tenant-public-reference";
+import { SceTenantPublicRecordKind } from "@prisma/client";
 
 export async function GET() {
   const access = await requireStrategicApiContext([
@@ -55,12 +63,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: metricsResult.error }, { status: 400 });
     }
 
+    const tenantShortCode = await loadTenantPublicReferenceShortCode(prisma, tenantId);
+
     const created = await prisma.$transaction(async (tx) => {
-      const scePublicNumber = await allocateScePublicNumber(tx);
-      return tx.target.create({
+      const refs = await allocateSceRecordReferenceFields(tx, tenantId);
+      const row = await tx.target.create({
       data: {
         tenantId,
-        scePublicNumber,
+        scePublicNumber: refs.scePublicNumber,
+        tenantPublicNumber: refs.tenantPublicNumber,
         title,
         description: body?.description?.trim() || null,
         category,
@@ -93,11 +104,26 @@ export async function POST(request: NextRequest) {
           })),
         },
       },
-      select: { id: true, title: true },
+      select: { id: true, title: true, scePublicNumber: true, tenantPublicNumber: true },
     });
+      if (refs.tenantPublicNumber != null) {
+        await linkTenantRecordPublicReference(tx, {
+          tenantId,
+          tenantPublicNumber: refs.tenantPublicNumber,
+          recordKind: SceTenantPublicRecordKind.TARGET,
+          entityId: row.id,
+        });
+      }
+      return row;
     });
 
-    return NextResponse.json({ target: created }, { status: 201 });
+    const publicReference = resolveTenantPublicReferenceDisplay({
+      tenantShortCode,
+      tenantPublicNumber: created.tenantPublicNumber,
+      legacyScePublicNumber: created.scePublicNumber,
+    });
+
+    return NextResponse.json({ target: { ...created, publicReference } }, { status: 201 });
   } catch (error) {
     console.error("Create target failed:", error);
     return NextResponse.json({ error: "Ziel konnte nicht erstellt werden." }, { status: 500 });
